@@ -2,7 +2,9 @@
 
 **Status**: mainline 完了（honest tier-2 到達、2026-07-14）→ stretch active 📈 —
 operational capacity を faithful かつ非循環に def 化し `IsTwoWDegreesOfFreedom` load-bearing
-predicate を除去済（Phase 0/1/5-min ✅）。残る stretch = `contAwgn_eq_shannonHartley` の
+predicate を除去済（Phase 0/1/5-min ✅）。**Phase 3 achievability の最大リスク GO/NO-GO は
+RESOLVED = GO（壁非依存）**（proof-pivot-advisor gate 2026-07-15、verbatim code 照合）— edge-effect は
+dissolve、`wall:nyquist-2w-dof` は converse 専用に確定。残る stretch = `contAwgn_eq_shannonHartley` の
 単一 wall-sorry（`wall:nyquist-2w-dof`、prolate-DOF・converse 側）を genuine 証明で除去し
 0-sorry 復帰。
 
@@ -18,7 +20,7 @@ predicate を除去済（Phase 0/1/5-min ✅）。残る stretch = `contAwgn_eq_
 - [x] Phase 0 — Mathlib + InformationTheory API 在庫 ✅（commit 8bf07545）
 - [x] Phase 1 — operational infra（新 file `ShannonHartleyOperational.lean`）✅（commit 7e354045）
 - [x] Phase 5-min — wire（load-bearing predicate 除去 + 単一 wall-sorry）✅（commit b8770fce、独立 honesty audit PASS）+ Option A README honesty infra ✅（commit ff32ec82）
-- [ ] Phase 3 — achievability（`contAwgn_ge_shannonHartley`）🚧 **[stretch 起点 = 次 leg]**
+- [ ] Phase 3 — achievability（`contAwgn_ge_shannonHartley`）🚧 **[stretch 起点 = 次 leg、GO 確定・壁非依存]**
 - [ ] Phase 2 — prolate-DOF スペクトル理論（`timeBandLimitingOp` + 固有値集中）📋 **[stretch / 壁核]**
 - [ ] Phase 4 — converse（`contAwgn_le_shannonHartley`、Phase 2 消費）📋 **[stretch]**
 - [ ] Phase 5-full — `le_antisymm` 組立 📋 **[stretch / closure]**
@@ -48,12 +50,12 @@ Shannon-Hartley の operational 版 = **サンドイッチ**:
 戦略の要は **2W という次元定数を def に埋めず、証明の 2 方向から emerge させる**（Phase 1 で
 実現済: 下記 def はいずれも `2W`・`⌊2WT⌋` を含まない）:
 
-- **achievability（≥）は sampling theorem + per-sample coding で閉じる**: rate `2W` でサンプリング
-  → per T 窓で `n ≈ 2WT` サンプル → `awgn_achievability`（既所有、genuine）で
-  `≈ exp(T·W·log(1+SNR))` メッセージの codebook → `whittaker_shannon_bandlimited`（sampling、CLOSED）
-  で連続信号に reconstruct。**この向きは prolate（Phase 2）を要さない公算が高い**（codebook は
-  こちらが構成するので converse 次元カウント不要）。唯一の懸念 = sinc-tail による essential
-  time-limiting の edge-effect（下記 GO/NO-GO）。
+- **achievability（≥）は synthesis 補間 + per-sample coding で閉じる（壁非依存、GO 確定）**: 真間隔
+  `Δ = T/n`（`n = ⌊2WT⌋`）でサンプリング → `awgn_achievability`（既所有、genuine）で
+  `≈ exp(T·W·log(1+SNR))` メッセージの codebook → **synthesis bridge**（任意有限サンプルベクトルを補間する
+  帯域制限信号を構成、`whittaker_shannon_bandlimited` の analysis 逆向き）で連続信号化。prolate（Phase 2）を
+  要さない。**edge-effect は dissolve**（`encoder_power` は in-window `∫_{[0,T]}f²` だけ課金、sinc isometry で
+  全直線 `∫_ℝ f² ≤ T·P` ⇒ `∫_{[0,T]} ≤ ∫_ℝ ≤ T·P`、窓外への sinc tail 漏れは電力制約を**緩める** = tolerate でない）。
 - **converse（≤）は prolate-DOF 上界が本質**: 受信信号を上位 `≈2WT` 個の prolate 固有関数に射影
   → `awgn_converse`（既所有、genuine）+ 次元カウント。**ここだけが `wall:nyquist-2w-dof` を要する**
   （time-and-band limiting operator `P_W Q_T P_W` の固有値集中 = Landau-Pollak-Slepian、Mathlib 不在）。
@@ -64,14 +66,12 @@ Phase 1 の周辺インフラと Phase 3 achievability は壁でない（in-proj
 ### stretch route（DAG 選択 + 起点）
 
 mainline は達成済（`0 → 1 → 5-min`）。stretch の攻略順は
-**Phase 3（achievability、壁非依存の公算・低リスク）→ Phase 2（prolate 壁核・最深）→ Phase 4（converse）
+**Phase 3（achievability、壁非依存 = 確定）→ Phase 2（prolate 壁核・最深）→ Phase 4（converse）
 → Phase 5-full（サンドイッチ組立）**。
 
-**stretch 起点 = Phase 3 achievability**（`contAwgn_ge_shannonHartley`）。先に achievability を genuine で
-閉じれば残壁が converse 単独に可視化され、Phase 2/4 の重投資判断が明確になる。**stretch 冒頭の GO/NO-GO
-判定点**（最大リスク・feasibility unknown）: **sinc-tail essential time-limiting の edge-effect が
-guard-interval で `limsup(T→∞)` 的に洗えるか**。閉じれば Phase 3 は壁非依存 genuine、閉じねば下位カウント側
-で `wall:nyquist-2w-dof` を一部共有。**この 1 点を Phase 3 実装の最初に評価する**（詳細 → Phase 3 節）。
+**stretch 起点 = Phase 3 achievability**（`contAwgn_ge_shannonHartley`）。**最大リスクだった GO/NO-GO
+（sinc-tail edge-effect）は RESOLVED = GO**（proof-pivot-advisor gate 2026-07-15、verbatim 照合）— achievability は
+壁非依存に genuine で閉じ、残壁は converse 単独（Phase 2/4）に確定。詳細 → Phase 3 節。
 
 ---
 
@@ -190,51 +190,85 @@ def の入力ではない ✓）。
 
 ---
 
-## Phase 3 — achievability 📋 **[stretch 起点 = 次 leg、壁非依存の公算]**
+## Phase 3 — achievability 📋 **[stretch 起点 = 次 leg、GO 確定・壁非依存]**
 
-**目的**: `bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P`。
-rate `2W` サンプリング → per-sample `awgn_achievability`（既所有 genuine）→ `whittaker_shannon_bandlimited`
-（sampling、CLOSED）で連続信号 reconstruct。proof-log: yes。概算 300–600 行。
+**目的**: `bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P`。真間隔 `Δ = T/n`
+（`n = ⌊2WT⌋`）サンプリング → per-sample `awgn_achievability`（既所有 genuine）→ **synthesis bridge**
+（有限サンプルベクトルを補間する帯域制限信号を構成）で連続信号化。proof-log: yes。**概算 500–850 行**
+（+BddAbove leg 分が旧見積 300–600 からの delta）。
+
+**GO/NO-GO は RESOLVED = GO（壁非依存）** — proof-pivot-advisor gate 2026-07-15、verbatim 照合。
+`ContAwgnCode.encoder_power`（ShannonHartleyOperational.lean:97）は in-window energy `∫_{[0,T]}f² ≤ T·P`
+だけを課金し、全直線 energy `∫_ℝ f²` は exact sinc isometry で既に `≤ T·P`。よって `∫_{[0,T]} ≤ ∫_ℝ ≤ T·P` で
+窓外への sinc tail 漏れは電力制約を**緩める**（dissolve、tolerate ではない）。prolate/LPS 次元カウントは
+achievability に一切入らない。→ **Phase 3 retreat line（`wall:nyquist-2w-dof` 一部共有）は不発**、
+`nyquist-2w-dof` は converse 専用（Phase 2/4）。
+
+**新 file**: `InformationTheory/Shannon/ShannonHartleyAchievability.lean`（imports:
+`ShannonHartleyOperational` + `WhittakerShannon`/`NormalizedSinc` + `AWGN.Achievability` + `AWGN.Converse`）。
+`ShannonHartleyOperational.lean` を clean に保つ。作成時 `InformationTheory.lean` に import 登録（実装 owner 担当）。
+**import cycle なし**（Converse/Achievability/WhittakerShannon は Operational を import しない、verified）。
 
 **主要 theorem（signature スケッチ、Phase 1 実 def 使用）**:
 
 ```lean
 theorem contAwgn_ge_shannonHartley (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
-    bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := ⟨サンドイッチの ≥ 方向⟩
+    bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := ⟨サンドイッチの ≥ 方向、genuine⟩
 ```
 
-**⚠ 最初に評価する GO/NO-GO（stretch 冒頭の feasibility 判定）**: **sinc-tail essential time-limiting の
-edge-effect**。`whittaker_shannon_bandlimited` は全直線信号を返し、`ContAwgnCode.encoder_power`
-（`∫_{[0,T]} (encoder m)² ≤ T·P`）の `[0,T]` 制限で sinc tail のエネルギー漏れが出る。per-second rate
-`limsup(T→∞)` で edge が **guard-interval 論法で洗える**なら壁非依存 genuine closure、洗えず**軽い prolate
-下位カウント**を要すなら `wall:nyquist-2w-dof` を一部共有。**この 1 点を Phase 3 実装の最初に判定**し、
-GO なら本 Phase を genuine で閉じ、NO-GO なら該当補題を honest sorry 化して Phase 2 の壁核に接続。
+**構成 leg（3 束）**:
 
-**構成 leg（Phase 1 実 def の使われ方）**:
-- 各 `ε ∈ Ioo 0 1` と（limsup 経由の）大 `T` に対し `ContAwgnCode T W P M` を構成して
-  `contAwgnMaxMessages T W N₀ P ε ≥ M`（sSup の下界）→ `contAwgnRate ≥ … ` → `⨅ε ≥ …` を出す。
-- **`sampleCount = ⌊2WT⌋` を code の自由 field に代入**（`n = ⌊2WT⌋` はここで achievability 側の**構成選択**
-  として入る = def の入力でない、C3/C4 ✓）。`awgn_achievability P _ n _ _ …` で discrete `AwgnCode M n P'`
-  を得、`M ≥ ⌈exp(n·(1/2)log(1+SNR'))⌉ = ⌈exp(T·W·log(1+SNR'))⌉`。
-- discrete `AwgnCode` の encoder（`Fin n → ℝ` サンプルベクトル）を `whittaker_shannon_bandlimited` で
-  帯域制限連続信号 `ℝ → ℝ`（複素化して sinc 補間）に持ち上げ `ContAwgnCode.encoder` に設定。
-- **`sampledSignal` √(T/n) 正規化の役割**: `errorProbAt` は `Measure.pi (gaussian (sampledSignal (encoder m) T n) (N₀/2))`
-  を使うので、持ち上げた連続 encoder の `sampledSignal` が discrete `AwgnCode` の codeword と一致し、かつ
-  `√(T/n)` isometry により per-sample エネルギー `↔` 連続電力 `∫f²` が Parseval 整合 → per-sample SNR が
-  `P/(N₀·W)`、`awgn_achievability` の誤り確率評価がそのまま `averageError ≤ ε` に移る。**この正規化がないと
-  oversampling で SNR が膨らみ誤り評価が崩れる**（非退化の要）。
-**依存（DAG edge）**: Phase 1 + WhittakerShannon（CLOSED）+ AWGN.awgn_achievability（genuine）→ Phase 3。
-**Phase 2 には依存しない公算が高い**（codebook はこちらが構成 = converse 次元カウント不要）。
+- **leg 1 — bridge sub-module（synthesis + Parseval energy）**。**synthesis ≠ analysis に注意**:
+  `whittaker_shannon_bandlimited` は analysis 方向（既帯域制限 f のサンプル）。achievability は synthesis 方向
+  = 任意有限サンプルベクトルを補間する帯域制限 f の構成 + その帯域制限性証明（別途要）。再利用資産:
+  `NormalizedSinc.sincN_int_eq_kronecker`（NormalizedSinc.lean:95、補間 exactness）+
+  `integral_exp_boxcar_eq_sincN`（WhittakerShannon.lean:63、sinc↔boxcar）+ **line**-Plancherel
+  `MeasureTheory.Lp.inner_fourier_eq` / `Lp.norm_fourier_eq`（LpSpace.lean:93/89）。**circle 版
+  `Lp ℂ 2 haarAddCircle` の sampling engine は使わない**（line-Plancherel が正解）。
+- **grid spacing の訂正**: サンプル間隔は真間隔 `Δ = T/n`（`sampledSignal` は spacing `T/n` で標本化、
+  ShannonHartleyOperational.lean:110）で、`1/(2W)` **ではない**（`n = ⌊2WT⌋` floor で `Δ ≠ 1/(2W)`）。
+  連続 encoder を真間隔 `Δ` で reconstruct し `[−n/(2T), n/(2T)] ⊆ [−W,W]`（`n/(2T) ≤ W`）に帯域制限。
+  isometry は EXACT: `∫_ℝ f² = Δ·∑ aᵢ² = ∑(sampledSignalᵢ)² = ∑ cᵢ² ≤ n·P' = ⌊2WT⌋·(P/(2W)) ≤ T·P`。
+- **leg 2 — BddAbove crude-converse leg（★ 新規、旧計画欠落）**: `contAwgnMaxMessages = sSup {M : ℕ | …}`
+  （ShannonHartleyOperational.lean:138）を `le_csSup` で下界するには集合の **`BddAbove`** が必須。ℕ 上で
+  unbounded `sSup` は junk `0` を返す（repo は `Cramer/Cramer.lean` / `ParallelGaussian/PerCoord.lean` で
+  この ℕ-sSup-returns-0 罠に既遭遇）。この `BddAbove` は crude converse（任意の有限上界でよい、tight ~2WT
+  カウントは不要）ゆえ**壁非依存**。**証明する**（`awgn_converse` を sample vector に適用 + sample-vs-integral
+  energy 制御）— **仮説化は禁止**（`≥` 定理に hyp 化すると borderline load-bearing）。→ Phase 3 file が
+  `AWGN.Converse` も import する理由（`Achievability` だけでない）。~150–350 行。
+- **leg 3 — assembly（`awgn_achievability` 配線）**: 各 `ε ∈ Ioo 0 1` と大 `T` に `sampleCount = ⌊2WT⌋`
+  を code の自由 field に代入（C3/C4 ✓）→ `awgn_achievability` で discrete `AwgnCode M n P'`
+  （`M ≥ ⌈exp(n·(1/2)log(1+SNR'))⌉ = ⌈exp(T·W·log(1+SNR'))⌉`）→ leg 1 synthesis で連続 encoder 化 →
+  `le_csSup`（leg 2 の BddAbove 消費）+ `limsup`/`⨅ε` 操作で `⨅ε contAwgnRate ≥ W·log(1+P/(N₀·W))`。
+  **`sampledSignal` √(T/n) 正規化の役割**: 持ち上げた連続 encoder の `sampledSignal` が discrete codeword `cᵢ`
+  と一致し、`√(T/n)` isometry で per-sample エネルギー ↔ 連続電力の Parseval 整合 → per-sample SNR = `P/(N₀·W)`
+  で `awgn_achievability` の誤り評価がそのまま `averageError ≤ ε` に移る（この正規化がないと oversampling で SNR
+  が膨らみ崩れる = 非退化の要）。誤り測度 match は verbatim 確認済（下記）。
+
+**build order（skeleton-first, then bottom-up）**: (0) skeleton = 全 bridge 補題 + BddAbove 補題 +
+`contAwgn_ge_shannonHartley` assembly を typed `sorry` で置き type-check done（committable、Parseval 定数 `Δ`
++ 帯域制限区間 `n/(2T)` を pin）→ (1) bridge sub-module（leg 1）を **interpolation-exactness (ii, `sincN_int_eq_kronecker`
+再利用, ~30–80) → band-limited synthesis (i, `𝓕` linearity + sinc↔boxcar, ~100–200) → W-scaling/dilation (iv, ~50–150)
+→ Parseval energy (iii, line-Plancherel × sinc, ~150–300、最重)** の順で fill → (2) BddAbove leg（leg 2, ~150–350）
+→ (3) assembly（leg 3、`le_csSup` + 誤り測度等式 + `limsup`/`⨅ε`）。**bridge-sub-module-first が
+top-down-with-sorries より de-risk**（2 つの feasibility unknown は leg 1–2 にあり assembly でない）。
+
+**誤り測度 match（verbatim 確認済）**: `Code.errorProbAt W m = Measure.pi (fun i ↦ W (encoder m i)) (errorEvent m)`
+（ChannelCoding/Basic.lean:192）、`awgnChannel N x = gaussianReal x N`（AWGN/Basic.lean:69）⇒ `N = (N₀/2).toNNReal`
++ `sampledSignal = cᵢ` で `ContAwgnCode.errorProbAt`（ShannonHartleyOperational.lean:121）に一致。
+`IsAwgnChannelMeasurable` は無条件 dischargeable（`isAwgnChannelMeasurable`, AWGN/ChannelMeasurability.lean）。
+
+**依存（DAG edge）**: Phase 1 + WhittakerShannon/NormalizedSinc（CLOSED）+ AWGN.awgn_achievability（genuine）
++ AWGN.awgn_converse（genuine、leg 2 BddAbove 専用）→ Phase 3。**Phase 2 には依存しない（確定）**。
 **循環チェック**: サンプリング rate `2W` / `sampleCount = ⌊2WT⌋` は achievability 側の**構成選択**であり
 def の入力でない（C3 ✓）。`contAwgnMaxMessages` を `⌊2WT⌋` サンプルに制限せず、その値以上のメッセージ数を
-**達成できる**と示すだけ（C1/C2 ✓）。
+**達成できる**と示すだけ（C1/C2 ✓）。leg 2 の BddAbove も crude 有限上界（tight 2WT 次元を def に埋めない）ゆえ非循環。
 **受入基準**:
-- **proof-done 条件**: `≥` を genuine 証明（`awgn_achievability` + `whittaker_shannon_bandlimited` +
-  Parseval 電力橋 + 雑音サンプル iid Gaussian）。壁 sorry を含まず閉じられれば **`≥` 方向 genuine**。
-- **honest-sorry 分解条件**: 上記 GO/NO-GO で edge-effect が閉じない箇所のみ sorry。
-**retreat line**: edge-effect が guard-interval で閉じない場合、その補題を
-`sorry + @residual(wall:nyquist-2w-dof)`（converse 壁と同核・下位カウント側）。主要 leg
-（`awgn_achievability` 呼出・reconstruction）は genuine の前提。
+- **proof-done 条件（= 目標）**: `≥` を fully genuine 証明（synthesis bridge + Parseval 電力橋 + BddAbove
+  crude converse + `awgn_achievability` + 雑音サンプル iid Gaussian）。**Phase 3 に壁は無い**（GO 確定）。
+**retreat line**: **Phase 3 は wall を生まない**（GO 確定で `wall:nyquist-2w-dof` 一部共有は不発）。
+予期せぬ Mathlib 不在で詰まった個別補題のみ、その時点で slug を切って honest `sorry + @residual(<class>:<slug>)`
+（load-bearing hyp 化・BddAbove の仮説化は禁止）。
 
 ---
 
@@ -304,7 +338,7 @@ theorem contAwgn_eq_shannonHartley ... :=
 |---|---|---|
 | Phase 1（雑音測度） | proposed wall `cont-awgn-noise-measure`（**不発**） | route β（per-sample iid Gaussian を `errorProbAt` に inline）採用で `IsGaussianProcess` 依存が消え、当初 proposed だった雑音測度壁は不要になった（register 追加せず、code 側 slug も生成されない） |
 | Phase 2（prolate 固有値集中） | `wall:nyquist-2w-dof`（**最有力・確定的**） | 真の壁核。作用素定義 + 自己共役 + コンパクト性は genuine 目標、**固有値集中 asymptotic のみ**が genuine 壁（loogle `Found 0`: prolate/Slepian、self-build ~800-1500 行）。詰まれば `prolate_eigenvalue_count` を honest sorry で分解 |
-| Phase 3（achievability edge-effect） | `wall:nyquist-2w-dof`（**一部共有の可能性 = GO/NO-GO**） | sinc-tail essential time-limiting が guard-interval で閉じれば**壁非依存で genuine**、閉じなければ下位カウント側で同核を一部共有。主要 leg（`awgn_achievability` + reconstruction）は genuine |
+| Phase 3（achievability） | **なし（GO 確定、壁非依存）** | edge-effect dissolve（`encoder_power` in-window 課金 + exact sinc isometry `∫_ℝf² ≤ T·P`）で `wall:nyquist-2w-dof` 一部共有は不発。全 leg（synthesis bridge + Parseval + BddAbove crude converse + `awgn_achievability`）genuine 目標 |
 | Phase 4（converse） | `wall:nyquist-2w-dof`（**Phase 2 transitive 継承**） | Phase 2 の `prolate_eigenvalue_count` を継承。Phase 4 独自の新 sorry は作らない |
 | Phase 5-min（達成済） | `wall:nyquist-2w-dof`（現 mainline 着地点） | `contAwgn_eq_shannonHartley` body の単一 honest wall-sorry。**load-bearing predicate 除去後の honest tier-2（commit b8770fce）** |
 
@@ -321,16 +355,18 @@ theorem contAwgn_eq_shannonHartley ... :=
 ```
 [達成済] Phase 0 ─► Phase 1 ─► Phase 5-min（load-bearing predicate 除去 + 単一 wall-sorry = honest tier-2）
 
-[stretch] Phase 1 ─► Phase 3 (achievability, 壁非依存の公算・起点) ─┐
-                                                                    ├─► Phase 5-full（closure）
-          Phase 0 ─► Phase 2 (prolate/壁核) ─► Phase 4 (converse) ──┘
+[stretch] Phase 1 ─► Phase 3 (achievability, 壁非依存 GO 確定・起点) ─┐
+                                                                     ├─► Phase 5-full（closure）
+          Phase 0 ─► Phase 2 (prolate/壁核) ─► Phase 4 (converse) ───┘
 ```
 
 - **mainline（達成）**: `0 → 1 → 5-min`。type-check done、honest tier-2（commit b8770fce）。
-- **stretch（残）**: `3`（achievability genuine 化・起点）→ `2 → 4`（converse、壁核）→ `5-full`（closure）。
+- **stretch（残）**: `3`（achievability genuine 化・起点、GO 確定）→ `2 → 4`（converse、壁核）→ `5-full`（closure）。
 - **ripple**: `IsTwoWDegreesOfFreedom` 削除は Phase 5-min で完了済（consumer = `shannon_hartley_formula`
-  1 decl・同 file、`dep_consumers` + `rg` 確認済、ShannonHartley.lean 内に閉じた）。`InformationTheory.lean`
-  の import は登録済（ShannonHartley / WhittakerShannon / ShannonHartleyOperational）。
+  1 decl・同 file、`dep_consumers` + `rg` 確認済、ShannonHartley.lean 内に閉じた）。登録済 import =
+  ShannonHartley / WhittakerShannon / ShannonHartleyOperational。**Phase 3 で新 file
+  `ShannonHartleyAchievability.lean` を作成時、`InformationTheory.lean` に import 追記が要る**（実装 owner 担当、
+  import cycle なし = Converse/Achievability/WhittakerShannon は Operational を import しない）。
 
 ---
 
@@ -338,11 +374,14 @@ theorem contAwgn_eq_shannonHartley ... :=
 
 append-only。決着済 entry は削除（git が履歴）、active な判断のみ残す（≤ 10 entry）。
 
-1. **stretch 起点 = Phase 3（achievability）を Phase 2（prolate）より先に**: achievability は
-   `awgn_achievability` + `whittaker_shannon_bandlimited`（両 genuine/CLOSED）で**壁非依存に閉じる公算**
-   （codebook 構成側 = converse 次元カウント不要）。先に閉じれば残壁が converse 単独に可視化され、
-   Phase 2 の重投資判断が明確化。**stretch 冒頭の GO/NO-GO = Phase 3 の sinc-tail edge-effect が
-   guard-interval で `limsup(T→∞)` 洗えるか**（feasibility unknown、実装の最初に判定）。
+1. **Phase 3 achievability GO/NO-GO = RESOLVED GO（壁非依存、確定）** — proof-pivot-advisor gate
+   2026-07-15、verbatim code 照合。最大リスクだった sinc-tail edge-effect は **dissolve**（`encoder_power` は
+   in-window `∫_{[0,T]}f² ≤ T·P` だけ課金、exact sinc isometry で全直線 `∫_ℝf² ≤ T·P` ⇒ `∫_{[0,T]} ≤ ∫_ℝ ≤ T·P`、
+   窓外漏れは制約を緩める）。prolate 不要、`nyquist-2w-dof` は converse 専用に確定。付随 verbatim 訂正 3 点を
+   Phase 3 節に反映: (a) grid 間隔は真間隔 `Δ = T/n` であって `1/(2W)` でない（isometry EXACT）、(b) **★ 新 leg —
+   BddAbove crude-converse**（ℕ-sSup-returns-0 罠、`le_csSup` 前提、証明必須・仮説化禁止、Phase 3 が
+   `AWGN.Converse` を import する理由）、(c) reconstruction は analysis の `whittaker_shannon_bandlimited` でなく
+   **synthesis bridge** + line-Plancherel（circle でない）。攻略順は Phase 3 → 2 → 4 → 5-full 不変、再見積 500–850 行。
 2. **真の壁核は converse 側の `nyquist-2w-dof` 単一**: Phase 2（固有値集中）→ Phase 4（converse 上位
    カウント）に閉じ込める。Phase 1 雑音測度 / Phase 3 achievability は壁非依存を第一目標。
 3. **`sampledSignal` の `√(T/n)` 正規化が両方向の要**: achievability（Phase 3）では per-sample エネルギー
