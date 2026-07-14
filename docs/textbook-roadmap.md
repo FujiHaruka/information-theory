@@ -22,7 +22,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 
 **残る真の scope-out (章内)**:
 
-- **Ch.9 Shannon-Hartley operational capacity (prolate DOF-per-second)**: Whittaker-Shannon **sampling theorem itself は 2026-07-14 に proof done** (`whittaker_shannon_hasSum` + `whittaker_shannon_bandlimited`、2 headline とも sorryAx-free、監査 PASS、Fourier 級数ルート)。残る scope-out は operational な `IsTwoWDegreesOfFreedom` 容量恒等式の真核 1 点のみ = 時間帯域幅 DOF-per-second カウント (prolate-spheroidal / Landau-Pollak-Slepian、Mathlib 不在)。周辺 (連続時間チャネル / AEP / noise 測度) は定義可能で壁でない。load-bearing predicate で honest 開示継続 (`@residual(wall:nyquist-2w-dof) @audit:retract-candidate`)。
+- **Ch.9 Shannon-Hartley operational capacity (prolate DOF-per-second)**: Whittaker-Shannon **sampling theorem itself は 2026-07-14 に proof done** (`whittaker_shannon_hasSum` + `whittaker_shannon_bandlimited`、2 headline とも sorryAx-free、監査 PASS、Fourier 級数ルート)。**operational capacity の mainline は 2026-07-14 に honest tier-2 到達** (commit b8770fce): load-bearing `IsTwoWDegreesOfFreedom` predicate を除去し operational capacity を非循環に def 化 (新 file `ShannonHartleyOperational.lean`、`contAwgnOperationalCapacity` = `⨅ε limsup (log M(T,ε))/T`、`sampledSignal` の `√(T/n)` tight-frame 正規化で非退化)、headline `contAwgn_eq_shannonHartley` (`@[entry_point]`) を単一 wall-sorry で publish (`sorry -- @residual(wall:nyquist-2w-dof)`、独立監査 PASS)。残る scope-out はこの真核 1 点のみ = 時間帯域幅 DOF-per-second カウント (prolate-spheroidal / Landau-Pollak-Slepian、Mathlib 不在、converse 側限定)。周辺 (連続時間チャネル / AEP / noise 測度) は定義可能で壁でない。**stretch = full closure 進行中** (壁 sorry を genuine 証明で除去 → 0-sorry 復帰、起点 = Phase 3 achievability) → `shannon/shannon-hartley-operational-moonshot-plan.md`。
 
 **当初 scope-out だが genuine closure して復帰済 (Ch.10)**:
 
@@ -48,7 +48,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 | 6 | Gambling | 🟡 | `doublingRate_le_proportional`, `_eq_proportional_iff`, `sideInfo_doublingRate_increment_eq_mutualInfo`, `condDoublingRate_le_proportional`, `seqLogWealth_div_tendsto_doublingRate`, `seqLogWealth_proportional_asymptotically_optimal`, `seqLogWealth_tendsto_atTop/atBot_...` (stock-market は scope-out) |
 | 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `channel_coding_feedback_converse`, `shannon_converse_single_shot` (Verdú-Han), `channelCoding_strong_converse_asymptotic` (Wolfowitz 強逆) |
 | 8 | Differential Entropy | ✅ | `differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le`, `KLDivContinuous`, `jointDifferentialEntropyPi_le_sum` (n-var subadditivity) |
-| 9 | Gaussian Channel | 🟢 (①②③) | ① `awgn_capacity_closed_form_genuine` = (1/2)log(1+P/N)。② parallel Gaussian water-filling proof done (`parallel_gaussian_capacity_formula_minimal` sorryAx-free, achiever+converse+per-coord+L-WF1+`KKT.isWaterFillingOptimal_of_kkt`)。③ operational `awgn_achievability` + `awgn_converse`。Whittaker-Shannon 標本化定理は proof done (`whittaker_shannon_hasSum` + `whittaker_shannon_bandlimited`、2 headline sorryAx-free)、残 scope-out は operational 容量 `IsTwoWDegreesOfFreedom` (連続時間 AEP) のみ |
+| 9 | Gaussian Channel | 🟢 (①②③) | ① `awgn_capacity_closed_form_genuine` = (1/2)log(1+P/N)。② parallel Gaussian water-filling proof done (`parallel_gaussian_capacity_formula_minimal` sorryAx-free, achiever+converse+per-coord+L-WF1+`KKT.isWaterFillingOptimal_of_kkt`)。③ operational `awgn_achievability` + `awgn_converse`。Whittaker-Shannon 標本化定理は proof done (`whittaker_shannon_hasSum` + `whittaker_shannon_bandlimited`、2 headline sorryAx-free)、operational 容量は mainline honest tier-2 達成 (`contAwgn_eq_shannonHartley` 単一 wall-sorry、load-bearing predicate 除去済、commit b8770fce)、残 scope-out は prolate DOF 壁核 1 点のみ (stretch closure 進行中) |
 | 10 | Rate Distortion | ✅ | `rate_distortion_achievability`, `rate_distortion_achievability_operational` (無条件 operational, full-support), `rate_distortion_achievability_operational_general` (任意 source, full-support 除去), `rate_distortion_converse_single_shot/_specified`, `rateDistortionFunction_convexOn` (measure 形), `rate_distortion_converse_n_letter_singleLetter` |
 | 11 | Statistics | 🟢 | `stein_*`, `sanov_ldp_*`, `tvNorm_le_sqrt_klDiv` (+`_div_two` sharp Pinsker), `conditionalStronglyTypicalSlice_mass_ge`, `chernoff_lemma_achievability` + `chernoff_converse`, `hoeffding_tradeoff_exp`, `cramer_lower_boundary_unconditional`。Hoeffding interior 述語 island (`IsHoeffdingInteriorGradient/Minimizer` 系 9 decl) は dead 確定 (production `hoeffding_tradeoff_exp` sorryAx-free で bypass) → 物理削除済 (2026-07-13) |
 | 12 | Maximum Entropy | ✅ | `entropy_le_log_card`, `entropy_eq_log_card_iff`, `entropy_le_gibbs_of_constraints`, `expFamily_maximizes_entropy_of_KKT` |
@@ -62,7 +62,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 
 - **(a) 量の壁** (低、未構築): well-understood だが Mathlib に補題不在で一から数百行。現存例なし (Slepian-Wolf error bound / AWGN continuous AEP 等はいずれも closure 済)。
 - **(b) 解析の壁** (中〜高): 計算体系自体を建てる型。EPI Stam / de Bruijn は closure 済。現存 frontier 例 0。
-- **(c) 数学的深さ** (高、真の壁): Ch.9 operational continuous-time AEP 部のみ (`IsTwoWDegreesOfFreedom`、連続時間チャネル未モデル)。標本化定理そのものは 2026-07-14 overturn (proof done)。
+- **(c) 数学的深さ** (高、真の壁): Ch.9 operational 容量の prolate DOF-per-second カウント 1 点のみ (`contAwgn_eq_shannonHartley` の `@residual(wall:nyquist-2w-dof)`、converse 側限定)。標本化定理は 2026-07-14 overturn (proof done)、operational mainline も同日 honest tier-2 到達 (load-bearing predicate 除去済)。
 - **(d) 実は選択** (de-circularize 済): "ROI 無し" を「壁」と呼んでいたもの、現在は honest 開示のみ。
 - **(e) scaffolding-was-false** (中〜大): 既存縮約 predicate / 定義が偽 / 循環 / 不健全で discharge 不能。過去例は全 closure or 削除済。
 
@@ -73,7 +73,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 **proof 層はほぼ全 closure 済**。scope 内で残るのは:
 
 - **教科書原稿 (層 3)**: genuine ✅ 章を prose 化する作業が主フロンティア (下記「次の一手」)。
-- **真の壁 (scope-out 確定・honest 開示)**: Ch.9 operational 容量の時間帯域幅 DOF-per-second カウント (prolate-spheroidal / Landau-Pollak-Slepian、Mathlib 不在) 1 点のみ (`IsTwoWDegreesOfFreedom` load-bearing、`@residual(wall:nyquist-2w-dof)`)。周辺の連続時間チャネル / AEP / noise 測度は定義可能で壁でない。標本化定理そのものは 2026-07-14 に proof done (`whittaker_shannon_hasSum` + `whittaker_shannon_bandlimited` sorryAx-free)。
+- **真の壁 (scope-out 確定・honest 開示)**: Ch.9 operational 容量の時間帯域幅 DOF-per-second カウント (prolate-spheroidal / Landau-Pollak-Slepian、Mathlib 不在) 1 点のみ。operational mainline は 2026-07-14 に honest tier-2 到達 (load-bearing `IsTwoWDegreesOfFreedom` 除去、`contAwgn_eq_shannonHartley` 単一 wall-sorry `@residual(wall:nyquist-2w-dof)`、commit b8770fce)。周辺の連続時間チャネル / AEP / noise 測度は定義可能で壁でない。標本化定理そのものは 2026-07-14 に proof done。**stretch = full closure 進行中** (壁 sorry を genuine 除去 → 0-sorry、起点 = Phase 3 achievability) → `shannon/shannon-hartley-operational-moonshot-plan.md`。
 - ~~壁ではない frontier (regularity 緩和): Ch.10 完全一般 source 版~~ **CLOSED (2026-07-13)**: `rate_distortion_achievability_operational_general` (`@[entry_point]`, sorryAx-free, `@audit:ok`)。full-support 前提 (`hP_supp`) を台 subtype 制限 + code lift で除去、新 load-bearing hyp なし。詳細 → `rate-distortion-achievability-general-source-plan.md`。
 
 legacy migration は完了済 (active な `@audit:suspect/staged/defer` タグ 0 件、`@audit:closed-by-successor` project-wide 0 件、circular `:= h` defect 0 件)。
