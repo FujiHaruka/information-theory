@@ -30,13 +30,13 @@ dissolved by a definition redesign, restoring the true-as-framedness of
 complexification (a genuine band-limit constraint, not junk-`0`), and `ContAwgnCode.encoder`
 carries `encoder_continuous` + `encoder_memLp` regularity fields that pin each codeword to its
 canonical continuous `L²` representative. The Paley-Wiener sup bound `bandlimited_sup_bound`
-(`|f(t)| ≤ √(2W)·‖f‖₂`, a true theorem whose only Lean gap is the `L²↔L¹` Fourier-agreement
-bridge) caps the pointwise samples by the *full-line* `L²` energy `‖f‖₂` (the norm over all of
-`ℝ`); the further tie from `‖f‖₂` to the *window* energy `∫_{[0,T]} f² ≤ T·P` is not supplied by
-the sup bound alone but by the band-limit + essential-time-limitation carried by the
-`nyquist-2w-dof` structure. Together they leave no unbounded-message-set counterexample.
-`bandlimited_sup_bound` carries an honest plan-tracked bridge residual;
-the mainline `sorry` is the genuine `wall:nyquist-2w-dof` degrees-of-freedom count.
+(`|f(t)| ≤ √(2W)·‖f‖₂`) is now fully proven (`sorryAx`-free) over the `L²↔L¹` Fourier-agreement
+bridges `l2Fourier_eq_fourierIntegral` / `l2FourierInv_eq_fourierIntegralInv`; it caps the
+pointwise samples by the *full-line* `L²` energy `‖f‖₂` (the norm over all of `ℝ`). The further
+tie from `‖f‖₂` to the *window* energy `∫_{[0,T]} f² ≤ T·P` is not supplied by the sup bound alone
+but by the band-limit + essential-time-limitation carried by the `nyquist-2w-dof` structure.
+Together they leave no unbounded-message-set counterexample. The only remaining `sorry` is the
+genuine `wall:nyquist-2w-dof` degrees-of-freedom count.
 
 ## Main definitions
 
@@ -229,16 +229,97 @@ theorem l2FourierInv_eq_fourierIntegralInv (f : ℝ → ℂ)
 representative, and this bound caps the sample values by the codeword energy — dissolving the
 pointwise-vs-a.e. defect that made an `encoder`-only code unbounded.
 
-This is a true theorem; its only Mathlib gap is the `L²↔L¹` Fourier-agreement bridge
-(`l2Fourier_eq_fourierIntegral`, `f ∈ L¹∩L²`), which is plumbing over the existing tempered-
-distribution scaffolding (`Lp.toTemperedDistribution` / `Lp.fourier_toTemperedDistribution_eq`),
-not a genuine wall. It is stated here as the named honest carrier of that residual.
-
-@residual(plan:shannon-hartley-operational-moonshot-plan) -/
+The proof realizes the signal as the inverse Fourier transform of its (compactly supported, hence
+`L¹`) spectrum via `l2FourierInv_eq_fourierIntegralInv`, bounds the pointwise inverse transform by
+the `L¹` norm of the spectrum, and closes with Hölder on `[-W, W]` and Plancherel. -/
 theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
     (hf : MemLp f 2 volume) (hbl : IsBandlimited f W) (hcont : Continuous f) (t : ℝ) :
     |f t| ≤ Real.sqrt (2 * W) * (eLpNorm f 2 volume).toReal := by
-  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+  obtain ⟨hfc2, hspec⟩ := hbl
+  set fc : ℝ → ℂ := fun t => (f t : ℂ) with hfcdef
+  set G : Lp ℂ 2 volume := 𝓕 (hfc2.toLp fc) with hG
+  -- The band `S = [-W, W]`; its complement is the essential support of `hspec`.
+  set S : Set ℝ := Set.Icc (-W) W with hSdef
+  have hS_meas : MeasurableSet S := measurableSet_Icc
+  have hSc_meas : MeasurableSet Sᶜ := hS_meas.compl
+  have hSc : Sᶜ = {ξ : ℝ | W < |ξ|} := by
+    ext x
+    simp only [hSdef, Set.mem_compl_iff, Set.mem_Icc, Set.mem_setOf_eq, ← abs_le, not_le]
+  rw [← hSc] at hspec
+  have hvolS : volume S = ENNReal.ofReal (2 * W) := by
+    rw [hSdef, Real.volume_Icc]; ring_nf
+  -- (b) `G` vanishes a.e. off `S`, hence `G ∈ L¹`.
+  have hcompl0 : Sᶜ.indicator (⇑G) =ᵐ[volume] 0 :=
+    indicator_ae_eq_zero_of_restrict_ae_eq_zero hSc_meas hspec
+  have hind_eq : (⇑G) =ᵐ[volume] S.indicator (⇑G) := by
+    filter_upwards [hcompl0] with x hx
+    by_cases hxS : x ∈ S
+    · rw [Set.indicator_of_mem hxS]
+    · rw [Set.indicator_of_notMem hxS]
+      have hxSc : x ∈ Sᶜ := hxS
+      rw [show (⇑G) x = Sᶜ.indicator (⇑G) x from (Set.indicator_of_mem hxSc _).symm]
+      simpa using hx
+  have hG1 : MemLp (⇑G) 1 volume := by
+    have hind_L1 : MemLp (S.indicator (⇑G)) 1 volume :=
+      ((Lp.memLp G).indicator hS_meas).mono_exponent_of_measure_support_ne_top
+        (s := S) (fun x hx => Set.indicator_of_notMem hx _)
+        (by rw [hvolS]; exact ENNReal.ofReal_ne_top) (by norm_num)
+    exact (memLp_congr_ae hind_eq).mpr hind_L1
+  have hG1_int : Integrable (⇑G) volume := memLp_one_iff_integrable.mp hG1
+  -- (c) `fc =ᵐ 𝓕⁻ ⇑G` via the inverse bridge and the `L²` Fourier pair.
+  have hfc_ae : fc =ᵐ[volume] 𝓕⁻ (⇑G) := by
+    have hbridge := l2FourierInv_eq_fourierIntegralInv (⇑G) hG1 (Lp.memLp G)
+    have hinv : 𝓕⁻ (𝓕 (hfc2.toLp fc)) = hfc2.toLp fc := by simp
+    rw [Lp.toLp_coeFn G (Lp.memLp G), hG, hinv] at hbridge
+    exact (hfc2.coeFn_toLp.symm).trans hbridge
+  -- (d) both sides are continuous, so the a.e. equality is everywhere.
+  have hfc_cont : Continuous fc := Complex.continuous_ofReal.comp hcont
+  have hFinv_cont : Continuous (𝓕⁻ (⇑G)) :=
+    VectorFourier.fourierIntegral_continuous (μ := volume) (L := -innerₗ ℝ)
+      Real.continuous_fourierChar (by fun_prop) hG1_int
+  have hpt : fc = 𝓕⁻ (⇑G) := (hfc_cont.ae_eq_iff_eq (μ := volume) hFinv_cont).mp hfc_ae
+  -- (e) `|f t| = ‖𝓕⁻ ⇑G t‖ ≤ ∫ ‖⇑G‖`.
+  have he : |f t| ≤ ∫ ξ, ‖(⇑G) ξ‖ ∂volume := by
+    have hfeq : (f t : ℂ) = 𝓕⁻ (⇑G) t := congrFun hpt t
+    rw [show |f t| = ‖(f t : ℂ)‖ from by rw [Complex.norm_real, Real.norm_eq_abs],
+      hfeq, Real.fourierInv_eq]
+    refine (norm_integral_le_integral_norm _).trans (le_of_eq ?_)
+    simp_rw [Circle.norm_smul]
+  -- (f)+(g) `∫ ‖⇑G‖ ≤ √(2W)·‖f‖₂` by Hölder on `S` and Plancherel.
+  have h_int_eq : ∫ ξ, ‖(⇑G) ξ‖ ∂volume = (eLpNorm (⇑G) 1 volume).toReal := by
+    rw [eLpNorm_one_eq_lintegral_enorm, ← ofReal_integral_norm_eq_lintegral_enorm hG1_int,
+      ENNReal.toReal_ofReal (integral_nonneg fun _ => norm_nonneg _)]
+  have hnorm : (eLpNorm (⇑G) 2 volume).toReal = (eLpNorm f 2 volume).toReal := by
+    rw [← Lp.norm_def G, hG, Lp.norm_fourier_eq, Lp.norm_def]
+    congr 1
+    rw [eLpNorm_congr_ae hfc2.coeFn_toLp]
+    exact eLpNorm_congr_norm_ae
+      (Filter.Eventually.of_forall fun x => by simp only [hfcdef, Complex.norm_real])
+  have h_holder :
+      eLpNorm (⇑G) 1 volume ≤ eLpNorm (⇑G) 2 volume * ENNReal.ofReal (Real.sqrt (2 * W)) := by
+    have e1 : eLpNorm (⇑G) 1 volume = eLpNorm (⇑G) 1 (volume.restrict S) := by
+      rw [eLpNorm_congr_ae hind_eq, eLpNorm_indicator_eq_eLpNorm_restrict hS_meas]
+    have e2 : eLpNorm (⇑G) 2 volume = eLpNorm (⇑G) 2 (volume.restrict S) := by
+      rw [eLpNorm_congr_ae hind_eq, eLpNorm_indicator_eq_eLpNorm_restrict hS_meas]
+    rw [e1, e2]
+    have hae : AEStronglyMeasurable (⇑G) (volume.restrict S) :=
+      (Lp.memLp G).aestronglyMeasurable.restrict
+    refine (eLpNorm_le_eLpNorm_mul_rpow_measure_univ (p := 1) (q := 2) (by norm_num) hae).trans
+      (le_of_eq ?_)
+    congr 1
+    have hb : (0 : ℝ) ≤ 2 * W := by positivity
+    rw [Measure.restrict_apply_univ, hvolS,
+      show (1 / (1 : ℝ≥0∞).toReal - 1 / (2 : ℝ≥0∞).toReal) = (1 / 2 : ℝ) from by norm_num,
+      Real.sqrt_eq_rpow, ← ENNReal.ofReal_rpow_of_nonneg hb (by norm_num : (0 : ℝ) ≤ 1 / 2)]
+  refine he.trans ?_
+  calc ∫ ξ, ‖(⇑G) ξ‖ ∂volume
+      = (eLpNorm (⇑G) 1 volume).toReal := h_int_eq
+    _ ≤ (eLpNorm (⇑G) 2 volume * ENNReal.ofReal (Real.sqrt (2 * W))).toReal :=
+        ENNReal.toReal_mono
+          (ENNReal.mul_ne_top (Lp.memLp G).2.ne ENNReal.ofReal_ne_top) h_holder
+    _ = (eLpNorm (⇑G) 2 volume).toReal * Real.sqrt (2 * W) := by
+        rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (Real.sqrt_nonneg _)]
+    _ = Real.sqrt (2 * W) * (eLpNorm f 2 volume).toReal := by rw [hnorm, mul_comm]
 
 /-! ## §B — Continuous-time AWGN code -/
 
