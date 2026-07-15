@@ -1,5 +1,7 @@
 import Mathlib.Analysis.Fourier.FourierTransform
 import Mathlib.Analysis.Fourier.LpSpace
+import Mathlib.Analysis.Distribution.TemperedDistribution
+import Mathlib.Analysis.Distribution.AEEqOfIntegralContDiff
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.MeasureTheory.Constructions.Pi
@@ -86,7 +88,7 @@ namespace InformationTheory.Shannon.ShannonHartley
 set_option linter.unusedVariables false
 
 open MeasureTheory ProbabilityTheory Filter
-open scoped ENNReal NNReal Topology FourierTransform
+open scoped ENNReal NNReal Topology FourierTransform SchwartzMap ContDiff RealInnerProductSpace
 
 /-! ## §A — Band-limited signals -/
 
@@ -103,6 +105,124 @@ def IsBandlimited (f : ℝ → ℝ) (W : ℝ) : Prop :=
   ∃ hf : MemLp (fun t : ℝ => (f t : ℂ)) 2 volume,
     (𝓕 (hf.toLp (fun t : ℝ => (f t : ℂ))) : Lp ℂ 2 volume)
       =ᵐ[volume.restrict {ξ : ℝ | W < |ξ|}] 0
+
+/-- **`L²`-`L¹` Fourier-agreement bridge.** For `f ∈ L¹ ∩ L²`, the coeFn of the `L²`-Fourier
+transform of the canonical `Lp` representative of `f` agrees almost everywhere with the classical
+`L¹` Fourier integral `𝓕 f` (the pointwise `VectorFourier.fourierIntegral`).
+
+This is the plumbing that connects the abstract `L²`-Fourier isometry `𝓕 : Lp ℂ 2 → Lp ℂ 2` to the
+concrete pointwise integral, over the tempered-distribution scaffolding. Both objects define the
+same tempered distribution: the `L²`-Fourier side via `Lp.fourier_toTemperedDistribution_eq`, the
+`L¹` pointwise side via the Fourier self-adjointness (multiplication formula)
+`VectorFourier.integral_fourierIntegral_smul_eq_flip`; equality of tempered distributions on the
+locally integrable class forces almost-everywhere equality
+(`ae_eq_of_integral_contDiff_smul_eq`). -/
+theorem l2Fourier_eq_fourierIntegral (f : ℝ → ℂ)
+    (hf1 : MemLp f 1 volume) (hf2 : MemLp f 2 volume) :
+    ((𝓕 (hf2.toLp f) : Lp ℂ 2 volume) : ℝ → ℂ) =ᵐ[volume] 𝓕 f := by
+  have hf1_int : Integrable f volume := memLp_one_iff_integrable.mp hf1
+  set G : Lp ℂ 2 volume := 𝓕 (hf2.toLp f) with hG
+  have hlocG : LocallyIntegrable (⇑G) volume :=
+    (Lp.memLp G).locallyIntegrable (by norm_num : (1 : ℝ≥0∞) ≤ 2)
+  have hcont_Ff : Continuous (𝓕 f) := by
+    rw [← Real.fourierTransform_toLp hf1]
+    exact (Real.Lp.fourierTransform hf1.toLp).continuous
+  have hlocFf : LocallyIntegrable (𝓕 f) volume := hcont_Ff.locallyIntegrable
+  refine ae_eq_of_integral_contDiff_smul_eq hlocG hlocFf ?_
+  intro g hg_diff hg_supp
+  -- Complexified compactly supported smooth test function as a Schwartz map.
+  have hφ1 : HasCompactSupport (Complex.ofRealCLM ∘ g) := hg_supp.comp_left rfl
+  have hφ2 : ContDiff ℝ ∞ (Complex.ofRealCLM ∘ g) := Complex.ofRealCLM.contDiff.comp hg_diff
+  set φ : 𝓢(ℝ, ℂ) := hφ1.toSchwartzMap hφ2 with hφdef
+  have hφ_coe : ∀ x, φ x = (g x : ℂ) := fun x => rfl
+  -- Real smul `g x • z` equals the multiplication `φ x • z` by the complexification of `g`.
+  have hsmul : ∀ (x : ℝ) (z : ℂ), g x • z = φ x • z := by
+    intro x z
+    rw [hφ_coe, Complex.real_smul, smul_eq_mul]
+  -- Step A: rewrite the `L²` side over the tempered-distribution scaffolding.
+  have hdist : (G : 𝓢'(ℝ, ℂ)) = 𝓕 ((hf2.toLp f : Lp ℂ 2 volume) : 𝓢'(ℝ, ℂ)) := by
+    rw [hG]; exact (Lp.fourier_toTemperedDistribution_eq (hf2.toLp f)).symm
+  have hA : ∫ x, g x • (⇑G) x ∂volume = ∫ x, (𝓕 φ : 𝓢(ℝ, ℂ)) x • f x ∂volume := by
+    calc ∫ x, g x • (⇑G) x ∂volume
+        = ∫ x, φ x • (⇑G) x ∂volume :=
+          integral_congr_ae (Filter.Eventually.of_forall fun x => hsmul x (G x))
+      _ = (G : 𝓢'(ℝ, ℂ)) φ := (Lp.toTemperedDistribution_apply G φ).symm
+      _ = 𝓕 ((hf2.toLp f : Lp ℂ 2 volume) : 𝓢'(ℝ, ℂ)) φ := by rw [hdist]
+      _ = ((hf2.toLp f : Lp ℂ 2 volume) : 𝓢'(ℝ, ℂ)) (𝓕 φ) := TemperedDistribution.fourier_apply _ _
+      _ = ∫ x, (𝓕 φ : 𝓢(ℝ, ℂ)) x • (hf2.toLp f : ℝ → ℂ) x ∂volume := Lp.toTemperedDistribution_apply _ _
+      _ = ∫ x, (𝓕 φ : 𝓢(ℝ, ℂ)) x • f x ∂volume := by
+          refine integral_congr_ae ?_
+          filter_upwards [hf2.coeFn_toLp] with x hx
+          rw [hx]
+  -- Step B: rewrite the `L¹` side via the Fourier self-adjointness (multiplication formula).
+  have hB : ∫ x, g x • (𝓕 f) x ∂volume = ∫ x, (𝓕 φ : 𝓢(ℝ, ℂ)) x • f x ∂volume := by
+    have hstep : ∫ x, g x • (𝓕 f) x ∂volume = ∫ x, φ x • (𝓕 f) x ∂volume :=
+      integral_congr_ae (Filter.Eventually.of_forall fun x => hsmul x (𝓕 f x))
+    have hFT : ∀ h : ℝ → ℂ, 𝓕 h = VectorFourier.fourierIntegral 𝐞 volume (innerₗ ℝ) h :=
+      fun _ => rfl
+    rw [hstep]
+    simp only [SchwartzMap.fourier_coe, hFT]
+    simpa using
+      (VectorFourier.integral_fourierIntegral_smul_eq_flip (L := innerₗ ℝ)
+        Real.continuous_fourierChar continuous_inner φ.integrable hf1_int).symm
+  rw [hA, hB]
+
+/-- **`L²`-`L¹` inverse-Fourier-agreement bridge.** The inverse-transform sibling of
+`l2Fourier_eq_fourierIntegral`: for `f ∈ L¹ ∩ L²`, the coeFn of the `L²`-inverse-Fourier transform
+of the canonical `Lp` representative agrees almost everywhere with the classical `L¹` inverse
+Fourier integral `𝓕⁻ f`. Used by `bandlimited_sup_bound` to realize a band-limited signal as the
+inverse transform of its (compactly supported, hence `L¹`) spectrum. -/
+theorem l2FourierInv_eq_fourierIntegralInv (f : ℝ → ℂ)
+    (hf1 : MemLp f 1 volume) (hf2 : MemLp f 2 volume) :
+    ((𝓕⁻ (hf2.toLp f) : Lp ℂ 2 volume) : ℝ → ℂ) =ᵐ[volume] 𝓕⁻ f := by
+  have hf1_int : Integrable f volume := memLp_one_iff_integrable.mp hf1
+  set G : Lp ℂ 2 volume := 𝓕⁻ (hf2.toLp f) with hG
+  have hlocG : LocallyIntegrable (⇑G) volume :=
+    (Lp.memLp G).locallyIntegrable (by norm_num : (1 : ℝ≥0∞) ≤ 2)
+  have hcont_Ff : Continuous (𝓕⁻ f) :=
+    VectorFourier.fourierIntegral_continuous (μ := volume) (L := -innerₗ ℝ)
+      Real.continuous_fourierChar (by fun_prop) hf1_int
+  have hlocFf : LocallyIntegrable (𝓕⁻ f) volume := hcont_Ff.locallyIntegrable
+  refine ae_eq_of_integral_contDiff_smul_eq hlocG hlocFf ?_
+  intro g hg_diff hg_supp
+  have hφ1 : HasCompactSupport (Complex.ofRealCLM ∘ g) := hg_supp.comp_left rfl
+  have hφ2 : ContDiff ℝ ∞ (Complex.ofRealCLM ∘ g) := Complex.ofRealCLM.contDiff.comp hg_diff
+  set φ : 𝓢(ℝ, ℂ) := hφ1.toSchwartzMap hφ2 with hφdef
+  have hφ_coe : ∀ x, φ x = (g x : ℂ) := fun x => rfl
+  have hsmul : ∀ (x : ℝ) (z : ℂ), g x • z = φ x • z := by
+    intro x z
+    rw [hφ_coe, Complex.real_smul, smul_eq_mul]
+  have hdist : (G : 𝓢'(ℝ, ℂ)) = 𝓕⁻ ((hf2.toLp f : Lp ℂ 2 volume) : 𝓢'(ℝ, ℂ)) := by
+    rw [hG]; exact (Lp.fourierInv_toTemperedDistribution_eq (hf2.toLp f)).symm
+  have hA : ∫ x, g x • (⇑G) x ∂volume = ∫ x, (𝓕⁻ φ : 𝓢(ℝ, ℂ)) x • f x ∂volume := by
+    calc ∫ x, g x • (⇑G) x ∂volume
+        = ∫ x, φ x • (⇑G) x ∂volume :=
+          integral_congr_ae (Filter.Eventually.of_forall fun x => hsmul x (G x))
+      _ = (G : 𝓢'(ℝ, ℂ)) φ := (Lp.toTemperedDistribution_apply G φ).symm
+      _ = 𝓕⁻ ((hf2.toLp f : Lp ℂ 2 volume) : 𝓢'(ℝ, ℂ)) φ := by rw [hdist]
+      _ = ((hf2.toLp f : Lp ℂ 2 volume) : 𝓢'(ℝ, ℂ)) (𝓕⁻ φ) :=
+          TemperedDistribution.fourierInv_apply _ _
+      _ = ∫ x, (𝓕⁻ φ : 𝓢(ℝ, ℂ)) x • (hf2.toLp f : ℝ → ℂ) x ∂volume :=
+          Lp.toTemperedDistribution_apply _ _
+      _ = ∫ x, (𝓕⁻ φ : 𝓢(ℝ, ℂ)) x • f x ∂volume := by
+          refine integral_congr_ae ?_
+          filter_upwards [hf2.coeFn_toLp] with x hx
+          rw [hx]
+  have hB : ∫ x, g x • (𝓕⁻ f) x ∂volume = ∫ x, (𝓕⁻ φ : 𝓢(ℝ, ℂ)) x • f x ∂volume := by
+    have hstep : ∫ x, g x • (𝓕⁻ f) x ∂volume = ∫ x, φ x • (𝓕⁻ f) x ∂volume :=
+      integral_congr_ae (Filter.Eventually.of_forall fun x => hsmul x (𝓕⁻ f x))
+    have hFTinv : ∀ h : ℝ → ℂ, 𝓕⁻ h = VectorFourier.fourierIntegral 𝐞 volume (-innerₗ ℝ) h :=
+      fun _ => rfl
+    have hflip : (-innerₗ ℝ : ℝ →ₗ[ℝ] ℝ →ₗ[ℝ] ℝ).flip = -innerₗ ℝ :=
+      LinearMap.ext fun a => LinearMap.ext fun b => by
+        simp only [LinearMap.flip_apply, LinearMap.neg_apply, innerₗ_apply_apply,
+          real_inner_comm b a]
+    rw [hstep]
+    simp only [SchwartzMap.fourierInv_coe, hFTinv]
+    simpa [hflip] using
+      (VectorFourier.integral_fourierIntegral_smul_eq_flip (L := -innerₗ ℝ)
+        Real.continuous_fourierChar (by fun_prop) φ.integrable hf1_int).symm
+  rw [hA, hB]
 
 /-- **Paley-Wiener sup bound**: a continuous band-limited `L²` signal is bounded pointwise by its
 `L²` energy, `|f t| ≤ √(2W)·‖f‖₂`. Continuity pins the raw codeword to the canonical
