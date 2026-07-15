@@ -257,3 +257,194 @@ end InformationTheory.Shannon.ShannonHartley
 ```
 
 （`contAwgnMaxMessages` / 雑音測度 / decoder / errorProb は Phase 1 で確定。上記は非循環設計 C1-C4 を満たす骨格の出発点。）
+
+---
+
+## M-fix inventory — faithful band-limit predicate + Paley-Wiener continuous representative (Phase 1-fix, 2026-07-15)
+
+> 親計画: [`shannon-hartley-operational-moonshot-plan.md`](shannon-hartley-operational-moonshot-plan.md)（Phase 1-fix 節）。
+> 対象: `IsBandlimited`（junk-0 defect）+ `ContAwgnCode.encoder`（a.e.-class / pointwise gap defect）の 2 根の def 修正。両 defect は独立 honesty audit で machine 確認済（`@audit:defect` stamps, ShannonHartleyOperational.lean L86/L181）。
+> 検証日: 2026-07-15（loogle index `.lake/build/loogle.index`、Mathlib `.lake/packages/mathlib`）。全 loogle query は Found N 付きで下記に転記（negatives auditable）。
+
+### 一行サマリ
+
+**Q1（L² スペクトル台の `IsBandlimited` 述語）は既存 API で clean に定義可能 → GO。Q2（Paley-Wiener 連続代表 + sup bound `|f(t)| ≤ √(2W)·‖f‖₂`）は Mathlib 完全不在（Paley-Wiener / bandlimited / exponentialType すべて Found 0）だが、下請け部品（`Lp.fourierTransform` L¹→有界連続 op-norm≤1、`mono_exponent_of_measure_support_ne_top`、`integral_mul_le_Lp_mul_Lq_of_nonneg`、`Lp.norm_fourier_eq` Plancherel）は全て存在 → self-build ~200-350 行、うち genuine gap は「L²-FT ↔ pointwise L¹ `𝓕` 一致 bridge（L¹∩L²）」~150-250 行。** M-fix の def 再設計そのものは GO。sup bound は「statement を真にする load-bearing な数学的中身」なので honest sorry か encoder field 化のどちらか（下記 Unification verdict）。
+
+---
+
+### VERDICT — Q1（spectral-support `IsBandlimited` on raw `ℝ→ℂ`）: **GO**
+
+既存 API で clean に書ける。推奨述語（`f : ℝ → ℂ`、L² spectral support ⊆ `[-W,W]`）:
+
+```lean
+open MeasureTheory
+/-- `f` の L² Fourier 変換の台が `[-W,W]` に含まれる（junk-0 でない真の帯域制限）。 -/
+def IsBandlimited (f : ℝ → ℂ) (W : ℝ) : Prop :=
+  ∃ hf : MemLp f 2 volume,
+    (𝓕 (hf.toLp f) : Lp ℂ 2 volume)
+      =ᵐ[volume.restrict {ξ : ℝ | W < |ξ|}] 0
+```
+
+- `hf.toLp f : Lp ℂ 2 volume`（`MemLp.toLp`、LpSpace/Basic.lean:106）で raw 関数 → Lp 元。
+- `𝓕`（= FourierTransform typeclass 記法）は `Lp.instFourierTransform`（LpSpace.lean:57、`fourierTransformₗᵢ ℝ ℂ` を fourier に）経由で `Lp ℂ 2 volume → Lp ℂ 2 volume` に解決。`E = ℝ`（`InnerProductSpace ℝ ℝ` + `FiniteDimensional ℝ ℝ` + `BorelSpace ℝ` 充足）, `F = ℂ`（`InnerProductSpace ℂ ℂ` + `CompleteSpace ℂ` 充足）, 測度は **volume 固定**（def に埋込、変更不可）。
+- 「Lp 元が `{|ξ|>W}` 上 a.e. 0」は `⇑g =ᵐ[volume.restrict {ξ | W<|ξ|}] 0`（`Lp` の coeFn + `Filter.EventuallyEq`）で表現。**専用 support API 不要**（`Lp.indicator` 系も不要）。
+- **依存する既存 lemma**: `MemLp.toLp`（Basic.lean:106）、`Lp.instFourierTransform`（LpSpace.lean:57）、`fourierTransformₗᵢ`（LpSpace.lean:50）。すべて既存、typeclass は `ℝ`/`ℂ` で自動充足。
+- **落とし穴（Q1d）**: `IsBandlimited` を **証明**する側（Phase 3 の `synthSignal` = 有限 sinc 和、その pointwise `Real.fourierIntegral` は boxcar）で、explicit な L¹ `𝓕` 計算を L²-support 述語へ繋ぐには「`𝓕_L²(toLp f) =ᵐ Real.fourierIntegral f`（`f ∈ L¹∩L²`）」が要る。**この一致 lemma は Mathlib 不在**（`"toLp_fourier"` → Schwartz 版 4 件のみ、下表）。→ Q2 の bridge と同一の self-build。**述語定義は GO、述語の検証（Phase 3）は bridge self-build 依存**。
+
+### VERDICT — Q2（Paley-Wiener 連続代表 + sup bound）: **NOT IN MATHLIB → self-build（~200-350 行、genuine gap は 1 bridge）**
+
+「帯域制限 L² 関数は連続代表を持ち `|f(t)| ≤ √(2W)·‖f‖₂` を満たす」は Mathlib **不在**（Paley-Wiener 系すべて Found 0）。ただし標準証明の 3 サブステップの下請けは全て存在:
+
+| サブステップ | Mathlib 資産 | 存在? | self-build 見積り |
+|---|---|---|---|
+| (i) compact-support FT の pointwise 反転 / 連続代表 | `Real.Lp.fourierTransform : Lp E 1 → V →ᵇ E`（op-norm≤1）+ `Integrable.fourierInv_fourier_eq`（L¹ 反転）。**ただし L²-FT↔pointwise L¹`𝓕` 一致 bridge は不在** | 部分（bridge 欠） | **~150-250 行（genuine gap）**。𝓢' 三角測量（両 Lp が `Lp.toTemperedDistribution` で 𝓢' に埋込、L²-FT↔𝓢'-FT = `Lp.fourier_toTemperedDistribution_eq` 既存、L¹-FT↔𝓢'-FT link を建設）で closable。textbook 難度でなく plumbing-heavy |
+| (ii) Cauchy-Schwarz `L²→L¹` on `[-W,W]` | `MemLp.mono_exponent_of_measure_support_ne_top`（compact-support L²→L¹）+ `integral_mul_le_Lp_mul_Lq_of_nonneg`（Hölder、p=q=2） | ✅ 存在 | ~40-80 行（plumbing） |
+| (iii) Plancherel `‖𝓕f‖₂=‖f‖₂` | `Lp.norm_fourier_eq`（LpSpace.lean:89） | ✅ 存在 | ~5 行 |
+
+- **定数 `√(2W)` verbatim 確認**: `[-W,W]` の Lebesgue 測度 = `2W`。Cauchy-Schwarz `∫_{[-W,W]}1·|g| ≤ (∫_{[-W,W]}1²)^{1/2}(∫|g|²)^{1/2} = (2W)^{1/2}·‖g‖_{L²[-W,W]}`、`g` は `[-W,W]` に台を持つので `‖g‖_{L²[-W,W]}=‖g‖_{L²(ℝ)}=‖𝓕f‖₂`、Plancherel で `=‖f‖₂`。∴ `|f(t)| ≤ √(2W)·‖f‖₂`。**定数正しい**。
+- **genuine gap は 1 つ**: (i) の「L²-inverse-FT = pointwise L¹ inverse integral（L¹∩L²）」bridge。これは Q1d の一致 bridge と実質同一物。**Mathlib wall（textbook 難度で不在）ではなく、既存 𝓢' scaffolding への配線 self-build**。よって `@residual` を切るなら `wall:` でなく plumbing 相当。ただし blast が大きく Phase 3 まで届かない場合は honest `sorry + @residual(plan:shannon-hartley-l2fourier-bridge)` が retreat exit。
+- **合計 self-build**: ~200-350 行（bridge ~150-250 + Cauchy-Schwarz plumbing ~40-80 + Plancherel ~5 + 連続性配線）。
+
+### VERDICT — Unification（(a) L²-support 述語 + (b) encoder 連続/`MemLp` field を 1 述語に？）
+
+**部分的に 1 つに束ねられるが、sup bound は独立に扱うべき。** 推奨 `ContAwgnCode` field 形:
+
+```lean
+structure ContAwgnCode (T W P : ℝ) (M : ℕ) where
+  encoder : Fin M → (ℝ → ℂ)                              -- ℝ→ℂ（L²-FT が ℂ 値）
+  encoder_memLp : ∀ m, MemLp (encoder m) 2 volume         -- L² 所属（toLp の材料、defect#1 の非退化化）
+  encoder_continuous : ∀ m, Continuous (encoder m)        -- pointwise 整合（defect#2、sampledSignal の a.e.-class gap を閉じる）
+  encoder_bandlimited : ∀ m, IsBandlimited (encoder m) W  -- L²-spectral-support（上記 Q1 述語）
+  encoder_power : ∀ m, (∫ t in Set.Icc (0:ℝ) T, ‖encoder m t‖^2) ≤ T * P
+  sampleCount : ℕ
+  decoder : (Fin sampleCount → ℝ) → Fin M
+  decoder_meas : Measurable decoder
+```
+
+- `IsBandlimited` は `MemLp` の存在を `∃` で内包するが、encoder は `toLp` を明示的に何度も使うので `encoder_memLp` を **別 field** に出す方が実用（`∃`-witness の unpack を各所で避ける）。
+- `encoder_continuous` は defect#2 の直接修正（連続関数は pointwise 値で確定、`∫ f²` が真の関数を見る）。**ただし連続性だけでは sample を energy で bound できない**（tall-thin spike は連続でも `|f(t)|` 大・`‖f‖₂` 小が可能）。
+- **sup bound `|f(t)| ≤ √(2W)‖f‖₂` は field 化 or Paley-Wiener 派生の二択**。これは「message set を有界化して statement を真にする load-bearing な中身」（下記 defect 解析）なので、`encoder_sup_bounded` を field に足すと **regularity precondition か load-bearing bundling かの判定が微妙**。判定: 「全ての帯域制限 L² 関数が満たす性質（= Paley-Wiener の帰結）」を field に置くのは **regularity（測度可能性と同格）で honest**。主定理の core（DOF count `nyquist-2w-dof`）を束ねるわけではない。ただし honest 度は Paley-Wiener 派生（field 不要）が上。**推奨: まず Paley-Wiener sup bound を self-build に挑戦、詰まれば `sorry + @residual` で publish（field 化は最後の手段）**。
+
+### VERDICT — Overall feasibility: **GO-with-honest-sorry**
+
+- **def 再設計（`IsBandlimited` L²-support 化 + encoder に `memLp`/`continuous` field 追加）= GO**（既存 API のみ、Q1 述語 clean、両 defect 根を溶かす）。
+- **honest sorry になる sub-lemma = `bandlimited_sup_bound`（Paley-Wiener `|f(t)| ≤ √(2W)‖f‖₂`）とその下請け `l2Fourier_eq_fourierIntegral`（L²-FT ↔ pointwise L¹ `𝓕` on L¹∩L²）**。後者が genuine gap（~150-250 行、Mathlib wall でなく 𝓢' 配線）。
+- **重大な非自明所見**: 「`Integrable f` を足せば junk-0 defect は消える」は **UNDER-HYPOTHESIS の罠**。帯域制限 L² 関数は一般に **L¹ でない**（sinc は L² だが L¹ でない、有限 sinc 和も同様）。`Integrable f` を課すと **狙いの信号クラス（essentially time-limited + band-limited、L² だが非 L¹）を除外**してしまう。だから owner の「L¹ `𝓕` を捨てて L²-FT へ」は正しく、L¹ 反転（`Continuous.fourierInv_fourier_eq`、両 `Integrable f` ∧ `Integrable (𝓕 f)` 要求）は対象クラスに直接使えない。
+
+---
+
+### API 在庫テーブル — Q1（spectral-support 述語の材料）
+
+| 概念 | Mathlib API (verbatim signature, brackets kept) | file:line | conclusion (verbatim) | usable-as? |
+|---|---|---|---|---|
+| L² Fourier 変換（線形等長同型） | `def MeasureTheory.Lp.fourierTransformₗᵢ : (Lp (α := E) F 2) ≃ₗᵢ[ℂ] (Lp (α := E) F 2)`. Context: `variable {E F : Type*} [NormedAddCommGroup E] [MeasurableSpace E] [BorelSpace E] [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F]` + `[InnerProductSpace ℝ E] [FiniteDimensional ℝ E]`. 測度 = **volume 固定**（def 内 `toLpCLM ℂ (E := E) F 2 volume`） | `Mathlib/Analysis/Fourier/LpSpace.lean:50` | `(Lp (α := E) F 2) ≃ₗᵢ[ℂ] (Lp (α := E) F 2)` | ✅ `E=ℝ, F=ℂ` で `IsBandlimited` の `𝓕`。**注意**: 名前で言及する decl は Mathlib 全体で **これ 1 件のみ**（loogle "Found one declaration"）→ spectral-support / coeFn / L¹一致 の専用 lemma は**皆無**、全て `𝓕` typeclass 記法経由 |
+| FourierTransform instance（Lp を `𝓕` の定義域に） | `instance MeasureTheory.Lp.instFourierTransform : FourierTransform (Lp (α := E) F 2) (Lp (α := E) F 2) where fourier := fourierTransformₗᵢ E F` | `Mathlib/Analysis/Fourier/LpSpace.lean:57` | — | ✅ `𝓕 (g : Lp ℂ 2 volume) : Lp ℂ 2 volume` を解決 |
+| L² 反転 instance | `instance MeasureTheory.Lp.instFourierPair … fourierInv_fourier_eq := (Lp.fourierTransformₗᵢ E F).symm_apply_apply` | `Mathlib/Analysis/Fourier/LpSpace.lean:81` | `𝓕⁻ (𝓕 f) = f`（Lp 元、等長同型ゆえ自明可逆） | ✅ L²-inversion（pointwise でなく Lp 元同値） |
+| raw 関数 → Lp 元 | `def MeasureTheory.MemLp.toLp (f : α → E) (h_mem_ℒp : MemLp f p μ) : Lp E p μ`. Context: `variable {α E : Type*} {m : MeasurableSpace α} {p : ℝ≥0∞} {μ : Measure α} [NormedAddCommGroup E]` | `Mathlib/MeasureTheory/Function/LpSpace/Basic.lean:106` | `Lp E p μ` | ✅ `hf.toLp f : Lp ℂ 2 volume`。typeclass 最小（`[NormedAddCommGroup ℂ]` のみ） |
+| toLp の coeFn a.e. 一致 | `theorem MeasureTheory.MemLp.coeFn_toLp {f : α → E} (hf : MemLp f p μ) : hf.toLp f =ᵐ[μ] f` | `Mathlib/MeasureTheory/Function/LpSpace/Basic.lean:111` | `hf.toLp f =ᵐ[μ] f` | ✅ Lp 元 ↔ raw 関数の a.e. 橋 |
+| Plancherel（ノルム保存） | `theorem MeasureTheory.Lp.norm_fourier_eq (f : Lp (α := E) F 2) : ‖𝓕 f‖ = ‖f‖` | `Mathlib/Analysis/Fourier/LpSpace.lean:89` | `‖𝓕 f‖ = ‖f‖` | ✅ Q2 sup bound の (iii)、電力橋 |
+| Plancherel（内積保存） | `theorem MeasureTheory.Lp.inner_fourier_eq (f g : Lp (α := E) F 2) : ⟪𝓕 f, 𝓕 g⟫ = ⟪f, g⟫` | `Mathlib/Analysis/Fourier/LpSpace.lean:93` | `⟪𝓕 f, 𝓕 g⟫ = ⟪f, g⟫` | ✅ 固有関数系 Parseval |
+| Schwartz 一致（**唯一の一致 lemma**） | `theorem SchwartzMap.toLp_fourier_eq (f : 𝓢(E, F)) : 𝓕 (f.toLp 2) = (𝓕 f).toLp 2` | `Mathlib/Analysis/Fourier/LpSpace.lean:99` | `𝓕 (f.toLp 2) = (𝓕 f).toLp 2` | 🟡 **f が Schwartz 必須**。sinc/synthSignal は Schwartz でない → Phase 3 に直接使えない。一般 L¹∩L² 一致は不在 |
+| L²-FT ↔ 𝓢'-FT 一致 | `theorem MeasureTheory.Lp.fourier_toTemperedDistribution_eq (f : Lp (α := E) F 2) : 𝓕 (f : 𝓢'(E, F)) = (𝓕 f : Lp (α := E) F 2)` | `Mathlib/Analysis/Fourier/LpSpace.lean:126` | `𝓕 (f : 𝓢'(E, F)) = (𝓕 f : Lp (α := E) F 2)` | ✅ bridge self-build の L² 側 scaffold |
+| Lp → 𝓢' 埋込（任意 p≥1） | `def MeasureTheory.Lp.toTemperedDistribution` + `theorem Lp.toTemperedDistribution_apply (f : Lp F p μ) [Fact (1 ≤ p)] …` | `Mathlib/Analysis/Distribution/TemperedDistribution.lean:169` | `∫ f·φ`（= 埋込の pairing） | ✅ **L¹ と L² 双方が 𝓢' に埋込 → bridge self-build の三角測量基盤** |
+
+### API 在庫テーブル — Q2（Paley-Wiener sup bound の下請け）
+
+| 概念 | Mathlib API (verbatim, brackets kept) | file:line | conclusion (verbatim) | usable-as? |
+|---|---|---|---|---|
+| L¹ FT = 有界連続関数（op-norm≤1） | `def Real.Lp.fourierTransformCLM : Lp (α := V) E 1 →L[ℂ] V →ᵇ E`（`LinearMap.mkContinuous … 1 …`）. Context: `variable {V W E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]` + `V` finite-dim real IPS | `Mathlib/Analysis/Fourier/FourierTransform.lean:572` | `Lp (α := V) E 1 →L[ℂ] V →ᵇ E` | ✅ 「compact-support L²(⊆L¹) の逆FT は有界連続、sup≤L¹ノルム」の (i) 部品 |
+| L¹ FT の pointwise 一致 | `theorem Real.Lp.fourierTransform_apply (f : Lp (α := V) E 1) (x : V) : Lp.fourierTransform f x = 𝓕 (f : V → E) x` | `Mathlib/Analysis/Fourier/FourierTransform.lean:559` | `Lp.fourierTransform f x = 𝓕 (f : V → E) x` | ✅ L¹-FT ↔ `Real.fourierIntegral` pointwise |
+| L¹ FT of toLp | `theorem Real.fourierTransform_toLp {f : V → E} (hf : MemLp f 1) : (Lp.fourierTransform hf.toLp : V → E) = 𝓕 f` | `Mathlib/Analysis/Fourier/FourierTransform.lean:563` | `(Lp.fourierTransform hf.toLp : V → E) = 𝓕 f` | ✅ raw L¹ 関数の FT = pointwise `𝓕` |
+| L¹ FT の連続性（VectorFourier） | `theorem VectorFourier.fourierIntegral_continuous [FirstCountableTopology W] (he : Continuous e) (hL : Continuous fun p : V × W ↦ L p.1 p.2) {f : V → E} (hf : Integrable f μ) : Continuous (fourierIntegral e μ L f)` | `Mathlib/Analysis/Fourier/FourierTransform.lean:163` | `Continuous (fourierIntegral e μ L f)` | ✅ WhittakerShannon が既用（L221-224）。`Real.fourierIntegral_continuous` は不在、これ経由 |
+| L¹ 反転（continuity point） | `theorem MeasureTheory.Integrable.fourierInv_fourier_eq (hf : Integrable f) (h'f : Integrable (𝓕 f)) {v : V} (hv : ContinuousAt f v) : 𝓕⁻ (𝓕 f) v = f v`. Context: `variable {V E : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [MeasurableSpace V] [BorelSpace V] [FiniteDimensional ℝ V] [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]` | `Mathlib/Analysis/Fourier/Inversion.lean:165` | `𝓕⁻ (𝓕 f) v = f v` | 🟡 **両 `Integrable f` ∧ `Integrable (𝓕 f)` 要求 = L¹ のみ**。帯域制限 L² f は一般に非 L¹ → 対象クラスに直接不可（UNDER-HYP 罠の根拠） |
+| L¹ 反転（全点、連続版） | `theorem Continuous.fourierInv_fourier_eq (h : Continuous f) (hf : Integrable f) (h'f : Integrable (𝓕 f)) : 𝓕⁻ (𝓕 f) = f` | `Mathlib/Analysis/Fourier/Inversion.lean:177` | `𝓕⁻ (𝓕 f) = f` | 🟡 同上（L¹ 限定） |
+| compact-support L²→L¹ | `lemma MeasureTheory.MemLp.mono_exponent_of_measure_support_ne_top {p q : ℝ≥0∞} {f : α → ε'} (hfq : MemLp f q μ) {s : Set α} (hf : ∀ x, x ∉ s → f x = 0) (hs : μ s ≠ ∞) (hpq : p ≤ q) : MemLp f p μ`. Context: `variable {α ε' : Type*} {m : MeasurableSpace α} {μ : Measure α} [TopologicalSpace ε'] [ESeminormedAddMonoid ε']` | `Mathlib/MeasureTheory/Function/LpSeminorm/CompareExp.lean:146` | `MemLp f p μ` | ✅ `𝓕f`（台⊆`[-W,W]`）が L¹。Cauchy-Schwarz (ii) の入口 |
+| 有限測度 L²→L¹ | `theorem MeasureTheory.MemLp.mono_exponent {p q : ℝ≥0∞} [IsFiniteMeasure μ] (hfq : MemLp f q μ) (hpq : p ≤ q) : MemLp f p μ` | `Mathlib/MeasureTheory/Function/LpSeminorm/CompareExp.lean:116` | `MemLp f p μ` | ✅ 制限測度版（`volume.restrict [-W,W]` は finite） |
+| Hölder（Cauchy-Schwarz p=q=2） | `theorem MeasureTheory.integral_mul_le_Lp_mul_Lq_of_nonneg {p q : ℝ} (hpq : p.HolderConjugate q) {f g : α → ℝ} (hf_nonneg : 0 ≤ᵐ[μ] f) (hg_nonneg : 0 ≤ᵐ[μ] g) (hf : MemLp f (ENNReal.ofReal p) μ) (hg : MemLp g (ENNReal.ofReal q) μ) : ∫ a, f a * g a ∂μ ≤ (∫ a, f a ^ p ∂μ) ^ (1 / p) * (∫ a, g a ^ q ∂μ) ^ (1 / q)` | `Mathlib/MeasureTheory/Integral/Bochner/Basic.lean:1181` | `∫ a, f a * g a ∂μ ≤ (∫ a, f a ^ p ∂μ) ^ (1/p) * (∫ a, g a ^ q ∂μ) ^ (1/q)` | ✅ `1·|g|` に適用で (ii)。`ENNReal.lintegral_mul_le_Lp_mul_Lq`（MeanInequalities.lean）が lintegral 版 backup |
+| in-project 連続代表 / sup bound | — | — | — | ❌ **不在**。WhittakerShannon は `whittaker_shannon_bandlimited`（L221）で `Continuous f ∧ Integrable f ∧ Integrable (𝓕 f)` を **仮定**（連続代表を構成しない）。NormalizedSinc も sup bound 資産なし（`sincN_le_one` は sinc 自身の bound、Paley-Wiener でない） |
+
+---
+
+### 重要 preconditions box（事故が起きやすい前提）
+
+- **`Lp.fourierTransformₗᵢ`（LpSpace.lean:50）**: 測度は **volume に固定**（def 内で明示、time-out 回避のため）。`E=ℝ`（`[MeasurableSpace ℝ] [BorelSpace ℝ] [InnerProductSpace ℝ ℝ] [FiniteDimensional ℝ ℝ]` 全て自動）, `F=ℂ`（`[InnerProductSpace ℂ ℂ] [CompleteSpace ℂ]` 自動）。**別測度（`volume.restrict` 等）では `𝓕` typeclass が発火しない** → spectral support は「`𝓕`（全 volume 上）の Lp 元を `restrict` 測度で a.e.0」の形で書く（`𝓕` 自体は volume 上）。
+- **名前で言及される `fourierTransformₗᵢ` decl は 1 件のみ**: spectral-support / pointwise coeFn / L¹一致 の専用 lemma は**存在しない**。`𝓕` typeclass 記法 + `norm_fourier_eq` / `inner_fourier_eq` / `fourier_toTemperedDistribution_eq` だけが道具。「`𝓕 g` の pointwise 値」を取り出す lemma を探すのは徒労 → **Lp 元同値 / a.e. 等式で押す**。
+- **Fourier 反転は L¹ 限定**（`Integrable.fourierInv_fourier_eq`、Inversion.lean:165）: `Integrable f` ∧ `Integrable (𝓕 f)` 両方要求。**帯域制限 L² 関数は一般に非 L¹** なので、対象信号に直接使うと空回り。L²-inversion（`instFourierPair`、Lp 元同値）を使い、pointwise 化は `Real.Lp.fourierTransform`（有界連続、compact-support 側）で行う。
+- **`MemLp.mono_exponent_of_measure_support_ne_top`（CompareExp.lean:146）**: `hs : μ s ≠ ∞`（台が有限測度）必須。`{ξ | ξ ∈ [-W,W]}` は `μ = volume` で `2W < ∞` OK。**注意**: `p ≤ q` の向き（L^q → L^p、`q=2, p=1`）。
+- **`integral_mul_le_Lp_mul_Lq_of_nonneg`（Bochner/Basic.lean:1181）**: `hpq : p.HolderConjugate q`（`1/p+1/q=1`）。Cauchy-Schwarz は `p=q=2`。非負性 `0 ≤ᵐ f, 0 ≤ᵐ g` 要求（`f=1`, `g=|𝓕f|` で充足）。
+- **`Integrable f` を encoder field に足すな**: junk-0 は消えるが対象信号クラス（非 L¹ の band-limited）を除外する UNDER-HYP。L² membership（`MemLp _ 2`）を使うこと。
+
+---
+
+### 自作が必要な要素（優先度順）
+
+1. **`l2Fourier_eq_fourierIntegral`（L²-FT ↔ pointwise L¹ `𝓕` on L¹∩L²）【genuine gap / bridge / ~150-250 行】** — `f ∈ L¹∩L²` に対し `⇑(𝓕 (hf₂.toLp f)) =ᵐ[volume] Real.fourierIntegral f`（`hf₂ : MemLp f 2`）。**推奨実装**: 𝓢' 三角測量。両 `toLp`（L¹/L²）が同一 a.e. 関数から `Lp.toTemperedDistribution` で同じ 𝓢' 元へ（`toTemperedDistribution_apply` = `∫ f·φ` は p 非依存）→ L²-FT↔𝓢'-FT（`fourier_toTemperedDistribution_eq` 既存）+ L¹-FT↔𝓢'-FT（`Real.Lp.fourierTransform` を 𝓢' に埋込む link を建設）→ 一致。**Mathlib wall でなく既存 scaffolding 配線**。詰まれば `sorry + @residual(plan:shannon-hartley-l2fourier-bridge)`。
+2. **`bandlimited_sup_bound`（Paley-Wiener `|f(t)| ≤ √(2W)·‖f‖₂`）【~60-120 行、(1) 依存】** — 帯域制限 L² `f` の連続代表に対する sup bound。**推奨**: (1) の bridge で `𝓕f` を pointwise 化 → `mono_exponent_of_measure_support_ne_top` で L¹ → `Real.Lp.fourierTransform`（sup≤L¹ノルム）で連続代表化 → `integral_mul_le_Lp_mul_Lq_of_nonneg`（Cauchy-Schwarz）+ `Lp.norm_fourier_eq`（Plancherel）で `√(2W)·‖f‖₂`。**部品は全存在、(1) の bridge のみ gap**。
+3. **`IsBandlimited` 述語（L²-support）【~10-20 行】** — Q1 verdict の述語。既存 API のみ、壁なし。
+4. **`ContAwgnCode` 再設計（`encoder : Fin M → (ℝ→ℂ)` + `encoder_memLp` / `encoder_continuous` field 追加）【~20-40 行 + downstream ripple】** — defect#2 修正。`errorProbAt` / `sampledSignal` は `encoder m` が連続なので pointwise well-defined、`encoder_power` の `∫‖f‖²` が真の関数を見る。ripple: `sampledSignal` の型（`ℝ→ℝ` → `ℝ→ℂ` の実部 or `Complex.abs`）調整。
+5. **連続代表の一意性 / sampledSignal 整合【~30-60 行】** — `encoder_continuous` から「a.e.-class の代表が pointwise 値で確定」。`MemLp.coeFn_toLp` + 連続関数の a.e.一致 → 全点一致（`Continuous.ae_eq_iff` 系）。
+
+---
+
+### Mathlib 壁の列挙（`@residual` 対象）
+
+| slug 候補 | 命題 | loogle 証拠（Found N、query 転記） | 壁 or plumbing |
+|---|---|---|---|
+| （新）`plan:shannon-hartley-l2fourier-bridge` | L²-FT ↔ pointwise L¹ `Real.fourierIntegral` 一致（L¹∩L²） | `"toLp_fourier"` → Found 4（全 Schwartz 版のみ）; `"fourierIntegral_eq_fourier"` → Found 0; `"coeFn_fourier"` → Found 1（`coeFn_fourierLp`、AddCircle 版、無関係） | **plumbing（wall でない）**。既存 𝓢' scaffolding（`Lp.toTemperedDistribution` + `fourier_toTemperedDistribution_eq`）への配線 self-build。textbook 難度でない → `wall:` でなく `plan:` |
+| — | Paley-Wiener 定理（任意形） | `"PaleyWiener"` → Found 0; `"Paley"` → Found 0; `"bandlimited"` → Found 0; `"BandLimited"` → Found 0; `"exponentialType"` → Found 0 | **Mathlib 完全不在**だが下請け部品（(i)(ii)(iii)）全存在 → self-build（(1) bridge のみ gap）。単独 `@residual` 不要、`bandlimited_sup_bound` を (1) 依存で建設 or `sorry + @residual(plan:…-bridge)` |
+| `wall:nyquist-2w-dof`（既存 register） | 時間帯域 DOF-per-second カウント | （Phase 0 inventory で確認済、本 M-fix と独立） | genuine wall（本 M-fix の scope 外、主定理 body の別 residual） |
+
+**shared sorry lemma 推奨**: Q1d の一致 bridge（Phase 3 検証）と Q2 の連続代表 bridge (i) は **同一物**（`l2Fourier_eq_fourierIntegral`）。**両者を 1 本の shared lemma に集約推奨**（audit-tags.md「Shared Mathlib walls」）。散逸させない。
+
+**loogle Found 0 確認（necessary but not sufficient 遵守、二段検索済）**: Paley-Wiener 系は name-search 0 に加え、conclusion-shape の代替（`Real.Lp.fourierTransform` 有界連続 + inversion）を探索し「単独定理は不在だが部品充足」を確認。→ genuine gap は L²↔L¹ 一致 bridge **1 本のみ**、それも 𝓢' 配線で closable な plumbing。
+
+---
+
+### 撤退ラインへの距離
+
+親計画の Phase 1-fix 撤退ライン照合:
+
+- **defect 修正そのもの（`IsBandlimited` L²化 + encoder field 追加）: 発動しない**。既存 API（`fourierTransformₗᵢ` / `MemLp.toLp` / `Lp.norm_fourier_eq`）で GO。両 defect 根を溶かす。
+- **Paley-Wiener sup bound（statement を真にする load-bearing な中身）: 触れる**。Mathlib 完全不在だが self-build 可能（(1) bridge のみ gap、~200-350 行）。**新規撤退ライン提案**: (1) の L²↔L¹ 一致 bridge が 𝓢' 配線で想定超過して詰まった場合、`bandlimited_sup_bound` を `sorry + @residual(plan:shannon-hartley-l2fourier-bridge)` で honest 化して encoder field は足さない（hypothesis bundling 禁止）。retreat exit = sorry + @residual、hypothesis bundling なし。sup bound を field 化する degenerate fallback は「全 band-limited L² が満たす regularity」の範囲でのみ許容（core `nyquist-2w-dof` を束ねない）。
+- **主定理 body（`contAwgn_eq_shannonHartley`）: M-fix 後も `sorry + @residual(wall:nyquist-2w-dof)` に着地**（defect 解消で「FALSE-as-framed」→「wall-blocked honest tier-2」に復帰）。M-fix の目的は `@audit:defect(false-statement)` を外して honest wall-sorry に戻すこと。
+
+**M-fix 判定: GO-with-honest-sorry。** def 再設計は既存 API のみ（Q1 GO）。唯一の self-build gap = L²↔L¹ FT 一致 bridge（plumbing、~150-250 行、詰まれば `plan:` residual）。sup bound の load-bearing 性が最大の注意点（連続性 field だけでは message set を有界化できない）。
+
+---
+
+### M-fix 着手 skeleton（`ShannonHartleyOperational.lean` 差分案、~28 行）
+
+```lean
+import Mathlib.Analysis.Fourier.LpSpace          -- fourierTransformₗᵢ, norm_fourier_eq
+import Mathlib.MeasureTheory.Function.LpSpace.Basic  -- MemLp.toLp
+-- （既存 import は維持）
+
+namespace InformationTheory.Shannon.ShannonHartley
+open MeasureTheory
+open scoped FourierTransform
+
+/-- 帯域制限（真）: L² Fourier 変換の台が `[-W,W]`。junk-0 でない。 -/
+def IsBandlimited (f : ℝ → ℂ) (W : ℝ) : Prop :=
+  ∃ hf : MemLp f 2 volume,
+    (𝓕 (hf.toLp f) : Lp ℂ 2 volume) =ᵐ[volume.restrict {ξ : ℝ | W < |ξ|}] 0
+
+/-- 帯域制限 L² 関数の Paley-Wiener sup bound（連続代表、self-build）。 -/
+theorem bandlimited_sup_bound (f : ℝ → ℂ) (W : ℝ) (hW : 0 < W)
+    (hf : MemLp f 2 volume) (hbl : IsBandlimited f W) (hcont : Continuous f) (t : ℝ) :
+    ‖f t‖ ≤ Real.sqrt (2 * W) * ‖hf.toLp f‖ := by
+  sorry -- @residual(plan:shannon-hartley-l2fourier-bridge) — L²-FT↔pointwise 𝓕 一致 + Cauchy-Schwarz + Plancherel
+
+structure ContAwgnCode (T W P : ℝ) (M : ℕ) where
+  encoder : Fin M → (ℝ → ℂ)
+  encoder_memLp : ∀ m, MemLp (encoder m) 2 volume
+  encoder_continuous : ∀ m, Continuous (encoder m)
+  encoder_bandlimited : ∀ m, IsBandlimited (encoder m) W
+  encoder_power : ∀ m, (∫ t in Set.Icc (0 : ℝ) T, ‖encoder m t‖ ^ 2) ≤ T * P
+  sampleCount : ℕ
+  decoder : (Fin sampleCount → ℝ) → Fin M
+  decoder_meas : Measurable decoder
+
+end InformationTheory.Shannon.ShannonHartley
+```
+
+（`sampledSignal` は `encoder m : ℝ→ℂ` の連続代表を pointwise 読む形に、`errorProbAt` は実部 or `‖·‖` で実サンプル化。主定理 body は `@residual(wall:nyquist-2w-dof)` のまま。M-fix 完了で `@audit:defect(false-statement)` / `@audit:defect(degenerate)` を除去し honest tier-2 に復帰。）
