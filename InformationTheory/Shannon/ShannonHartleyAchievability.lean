@@ -456,21 +456,53 @@ theorem synthSignal_window_energy_le (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
   exact setIntegral_le_integral (synthSignal_sq_integrable T n a hT hn)
     (Filter.Eventually.of_forall (fun t => sq_nonneg _))
 
-/-! ## §E — crude-converse boundedness (deferred to a follow-up dispatch) -/
+/-! ## §E — boundedness of the message set (wall-gated) -/
 
-/-- The message-count set is bounded above: a crude finite upper bound suffices (no tight
-`≈2WT` count needed), obtained by applying `awgn_converse` to the sampled codeword. This is
-the `BddAbove` obligation required to lower-bound `contAwgnMaxMessages` via `le_csSup`. -/
+/-- The message-count set is bounded above — the `BddAbove` obligation needed to lower-bound
+`contAwgnMaxMessages` via `le_csSup`.
+
+Contrary to the original plan, this is **not** a crude/wall-independent converse. Applying
+`awgn_converse` to the sampled codeword vector reduces `BddAbove` to a bound on the sampled
+energy `E = (T/n)·∑ᵢ (encoder m (i·T/n))²` that is **uniform over the whole code family and over
+`sampleCount = n`** (more samples give the decoder strictly more information, so the sup is not
+attained at small `n`). The `ContAwgnCode` structure constrains only the **window** energy
+`∫₀ᵀ f² ≤ T·P`; `bandlimited_sup_bound` controls point values by the **full-line** `‖f‖₂`, which
+is unconstrained (a band-limited `L²` signal can carry arbitrary energy outside `[0,T]` while
+keeping the window energy small, and the sinc reproducing-kernel tail leaks it back into the
+in-window samples). Tying the in-window sampled energy of a band-limited signal to its window
+energy is exactly the time-band concentration (prolate-spheroidal / Landau-Pollak-Slepian)
+content — the same `nyquist-2w-dof` wall carried by `contAwgn_eq_shannonHartley` (converse side).
+The statement is **true** (the message set is finite because capacity is finite), but even mere
+finiteness of the sampled energy requires the concentration theorem; there is no cheaper crude
+intermediate (a `≈2WT`-tight count is not needed, yet no weaker bound exists either). Absent from
+Mathlib: loogle `Found 0` for `prolate`/`Slepian`.
+
+`@residual(wall:nyquist-2w-dof)` -/
 theorem contAwgnMaxMessages_bddAbove (T W N₀ P ε : ℝ)
     (hT : 0 < T) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
     BddAbove { M : ℕ | ∃ c : ContAwgnCode T W P M, (c.averageError N₀).toReal ≤ ε } := by
-  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+  sorry -- @residual(wall:nyquist-2w-dof)
 
-/-! ## §F — assembly (deferred to a follow-up dispatch) -/
+/-! ## §F — assembly (gated on §E's wall-blocked boundedness) -/
 
 /-- **Shannon-Hartley achievability (`≥`)**: the operational capacity is at least the
 Shannon-Hartley closed form. Proved by lifting a per-sample `awgn_achievability` codebook
-through the synthesis bridge. -/
+through the synthesis bridge.
+
+The achievability construction itself (per-sample `awgn_achievability` → `synthSignal` bridge →
+per-`T` codebook) is wall-free plan-work. But lower-bounding the operational capacity requires
+`contAwgnMaxMessages = sSup {M | …} ≥ M₀` via `le_csSup`, which consumes
+`contAwgnMaxMessages_bddAbove` (§E) — and the ℕ-`sSup` collapses to junk `0` without that
+`BddAbove`. Since §E is `nyquist-2w-dof`-wall-blocked, this direction cannot close until either
+the wall is resolved or the capacity definition is refactored to the standard achievable-rate
+form (`sup` over rates achievable by code sequences), which decouples achievability from the
+converse's boundedness obligation. Hence the residual is wall-gated even though the assembly logic
+is not itself a wall. The residual's own content (the assembly) is writeable plan-work; the
+`nyquist-2w-dof` obstruction it transitively needs is carried by §E (`contAwgnMaxMessages_bddAbove`),
+so this residual is classified `plan:` with the wall recorded as a documented prerequisite rather
+than duplicating the wall tag here.
+
+`@residual(plan:shannon-hartley-operational-moonshot-plan)` -/
 theorem contAwgn_ge_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := by
