@@ -127,7 +127,7 @@ theorem synthSignal_bandlimited (T W : ℝ) (n : ℕ) (a : Fin n → ℝ)
   -- `IsBandlimited` is the L¹ `Real.fourierIntegral` while `synthSignal ∉ L¹` (a finite
   -- sinc combination decays like `1/t`; `Real.integrable_sinc` needs `[IsFiniteMeasure]`).
   -- A genuine (non-junk) proof needs `Lp.fourierTransformₗᵢ` + the sinc↔boxcar identity.
-  sorry -- @residual(plan:shannon-hartley-op-phase3)
+  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
 
 /-! ## §D — (iii) Parseval energy -/
 
@@ -138,7 +138,7 @@ theorem synthSignal_sq_integrable (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
   -- `synthSignal ∈ L²` (its square is integrable), from the L² membership of each shifted
   -- `sincN(·/Δ)`. Needs the sinc L² framework (Mathlib's `Real.integrable_sinc` is finite-
   -- measure only; `∫ sinc² = π` is absent from Mathlib — loogle Found 0).
-  sorry -- @residual(plan:shannon-hartley-op-phase3)
+  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
 
 /-- **(iii)** Parseval / sinc self-reproducing energy identity: the whole-line energy of the
 synthesis equals `Δ · ∑ᵢ (a i)²` with `Δ = T/n`. Follows from the sinc orthogonality
@@ -149,7 +149,7 @@ theorem synthSignal_energy (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) 
   -- `∫ sincN((t-iΔ)/Δ)·sincN((t-jΔ)/Δ) dt = Δ·δᵢⱼ`. Absent from Mathlib (needs the
   -- sinc↔boxcar L² Fourier identity + Plancherel `Lp.inner_fourier_eq`); the in-project
   -- `WhittakerShannon` deliberately routed through the circle to avoid exactly this.
-  sorry -- @residual(plan:shannon-hartley-op-phase3)
+  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
 
 /-- In-window energy is bounded by the whole-line energy (the integrand is `≥ 0`), giving the
 `ContAwgnCode.encoder_power` obligation directly. This reduction is genuine; it transitively
@@ -170,7 +170,7 @@ the `BddAbove` obligation required to lower-bound `contAwgnMaxMessages` via `le_
 theorem contAwgnMaxMessages_bddAbove (T W N₀ P ε : ℝ)
     (hT : 0 < T) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
     BddAbove { M : ℕ | ∃ c : ContAwgnCode T W P M, (c.averageError N₀).toReal ≤ ε } := by
-  sorry -- @residual(plan:shannon-hartley-op-phase3)
+  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
 
 /-! ## §F — assembly (deferred to a follow-up dispatch) -/
 
@@ -180,6 +180,6 @@ through the synthesis bridge. -/
 theorem contAwgn_ge_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := by
-  sorry -- @residual(plan:shannon-hartley-op-phase3)
+  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
 
 end InformationTheory.Shannon.ShannonHartley

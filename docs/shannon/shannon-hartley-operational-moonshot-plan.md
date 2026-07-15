@@ -1,15 +1,13 @@
 # Shannon-Hartley operational capacity closure ムーンショット計画 🌙
 
-**Status**: 🔄 **mainline OVERTURNED（2026-07-15、独立 honesty audit で機械確認、commit e711aa03）**。
-2026-07-14 の tier-2 audit は覆り、既 publish 済 mainline `contAwgn_eq_shannonHartley` は現行 Phase 1 def の下で
-**`P > 0` で FALSE-as-framed**（degenerate `IsBandlimited` + a.e.-class encoder 上の pointwise `sampledSignal`）。
-コード側 SoT = `ShannonHartleyOperational.lean` の `@audit:defect(degenerate)`（`IsBandlimited`）/
-`@audit:defect(false-statement)`（`contAwgn_eq_shannonHartley`、2026-07-14 stamp を OVERTURNED 明記）。
-**新 mainline blocker = Phase 1-fix（def 再設計）**: Phase 1 def を faithful・非退化に建て直し
-`contAwgn_eq_shannonHartley` を true-as-framed に復帰させ、honest な単一 wall-sorry
-`@residual(wall:nyquist-2w-dof)` を回復する（**`nyquist-2w-dof` が genuine documented wall なのは
-statement が true になった後に限る**）。stretch（Phase 3 achievability closure）は Phase 1-fix に gated。
-honesty bar 不変（CLAUDE.md「検証の誠実性」）。
+**Status**: ✅ **mainline RESTORED（2026-07-15、Phase 1-fix 着地、commit 7c3afc86、独立 honesty audit PASS）**。
+Phase 1-fix（def 再設計）で 2 defect root（degenerate L¹-`𝓕` `IsBandlimited` / a.e.-class encoder gap）を
+解消し、`contAwgn_eq_shannonHartley` は **true-as-framed** な honest 単一 wall-sorry
+`@residual(wall:nyquist-2w-dof)` に復帰（`nyquist-2w-dof` は statement true 化後の genuine documented wall）。
+コード側 SoT = `ShannonHartleyOperational.lean`（`@audit:defect` 除去済、詳細は Phase 1-fix「着地」節）。
+**残 open work**: (1) shared bridge lemma `l2Fourier_eq_fourierIntegral`（`bandlimited_sup_bound` を genuine 化、
+~150–250 行の tempered-distribution plumbing、**壁でない**）→ (2) Phase 3 achievability closure（既 skeleton の
+5 sorry、Phase 1-fix 完了で un-blocked）。stretch（Phase 2/4/5-full）は不変。honesty bar 不変（CLAUDE.md「検証の誠実性」）。
 
 > **Parent**: [`../textbook-roadmap.md`](../textbook-roadmap.md) §Ch.9 Shannon-Hartley（Ch.9.6）
 > **関連**: [`whittaker-shannon-partial-moonshot-plan.md`](whittaker-shannon-partial-moonshot-plan.md)
@@ -21,10 +19,11 @@ honesty bar 不変（CLAUDE.md「検証の誠実性」）。
 ## 進捗
 
 - [x] Phase 0 — Mathlib + InformationTheory API 在庫 ✅（commit 8bf07545）
-- [~] Phase 1 — operational infra 🔄 **[FALSIFIED: def が degenerate/under-specified、`@audit:defect` 済。Phase 1-fix で再設計]**（commit 7e354045）
-- [~] Phase 5-min — wire + Option A README infra 🔄 **[FALSIFIED: 着地した mainline は false-as-framed、2026-07-14 tier-2 audit OVERTURNED]**（commit b8770fce / ff32ec82）
-- [ ] **Phase 1-fix — faithful band-limit + continuous-codeword redesign 🚧 [新 mainline blocker = 次 leg]**
-- [ ] Phase 3 — achievability closure（`contAwgn_ge_shannonHartley`、既 skeleton `ShannonHartleyAchievability.lean`）📋 **[Phase 1-fix に gated、fix 後 un-blocked]**
+- [~] Phase 1 — operational infra 🔄 **[FALSIFIED → Phase 1-fix で再設計済]**（commit 7e354045）
+- [x] M-fix — 在庫 pass（faithful band-limit design question 解決）✅（commit 5aeb2f92）
+- [x] **Phase 1-fix — faithful band-limit + continuous-codeword redesign ✅（commit 7c3afc86、独立 honesty audit PASS）**
+- [~] Phase 5-min — wire + Option A README infra 🔄 **[旧着地 FALSIFIED、Phase 1-fix で mainline 復帰済]**（commit b8770fce / ff32ec82）
+- [ ] Phase 3 — achievability closure（`contAwgn_ge_shannonHartley`、既 skeleton `ShannonHartleyAchievability.lean`）📋 **[Phase 1-fix 完了で un-blocked = 次 leg]**
 - [ ] Phase 2 — prolate-DOF スペクトル理論（`timeBandLimitingOp` + 固有値集中）📋 **[stretch / 壁核]**
 - [ ] Phase 4 — converse（`contAwgn_le_shannonHartley`、Phase 2 消費）📋 **[stretch]**
 - [ ] Phase 5-full — `le_antisymm` 組立 📋 **[stretch / closure]**
@@ -33,11 +32,10 @@ honesty bar 不変（CLAUDE.md「検証の誠実性」）。
 
 ### Goal（最終達成状態）
 
-**mainline（再取得目標、旧「達成済」は OVERTURNED）**: Phase 1 def を faithful・非退化・非循環に
-建て直し（Phase 1-fix）、`contAwgn_eq_shannonHartley`（`@[entry_point]`）を **true-as-framed** な
-honest 単一 wall-sorry として復帰（body = `sorry -- @residual(wall:nyquist-2w-dof)`）。
-`IsTwoWDegreesOfFreedom` load-bearing predicate の除去自体は有効（`ShannonHartley.lean` から消滅済）だが、
-それを受けた operational def が degenerate/under-specified で命題を空にしていた（下記「def-fix の必要」）。
+**mainline（達成済、commit 7c3afc86）**: Phase 1-fix で def を faithful・非退化・非循環に建て直し、
+`contAwgn_eq_shannonHartley`（`@[entry_point]`）は **true-as-framed** な honest 単一 wall-sorry
+（body = `sorry -- @residual(wall:nyquist-2w-dof)`）に復帰済（独立 audit PASS）。
+`IsTwoWDegreesOfFreedom` load-bearing predicate 除去（`ShannonHartley.lean` から消滅済）も有効。
 
 **stretch（残）**: その wall-sorry を genuine 証明で除去し `contAwgn_eq_shannonHartley` を 0-sorry
 （`@audit:ok`）に復帰。真の壁核は converse 側の単一 `wall:nyquist-2w-dof`（prolate-DOF）に閉じ込め済
@@ -46,17 +44,12 @@ honest 単一 wall-sorry として復帰（body = `sorry -- @residual(wall:nyqui
 honesty bar 不変（CLAUDE.md「検証の誠実性」）: genuine に建て、真に詰まる sub-wall のみ
 honest `sorry + @residual(wall:<slug>)` で分解。**load-bearing hyp / 循環 def / `:True` slot は禁止**。
 
-### def-fix の必要（overturn の根 = 2 独立ルート、詳細はコード stamp が SoT）
+### def-fix の背景（overturn = 2 独立ルート、Phase 1-fix で解消済・history）
 
-1. **degenerate `IsBandlimited`**（`@audit:defect(degenerate)`、ShannonHartleyOperational.lean:~86）:
-   L¹ `Real.fourierIntegral`（`𝓕`）を使うため非 L¹ 信号で junk-0 = すべての genuine 帯域制限 L² 信号
-   （非 L¹）で述語が vacuously 成立し何も制約しない。
-2. **pointwise-vs-a.e. gap**（`@audit:defect(false-statement)`、~line 213）: `sampledSignal` は pointwise
-   `f(node)` を読むが `encoder_power`/`𝓕` は a.e. class しか見ない。`0` a.e. で 1 node だけ巨大値の codeword が
-   全 field を満たしつつサンプル無限大 → `ContAwgnCode.encoder` に continuity/L²-membership field が無いため
-   固定 `IsBandlimited` 下でも生存。
-帰結: message 集合 unbounded ⇒ `contAwgnMaxMessages = Nat.sSup(unbounded) = 0` ⇒ capacity `0 ≠ W·log(1+P/(N₀W)) > 0`。
-（2026-07-14 の非退化論法は暗に Parseval = genuine 帯域制限**連続**代表の存在を仮定していた。）
+旧 Phase 1 def は 2 root で命題を空にしていた: (1) degenerate `IsBandlimited`（L¹-`𝓕` junk-0）、
+(2) pointwise-vs-a.e. gap（encoder に continuity/L²-membership field 不在）。帰結は
+`contAwgnMaxMessages = Nat.sSup(unbounded) = 0`。両 root は Phase 1-fix（着地節）で dissolve 済 =
+コード側 `@audit:defect` 除去済（現状 false-as-framed ではない、以下は解決した設計上の理由の記録）。
 
 ### Approach（解の全体形 = 戦略）
 
@@ -82,16 +75,17 @@ def に含めない C3 の意図は Phase 1-fix でも継承。**旧 Phase 1 def
 したがって **真の壁は converse 側の単一核 `nyquist-2w-dof`（Phase 2 → Phase 4）に閉じ込められる**。
 Phase 1 の周辺インフラと Phase 3 achievability は壁でない（in-project 定義・証明可能）。
 
-### route（DAG 選択 + 起点、overturn 後に再シーケンス）
+### route（DAG 選択 + 次アクション）
 
-旧「mainline 達成済 → stretch」は無効。攻略順は
-**Phase 1-fix（def 再設計、新 mainline blocker・起点）→ Phase 3（achievability closure、fix 後 un-blocked）
+Phase 1-fix 完了（commit 7c3afc86）で mainline は honest wall-sorry に着地。残る攻略順は
+**bridge `l2Fourier_eq_fourierIntegral`（`bandlimited_sup_bound` を genuine 化、mainline-adjacent 次アクション）
+→ Phase 3（achievability closure、既 skeleton の 5 sorry を fill、Phase 1-fix で un-blocked）
 → Phase 2（prolate 壁核・最深）→ Phase 4（converse）→ Phase 5-full（サンドイッチ組立）**。
 
-**起点 = Phase 1-fix**。Phase 1 def が degenerate/under-specified の間は achievability の GO 論法
-（edge-effect dissolve = exact sinc isometry）も、`contAwgnMaxMessages_bddAbove` も成立しない
-（既存 skeleton の 5 sorry は fix 後に初めて genuine 化）。2026-07-15 の Phase 3 GO/NO-GO 判定は
-faithful def を前提にしており、**Phase 1-fix 完了までは条件付き**。詳細 → Phase 1-fix / Phase 3 節。
+**次アクション = bridge lemma fill**。`l2Fourier_eq_fourierIntegral`（L²-FT ↔ pointwise L¹ `Real.fourierIntegral`
+の L¹∩L² 上一致）を埋めれば `bandlimited_sup_bound` が genuine 化する（~150–250 行、壁でない）。その後
+Phase 3 achievability の GO 論法（edge-effect dissolve = exact sinc isometry、`contAwgnMaxMessages_bddAbove`）は
+faithful def の下で有効 = 5 sorry が genuine 化可能。詳細 → Phase 1-fix「着地」/ Phase 3 節。
 
 ---
 
@@ -125,79 +119,44 @@ proof-pivot-advisor 名指しの循環罠: **連続時間 code を「長さ `⌊
 commit 8bf07545。`docs/shannon/shannon-hartley-operational-inventory.md` に各 Phase feasibility を確定。
 mainline GO 判定 + prolate = genuine 壁核の裏取り済。
 
-## Phase 1 — operational infra 🔄 **[FALSIFIED、Phase 1-fix で再設計]**
+## Phase 1 / Phase 5-min — retired（Phase 1-fix に統合）
 
-commit 7e354045。新 file `InformationTheory/Shannon/ShannonHartleyOperational.lean`。def 一式
-（`IsBandlimited` / `structure ContAwgnCode` / `sampledSignal` / `errorProbAt` / `averageError` /
-`contAwgnMaxMessages` = `sSup{M | …}` / `contAwgnRate` = `limsup_T (log M(T))/T` / `contAwgnOperationalCapacity`
-= `⨅ε∈Ioo 0 1 contAwgnRate`）を実装。**当初「全 def が非循環・非退化（C1–C4 充足、`√(T/n)` 正規化が要）」と
-記録したが 2026-07-15 に FALSIFIED**: `IsBandlimited`（L¹ `𝓕`）が degenerate、`ContAwgnCode.encoder` に
-continuity/L²-membership field が無く pointwise `sampledSignal` が a.e.-class を突破（上記「def-fix の必要」）。
-コード stamp が SoT（`@audit:defect(degenerate)` / `@audit:defect(false-statement)`）。C2 primitive の形
-（`sSup` に `2W`/`⌊2WT⌋` 不在）と非循環設計意図（C1–C4）は Phase 1-fix でも継承する。
-**雑音 route β**（per-sample iid Gaussian を `errorProbAt` に inline、`IsGaussianProcess` 非依存、
-proposed wall `cont-awgn-noise-measure` 不発）は overturn の影響外で有効。
-
-## Phase 5-min — wire ✅→🔄 **[着地は FALSIFIED、audit OVERTURNED]**
-
-commit b8770fce（+ Option A README infra = commit ff32ec82）。
-
-- **有効な部分**: `IsTwoWDegreesOfFreedom` / `IsBandlimitedSamplingHypothesis` / `IsBandlimitedKernel` の
-  `ShannonHartley.lean` からの除去（load-bearing predicate 消滅）は依然有効。**Option A README honesty infra**
-  （`gen_readme_table.ts` が `@residual(wall:*)` 付き documented wall-sorry を許容、listed file は strict 0-sorry
-  維持）も再利用可能インフラとして残る。
-- **FALSIFIED**: 2026-07-14 の独立 honesty audit（tier-2 PASS、命題 true-as-framed / 非退化）は
-  **2026-07-15 に OVERTURNED**（degenerate def で命題が false-as-framed だった）。`contAwgn_eq_shannonHartley`
-  の単一 wall-sorry は honest tier-2 ではなく **`@audit:defect(false-statement)`** 状態。
-  Phase 1-fix で def を建て直して初めて honest wall-sorry に復帰する。
+- **Phase 1 — operational infra**（commit 7e354045）: `ShannonHartleyOperational.lean` の def 一式実装。
+  当初 def が degenerate/under-specified で 2026-07-15 に FALSIFIED → **Phase 1-fix で再設計済**（着地節）。
+  C2 primitive 形（`sSup` に `2W`/`⌊2WT⌋` 不在）+ 非循環設計意図 C1–C4 + 雑音 route β（per-sample iid
+  Gaussian を `errorProbAt` に inline、proposed wall `cont-awgn-noise-measure` 不発）は Phase 1-fix でも継承・有効。
+- **Phase 5-min — wire**（commit b8770fce / ff32ec82）: `IsTwoWDegreesOfFreedom` 等 load-bearing predicate の
+  `ShannonHartley.lean` からの除去 + Option A README honesty infra（`gen_readme_table.ts` が `@residual(wall:*)`
+  documented wall-sorry を許容）は有効な再利用インフラ。旧着地は false-as-framed で 2026-07-14 audit OVERTURNED
+  だったが Phase 1-fix で mainline 復帰済。
 
 ---
 
-## Phase 1-fix — faithful band-limit + continuous-codeword redesign 🚧 **[新 mainline blocker = 起点]**
+## Phase 1-fix — faithful band-limit + continuous-codeword redesign ✅ **[DONE、commit 7c3afc86、audit PASS]**
 
 **目的**: Phase 1 def を再設計し `contAwgn_eq_shannonHartley` を true-as-framed（finite・band-limited・
-非退化）に復帰 → honest な単一 wall-sorry `@residual(wall:nyquist-2w-dof)` を回復（DOF 壁が genuine なのは
-**statement が true になった後のみ**）。proof-log: yes。
+非退化）に復帰 → honest な単一 wall-sorry `@residual(wall:nyquist-2w-dof)` を回復。M-fix 在庫（commit 5aeb2f92）で
+open design question（L² 関数上の spectral `IsBandlimited` 述語化 + Paley-Wiener 連続代表の Mathlib 有無）を先行解決。
 
-**M-fix — 在庫 pass（FIRST、coding 前に必須・feasibility-unknown）**: 独立 Mathlib API 在庫（`mathlib-inventory`
-の別 leg、`shannon-hartley-operational-inventory.md` に追記）。open design question を先に解く:
-- `Lp.fourierTransformₗᵢ`（`MeasureTheory.Lp.fourierTransformₗᵢ`）は `Lp ℂ 2` の a.e.-class 上で動く。
-  raw `ℝ → ℝ` 関数に対し「L² 関数で 𝓕-台 ⊆ `[-W,W]`」を **どう clean に述語化するか**。
-- 「band-limited L² ⟹ `|f(t)| ≤ √(2W)·‖f‖₂` を満たす連続 canonical 代表を持つ」（Paley-Wiener）が
-  Mathlib に在るか / self-build 可能か。**在れば** 連続 L² 関数上の spectral-support `IsBandlimited` +
-  1 個の continuity/`Memℒp` field で **両ルートを同時に解消**しうる。**無ければ** Paley-Wiener 連続性補題を
-  self-build として計上。→ **feasibility-unknown（この 1 点が Phase 1-fix の最大リスク）**。
+### 着地（2026-07-15、commit 7c3afc86、独立 honesty audit PASS）
 
-**fix recipe（auditor 指定、両ルート必須）**:
-- (a) `IsBandlimited` を **L² Fourier transform のスペクトル台**（`Lp.fourierTransformₗᵢ`、台 ⊆ `[-W,W]`）で
-  再定義する（L¹ 積分 `𝓕` ではない）→ ルート1（degenerate）解消。
-- (b) `ContAwgnCode.encoder` に **L²-membership / continuity field** を追加し、pointwise `sampledSignal` が
-  canonical Paley-Wiener 代表（`|f(t)| ≤ √(2W)·‖f‖₂`）を読むようにする → per-sample 電力を finite に回復、
-  ルート2（pointwise-vs-a.e.）解消。M-fix で「連続 L² 上の spectral `IsBandlimited` が両ルートを 1 field で
-  賄える」と判れば (a)(b) は 1 述語に統合。
+- **(a)** `IsBandlimited` を **L²-Fourier スペクトル台**で再定義（signature は `(ℝ→ℝ)` 維持 = option X、内部で
+  complexify）→ degenerate L¹-`𝓕` junk-0 root 解消。
+- **(b)** `ContAwgnCode` に regularity field `encoder_memLp` + `encoder_continuous` を追加 → pointwise-vs-a.e. gap 解消
+  （codeword が canonical 連続 L² 代表を読む）。
+- **(c)** Paley-Wiener sup bound は **field でなく派生 theorem** `bandlimited_sup_bound` として着地、body =
+  `sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)`。
+- **(d)** 唯一の genuine self-build gap = shared bridge lemma **`l2Fourier_eq_fourierIntegral`**（L²-FT ↔ pointwise
+  L¹ `Real.fourierIntegral` の L¹∩L² 上一致、~150–250 行の tempered-distribution plumbing、**壁でない**）。
+- **(e)** audit PASS: 2 false-as-framed root 双方 dissolve、新 field は regularity/非 load-bearing、wall は genuine。
+- **auditor clarification（future closer 向け注意）**: `bandlimited_sup_bound` が与えるのは **full-line** の
+  `|f(t)| ≤ √(2W)·‖f‖₂` 束（`‖f‖₂` は全直線 L² ノルム）。full-line → window energy `∫_{[0,T]}f² ≤ T·P` の tie は
+  sup bound 単独ではなく `nyquist-2w-dof` の band-limit/essential-time-limitation 構造が供給する
+  （sup bound だけで window-energy sample boundedness が出ると誤読しないこと）。
 
-**ripple（記録用）**:
-- (i) mainline `contAwgn_eq_shannonHartley` は fix 後に honest true-as-framed `@residual(wall:nyquist-2w-dof)` で再着地。
-- (ii) Phase 3 skeleton（`ShannonHartleyAchievability.lean`）の `synthSignal_bandlimited` は L²-FT = boxcar で
-  **genuine に証明可能**化（現行 degenerate def 下では junk-true）。`contAwgnMaxMessages_bddAbove` +
-  `contAwgn_ge_shannonHartley` も **closable** 化（degenerate def 下では un-closable だった）。
-- (iii) Phase 4 converse は訂正後の def を消費。
-- (iv) **README Option A 脚注は現在 `nyquist-2w-dof` を「true-but-walled」として提示するが実際は false-as-framed**
-  = 一時的な dishonesty。def-fix で解消（true 化後は genuine documented wall に戻る）。**この false 状態を
-  settled documented wall として outward artifact に提示しない**（README/site には fix 完了まで壁として喧伝しない）。
-
-**依存（DAG edge）**: Phase 0 + M-fix 在庫 → Phase 1-fix。Phase 1-fix → Phase 3 / Phase 4（訂正 def を消費）。
-**循環チェック**: 再設計後も設計制約 C1–C4 を再照合（`encoder : Fin M → (ℝ → ℝ)` は関数のまま、
-capacity primitive に `2W`/`⌊2WT⌋` を埋めない）。continuity/L²-membership field は codeword の regularity
-制約であり DOF 限界を埋め込む循環ではない（射影・次元カウントは converse の証明ステップ）。
-**受入基準**: `contAwgn_eq_shannonHartley` が true-as-framed（`@audit:defect` 除去）+ 単一 honest wall-sorry
-`@residual(wall:nyquist-2w-dof)` に復帰、`IsBandlimited` の `@audit:defect(degenerate)` 除去。非退化の再確認
-（fix 後に `contAwgnMaxMessages` が正 `P` で unbounded → 0 に潰れないこと = 少なくとも 1 code の finite サンプル）。
-**概算**: genuine 再設計。def 書換 + Parseval/isometry 再証明 + downstream 再配線で **~300–700 行**
-（**Paley-Wiener 連続性が Mathlib 不在なら +~300–600 行 self-build、feasibility-unknown**）。
-**retreat line**: Paley-Wiener 連続代表の存在（`|f(t)| ≤ √(2W)‖f‖₂`）が Mathlib 不在で self-build も詰まった
-個別補題のみ、その時点で slug を切って honest `sorry + @residual(<class>:<slug>)`。**def を空にする degenerate
-再定義 / load-bearing hyp 化は禁止**（`IsBandlimited` を再び vacuous 化しない）。
+**循環チェック（充足）**: C1–C4 再照合済（`encoder : Fin M → (ℝ → ℝ)` は関数のまま、capacity primitive に
+`2W`/`⌊2WT⌋` 不在）。continuity/L²-membership field は codeword regularity であり DOF 限界の埋め込みではない。
+**README ripple**: Option A 脚注の `nyquist-2w-dof` は fix 完了で genuine documented wall に復帰（一時 false 状態は解消）。
 
 ---
 
@@ -409,15 +368,14 @@ theorem contAwgn_eq_shannonHartley ... :=
 |---|---|---|
 | Phase 1（雑音測度） | proposed wall `cont-awgn-noise-measure`（**不発**） | route β（per-sample iid Gaussian を `errorProbAt` に inline）採用で `IsGaussianProcess` 依存が消え、当初 proposed だった雑音測度壁は不要になった（register 追加せず、code 側 slug も生成されない） |
 | Phase 2（prolate 固有値集中） | `wall:nyquist-2w-dof`（**最有力・確定的**） | 真の壁核。作用素定義 + 自己共役 + コンパクト性は genuine 目標、**固有値集中 asymptotic のみ**が genuine 壁（loogle `Found 0`: prolate/Slepian、self-build ~800-1500 行）。詰まれば `prolate_eigenvalue_count` を honest sorry で分解 |
-| Phase 3（achievability） | **なし（壁非依存、faithful def 前提の GO・Phase 1-fix に gated）** | edge-effect dissolve（`encoder_power` in-window 課金 + exact sinc isometry `∫_ℝf² ≤ T·P`）で `wall:nyquist-2w-dof` 一部共有は不発。全 leg（synthesis bridge + Parseval + BddAbove crude converse + `awgn_achievability`）genuine 目標だが degenerate def 下では un-closable = Phase 1-fix 後に closable |
-| Phase 1-fix（def 再設計） | **なし（def-fix、壁生成せず）** | degenerate/under-specified def を faithful 化し `@audit:defect` を除去。retreat は Paley-Wiener 連続性の個別補題のみ（feasibility-unknown）|
+| Phase 3（achievability） | **なし（壁非依存、faithful def 前提の GO・Phase 1-fix で un-gated）** | edge-effect dissolve（`encoder_power` in-window 課金 + exact sinc isometry `∫_ℝf² ≤ T·P`）で `wall:nyquist-2w-dof` 一部共有は不発。全 leg（synthesis bridge + Parseval + BddAbove crude converse + `awgn_achievability`）genuine 目標、Phase 1-fix 完了で closable |
+| Phase 1-fix（def 再設計） | **`plan:…moonshot-plan`（`bandlimited_sup_bound`）** ✅ | def を faithful 化し `@audit:defect` 除去済（commit 7c3afc86）。残 self-build = bridge `l2Fourier_eq_fourierIntegral`（壁でない、~150–250 行） |
 | Phase 4（converse） | `wall:nyquist-2w-dof`（**Phase 2 transitive 継承**） | Phase 2 の `prolate_eigenvalue_count` を継承。Phase 4 独自の新 sorry は作らない |
-| Phase 5-min（🔄 着地 FALSIFIED） | `@audit:defect(false-statement)`（honest wall ではない） | 現行 `contAwgn_eq_shannonHartley` body の sorry は degenerate def 下で false-as-framed。**2026-07-14 tier-2 audit は OVERTURNED**。Phase 1-fix 後に初めて honest `@residual(wall:nyquist-2w-dof)` に復帰 |
+| Phase 5-min（🔄 旧着地 FALSIFIED → 復帰済） | `@residual(wall:nyquist-2w-dof)`（honest） | 旧 mainline は degenerate def 下で false-as-framed（2026-07-14 audit OVERTURNED）だったが、Phase 1-fix で `contAwgn_eq_shannonHartley` は honest wall-sorry に復帰済 |
 
-**register 整合**: `nyquist-2w-dof` は `docs/audit/audit-tags.md` Wall name register に既存。**`nyquist-2w-dof` が
-genuine documented wall として有効なのは statement が true-as-framed になった後（Phase 1-fix 完了後）のみ** —
-現状 `contAwgn_eq_shannonHartley` は `@audit:defect(false-statement)` で、この sorry を「documented wall」として
-outward artifact（README/site）に提示しない。register note の consumer 反映は実装 owner の担当（本 plan は
+**register 整合**: `nyquist-2w-dof` は `docs/audit/audit-tags.md` Wall name register に既存。Phase 1-fix 完了で
+`contAwgn_eq_shannonHartley` は true-as-framed になり、この sorry は genuine documented wall として有効
+（`@audit:defect` 除去済）。register note の consumer 反映は実装 owner の担当（本 plan は
 prose に壁事実をキャッシュしない）。各 node の前提: **genuine に詰まったら honest
 `sorry + @residual(wall:nyquist-2w-dof)` で分解し次 leg**。load-bearing hyp / `*Hypothesis` predicate 化 /
 循環 def / `:True` slot は全 Phase で禁止（CLAUDE.md）。
@@ -427,16 +385,15 @@ prose に壁事実をキャッシュしない）。各 node の前提: **genuine
 ## 依存 DAG / ripple
 
 ```
-[OVERTURNED] Phase 0 ─► Phase 1 (degenerate def) ─► Phase 5-min (false-as-framed 着地、audit OVERTURNED)
-
-[mainline 再取得] Phase 0 ─► M-fix 在庫 ─► Phase 1-fix (faithful def 再設計・新起点) ─► Phase 3 (achievability closure) ─┐
-                                                        │                                                             ├─► Phase 5-full
-                                                        └─► Phase 4 (converse) ◄─ Phase 2 (prolate/壁核) ─────────────┘
+[DONE] Phase 0 ─► M-fix 在庫 ─► Phase 1-fix ✅ (faithful def, mainline 復帰) ─► [next] bridge l2Fourier_eq_fourierIntegral ─► Phase 3 (achievability closure) ─┐
+                                                                                                                              ├─► Phase 5-full
+                                                        Phase 4 (converse) ◄─ Phase 2 (prolate/壁核) ────────────────────────┘
 ```
 
-- **mainline blocker（起点）**: `0 → M-fix → 1-fix`。faithful def 再設計で `contAwgn_eq_shannonHartley` を
-  true-as-framed + honest 単一 wall-sorry に復帰。
-- **fix 後**: `3`（achievability closure、既 skeleton の 5 sorry を genuine 化）→ `2 → 4`（converse、壁核）→ `5-full`。
+- **mainline（達成済）**: `0 → M-fix → 1-fix ✅`。faithful def 再設計で `contAwgn_eq_shannonHartley` は
+  true-as-framed + honest 単一 wall-sorry に復帰済（commit 7c3afc86）。
+- **next**: bridge `l2Fourier_eq_fourierIntegral` fill（`bandlimited_sup_bound` genuine 化）→ `3`
+  （achievability closure、既 skeleton の 5 sorry を genuine 化）→ `2 → 4`（converse、壁核）→ `5-full`。
 - **ripple**: `IsTwoWDegreesOfFreedom` 削除は完了済で有効（consumer 影響 ShannonHartley.lean 内に閉じる）。
   新 file `ShannonHartleyAchievability.lean` は既存 + `InformationTheory.lean` に import 登録済
   （import cycle なし = Converse/Achievability/WhittakerShannon は Operational を import しない）。
@@ -449,18 +406,15 @@ prose に壁事実をキャッシュしない）。各 node の前提: **genuine
 
 append-only。決着済 entry は削除（git が履歴）、active な判断のみ残す（≤ 10 entry）。
 
-1. **🔄 mainline OVERTURNED = false-as-framed defect（2026-07-15、commit e711aa03）**: 既 publish 済
-   `contAwgn_eq_shannonHartley` は現行 Phase 1 def の下で `P > 0` で FALSE。Phase 3 実装中に発見、fresh
-   `honesty-auditor` が full machine verification で確認、2026-07-14 tier-2 audit を OVERTURN。2 独立ルート
-   （① degenerate `IsBandlimited`=L¹`𝓕` junk-0、② pointwise-vs-a.e. gap = encoder に continuity/L² field 不在）。
-   詳細プロセスはコード stamp が SoT（`@audit:defect(degenerate)` / `@audit:defect(false-statement)`）。→ 新 mainline
-   blocker = **Phase 1-fix**（L²-FT spectral-support `IsBandlimited` + Paley-Wiener 連続代表 field）。再シーケンス:
-   `1-fix → 3 → 2/4 → 5-full`。Paley-Wiener 連続性の Mathlib 有無が最大リスク（feasibility-unknown、M-fix 在庫で先に解く）。
-2. **Phase 3 achievability GO 論法は faithful def が前提**: sinc-tail edge-effect dissolve（exact sinc isometry
-   `∫_ℝf² ≤ T·P`）+ BddAbove crude-converse（ℕ-sSup-returns-0 罠、`le_csSup` 前提、仮説化禁止）+ synthesis
-   bridge/line-Plancherel の 3 点は proof-pivot-advisor gate 2026-07-15 で verbatim 確定したが、**degenerate def
-   下では成立せず Phase 1-fix に gated**（既 skeleton の 5 sorry は fix 後に genuine 化）。`nyquist-2w-dof` は
-   converse 専用（Phase 2/4）。
+1. **✅ mainline OVERTURN は Phase 1-fix で RESOLVED（2026-07-15、commit 7c3afc86、audit PASS）**: 2026-07-14
+   tier-2 audit を覆した 2 root（① degenerate L¹-`𝓕` `IsBandlimited`、② pointwise-vs-a.e. encoder gap）は
+   def 再設計（L²-FT spectral-support + `encoder_memLp`/`encoder_continuous` field）で dissolve 済。
+   `contAwgn_eq_shannonHartley` は honest 単一 wall-sorry `@residual(wall:nyquist-2w-dof)` に復帰、`@audit:defect` 除去済。
+   残: bridge `l2Fourier_eq_fourierIntegral`（壁でない）→ Phase 3。
+2. **Phase 3 achievability GO 論法（faithful def 前提、un-gated）**: sinc-tail edge-effect dissolve（exact sinc
+   isometry `∫_ℝf² ≤ T·P`）+ BddAbove crude-converse（ℕ-sSup-returns-0 罠、`le_csSup` 前提、仮説化禁止）+ synthesis
+   bridge/line-Plancherel の 3 点は proof-pivot-advisor gate 2026-07-15 で verbatim 確定。Phase 1-fix 完了で
+   **un-gated**（既 skeleton の 5 sorry が genuine 化可能）。`nyquist-2w-dof` は converse 専用（Phase 2/4）。
 3. **真の壁核は converse 側の `nyquist-2w-dof` 単一**: Phase 2（固有値集中）→ Phase 4（converse 上位カウント）に
    閉じ込める。Phase 1-fix / Phase 3 achievability は壁非依存を第一目標（壁が genuine なのは statement true 化後）。
 4. **`sampledSignal` の `√(T/n)` 正規化は必要だが非退化に不十分**: per-sample↔連続電力 Parseval 整合

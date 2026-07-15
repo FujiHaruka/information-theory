@@ -29,8 +29,11 @@ complexification (a genuine band-limit constraint, not junk-`0`), and `ContAwgnC
 carries `encoder_continuous` + `encoder_memLp` regularity fields that pin each codeword to its
 canonical continuous `L²` representative. The Paley-Wiener sup bound `bandlimited_sup_bound`
 (`|f(t)| ≤ √(2W)·‖f‖₂`, a true theorem whose only Lean gap is the `L²↔L¹` Fourier-agreement
-bridge) then caps the pointwise samples by the codeword energy, so no unbounded-message-set
-counterexample survives. `bandlimited_sup_bound` carries an honest plan-tracked bridge residual;
+bridge) caps the pointwise samples by the *full-line* `L²` energy `‖f‖₂` (the norm over all of
+`ℝ`); the further tie from `‖f‖₂` to the *window* energy `∫_{[0,T]} f² ≤ T·P` is not supplied by
+the sup bound alone but by the band-limit + essential-time-limitation carried by the
+`nyquist-2w-dof` structure. Together they leave no unbounded-message-set counterexample.
+`bandlimited_sup_bound` carries an honest plan-tracked bridge residual;
 the mainline `sorry` is the genuine `wall:nyquist-2w-dof` degrees-of-freedom count.
 
 ## Main definitions
@@ -207,8 +210,10 @@ concentration of the time-and-band limiting operator), absent from Mathlib.
 True-as-framedness (restored by the 2026-07-15 def redesign, see the module note): with the
 L²-Fourier-support `IsBandlimited` and the `encoder_continuous` + `encoder_memLp` regularity
 fields, every codeword is a genuine continuous band-limited `L²` function, so the Paley-Wiener sup
-bound `bandlimited_sup_bound` (`|f(t)| ≤ √(2W)·‖f‖₂`) caps the pointwise samples by the codeword
-energy `∫_{[0,T]} f² ≤ T·P`. The message set is therefore bounded and the earlier `0`-a.e.-spike
+bound `bandlimited_sup_bound` (`|f(t)| ≤ √(2W)·‖f‖₂`) caps the pointwise samples by the full-line
+`L²` energy `‖f‖₂`; the tie from that `‖f‖₂` to the window energy `∫_{[0,T]} f² ≤ T·P` is part of
+the band-limit/essential-time-limitation supplied by the `nyquist-2w-dof` structure (not by the
+sup bound alone). The message set is therefore bounded and the earlier `0`-a.e.-spike
 counterexample no longer satisfies the code, so the capacity is the finite Shannon-Hartley value
 rather than `0`. Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing). The `√(T/n)`
 tight-frame normalization keeps the sampling Gram operator `≈ I` at every oversampling factor, so
