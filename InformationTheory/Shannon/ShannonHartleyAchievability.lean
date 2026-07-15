@@ -45,7 +45,7 @@ namespace InformationTheory.Shannon.ShannonHartley
 set_option linter.unusedVariables false
 
 open MeasureTheory ProbabilityTheory Filter
-open scoped ENNReal NNReal Topology FourierTransform
+open scoped ENNReal NNReal Topology FourierTransform ComplexInnerProductSpace
 open InformationTheory.Shannon.NormalizedSinc
 
 /-! ## §A — Sinc synthesis -/
@@ -114,6 +114,205 @@ theorem sampledSignal_synthSignal_sqrt (T : ℝ) (n : ℕ) (c : Fin n → ℝ)
     exact Real.sqrt_one
   rw [← mul_assoc, h1, one_mul]
 
+/-! ## §B2 — Sinc/boxcar L²-Fourier atom
+
+The workhorse of the whole reduction. A single shifted, dilated normalized sinc
+`t ↦ sincN((t - c)/Δ)` is the inverse Fourier transform of the spectral boxcar
+`Δ · e^{-2πi c ξ} · 𝟙_{[-1/(2Δ), 1/(2Δ)]}`. Because the boxcar is compactly supported
+(hence `L¹ ∩ L²`), the inverse Fourier-agreement bridge
+`l2FourierInv_eq_fourierIntegralInv` transfers this pointwise identity to the abstract
+`L²`-Fourier isometry, giving both the `L²` membership of the sinc and the explicit
+`L²`-Fourier transform. Everything else (band-limitedness, energy) is finite linearity. -/
+
+/-- The spectral boxcar `Δ · e^{-2πi c ξ}` supported on `[-1/(2Δ), 1/(2Δ)]`. This is the
+`L²`-Fourier transform of the shifted, dilated normalized sinc `t ↦ sincN((t - c)/Δ)`. -/
+noncomputable def specBoxcar (c Δ : ℝ) : ℝ → ℂ :=
+  (Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))).indicator
+    fun ξ => (Δ : ℂ) * Complex.exp ((-(2 * Real.pi * c * ξ) : ℝ) * Complex.I)
+
+/-- Dilated boxcar integral: rescaling the fundamental-interval identity
+`integral_exp_boxcar_eq_sincN` to the band `[-1/(2Δ), 1/(2Δ)]`. -/
+theorem exp_dilate_interval_integral (Δ u : ℝ) (hΔ : 0 < Δ) :
+    (∫ ξ in (-(1 / (2 * Δ)))..(1 / (2 * Δ)),
+        Complex.exp ((2 * Real.pi * u * ξ : ℝ) * Complex.I))
+      = (Δ⁻¹ : ℂ) * (sincN (u / Δ) : ℂ) := by
+  have hΔ' : Δ ≠ 0 := ne_of_gt hΔ
+  have hrw : (fun ξ : ℝ => Complex.exp ((2 * Real.pi * u * ξ : ℝ) * Complex.I))
+      = fun ξ : ℝ =>
+          (fun y : ℝ => Complex.exp ((2 * Real.pi * (u / Δ) * y : ℝ) * Complex.I)) (Δ * ξ) := by
+    funext ξ
+    have harg : (2 * Real.pi * u * ξ : ℝ) = 2 * Real.pi * (u / Δ) * (Δ * ξ) := by
+      field_simp
+    rw [harg]
+  rw [show (∫ ξ in (-(1 / (2 * Δ)))..(1 / (2 * Δ)),
+        Complex.exp ((2 * Real.pi * u * ξ : ℝ) * Complex.I))
+        = ∫ ξ in (-(1 / (2 * Δ)))..(1 / (2 * Δ)),
+            (fun y : ℝ => Complex.exp ((2 * Real.pi * (u / Δ) * y : ℝ) * Complex.I)) (Δ * ξ) from by
+      rw [hrw]]
+  rw [intervalIntegral.integral_comp_mul_left
+      (f := fun y : ℝ => Complex.exp ((2 * Real.pi * (u / Δ) * y : ℝ) * Complex.I)) hΔ',
+    show Δ * (-(1 / (2 * Δ))) = -(1 / 2) by field_simp,
+    show Δ * (1 / (2 * Δ)) = 1 / 2 by field_simp,
+    WhittakerShannon.integral_exp_boxcar_eq_sincN (u / Δ), Complex.real_smul, Complex.ofReal_inv]
+
+/-- The spectral boxcar lies in every `Lᵖ`: it is bounded by `Δ` on a compact set. -/
+theorem specBoxcar_memLp (c Δ : ℝ) (hΔ : 0 < Δ) (p : ℝ≥0∞) :
+    MemLp (specBoxcar c Δ) p volume := by
+  have hcont : Continuous
+      fun ξ : ℝ => (Δ : ℂ) * Complex.exp ((-(2 * Real.pi * c * ξ) : ℝ) * Complex.I) := by
+    fun_prop
+  have haesm : AEStronglyMeasurable (specBoxcar c Δ) volume :=
+    hcont.aestronglyMeasurable.indicator measurableSet_Icc
+  have hvol : volume (Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))) ≠ ∞ := by
+    rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top
+  refine MemLp.mono' (memLp_indicator_const p measurableSet_Icc (Δ : ℝ) (Or.inr hvol)) haesm ?_
+  refine ae_of_all _ (fun ξ => ?_)
+  rw [specBoxcar]
+  by_cases hξ : ξ ∈ Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))
+  · rw [Set.indicator_of_mem hξ, Set.indicator_of_mem hξ, norm_mul,
+      Complex.norm_exp_ofReal_mul_I, mul_one, Complex.norm_real, Real.norm_eq_abs]
+    exact le_of_eq (abs_of_pos hΔ)
+  · rw [Set.indicator_of_notMem hξ, Set.indicator_of_notMem hξ, norm_zero]
+
+/-- Pointwise inverse Fourier transform of the spectral boxcar is the shifted, dilated sinc. -/
+theorem fourierInv_specBoxcar (c Δ : ℝ) (hΔ : 0 < Δ) (t : ℝ) :
+    𝓕⁻ (specBoxcar c Δ) t = (sincN ((t - c) / Δ) : ℂ) := by
+  have hb : (0 : ℝ) ≤ 1 / (2 * Δ) := by positivity
+  have hΔC : (Δ : ℂ) ≠ 0 := by exact_mod_cast ne_of_gt hΔ
+  rw [Real.fourierInv_eq']
+  simp only [Real.inner_apply]
+  have hfun : (fun ξ : ℝ => Complex.exp ((↑(2 * Real.pi * (ξ * t)) : ℂ) * Complex.I) •
+        specBoxcar c Δ ξ)
+      = (Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))).indicator
+          (fun ξ => (Δ : ℂ) * Complex.exp ((2 * Real.pi * (t - c) * ξ : ℝ) * Complex.I)) := by
+    funext ξ
+    by_cases hξ : ξ ∈ Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))
+    · have hexp : Complex.exp ((2 * Real.pi * (t - c) * ξ : ℝ) * Complex.I)
+          = Complex.exp ((2 * Real.pi * (ξ * t) : ℝ) * Complex.I)
+            * Complex.exp ((-(2 * Real.pi * c * ξ) : ℝ) * Complex.I) := by
+        rw [← Complex.exp_add]; congr 1; push_cast; ring
+      rw [specBoxcar, Set.indicator_of_mem hξ, Set.indicator_of_mem hξ, smul_eq_mul, hexp]
+      ring
+    · rw [specBoxcar, Set.indicator_of_notMem hξ, Set.indicator_of_notMem hξ, smul_zero]
+  rw [hfun, MeasureTheory.integral_indicator measurableSet_Icc,
+    MeasureTheory.integral_Icc_eq_integral_Ioc,
+    ← intervalIntegral.integral_of_le (by linarith : -(1 / (2 * Δ)) ≤ 1 / (2 * Δ)),
+    intervalIntegral.integral_const_mul, exp_dilate_interval_integral Δ (t - c) hΔ,
+    ← mul_assoc, mul_inv_cancel₀ hΔC, one_mul]
+
+/-- The complexified shifted, dilated sinc lies in `L²` (it is the inverse transform of an
+`L¹ ∩ L²` boxcar). -/
+theorem shiftSinc_memLp (c Δ : ℝ) (hΔ : 0 < Δ) :
+    MemLp (fun t => (sincN ((t - c) / Δ) : ℂ)) 2 volume := by
+  have hS1 := specBoxcar_memLp c Δ hΔ 1
+  have hS2 := specBoxcar_memLp c Δ hΔ 2
+  have hbridge := l2FourierInv_eq_fourierIntegralInv (specBoxcar c Δ) hS1 hS2
+  have hpt : 𝓕⁻ (specBoxcar c Δ) = fun t => (sincN ((t - c) / Δ) : ℂ) := by
+    funext t; exact fourierInv_specBoxcar c Δ hΔ t
+  rw [hpt] at hbridge
+  exact (memLp_congr_ae hbridge).mp (Lp.memLp _)
+
+/-- The abstract `L²`-Fourier transform of the sinc's canonical `Lp` representative is the
+boxcar's canonical `Lp` representative. -/
+theorem fourier_shiftSinc_toLp (c Δ : ℝ) (hΔ : 0 < Δ) :
+    (𝓕 ((shiftSinc_memLp c Δ hΔ).toLp (fun t => (sincN ((t - c) / Δ) : ℂ))) : Lp ℂ 2 volume)
+      = (specBoxcar_memLp c Δ hΔ 2).toLp (specBoxcar c Δ) := by
+  have hS1 := specBoxcar_memLp c Δ hΔ 1
+  have hbridge := l2FourierInv_eq_fourierIntegralInv (specBoxcar c Δ) hS1
+    (specBoxcar_memLp c Δ hΔ 2)
+  have hpt : 𝓕⁻ (specBoxcar c Δ) = fun t => (sincN ((t - c) / Δ) : ℂ) := by
+    funext t; exact fourierInv_specBoxcar c Δ hΔ t
+  rw [hpt] at hbridge
+  have hGeq : (shiftSinc_memLp c Δ hΔ).toLp (fun t => (sincN ((t - c) / Δ) : ℂ))
+      = 𝓕⁻ ((specBoxcar_memLp c Δ hΔ 2).toLp (specBoxcar c Δ)) := by
+    rw [← Lp.toLp_coeFn (𝓕⁻ ((specBoxcar_memLp c Δ hΔ 2).toLp (specBoxcar c Δ))) (Lp.memLp _)]
+    exact MemLp.toLp_congr (shiftSinc_memLp c Δ hΔ) (Lp.memLp _) hbridge.symm
+  rw [hGeq]
+  simp
+
+/-- Boxcar orthogonality (Plancherel on the band): the `L²` inner product of two spectral
+boxcars collapses to `Δ · sincN((c - c')/Δ)`. -/
+theorem inner_specBoxcar_toLp (c c' Δ : ℝ) (hΔ : 0 < Δ) :
+    (⟪(specBoxcar_memLp c Δ hΔ 2).toLp (specBoxcar c Δ),
+        (specBoxcar_memLp c' Δ hΔ 2).toLp (specBoxcar c' Δ)⟫ : ℂ)
+      = (Δ : ℂ) * (sincN ((c - c') / Δ) : ℂ) := by
+  have hb : (0 : ℝ) ≤ 1 / (2 * Δ) := by positivity
+  have hΔC : (Δ : ℂ) ≠ 0 := by exact_mod_cast ne_of_gt hΔ
+  have hu := MemLp.coeFn_toLp (specBoxcar_memLp c Δ hΔ 2)
+  have hv := MemLp.coeFn_toLp (specBoxcar_memLp c' Δ hΔ 2)
+  have hfun : (fun ξ : ℝ => (⟪((specBoxcar_memLp c Δ hΔ 2).toLp (specBoxcar c Δ)) ξ,
+        ((specBoxcar_memLp c' Δ hΔ 2).toLp (specBoxcar c' Δ)) ξ⟫ : ℂ))
+      =ᵐ[volume] fun ξ => (Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))).indicator
+        (fun ξ => (Δ : ℂ) ^ 2 * Complex.exp ((2 * Real.pi * (c - c') * ξ : ℝ) * Complex.I)) ξ := by
+    filter_upwards [hu, hv] with ξ hξu hξv
+    rw [hξu, hξv]
+    by_cases hmem : ξ ∈ Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))
+    · rw [specBoxcar, specBoxcar, Set.indicator_of_mem hmem, Set.indicator_of_mem hmem,
+        Set.indicator_of_mem hmem, RCLike.inner_apply']
+      have hexp : Complex.exp ((2 * Real.pi * (c - c') * ξ : ℝ) * Complex.I)
+          = (starRingEnd ℂ) (Complex.exp ((-(2 * Real.pi * c * ξ) : ℝ) * Complex.I))
+            * Complex.exp ((-(2 * Real.pi * c' * ξ) : ℝ) * Complex.I) := by
+        rw [← Complex.exp_conj, ← Complex.exp_add]
+        congr 1
+        rw [map_mul, Complex.conj_I, Complex.conj_ofReal]
+        push_cast; ring
+      rw [hexp, map_mul, Complex.conj_ofReal]
+      ring
+    · rw [specBoxcar, specBoxcar, Set.indicator_of_notMem hmem, Set.indicator_of_notMem hmem,
+        Set.indicator_of_notMem hmem, inner_zero_left]
+  rw [MeasureTheory.L2.inner_def, integral_congr_ae hfun,
+    MeasureTheory.integral_indicator measurableSet_Icc,
+    MeasureTheory.integral_Icc_eq_integral_Ioc,
+    ← intervalIntegral.integral_of_le (by linarith : -(1 / (2 * Δ)) ≤ 1 / (2 * Δ)),
+    intervalIntegral.integral_const_mul, exp_dilate_interval_integral Δ (c - c') hΔ, pow_two]
+  rw [show (Δ : ℂ) * (Δ : ℂ) * ((Δ : ℂ)⁻¹ * (sincN ((c - c') / Δ) : ℂ))
+        = (Δ : ℂ) * ((Δ : ℂ) * (Δ : ℂ)⁻¹) * (sincN ((c - c') / Δ) : ℂ) by ring,
+    mul_inv_cancel₀ hΔC, mul_one]
+
+/-- The complexified synthesis lies in `L²` (a finite sum of `L²` shifted sincs). -/
+theorem synthSignal_complex_memLp (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n) :
+    MemLp (fun t => (synthSignal T n a t : ℂ)) 2 volume := by
+  have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hΔ : (0 : ℝ) < T / (n : ℝ) := by positivity
+  have hrw : (fun t => (synthSignal T n a t : ℂ))
+      = fun t => ∑ i : Fin n, (a i : ℂ) *
+          (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ) := by
+    funext t
+    simp only [synthSignal, Complex.ofReal_sum, Complex.ofReal_mul]
+  rw [hrw]
+  exact memLp_finsetSum Finset.univ (fun i _ =>
+    (shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).const_mul (a i : ℂ))
+
+/-- The synthesis's canonical `Lp` representative decomposes as the finite `Lp` combination
+`∑ᵢ aᵢ • (shifted sinc)ᵢ`. -/
+theorem synthSignal_toLp_eq_sum (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n)
+    (hΔ : 0 < T / (n : ℝ)) :
+    (synthSignal_complex_memLp T n a hT hn).toLp (fun t => (synthSignal T n a t : ℂ))
+      = ∑ i : Fin n, (a i : ℂ) •
+          (shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
+            (fun t => (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ)) := by
+  refine Lp.ext ?_
+  have hRHS : (⇑(∑ i : Fin n, (a i : ℂ) •
+        (shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
+          (fun t => (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))) : ℝ → ℂ)
+      =ᵐ[volume] fun t => (synthSignal T n a t : ℂ) := by
+    refine (Lp.coeFn_fun_finsetSum _ _).trans ?_
+    have hterm : ∀ i : Fin n, ∀ᵐ x ∂volume,
+        (((a i : ℂ) • (shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
+            (fun t => (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))) x)
+          = (a i : ℂ) * (sincN ((x - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ) := by
+      intro i
+      filter_upwards [Lp.coeFn_smul (a i : ℂ)
+          ((shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
+            (fun t => (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))),
+        MemLp.coeFn_toLp (shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ)]
+        with x hx1 hx2
+      rw [hx1, Pi.smul_apply, hx2, smul_eq_mul]
+    filter_upwards [ae_all_iff.mpr hterm] with x hx
+    rw [Finset.sum_congr rfl (fun i _ => hx i)]
+    simp only [synthSignal, Complex.ofReal_sum, Complex.ofReal_mul]
+  exact (MemLp.coeFn_toLp _).trans hRHS.symm
+
 /-! ## §C — (i) band-limitedness -/
 
 /-- **(i)** The synthesis is band-limited to `[-W, W]` provided the sample count satisfies the
@@ -122,12 +321,58 @@ in `[-1/(2Δ), 1/(2Δ)] = [-n/(2T), n/(2T)]`, and `n/(2T) ≤ W`. -/
 theorem synthSignal_bandlimited (T W : ℝ) (n : ℕ) (a : Fin n → ℝ)
     (hT : 0 < T) (hn : 0 < n) (hnW : (n : ℝ) ≤ 2 * W * T) :
     IsBandlimited (synthSignal T n a) W := by
-  -- Missing: the L² Fourier transform of `sincN(·/Δ)` equals a boxcar supported in
-  -- `[-1/(2Δ), 1/(2Δ)]`. Mathlib has no FT-of-sinc-equals-boxcar lemma, and `𝓕` in
-  -- `IsBandlimited` is the L¹ `Real.fourierIntegral` while `synthSignal ∉ L¹` (a finite
-  -- sinc combination decays like `1/t`; `Real.integrable_sinc` needs `[IsFiniteMeasure]`).
-  -- A genuine (non-junk) proof needs `Lp.fourierTransformₗᵢ` + the sinc↔boxcar identity.
-  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+  have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hΔ : (0 : ℝ) < T / (n : ℝ) := by positivity
+  have hbW : 1 / (2 * (T / (n : ℝ))) ≤ W := by
+    rw [div_le_iff₀ (by positivity : (0 : ℝ) < 2 * (T / (n : ℝ))),
+      show W * (2 * (T / (n : ℝ))) = (2 * W * T) / (n : ℝ) by ring, le_div_iff₀ hnR, one_mul]
+    exact hnW
+  have hSmeas : MeasurableSet {ξ : ℝ | W < |ξ|} :=
+    measurableSet_lt measurable_const measurable_id.abs
+  refine ⟨synthSignal_complex_memLp T n a hT hn, ?_⟩
+  have hFT : (𝓕 ((synthSignal_complex_memLp T n a hT hn).toLp
+        (fun t => (synthSignal T n a t : ℂ))) : Lp ℂ 2 volume)
+      = ∑ i : Fin n, (a i : ℂ) •
+          (specBoxcar_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ 2).toLp
+            (specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ))) := by
+    rw [synthSignal_toLp_eq_sum T n a hT hn hΔ, FourierTransform.fourier_sum]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [FourierTransform.fourier_smul,
+      fourier_shiftSinc_toLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ]
+  rw [hFT]
+  have hcoe : (⇑(∑ i : Fin n, (a i : ℂ) •
+        (specBoxcar_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ 2).toLp
+          (specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)))) : ℝ → ℂ)
+      =ᵐ[volume] fun ξ => ∑ i : Fin n, (a i : ℂ) *
+        specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) ξ := by
+    refine (Lp.coeFn_fun_finsetSum _ _).trans ?_
+    have hterm : ∀ i : Fin n, ∀ᵐ x ∂volume,
+        (((a i : ℂ) • (specBoxcar_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ 2).toLp
+            (specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)))) x)
+          = (a i : ℂ) * specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) x := by
+      intro i
+      filter_upwards [Lp.coeFn_smul (a i : ℂ)
+          ((specBoxcar_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ 2).toLp
+            (specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)))),
+        MemLp.coeFn_toLp (specBoxcar_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ 2)]
+        with x hx1 hx2
+      rw [hx1, Pi.smul_apply, hx2, smul_eq_mul]
+    filter_upwards [ae_all_iff.mpr hterm] with x hx
+    exact Finset.sum_congr rfl (fun i _ => hx i)
+  have hcoe' : (⇑(∑ i : Fin n, (a i : ℂ) •
+        (specBoxcar_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ 2).toLp
+          (specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)))) : ℝ → ℂ)
+      =ᵐ[volume.restrict {ξ : ℝ | W < |ξ|}] fun ξ => ∑ i : Fin n, (a i : ℂ) *
+        specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) ξ := ae_restrict_of_ae hcoe
+  refine hcoe'.trans ?_
+  rw [Filter.EventuallyEq, ae_restrict_iff' hSmeas]
+  refine ae_of_all _ (fun ξ hξ => ?_)
+  have hnotmem : ξ ∉ Set.Icc (-(1 / (2 * (T / (n : ℝ))))) (1 / (2 * (T / (n : ℝ)))) := by
+    rw [Set.mem_Icc, ← abs_le, not_le]
+    exact lt_of_le_of_lt hbW hξ
+  simp only [Pi.zero_apply]
+  exact Finset.sum_eq_zero (fun i _ => by
+    rw [specBoxcar, Set.indicator_of_notMem hnotmem, mul_zero])
 
 /-! ## §D — (iii) Parseval energy -/
 
@@ -135,21 +380,62 @@ theorem synthSignal_bandlimited (T W : ℝ) (n : ℕ) (a : Fin n → ℝ)
 theorem synthSignal_sq_integrable (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
     (hT : 0 < T) (hn : 0 < n) :
     Integrable (fun t => (synthSignal T n a t) ^ 2) := by
-  -- `synthSignal ∈ L²` (its square is integrable), from the L² membership of each shifted
-  -- `sincN(·/Δ)`. Needs the sinc L² framework (Mathlib's `Real.integrable_sinc` is finite-
-  -- measure only; `∫ sinc² = π` is absent from Mathlib — loogle Found 0).
-  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+  have hint : Integrable (fun t => ‖(synthSignal T n a t : ℂ)‖ ^ 2) :=
+    (synthSignal_complex_memLp T n a hT hn).integrable_norm_pow (p := 2) (by norm_num)
+  refine hint.congr ?_
+  filter_upwards with t
+  rw [Complex.norm_real, Real.norm_eq_abs, sq_abs]
 
 /-- **(iii)** Parseval / sinc self-reproducing energy identity: the whole-line energy of the
 synthesis equals `Δ · ∑ᵢ (a i)²` with `Δ = T/n`. Follows from the sinc orthogonality
 `∫ sincN((t-iΔ)/Δ)·sincN((t-jΔ)/Δ) dt = Δ·δᵢⱼ`. -/
 theorem synthSignal_energy (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n) :
     (∫ t, (synthSignal T n a t) ^ 2) = (T / (n : ℝ)) * ∑ i : Fin n, (a i) ^ 2 := by
-  -- Missing: sinc L² self-reproducing orthogonality
-  -- `∫ sincN((t-iΔ)/Δ)·sincN((t-jΔ)/Δ) dt = Δ·δᵢⱼ`. Absent from Mathlib (needs the
-  -- sinc↔boxcar L² Fourier identity + Plancherel `Lp.inner_fourier_eq`); the in-project
-  -- `WhittakerShannon` deliberately routed through the circle to avoid exactly this.
-  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+  have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hΔ : (0 : ℝ) < T / (n : ℝ) := by positivity
+  have hstep1 : (⟪(synthSignal_complex_memLp T n a hT hn).toLp (fun t => (synthSignal T n a t : ℂ)),
+        (synthSignal_complex_memLp T n a hT hn).toLp (fun t => (synthSignal T n a t : ℂ))⟫ : ℂ)
+      = ((∫ t, (synthSignal T n a t) ^ 2 : ℝ) : ℂ) := by
+    rw [MeasureTheory.L2.inner_def]
+    have hae : (fun ξ => (⟪((synthSignal_complex_memLp T n a hT hn).toLp
+          (fun t => (synthSignal T n a t : ℂ))) ξ,
+        ((synthSignal_complex_memLp T n a hT hn).toLp
+          (fun t => (synthSignal T n a t : ℂ))) ξ⟫ : ℂ))
+        =ᵐ[volume] fun ξ => ((synthSignal T n a ξ ^ 2 : ℝ) : ℂ) := by
+      filter_upwards [MemLp.coeFn_toLp (synthSignal_complex_memLp T n a hT hn)] with ξ hξ
+      rw [hξ, RCLike.inner_apply', Complex.conj_ofReal]
+      push_cast; ring
+    rw [integral_congr_ae hae, integral_complex_ofReal]
+  have hstep2 : (⟪(synthSignal_complex_memLp T n a hT hn).toLp (fun t => (synthSignal T n a t : ℂ)),
+        (synthSignal_complex_memLp T n a hT hn).toLp (fun t => (synthSignal T n a t : ℂ))⟫ : ℂ)
+      = ((T / (n : ℝ) * ∑ i : Fin n, (a i) ^ 2 : ℝ) : ℂ) := by
+    have hinner : ∀ i j : Fin n,
+        (⟪(shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
+            (fun t => (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ)),
+          (shiftSinc_memLp (((j : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
+            (fun t => (sincN ((t - ((j : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))⟫ : ℂ)
+          = (T / (n : ℝ) : ℂ) * (if i = j then 1 else 0) := by
+      intro i j
+      rw [← Lp.inner_fourier_eq,
+        fourier_shiftSinc_toLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ,
+        fourier_shiftSinc_toLp (((j : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ,
+        inner_specBoxcar_toLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (((j : ℕ) : ℝ) * (T / (n : ℝ)))
+          (T / (n : ℝ)) hΔ,
+        show (((i : ℕ) : ℝ) * (T / (n : ℝ)) - ((j : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))
+            = ((i : ℕ) : ℝ) - ((j : ℕ) : ℝ) by
+          rw [sub_div, mul_div_assoc, mul_div_assoc, div_self (ne_of_gt hΔ), mul_one, mul_one],
+        sincN_natCast_sub]
+      by_cases h : i = j
+      · simp [h]
+      · have hne : (i : ℕ) ≠ (j : ℕ) := fun hc => h (Fin.ext hc)
+        simp [hne, h]
+    rw [synthSignal_toLp_eq_sum T n a hT hn hΔ]
+    simp only [sum_inner, inner_sum, inner_smul_left, inner_smul_right, Complex.conj_ofReal, hinner]
+    simp only [mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, if_true]
+    push_cast
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl (fun i _ => by ring)
+  exact_mod_cast hstep1.symm.trans hstep2
 
 /-- In-window energy is bounded by the whole-line energy (the integrand is `≥ 0`), giving the
 `ContAwgnCode.encoder_power` obligation directly. This reduction is genuine; it transitively
