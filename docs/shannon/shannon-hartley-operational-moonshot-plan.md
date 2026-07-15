@@ -5,9 +5,11 @@ Phase 1-fix（def 再設計）で 2 defect root（degenerate L¹-`𝓕` `IsBandl
 解消し、`contAwgn_eq_shannonHartley` は **true-as-framed** な honest 単一 wall-sorry
 `@residual(wall:nyquist-2w-dof)` に復帰（`nyquist-2w-dof` は statement true 化後の genuine documented wall）。
 コード側 SoT = `ShannonHartleyOperational.lean`（`@audit:defect` 除去済、詳細は Phase 1-fix「着地」節）。
-**残 open work**: (1) shared bridge lemma `l2Fourier_eq_fourierIntegral`（`bandlimited_sup_bound` を genuine 化、
-~150–250 行の tempered-distribution plumbing、**壁でない**）→ (2) Phase 3 achievability closure（既 skeleton の
-5 sorry、Phase 1-fix 完了で un-blocked）。stretch（Phase 2/4/5-full）は不変。honesty bar 不変（CLAUDE.md「検証の誠実性」）。
+**残 open work**: (1) shared bridge `l2Fourier_eq_fourierIntegral`（+ inverse sibling）+ `bandlimited_sup_bound` = ✅
+**proof-done・sorryAx-free・独立 audit PASS**（commit 9d8608a8/40c2e449/30b59a15）。(2) Phase 3 achievability closure：
+**leg 1（synthSignal band-limit/energy 3 sorry）= ✅ proof-done・audit PASS（commit 89ede2a3/646605c7）**。
+残るは Phase 3 **leg 2（`contAwgnMaxMessages_bddAbove` crude-converse）+ leg 3（`contAwgn_ge_shannonHartley` assembly）**。
+stretch（Phase 2/4/5-full）は不変。honesty bar 不変（CLAUDE.md「検証の誠実性」）。
 
 > **Parent**: [`../textbook-roadmap.md`](../textbook-roadmap.md) §Ch.9 Shannon-Hartley（Ch.9.6）
 > **関連**: [`whittaker-shannon-partial-moonshot-plan.md`](whittaker-shannon-partial-moonshot-plan.md)
@@ -23,7 +25,8 @@ Phase 1-fix（def 再設計）で 2 defect root（degenerate L¹-`𝓕` `IsBandl
 - [x] M-fix — 在庫 pass（faithful band-limit design question 解決）✅（commit 5aeb2f92）
 - [x] **Phase 1-fix — faithful band-limit + continuous-codeword redesign ✅（commit 7c3afc86、独立 honesty audit PASS）**
 - [~] Phase 5-min — wire + Option A README infra 🔄 **[旧着地 FALSIFIED、Phase 1-fix で mainline 復帰済]**（commit b8770fce / ff32ec82）
-- [ ] Phase 3 — achievability closure（`contAwgn_ge_shannonHartley`、既 skeleton `ShannonHartleyAchievability.lean`）📋 **[Phase 1-fix 完了で un-blocked = 次 leg]**
+- [x] **l2Fourier bridge（fwd+inv）+ bandlimited_sup_bound ✅ proof-done・audit PASS（commit 9d8608a8/40c2e449/30b59a15）**
+- [~] Phase 3 — achievability closure（`contAwgn_ge_shannonHartley`）🔄 **leg 1（synthSignal band-limit/energy）= ✅ audit PASS（commit 89ede2a3/646605c7）**。残 leg 2（BddAbove）+ leg 3（assembly）
 - [ ] Phase 2 — prolate-DOF スペクトル理論（`timeBandLimitingOp` + 固有値集中）📋 **[stretch / 壁核]**
 - [ ] Phase 4 — converse（`contAwgn_le_shannonHartley`、Phase 2 消費）📋 **[stretch]**
 - [ ] Phase 5-full — `le_antisymm` 組立 📋 **[stretch / closure]**
