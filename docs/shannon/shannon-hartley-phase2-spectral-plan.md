@@ -2,228 +2,187 @@
 
 > **Parent**: [`shannon-hartley-operational-moonshot-plan.md`](shannon-hartley-operational-moonshot-plan.md) §Phase 2（prolate-DOF 壁核）
 > **Inventory (SoT)**: [`shannon-hartley-phase2-spectral-inventory.md`](shannon-hartley-phase2-spectral-inventory.md)
-> **関連**: [`whittaker-shannon-partial-moonshot-plan.md`](whittaker-shannon-partial-moonshot-plan.md)（sinc/sampling = CLOSED、kernel 資産）/ [`awgn-moonshot-plan.md`](awgn-moonshot-plan.md)（`awgn_converse` = leg D 消費）
+> **関連**: [`whittaker-shannon-partial-moonshot-plan.md`](whittaker-shannon-partial-moonshot-plan.md)（sinc/sampling = CLOSED、kernel 資産）/ [`awgn-moonshot-plan.md`](awgn-moonshot-plan.md)（`awgn_converse` = leg D の trace 境界を供給）
 
 ## 進捗
 
 - [x] M0 在庫調査 ✅（`shannon-hartley-phase2-spectral-inventory.md`、3 GATING verdict 確定）
-- [ ] Leg A — 作用素 + subspace + 自己共役 + 正 + `‖A‖≤1` 📋 **[genuine・first]**
-- [ ] Leg B — コンパクト性（finite-rank kernel 極限）📋 **[big self-build・make-or-break]**
-- [ ] Leg C — 固有値降順列挙 + 定性的 effective-rank 📋 **[self-build]**
-- [ ] Leg D — `contAwgnMaxMessages_bddAbove` closure（Phase 3 leg 2）📋 **[de-risk payoff]**
-- [ ] Leg E — tight concentration `prolate_eigenvalue_count`（LPS 壁）📋 **[irreducible wall・last]**
+- [x] Leg A — 作用素 + subspace + 自己共役 + 正 + `‖A‖≤1` ✅（genuine、commit 4d848a53）**[Phase-4 スペクトル鎖専用に降格 — BddAbove critical path から外れた]**
+- [ ] **Leg W — WSEB スカラー標本エネルギー不等式** 📋 **[NEW make-or-break・gateway-atom probe 保留中 — BddAbove の route を決する]**
+- [ ] Leg D — `contAwgnMaxMessages_bddAbove` closure（Phase 3 leg 2）📋 **[Leg W に gated、~150–250 行 plumbing]**
+- [ ] Leg B — コンパクト性（finite-rank kernel 極限）📋 **[Phase-4 tight-count 専用・OFF BddAbove path]**
+- [ ] Leg C — 固有値降順列挙 + 定性 effective-rank 📋 **[Phase-4 専用・OFF BddAbove path（count は BddAbove に対し red herring）]**
+- [ ] Leg E — tight concentration `prolate_eigenvalue_count`（LPS 壁）📋 **[Phase-4 専用・irreducible wall]**
 
 ## ゴール / Approach
 
 ### Goal
 
-親 §Phase 2 の壁核 `wall:nyquist-2w-dof` を **spectral theory で self-build** する。最終目標は 2 消費点:
-(1) **Phase 3 achievability leg 2** `contAwgnMaxMessages_bddAbove`（`ShannonHartleyAchievability.lean:481`、現状
-`@residual(wall:nyquist-2w-dof)`）を genuine に閉じる、(2) **Phase 4 main converse** `contAwgn_le_shannonHartley`
-が消費する tight 固有値カウント `prolate_eigenvalue_count`。**(2) は irreducible な LPS 壁**、**(1) は (2) より
-弱い定性的スペクトル構造で閉じる公算**（下記 中心問題 verdict）。
+親 §Phase 2 の壁核 `wall:nyquist-2w-dof` を self-build する。**2 消費点がこのセッションの検証で 2 本の独立サブ線に分裂した**:
 
-### Approach（解の全体形 — 作用素・スペクトル鎖・各消費点の接続）
+1. **Phase 3 achievability leg 2** `contAwgnMaxMessages_bddAbove`（`ShannonHartleyAchievability.lean:481`、現状
+   `sorry + @residual(wall:nyquist-2w-dof)`）⟸ **スカラー WSEB 不等式**（Leg W → Leg D、`awgn_converse` の trace 境界経由）。
+   **作用素論を経由しない**。
+2. **Phase 4 main converse** `contAwgn_le_shannonHartley` の tight 固有値カウント `prolate_eigenvalue_count`
+   ⟸ **作用素スペクトル鎖**（Leg A ✅ → B → C → E、LPS concentration）。
 
-`E := Lp ℂ 2 (volume : Measure ℝ)`（複素 Hilbert 空間、`CompleteSpace`✓）上に時間帯域制限作用素
-`A := P_W ∘L Q_T ∘L P_W` を建てる。`Q_T` = `[0,T]` 本質時間制限射影、`P_W` = `[-W,W]` 帯域制限射影、
-両者とも **閉部分空間への `starProjection`**（乗算作用素でなく射影として建てるのが Mathlib-shape-driven の要
-— 自己共役・正が one-liner 化、inventory §D 設計勧告）。
+**中心問題 verdict はこの分裂**（下記）: BddAbove は compactness / effective-rank で **届かない**（tail-eigenvalue /
+trace gap）。BddAbove の唯一の壁核は WSEB スカラー不等式で、その真偽 / 壁性は probe 保留中。
 
-スペクトル鎖（下流ほど深い）:
+### Approach（解の全体形 — 2 本の独立鎖）
+
+**Chain 1（Phase 3 BddAbove、スカラー・新 critical path）**:
 
 ```
-A = P_W Q_T P_W  (self-adjoint, positive, ‖A‖≤1)        ← Leg A（direct）
-      │  compact（no Hilbert-Schmidt → finite-rank kernel 極限）
+awgn_converse（Converse.lean:607、scalar trace 境界）
+      │  標本 codeword を AwgnCode に載せ P' = E_s/n、log(1+x)≤x で RHS を E_s/N₀ に潰す（n 一様、固有値不要）
       ▼
-IsCompactOperator A                                       ← Leg B（big self-build）
-      │  structural spectral thm（eigenspaces span + 有限重複）
+BddAbove ⟸ WSEB: E_s(f,n) = (T/n)∑_{i<n} f(iT/n)² ≤ C(T,W)·∫₀ᵀ f²   ← Leg W（make-or-break、probe 保留中）
+      │  + ~150–250 行の壁非依存 plumbing（ContAwgnCode→AwgnCode 配線 / errorProbAt 等式 / Fano / edge case）
       ▼
-prolateEigenvalues : ℕ → ℝ（降順）＋ #{k | λ_k>θ}<∞      ← Leg C（self-build）
-      │                                     │
-      │ 定性 effective-rank（compact 由来）  │ tight ≈2WT concentration（LPS）
-      ▼                                     ▼
-contAwgnMaxMessages_bddAbove（Phase 3 leg 2）   prolate_eigenvalue_count（Phase 4 converse）
-      = Leg D（消費: awgn_converse + 有限次元回転） = Leg E（irreducible wall）
+contAwgnMaxMessages_bddAbove（Phase 3 leg 2）= Leg D
 ```
 
-**各消費点の接続**:
-- **Leg D → Phase 3**: `contAwgn_ge_shannonHartley`（`ShannonHartleyAchievability.lean:506`）が `le_csSup` で
-  Leg D の `BddAbove` を消費（同一 file 内、親 plan leg 3）。Leg D が genuine 化すれば Phase 3 achievability
-  closure が **LPS 壁 (Leg E) より前に** 着地しうる。
-- **Leg E → Phase 4**: `contAwgn_le_shannonHartley`（Phase 4）が tight カウントを消費。ここだけ irreducible。
+**Chain 2（Phase 4 tight count、作用素・BddAbove から独立）**:
+
+```
+A = P_W Q_T P_W  ✅（self-adjoint, positive, ‖A‖≤1、commit 4d848a53）        ← Leg A（DONE）
+      │  compact
+      ▼  IsCompactOperator A                                                  ← Leg B（Phase-4 のみ）
+      │  spectral thm → 降順固有値列 + #{k|λ_k>θ}<∞
+      ▼  prolateEigenvalues + qualitative effective-rank                      ← Leg C（Phase-4 のみ）
+      │  tight ≈2WT concentration（LPS）
+      ▼  prolate_eigenvalue_count                                             ← Leg E（irreducible wall）
+      ▼  contAwgn_le_shannonHartley（Phase 4 converse）
+```
+
+**なぜ Chain 2 が BddAbove（Chain 1）に届かないか — tail-eigenvalue / trace gap**（下記 中心問題で詳述）:
+effective-rank の **カウント** `#{k|λ_k>θ}<∞` は **大きい固有値だけ** を抑える。MI は
+`I ≤ (1/2)∑_k log(1+λ_k/N)`。小固有値 **tail** `∑_{λ_k≤θ} log(1+λ_k/N) ≈ (2/N)∑_{small}λ_k` は依然 ~n 項あり、
+**trace** `∑_k λ_k` が有界でない限り発散する。**trace = E_s = WSEB**。つまり count は red herring で、
+必要なのは trace = WSEB そのもの。それを `awgn_converse` が直接与える。
 
 ### route（次アクション）
 
-**Leg A first**（direct one-liner、真の作用素 object を先に生む）→ **Leg B**（make-or-break の 500-900 行）→
-**Leg C** → **Leg D**（Phase 3 payoff）→ **Leg E**（壁）。ただし Leg B 投資前に **Leg D の gateway atom**
-（回転 + rank + Fano の還元 skeleton）を sorry-laden で先置きし「BddAbove が定性 effective-rank で閉じる」還元形を
-先に固定する（下記 中心問題）。詳細 → 各 Leg 節。
+**WSEB gateway probe FIRST（decisive）**: 単標本 case `T·f(0)² ≤ C·∫₀ᵀf²` を two-directional（refute / prove）で
+settle → provable なら **Leg D plumbing（~200 行）で BddAbove closure → Phase 3 achievability closure**。
+WSEB が壁なら honest `sorry`（既 in place、`ShannonHartleyAchievability.lean:484`）。WSEB が false なら **def-fix に
+escalate**。**Legs B/C/E は Phase 4 に defer**（BddAbove の make-or-break はもはや Leg B ではなく Leg W）。
 
 ---
 
-## 中心問題 verdict — BddAbove は定性コンパクト性で閉じるか、tight カウントを要するか
+## 中心問題 verdict — BddAbove はスカラー WSEB に還元される（作用素コンパクト性でない）
 
-**タスク指定の決定的問い**。親 plan + inventory + proof-pivot-advisor の 2026-07-15 audited verdict は
-「leg 2 は `wall:nyquist-2w-dof` を共有」だが、finite-vs-exactly-2WT を分離していない。以下で分離する。
+**タスク指定の決定的問い**。旧 verdict「BddAbove は定性コンパクト性 + effective-rank で閉じ tight LPS 不要」は
+**HALF-RIGHT**（tight LPS 不要は正しい）だが **route が WRONG**（compactness / count は届かない — tail-eigenvalue /
+trace gap）。新 verdict で置換する。
 
 ### verdict（証拠付き）
 
-**BddAbove（leg 2）は tight concentration `prolate_eigenvalue_count`（LPS ≈2WT asymptotic）を要さない。
-genuine コンパクト性（Leg B）＋ sampleCount `n` について一様な有限 effective-rank 境界（Leg C/D）で閉じる。
-これは「作用素が bounded（`‖A‖≤1`）」より strictly 強く、tight ≈2WT concentration より strictly 弱い。tight
-カウントは Phase 4 main converse（定数を EXACT に `W·log(1+P/(N₀W))` へ合わせる ≤ 方向）でのみ必要。**
+**BddAbove（leg 2）は `awgn_converse` の trace 境界経由で単一 SCALAR 標本エネルギー不等式（WSEB）に還元される。
+Legs B/C/E（作用素スペクトル理論）は BddAbove critical path から外れ、Phase-4 tight-count 専用。**
 
-### 決定的理由（reduction を trace）
+### 決定的理由（reduction を trace、全て本セッション verbatim 確認済）
 
-`contAwgnMaxMessages = Nat.sSup {M | ∃ code, averageError ≤ ε}`（`ShannonHartleyOperational.lean:392`）。
-`BddAbove` は **∃ 有限上界**（存在的有限性）— EXACT な値は不要。reduction:
+1. **`awgn_converse`**（`InformationTheory/Shannon/AWGN/Converse.lean:607`、`@[entry_point]`）が scalar 境界を供給:
+   `log M ≤ n·(1/2)·log(1 + P/N) + binEntropy(Pe) + Pe·log(M-1)`、`AwgnCode.power_constraint : ∑ᵢ xᵢ² ≤ n·P`
+   （`AWGN/Basic.lean:95`）に keyed。`N = N₀/2`。
+2. **標本 ContAwgnCode codeword を載せる**: `∑ᵢ (sampledSignalᵢ)² = (T/n)∑ᵢ f(iT/n)² =: E_s`
+   （verbatim: `sampledSignal f T n i = √(T/n)·f(iT/n)`、`Operational.lean:364`）。よって per-sample power
+   `P' = E_s/n`。`log(1+x)≤x` で RHS を `n·(1/2)·(E_s/n)/(N₀/2) = E_s/N₀` に潰す — **n 一様、固有値なし**。
+3. **BddAbove ⟸ WSEB**: `E_s(f,n) = (T/n)∑_{i<n} f(iT/n)² ≤ C(T,W)·∫₀ᵀ f²`（band-limited `[-W,W]` 連続 L² f、
+   n 一様）。加えて **~150–250 行の壁非依存 plumbing**（`ContAwgnCode→AwgnCode` 配線 / `errorProbAt` 等式 /
+   Fano 再配置（`ε<1` 使用）/ edge case `n=0` / `M<2`）。
 
-1. **sample 基底の crude 境界は失敗**。per-letter `awgn_converse` は
-   `I(msg;Y_1..Y_n) ≤ ∑_i (1/2)log(1+E[f(t_iᵢ)²]/(N₀/2))`。`log(1+x)≤x` + trace 回転不変で
-   `I ≤ (1/N₀)·∑_i E[f(t_i)²]`。窓内電力 `∫_{[0,T]}f² ≤ TP` の Riemann 和で `∑_i E[f(t_i)²] ≲ nP` ⟹
-   `I ≲ nP/N₀` = **`n` で発散**。`ContAwgnCode.sampleCount` は自由 ℕ（C4、oversampling 可）なので
-   crude 有限上界は無い（親 plan 2026-07-15 の「crude・壁非依存」撤回は正当）。
+### なぜ compactness route（Legs B/C/E）が BddAbove に届かないか — genuine GAP
 
-2. **一様境界は effective-rank concentration を要する**。回転不変 MI
-   `I ≤ (1/2)∑_k log(1+eig_k(Σ_s)/(N₀/2))`。`n` について一様に有限に抑えるには、固有値 `eig_k(Σ_s)` が
-   **有限個 `D(W,T)` の mode を除き 0 近傍に集中**（= 有限 effective-rank）していることが要る。信号が
-   `[-W,W]` 帯域制限 & `[0,T]` 本質時間制限ゆえ有効次元は `≈2WT` に留まる = 過剰標本が自由 DOF を生まない。
+effective-rank の **カウント** `#{k|λ_k>θ}<∞` は **大きい固有値のみ** を抑える。MI は
+`I ≤ (1/2)∑_k log(1+λ_k/N)`。小固有値 **tail** `∑_{λ_k≤θ} log(1+λ_k/N) ≈ (2/N)∑_{small}λ_k` は依然 ~n 項あり、
+**trace** `∑_k λ_k` が有界でなければ発散する。**trace = E_s = WSEB**。したがって count は red herring で、
+必要なのは trace = WSEB そのもの — それを `awgn_converse` が直接与える。連続コンパクト作用素
+`A = P_W Q_T P_W`（L²(ℝ) 上）は連続的な事実だが、BddAbove の障害は **離散標本境界** で、作用素がそこに届くのは
+（mis-specified な）gateway frame bound 経由だけ。
 
-3. **その有限 effective-rank は「定性コンパクト性」で出る、LPS でない**。連続作用素 `A` がコンパクト ⟹
-   固有値は 0 にのみ集積 ⟹ 任意閾値 `θ>0` に対し `#{k | λ_k(A)>θ}<∞`（有限）。有限標本作用素 `A_n`（√(T/n)
-   正規化 sampling Gram）が `A_n → A`（作用素ノルム収束）ゆえ、`#{k | λ_k(A_n)>θ}` は `n` について
-   一様に `#{k | λ_k(A)>θ/2}` 以下で bound。**これは compact + 収束の帰結であり、tight ≈2WT カウント
-   (LPS) を要さない**。値は `D`（有限、`≈2WT` 近傍だが正確値不要）で十分。
+### WSEB 自体の status は UNRESOLVED（新 make-or-break、probe 保留中）
 
-4. **含意**: Legs B（compact）+ C（列挙 + 定性 rank）が genuine に着地すれば、**Leg D (BddAbove) は
-   Phase 4 の LPS 壁 (Leg E) より前に閉じる** = Phase 3 achievability closure の major win。
+3 択（trichotomy）:
+
+- **WSEB は genuine 壁の公算**（Marcinkiewicz-Zygmund / band-limited window-concentration 不等式）。Mathlib は
+  band-limited sampling / Bernstein / Paley-Wiener を **0 hit**。存在するのは **全直線** `bandlimited_sup_bound`
+  `|f(t)| ≤ √(2W)·‖f‖_{L²(ℝ)}`（`ShannonHartleyOperational.lean:241`）のみ = **窓エネルギーで制御しない**。
+- **または restricted reproducing-kernel / Bernstein 論法で provable（~200 行）** → BddAbove が安く閉じる、作用素論不要。
+- **または FALSE**（遠方エネルギーが sinc tail 経由で in-window 標本値を大きくする漏れ）→ その場合 BddAbove は
+  FALSE-as-framed で def-fix を要する。**WSEB-false ⟹ BddAbove-false は密結合**（有界窓エネルギーで `f(0)` 無限大 ⟹
+  区別可能メッセージ数無限）。
+
+**gateway-atom-first probe を次に dispatch**: 決定的単標本 case `T·f(0)² ≤ C·∫₀ᵀf²`（two-directional
+refute / prove）で settle。
 
 ### honest hedge + gateway atom + 撤退
 
-- **これは 2026-07-15 audited verdict の refine（overturn でない）**: leg 2 は依然 `nyquist-2w-dof` **family**
-  内（作用素のスペクトル構造を要する。auditor の「full-line↔window energy tie は band-limit/time-limit 構造が
-  供給」と整合）。私の主張は「leg 2 が要する sub-object は compact + effective-rank であって LPS asymptotic
-  ではない」。**コード側 SoT は Legs B/C/D が genuine 着地するまで leg 2 = `@residual(wall:nyquist-2w-dof)`
-  のまま**（本 plan は prose に「壁でない」をキャッシュしない）。
-- **gateway atom（Leg B 投資前に試す）**: 有限標本 sampling Gram の一様 frame bound `‖A_n‖≤1`（= [-W,W]
-  帯域制限を rate `1/Δ≥2W` で標本化した √Δ-frame の Bessel bound 1、Poisson 和、**LPS でない**）+ 回転 +
-  rank + Fano の還元 skeleton。これが「BddAbove が定性 effective-rank で閉じる」形を確定する。閉じないと
-  判明したら verdict を訂正し leg 2 を素直に `wall:nyquist-2w-dof` 継続。
-- **撤退**: Leg D の一様 effective-rank / frame bound が詰まれば honest `sorry + @residual(wall:nyquist-2w-dof)`
-  （既 verdict へ fall back）。**BddAbove を `≥` 定理へ hyp 化 / 全直線エネルギー field 追加は禁止**（load-bearing
-  tier-5、壁の偽装、下記 誠実性制約）。
+- **コード側 SoT は変えない**: `contAwgnMaxMessages_bddAbove` は `sorry + @residual(wall:nyquist-2w-dof)` のまま
+  — route に関わらず honest。**prose に「壁でない」をキャッシュしない**（WSEB status は probe 保留中）。
+- **gateway atom（旧 frame bound を置換）**: 決定的 atom は WSEB スカラー不等式の単標本 case
+  `T·f(0)² ≤ C·∫₀ᵀf²`。two-directional: (prove) band-limited f への restricted RKHS/Bernstein 境界、
+  (refute) 小窓エネルギーで `f(0)` 大な band-limited f を sinc-tail 漏れで構成。旧 gateway `‖A_n‖≤1`（frame bound）は
+  **mis-specified**（下記 判断ログ #3）。
+- **UNDERSAMPLING 領域（n<2WT）が WORST case**: `E_s/∫₀ᵀf²` の sup は **小 n** で最大化され、`n=1` で `≈2WT`。
+  旧 plan の oversampling 懸念は反転する。
+- **撤退**: WSEB が壁 → honest `sorry + @residual(wall:nyquist-2w-dof)`（既 in place、`:484`）。WSEB が false →
+  def-fix に escalate。**BddAbove を `≥` 定理へ hyp 化 / `ContAwgnCode` へ全直線エネルギー field 追加は禁止**
+  （load-bearing tier-5、壁の偽装、下記 誠実性制約）。
 
 ---
 
-## Leg A — 作用素 + subspace + 自己共役 + 正 + `‖A‖≤1` 📋 **[directly-available・first]**
+## Leg A — 作用素 + subspace + 自己共役 + 正 + `‖A‖≤1` ✅ DONE（commit 4d848a53）
 
-**目的**: 真の作用素 object を建てる（下流全 Leg が参照）。proof-log: no（direct、短い）。**概算 120–200 行**。
-
-**新 file**: `InformationTheory/Shannon/TimeBandLimiting.lean`（imports = inventory §Starting skeleton。
-作成時 `InformationTheory.lean` に import 登録 = 実装 owner 担当）。`ShannonHartleyOperational.lean` は clean に保つ。
-
-**signature スケッチ**（inventory decl + file:line）:
-
-```lean
-abbrev E : Type := Lp ℂ 2 (volume : Measure ℝ)
-def timeLimitSubspace (T : ℝ) : Submodule ℂ E := …   -- 閉部分空間（real def、sorry 不可）
-def bandLimitSubspace (W : ℝ) : Submodule ℂ E := …   -- 𝓕 で pull-back した閉部分空間（real def）
-noncomputable def timeBandLimitingOp (T W : ℝ) : E →L[ℂ] E :=
-  (bandLimitSubspace W).starProjection ∘L (timeLimitSubspace T).starProjection ∘L
-    (bandLimitSubspace W).starProjection            -- Submodule.starProjection, Projection/Basic.lean:124
-theorem timeBandLimitingOp_isSelfAdjoint (T W) : IsSelfAdjoint (timeBandLimitingOp T W)
-  -- IsSelfAdjoint.conj_starProjection (Adjoint.lean:376) + isSelfAdjoint_starProjection (Adjoint.lean:371)
-theorem timeBandLimitingOp_isPositive (T W) : (timeBandLimitingOp T W).IsPositive
-  -- IsPositive.of_isStarProjection (Positive.lean:491) + IsPositive.adjoint_conj (Positive.lean:366)
-theorem timeBandLimitingOp_norm_le_one (T W) : ‖timeBandLimitingOp T W‖ ≤ 1
-  -- 射影ノルム ≤ 1 の合成（starProjection 3 段）
-```
-
-**再利用資産**: `MeasureTheory.Lp.fourierTransformₗᵢ`（LpSpace.lean:50、Plancherel 等距、`bandLimitSubspace`
-定義に）+ `Lp.norm_fourier_eq`/`inner_fourier_eq`（LpSpace.lean:89/93）+ `HasOrthogonalProjection.ofCompleteSpace`。
-**feasibility**: **(i) directly-available**（inventory §B/§C/§D、one-liner）。
-**pitfall**: `bandLimitSubspace` の **閉性**（`𝓕`-then-restrict の連続性、`fourierTransformₗᵢ.continuous` +
-指示関数 restrict の連続性）— 唯一の非自明部。`starProjection` は `HasOrthogonalProjection` を要し、それは
-閉（= complete）部分空間でのみ供給される。
-**循環チェック**: `timeBandLimitingOp T W` の `W` は物理帯域幅（作用素の入力）で DOF カウント `2W` ではない
-（C3 ✓）。
-**retreat line**: 閉性補題が Mathlib 不足で詰まれば当該補題を `sorry + @residual(wall:nyquist-2w-dof)`
-（同 wall 集約、compound 化しない）。ただし **genuine 着地が期待値**。**def body（`timeLimitSubspace` 等）は
-sorry 不可** — commit 前に real def（CLAUDE.md「sorry を書けない場合の扱い順」）。
+genuine 着地済。`E := Lp ℂ 2 (volume)` 上に `A := P_W ∘L Q_T ∘L P_W`（`Q_T`/`P_W` = 閉部分空間への
+`starProjection`）を建て、`timeBandLimitingOp_isSelfAdjoint` / `_isPositive` / `_norm_le_one` を genuine 証明。
+**この作用素 object は Phase-4 スペクトル鎖（Legs B/C/E）専用**で、Phase-3 BddAbove path からは外れた
+（中心問題 verdict: BddAbove はスカラー WSEB 経由で、作用素を経由しない）。新 file
+`InformationTheory/Shannon/TimeBandLimiting.lean`（`InformationTheory.lean` に import 登録済）。
 
 ---
 
-## Leg B — コンパクト性 📋 **[self-buildable・make-or-break・最大リスク]**
+## Leg W — WSEB スカラー標本エネルギー不等式 📋 **[NEW make-or-break・probe 保留中]**
 
-**目的**: `IsCompactOperator (timeBandLimitingOp T W)`。Mathlib に Hilbert-Schmidt/Schatten 不在（inventory Q2、
-loogle Found 0）ゆえ **finite-rank kernel 極限で self-build**。proof-log: yes。**概算 500–900 行**（Phase 2 の
-line count の大半、zero scaffolding = 単独最大 feasibility リスク、inventory §Self-build #2）。
+**目的**: band-limited 連続 L² 信号の in-window 標本エネルギーを窓エネルギーで n 一様に抑える単一スカラー不等式。
+**BddAbove（Leg D）の唯一の壁核**。proof-log: yes。
 
 **signature スケッチ**:
 
 ```lean
-theorem timeBandLimitingOp_isCompact (T W : ℝ) : IsCompactOperator (timeBandLimitingOp T W)
+theorem wseb (T W : ℝ) (hT : 0 < T) (hW : 0 < W) (f : ℝ → ℝ)
+    (hf_bl : IsBandlimited W f) (hf_L2 : MemLp f 2 volume) (hf_cont : Continuous f) :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ n : ℕ, 0 < n →
+      (T / n) * ∑ i : Fin n, f ((i : ℝ) * (T / n)) ^ 2
+        ≤ C * ∫ t in Set.Icc (0 : ℝ) T, f t ^ 2
+  -- C = C(T,W)（n に依らない）
 ```
 
-**構成**（inventory §A/§Self-build #2）: `B := P_W ∘L Q_T` として `A = B ∘L B†`、companion `B†B = Q_T P_W Q_T`
-= `L²[0,T]` 上 kernel `k(s,t)=2W·sincN(2W(s−t))·𝟙_{[0,T]²}` の sinc 積分作用素（有限測度正方形上で bounded ⟹ L²）。
-`A` と `B†B` は非零スペクトルを重複込みで共有 ⟹ `A` のコンパクト性は sinc 積分作用素に還元。
-(a) kernel が L²、(b) simple function で L² 近似 → 各 simple kernel = finite-rank、(c) 作用素ノルム ≤ L²-kernel
-ノルム（HS bound、inline 証明）、(d) `isCompactOperator_of_tendsto`（Compact/Basic.lean:459、`l=atTop` NeBot ✓）。
+**probe（次アクション、gateway-atom-first）**: 単標本 `n=1` case `T·f(0)² ≤ C·∫₀ᵀf²` を two-directional で settle。
+- **prove 方向**: band-limited f に対する reproducing-kernel / Bernstein 型点値境界（窓エネルギー版）。~200 行見込み。
+- **refute 方向**: 小窓エネルギー `∫₀ᵀf²` で `f(0)` を大きくできる band-limited f を sinc-tail 漏れで構成
+  （全ての標本点 `iT/n` は `[0,T)` 内部 = out-of-window sampling ではない。gap は quadrature/aliasing +
+  reproducing-kernel coupling）。
 
-**再利用資産**: `isCompactOperator_of_tendsto`（Basic.lean:459）+ `isCompactOperator_id_iff_finiteDimensional`
-（Compact/FiniteDimension.lean:26、finite-rank ⟹ compact）+ `IsCompactOperator.comp_clm/.clm_comp/.add/.smul`
-（Basic.lean）+ `NormalizedSinc.sincN_int_eq_kronecker`（NormalizedSinc.lean:95）+ `integral_exp_boxcar_eq_sincN`
-（WhittakerShannon.lean:63）+ `bandlimited_sup_bound`（ShannonHartleyOperational.lean:241、kernel boundedness）。
-**feasibility**: **(ii) self-buildable on Mathlib**（壁でない、constructible）。ただし scaffolding 皆無。
-**pitfall**: 「finite-rank ⟹ compact」は named lemma 不在（inventory §A）— `id_iff_finiteDimensional` + `comp_clm`
-から ~20–40 行で自作。WS/sinc 固有関数で `A` を直接 finite-rank 近似する別ルートは Leg C 列挙と循環リスク →
-**kernel-simple-function ルート推奨**（self-contained）。
-**retreat line**: finite-rank 極限が予算内に詰まれば `sorry + @residual(wall:nyquist-2w-dof)`（親 plan 「詰まる
-個別補題も同 wall に集約」）。**新 slug は禁止**（loogle-0 + two-stage + template 行数見積が揃わない限り）。
-**degenerate fallback**: compact が予算内に self-build 不能なら Phase 2 を「Leg A genuine + Leg B/C/D/E を
-`sorry @residual(wall:nyquist-2w-dof)`」に縮退（真の作用素 object は Phase 4 参照用に残る、単一集約壁）。
-**hyp bundling は禁止**（compact/count を `*Hypothesis` predicate で渡す = tier-5 load-bearing）。
+**feasibility**: **UNKNOWN（probe 保留中）**。Mathlib は band-limited sampling / Bernstein / Paley-Wiener を 0 hit
+（`prolate`/`Slepian`/`Mercer` も 0、2026-07-14 確認）。全直線 `bandlimited_sup_bound`（`Operational.lean:241`）は
+窓エネルギー制御を与えない。
+**retreat line**: WSEB が壁と判明 → Leg D は transitively `sorry + @residual(wall:nyquist-2w-dof)`（既 in place）。
+WSEB が false → **`ContAwgnCode` / 容量 def の def-fix に escalate**（`≥` 定理への hyp 化・全直線エネルギー
+field 追加は禁止 = 壁偽装 tier-5）。
+**循環チェック**: `wseb` の統計に `2W`/`⌊2WT⌋` は入らない（`W` は物理帯域幅 = 入力、C3 ✓）。
+**def body 不可 sorry**: `wseb` は theorem（proof body に sorry 可、tier-2 撤退口）。
 
 ---
 
-## Leg C — 固有値降順列挙 + 定性的 effective-rank 📋 **[self-buildable]**
+## Leg D — `contAwgnMaxMessages_bddAbove` closure（Phase 3 leg 2）📋 **[Leg W に gated]**
 
-**目的**: `prolateEigenvalues : ℕ → ℝ`（降順列挙）+ 「`#{k | λ_k>θ}<∞`（有限 effective-rank）」。proof-log: yes。
-**概算 200–400 行**（inventory §Self-build #3）。
-
-**signature スケッチ**:
-
-```lean
-noncomputable def prolateEigenvalues (T W : ℝ) : ℕ → ℝ := …   -- real def（spanning eigenspaces を降順列挙）
-theorem prolateEigenvalues_antitone (T W) : Antitone (prolateEigenvalues T W)
-theorem prolateEigenvalues_mem_Icc (T W) (n) : prolateEigenvalues T W n ∈ Set.Icc 0 1  -- ≥0 正、≤1 ‖A‖
-theorem prolate_effectiveRank_finite (T W) (hθ : 0 < θ) :
-    {n | θ < prolateEigenvalues T W n}.Finite                  -- ★ 定性 effective-rank（Leg D の核）
-```
-
-**構成**: `orthogonalComplement_iSup_eigenspaces_eq_bot`（Spectrum.lean:443、稠密 span）+
-`finite_dimensional_eigenspace`（Spectrum.lean:463、有限重複）+ Fredholm
-`IsCompactOperator.hasEigenvalue_iff_mem_spectrum`（FredholmAlternative.lean:220、非零 eig = 非零 spectrum）
-→ 非零スペクトルは可算・0 のみ集積・各有限重複 ⟹ 重複込み降順列挙（0 で padding）。`∈[0,1]` は
-`eigenvalue_nonneg_of_nonneg`（Spectrum.lean:409、正作用素）+ Leg A の `‖A‖≤1`。**`prolate_effectiveRank_finite`
-は compact の帰結**（0 のみ集積 ⟹ `θ>0` 上に有限個）。
-**feasibility**: **(ii) self-buildable on Mathlib**。降順 `ℕ→ℝ` 列は Mathlib 不在（finite-dim only、
-`LinearMap.IsSymmetric.eigenvalues` Spectrum.lean:279）→ 自作 sorted list。
-**pitfall**: 「0 に収束 / 0 から離れて離散」は Fredholm `antilipschitz_of_not_hasEigenvalue` 系を要する。
-**循環チェック**: `prolateEigenvalues` は spectrum から定義（`2WT` は入力でない、C3 ✓）。`effectiveRank` は
-`#{k | λ_k>θ}` で定義（`⌊2WT⌋` を def 入力にしない、C3 ✓）。
-**retreat line**: 列挙 / effective-rank finiteness が詰まれば `sorry + @residual(wall:nyquist-2w-dof)`。
-**def body（`prolateEigenvalues`）は sorry 不可** — real def。
-
----
-
-## Leg D — `contAwgnMaxMessages_bddAbove` closure（Phase 3 leg 2）📋 **[de-risk payoff]**
-
-**目的**: 既存 sorry `contAwgnMaxMessages_bddAbove`（`ShannonHartleyAchievability.lean:481`、現 `@residual(wall:
-nyquist-2w-dof)`）を Legs B+C 経由で **genuine 化**。中心問題 verdict の実装 = 定性 effective-rank で BddAbove を
-閉じる。proof-log: yes。**概算 250–500 行**。
+**目的**: 既存 sorry `contAwgnMaxMessages_bddAbove`（`ShannonHartleyAchievability.lean:481`、現
+`@residual(wall:nyquist-2w-dof)`）を **Leg W（WSEB）経由で** genuine 化。中心問題 verdict の実装 = スカラー
+WSEB reduction。**Legs B/C（作用素論）に gated ではない — reduction はスカラー**。proof-log: yes。
+**概算 150–250 行の壁非依存 plumbing（WSEB に gated）**。
 
 **target signature**（既存、変更なし = signature ripple 無し）:
 
@@ -233,94 +192,97 @@ theorem contAwgnMaxMessages_bddAbove (T W N₀ P ε : ℝ)
     BddAbove { M : ℕ | ∃ c : ContAwgnCode T W P M, (c.averageError N₀).toReal ≤ ε }
 ```
 
-**構成**（中心問題 verdict step 1–4 の実装）:
-- **一様 frame bound（gateway atom）**: √(T/n)-正規化 sampling Gram `A_n` に `‖A_n‖≤1`（[-W,W] を `1/Δ≥2W` で
-  標本化した Bessel bound、Poisson 和、LPS でない）。
-- **有限次元回転**: 固定 `n` で `A_n` を対角化（`LinearMap.IsSymmetric.eigenvalues` Spectrum.lean:279、finite-dim
-  で使用可）→ per-letter `awgn_converse`（既所有 genuine、AWGN）を回転後の effective mode に適用。
-- **一様 effective-rank**: `A_n → A`（Leg B/C 由来）で `#{k | λ_k(A_n)>θ}` を `n` 一様に有限 `D` で bound
-  （`prolate_effectiveRank_finite` 消費）→ `I ≤ D·(定数)` uniform ⟹ Fano で `M ≤` 有限 ⟹ `BddAbove`。
-- **ℕ-sSup 罠**: unbounded `sSup` は junk `0`（親 plan、repo は `Cramer.lean`/`ParallelGaussian/PerCoord.lean`
-  で既遭遇）→ `BddAbove` が `le_csSup`（leg 3）の前提。
-**再利用資産**: Leg B `timeBandLimitingOp_isCompact` + Leg C `prolate_effectiveRank_finite` +
-`awgn_converse`（AWGN）+ `parallel_gaussian_capacity_formula_minimal`（ParallelGaussian/PerCoordRegularity.lean:74、
-有限次元回転の水充填形、参考）。
-**feasibility**: **(ii) self-buildable — Legs B+C が genuine 着地する条件付き**。Leg B/C が壁化すれば Leg D も
-transitive に壁。
-**循環チェック**: サンプリング rate は achievability の構成選択で def 入力でない（C3 ✓）。BddAbove の core を
-hyp 化しない（C1/C2 ✓）。
-**retreat line**: 一様 frame/rank が詰まれば `sorry + @residual(wall:nyquist-2w-dof)`（2026-07-15 verdict へ fall
-back）。**禁止**: `BddAbove` を `≥` 定理へ hyp 化、`ContAwgnCode` に全直線エネルギー field 追加（壁偽装）。
+**構成（中心問題 verdict step 1–3 の実装）**:
+- **`ContAwgnCode → AwgnCode` 配線**: 標本 codeword から per-sample power `P' = E_s/n` の `AwgnCode M n P'` を構成。
+  `power_constraint : ∑ᵢ (sampledSignalᵢ)² ≤ n·P'` は構成から成立。
+- **`errorProbAt` 等式**: `ContAwgnCode.errorProbAt`（`Operational.lean:373`、`Measure.pi` の per-sample AWGN）=
+  `AwgnCode` 側の離散 `errorProbAt`（`sampledSignal = cᵢ` で一致、親 Phase 3 で verbatim 確認済）。
+- **`awgn_converse` + `log(1+x)≤x`**: RHS を `E_s/N₀ + Fano` に潰す（n 一様）。
+- **WSEB（Leg W）**: `E_s ≤ C(T,W)·∫₀ᵀf² ≤ C·T·P`（窓エネルギー `∫₀ᵀf² ≤ T·P` は `ContAwgnCode` の
+  `encoder_power` が課す）→ `E_s` 一様上界 → `log M` 一様上界 → `BddAbove`。
+- **Fano 再配置**（`ε<1` 使用）+ edge case（`n=0` / `M<2`）。
+- **ℕ-sSup 罠**: unbounded `sSup` は junk `0`（repo は `Cramer.lean` / `ParallelGaussian/PerCoord.lean` で既遭遇）→
+  `BddAbove` が `le_csSup`（leg 3）の前提。
+
+**再利用資産**: `awgn_converse`（AWGN、genuine）+ Leg W `wseb` + `bandlimited_sup_bound`
+（`Operational.lean:241`、point-value 補助）。**Legs B/C/E は参照しない**（作用素論を経由しないため）。
+**feasibility**: **self-buildable — Leg W（WSEB）が provable な条件付き**。WSEB が壁化すれば Leg D も transitive に壁。
+**循環チェック**: サンプリング rate は achievability の構成選択で def 入力でない（C3 ✓）。BddAbove の core を hyp 化しない
+（C1/C2 ✓）。
+**retreat line**: WSEB が壁 → `sorry + @residual(wall:nyquist-2w-dof)`（既 verdict へ fall back）。**禁止**: `BddAbove` を
+`≥` 定理へ hyp 化、`ContAwgnCode` に全直線エネルギー field 追加（壁偽装）。
 **consumer wiring**: `contAwgn_ge_shannonHartley`（`ShannonHartleyAchievability.lean:506`）が `le_csSup` で消費。
 Leg D genuine 化で leg 3 も transitive に closure（tag は `plan:` のまま、Phase 3 assembly work）。
 
+**code-TODO（`sampledSignal` docstring overstatement）**: `Operational.lean:361–363` の docstring は `√(T/n)`
+正規化が離散エネルギーを連続積分に「equal」にすると述べるが、その等号は **n→∞ のみ** で、有限 n の quadrature gap
+（= sinc-tail leakage）こそが本壁。当該 file を次に触るとき「equal」を「approximate（n→∞ で一致、有限 n では
+WSEB gap）」に軟化する（本 plan は docs-only ゆえコードは触らない）。
+
 ---
 
-## Leg E — tight concentration `prolate_eigenvalue_count`（LPS 壁）📋 **[irreducible wall・last]**
+## Legs B/C/E — Phase-4 tight-count 専用（OFF the BddAbove critical path）📋
 
-**目的**: `#{n | 1/2 < prolateEigenvalues T W n}` の `⌊2WT⌋ + O(log WT)` 集中（Landau-Pollak-Slepian）。
-**唯一の genuine irreducible 壁**。proof-log: yes（撤退 rationale）。Phase 4 main converse が消費。
+**3 leg とも Phase 4 main converse の tight ≈2WT カウント専用**で、中心問題 verdict により **Phase 3 BddAbove の
+make-or-break ではない**（それは Leg W = WSEB）。Leg A（DONE）の作用素 object の上に建てる。
 
-**signature スケッチ**:
+- **Leg B — コンパクト性** `IsCompactOperator (timeBandLimitingOp T W)`。HS/Schatten 不在（inventory Q2、Found 0）
+  ゆえ finite-rank kernel（sinc 積分作用素）極限で self-build（`isCompactOperator_of_tendsto`、`Compact/Basic.lean:459`）。
+  ~500–900 行 zero-scaffolding。**Phase-4 専用**。proof-log: yes。
+- **Leg C — 固有値降順列挙 + qualitative effective-rank** `prolateEigenvalues : ℕ → ℝ`（降順）+ `#{k|λ_k>θ}<∞`。
+  構造的 spectral thm（`orthogonalComplement_iSup_eigenspaces_eq_bot` `Spectrum.lean:443` + `finite_dimensional_eigenspace`
+  `:463` + Fredholm `:220`）。~200–400 行。**Phase-4 専用**。**注意**: effective-rank の **count は BddAbove に対し
+  red herring**（tail-eigenvalue / trace gap、中心問題 verdict）— Phase 4 の tight count に属し Phase 3 ではない。
+  proof-log: yes。
+- **Leg E — tight concentration** `prolate_eigenvalue_count`: `#{n|1/2<prolateEigenvalues T W n}` の
+  `⌊2WT⌋ + O(log WT)` 集中（Landau-Pollak-Slepian）。**genuine irreducible 壁**（loogle `prolate`/`Slepian`/`Mercer`
+  Found 0、2026-07-14 確認）。body `sorry + @residual(wall:nyquist-2w-dof)`。**Phase-4 専用**。proof-log: yes（撤退 rationale）。
+  **循環チェック（最重要）**: `2WT` は本カウントの **結論** としてのみ現れる（`prolateEigenvalues` / `timeBandLimitingOp`
+  の def に `2W`/`⌊2WT⌋` は入らない、C3 ✓）。**statement は `True` placeholder でなく実不等式で書く**。
 
-```lean
-/-- 壁核: >1/2 の固有値カウント = ⌊2WT⌋ + O(log WT)（Landau-Pollak-Slepian）。 -/
-theorem prolate_eigenvalue_count (T W : ℝ) (hT : 0 < T) (hW : 0 < W) :
-    ⟨#{n | 1/2 < prolateEigenvalues T W n} と 2WT の集中不等式⟩ := by
-  sorry   -- @residual(wall:nyquist-2w-dof)
-```
-
-**feasibility**: **(iii) genuine wall**（inventory §Walls、loogle `prolate`/`Slepian`/`Mercer` Found 0、
-2026-07-14 確認）。self-build する asymptotic 資産が Mathlib 完全不在。
-**循環チェック（最重要）**: `2WT` は本カウントの **結論** としてのみ現れる（`prolateEigenvalues` の def にも
-`timeBandLimitingOp` の def にも `2W`/`⌊2WT⌋` は入らない、C3 ✓）。
-**retreat line**: `sorry + @residual(wall:nyquist-2w-dof)`（sanctioned 撤退口）。**hyp bundling 禁止**
-（concentration を `*Hypothesis` predicate で渡さない）。**statement は `True` placeholder でなく実不等式で書く**
-（`prolateEigenvalues` 定義後、inventory §Starting skeleton の `True` は skeleton stand-in であり shippable でない）。
+**共通 retreat line**: Leg B/C の個別補題が Mathlib 不足で詰まれば `sorry + @residual(wall:nyquist-2w-dof)`
+（同 wall 集約、compound 化しない）。**hyp bundling 禁止**（compact/count を `*Hypothesis` predicate で渡す = tier-5）。
+**def body（`prolateEigenvalues`）は sorry 不可** — real def。
 
 ---
 
 ## 誠実性制約（explicit）
 
+- **`contAwgnMaxMessages_bddAbove` は route に関わらず `sorry + @residual(wall:nyquist-2w-dof)` のまま**（コード側
+  SoT 不変）。WSEB status（provable / 壁 / false）は probe 保留中で、**prose に「壁でない」をキャッシュしない**。
 - **tight concentration `prolate_eigenvalue_count`（Leg E）= sanctioned `@residual(wall:nyquist-2w-dof)` 撤退口**。
-  詰まらなければ genuine 化するが、詰まる公算が最も高い唯一の壁核。
-- **load-bearing hyp bundling 禁止**: concentration / compact / BddAbove を `*Hypothesis`/`*Reduction`/`IsXxxClaim`
+- **load-bearing hyp bundling 禁止**: WSEB / concentration / compact / BddAbove を `*Hypothesis`/`*Reduction`/`IsXxxClaim`
   predicate に束ねて仮説で渡さない。**`ContAwgnCode` に「全直線エネルギー field」を足して壁を回避しない**
   （窓外 sinc tail の抑制を field 化 = 壁偽装 tier-5）。**`≥` 定理へ `BddAbove` を hyp 化しない**。
+- **WSEB が false と判明したら def-fix に escalate**（`ContAwgnCode` / 容量 def）、hyp 化で誤命題を回避しない。
 - **compact（Leg B）は GENUINE か honest sorry の二択、fake 禁止**。degenerate 定義悪用 / `:True` slot も禁止。
-- **Leg B/C/D が詰まった時の honest exit も `wall:nyquist-2w-dof`**（同一 family へ集約、compound 化しない）。
-  **新 slug は** loogle-0 + two-stage conclusion-shape 検索 + template lemma 行数見積が揃った時のみ（CLAUDE.md
-  「壁判定」）。
-- **def body に sorry 不可**: `timeLimitSubspace`/`bandLimitSubspace`/`prolateEigenvalues` は commit 前に real def
-  （CLAUDE.md「sorry を書けない場合の扱い順」、第一選択 = 定義を書き換えて sorry を proof body へ押し込む）。
+- **Leg B/C/D/W が詰まった時の honest exit も `wall:nyquist-2w-dof`**（同一 family 集約、compound 化しない）。
+  **新 slug は** loogle-0 + two-stage conclusion-shape 検索 + template lemma 行数見積が揃った時のみ。
+- **def body に sorry 不可**: `prolateEigenvalues` は commit 前に real def。`wseb` は theorem（proof body に sorry 可）。
 - 実装 owner が新 sorry + `@residual` を commit したら **独立 honesty audit を同セッションで起動**（CLAUDE.md）。
 
 ---
 
 ## feasibility ledger（Leg 別、inventory 引用）
 
-| Leg | target | 判定 | 根拠（inventory） |
+| Leg | target | 判定 | 根拠 |
 |---|---|---|---|
-| A | 作用素定義 | **directly-available** | `Lp.fourierTransformₗᵢ`（LpSpace.lean:50）+ `Submodule.starProjection`（Projection/Basic.lean:124）|
-| A | 自己共役 | **directly-available** | `IsSelfAdjoint.conj_starProjection`（Adjoint.lean:376）one-liner |
-| A | 正 | **directly-available** | `IsPositive.of_isStarProjection`（Positive.lean:491）+ `adjoint_conj`（Positive.lean:366）|
-| A | `‖A‖≤1` | **directly-available** | 射影ノルム合成 |
-| B | コンパクト性 | **self-buildable**（~500–900 行）| HS/Schatten 不在（Q2、Found 0）→ `isCompactOperator_of_tendsto`（Basic.lean:459）+ finite-rank sinc kernel 近似。**壁でない** |
-| C | 固有値降順列挙 | **self-buildable**（~200–400 行）| 構造的 spectral thm `orthogonalComplement_iSup_eigenspaces_eq_bot`（Spectrum.lean:443）+ `finite_dimensional_eigenspace`（:463）+ Fredholm（:220）。降順 `ℕ→ℝ` 列は不在（finite-dim only :279）|
-| C | 定性 effective-rank | **self-buildable** | compact の帰結（0 のみ集積 ⟹ `θ>0` 上有限）|
-| D | `contAwgnMaxMessages_bddAbove` | **self-buildable（B+C 条件付き）** | 中心問題 verdict: 定性 effective-rank + 有限次元回転 + `awgn_converse`。tight カウント不要 |
-| E | tight concentration | **genuine wall** | LPS asymptotic、Mathlib 完全不在（loogle `prolate`/`Slepian`/`Mercer` Found 0）|
+| A | 作用素 + 自己共役 + 正 + `‖A‖≤1` | **✅ DONE（genuine、commit 4d848a53）** | `Lp.fourierTransformₗᵢ` + `Submodule.starProjection` + `conj_starProjection` / `of_isStarProjection`。Phase-4 専用 |
+| **W** | **WSEB スカラー不等式** | **UNKNOWN（probe 保留中）** | band-limited window-concentration。Mathlib 0 hit（band-limited sampling / Bernstein / Paley-Wiener）。単標本 gateway で settle |
+| D | `contAwgnMaxMessages_bddAbove` | **self-buildable（Leg W 条件付き）** | 中心問題 verdict: `awgn_converse` trace 境界 + `log(1+x)≤x` + WSEB + Fano plumbing（~150–250 行）。作用素論不要 |
+| B | コンパクト性 | **self-buildable（~500–900 行）・Phase-4 専用** | HS/Schatten 不在（Q2、Found 0）→ finite-rank sinc kernel 近似 |
+| C | 固有値列挙 + qualitative rank | **self-buildable（~200–400 行）・Phase-4 専用** | 構造的 spectral thm + Fredholm。count は BddAbove に対し red herring |
+| E | tight concentration | **genuine wall・Phase-4 専用** | LPS asymptotic、Mathlib 完全不在（`prolate`/`Slepian`/`Mercer` Found 0）|
 
 ---
 
 ## 循環チェック（C3 受入基準・全 Leg 集約）
 
-**C3**: 定数 `2W`/`⌊2WT⌋` は **`prolate_eigenvalue_count`（Leg E）の結論としてのみ** 現れ、どの def の入力にも
-現れない。確認:
-- `timeBandLimitingOp T W` の `W` = 物理帯域幅（作用素入力）≠ DOF カウント `2W`。✓
+**C3**: 定数 `2W`/`⌊2WT⌋` は **`prolate_eigenvalue_count`（Leg E）の結論としてのみ** 現れ、どの def の入力にも現れない。
+- `timeBandLimitingOp T W` の `W` = 物理帯域幅（入力）≠ DOF カウント `2W`。✓
+- `wseb` の統計に `2W`/`⌊2WT⌋` 非入力（`W` は帯域幅、C は n 非依存の定数）。✓
 - `prolateEigenvalues` = spectrum から定義、`2WT` 非入力。✓
-- `prolate_effectiveRank_finite` = `#{k | λ_k>θ}` で定義、`⌊2WT⌋` 非入力。✓
-- Leg D `BddAbove` = 定性有限 rank `D` で bound（EXACT `⌊2WT⌋` 不要）、code def をサンプルベクトルに制限しない
+- Leg D `BddAbove` = WSEB `E_s ≤ C·∫₀ᵀf²` で bound（EXACT `⌊2WT⌋` 不要）、code def をサンプルベクトルに制限しない
   （C1 維持）。✓
 - Leg E で初めて `2WT` が **カウントの結論** として出る。✓
 tell（循環兆候）: `contAwgn_eq_shannonHartley` が `rfl`/`unfold` のみ、`prolateEigenvalues` def に `2WT` 出現、
@@ -330,14 +292,13 @@ reduction が per-sample capacity をそのまま返す — いずれも本 plan
 
 ## ripple / import
 
-- **signature 変更なし**: Phase 2 は **新 file `TimeBandLimiting.lean` を ADD + closed 資産を read** のみ
-  （inventory「no signature change to any existing shared InformationTheory lemma」）。Leg D は既存 sorry
+- **signature 変更なし**: Phase 2 は Leg A（新 file `TimeBandLimiting.lean` ADD、DONE）+ Leg D で既存 sorry
   `contAwgnMaxMessages_bddAbove` を **fill**（signature 不変）→ `dep_consumers` blast-radius 不要。
 - **consumer**: leg 2 `contAwgnMaxMessages_bddAbove` の消費者は同 file `contAwgn_ge_shannonHartley`
   （`ShannonHartleyAchievability.lean:506`、`le_csSup` 経由、親 plan leg 3）+ Phase 4 main converse（Leg E 経由）。
-- **import cycle なし**: `TimeBandLimiting.lean` は Mathlib spectral/Fourier + `NormalizedSinc`/`WhittakerShannon`
-  を import。`ShannonHartleyOperational`/`Achievability` は Leg D で `TimeBandLimiting` を import（逆向きなし、
-  verified: Operational は spectral 資産を持たない）。作成時 `InformationTheory.lean` 登録 = 実装 owner。
+- **import cycle なし**: `TimeBandLimiting.lean`（Leg A/B/C/E）は Mathlib spectral/Fourier + `NormalizedSinc`/
+  `WhittakerShannon` を import。Leg W/D は `ShannonHartleyAchievability.lean` 内（`AWGN.Converse` の `awgn_converse`
+  + WSEB 補助を消費、作用素 file `TimeBandLimiting` に依存しない）。
 
 ---
 
@@ -345,18 +306,23 @@ reduction が per-sample capacity をそのまま返す — いずれも本 plan
 
 append-only。決着済 entry は削除（git が履歴）、active な判断のみ（≤ 10 entry）。
 
-1. **中心問題 verdict — BddAbove は tight カウントを要さない（refine、not overturn）**: leg 2 は定性コンパクト性
-   （Leg B）+ 一様 effective-rank（Leg C/D）で閉じる。tight ≈2WT concentration（LPS、Leg E）は Phase 4 main
-   converse 専用。2026-07-15 audited verdict は「nyquist-2w-dof family」までは正しく、私はその sub-object を
-   compact+rank に特定（LPS asymptotic でない）。**コード side SoT は Legs B/C/D genuine 着地まで leg 2 =
-   `@residual(wall:nyquist-2w-dof)` 維持**（prose に「壁でない」をキャッシュしない）。gateway atom（一様 frame
-   bound `‖A_n‖≤1`）で還元形を先に固定。
-2. **starProjection 設計（乗算作用素でない）**: `Q_T`/`P_W` を閉部分空間への `starProjection` で建てる
-   （inventory §D 設計勧告）。自己共役 = `conj_starProjection`、正 = `of_isStarProjection` が one-liner 化。
-   乗算作用素だと `M_g`-on-`Lp` API を自作させられる。
-3. **Leg B（compact）が単独最大リスク**: HS/Schatten 皆無（Q2）ゆえ ~500–900 行 zero-scaffolding self-build。
-   詰まれば `wall:nyquist-2w-dof` 集約（degenerate fallback = Leg A のみ genuine 残置）。kernel-simple-function
-   ルート推奨（WS 固有関数直接近似は Leg C 循環リスク）。
-4. **build order — Leg A first だが Leg D gateway atom を Leg B 前に先置き**: Leg A（direct、作用素 object）→
-   Leg D の還元 skeleton（sorry-laden、BddAbove ← 定性 rank の形を確定）→ Leg B（make-or-break）→ C → D fill
-   → E（壁）。2 feasibility unknown（compact self-build 可否 + BddAbove 還元形）を assembly より先に潰す。
+1. **中心問題 verdict（NEW）— BddAbove ⟸ スカラー WSEB（旧 compactness verdict を置換）**: 旧 verdict
+   「定性コンパクト性 + effective-rank で閉じる」は HALF-RIGHT（tight LPS 不要は正しい）だが route が WRONG。
+   effective-rank の count は **大固有値のみ** を抑え、小固有値 tail `≈(2/N)∑_{small}λ_k` は ~n 項で **trace** が
+   有界でなければ発散 → count は red herring、必要なのは **trace = E_s = WSEB**（`awgn_converse` が直接供給）。
+   よって BddAbove ⟸ スカラー WSEB `E_s ≤ C(T,W)·∫₀ᵀf²`、Legs B/C/E は BddAbove path から外れ Phase-4 専用。
+   **コード側 SoT は `contAwgnMaxMessages_bddAbove` = `@residual(wall:nyquist-2w-dof)` 維持**（WSEB status probe 保留中、
+   prose に「壁でない」を cache しない）。
+2. **`√(T/n)` 正規化で `E_s` は Riemann/quadrature 和、`∝ nP` **ではない** — 旧 step-1 の「`I ≲ nP/N₀` が n で発散」
+   機構は WRONG**: `sampledSignal = √(T/n)·f(iT/n)` ゆえ `E_s = (T/n)∑f(iT/n)²` は `∫₀ᵀf²` の quadrature 近似で、
+   per-sample power `P' = E_s/n`。`awgn_converse` は `I ≤ E_s/N₀`（n 一様）を与える。真の障害は **窓 vs 標本エネルギー
+   gap**（sinc-tail leakage、`ShannonHartleyAchievability.lean:461–478` の code docstring が正しく記述）。全標本点
+   `iT/n` は `[0,T)` **内部**（out-of-window sampling でない）— gap は quadrature/aliasing + reproducing-kernel coupling。
+3. **旧 gateway `‖A_n‖≤1`（frame bound）は mis-specified、WSEB atom で置換**: 全直線エネルギーに対しては誤った量、
+   窓エネルギーに対しては honest 定数が `≈2WT`（`≤1` でない）、`√Δ`-Bessel-`≤1` は **undersampling `Δ>1/2W` で FAIL**。
+   真の gateway atom は WSEB 単標本 case `T·f(0)² ≤ C·∫₀ᵀf²`。**undersampling `n<2WT` が WORST case**
+   （`E_s/∫₀ᵀf²` の sup は小 n で最大、`n=1` で `≈2WT`）= 旧 plan の oversampling 懸念を反転。
+4. **build order — WSEB gateway probe FIRST（decisive）**: 単標本 case を two-directional（refute/prove）で settle →
+   provable なら Leg D plumbing（~200 行）で BddAbove closure → Phase 3 achievability closure。WSEB 壁 → honest sorry
+   （既 in place `:484`）。WSEB false → def-fix escalate。Leg A（DONE、commit 4d848a53）は Phase-4 鎖に残置、
+   Legs B/C/E は Phase 4 に defer。
