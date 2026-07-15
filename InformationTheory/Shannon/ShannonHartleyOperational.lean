@@ -116,7 +116,9 @@ same tempered distribution: the `L²`-Fourier side via `Lp.fourier_toTemperedDis
 `L¹` pointwise side via the Fourier self-adjointness (multiplication formula)
 `VectorFourier.integral_fourierIntegral_smul_eq_flip`; equality of tempered distributions on the
 locally integrable class forces almost-everywhere equality
-(`ae_eq_of_integral_contDiff_smul_eq`). -/
+(`ae_eq_of_integral_contDiff_smul_eq`).
+
+@audit:ok -/
 theorem l2Fourier_eq_fourierIntegral (f : ℝ → ℂ)
     (hf1 : MemLp f 1 volume) (hf2 : MemLp f 2 volume) :
     ((𝓕 (hf2.toLp f) : Lp ℂ 2 volume) : ℝ → ℂ) =ᵐ[volume] 𝓕 f := by
@@ -171,7 +173,9 @@ theorem l2Fourier_eq_fourierIntegral (f : ℝ → ℂ)
 `l2Fourier_eq_fourierIntegral`: for `f ∈ L¹ ∩ L²`, the coeFn of the `L²`-inverse-Fourier transform
 of the canonical `Lp` representative agrees almost everywhere with the classical `L¹` inverse
 Fourier integral `𝓕⁻ f`. Used by `bandlimited_sup_bound` to realize a band-limited signal as the
-inverse transform of its (compactly supported, hence `L¹`) spectrum. -/
+inverse transform of its (compactly supported, hence `L¹`) spectrum.
+
+@audit:ok -/
 theorem l2FourierInv_eq_fourierIntegralInv (f : ℝ → ℂ)
     (hf1 : MemLp f 1 volume) (hf2 : MemLp f 2 volume) :
     ((𝓕⁻ (hf2.toLp f) : Lp ℂ 2 volume) : ℝ → ℂ) =ᵐ[volume] 𝓕⁻ f := by
@@ -231,7 +235,9 @@ pointwise-vs-a.e. defect that made an `encoder`-only code unbounded.
 
 The proof realizes the signal as the inverse Fourier transform of its (compactly supported, hence
 `L¹`) spectrum via `l2FourierInv_eq_fourierIntegralInv`, bounds the pointwise inverse transform by
-the `L¹` norm of the spectrum, and closes with Hölder on `[-W, W]` and Plancherel. -/
+the `L¹` norm of the spectrum, and closes with Hölder on `[-W, W]` and Plancherel.
+
+@audit:ok -/
 theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
     (hf : MemLp f 2 volume) (hbl : IsBandlimited f W) (hcont : Continuous f) (t : ℝ) :
     |f t| ≤ Real.sqrt (2 * W) * (eLpNorm f 2 volume).toReal := by
