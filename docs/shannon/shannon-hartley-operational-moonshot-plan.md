@@ -35,7 +35,7 @@ stretch（Phase 2/4/5-full）は不変。honesty bar 不変（CLAUDE.md「検証
 - [~] Phase 5-min — wire + Option A README infra 🔄 **[旧着地 FALSIFIED、Phase 1-fix で mainline 復帰済]**（commit b8770fce / ff32ec82）
 - [x] **l2Fourier bridge（fwd+inv）+ bandlimited_sup_bound ✅ proof-done・audit PASS（commit 9d8608a8/40c2e449/30b59a15）**
 - [~] Phase 3 — achievability closure（`contAwgn_ge_shannonHartley`）🔄 **leg 1（synthSignal band-limit/energy）= ✅ audit PASS（commit 89ede2a3/646605c7）**。**leg 2（BddAbove）+ leg 3（assembly）= 2026-07-15 WALL-GATED（`wall:nyquist-2w-dof`、mainline と同一壁）**。壁ブロックゆえ Phase 3 単独では closure 不可 → 壁 self-build（Phase 2）か 容量 def 再設計が前提
-- [ ] Phase 2 — prolate-DOF スペクトル理論（`timeBandLimitingOp` + 固有値集中）📋 **[stretch / 壁核]**
+- [ ] Phase 2 — prolate-DOF スペクトル理論（`timeBandLimitingOp` + 固有値集中）📋 **[stretch / 壁核]** → [shannon-hartley-phase2-spectral-plan.md](shannon-hartley-phase2-spectral-plan.md)
 - [ ] Phase 4 — converse（`contAwgn_le_shannonHartley`、Phase 2 消費）📋 **[stretch]**
 - [ ] Phase 5-full — `le_antisymm` 組立 📋 **[stretch / closure]**
 
@@ -73,7 +73,7 @@ Shannon-Hartley の operational 版 = **サンドイッチ**:
 def に含めない C3 の意図は Phase 1-fix でも継承。**旧 Phase 1 def はこの形は満たしたが degenerate/under-specified
 で命題を空にしていた** → Phase 1-fix で faithful 化）:
 
-- **achievability（≥）は synthesis 補間 + per-sample coding で閉じる（壁非依存、faithful def 前提で GO）**: 真間隔
+- **achievability（≥）の信号構成は synthesis 補間 + per-sample coding で閉じる（壁非依存）が、operational な `BddAbove`（leg 2）は spectral 壁を要する（2026-07-15 是正、Phase 2 sub-plan Leg B/C で closure 見込み）**: 真間隔
   `Δ = T/n`（`n = ⌊2WT⌋`）でサンプリング → `awgn_achievability`（既所有、genuine）で
   `≈ exp(T·W·log(1+SNR))` メッセージの codebook → **synthesis bridge**（任意有限サンプルベクトルを補間する
   帯域制限信号を構成、`whittaker_shannon_bandlimited` の analysis 逆向き）で連続信号化。prolate（Phase 2）を
@@ -172,6 +172,10 @@ open design question（L² 関数上の spectral `IsBandlimited` 述語化 + Pal
 ---
 
 ## Phase 2 — prolate-DOF スペクトル理論 📋 **[stretch / 壁核・最深]**
+
+> **サブ計画**: [`shannon-hartley-phase2-spectral-plan.md`](shannon-hartley-phase2-spectral-plan.md)
+> （Leg A–E 分解 + 中心問題 verdict: BddAbove は定性コンパクト性で閉じ tight ≈2WT カウントは Phase 4 専用）。
+> 在庫 = [`shannon-hartley-phase2-spectral-inventory.md`](shannon-hartley-phase2-spectral-inventory.md)。以下は pointer。
 
 **目的**: time-and-band limiting operator `P_W Q_T P_W`（`Q_T` = `[0,T]` 時間制限、`P_W` = `[-W,W]`
 帯域制限射影）のコンパクト自己共役性 + prolate-spheroidal 固有値集中（>1/2 の固有値が `≈2WT + O(log WT)`
@@ -399,7 +403,7 @@ theorem contAwgn_eq_shannonHartley ... :=
 |---|---|---|
 | Phase 1（雑音測度） | proposed wall `cont-awgn-noise-measure`（**不発**） | route β（per-sample iid Gaussian を `errorProbAt` に inline）採用で `IsGaussianProcess` 依存が消え、当初 proposed だった雑音測度壁は不要になった（register 追加せず、code 側 slug も生成されない） |
 | Phase 2（prolate 固有値集中） | `wall:nyquist-2w-dof`（**最有力・確定的**） | 真の壁核。作用素定義 + 自己共役 + コンパクト性は genuine 目標、**固有値集中 asymptotic のみ**が genuine 壁（loogle `Found 0`: prolate/Slepian、self-build ~800-1500 行）。詰まれば `prolate_eigenvalue_count` を honest sorry で分解 |
-| Phase 3（achievability） | **なし（壁非依存、faithful def 前提の GO・Phase 1-fix で un-gated）** | edge-effect dissolve（`encoder_power` in-window 課金 + exact sinc isometry `∫_ℝf² ≤ T·P`）で `wall:nyquist-2w-dof` 一部共有は不発。全 leg（synthesis bridge + Parseval + BddAbove crude converse + `awgn_achievability`）genuine 目標、Phase 1-fix 完了で closable |
+| Phase 3（achievability） | **leg 1 = なし（synthesis/energy 壁非依存・proof-done 済）／leg 2 (BddAbove) + leg 3 (assembly) = `wall:nyquist-2w-dof`（2026-07-15 是正）** | synthesis 信号の構成（leg 1）は edge-effect dissolve で壁非依存だが、任意コードの `BddAbove`（leg 2）は標本↔窓エネルギー集中を要し main と同一壁。ただし Phase 2 sub-plan の判定では **compactness + effective-rank（Leg B/C）で閉じ、tight ≈2WT（Leg E）は不要** → 子 `shannon-hartley-phase2-spectral-plan.md` Leg D で closure 見込み |
 | Phase 1-fix（def 再設計） | **`plan:…moonshot-plan`（`bandlimited_sup_bound`）** ✅ | def を faithful 化し `@audit:defect` 除去済（commit 7c3afc86）。残 self-build = bridge `l2Fourier_eq_fourierIntegral`（壁でない、~150–250 行） |
 | Phase 4（converse） | `wall:nyquist-2w-dof`（**Phase 2 transitive 継承**） | Phase 2 の `prolate_eigenvalue_count` を継承。Phase 4 独自の新 sorry は作らない |
 | Phase 5-min（🔄 旧着地 FALSIFIED → 復帰済） | `@residual(wall:nyquist-2w-dof)`（honest） | 旧 mainline は degenerate def 下で false-as-framed（2026-07-14 audit OVERTURNED）だったが、Phase 1-fix で `contAwgn_eq_shannonHartley` は honest wall-sorry に復帰済 |
