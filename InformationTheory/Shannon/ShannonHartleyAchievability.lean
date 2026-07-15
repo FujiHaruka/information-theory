@@ -317,7 +317,9 @@ theorem synthSignal_toLp_eq_sum (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 
 
 /-- **(i)** The synthesis is band-limited to `[-W, W]` provided the sample count satisfies the
 Nyquist bound `n ≤ 2WT`: each shifted `sincN(·/Δ)` (spacing `Δ = T/n`) has spectrum supported
-in `[-1/(2Δ), 1/(2Δ)] = [-n/(2T), n/(2T)]`, and `n/(2T) ≤ W`. -/
+in `[-1/(2Δ), 1/(2Δ)] = [-n/(2T), n/(2T)]`, and `n/(2T) ≤ W`.
+
+@audit:ok -/
 theorem synthSignal_bandlimited (T W : ℝ) (n : ℕ) (a : Fin n → ℝ)
     (hT : 0 < T) (hn : 0 < n) (hnW : (n : ℝ) ≤ 2 * W * T) :
     IsBandlimited (synthSignal T n a) W := by
@@ -376,7 +378,9 @@ theorem synthSignal_bandlimited (T W : ℝ) (n : ℕ) (a : Fin n → ℝ)
 
 /-! ## §D — (iii) Parseval energy -/
 
-/-- The squared synthesis is integrable on the whole line (it lies in `L²`). -/
+/-- The squared synthesis is integrable on the whole line (it lies in `L²`).
+
+@audit:ok -/
 theorem synthSignal_sq_integrable (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
     (hT : 0 < T) (hn : 0 < n) :
     Integrable (fun t => (synthSignal T n a t) ^ 2) := by
@@ -388,7 +392,9 @@ theorem synthSignal_sq_integrable (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
 
 /-- **(iii)** Parseval / sinc self-reproducing energy identity: the whole-line energy of the
 synthesis equals `Δ · ∑ᵢ (a i)²` with `Δ = T/n`. Follows from the sinc orthogonality
-`∫ sincN((t-iΔ)/Δ)·sincN((t-jΔ)/Δ) dt = Δ·δᵢⱼ`. -/
+`∫ sincN((t-iΔ)/Δ)·sincN((t-jΔ)/Δ) dt = Δ·δᵢⱼ`.
+
+@audit:ok -/
 theorem synthSignal_energy (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n) :
     (∫ t, (synthSignal T n a t) ^ 2) = (T / (n : ℝ)) * ∑ i : Fin n, (a i) ^ 2 := by
   have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
@@ -438,8 +444,10 @@ theorem synthSignal_energy (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) 
   exact_mod_cast hstep1.symm.trans hstep2
 
 /-- In-window energy is bounded by the whole-line energy (the integrand is `≥ 0`), giving the
-`ContAwgnCode.encoder_power` obligation directly. This reduction is genuine; it transitively
-carries the residuals of `synthSignal_energy` (iii) and `synthSignal_sq_integrable`. -/
+`ContAwgnCode.encoder_power` obligation directly. This reduction is genuine, resting on the
+(now genuine) `synthSignal_energy` (iii) and `synthSignal_sq_integrable`.
+
+@audit:ok -/
 theorem synthSignal_window_energy_le (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
     (hT : 0 < T) (hn : 0 < n) :
     (∫ t in Set.Icc (0 : ℝ) T, (synthSignal T n a t) ^ 2)
