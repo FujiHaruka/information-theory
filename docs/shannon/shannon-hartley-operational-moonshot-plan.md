@@ -73,7 +73,7 @@ Shannon-Hartley の operational 版 = **サンドイッチ**:
 def に含めない C3 の意図は Phase 1-fix でも継承。**旧 Phase 1 def はこの形は満たしたが degenerate/under-specified
 で命題を空にしていた** → Phase 1-fix で faithful 化）:
 
-- **achievability（≥）の信号構成は synthesis 補間 + per-sample coding で閉じる（壁非依存）が、operational な `BddAbove`（leg 2）は `wall:nyquist-2w-dof` family を要する（2026-07-15 是正）。Phase 2 sub-plan の中心問題 verdict（更新）: BddAbove ⟸ スカラー WSEB（`awgn_converse` trace 境界、子 Leg W→Leg D、作用素論を経由しない）、WSEB status は probe 保留中**: 真間隔
+- **achievability（≥）の信号構成は synthesis 補間 + per-sample coding で閉じる（壁非依存）が、operational な `BddAbove`（leg 2）は `wall:nyquist-2w-dof` family を要する（2026-07-15 是正）。Phase 2 sub-plan の中心問題 verdict: BddAbove ⟸ スカラー WSEB（`awgn_converse` trace 境界、子 Leg W→Leg D、作用素論を経由しない）。WSEB status = leg 9 で決着: 単標本 atom は数値 2 独立法で TRUE（FALSE/def-fix 排除）だが self-build は GENUINE WALL（~800–1500 行 prolate/LPS 理論、Mathlib 完全不在、`lean-implementer` machine verdict）。⟹ (b) 正面突破は失敗、honest sorry 維持、次は user-decision（子 plan「route」3 択）。settled-facts → `shannon-hartley-facts.md`**: 真間隔
   `Δ = T/n`（`n = ⌊2WT⌋`）でサンプリング → `awgn_achievability`（既所有、genuine）で
   `≈ exp(T·W·log(1+SNR))` メッセージの codebook → **synthesis bridge**（任意有限サンプルベクトルを補間する
   帯域制限信号を構成、`whittaker_shannon_bandlimited` の analysis 逆向き）で連続信号化。prolate（Phase 2）を
@@ -174,10 +174,11 @@ open design question（L² 関数上の spectral `IsBandlimited` 述語化 + Pal
 ## Phase 2 — prolate-DOF スペクトル理論 📋 **[stretch / 壁核・最深]**
 
 > **サブ計画**: [`shannon-hartley-phase2-spectral-plan.md`](shannon-hartley-phase2-spectral-plan.md)
-> （中心問題 verdict 更新: **Phase 3 BddAbove ⟸ スカラー WSEB** via `awgn_converse` trace 境界（Leg W → Leg D）で
-> **作用素論を経由しない**。作用素スペクトル鎖 Legs A✅/B/C/E は **Phase-4 tight-count 専用**。WSEB status は
-> probe 保留中（provable / 壁 / false）。旧「BddAbove は定性コンパクト性で閉じる」は tail-eigenvalue/trace gap で
-> route WRONG と判明）。在庫 = [`shannon-hartley-phase2-spectral-inventory.md`](shannon-hartley-phase2-spectral-inventory.md)。以下は pointer。
+> （中心問題 verdict: **Phase 3 BddAbove ⟸ スカラー WSEB** via `awgn_converse` trace 境界（Leg W → Leg D）で
+> **作用素論を経由しない**。作用素スペクトル鎖 Legs A✅/B/C/E は **Phase-4 tight-count 専用**。**WSEB status =
+> leg 9 決着: TRUE（数値 2 独立法、FALSE 排除）だが self-build は GENUINE WALL（~800–1500 行 prolate 理論、
+> machine verdict）**。旧「BddAbove は定性コンパクト性で閉じる」は tail-eigenvalue/trace gap で route WRONG と判明）。
+> settled-facts → [`shannon-hartley-facts.md`](shannon-hartley-facts.md)。在庫 = [`shannon-hartley-phase2-spectral-inventory.md`](shannon-hartley-phase2-spectral-inventory.md)。以下は pointer。
 
 **目的**: time-and-band limiting operator `P_W Q_T P_W`（`Q_T` = `[0,T]` 時間制限、`P_W` = `[-W,W]`
 帯域制限射影）のコンパクト自己共役性 + prolate-spheroidal 固有値集中（>1/2 の固有値が `≈2WT + O(log WT)`
