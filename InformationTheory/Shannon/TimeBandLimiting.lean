@@ -1837,7 +1837,9 @@ end Degeneracy
 /-!
 ### The `2WT` trace bound (Leg E)
 
-The Landau–Pollak–Slepian degrees-of-freedom count, in its Bessel form. The band-limiting projection
+The crude `2WT` trace bound — the part of the degrees-of-freedom story that Bessel reaches on its
+own. (The Landau–Pollak–Slepian *concentration* is a strictly stronger statement and is not proved
+here; see `prolateCount_mul_le`.) The band-limiting projection
 is an integral operator against the reproducing kernel `k_t = 2W sincN(2W(t − ·))`
 (`bandLimitProj_apply_ae`), so `(P_W f)(t) = ⟪k_t, f⟫`. Two facts about that kernel drive everything
 here: its `L²`-norm is the constant `‖k_t‖² = 2W` (Plancherel against the spectral boxcar, which is
@@ -1852,12 +1854,18 @@ section TraceBound
 
 /-- The reproducing kernel of the band-limited subspace at time `t`: the ideal low-pass
 `2W sincN(2W(t − ·))`, whose Fourier transform is the spectral boxcar `𝟙_[-W,W] e^{-2πi t ·}`. It
-is the integral kernel of `P_W`, so pairing against it evaluates a band-limited function at `t`. -/
+is the integral kernel of `P_W`, so pairing against it evaluates a band-limited function at `t`.
+
+The `2W` factor is not a free constant: `bandLimitProj_apply_ae` pins it against the Fourier
+definition of `bandLimitSubspace`, so a wrong gain fails to compile rather than rescaling the
+bound below.
+@audit:ok -/
 noncomputable def bandKernel (W t : ℝ) : ℝ → ℂ :=
   fun s => ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ)
 
 /-- The kernel is a constant multiple of the shifted, dilated sinc `sincN((· − t)/Δ)` at
-`Δ = 1/(2W)`, whose `L²` membership is `ShannonHartley.shiftSinc_memLp`. -/
+`Δ = 1/(2W)`, whose `L²` membership is `ShannonHartley.shiftSinc_memLp`.
+@audit:ok -/
 theorem bandKernel_eq_smul_shiftSinc {W : ℝ} (hW : 0 < W) (t : ℝ) :
     bandKernel W t
       = fun s => (2 * W : ℂ) *
@@ -1892,7 +1900,8 @@ theorem bandKernel_memLp (W t : ℝ) : MemLp (bandKernel W t) 2 volume := by
     exact MemLp.zero'
   · exact key W hW t
 
-/-- The reproducing kernel at time `t`, as an element of `L²(ℝ;ℂ)`. -/
+/-- The reproducing kernel at time `t`, as an element of `L²(ℝ;ℂ)`.
+@audit:ok -/
 noncomputable def bandKernelLp (W t : ℝ) : E := (bandKernel_memLp W t).toLp (bandKernel W t)
 
 theorem bandKernelLp_norm_sq (W t : ℝ) (hW : 0 < W) : ‖bandKernelLp W t‖ ^ 2 = 2 * W := by
@@ -1944,7 +1953,8 @@ theorem inner_bandKernelLp (W t : ℝ) (f : E) :
 /-- The reproducing property of the band-limited subspace: `(P_W f)(t) = ⟪k_t, f⟫` for a.e. `t`,
 with `k_t = bandKernelLp W t` the ideal low-pass centered at `t`. This is
 `bandLimitProj_apply_ae` read as an `L²` pairing; the kernel is real-valued, so the conjugation in
-the (conjugate-linear-in-the-first-slot) inner product is invisible. -/
+the (conjugate-linear-in-the-first-slot) inner product is invisible.
+@audit:ok -/
 theorem bandLimitProj_apply_eq_inner (W : ℝ) (hW : 0 ≤ W) (f : E) :
     ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume]
       fun t => inner ℂ (bandKernelLp W t) f := by
@@ -1954,7 +1964,8 @@ theorem bandLimitProj_apply_eq_inner (W : ℝ) (hW : 0 ≤ W) (f : E) :
 
 /-- The quadratic form of `A` is the energy of `P_W f` observed through the window `[0,T]`:
 `⟪A f, f⟫ = ∫_[0,T] |⟪k_t, f⟫|² dt`. Self-adjointness of `P_W` moves one copy across the pairing,
-and `timeLimitProj_apply_ae` turns `Q_T` into multiplication by `𝟙_[0,T]`. -/
+and `timeLimitProj_apply_ae` turns `Q_T` into multiplication by `𝟙_[0,T]`.
+@audit:ok -/
 theorem inner_timeBandLimitingOp_self_eq (T W : ℝ) (hW : 0 ≤ W) (f : E) :
     (inner ℂ (timeBandLimitingOp T W f) f).re
       = ∫ t in Set.Icc (0 : ℝ) T, ‖inner ℂ (bandKernelLp W t) f‖ ^ 2 := by
@@ -2004,11 +2015,19 @@ theorem integrableOn_inner_bandKernelLp_sq (T W : ℝ) (hW : 0 ≤ W) (f : E) :
 /-- **Leg E gateway atom.** The trace of the time-and-band limiting operator along any finite
 orthonormal family is at most `2WT`.
 
-This is the Landau–Pollak–Slepian degrees-of-freedom count in its Bessel form. The quadratic form
-`⟪A eᵢ, eᵢ⟫ = ∫_[0,T] |⟪k_t, eᵢ⟫|² dt` (`inner_timeBandLimitingOp_self_eq`) turns the trace into an
-integral of a *finite* sum, so the sum and the integral commute without any Fubini; Bessel's
-inequality then caps the integrand by the constant `‖k_t‖² = 2W` (`bandKernelLp_norm_sq`), and the
-window `[0,T]` supplies the factor `T`. No trace-class or Schatten theory is involved. -/
+The quadratic form `⟪A eᵢ, eᵢ⟫ = ∫_[0,T] |⟪k_t, eᵢ⟫|² dt` (`inner_timeBandLimitingOp_self_eq`) turns
+the trace into an integral of a *finite* sum, so the sum and the integral commute without any
+Fubini; Bessel's inequality then caps the integrand by the constant `‖k_t‖² = 2W`
+(`bandKernelLp_norm_sq`), and the window `[0,T]` supplies the factor `T`. No trace-class or Schatten
+theory is involved — only a finite orthonormal family — so Mathlib's lack of Schatten API does not
+block this bound.
+
+Scope (audited 2026-07-17): this is the *trace* bound, not the Landau–Pollak–Slepian
+degrees-of-freedom count. It is the same Bessel argument that already closes
+`contAwgnMaxMessages_bddAbove` wall-free, and like that bound it yields the crude constant only.
+It does **not** bear on `wall:nyquist-2w-dof`, whose content is the eigenvalue *concentration*
+(`≈2WT` eigenvalues near `1`, the rest near `0`); Bessel is one-directional and cannot reach it.
+@audit:ok -/
 theorem sum_inner_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     {d : ℕ} {e : Fin d → E} (he : Orthonormal ℂ e) :
     ∑ i, (inner ℂ (timeBandLimitingOp T W (e i)) (e i)).re ≤ 2 * W * T := by
@@ -2065,7 +2084,19 @@ The span `prolateEigenspaceSup T W c` of the eigenspaces above `c` is `A`-invari
 finite-dimensional, so the finite-dimensional spectral theorem supplies an orthonormal eigenbasis of
 it; every one of its eigenvalues exceeds `c` (an eigenvector for an eigenvalue `≤ c` would be
 orthogonal to every eigenspace above `c`, hence to the span containing it, hence zero). Feeding that
-basis to `sum_inner_timeBandLimitingOp_le` gives `c · #{λ > c} ≤ ∑ λᵢ ≤ 2WT`. -/
+basis to `sum_inner_timeBandLimitingOp_le` gives `c · #{λ > c} ≤ ∑ λᵢ ≤ 2WT`.
+
+Scope (audited 2026-07-17): read as a count this says `#{λ > c} ≤ 2WT/c`, which *overcounts* by the
+factor `1/c` and has no vanishing relative error. It is therefore weaker than the sharp upper half
+`#{λ > c} ≤ 2WT + O(log WT)`, and weaker still than the two-sided concentration that
+`wall:nyquist-2w-dof` names. Neither wall consumer is unblocked by it:
+`contAwgn_ge_shannonHartley` needs the *lower* half, and `contAwgn_eq_shannonHartley`, being an
+equality, needs both halves sharply.
+
+Non-vacuity is machine-checked rather than assumed: for `0 < T`, `0 < W`,
+`exists_pos_hasEigenvalue` yields an eigenvalue `μ > 0`, so `prolateCount T W (μ/2) ≥ 1` and the
+bound bites (`μ/2 ≤ 2WT`) instead of holding by `0 ≤ 2WT`.
+@audit:ok -/
 theorem prolateCount_mul_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (hc : 0 < c) :
     c * (prolateCount T W c : ℝ) ≤ 2 * W * T := by
   classical
