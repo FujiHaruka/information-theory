@@ -1280,13 +1280,15 @@ theorem eigenvalue_le_one {T W μ : ℝ} (hμ : (prolateEnd T W).HasEigenvalue (
   rw [hv, norm_smul, hv_norm, mul_one, Complex.norm_real] at h1
   exact (abs_le.mp h1).2
 
-/-- The set of eigenvalues of `A = timeBandLimitingOp T W` lying strictly above `c`. -/
+/-- The set of eigenvalues of `A = timeBandLimitingOp T W` lying strictly above `c`.
+@audit:ok -/
 def prolateEigenvalueSet (T W c : ℝ) : Set ℝ :=
   {μ : ℝ | c < μ ∧ (prolateEnd T W).HasEigenvalue (μ : ℂ)}
 
 /-- **Atom 1.** For a positive threshold `c`, the compact operator `A` has only finitely many
 eigenvalues above `c`: an infinite family would give an orthonormal sequence of eigenvectors whose
-images stay `√2·c`-separated, contradicting compactness. -/
+images stay `c`-separated, contradicting compactness.
+@audit:ok -/
 theorem prolateEigenvalueSet_finite (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     (prolateEigenvalueSet T W c).Finite := by
   by_contra hfin
@@ -1331,7 +1333,8 @@ theorem prolateEigenvalueSet_finite (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   rw [Function.comp_apply, Function.comp_apply, dist_eq_norm] at this
   exact absurd this (not_lt.mpr (hsep _ _ hne).le)
 
-/-- The span of all eigenspaces of `A` whose eigenvalue exceeds `c`. -/
+/-- The span of all eigenspaces of `A` whose eigenvalue exceeds `c`.
+@audit:ok -/
 noncomputable def prolateEigenspaceSup (T W c : ℝ) : Submodule ℂ E :=
   ⨆ μ ∈ prolateEigenvalueSet T W c, Module.End.eigenspace (prolateEnd T W) (μ : ℂ)
 
@@ -1347,8 +1350,15 @@ theorem prolateEigenspaceSup_finiteDimensional (T W : ℝ) {c : ℝ} (hc : 0 < c
   infer_instance
 
 /-- The eigenvalue counting function of `A`: the number of eigenvalues exceeding `c`, counted with
-multiplicity. Junk (`0`) for `c ≤ 0`, where the span is genuinely infinite-dimensional; every use
-site below is guarded by `0 < c`. -/
+multiplicity.
+
+Only meaningful for `0 < c`, where `prolateEigenspaceSup_finiteDimensional` makes the `finrank` a
+genuine dimension. For `c ≤ 0` it is a junk value: at `0 < T`, `0 < W` the span is then
+infinite-dimensional and `finrank` reports `0` (this is why `prolateEigenvalues` below takes the
+infimum over `0 < c` rather than `0 ≤ c` — the latter would let the junk `0` into the constraint set
+and collapse the whole enumeration to `≡ 0`). Every use site below is guarded by `0 < c`; audited
+site-by-site, no proof consumes the junk value.
+@audit:ok -/
 noncomputable def prolateCount (T W c : ℝ) : ℕ := Module.finrank ℂ (prolateEigenspaceSup T W c)
 
 theorem prolateEigenvalueSet_subset (T W : ℝ) {c c' : ℝ} (h : c ≤ c') :
@@ -1379,7 +1389,21 @@ theorem prolateCount_one_eq_zero (T W : ℝ) : prolateCount T W 1 = 0 := by
 `A = P_W ∘ Q_T ∘ P_W`, listed with multiplicity and padded with `0`.
 
 Defined as the generalized inverse of the counting function `prolateCount`: `λ n` is the least
-threshold `c > 0` above which `A` has at most `n` eigenvalues. -/
+threshold `c > 0` above which `A` has at most `n` eigenvalues.
+
+Scope (audit, 2026-07-17): the enumeration is **not yet known to be nonzero**. Nothing in this file
+or its dependencies establishes `prolateEigenvalues T W 0 ≠ 0` for `0 < T`, `0 < W`, so the
+unconditional headlines below (`_nonneg`, `_le_one`, `_antitone`, `_tendsto_zero`) are all satisfied
+by the constant-zero sequence and carry no spectral content on their own; they are the shape
+statements, not the eigenvalue asymptotics. This is not a degenerate definition: at `W < 0` and at
+`T < 0` the operator genuinely collapses and the enumeration really is `≡ 0`, so a positivity input
+is needed to say more. The missing input is exactly one atom, `timeBandLimitingOp T W ≠ 0` for
+`0 < T`, `0 < W`; from it, Mathlib's `ContinuousLinearMap.eq_zero_of_forall_hasEigenvalue_eq_zero`
+(fed by `timeBandLimitingOp_isCompact` / `_isSymmetric` / `_isPositive`) yields a positive
+eigenvalue and hence `0 < prolateEigenvalues T W 0`. Note that atom bounds only the *first* entry:
+`λ n ≠ 0` for all `n` additionally needs `A` to have infinite rank. Neither is the
+`wall:nyquist-2w-dof` eigenvalue-concentration wall.
+@audit:ok -/
 noncomputable def prolateEigenvalues (T W : ℝ) (n : ℕ) : ℝ :=
   sInf {c : ℝ | 0 < c ∧ prolateCount T W c ≤ n}
 
@@ -1420,7 +1444,13 @@ theorem prolateEigenvalues_tendsto_zero (T W : ℝ) :
 
 /-- Every nonzero entry of the enumeration really is an eigenvalue of `A`. If it were not, the
 finitely many eigenvalues above `c/2` would leave a gap around it, making the counting function
-constant across `c` — contradicting that the count jumps there by definition of the infimum. -/
+constant across `c` — contradicting that the count jumps there by definition of the infimum.
+
+The hypothesis is a non-degeneracy precondition, not the proof's core (granting it hands you
+nothing about eigenvalues; the gap argument below does the work). It is, however, **not currently
+dischargeable in-tree** — see the scope note on `prolateEigenvalues` — so this theorem has no
+consumer yet.
+@audit:ok -/
 theorem prolateEigenvalues_hasEigenvalue (T W : ℝ) (n : ℕ) (h : prolateEigenvalues T W n ≠ 0) :
     (prolateEnd T W).HasEigenvalue ((prolateEigenvalues T W n : ℝ) : ℂ) := by
   set c := prolateEigenvalues T W n with hc_def
