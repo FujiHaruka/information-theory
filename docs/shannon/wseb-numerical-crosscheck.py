@@ -1,4 +1,9 @@
 """
+SUPERSEDED by docs/shannon/wseb-highprec-probe.py — this cross-check is not independent of the
+sinc-side probe in the way that matters: both use lstsq(rcond=None) and so share the same
+double-precision truncation. Its agreement on TRUE (sup ~= 76.1) is an artifact; the atom is
+FALSE (sup = +infinity).
+
 Independent SPECTRAL-side cross-check of WSEB single-sample atom (different discretization/conditioning
 path than the sinc-side lstsq probe).
 

@@ -1,4 +1,8 @@
 """
+SUPERSEDED by docs/shannon/wseb-highprec-probe.py — this script's TRUE verdict (sup ~= 76.1) is a
+double-precision artifact: lstsq(rcond=None) silently discards the super-exponentially small
+singular values that drive the sup up. The atom is FALSE (sup = +infinity).
+
 WSEB single-sample gateway atom — STABLE decisive test avoiding G^{-1}.
 
 min window energy for f(0)=1  ==  squared L2([0,T]) distance from sinc_0 to span{sinc_n : n != 0}
