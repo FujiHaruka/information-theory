@@ -1363,11 +1363,14 @@ theorem prolateEigenspaceSup_finiteDimensional (T W : ℝ) {c : ℝ} (hc : 0 < c
 multiplicity.
 
 Only meaningful for `0 < c`, where `prolateEigenspaceSup_finiteDimensional` makes the `finrank` a
-genuine dimension. For `c ≤ 0` it is a junk value: at `0 < T`, `0 < W` the span is then
-infinite-dimensional and `finrank` reports `0` (this is why `prolateEigenvalues` below takes the
-infimum over `0 < c` rather than `0 ≤ c` — the latter would let the junk `0` into the constraint set
-and collapse the whole enumeration to `≡ 0`). Every use site below is guarded by `0 < c`; audited
-site-by-site, no proof consumes the junk value.
+genuine dimension. For `c ≤ 0` it is a junk value: `prolateEigenspaceSup_finiteDimensional` no
+longer applies, and on an infinite-dimensional span `finrank` reports `0`. This is why
+`prolateEigenvalues` below takes the infimum over `0 < c` rather than `0 ≤ c` — the latter would
+risk letting a junk `0` into the constraint set and collapsing the whole enumeration to `≡ 0`.
+The span's infinite-dimensionality at `c ≤ 0` is expected but *not* established in-tree (at `c = 0`
+it is exactly the open infinite-rank obligation noted on `prolateEigenvalues`); nothing depends on
+it, since every use site below is guarded by `0 < c` — audited site-by-site, no proof consumes the
+junk value.
 @audit:ok -/
 noncomputable def prolateCount (T W c : ℝ) : ℕ := Module.finrank ℂ (prolateEigenspaceSup T W c)
 
@@ -1454,9 +1457,11 @@ finitely many eigenvalues above `c/2` would leave a gap around it, making the co
 constant across `c` — contradicting that the count jumps there by definition of the infimum.
 
 The hypothesis is a non-degeneracy precondition, not the proof's core (granting it hands you
-nothing about eigenvalues; the gap argument below does the work). It is genuinely needed: for `n`
-past the rank of `A` the entry is `0`, which need not be an eigenvalue. At `n = 0` it is discharged
-in-tree by `prolateEigenvalues_zero_hasEigenvalue` for `0 < T`, `0 < W`.
+nothing about eigenvalues; the gap argument below does the work). It is retained for content rather
+than necessity: at an entry with `λ n = 0` the conclusion would assert only that `0` is an
+eigenvalue of `A`, which is no spectral information, so the hypothesis-free form would pin strictly
+less. At `n = 0` it is discharged in-tree by `prolateEigenvalues_zero_hasEigenvalue` for `0 < T`,
+`0 < W`.
 @audit:ok -/
 theorem prolateEigenvalues_hasEigenvalue (T W : ℝ) (n : ℕ) (h : prolateEigenvalues T W n ≠ 0) :
     (prolateEnd T W).HasEigenvalue ((prolateEigenvalues T W n : ℝ) : ℂ) := by
@@ -1510,7 +1515,8 @@ section NonVacuity
 
 /-- The indicator of the time window `[0,T]`, as an element of `L²(ℝ;ℂ)`. It is the witness that
 makes the eigenvalue enumeration non-vacuous: it lies in the time-limited subspace, and its
-spectrum is continuous with value `T` at the origin, hence survives the band cutoff. -/
+spectrum is continuous with value `T` at the origin, hence survives the band cutoff.
+@audit:ok -/
 noncomputable def timeBox (T : ℝ) : E :=
   indicatorConstLp 2 (measurableSet_Icc (a := (0 : ℝ)) (b := T))
     (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top) (1 : ℂ)
@@ -1597,7 +1603,14 @@ theorem bandLimitProj_timeBox_ne_zero {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
   exact absurd hUnull hUpos.ne'
 
 /-- The time-and-band limiting operator is nonzero whenever both the window and the band are
-nondegenerate. This is the non-vacuity input for the eigenvalue enumeration. -/
+nondegenerate. This is the non-vacuity input for the eigenvalue enumeration.
+
+Both hypotheses are tight, and on structurally distinct grounds: at `T = 0` the window collapses
+(`timeLimitSubspace 0 = ⊥`, so `Q = 0`) and at `W = 0` the band collapses
+(`bandLimitSubspace 0 = ⊥`, so `P = 0`); either forces `A = 0`. So neither can be relaxed to `≤`.
+The two boundary lemmas are not currently in-tree — only the strict-negative band case
+(`bandLimitSubspace_eq_bot_of_neg`) is.
+@audit:ok -/
 theorem timeBandLimitingOp_ne_zero {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
     timeBandLimitingOp T W ≠ 0 := by
   intro hA
@@ -1654,7 +1667,10 @@ theorem exists_pos_hasEigenvalue {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
   · exact absurd (by rw [← hre, ← h]; simp) hμ0
 
 /-- The eigenvalue enumeration of the time-and-band limiting operator is non-vacuous: its leading
-entry is strictly positive whenever the window and the band are nondegenerate. -/
+entry is strictly positive whenever the window and the band are nondegenerate. This is what rules
+out the constant-zero sequence, which satisfies every shape headline on `prolateEigenvalues`.
+It bounds only the *leading* entry; `λ n ≠ 0` for all `n` is a strictly larger, open obligation.
+@audit:ok -/
 theorem prolateEigenvalues_zero_pos {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
     0 < prolateEigenvalues T W 0 := by
   obtain ⟨μ, hμpos, hμ⟩ := exists_pos_hasEigenvalue hT hW
@@ -1675,7 +1691,10 @@ theorem prolateEigenvalues_zero_pos {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
     (le_csInf (prolateEigenvalues_setOf_nonempty T W 0) hlb)
 
 /-- The leading entry of the enumeration is a genuine eigenvalue of `A`, discharging the
-non-degeneracy hypothesis of `prolateEigenvalues_hasEigenvalue` at `n = 0`. -/
+non-degeneracy hypothesis of `prolateEigenvalues_hasEigenvalue` at `n = 0`. The discharge is not
+vacuous: the entry is strictly positive, so this exhibits a positive eigenvalue rather than the
+uninformative `0`.
+@audit:ok -/
 theorem prolateEigenvalues_zero_hasEigenvalue {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
     (prolateEnd T W).HasEigenvalue ((prolateEigenvalues T W 0 : ℝ) : ℂ) :=
   prolateEigenvalues_hasEigenvalue T W 0 (prolateEigenvalues_zero_pos hT hW).ne'
