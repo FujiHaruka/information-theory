@@ -19,8 +19,9 @@
       Proposal C = FAIL（同欠陥を継承）/ Proposal O = PASS** → 台帳 §OBSERVATION-MAP。下記「Leg 0 — 終了」
 - [x] **Leg P — 観測写像の def-fix（Proposal O = 正規直交テスト関数）** ✅ **CLOSED（leg 14、`4fd8a47c`、監査 all OK）**。
       3 宣言が false-as-framed から離脱。**判別子 PASS = 壁は消えなかった**（`wall:nyquist-2w-dof` の実タグ consumer 2 本）。下記「Leg P — 終了」
-- [ ] Leg D' — `contAwgnMaxMessages_bddAbove` を修正後 def の下で **Bessel 単独**で closure 📋 **[NEXT]**
-- [ ] Leg E — tight concentration `prolate_eigenvalue_count`（LPS）📋 **[converse exact 定数、genuine wall 公算大]**
+- [x] **Leg D' — `contAwgnMaxMessages_bddAbove` を Bessel 単独で closure** ✅ **PROOF-DONE（leg 14、`fb18b681`、監査 `@audit:ok`）**。
+      sorryAx-free + 全 hyp が regularity（**`hW` は機械検査で未使用**）+ 壁を一切経由せず。下記「Leg D' — 終了」
+- [ ] Leg E — tight concentration `prolate_eigenvalue_count`（LPS）📋 **[NEXT — genuine wall。`ge` と `eq` の両方がここ待ち]**
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
 
 ---
@@ -244,54 +245,34 @@ a.e. 不変 ⟹ `encoder_continuous` は唯一の代表元固定 field で、除
 
 ---
 
-## Leg D' — `contAwgnMaxMessages_bddAbove` 壁非依存 closure 📋 **[NEXT]**
+## Leg D' — 終了（✅ **PROOF-DONE**、leg 14、`fb18b681` + 監査 `@audit:ok`）
 
-**目的**: 修正後 def の下で `BddAbove` を **`wall:nyquist-2w-dof` を経由せず** genuine 化する。proof-log: yes。
-概算 **~150–250 行の壁非依存 plumbing**（旧 Leg D の見積を継承 — 中身は WSEB でなく sup 境界に置換）。
+`contAwgnMaxMessages_bddAbove` を **Bessel 単独**で closure。**署名不変**（ripple 0）、~150 行、見積内。
+**コードが SoT** — 証明構成をここに再キャッシュしない。
 
-**target signature（不変 = signature ripple 無し）**:
+**達成した bar**: `#print axioms` = `[propext, Classical.choice, Quot.sound]`（sorryAx-free）**かつ**
+全 hyp が regularity（監査が de Bruijn binder 検査で確認）。`sorryAx`-free だけでは完了 verdict にならない
+（`h_opt`/`h_max_ent` の罠）ので後者が本体 — **本 leg にはそもそも project 定義の述語仮説が 1 つも無い**。
 
-```lean
-theorem contAwgnMaxMessages_bddAbove (T W N₀ P ε : ℝ)
-    (hT : 0 < T) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
-    BddAbove { M : ℕ | ∃ c : ContAwgnCode T W P M, (c.averageError N₀).toReal ≤ ε }
-```
+**壁非依存が機械確認された**（本 leg の存在理由）: 証明項の推移的定数閉包 55234 個に対し
+`bandlimited_sup_bound` / `prolate` / `timeBandLimiting` / `Whittaker` / `Slepian` / `Nyquist` / `synthSignal` /
+`sinc` はいずれも **0 hit**。予想より強く **`hW : 0 < W` は未使用**（`encoder_bandlimited` と `testFn_support`
+も読まれない）。`hW` は保守的なだけで有害でないので残置（docstring に明記済）。
+**循環も機械で排除**: `bandlimitedAwgnCapacity` / `contAwgn_eq_shannonHartley` / `contAwgnRate` 等はいずれも
+閉包に不在。crude route の閉じる rate は `≤ P/N₀`（広帯域極限）で SH より真に弱い。
 
-**構成**:
-- **Bessel の不等式**（Proposal O の `testFn_orthonormal` から直接）: `∑ᵢ ⟨f, φᵢ⟩² ≤ ‖f‖₂² ≤ T·P`、
-  **k について一様、`2W` を経由しない**。⚠️ 旧計画の点値 sup 境界ルート（`bandlimited_sup_bound` +
-  `‖f‖_∞² ≤ 2W·T·P` ⟹ `E_s ≤ 2WT²P`）は **Proposal O では不要**（Bessel の方が単純かつ真に強い）。
-  `bandlimited_sup_bound` は Leg D' からは落ちる — Leg E での再利用候補として残す。
-- **`ContAwgnCode → AwgnCode` 配線**: per-observation power `P' = (∑ᵢ⟨f,φᵢ⟩²)/k` で `AwgnCode M k P'` を構成
-  （`power_constraint` は構成から成立）。
-- **`errorProbAt` 等式**: `ContAwgnCode.errorProbAt`（`Measure.pi` の per-observation AWGN）=
-  `AwgnCode` 側の離散 `errorProbAt`。**⚠️ 親 Phase 3 の verbatim 確認（`sampledSignal = cᵢ`）は
-  Leg P で `sampledSignal` ごと消滅したので無効。`ContAwgnCode.observation` に対して取り直すこと**。
-- **`awgn_converse` + `log(1+x) ≤ x`**: `log M ≤ (∑ᵢ⟨f,φᵢ⟩²)/N₀ + Fano ≤ TP/N₀ + Fano`（k 一様）。
-- **Fano 再配置**（`ε<1` 使用）+ edge case（`n=0` / `M<2`）+ **ℕ-sSup 罠**（unbounded `sSup` は junk `0`）。
+**予測が外れた 2 点（記録）**:
+- **`synthSignal_memLp`（実数版）の穴は Leg D' では発火しなかった** — Leg D' は converse 方向で**全 code に
+  対する量化**ゆえ code を構成せず、`encoder_memLp` は field として渡ってくる。監査の *probe* が code を
+  構成したから当たっただけで、転移しなかった。**穴自体は実在** → Leg E / 将来の probe が当たる。
+- **`P = 0` が plan 未記載の分岐だった**: `awgn_converse` が `0 < P'` を要求するが `T·P/k = 0`。
+  `P' := (T·P+1)/k` で解決（`+1` は crude 境界が呑めるスラック、緩める向きゆえ健全、k 一様性も保存）。
+  `k = 0` も独立分岐（`Measure.pi_of_empty` = 点質量、`ε<1` だけで `1/(1-ε)` に抑える）。
 
-**再利用資産**: `awgn_converse`（`AWGN/Converse.lean:607`、genuine）+ Mathlib の Bessel 不等式
-（`inner_mul_le_norm_mul_norm` 族 / `Orthonormal.sum_inner_products_le` — **Leg D' 着手時に loogle で
-verbatim 確認すること**、ここに署名をキャッシュしない）。
-**Legs A/B/C/C'（作用素論）は参照しない** — reduction はスカラー。
-**feasibility**: **self-buildable・壁非依存**（Leg 0 PASS 済 + leg 14 の監査が Bessel 経路を独立再導出:
-`∑ᵢ⟨f,φᵢ⟩² ≤ ‖f‖² ≤ TP` → 離散 converse `(k/2)log(1+2TP/(kN₀)) ≤ TP/N₀`、**k 一様・帯域入力なし**）。
-**⚠️ `ge` は Leg D' では閉じない**（旧 plan の「`le_csSup` で transitive に closure」は def-fix 前の線 = 失効。
-DAG 訂正の項を見よ）。Leg D' が閉じるのは `bddAbove` **のみ**。
-
-**leg 14 の監査が機械で閉じた前提**（Leg D' はこれらを再証明しなくてよいが、**資産としては未コミット** —
-必要なら再構築）: 修理後 `ContAwgnCode` は**非退化に inhabited**（`k=1`、`testFn = 𝟙_{[0,T]}/√T`、
-`encoder = synthSignal T 1 (fun _ => √P)` が `encoder_power` を**等号**で満たし `encoder ≠ 0`、要 `1 ≤ 2WT`）
-⟹ `bddAbove` は空虚に真ではない。加えて `ContAwgnCode T W P 0` は `IsEmpty`（`decoder` が `Fin 0` へ写れない）。
-**⚠️ ファイルに `synthSignal_memLp`（実数版）が無い**（複素版 `synthSignal_complex_memLp` のみ）— 監査は
-`Complex.reCLM` 経由を強いられた。**Leg D' が code を構成した瞬間に同じ穴に当たる** ⟹
-`synthSignal_energy` の隣に実数版を landing させると元が取れる。
-
-**retreat line（新 route 用）**: 修正後 def の下で Leg D' の plumbing が **3 turn 超で停滞**したら
-`sorry + @residual(plan:shannon-hartley-phase2-spectral-plan)`。**この撤退は honest** — 修正後 def の下で
-statement は**真**であり（Leg 0 PASS 済）、残るのは配線だけだから。
-**禁止（不変）**: `BddAbove` の core を `≥` 定理へ hyp 化 / `*Hypothesis` predicate に束ねる（tier-5）。
-**`wall:nyquist-2w-dof` へは退避しない** — この route は壁を経由しないので、詰まりは壁でなく plumbing。
+**非空虚性**（`proof-done` verdict が最も要する検査）: 監査が `zeroCode` で `Nonempty (ContAwgnCode 1 1 1 2)` を
+sorryAx-free に再導出（台帳の leg 14 行は**未コミット** probe 引用なので `rg` で辿れず、独立に建て直した）。
+leg 13 が**同じ statement を旧 def 下で FALSE（非有界）**と機械判定していることと合わせ、
+**def-fix こそがこれを真にした** = 主張に実質がある。
 
 ---
 
