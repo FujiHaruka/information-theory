@@ -117,9 +117,15 @@ count near 1    := sorry @residual(wall:nyquist-2w-dof)
 `B† ∘L B = Q_T P_W Q_T` is the sinc integral operator on the time-limited subspace `≅ L²[0,T]` with
 kernel `k(s,t) = 2W·sincN(2W(s−t))` (bounded, on the finite-measure square `[0,T]²` ⟹ `L²`). `A` and
 `B†B` share their nonzero spectrum with multiplicities, so compactness of `A` reduces to compactness of
-the sinc integral operator. **That reduction is where the finite-rank approximation lives** (approximate
-the L² kernel by simple functions; each simple kernel gives a finite-rank operator; the operator-norm
-error is bounded by the L² kernel error — the "Hilbert-Schmidt bound" proven inline).
+the sinc integral operator. **REALIZED (e619b06c, audit PASS a04b1cec)** — see `l2KernelOperator_isCompact`
+in `TimeBandLimiting.lean`. The route below ("simple functions ⟹ finite rank") was **false and was
+backtracked**: an `Lp.simpleFunc` on `ℝ × ℝ` is supported on arbitrary product-measurable sets, and only
+*rectangle* indicators give rank-one (counterexample: `𝟙_{|t−s|≤1} ∩ [−R,R]²` is a single-indicator simple
+function whose operator is compact but of infinite rank). The realized route instead shows
+`V := {κ | IsCompactOperator (l2KernelOp κ)}` is a **closed submodule** containing rectangles, then reaches
+all of `L²(ℝ×ℝ)` by π-λ (`MeasurableSpace.induction_on_inter` + `Lp.induction`). Because `V` is closed,
+`isCompactOperator_of_tendsto` is never needed. The "Hilbert-Schmidt bound" is still real and is the crux
+(`l2KernelApply_eLpNorm_le`): it supplies `l2KernelOp`'s continuity.
 
 ---
 
@@ -273,12 +279,12 @@ quantity is finite without the tight count) but it does not close the *operation
 2. **`timeBandLimitingOp_isCompact`** — **HIGH effort (~500–900 lines)**, self-buildable, NOT the wall.
    No Hilbert-Schmidt in Mathlib (Q2), so: (a) represent `B†B = Q_T P_W Q_T` as the sinc integral
    operator on `L²[0,T]`; (b) prove the kernel `2W·sincN(2W(s−t))·𝟙_{[0,T]²}` is `L²` (bounded on a
-   finite-measure square); (c) approximate the kernel in `L²` by simple functions, each giving a
-   finite-rank operator; (d) bound operator-norm by the L²-kernel norm (the HS bound, proven inline);
-   (e) conclude via `isCompactOperator_of_tendsto`. Pitfall: this is genuinely the bulk of Phase 2's
-   line count. Alternative (cheaper?): directly finite-rank-approximate `A` using the WS/sinc
-   eigenfunction structure — but that risks circularity with the eigenvalue enumeration. **Recommend
-   the kernel-simple-function route** (self-contained, uses `NormalizedSinc` + `bandlimited_sup_bound`).
+   finite-measure square); (c) bound operator-norm by the L²-kernel norm (the HS bound, proven inline)
+   — this makes `l2KernelOp : L2Kernel →L[ℂ] (E →L[ℂ] E)` continuous; (d) conclude that the compact
+   kernels form a **closed** submodule and reach all of `L²(ℝ×ℝ)` from rectangles by π-λ + `Lp.induction`.
+   **DONE (e619b06c, audit PASS)** — ~500 lines, sorryAx-free. Steps (c)/(d) supersede the original
+   "simple functions ⟹ finite rank + `isCompactOperator_of_tendsto`" plan, whose middle step is false
+   (see §Self-build #2 note above); `isCompactOperator_of_tendsto` turned out not to be needed at all.
 
 3. **`prolateEigenvalues : ℕ → ℝ` (decreasing enumeration) + `_antitone` + `hasEigenvalue`** —
    **MEDIUM effort (~200–400 lines)**, self-buildable, NOT the wall. From
@@ -422,7 +428,7 @@ above is a skeleton stand-in, not a shippable statement.)
 | **operator def** (`timeBandLimitingOp`) | **(i) directly available** | `MeasureTheory.Lp.fourierTransformₗᵢ` (LpSpace.lean:50) + `Submodule.starProjection` (Projection/Basic.lean:124) + `HasOrthogonalProjection.ofCompleteSpace`. Was assumed "unknown" by the plan; it is DIRECT. |
 | **self-adjoint** | **(i) directly available** | `IsSelfAdjoint.conj_starProjection` (Adjoint.lean:376) / `conj_adjoint` (Adjoint.lean:347) + `isSelfAdjoint_starProjection` (Adjoint.lean:371). One-liner. |
 | **positive** | **(i) directly available** | `IsPositive.of_isStarProjection` (Positive.lean:491) + `IsPositive.adjoint_conj` (Positive.lean:366). One-liner. |
-| **compact / Hilbert-Schmidt** | **(ii) self-buildable on Mathlib** (~500–900 lines) | NO HS/Schatten (loogle Found 0); build via `isCompactOperator_of_tendsto` (Compact/Basic.lean:459) + finite-rank simple-kernel approximation of the sinc integral operator. Not a wall. |
+| **compact / Hilbert-Schmidt** | **(ii) self-built — DONE** (~500 lines, e619b06c, sorryAx-free, audit PASS) | NO HS/Schatten (loogle Found 0); built as `l2KernelOperator_isCompact` via the HS bound (`l2KernelApply_eLpNorm_le`) + closed-submodule/π-λ generation from rectangles. Was not a wall. `isCompactOperator_of_tendsto` unused; the "simple-kernel ⟹ finite rank" step was false. |
 | **eigenvalue enumeration** | **(ii) self-buildable on Mathlib** (~200–400 lines) | structural spectral thm `orthogonalComplement_iSup_eigenspaces_eq_bot` (Spectrum.lean:443) + `finite_dimensional_eigenspace` (Spectrum.lean:463) + Fredholm (FredholmAlternative.lean:220); NO ready ordered `ℕ→ℝ` seq (finite-dim only, Spectrum.lean:279). |
 | **trace summability `∑λ = 2WT`** | **(ii) self-buildable** (tied to compactness) / optional | no trace-class API; = `∫_{[0,T]} 2W dt`. Only needed for the summability angle, not the count. |
 | **BddAbove via water-filling** (achievability leg-2) | **(iii) does NOT close via water-filling alone** | `parallel_gaussian_capacity_formula_minimal` (PerCoordRegularity.lean:74) is finite-dim/KKT-gated; crude `log(1+x)≤x` bounds the capacity FUNCTIONAL mode-count-independently, but the operational `Nat.sSup` message-count `BddAbove` still needs the effective-dimension count = `wall:nyquist-2w-dof` (plan's 2026-07-15 verdict stands). |
@@ -432,7 +438,11 @@ above is a skeleton stand-in, not a shippable statement.)
 operator/self-adjoint/positive are direct one-liners on existing Mathlib, so the operator OBJECT is
 real (non-degenerate, non-circular). The heavy lifting is compactness (self-build, no HS) + eigenvalue
 enumeration (self-build), both constructible. The ONE irreducible `wall:nyquist-2w-dof` is the
-Landau-Pollak-Slepian concentration count. Single most dangerous finding: **`isCompactOperator_of_tendsto`
-+ finite-rank approximation is the ~500–900-line load-bearing self-build with no Mathlib scaffolding —
-if it stalls, honest-sorry it into `wall:nyquist-2w-dof` (no hypothesis bundling), don't fake it.**
+Landau-Pollak-Slepian concentration count. The compactness self-build — once flagged here as the single
+most dangerous finding (~500–900 lines, no Mathlib scaffolding) — **landed genuinely in e619b06c**
+(sorryAx-free, audit PASS a04b1cec) via a closed-submodule/π-λ argument, not the finite-rank limit this
+inventory originally prescribed. Retained lesson: the prescribed route's middle step ("simple kernel ⟹
+finite rank") was **false**, and it was named next to a real tool (`isCompactOperator_of_tendsto`), which
+made the gap look like plumbing. An inventory route naming a real Mathlib tool is not evidence that the
+steps reaching it are sound.
 ```
