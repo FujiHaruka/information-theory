@@ -2,7 +2,10 @@ import Mathlib.Analysis.Fourier.LpSpace
 import Mathlib.Analysis.InnerProductSpace.Positive
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.Analysis.InnerProductSpace.Projection.Basic
+import Mathlib.Analysis.Normed.Operator.Compact.Basic
+import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
+import InformationTheory.Shannon.NormalizedSinc
 
 /-!
 # The time-and-band-limiting operator on `L²(ℝ;ℂ)`
@@ -26,8 +29,11 @@ self-adjointness and positivity are one-line consequences of the projection API.
 * `timeBandLimitingOp_isPositive` — `A` is a positive operator.
 * `timeBandLimitingOp_norm_le_one` — `‖A‖ ≤ 1` (contraction).
 
-The compactness, eigenvalue enumeration and the Landau–Pollak–Slepian concentration count live in
-later legs (`timeBandLimitingOp_isCompact`, `prolateEigenvalues`, `prolate_eigenvalue_count`).
+Leg B adds compactness `timeBandLimitingOp_isCompact`, reducing it — via `A = P_W ∘ C` with
+`C = Q_T ∘ P_W` — to compactness of the sinc integral operator `C`, whose Hilbert–Schmidt kernel is
+`sincConvKernel t s = 𝟙_[0,T](t) · 2W · sincN(2W(t−s))`. The eigenvalue enumeration and the
+Landau–Pollak–Slepian concentration count live in later legs (`prolateEigenvalues`,
+`prolate_eigenvalue_count`).
 -/
 
 namespace InformationTheory.Shannon.TimeBandLimiting
@@ -140,5 +146,122 @@ theorem timeBandLimitingOp_norm_le_one (T W : ℝ) :
         gcongr
         exact hQP.trans (by gcongr)
     _ = 1 := by norm_num
+
+/-!
+## Compactness (Leg B)
+
+Compactness of `A = P_W ∘ Q_T ∘ P_W` is reduced to compactness of the *sinc integral operator*
+`C = Q_T ∘ P_W`. Since `A = P_W ∘ C` (the definition, reassociated) and `P_W` is bounded,
+`A` is compact as soon as `C` is (`IsCompactOperator.clm_comp`). The operator `C` is
+Hilbert–Schmidt: its integral kernel
+
+    `sincConvKernel T W t s = 𝟙_[0,T](t) · 2W · sincN(2W(t − s))`
+
+lies in `L²(ℝ × ℝ)` (the `t`-indicator confines the mass to `[0,T]`, and Plancherel of the ideal
+low-pass gives `∫_ℝ (2W sincN(2W u))² du = 2W`, so `‖k‖₂² = 2WT < ∞`), and an `L²` kernel yields a
+compact operator by the finite-rank simple-function approximation. The genuinely analytic content
+therefore lives in four leaves, all `@residual(plan:shannon-hartley-operational-moonshot-plan)`:
+
+* `timeLimitProj_apply_ae` — `Q_T` acts as multiplication by `𝟙_[0,T]`;
+* `bandLimitProj_apply_ae` — `P_W` acts as convolution with `2W sincN(2W·)` (**the make-or-break
+  abstract-projection ↔ concrete-sinc bridge**);
+* `sincConvKernel_memLp` — the kernel is `L²` on `ℝ × ℝ`;
+* `l2KernelOperator_isCompact` — a generic `L²`-kernel operator is compact (the finite-rank build).
+
+The remaining declarations (`timeBandLimitingComp_apply_ae`,
+`timeBandLimitingComp_isCompact`, `timeBandLimitingOp_isCompact`) are genuine reductions that
+compose the four leaves and are proven `sorry`-free.
+-/
+
+/-- The Hilbert–Schmidt kernel of the sinc integral operator `C = Q_T ∘ P_W`:
+`𝟙_[0,T](t) · 2W · sincN(2W(t − s))`. The `t`-indicator encodes the time-limiting `Q_T`; the
+`2W sincN(2W·)` factor is the ideal low-pass whose Fourier transform is `𝟙_[-W,W]`, i.e. the
+convolution kernel of the band-limiting `P_W`. -/
+noncomputable def sincConvKernel (T W : ℝ) (t s : ℝ) : ℂ :=
+  (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) t *
+    ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ)
+
+/-- The sinc integral operator `C = Q_T ∘ P_W` (band-limit, then time-limit). `A = P_W ∘ C`. -/
+noncomputable def timeBandLimitingComp (T W : ℝ) : E →L[ℂ] E :=
+  (timeLimitSubspace T).starProjection ∘L (bandLimitSubspace W).starProjection
+
+theorem timeBandLimitingOp_eq_bandProj_comp (T W : ℝ) :
+    timeBandLimitingOp T W =
+      (bandLimitSubspace W).starProjection ∘L timeBandLimitingComp T W := rfl
+
+/-- **Leaf 1** (`Q_T` = multiplication by `𝟙_[0,T]`). The orthogonal projection onto the
+time-limited subspace acts, a.e., as multiplication by the indicator of `[0,T]`.
+@residual(plan:shannon-hartley-operational-moonshot-plan) -/
+theorem timeLimitProj_apply_ae (T : ℝ) (g : E) :
+    ((timeLimitSubspace T).starProjection g : ℝ → ℂ) =ᵐ[volume]
+      (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ) := by
+  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+
+/-- **Leaf 2 — the make-or-break bridge** (`P_W` = convolution with `2W sincN(2W·)`). The
+orthogonal projection onto the band-limited subspace acts, a.e., as convolution with the ideal
+low-pass `2W sincN(2W·)` (whose Fourier transform is `𝟙_[-W,W]`). This is the abstract
+`starProjection`-of-a-`comap`-under-`𝓕` ↔ concrete sinc-convolution identity.
+@residual(plan:shannon-hartley-operational-moonshot-plan) -/
+theorem bandLimitProj_apply_ae (W : ℝ) (f : E) :
+    ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume]
+      fun t => ∫ s, ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ) *
+        (f : ℝ → ℂ) s ∂volume := by
+  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+
+/-- **Leaf 3** (the kernel is `L²`). `sincConvKernel` is square-integrable on `ℝ × ℝ`: the
+`t`-indicator confines the mass to `[0,T]` and `∫_ℝ (2W sincN(2W u))² du = 2W` (Plancherel of the
+ideal low-pass), giving `‖k‖₂² = 2WT < ∞`.
+@residual(plan:shannon-hartley-operational-moonshot-plan) -/
+theorem sincConvKernel_memLp (T W : ℝ) :
+    MemLp (fun p : ℝ × ℝ => sincConvKernel T W p.1 p.2) 2 (volume.prod volume) := by
+  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+
+/-- **Leaf 4** (generic `L²`-kernel ⟹ compact operator). An integral operator on `L²(ℝ;ℂ)` whose
+kernel is `L²` on `ℝ × ℝ` is a compact operator; it is realized a.e. as `f ↦ ∫ k(·,s) f(s) ds`.
+Built via finite-rank simple-function approximation of the kernel (Mathlib has no Hilbert–Schmidt
+API, so this is the reusable self-build). Stated existentially so the operator object is genuinely
+constructed together with its compactness rather than assumed.
+@residual(plan:shannon-hartley-operational-moonshot-plan) -/
+theorem l2KernelOperator_isCompact {k : ℝ → ℝ → ℂ}
+    (hk : MemLp (fun p : ℝ × ℝ => k p.1 p.2) 2 (volume.prod volume)) :
+    ∃ Op : E →L[ℂ] E, (∀ f : E, (Op f : ℝ → ℂ) =ᵐ[volume]
+        fun t => ∫ s, k t s * (f : ℝ → ℂ) s ∂volume) ∧ IsCompactOperator Op := by
+  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+
+/-- The sinc integral operator `C = Q_T ∘ P_W` acts a.e. as the integral operator of
+`sincConvKernel`. Genuine composition of Leaf 1 and Leaf 2. -/
+theorem timeBandLimitingComp_apply_ae (T W : ℝ) (f : E) :
+    (timeBandLimitingComp T W f : ℝ → ℂ) =ᵐ[volume]
+      fun t => ∫ s, sincConvKernel T W t s * (f : ℝ → ℂ) s ∂volume := by
+  have h1 : (timeBandLimitingComp T W f : ℝ → ℂ) =ᵐ[volume]
+      (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) *
+        ((bandLimitSubspace W).starProjection f : ℝ → ℂ) := by
+    simpa only [timeBandLimitingComp, ContinuousLinearMap.comp_apply] using
+      timeLimitProj_apply_ae T ((bandLimitSubspace W).starProjection f)
+  filter_upwards [h1, bandLimitProj_apply_ae W f] with t ht1 ht2
+  rw [ht1]
+  simp only [Pi.mul_apply]
+  rw [ht2, ← MeasureTheory.integral_const_mul]
+  refine integral_congr_ae (Filter.Eventually.of_forall fun s => ?_)
+  simp only [sincConvKernel]
+  ring
+
+/-- The sinc integral operator `C = Q_T ∘ P_W` is compact. Genuine reduction: the operator built by
+`l2KernelOperator_isCompact` for `sincConvKernel` coincides with `C` (both have the same a.e.
+representative, hence are equal in `Lp`). -/
+theorem timeBandLimitingComp_isCompact (T W : ℝ) :
+    IsCompactOperator (timeBandLimitingComp T W) := by
+  obtain ⟨Op, hOp_ae, hOp_cpt⟩ := l2KernelOperator_isCompact (sincConvKernel_memLp T W)
+  have hEq : Op = timeBandLimitingComp T W := by
+    refine ContinuousLinearMap.ext (fun f => MeasureTheory.Lp.ext ?_)
+    exact (hOp_ae f).trans (timeBandLimitingComp_apply_ae T W f).symm
+  rwa [hEq] at hOp_cpt
+
+/-- **The time-and-band limiting operator is compact.** `A = P_W ∘ C` with `C = Q_T ∘ P_W` compact
+(the sinc integral operator) and `P_W` bounded, so `A` is compact by `clm_comp`. -/
+theorem timeBandLimitingOp_isCompact (T W : ℝ) :
+    IsCompactOperator (timeBandLimitingOp T W) := by
+  rw [timeBandLimitingOp_eq_bandProj_comp]
+  exact (timeBandLimitingComp_isCompact T W).clm_comp (bandLimitSubspace W).starProjection
 
 end InformationTheory.Shannon.TimeBandLimiting
