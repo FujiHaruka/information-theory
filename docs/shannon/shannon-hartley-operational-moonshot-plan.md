@@ -35,7 +35,7 @@ stretch（Phase 2/4/5-full）は不変。honesty bar 不変（CLAUDE.md「検証
 - [~] Phase 5-min — wire + Option A README infra 🔄 **[旧着地 FALSIFIED、Phase 1-fix で mainline 復帰済]**（commit b8770fce / ff32ec82）
 - [x] **l2Fourier bridge（fwd+inv）+ bandlimited_sup_bound ✅ proof-done・audit PASS（commit 9d8608a8/40c2e449/30b59a15）**
 - [~] Phase 3 — achievability closure（`contAwgn_ge_shannonHartley`）🔄 **leg 1（synthSignal band-limit/energy）= ✅ audit PASS（commit 89ede2a3/646605c7）**。**leg 2（BddAbove）+ leg 3（assembly）= 2026-07-15 WALL-GATED（`wall:nyquist-2w-dof`、mainline と同一壁）**。壁ブロックゆえ Phase 3 単独では closure 不可 → 壁 self-build（Phase 2）か 容量 def 再設計が前提
-- [~] Phase 2 — prolate-DOF スペクトル理論（`timeBandLimitingOp` + 固有値集中）🔄 **[user 指示で全理論自前構築 開始（leg 9+）: Leg A✅ → Leg B コンパクト性 dispatch 中 → Leg C 列挙 → WSEB → Leg E LPS count]** → [shannon-hartley-phase2-spectral-plan.md](shannon-hartley-phase2-spectral-plan.md)
+- [~] Phase 2 — prolate-DOF スペクトル理論（`timeBandLimitingOp` + 固有値集中）🔄 **[user 指示で全理論自前構築（leg 9+）: Leg A✅ → Leg B コンパクト性 = backbone+Leaf1 genuine（911f3b0f/21de0a5d）、残 3 leaf（sinc 畳込橋/kernel L²/generic HS）→ Leg C 列挙 → WSEB → Leg E LPS count]** → [shannon-hartley-phase2-spectral-plan.md](shannon-hartley-phase2-spectral-plan.md)
 - [ ] Phase 4 — converse（`contAwgn_le_shannonHartley`、Phase 2 消費）📋 **[stretch]**
 - [ ] Phase 5-full — `le_antisymm` 組立 📋 **[stretch / closure]**
 

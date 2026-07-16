@@ -7,12 +7,14 @@
 ## 進捗
 
 - [x] M0 在庫調査 ✅（`shannon-hartley-phase2-spectral-inventory.md`、3 GATING verdict 確定）
-- [x] Leg A — 作用素 + subspace + 自己共役 + 正 + `‖A‖≤1` ✅（genuine、commit 4d848a53）**[Phase-4 スペクトル鎖専用に降格 — BddAbove critical path から外れた]**
-- [~] **Leg W — WSEB スカラー標本エネルギー不等式** 🧱 **[probe 決着 (leg 9): WSEB は TRUE だが self-build は GENUINE WALL (~800–1500 行 prolate 理論、Mathlib 完全不在)。(b) 正面突破 = 失敗、honest sorry 維持。settled-facts → `shannon-hartley-facts.md`]**
-- [ ] Leg D — `contAwgnMaxMessages_bddAbove` closure（Phase 3 leg 2）🧱 **[Leg W が壁化 → transitive に wall-blocked。honest sorry 維持]**
-- [ ] Leg B — コンパクト性（finite-rank kernel 極限）📋 **[Phase-4 tight-count 専用・OFF BddAbove path]**
-- [ ] Leg C — 固有値降順列挙 + 定性 effective-rank 📋 **[Phase-4 専用・OFF BddAbove path（count は BddAbove に対し red herring）]**
-- [ ] Leg E — tight concentration `prolate_eigenvalue_count`（LPS 壁）📋 **[Phase-4 専用・irreducible wall]**
+- [x] Leg A — 作用素 + subspace + 自己共役 + 正 + `‖A‖≤1` ✅（genuine、commit 4d848a53）
+- [~] **Leg B — コンパクト性** `timeBandLimitingOp_isCompact` 🔄 **backbone + Leaf 1 genuine（commit 911f3b0f/21de0a5d、0 errors・3 sorry）**。still-sorried 3 leaf（全 `@residual(plan:…)` = constructible、wall でない）:
+  - **Leaf 2** `bandLimitProj_apply_ae`（L253、make-or-break 橋 = 抽象 `P_W` ↔ sinc 畳み込み）。分割: **(a)** isometry 下 projection 共役化 `(U.comap L).starProjection = L⁻¹∘U.starProjection∘L`（loogle `Submodule.starProjection, Submodule.comap` Found 0、~40-80 行 clean atom、gateway-atom-first 候補）+ **(b)** `𝓕⁻¹(m·𝓕 f) = f * 𝓕⁻¹m` の Lp² 畳み込み橋（重い半分、`integral_exp_boxcar_eq_sincN` 経由）。計 ~200-400 行。
+  - **Leaf 3** `sincConvKernel_memLp`（L263、kernel ∈ L²(ℝ²)）。**Mathlib に `Real.integrable_sinc` + `Sinc` special-functions file あり** → `sincN∈L²` + product-MemLp、Fubini/Tonelli plumbing ~150-250 行。**次の cheapest target。**
+  - **Leaf 4** `l2KernelOperator_isCompact`（L273、generic L²-kernel⟹compact、存在形）。~500 行 finite-rank/HS build（HS が Mathlib 不在、inventory Q2）。reusable。
+- [ ] Leg C — 固有値降順列挙 `prolateEigenvalues`（構造的 spectral thm 経由）📋 **[両方向 foundation: converse tight count + achievability WSEB の両方が要す]**
+- [ ] **WSEB**（achievability の勝ち筋）📋 **[`∑ψ_k(0)²/λ_k<∞` = 境界 reproducing kernel `k₀∈range(A^{1/2})`。Legs B/C 完了後に assess: constructible なら BddAbove `contAwgnMaxMessages_bddAbove` closure → Phase 3 achievability（LPS wall 無し）。second wall の可能性も要確認]**
+- [ ] Leg E — tight concentration `prolate_eigenvalue_count`（LPS）📋 **[converse exact 定数用、genuine wall 公算大（研究フロンティア、loogle Found 0）]**
 
 ## ゴール / Approach
 
