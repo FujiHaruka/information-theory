@@ -53,13 +53,22 @@ orchestrator 解析・既存 docstring と三重一致）。`contAwgnMaxMessages
   verdict 方向 refutation: `bandlimited_sup_bound` 連鎖には `‖f‖²_{L²(ℝ)}≤C∫₀ᵀf²` (全直線≤C·窓) が要り、A の
   固有値→0 ゆえ偽。⟹ sup bound 単独では WSEB に届かない。
 
-## Mathlib の L² Fourier 変換はブラックボックス (Leg B Leaf 2、2026-07-17 実装 + 独立監査で二重確認)
+## ~~Mathlib の L² Fourier 変換はブラックボックス~~ → **REVOKED (2026-07-17、同 leg 内で反証)。`cause:loogle-blind` の教訓として保存**
 
-| claim | confidence | 再検証コマンド | last-verified | notes |
-|---|---|---|---|---|
-| `Lp.fourierTransformₗᵢ` は Schwartz 拡張で定義され、**古典 Fourier 積分と繋ぐ資産が Mathlib に一切無い** | `loogle-neg` | `loogle "MeasureTheory.Lp.fourierTransformₗᵢ"` → Found 1 (自身のみ、Mathlib 内 consumer 0) / `loogle "VectorFourier.fourierIntegral, MeasureTheory.Lp"` → Found 0 / `loogle "MeasureTheory.MemLp, VectorFourier.fourierIntegral"` → Found 0 | 98d4da6c | ⟹ **L² multiplier / 畳み込み定理は Mathlib に存在しない**。Leaf 2 (b) の旧 route (`integral_exp_boxcar_eq_sincN` 経由の Lp² 畳み込み) が route WRONG だった根拠 |
-| `𝓢'` (tempered distribution) 経由の迂回も同断 | `loogle-neg` | `rg -l "TemperedDistribution" .lake/packages/mathlib` ∩ `rg -l "fourierIntegral"` → **共通 file 0** | 98d4da6c | file header が広告する `Lp.fourierInv_toTemperedDistribution_eq` route も古典積分に届かない (監査が implementer の query 漏れを埋めて確認) |
-| 欠落資産 = **L¹∩L² 橋** `g ∈ L¹∩L² ⟹ (𝓕⁻¹_{L²} g : ℝ→ℂ) =ᵐ 𝓕⁻ g`。**self-build 可 (`plan:`)、`wall:` ではない** | `human-judgment` | — (独立 2 者一致: implementer + honesty-auditor) | 98d4da6c | 行数見積は割れた: implementer ~350-600 (一般 L¹∩L² 橋 = 同時 Schwartz 稠密が要ると想定) vs 監査 **~150-300** (コンパクト台のみ必要 ⟹ L¹ leg は Cauchy-Schwarz でタダ、mollifier 不要)。**監査 route が SoT** = `TimeBandLimiting.lean` の Leaf 2 docstring に記録。全 asset の Mathlib 実在は確認済 |
+**この節は 2026-07-17 に自分で書き、同じ leg の次の dispatch が反証した。** 欠落と宣言した「L¹∩L² 橋」は
+**プロジェクト内に既に存在**していた: `ShannonHartley.l2FourierInv_eq_fourierIntegralInv`
+(`ShannonHartleyOperational.lean:179`、sorryAx-free、既存 consumer 2)。一般 L¹∩L² 形そのもので、
+しかも「閉じている」と記録した **`𝓢'` 迂回を実際に通っている**。Leaf 2 はこれを消費して ~125 行で閉じた
+(d16a74e1、`timeBandLimitingOp_isCompact` = sorryAx-free)。
+
+**失敗モード (再発防止の本体)**: 3 つの loogle-neg は**逐語的に真**だった (`Lp.fourierTransformₗᵢ` の
+Mathlib 内 consumer は実際 0)。真だが**的外れ**だった — 検索範囲が Mathlib に限定され、**同じ family の
+2 file 隣を誰も grep しなかった**。implementer と honesty-auditor の**独立 2 者が同じ穴に落ちた**
+(独立性は共通の盲点を救わない)。台帳が「Mathlib に無い ⟹ 自前構築」と結論する形式そのものが罠。
+
+**⟹ 標準手順**: 「Mathlib に無い」を欠落の根拠にする前に、**必ず in-project を先に grep する**
+(`rg` + `scripts/dep_consumers.sh`)。壁宣言・self-build 見積の前提条件。行数見積が両者とも高かった
+(~150-300 / ~350-600 vs 実測 ~125) のも、既に払い済みの橋を予算計上したため。
 
 ## コード側 SoT (壁の真実源はコードの `@residual`)
 
