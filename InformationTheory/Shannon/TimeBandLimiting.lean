@@ -1,5 +1,6 @@
 import Mathlib.Analysis.Fourier.LpSpace
 import Mathlib.Analysis.InnerProductSpace.Positive
+import Mathlib.Analysis.InnerProductSpace.Spectrum
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 import Mathlib.Analysis.Normed.Operator.Compact.Basic
@@ -33,9 +34,21 @@ self-adjointness and positivity are one-line consequences of the projection API.
 
 Leg B adds compactness `timeBandLimitingOp_isCompact`, reducing it — via `A = P_W ∘ C` with
 `C = Q_T ∘ P_W` — to compactness of the sinc integral operator `C`, whose Hilbert–Schmidt kernel is
-`sincConvKernel t s = 𝟙_[0,T](t) · 2W · sincN(2W(t−s))`. The eigenvalue enumeration and the
-Landau–Pollak–Slepian concentration count live in later legs (`prolateEigenvalues`,
-`prolate_eigenvalue_count`).
+`sincConvKernel t s = 𝟙_[0,T](t) · 2W · sincN(2W(t−s))`.
+
+Leg C adds the decreasing eigenvalue enumeration. Mathlib's ordered `ℕ → ℝ` eigenvalue sequence is
+`FiniteDimensional`-gated, so it is rebuilt here from the structural compact self-adjoint spectral
+theorem: `prolateEigenvalueSet_finite` (only finitely many eigenvalues exceed any `c > 0`) makes the
+counting function `prolateCount` honest, and `prolateEigenvalues` is its generalized inverse.
+
+* `prolateEigenvalueSet_finite` — finitely many eigenvalues above any positive threshold.
+* `prolateEigenvalues` — the eigenvalues of `A` in decreasing order, listed with multiplicity.
+* `prolateEigenvalues_antitone` / `_nonneg` / `_le_one` — the enumeration decreases within `[0,1]`.
+* `prolateEigenvalues_hasEigenvalue` — every nonzero entry is a genuine eigenvalue of `A`.
+* `prolateEigenvalues_tendsto_zero` — the enumeration tends to `0`.
+
+The Landau–Pollak–Slepian concentration count (`prolate_eigenvalue_count`, `≈ 2WT` eigenvalues near
+`1`) lives in a later leg.
 -/
 
 namespace InformationTheory.Shannon.TimeBandLimiting
@@ -1218,5 +1231,242 @@ theorem timeBandLimitingOp_isCompact (T W : ℝ) :
     IsCompactOperator (timeBandLimitingOp T W) := by
   rw [timeBandLimitingOp_eq_bandProj_comp]
   exact (timeBandLimitingComp_isCompact T W).clm_comp (bandLimitSubspace W).starProjection
+
+/-! ### Leg C — the decreasing prolate eigenvalue enumeration -/
+
+section Enumeration
+
+/-- `A = timeBandLimitingOp T W` as a bare `Module.End`, the shape Mathlib's eigenvalue API uses. -/
+noncomputable abbrev prolateEnd (T W : ℝ) : Module.End ℂ E := timeBandLimitingOp T W
+
+theorem timeBandLimitingOp_isSymmetric (T W : ℝ) : (prolateEnd T W).IsSymmetric :=
+  ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.mp (timeBandLimitingOp_isSelfAdjoint T W)
+
+theorem exists_unit_eigenvector {T W μ : ℝ} (hμ : (prolateEnd T W).HasEigenvalue (μ : ℂ)) :
+    ∃ v : E, ‖v‖ = 1 ∧ timeBandLimitingOp T W v = (μ : ℂ) • v := by
+  obtain ⟨v, hv_mem, hv_ne⟩ := hμ.exists_hasEigenvector
+  rw [Module.End.mem_eigenspace_iff] at hv_mem
+  have hv' : timeBandLimitingOp T W v = (μ : ℂ) • v := hv_mem
+  refine ⟨(‖v‖ : ℂ)⁻¹ • v, ?_, ?_⟩
+  · rw [norm_smul, norm_inv, Complex.norm_real, norm_norm]
+    exact inv_mul_cancel₀ (norm_ne_zero_iff.mpr hv_ne)
+  · rw [map_smul, hv', smul_comm]
+
+theorem inner_eq_zero_of_eigenvalue_ne {T W : ℝ} {μ ν : ℝ} (hμν : μ ≠ ν) {v w : E}
+    (hv : timeBandLimitingOp T W v = (μ : ℂ) • v)
+    (hw : timeBandLimitingOp T W w = (ν : ℂ) • w) :
+    inner ℂ v w = (0 : ℂ) := by
+  have hsym := timeBandLimitingOp_isSymmetric T W v w
+  have hL : inner ℂ (timeBandLimitingOp T W v) w = (μ : ℂ) * inner ℂ v w := by
+    rw [hv, inner_smul_left, Complex.conj_ofReal]
+  have hR : inner ℂ v (timeBandLimitingOp T W w) = (ν : ℂ) * inner ℂ v w := by
+    rw [hw, inner_smul_right]
+  have key : ((μ : ℂ) - (ν : ℂ)) * inner ℂ v w = 0 := by
+    have : (μ : ℂ) * inner ℂ v w = (ν : ℂ) * inner ℂ v w := by
+      rw [← hL, ← hR]; exact hsym
+    linear_combination this
+  rcases mul_eq_zero.mp key with h | h
+  · exact absurd (by exact_mod_cast sub_eq_zero.mp h) hμν
+  · exact h
+
+theorem eigenvalue_le_one {T W μ : ℝ} (hμ : (prolateEnd T W).HasEigenvalue (μ : ℂ)) : μ ≤ 1 := by
+  obtain ⟨v, hv_norm, hv⟩ := exists_unit_eigenvector hμ
+  have h1 : ‖timeBandLimitingOp T W v‖ ≤ 1 := by
+    calc ‖timeBandLimitingOp T W v‖ ≤ ‖timeBandLimitingOp T W‖ * ‖v‖ :=
+          ContinuousLinearMap.le_opNorm _ _
+      _ ≤ 1 * 1 :=
+          mul_le_mul (timeBandLimitingOp_norm_le_one T W) hv_norm.le (norm_nonneg _) zero_le_one
+      _ = 1 := one_mul 1
+  rw [hv, norm_smul, hv_norm, mul_one, Complex.norm_real] at h1
+  exact (abs_le.mp h1).2
+
+/-- The set of eigenvalues of `A = timeBandLimitingOp T W` lying strictly above `c`. -/
+def prolateEigenvalueSet (T W c : ℝ) : Set ℝ :=
+  {μ : ℝ | c < μ ∧ (prolateEnd T W).HasEigenvalue (μ : ℂ)}
+
+/-- **Atom 1.** For a positive threshold `c`, the compact operator `A` has only finitely many
+eigenvalues above `c`: an infinite family would give an orthonormal sequence of eigenvectors whose
+images stay `√2·c`-separated, contradicting compactness. -/
+theorem prolateEigenvalueSet_finite (T W : ℝ) {c : ℝ} (hc : 0 < c) :
+    (prolateEigenvalueSet T W c).Finite := by
+  by_contra hfin
+  have hinf : (prolateEigenvalueSet T W c).Infinite := hfin
+  -- An injective stream of distinct eigenvalues above `c`.
+  let f := hinf.natEmbedding
+  set μ : ℕ → ℝ := fun n => ((f n : ℝ)) with hμdef
+  have hμ_inj : Function.Injective μ := Subtype.val_injective.comp f.injective
+  have hμ_gt : ∀ n, c < μ n := fun n => (f n).2.1
+  have hμ_eig : ∀ n, (prolateEnd T W).HasEigenvalue ((μ n : ℝ) : ℂ) := fun n => (f n).2.2
+  -- Unit eigenvectors for each of them.
+  choose e he_norm he_eig using fun n => exists_unit_eigenvector (hμ_eig n)
+  -- Their images are pairwise `c`-separated.
+  have hsep : ∀ i j : ℕ, i ≠ j →
+      c < ‖timeBandLimitingOp T W (e i) - timeBandLimitingOp T W (e j)‖ := by
+    intro i j hij
+    have horth : inner ℂ (e i) (e j) = (0 : ℂ) :=
+      inner_eq_zero_of_eigenvalue_ne (hμ_inj.ne hij) (he_eig i) (he_eig j)
+    have hinner : inner ℂ (e i) (timeBandLimitingOp T W (e i) - timeBandLimitingOp T W (e j))
+        = ((μ i : ℝ) : ℂ) := by
+      rw [inner_sub_right, he_eig i, he_eig j, inner_smul_right, inner_smul_right, horth,
+        inner_self_eq_norm_sq_to_K, he_norm i]
+      push_cast
+      ring
+    have hCS := norm_inner_le_norm (𝕜 := ℂ) (e i)
+      (timeBandLimitingOp T W (e i) - timeBandLimitingOp T W (e j))
+    rw [hinner, he_norm i, one_mul, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos (hc.trans (hμ_gt i))] at hCS
+    exact lt_of_lt_of_le (hμ_gt i) hCS
+  -- But `A` maps the unit ball into a compact set, forcing a convergent (hence Cauchy) subsequence.
+  have hK : IsCompact (closure ((timeBandLimitingOp T W : E →ₗ[ℂ] E) '' Metric.closedBall 0 1)) :=
+    (timeBandLimitingOp_isCompact T W).isCompact_closure_image_closedBall 1
+  have hmem : ∀ n, timeBandLimitingOp T W (e n) ∈
+      closure ((timeBandLimitingOp T W : E →ₗ[ℂ] E) '' Metric.closedBall 0 1) := by
+    intro n
+    refine subset_closure ⟨e n, ?_, rfl⟩
+    simp [Metric.mem_closedBall, dist_zero_right, he_norm n]
+  obtain ⟨a, -, φ, hφ, hlim⟩ := hK.tendsto_subseq hmem
+  obtain ⟨N, hN⟩ := Metric.cauchySeq_iff.mp hlim.cauchySeq c hc
+  have hne : φ N ≠ φ (N + 1) := (hφ (Nat.lt_succ_self N)).ne
+  have := hN N le_rfl (N + 1) (Nat.le_succ N)
+  rw [Function.comp_apply, Function.comp_apply, dist_eq_norm] at this
+  exact absurd this (not_lt.mpr (hsep _ _ hne).le)
+
+/-- The span of all eigenspaces of `A` whose eigenvalue exceeds `c`. -/
+noncomputable def prolateEigenspaceSup (T W c : ℝ) : Submodule ℂ E :=
+  ⨆ μ ∈ prolateEigenvalueSet T W c, Module.End.eigenspace (prolateEnd T W) (μ : ℂ)
+
+theorem prolateEigenspaceSup_finiteDimensional (T W : ℝ) {c : ℝ} (hc : 0 < c) :
+    FiniteDimensional ℂ (prolateEigenspaceSup T W c) := by
+  haveI : Finite ↥(prolateEigenvalueSet T W c) := (prolateEigenvalueSet_finite T W hc).to_subtype
+  haveI : ∀ μ : ↥(prolateEigenvalueSet T W c),
+      FiniteDimensional ℂ (Module.End.eigenspace (prolateEnd T W) (((μ : ℝ)) : ℂ)) := by
+    intro μ
+    exact ContinuousLinearMap.finite_dimensional_eigenspace (timeBandLimitingOp_isCompact T W) _
+      (Complex.ofReal_ne_zero.mpr (ne_of_gt (hc.trans μ.2.1)))
+  rw [prolateEigenspaceSup, iSup_subtype']
+  infer_instance
+
+/-- The eigenvalue counting function of `A`: the number of eigenvalues exceeding `c`, counted with
+multiplicity. Junk (`0`) for `c ≤ 0`, where the span is genuinely infinite-dimensional; every use
+site below is guarded by `0 < c`. -/
+noncomputable def prolateCount (T W c : ℝ) : ℕ := Module.finrank ℂ (prolateEigenspaceSup T W c)
+
+theorem prolateEigenvalueSet_subset (T W : ℝ) {c c' : ℝ} (h : c ≤ c') :
+    prolateEigenvalueSet T W c' ⊆ prolateEigenvalueSet T W c :=
+  fun _ hμ => ⟨lt_of_le_of_lt h hμ.1, hμ.2⟩
+
+theorem prolateEigenspaceSup_mono (T W : ℝ) {c c' : ℝ} (h : c ≤ c') :
+    prolateEigenspaceSup T W c' ≤ prolateEigenspaceSup T W c :=
+  biSup_mono (prolateEigenvalueSet_subset T W h)
+
+theorem prolateCount_antitone (T W : ℝ) {c c' : ℝ} (hc : 0 < c) (h : c ≤ c') :
+    prolateCount T W c' ≤ prolateCount T W c := by
+  haveI := prolateEigenspaceSup_finiteDimensional T W hc
+  exact Submodule.finrank_mono (prolateEigenspaceSup_mono T W h)
+
+theorem prolateEigenvalueSet_one_eq_empty (T W : ℝ) : prolateEigenvalueSet T W 1 = ∅ := by
+  refine Set.eq_empty_iff_forall_notMem.mpr fun μ hμ => ?_
+  exact absurd (eigenvalue_le_one hμ.2) (not_le.mpr hμ.1)
+
+theorem prolateCount_one_eq_zero (T W : ℝ) : prolateCount T W 1 = 0 := by
+  have : prolateEigenspaceSup T W 1 = ⊥ := by
+    rw [prolateEigenspaceSup, prolateEigenvalueSet_one_eq_empty]
+    simp
+  rw [prolateCount, this]
+  simp
+
+/-- The decreasing enumeration of the eigenvalues of the time-and-band limiting operator
+`A = P_W ∘ Q_T ∘ P_W`, listed with multiplicity and padded with `0`.
+
+Defined as the generalized inverse of the counting function `prolateCount`: `λ n` is the least
+threshold `c > 0` above which `A` has at most `n` eigenvalues. -/
+noncomputable def prolateEigenvalues (T W : ℝ) (n : ℕ) : ℝ :=
+  sInf {c : ℝ | 0 < c ∧ prolateCount T W c ≤ n}
+
+theorem prolateEigenvalues_setOf_nonempty (T W : ℝ) (n : ℕ) :
+    {c : ℝ | 0 < c ∧ prolateCount T W c ≤ n}.Nonempty :=
+  ⟨1, one_pos, (prolateCount_one_eq_zero T W).le.trans (Nat.zero_le n)⟩
+
+theorem prolateEigenvalues_setOf_bddBelow (T W : ℝ) (n : ℕ) :
+    BddBelow {c : ℝ | 0 < c ∧ prolateCount T W c ≤ n} :=
+  ⟨0, fun _ hc => hc.1.le⟩
+
+theorem prolateEigenvalues_nonneg (T W : ℝ) (n : ℕ) : 0 ≤ prolateEigenvalues T W n :=
+  le_csInf (prolateEigenvalues_setOf_nonempty T W n) fun _ hc => hc.1.le
+
+theorem prolateEigenvalues_le_of_count_le (T W : ℝ) {c : ℝ} (hc : 0 < c) {n : ℕ}
+    (h : prolateCount T W c ≤ n) : prolateEigenvalues T W n ≤ c :=
+  csInf_le (prolateEigenvalues_setOf_bddBelow T W n) ⟨hc, h⟩
+
+theorem prolateEigenvalues_le_one (T W : ℝ) (n : ℕ) : prolateEigenvalues T W n ≤ 1 :=
+  prolateEigenvalues_le_of_count_le T W one_pos
+    ((prolateCount_one_eq_zero T W).le.trans (Nat.zero_le n))
+
+theorem prolateEigenvalues_antitone (T W : ℝ) : Antitone (prolateEigenvalues T W) := by
+  intro m n hmn
+  refine csInf_le_csInf (prolateEigenvalues_setOf_bddBelow T W n)
+    (prolateEigenvalues_setOf_nonempty T W m) ?_
+  exact fun c hc => ⟨hc.1, hc.2.trans hmn⟩
+
+theorem prolateEigenvalues_tendsto_zero (T W : ℝ) :
+    Filter.Tendsto (prolateEigenvalues T W) Filter.atTop (nhds 0) := by
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  refine ⟨prolateCount T W (ε / 2), fun n hn => ?_⟩
+  have h1 : prolateEigenvalues T W n ≤ ε / 2 :=
+    prolateEigenvalues_le_of_count_le T W (by linarith) hn
+  rw [Real.dist_eq, sub_zero, abs_of_nonneg (prolateEigenvalues_nonneg T W n)]
+  linarith
+
+/-- Every nonzero entry of the enumeration really is an eigenvalue of `A`. If it were not, the
+finitely many eigenvalues above `c/2` would leave a gap around it, making the counting function
+constant across `c` — contradicting that the count jumps there by definition of the infimum. -/
+theorem prolateEigenvalues_hasEigenvalue (T W : ℝ) (n : ℕ) (h : prolateEigenvalues T W n ≠ 0) :
+    (prolateEnd T W).HasEigenvalue ((prolateEigenvalues T W n : ℝ) : ℂ) := by
+  set c := prolateEigenvalues T W n with hc_def
+  have hc_eq : c = sInf {x : ℝ | 0 < x ∧ prolateCount T W x ≤ n} := hc_def
+  have hc : 0 < c := lt_of_le_of_ne (prolateEigenvalues_nonneg T W n) (Ne.symm h)
+  by_contra hnot
+  have hFfin := prolateEigenvalueSet_finite T W (half_pos hc)
+  have hcF : c ∉ prolateEigenvalueSet T W (c / 2) := fun hmem => hnot hmem.2
+  obtain ⟨ε₀, hε₀, hball⟩ := Metric.isOpen_iff.mp hFfin.isClosed.isOpen_compl c hcF
+  have hδ : 0 < min ε₀ (c / 2) := lt_min hε₀ (half_pos hc)
+  have hδ_le : min ε₀ (c / 2) ≤ c / 2 := min_le_right _ _
+  set ε := min ε₀ (c / 2) / 2 with hε_def
+  have hεpos : 0 < ε := half_pos hδ
+  have hε_le : ε ≤ c / 4 := by rw [hε_def]; linarith
+  -- No eigenvalue lies within `ε` of `c`, so the eigenvalue sets either side agree.
+  have hgap : prolateEigenvalueSet T W (c - ε) = prolateEigenvalueSet T W (c + ε) := by
+    refine Set.Subset.antisymm (fun μ hμ => ⟨?_, hμ.2⟩)
+      (prolateEigenvalueSet_subset T W (by linarith))
+    by_contra hle
+    push Not at hle
+    have hμ_gt : c - ε < μ := hμ.1
+    have hmemF : μ ∈ prolateEigenvalueSet T W (c / 2) := ⟨by linarith, hμ.2⟩
+    have hin : μ ∈ Metric.ball c ε₀ := by
+      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
+      constructor
+      · have : min ε₀ (c / 2) ≤ ε₀ := min_le_left _ _
+        rw [hε_def] at hμ_gt; linarith
+      · have : min ε₀ (c / 2) ≤ ε₀ := min_le_left _ _
+        rw [hε_def] at hle; linarith
+    exact (hball hin) hmemF
+  have hcount_eq : prolateCount T W (c - ε) = prolateCount T W (c + ε) := by
+    rw [prolateCount, prolateCount, prolateEigenspaceSup, prolateEigenspaceSup, hgap]
+  -- The count is `≤ n` just above `c` ...
+  obtain ⟨u, hu_mem, hu_lt⟩ :=
+    Real.lt_sInf_add_pos (prolateEigenvalues_setOf_nonempty T W n) hεpos
+  rw [← hc_eq] at hu_lt
+  have h1 : prolateCount T W (c + ε) ≤ n :=
+    le_trans (prolateCount_antitone T W hu_mem.1 hu_lt.le) hu_mem.2
+  -- ... but `> n` just below it, since `c` is the infimum.
+  have h2 : ¬ prolateCount T W (c - ε) ≤ n := by
+    intro hle
+    have hle' : c ≤ c - ε :=
+      hc_eq ▸ csInf_le (prolateEigenvalues_setOf_bddBelow T W n) ⟨by linarith, hle⟩
+    linarith
+  exact h2 (hcount_eq ▸ h1)
+
+end Enumeration
 
 end InformationTheory.Shannon.TimeBandLimiting
