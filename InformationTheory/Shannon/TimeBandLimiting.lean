@@ -510,7 +510,8 @@ theorem bandLimitProj_apply_ae (W : ℝ) (hW : 0 ≤ W) (f : E) :
 its Lebesgue `L²`-membership follows from the elementary majorant `sincN(x)² ≤ 2/(1 + x²)`
 (`|sincN| ≤ 1` near `0`, `sincN(x)² = sin²(πx)/(πx)² ≤ 1/(πx)²` away from it) against the
 integrable `2/(1 + x²)`. Mathlib's `Real.integrable_sinc` is finite-measure-only, so the Lebesgue
-`L²` fact is built here. -/
+`L²` fact is built here.
+@audit:ok -/
 theorem sincN_memLp_two :
     MemLp (fun x : ℝ => (NormalizedSinc.sincN x : ℂ)) 2 volume := by
   have hcont : Continuous (fun x : ℝ => (NormalizedSinc.sincN x : ℂ)) :=
@@ -551,7 +552,10 @@ theorem sincN_memLp_two :
 finite constant `C` (independent of `t`, by translation invariance of Lebesgue measure), so
 `‖k‖₂² ≤ C · vol[0,T] < ∞`. The finite `L²` mass of the ideal low-pass `2W sincN(2W·)` is obtained by
 rescaling the 1-D crux `sincN ∈ L²` (`sincN_memLp_two`) through `integrable_comp_mul_left_iff`, and
-the 2-D lift is a Tonelli (`lintegral_prod_le`) + `lintegral_sub_left_eq_self` computation. -/
+the 2-D lift is a Tonelli (`lintegral_prod_le`) + `lintegral_sub_left_eq_self` computation.
+Hypothesis-free in `T` and `W`: the degenerate `T < 0` (empty `[0,T]`, zero mass) and `2W = 0`
+(zero kernel) cases are both genuinely covered.
+@audit:ok -/
 theorem sincConvKernel_memLp (T W : ℝ) :
     MemLp (fun p : ℝ × ℝ => sincConvKernel T W p.1 p.2) 2 (volume.prod volume) := by
   -- The ideal low-pass factor `2W sincN(2W·)`, as a one-variable function.
@@ -1158,7 +1162,9 @@ theorem l2KernelOperator_isCompact {k : ℝ → ℝ → ℂ}
   exact integral_congr_ae (by filter_upwards [h2] with s hs using by rw [hs])
 
 /-- The sinc integral operator `C = Q_T ∘ P_W` acts a.e. as the integral operator of
-`sincConvKernel`. Genuine composition of Leaf 1 and Leaf 2. -/
+`sincConvKernel`. Genuine composition of Leaf 1 and Leaf 2. The `0 ≤ W` hypothesis is inherited
+from Leaf 2 as a parameter precondition and is discharged by the caller's case split.
+@audit:ok -/
 theorem timeBandLimitingComp_apply_ae (T W : ℝ) (hW : 0 ≤ W) (f : E) :
     (timeBandLimitingComp T W f : ℝ → ℂ) =ᵐ[volume]
       fun t => ∫ s, sincConvKernel T W t s * (f : ℝ → ℂ) s ∂volume := by
@@ -1178,7 +1184,8 @@ theorem timeBandLimitingComp_apply_ae (T W : ℝ) (hW : 0 ≤ W) (f : E) :
 /-- The sinc integral operator `C = Q_T ∘ P_W` is compact. Genuine reduction: the operator built by
 `l2KernelOperator_isCompact` for `sincConvKernel` coincides with `C` (both have the same a.e.
 representative, hence are equal in `Lp`). No sign restriction on `W`: for `W < 0` the kernel
-representation is unavailable (and false), but there `P_W = 0`, so `C = 0` is compact outright. -/
+representation is unavailable (and false), but there `P_W = 0`, so `C = 0` is compact outright.
+@audit:ok -/
 theorem timeBandLimitingComp_isCompact (T W : ℝ) :
     IsCompactOperator (timeBandLimitingComp T W) := by
   rcases lt_or_ge W 0 with hW | hW
@@ -1200,7 +1207,13 @@ theorem timeBandLimitingComp_isCompact (T W : ℝ) :
     rwa [hEq] at hOp_cpt
 
 /-- **The time-and-band limiting operator is compact.** `A = P_W ∘ C` with `C = Q_T ∘ P_W` compact
-(the sinc integral operator) and `P_W` bounded, so `A` is compact by `clm_comp`. -/
+(the sinc integral operator) and `P_W` bounded, so `A` is compact by `clm_comp`.
+
+Unconditional: the signature carries no hypothesis on `T` or `W`, and both degenerate parameter
+ranges are discharged by real proofs rather than assumed away — `W < 0` via
+`bandLimitSubspace_eq_bot_of_neg` (`P_W = 0`, so `C = 0`), `T < 0` via the empty `[0,T]`
+(`Q_T = 0`), and `W = 0` inside Leaf 2 as a genuine null-band case.
+@audit:ok -/
 theorem timeBandLimitingOp_isCompact (T W : ℝ) :
     IsCompactOperator (timeBandLimitingOp T W) := by
   rw [timeBandLimitingOp_eq_bandProj_comp]
