@@ -637,15 +637,20 @@ are handled separately: `M < 2` (below the converse's range) and `k = 0`, where 
 observes nothing, every message decodes to the same one, the average error is exactly `(M-1)/M`,
 and `ε < 1` alone caps `M ≤ 1/(1-ε)`.
 
-That the bandwidth `W` is *unused* here is the point rather than an oversight: `hW` is retained
-only to keep the signature uniform with the rest of the sandwich.
+That the bandwidth constraint is *unused* here is the point rather than an oversight: `hW` is the
+only hypothesis the proof never touches, and it is retained solely to keep the signature uniform
+with the rest of the sandwich (`W` itself still appears, via `ContAwgnCode T W P M`). The proof in
+fact reads neither `encoder_bandlimited` nor `testFn_support`: orthonormality of `testFn` plus the
+whole-line `encoder_power` are the only structure fields the bound needs.
 
 This bound is deliberately crude, and its crudeness is load-bearing evidence rather than a
 shortcoming: it caps the rate at `P/N₀`, which `ln(1+x) ≤ x` makes strictly larger than
 `bandlimitedAwgnCapacity W N₀ P`. Boundedness is free; the exact constant is not, and it is the
 part that still needs the prolate eigenvalue count (see `contAwgn_eq_shannonHartley`).
 
-Hypotheses are regularity-only (not load-bearing). -/
+Hypotheses are regularity-only (not load-bearing).
+
+@audit:ok -/
 theorem contAwgnMaxMessages_bddAbove (T W N₀ P ε : ℝ)
     (hT : 0 < T) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
     BddAbove { M : ℕ | ∃ c : ContAwgnCode T W P M, (c.averageError N₀).toReal ≤ ε } := by
