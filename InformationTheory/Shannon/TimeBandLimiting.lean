@@ -7,6 +7,7 @@ import Mathlib.Analysis.Real.Pi.Bounds
 import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import InformationTheory.Shannon.NormalizedSinc
+import InformationTheory.Shannon.ShannonHartleyAchievability
 
 /-!
 # The time-and-band-limiting operator on `L²(ℝ;ℂ)`
@@ -40,7 +41,7 @@ Landau–Pollak–Slepian concentration count live in later legs (`prolateEigenv
 namespace InformationTheory.Shannon.TimeBandLimiting
 
 open MeasureTheory
-open scoped ENNReal symmDiff
+open scoped ENNReal symmDiff FourierTransform
 
 /-- The `L²(ℝ;ℂ)` Hilbert space the operator acts on. -/
 abbrev E : Type := Lp ℂ 2 (volume : Measure ℝ)
@@ -167,20 +168,20 @@ leaves:
 
 * `timeLimitProj_apply_ae` — `Q_T` acts as multiplication by `𝟙_[0,T]` (proven, as the instance
   `S = [0,T]ᶜ` of `zeroOnLp_starProjection_apply_ae`);
-* `bandLimitProj_apply_ae` — `P_W` acts as convolution with `2W sincN(2W·)` (**the make-or-break
-  abstract-projection ↔ concrete-sinc bridge**; the file's only remaining residual). Its abstract
-  half is proven: `fourier_bandLimitProj_apply_ae` identifies `P_W` as the Fourier multiplier by
-  `𝟙_[-W,W]`, via `starProjection_comap_linearIsometryEquiv` (the `comap` form of Mathlib's
-  `LinearIsometry.map_starProjection`). The residual is the concrete evaluation of `𝓕⁻¹`, which needs
-  an `L¹ ∩ L²` agreement bridge absent from Mathlib;
+* `bandLimitProj_apply_ae` — `P_W` acts as convolution with `2W sincN(2W·)` (the
+  abstract-projection ↔ concrete-sinc bridge, proven). Its abstract half is
+  `fourier_bandLimitProj_apply_ae`, which identifies `P_W` as the Fourier multiplier by `𝟙_[-W,W]`
+  via `starProjection_comap_linearIsometryEquiv` (the `comap` form of Mathlib's
+  `LinearIsometry.map_starProjection`); the concrete evaluation of `𝓕⁻¹` then goes through the
+  `L¹ ∩ L²` Fourier agreement bridge `ShannonHartley.l2FourierInv_eq_fourierIntegralInv`, applied to
+  the spectral cutoff `bandLimitSpec W f = 𝟙_[-W,W]·𝓕f` (integrable because the band is bounded);
 * `sincConvKernel_memLp` — the kernel is `L²` on `ℝ × ℝ` (proven);
 * `l2KernelOperator_isCompact` — a generic `L²`-kernel operator is compact (proven; the reusable
   Hilbert–Schmidt build, `l2KernelOp` and friends).
 
 The remaining declarations (`timeBandLimitingComp_apply_ae`,
 `timeBandLimitingComp_isCompact`, `timeBandLimitingOp_isCompact`) are genuine reductions that
-compose the four leaves and are proven `sorry`-free, so the headline `timeBandLimitingOp_isCompact`
-is conditional on Leaf 2 alone.
+compose the four leaves, so the headline `timeBandLimitingOp_isCompact` is unconditional.
 
 Note the sign asymmetry: the kernel representation needs `0 ≤ W` (`sincN` is even, so a negative `W`
 flips the sign of the kernel while `P_W` collapses to `0`), but the compactness headlines hold for
@@ -350,10 +351,120 @@ theorem bandLimitSubspace_eq_bot_of_neg {W : ℝ} (hW : W < 0) : bandLimitSubspa
   rw [bandLimitSubspace, hzero, Submodule.comap_bot, LinearMap.ker_eq_bot]
   exact (Lp.fourierTransformₗᵢ ℝ ℂ).toLinearEquiv.injective
 
-/-- **Leaf 2 — the make-or-break bridge** (`P_W` = convolution with `2W sincN(2W·)`). The
-orthogonal projection onto the band-limited subspace acts, a.e., as convolution with the ideal
-low-pass `2W sincN(2W·)` (whose Fourier transform is `𝟙_[-W,W]`). This is the abstract
-`starProjection`-of-a-`comap`-under-`𝓕` ↔ concrete sinc-convolution identity.
+
+/-- The frequency-side content of the band-limiting projection: the spectral cutoff
+`𝟙_[-W,W] · 𝓕f`. By `fourier_bandLimitProj_apply_ae` this is a.e. the Fourier transform of
+`P_W f`; being an `L²` function cut down to a bounded interval it is moreover integrable, which
+is what lets the `L¹ ∩ L²` Fourier bridge evaluate `P_W f` pointwise. -/
+noncomputable def bandLimitSpec (W : ℝ) (f : E) : ℝ → ℂ :=
+  (Set.Icc (-W) W).indicator (fun _ => (1 : ℂ)) *
+    ((Lp.fourierTransformₗᵢ ℝ ℂ f : E) : ℝ → ℂ)
+
+theorem bandLimitSpec_eq_indicator (W : ℝ) (f : E) :
+    bandLimitSpec W f
+      = (Set.Icc (-W) W).indicator ((Lp.fourierTransformₗᵢ ℝ ℂ f : E) : ℝ → ℂ) := by
+  funext x
+  by_cases hx : x ∈ Set.Icc (-W) W <;>
+    simp [bandLimitSpec, Set.indicator_of_mem, Set.indicator_of_notMem, hx]
+
+theorem bandLimitSpec_memLp_two (W : ℝ) (f : E) : MemLp (bandLimitSpec W f) 2 volume := by
+  rw [bandLimitSpec_eq_indicator]
+  exact (Lp.memLp _).indicator measurableSet_Icc
+
+theorem bandLimitSpec_memLp_one (W : ℝ) (f : E) : MemLp (bandLimitSpec W f) 1 volume := by
+  rw [memLp_one_iff_integrable, bandLimitSpec]
+  have hvol : volume (Set.Icc (-W) W) ≠ ∞ := by
+    rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top
+  exact MemLp.integrable_mul
+    (memLp_indicator_const 2 measurableSet_Icc (1 : ℂ) (Or.inr hvol)) (Lp.memLp _)
+
+theorem bandLimitProj_coeFn_ae_eq_fourierInv (W : ℝ) (f : E) :
+    ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume] 𝓕⁻ (bandLimitSpec W f) := by
+  set G : E := Lp.fourierTransformₗᵢ ℝ ℂ ((bandLimitSubspace W).starProjection f) with hGdef
+  have hG : (G : ℝ → ℂ) =ᵐ[volume] bandLimitSpec W f := fourier_bandLimitProj_apply_ae W f
+  have hGeq : G = (bandLimitSpec_memLp_two W f).toLp (bandLimitSpec W f) := by
+    have h := MemLp.toLp_congr (Lp.memLp G) (bandLimitSpec_memLp_two W f) hG
+    rwa [Lp.toLp_coeFn] at h
+  have hproj : (bandLimitSubspace W).starProjection f = (Lp.fourierTransformₗᵢ ℝ ℂ).symm G := by
+    rw [hGdef, LinearIsometryEquiv.symm_apply_apply]
+  rw [hproj, hGeq]
+  exact ShannonHartley.l2FourierInv_eq_fourierIntegralInv (bandLimitSpec W f)
+    (bandLimitSpec_memLp_one W f) (bandLimitSpec_memLp_two W f)
+
+theorem inner_two_mul_specBoxcar_apply (W t ξ : ℝ) (hW : 0 < W) (z : ℂ) :
+    inner ℂ ((2 * (W : ℂ)) * ShannonHartley.specBoxcar t (1 / (2 * W)) ξ) z
+      = Complex.exp ((2 * Real.pi * (ξ * t) : ℝ) * Complex.I) *
+          ((Set.Icc (-W) W).indicator (fun _ => (1 : ℂ)) ξ * z) := by
+  have hW' : (W : ℝ) ≠ 0 := ne_of_gt hW
+  have hhalf : 1 / (2 * (1 / (2 * W))) = W := by field_simp
+  rw [ShannonHartley.specBoxcar, hhalf]
+  by_cases hξ : ξ ∈ Set.Icc (-W) W
+  · have hWC : (W : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hW'
+    have hbox : (2 * (W : ℂ)) *
+        ((Set.Icc (-W) W).indicator
+          (fun ζ : ℝ => (((1 / (2 * W) : ℝ)) : ℂ) *
+            Complex.exp ((-(2 * Real.pi * t * ζ) : ℝ) * Complex.I)) ξ)
+        = Complex.exp ((-(2 * Real.pi * t * ξ) : ℝ) * Complex.I) := by
+      rw [Set.indicator_of_mem hξ, ← mul_assoc]
+      have h : (((1 / (2 * W) : ℝ)) : ℂ) = 1 / (2 * (W : ℂ)) := by push_cast; ring
+      rw [h]
+      field_simp
+    have hexp : ((-(2 * Real.pi * t * ξ) : ℝ) : ℂ) * (-Complex.I)
+        = ((2 * Real.pi * (ξ * t) : ℝ) : ℂ) * Complex.I := by push_cast; ring
+    rw [hbox, Set.indicator_of_mem hξ, RCLike.inner_apply, ← Complex.exp_conj,
+      map_mul, Complex.conj_I, Complex.conj_ofReal, hexp]
+    push_cast
+    ring
+  · rw [Set.indicator_of_notMem hξ, Set.indicator_of_notMem hξ, mul_zero, inner_zero_left,
+      zero_mul, mul_zero]
+
+theorem fourierInv_bandLimitSpec_eq (W : ℝ) (hW : 0 < W) (f : E) (t : ℝ) :
+    𝓕⁻ (bandLimitSpec W f) t
+      = ∫ s, ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ) *
+          (f : ℝ → ℂ) s ∂volume := by
+  have hΔ : (0:ℝ) < 1 / (2 * W) := by positivity
+  -- `S` = the shifted/dilated sinc, `B = 𝓕 S` = the spectral boxcar at `t`.
+  set S : E := (ShannonHartley.shiftSinc_memLp t (1 / (2 * W)) hΔ).toLp
+    (fun s => (NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℂ)) with hSdef
+  set B : E := (ShannonHartley.specBoxcar_memLp t (1 / (2 * W)) hΔ 2).toLp
+    (ShannonHartley.specBoxcar t (1 / (2 * W))) with hBdef
+  have hFS : Lp.fourierTransformₗᵢ ℝ ℂ S = B :=
+    ShannonHartley.fourier_shiftSinc_toLp t (1 / (2 * W)) hΔ
+  -- Step A: the inverse transform at `t` is the pairing of `𝓕 f` against `2W · B`.
+  have hA : 𝓕⁻ (bandLimitSpec W f) t
+      = inner ℂ ((2 * W : ℂ) • B) (Lp.fourierTransformₗᵢ ℝ ℂ f) := by
+    rw [MeasureTheory.L2.inner_def, Real.fourierInv_eq']
+    refine integral_congr_ae ?_
+    filter_upwards [Lp.coeFn_smul (2 * W : ℂ) B,
+      (ShannonHartley.specBoxcar_memLp t (1 / (2 * W)) hΔ 2).coeFn_toLp] with ξ hsmul hB
+    rw [hsmul, Pi.smul_apply, hB]
+    simp only [smul_eq_mul]
+    rw [inner_two_mul_specBoxcar_apply W t ξ hW, bandLimitSpec, Pi.mul_apply]
+    congr 2
+    simp [RCLike.inner_apply]
+    ring
+  -- Step B: Plancherel moves the pairing to the time side, where `S` is an explicit sinc.
+  have hB' : inner ℂ ((2 * W : ℂ) • B) (Lp.fourierTransformₗᵢ ℝ ℂ f)
+      = (2 * W : ℂ) * inner ℂ S f := by
+    rw [← hFS, inner_smul_left, (Lp.fourierTransformₗᵢ ℝ ℂ).inner_map_map]
+    congr 1
+    rw [map_mul, Complex.conj_ofReal, map_ofNat]
+  rw [hA, hB', MeasureTheory.L2.inner_def, ← integral_const_mul]
+  refine integral_congr_ae ?_
+  filter_upwards [(ShannonHartley.shiftSinc_memLp t (1 / (2 * W)) hΔ).coeFn_toLp] with s hs
+  rw [hSdef]
+  rw [hs, RCLike.inner_apply, Complex.conj_ofReal]
+  -- `(s - t)/Δ = 2W(s - t)`, and `sincN` is even.
+  rw [show (s - t) / (1 / (2 * W)) = -(2 * W * (t - s)) by field_simp; ring,
+    NormalizedSinc.sincN_neg]
+  push_cast
+  ring
+
+/-- **Leaf 2** (`P_W` = convolution with `2W sincN(2W·)`). The orthogonal projection onto the
+band-limited subspace acts, a.e., as convolution with the ideal low-pass `2W sincN(2W·)` (whose
+Fourier transform is `𝟙_[-W,W]`). This is the abstract `starProjection`-of-a-`comap`-under-`𝓕` ↔
+concrete sinc-convolution identity, and it is what turns the operator `C = Q_T ∘ P_W` into an
+integral operator with the Hilbert–Schmidt kernel `sincConvKernel`.
 
 The sign precondition `0 ≤ W` is necessary, not cosmetic: `sincN` is even, so for `W < 0` the stated
 kernel `2W sincN(2W·)` is *minus* the ideal low-pass at `|W|`, while the left-hand side collapses to
@@ -361,39 +472,39 @@ kernel `2W sincN(2W·)` is *minus* the ideal low-pass at `|W|`, while the left-h
 right-hand side is `-∫_(-1)^(1) sincN ≈ -1.179 ≠ 0`, so the unrestricted statement is false; `0 ≤ W`
 is a precondition on the parameter, not a hypothesis carrying the proof.
 
-The abstract half is discharged: `fourier_bandLimitProj_apply_ae` proves `𝓕(P_W f) =ᵐ 𝟙_[-W,W]·𝓕f`,
-so `P_W f = 𝓕⁻¹ g` with `g := 𝟙_[-W,W]·𝓕f ∈ L¹ ∩ L²` (`L¹` by Cauchy–Schwarz against the finite
-interval). What remains is to evaluate `𝓕⁻¹ g` concretely, and that is blocked on a single missing
-Mathlib fact: the `L¹ ∩ L²` agreement of `Lp.fourierTransformₗᵢ` with the classical Fourier integral,
-`(𝓕⁻¹_{L²} g : ℝ → ℂ) =ᵐ 𝓕⁻ g`. Given it, the rest is Plancherel plus
-`NormalizedSinc.integral_exp_boxcar_eq_sincN`: `𝓕⁻ g t = ⟪e_t, 𝓕 f⟫ = ⟪𝓕⁻¹ e_t, f⟫` with
-`e_t ξ = 𝟙_[-W,W](ξ)·exp(-2πitξ)`, and `𝓕⁻ e_t s = 2W sincN(2W(s-t))` by rescaling the boxcar.
-
-Mathlib's `L²` Fourier transform is defined by extension from Schwartz space and is a black box:
-`Lp.fourierTransformₗᵢ` has *no* consumers anywhere in Mathlib, no declaration mentions both
-`VectorFourier.fourierIntegral` and `Lp`/`MemLp`, and the tempered-distribution detour
-(`Lp.fourierInv_toTemperedDistribution_eq`) does not help — no Mathlib file mentions both
-`TemperedDistribution` and `fourierIntegral`, so `𝓢'` is a black box against the classical integral
-too. The bridge is therefore a genuine gap rather than plumbing; it is out of reach of the plan's
-`integral_exp_boxcar_eq_sincN`-only route, which presupposed an `L²` convolution/multiplier theorem
-that does not exist.
-
-It is, however, constructible (hence `plan:`, not `wall:`), and only the *compactly supported* case
-of the bridge is needed here — which is the cheap case. Since `g = 𝟙_[-W,W]·𝓕f` is supported in
-`[-W,W]`, a fixed smooth cutoff `χ ≡ 1` on `[-W,W]` turns any `L²`-approximating Schwartz sequence
-`ψₙ → g` (`SchwartzMap.denseRange_toLpCLM`, per-exponent, `p = 2`) into `χ·ψₙ`
-(`SchwartzMap.bilinLeftCLM`), still Schwartz, still `L²`-convergent, and supported in one fixed
-compact — on which `L¹` convergence is *free* by Cauchy–Schwarz. So no general simultaneous
-`L¹ ∩ L²` density machinery (truncate + mollify, cf. `EPIApproxIdentityL1.lean`) is required: pass to
-the limit with `SchwartzMap.toLp_fourierInv_eq` + `fourierInv_coe` (Schwartz-level `𝓕⁻` is the
-classical integral by `rfl`) on one side and `VectorFourier.norm_fourierIntegral_le_integral_norm`
-(uniform convergence from `L¹`) on the other.
-@residual(plan:shannon-hartley-phase2-spectral-plan) -/
+The proof factors through the spectral cutoff `bandLimitSpec W f = 𝟙_[-W,W]·𝓕f`: the abstract half
+`fourier_bandLimitProj_apply_ae` identifies `𝓕(P_W f)` with it, and since it is supported in a
+bounded interval it lies in `L¹ ∩ L²`, so the Fourier bridge
+`ShannonHartley.l2FourierInv_eq_fourierIntegralInv` evaluates `P_W f = 𝓕⁻¹(bandLimitSpec W f)`
+pointwise as an honest integral (`bandLimitProj_coeFn_ae_eq_fourierInv`). That integral is then
+identified with the sinc convolution by Plancherel against the spectral boxcar, whose inverse
+transform is already known to be a shifted sinc (`ShannonHartley.fourier_shiftSinc_toLp`).
+The degenerate `W = 0` band is a null set, where both sides vanish.
+@audit:ok -/
 theorem bandLimitProj_apply_ae (W : ℝ) (hW : 0 ≤ W) (f : E) :
     ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume]
       fun t => ∫ s, ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ) *
         (f : ℝ → ℂ) s ∂volume := by
-  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+  rcases eq_or_lt_of_le hW with hW0 | hWpos
+  · -- `W = 0`: the band `[-0,0] = {0}` is a null set, so both sides vanish.
+    subst hW0
+    have hnull : volume (Set.Icc (-(0:ℝ)) 0) = 0 := by simp
+    have hspec : bandLimitSpec 0 f =ᵐ[volume] 0 := by
+      rw [bandLimitSpec_eq_indicator]
+      filter_upwards [compl_mem_ae_iff.mpr hnull] with x hx
+      rw [Set.indicator_of_notMem hx]
+      rfl
+    have hzero : ∀ t : ℝ, 𝓕⁻ (bandLimitSpec 0 f) t = 0 := by
+      intro t
+      rw [Real.fourierInv_eq']
+      refine integral_eq_zero_of_ae ?_
+      filter_upwards [hspec] with v hv
+      rw [hv, Pi.zero_apply, smul_zero]
+    filter_upwards [bandLimitProj_coeFn_ae_eq_fourierInv 0 f] with t ht
+    rw [ht, hzero t]
+    simp
+  · filter_upwards [bandLimitProj_coeFn_ae_eq_fourierInv W f] with t ht
+    rw [ht, fourierInv_bandLimitSpec_eq W hWpos f t]
 
 /-- The normalized sinc is square-integrable on `ℝ`. The reusable crux for the kernel-`L²` bound:
 its Lebesgue `L²`-membership follows from the elementary majorant `sincN(x)² ≤ 2/(1 + x²)`
