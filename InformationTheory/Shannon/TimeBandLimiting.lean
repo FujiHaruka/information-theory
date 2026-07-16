@@ -165,9 +165,14 @@ compact operator because the kernels with compact operator form a closed submodu
 rectangle indicators, which generate `L²(ℝ × ℝ)`. The genuinely analytic content lives in four
 leaves:
 
-* `timeLimitProj_apply_ae` — `Q_T` acts as multiplication by `𝟙_[0,T]` (proven);
+* `timeLimitProj_apply_ae` — `Q_T` acts as multiplication by `𝟙_[0,T]` (proven, as the instance
+  `S = [0,T]ᶜ` of `zeroOnLp_starProjection_apply_ae`);
 * `bandLimitProj_apply_ae` — `P_W` acts as convolution with `2W sincN(2W·)` (**the make-or-break
-  abstract-projection ↔ concrete-sinc bridge**; the file's only remaining residual);
+  abstract-projection ↔ concrete-sinc bridge**; the file's only remaining residual). Its abstract
+  half is proven: `fourier_bandLimitProj_apply_ae` identifies `P_W` as the Fourier multiplier by
+  `𝟙_[-W,W]`, via `starProjection_comap_linearIsometryEquiv` (the `comap` form of Mathlib's
+  `LinearIsometry.map_starProjection`). The residual is the concrete evaluation of `𝓕⁻¹`, which needs
+  an `L¹ ∩ L²` agreement bridge absent from Mathlib;
 * `sincConvKernel_memLp` — the kernel is `L²` on `ℝ × ℝ` (proven);
 * `l2KernelOperator_isCompact` — a generic `L²`-kernel operator is compact (proven; the reusable
   Hilbert–Schmidt build, `l2KernelOp` and friends).
@@ -176,6 +181,10 @@ The remaining declarations (`timeBandLimitingComp_apply_ae`,
 `timeBandLimitingComp_isCompact`, `timeBandLimitingOp_isCompact`) are genuine reductions that
 compose the four leaves and are proven `sorry`-free, so the headline `timeBandLimitingOp_isCompact`
 is conditional on Leaf 2 alone.
+
+Note the sign asymmetry: the kernel representation needs `0 ≤ W` (`sincN` is even, so a negative `W`
+flips the sign of the kernel while `P_W` collapses to `0`), but the compactness headlines hold for
+every real `W`, the degenerate band being handled separately via `bandLimitSubspace_eq_bot_of_neg`.
 -/
 
 /-- The Hilbert–Schmidt kernel of the sinc integral operator `C = Q_T ∘ P_W`:
@@ -342,9 +351,23 @@ kernel `2W sincN(2W·)` is *minus* the ideal low-pass at `|W|`, while the left-h
 right-hand side is `-∫_(-1)^(1) sincN ≈ -1.179 ≠ 0`, so the unrestricted statement is false; `0 ≤ W`
 is a precondition on the parameter, not a hypothesis carrying the proof.
 
-Reduced to `bandLimitProj_fourierInv_apply_ae` — the `L¹ ∩ L²` agreement of Mathlib's abstract `L²`
-Fourier transform with the classical Fourier integral, which is the genuine gap (see that
-declaration).
+The abstract half is discharged: `fourier_bandLimitProj_apply_ae` proves `𝓕(P_W f) =ᵐ 𝟙_[-W,W]·𝓕f`,
+so `P_W f = 𝓕⁻¹ g` with `g := 𝟙_[-W,W]·𝓕f ∈ L¹ ∩ L²` (`L¹` by Cauchy–Schwarz against the finite
+interval). What remains is to evaluate `𝓕⁻¹ g` concretely, and that is blocked on a single missing
+Mathlib fact: the `L¹ ∩ L²` agreement of `Lp.fourierTransformₗᵢ` with the classical Fourier integral,
+`(𝓕⁻¹_{L²} g : ℝ → ℂ) =ᵐ 𝓕⁻ g`. Given it, the rest is Plancherel plus
+`NormalizedSinc.integral_exp_boxcar_eq_sincN`: `𝓕⁻ g t = ⟪e_t, 𝓕 f⟫ = ⟪𝓕⁻¹ e_t, f⟫` with
+`e_t ξ = 𝟙_[-W,W](ξ)·exp(-2πitξ)`, and `𝓕⁻ e_t s = 2W sincN(2W(s-t))` by rescaling the boxcar.
+
+Mathlib's `L²` Fourier transform is defined by extension from Schwartz space and is a black box:
+`Lp.fourierTransformₗᵢ` has *no* consumers anywhere in Mathlib, and no declaration mentions both
+`VectorFourier.fourierIntegral` and `Lp`/`MemLp`. Schwartz density (`SchwartzMap.denseRange_toLpCLM`)
+is per-exponent, so even the standard proof of the bridge — approximate `g` by Schwartz functions
+simultaneously in `L¹` and `L²`, then compare — needs a simultaneous-density self-build first
+(truncate + mollify; cf. `EPIApproxIdentityL1.lean`, which closed a similar approximate-identity `L¹`
+statement in-tree). This is a genuine gap, not plumbing, and is out of reach of the plan's
+`integral_exp_boxcar_eq_sincN`-only route, which presupposed an `L²` convolution/multiplier theorem
+that does not exist.
 @residual(plan:shannon-hartley-phase2-spectral-plan) -/
 theorem bandLimitProj_apply_ae (W : ℝ) (hW : 0 ≤ W) (f : E) :
     ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume]
