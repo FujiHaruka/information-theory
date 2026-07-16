@@ -6,6 +6,7 @@ import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 import Mathlib.Analysis.Normed.Operator.Compact.Basic
 import Mathlib.Analysis.Real.Pi.Bounds
 import Mathlib.MeasureTheory.Measure.Prod
+import Mathlib.MeasureTheory.Measure.SeparableMeasure
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import InformationTheory.Shannon.NormalizedSinc
 import InformationTheory.Shannon.ShannonHartleyAchievability
@@ -81,9 +82,21 @@ from Mathlib) is needed.
 Both hypotheses of the last two are tight in the same way as above: for `T < 0` or `W < 0` the
 operator collapses, so the trace is `0` while the claimed bound `2WT` is strictly negative.
 
+Leg E-trace upgrades that Bessel *inequality* to a Parseval *equality*: along a *complete* basis the
+trace is exactly `2WT`. The mechanism needs neither the spectral theorem nor trace-class theory —
+the terms are nonnegative, so Tonelli exchanges `∑'` with `∫` unconditionally, and completeness
+replaces Bessel by Parseval.
+
+* `orthonormal_countable` — an orthonormal family in a separable space is countable (absent from
+  Mathlib; it discharges the Tonelli step's countability rather than assuming it).
+* `tsum_inner_timeBandLimitingOp_eq` — `∑'ᵢ ⟪A bᵢ, bᵢ⟫ = 2WT` for any `HilbertBasis`.
+* `exists_hilbertBasis_tsum_inner_timeBandLimitingOp_eq` — an in-tree non-vacuity witness.
+
 The sharp Landau–Pollak–Slepian concentration (`⌊2WT⌋ + O(log WT)` eigenvalues near `1`, i.e. the
-matching lower bound and the transition width) is not proved here, as is `λ n ≠ 0` for all `n`
-(which needs `A` to have infinite rank).
+matching lower bound and the transition width) is still not proved here, and the exact first moment
+does not bring it closer: Markov uses only the `≤` half, while a lower bound on the count needs the
+*second* moment `∑ λₙ(1 − λₙ) = tr A − tr A²` to control the tail `∑_{λₙ ≤ c} λₙ`. Also still open
+is `λ n ≠ 0` for all `n` (which needs `A` to have infinite rank).
 -/
 
 namespace InformationTheory.Shannon.TimeBandLimiting
@@ -2060,6 +2073,128 @@ theorem sum_inner_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
         rw [setIntegral_const, Real.volume_real_Icc_of_le hT, sub_zero, smul_eq_mul]
         ring
 
+/-- An orthonormal family in a separable inner-product space is countable.
+
+Distinct members sit at distance `√2`, so the open balls of radius `1/2` around them are pairwise
+disjoint, and a separable space admits only countably many pairwise-disjoint nonempty open sets
+(`Pairwise.countable_of_isOpen_disjoint`). Mathlib has no such lemma (loogle `Orthonormal, Countable`
+= `Found 0`, 2026-07-17), so it is built here; it is what lets `tsum_inner_timeBandLimitingOp_eq`
+*derive* the countability its Tonelli step needs instead of assuming it. -/
+theorem orthonormal_countable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+    [TopologicalSpace.SeparableSpace H] {ι : Type*} {v : ι → H} (hv : Orthonormal ℂ v) :
+    Countable ι := by
+  -- Distinct members sit at distance `√2`, so the balls of radius `1/2` around them are disjoint.
+  have hdist : ∀ i j, i ≠ j → ‖v i - v j‖ ^ 2 = 2 := by
+    intro i j hij
+    have h : (inner ℂ (v i) (-v j) : ℂ) = 0 := by rw [inner_neg_right, hv.2 hij, neg_zero]
+    have hp := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero (v i) (-v j) h
+    rw [← sub_eq_add_neg, norm_neg, hv.1 i, hv.1 j] at hp
+    rw [sq]; rw [hp]; norm_num
+  refine Pairwise.countable_of_isOpen_disjoint (s := fun i => Metric.ball (v i) (1 / 2)) ?_
+    (fun _ => Metric.isOpen_ball) (fun i => ⟨v i, Metric.mem_ball_self (by norm_num)⟩)
+  intro i j hij
+  simp only [Function.onFun]
+  refine Metric.ball_disjoint_ball ?_
+  have h2 : ‖v i - v j‖ ^ 2 = 2 := hdist i j hij
+  have hnn : (0 : ℝ) ≤ ‖v i - v j‖ := norm_nonneg _
+  rw [dist_eq_norm]
+  nlinarith
+
+theorem hasSum_norm_inner_bandKernelLp_sq {ι : Type*} (b : HilbertBasis ι ℂ E) (W t : ℝ) :
+    HasSum (fun i => ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2) (‖bandKernelLp W t‖ ^ 2) := by
+  set k : E := bandKernelLp W t with hk
+  have h := b.hasSum_inner_mul_inner k k
+  have hval : (inner ℂ k k : ℂ) = ((‖k‖ ^ 2 : ℝ) : ℂ) := by
+    rw [inner_self_eq_norm_sq_to_K]; norm_cast
+  have hterm : ∀ i, (inner ℂ k (b i) : ℂ) * (inner ℂ (b i) k : ℂ)
+      = ((‖inner ℂ k (b i)‖ ^ 2 : ℝ) : ℂ) := by
+    intro i
+    rw [← inner_conj_symm (b i) k, RCLike.mul_conj (K := ℂ)]
+    norm_cast
+  rw [funext hterm, hval] at h
+  exact Complex.hasSum_ofReal.mp h
+
+/-- **Leg E-trace.** The trace of the time-and-band limiting operator along *any* complete
+orthonormal basis is exactly `2WT`.
+
+This upgrades the Bessel *inequality* `sum_inner_timeBandLimitingOp_le` to a Parseval *equality*.
+The quadratic form `⟪A bᵢ, bᵢ⟫ = ∫_[0,T] |⟪k_t, bᵢ⟫|² dt` (`inner_timeBandLimitingOp_self_eq`) makes
+the trace a sum of integrals of nonnegative terms, so Tonelli (`lintegral_tsum`, over `ℝ≥0∞`)
+exchanges `∑'` and `∫` with no joint-integrability side condition; completeness of the basis then
+replaces Bessel by Parseval (`hasSum_norm_inner_bandKernelLp_sq`), pinning the integrand to exactly
+`‖k_t‖² = 2W` (`bandKernelLp_norm_sq`), and the window `[0,T]` supplies the factor `T`.
+
+No spectral theorem and no trace-class theory are used: Mathlib's lack of Schatten/Hilbert–Schmidt
+API (real, and confirmed) does not block this identity. Countability of the index — the Tonelli
+step's only structural need — is *derived* from separability of `L²(ℝ;ℂ)` via
+`orthonormal_countable`, not assumed. `exists_hilbertBasis_tsum_inner_timeBandLimitingOp_eq`
+witnesses in-tree that such a basis exists, so the statement is not vacuous.
+
+Scope (the question that matters, asked before reporting): this is an *exact first moment*
+`∑ λₙ = 2WT`, which is **not** what `wall:nyquist-2w-dof` names. The wall's content is the
+Landau–Pollak–Slepian *concentration* `#{n | λₙ > c} = 2WT + O(log WT)`, and the first moment does
+not reach it in either direction. Upward it feeds only Markov (`prolateCount_mul_le`), which uses
+just the `≤` half and overcounts by `1/c`; the exactness buys nothing there. Downward it is
+strictly insufficient: a spectrum with `∑ λₙ = 2WT` and every `λₙ ≤ c` has `#{λₙ > c} = 0`, so no
+lower bound on the count follows from the first moment alone. Splitting the sum gives
+`#{λₙ > c} ≥ 2WT − ∑_{λₙ ≤ c} λₙ`, whose tail term is controlled only by the *second* moment
+`∑ λₙ(1 − λₙ) = tr A − tr A²`. That second moment — not this identity — remains the blocker. -/
+theorem tsum_inner_timeBandLimitingOp_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
+    {ι : Type*} (b : HilbertBasis ι ℂ E) :
+    ∑' i, (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re = 2 * W * T := by
+  classical
+  haveI : Fact ((2 : ℝ≥0∞) ≠ ∞) := ⟨by norm_num⟩
+  haveI : Countable ι := orthonormal_countable b.orthonormal
+  set a : ι → ℝ := fun i => (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re with hadef
+  have hint : ∀ i : ι,
+      IntegrableOn (fun t => ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2) (Set.Icc (0 : ℝ) T) volume :=
+    fun i => integrableOn_inner_bandKernelLp_sq T W hW.le (b i)
+  have ha : ∀ i, a i = ∫ t in Set.Icc (0 : ℝ) T, ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2 :=
+    fun i => inner_timeBandLimitingOp_self_eq T W hW.le (b i)
+  have hnn : ∀ i, 0 ≤ a i := by
+    intro i
+    rw [ha i]
+    exact setIntegral_nonneg measurableSet_Icc fun t _ => by positivity
+  -- Each trace entry as a lower Lebesgue integral, so the swap below needs no integrability side
+  -- condition.
+  have hlint : ∀ i, ENNReal.ofReal (a i)
+      = ∫⁻ t in Set.Icc (0 : ℝ) T,
+          ENNReal.ofReal (‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2) := by
+    intro i
+    rw [ha i]
+    exact ofReal_integral_eq_lintegral_ofReal (hint i) (ae_of_all _ fun t => by positivity)
+  have hmeas : ∀ i, AEMeasurable
+      (fun t => ENNReal.ofReal (‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2))
+      (volume.restrict (Set.Icc (0 : ℝ) T)) :=
+    fun i => ENNReal.measurable_ofReal.comp_aemeasurable (hint i).1.aemeasurable
+  have hTW : (0 : ℝ) ≤ 2 * W * T := mul_nonneg (by linarith) hT
+  -- Tonelli (every term is `≥ 0`) plus Parseval, pointwise in `t`.
+  have hkey : ∑' i, ENNReal.ofReal (a i) = ENNReal.ofReal (2 * W * T) := by
+    rw [tsum_congr hlint, ← lintegral_tsum hmeas]
+    have hpt : ∀ t : ℝ, (∑' i, ENNReal.ofReal (‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2))
+        = ENNReal.ofReal (2 * W) := by
+      intro t
+      have hs := hasSum_norm_inner_bandKernelLp_sq b W t
+      rw [← ENNReal.ofReal_tsum_of_nonneg (fun i => by positivity) hs.summable, hs.tsum_eq,
+        bandKernelLp_norm_sq W t hW]
+    rw [lintegral_congr hpt, setLIntegral_const, Real.volume_Icc, sub_zero,
+      ← ENNReal.ofReal_mul (by linarith)]
+  -- Transfer the identity back to `ℝ`.
+  have h := ENNReal.tsum_toReal_eq (f := fun i => ENNReal.ofReal (a i))
+    fun i => ENNReal.ofReal_ne_top
+  rw [hkey, ENNReal.toReal_ofReal hTW,
+    tsum_congr fun i => ENNReal.toReal_ofReal (hnn i)] at h
+  exact h.symm
+
+/-- Non-vacuity of `tsum_inner_timeBandLimitingOp_eq`, machine-checked rather than asserted: a
+Hilbert basis of `L²(ℝ;ℂ)` exists (`exists_hilbertBasis`), so the trace identity is a statement
+about a real object and not an empty quantification over an uninhabited hypothesis. -/
+theorem exists_hilbertBasis_tsum_inner_timeBandLimitingOp_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
+    ∃ (w : Set E) (b : HilbertBasis w ℂ E),
+      ∑' i, (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re = 2 * W * T := by
+  obtain ⟨w, b, -⟩ := exists_hilbertBasis ℂ E
+  exact ⟨w, b, tsum_inner_timeBandLimitingOp_eq T W hT hW b⟩
+
 theorem prolateEigenspaceSup_invariant (T W c : ℝ) :
     ∀ v ∈ prolateEigenspaceSup T W c,
       (timeBandLimitingOp T W : E →ₗ[ℂ] E) v ∈ prolateEigenspaceSup T W c := by
@@ -2150,6 +2285,28 @@ theorem prolateCount_mul_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (h
           rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, mul_comm]
       _ ≤ ∑ i, ν i := Finset.sum_le_sum fun i _ => (hνgt i).le
   linarith
+
+/-- The trace identity `tsum_inner_timeBandLimitingOp_eq`, transported onto the decreasing
+eigenvalue enumeration: `∑ₙ λₙ = 2WT`.
+
+Not attempted here (this is the *statement*, left honestly open rather than framed to look closed).
+The trace identity holds along any Hilbert basis; specializing it to `prolateEigenvalues` needs two
+further pieces, neither of which is the `wall:nyquist-2w-dof` concentration:
+
+1. a complete orthonormal *eigen*basis of `A`. Mathlib's compact self-adjoint spectral theorem
+   (`ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot`: the eigenspaces are total)
+   plus `HilbertBasis.mkOfOrthogonalEqBot` supply the machinery, but gluing per-eigenspace bases
+   (finite-dimensional for `μ ≠ 0` by `finite_dimensional_eigenspace`, infinite-dimensional for the
+   kernel) into one orthonormal family indexed over the eigenvalue set is real work;
+2. the multiplicity bridge from that basis's eigenvalue multiset to `prolateEigenvalues`, which is
+   defined as the generalized inverse `sInf {c > 0 | prolateCount T W c ≤ n}` of the counting
+   function rather than as a list.
+
+Both are plumbing onto assets that exist, not a missing theory, hence `plan:` and not `wall:`.
+@residual(plan:shannon-hartley-phase2-spectral) -/
+theorem tsum_prolateEigenvalues_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
+    ∑' n, prolateEigenvalues T W n = 2 * W * T := by
+  sorry
 
 end TraceBound
 
