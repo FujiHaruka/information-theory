@@ -221,3 +221,36 @@ leg 12 の **6 行の解析証明**が FALSE を確定 — 命題は偽、壁は
 docstring は反証の機構（窓外に無限のエネルギーを置ける / sinc 尾が窓内標本に漏れ戻す）を**正しく記述した上で**
 「ゆえに難しい」と結論していた — 正しい推論は「ゆえに非有界」。**「制御できない」は *難度* と読めてしまうが、
 実際には *非有界性* を意味していた。**
+
+---
+
+## §SPECTRAL-ASSETS — Mathlib の無限次元スペクトル資産は「有る」。壁論拠が誤っていた (2026-07-17, leg 15, Leg E atom)
+
+`wall:nyquist-2w-dof` の旧論拠は「`≈2WT` DOF カウントには無限次元スペクトル理論が要るが Mathlib に無い」だった。
+**後半が誤り**。grep で機械確認した実際の在庫:
+
+| claim | confidence | 再検証コマンド | last-verified | notes |
+|---|---|---|---|---|
+| Mathlib に trace-class / Schatten / Hilbert-Schmidt **作用素論は不在** | machine | `grep -n "FiniteDimensional" .lake/packages/mathlib/Mathlib/Analysis/InnerProductSpace/{Trace,SingularValues}.lean` → 両者とも有限次元前提 | `7c43417a` | `find Mathlib -iname "*Schatten*" -o -iname "*TraceClass*"` = 0 hit |
+| Mathlib に**コンパクト自己共役の無限次元スペクトル定理は存在** | machine | `grep -n "orthogonalComplement_iSup_eigenspaces_eq_bot" .lake/packages/mathlib/Mathlib/Analysis/InnerProductSpace/Spectrum.lean` → `:443` | `7c43417a` | 「固有空間の iSup の直交補 = `⊥`」形。`:464` `finite_dimensional_eigenspace` は本 family が既に消費中 |
+| crude trace bound `c·#{λ>c} ≤ 2WT` は**壁非依存**で closure 可能 | machine | `#print axioms InformationTheory.Shannon.TimeBandLimiting.prolateCount_mul_le` → sorryAx-free | `7c43417a` | Bessel + 既存 `bandLimitProj_apply_ae`。有限直交族しか要らず無限次元 trace 理論を経由しない |
+| **tight LPS 集中は依然未証明**（本 slug の本体） | human-judgment | Bessel は片方向 / Markov は `1/c` 倍の過大計上 | `7c43417a` | **独立監査が実装者の「壁でない」verdict を refute**。次 atom (E-trace) が再判別する |
+
+**教訓 1 — `cause:weaker-relative`（CLAUDE.md「textbook-object strength diff」の実発火）**: 実装者は
+gateway atom が通ったことから「`wall:nyquist-2w-dof` は genuine でない・`cause:single-route`」と結論した。
+**閉じたのは弱い親戚**（crude trace bound）であって slug が名指す tight LPS ではない。
+**弱い命題を閉じても、強い命題についての壁 verdict は覆らない。** 監査が逐語根拠（consumer が要する強度 =
+`ShannonHartleyOperational.lean:461-462`「converse は上半分、achievability は下半分」）で訂正した。
+**問いの立て方が誤っていた**: 実装者は「Bessel は `2WT` 上界に届くか」(yes) を問い、
+「**Bessel が届く上界は、壁が名指す上界か**」(no) を問わなかった。
+
+**教訓 2 — 否定的主張はコンパイラに退けさせるまで退けたことにならない（3 度目の近接事例）**: 
+「無限次元スペクトル理論が Mathlib に無い」は**誰も検証していない否定的主張**として壁論拠に居座っていた。
+1 回の grep で反証された。`cause:loogle-blind` の親戚 — loogle は Mathlib しか見ないが、
+**この事例は loogle すら引かれていなかった**。壁の**論拠**は壁の**結論**とは別に検証が要る:
+結論（tight LPS は未証明）が正しいままでも、論拠が誤っていればコスト見積が丸ごと狂う。
+
+**§SELF-REPORT-DRIFT の 3 度目の再現（同じ形）**: 実装者の申告のうち機械が検査した項目（sorryAx-free /
+0 sorry / 署名）は**全部正確**で、機械が検査しなかった 3 項目（非空虚性 probe の存在 / tightness witness /
+壁 verdict）が**すべてドリフト**した。うち唯一 `rg` でなく判断を要した壁 verdict が**最も遠くまでドリフト**した。
+probe と witness は監査が自分で書いてコンパイルし直し、主張自体は CONFIRMED（結論は正しく、根拠が tree に無かった）。
