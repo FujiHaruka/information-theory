@@ -53,6 +53,14 @@ orchestrator 解析・既存 docstring と三重一致）。`contAwgnMaxMessages
   verdict 方向 refutation: `bandlimited_sup_bound` 連鎖には `‖f‖²_{L²(ℝ)}≤C∫₀ᵀf²` (全直線≤C·窓) が要り、A の
   固有値→0 ゆえ偽。⟹ sup bound 単独では WSEB に届かない。
 
+## Mathlib の L² Fourier 変換はブラックボックス (Leg B Leaf 2、2026-07-17 実装 + 独立監査で二重確認)
+
+| claim | confidence | 再検証コマンド | last-verified | notes |
+|---|---|---|---|---|
+| `Lp.fourierTransformₗᵢ` は Schwartz 拡張で定義され、**古典 Fourier 積分と繋ぐ資産が Mathlib に一切無い** | `loogle-neg` | `loogle "MeasureTheory.Lp.fourierTransformₗᵢ"` → Found 1 (自身のみ、Mathlib 内 consumer 0) / `loogle "VectorFourier.fourierIntegral, MeasureTheory.Lp"` → Found 0 / `loogle "MeasureTheory.MemLp, VectorFourier.fourierIntegral"` → Found 0 | 98d4da6c | ⟹ **L² multiplier / 畳み込み定理は Mathlib に存在しない**。Leaf 2 (b) の旧 route (`integral_exp_boxcar_eq_sincN` 経由の Lp² 畳み込み) が route WRONG だった根拠 |
+| `𝓢'` (tempered distribution) 経由の迂回も同断 | `loogle-neg` | `rg -l "TemperedDistribution" .lake/packages/mathlib` ∩ `rg -l "fourierIntegral"` → **共通 file 0** | 98d4da6c | file header が広告する `Lp.fourierInv_toTemperedDistribution_eq` route も古典積分に届かない (監査が implementer の query 漏れを埋めて確認) |
+| 欠落資産 = **L¹∩L² 橋** `g ∈ L¹∩L² ⟹ (𝓕⁻¹_{L²} g : ℝ→ℂ) =ᵐ 𝓕⁻ g`。**self-build 可 (`plan:`)、`wall:` ではない** | `human-judgment` | — (独立 2 者一致: implementer + honesty-auditor) | 98d4da6c | 行数見積は割れた: implementer ~350-600 (一般 L¹∩L² 橋 = 同時 Schwartz 稠密が要ると想定) vs 監査 **~150-300** (コンパクト台のみ必要 ⟹ L¹ leg は Cauchy-Schwarz でタダ、mollifier 不要)。**監査 route が SoT** = `TimeBandLimiting.lean` の Leaf 2 docstring に記録。全 asset の Mathlib 実在は確認済 |
+
 ## コード側 SoT (壁の真実源はコードの `@residual`)
 
 | decl | 状態 | notes |
