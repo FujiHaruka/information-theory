@@ -15,9 +15,10 @@
 - [x] Leg C' — 非空虚性 `prolateEigenvalues_zero_pos` ✅ CLOSED（a040a456、監査 PASS 569c48f0）
 - [x] 境界補題 + 退化物語の統合 ✅ CLOSED（a7595371、tightness が compiler-backed）
 - [x] ~~Leg W — WSEB probe~~ ❌ **命題が FALSE と確定（leg 12、`d2938749`/`67e1ff3f`）**。下記「Leg W — 終了」
-- [ ] **Leg 0 — 修正後 def の gateway 検査（真偽が先、実装はその後）** 🚦 **[NEXT、Proposal A を block]**
-- [ ] Leg P — `ContAwgnCode.encoder_power` def-fix（Proposal A = Wyner 全直線エネルギー）📋 **[Leg 0 に gated]**
-- [ ] Leg D' — `contAwgnMaxMessages_bddAbove` を修正後 def の下で壁非依存 closure 📋 **[Leg P に gated]**
+- [x] **Leg 0 — 修正後 def の gateway 検査** ✅ **CLOSED（leg 13）**。verdict: **Proposal A = FAIL（反証）/
+      Proposal C = FAIL（同欠陥を継承）/ Proposal O = PASS** → 台帳 §OBSERVATION-MAP。下記「Leg 0 — 終了」
+- [ ] **Leg P — 観測写像の def-fix（Proposal O = 正規直交テスト関数）** 📋 **[NEXT]**
+- [ ] Leg D' — `contAwgnMaxMessages_bddAbove` を修正後 def の下で **Bessel 単独**で closure 📋 **[Leg P に gated]**
 - [ ] Leg E — tight concentration `prolate_eigenvalue_count`（LPS）📋 **[converse exact 定数、genuine wall 公算大]**
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
 - [ ] 残債 — 散文 de-tag 3 件（下記「残債」節）
@@ -34,8 +35,12 @@
    `contAwgn_ge_shannonHartley` の 3 宣言は **false-as-framed** で、コード側は
    `@audit:defect(false-statement)` + `@residual(defect:false-statement)` +
    `@audit:closed-by-successor(shannon-hartley-phase2-spectral-plan)` = **本 plan 名指し**。
-   根本原因は `ContAwgnCode.encoder_power` が窓 `[0,T]` のエネルギーだけを拘束すること
-   （`cause:signature-drops-constraint`）。**この def-fix を負うのは本 plan**。
+   **この def-fix を負うのは本 plan**。
+   **⚠️ 根本原因は Leg 0 で入れ替わった（leg 13）**: `encoder_power`（入力クラス）**ではなく**
+   `sampledSignal` + `ContAwgnCode.errorProbAt`（**観測写像**）。`encoder_power` の窓限定は
+   `BddAbove` を落とす**第 2 の**欠陥ではあるが、`eq` の falsity はそれを直しても残る。
+   軸ごと違った。証拠と機序 → 台帳 **§OBSERVATION-MAP**（`cause:signature-drops-constraint` の
+   帰属先も `encoder_power` → 観測写像に訂正）。
 2. **壁核 self-build（従来）**: `wall:nyquist-2w-dof`（prolate/LPS の `≈2WT` DOF カウント）。
    **live consumer は 0（DORMANT）だが retire しない** — 修正後 def の下で converse が依然要する。
 
@@ -45,14 +50,15 @@
 ### Approach（解の全体形 — gateway が先、実装は後）
 
 ```
-Leg 0  修正後 def の真偽を敵対的に検査（実装ゼロ）  🚦 make-or-break
-   │      ├ 反証成功 → Proposal C（Landau-Pollak）へ pivot、Proposal A 破棄
-   │      └ 反証失敗（= 生存）→ ↓
+Leg 0  修正後 def の真偽を敵対的に検査（実装ゼロ）  🚦 ✅ CLOSED（leg 13）
+   │      ├ Proposal A（encoder_power → 全直線）      = FAIL  ← sub-Nyquist 漏れ、破棄
+   │      ├ Proposal C（Landau-Pollak、指定退避先）   = FAIL  ← 同欠陥を継承、park 解除せず破棄
+   │      └ Proposal O（点標本 → 正規直交テスト関数） = PASS  → ↓
    ▼
-Leg P  def-fix: encoder_power を全直線エネルギーへ（Wyner）  ripple = 5 direct / 9 transitive、2 file
-   │
+Leg P  def-fix: 観測写像を Karhunen-Loève 展開へ（Proposal O）  ripple は Leg 0 の見積を再測定のこと
+   │      （C1 ✓ 符号語は関数 / C3 ✓ どの def にも 2W なし / C4 ✓ k は自由）
    ▼
-Leg D' BddAbove を **壁非依存**で closure（bandlimited_sup_bound + awgn_converse + log(1+x)≤x）
+Leg D' BddAbove を **Bessel 単独**で closure（Σᵢ⟨f,φᵢ⟩² ≤ ‖f‖² ≤ TP、k 一様、壁非依存）
    │      → contAwgn_ge_shannonHartley（leg 3、le_csSup）も transitive に closure
    ▼
 Leg E  tight ≈2WT DOF カウント（LPS）← **壁はここに残る**（Legs A/B/C/C' の上に建つ）
@@ -60,45 +66,55 @@ Leg E  tight ≈2WT DOF カウント（LPS）← **壁はここに残る**（Leg
        contAwgn_eq_shannonHartley（Phase 4/5-full 組立）
 ```
 
-**Proposal A — 全直線エネルギー予算への def-fix（Wyner モデル）**:
+**Proposal O — 観測写像を Karhunen-Loève 展開へ（Leg 0 PASS 済、Leg P のターゲット）**:
 
 ```lean
--- 現行（false を生む）: 窓のみ
-encoder_power : ∀ m, (∫ t in Set.Icc (0 : ℝ) T, (encoder m t) ^ 2) ≤ T * P
--- Proposal A: 全直線
-encoder_power : ∀ m, (∫ t, (encoder m t) ^ 2) ≤ T * P
+-- 現行（false を生む）: 点標本 + `Δ` 非依存の固定雑音。`√(T/n)` は Δ=1/(2W) でのみ等長
+sampleCount : ℕ ; decoder : (Fin sampleCount → ℝ) → Fin M
+sampledSignal f T n i = √(T/n) * f (i * (T/n))
+-- Proposal O: [0,T] 台の正規直交テスト関数（k は自由のまま = C4）
+testFn : Fin k → (ℝ → ℝ)
+testFn_support    : ∀ i, Function.support (testFn i) ⊆ Set.Icc 0 T
+testFn_orthonormal : ∀ i j, (∫ t, testFn i t * testFn j t) = if i = j then 1 else 0
+-- 観測 yᵢ = ∫ (encoder m)·testFn i + zᵢ,  zᵢ ~ N(0, N₀/2) iid
+-- + encoder_power も全直線へ（Proposal A の変更自体は独立に正しい／それ**だけ**では不十分だった）
 ```
 
-**blast radius（`scripts/dep_consumers.sh` 実測、記憶や `rg` でなく機械値）**:
-`InformationTheory.Shannon.ShannonHartley.ContAwgnCode`（`ShannonHartleyOperational.lean:338`）=
-**direct 5 decl / 2 file、transitive closure 9 decl / 2 file**。
+**なぜこれが定義であって代用でないか（Leg 0 の核心）**: 正規直交族に対し白色雑音係数 `⟨ξ, φᵢ⟩` は
+**厳密に** iid `N(0, N₀/2)` ⟹ `Measure.pi` が厳密（現行 `sampledSignal` は Nyquist 間隔でのみ等長 =
+Nyquist を仮定して Nyquist を証明する代用だった）。教科書の整合フィルタ離散化そのもの。
 
-| file | direct consumers | transitive 追加 |
-|---|---|---|
-| `ShannonHartleyOperational.lean` | `ContAwgnCode.mk.inj` / `.errorProbAt`(:392) / `.averageError`(:406) / `contAwgnMaxMessages`(:414) | `contAwgnRate`(:420) / `contAwgnOperationalCapacity`(:424) / `contAwgn_eq_shannonHartley`(:434) |
-| `ShannonHartleyAchievability.lean` | `contAwgnMaxMessages_bddAbove`(:461) | `contAwgn_ge_shannonHartley`(:488) |
+**blast radius**: ⚠️ 下表は **Proposal A（field 1 本の型変更）で実測した旧値**であり **Proposal O には
+適用できない**（観測写像の差し替えは `errorProbAt` / `averageError` / `contAwgnMaxMessages` の**署名**にも
+及びうる）。**Leg P の最初の仕事は `scripts/dep_consumers.sh` での再実測**。旧値は参考のみ:
+`ContAwgnCode` = direct 5 decl / 2 file、transitive 9 decl / 2 file
+（`ShannonHartleyOperational.lean`: `.mk.inj` / `.errorProbAt` / `.averageError` / `contAwgnMaxMessages`
+→ `contAwgnRate` / `contAwgnOperationalCapacity` / `contAwgn_eq_shannonHartley`。
+`ShannonHartleyAchievability.lean`: `contAwgnMaxMessages_bddAbove` → `contAwgn_ge_shannonHartley`）。
 
-field 型のみの変更ゆえ consumer の**署名は不変**（`errorProbAt`/`averageError`/capacity 3 本は field を読まない）。
-実質 touch が要るのは `ContAwgnCode` を**構成する**側（achievability の code 構成）だけ。
-
-**Leg D' が壁非依存で閉じる機構**（Proposal A の下で `bandlimited_sup_bound` が初めて使える）:
-`bandlimited_sup_bound`（`ShannonHartleyOperational.lean:247`、`@audit:ok`）は
-`|f t| ≤ √(2W)·(eLpNorm f 2 volume).toReal` = **全直線** `‖f‖₂` での点値上界。
-**現行 def ではこれが無力**（`‖f‖₂` が無拘束）だが、Proposal A の下では `‖f‖₂² ≤ T·P` ゆえ:
+**Leg D' が壁非依存で閉じる機構（Proposal O では Bessel 単独 = 旧 sup-境界ルートより単純）**:
+`testFn` が正規直交ゆえ Bessel の不等式が直接効く。
 
 ```
-E_s(f,n) = (T/n)·∑_{i<n} f(iT/n)²  ≤  T·‖f‖_∞²  ≤  T·(2W·T·P) = 2WT·(T·P)     — n について一様
-awgn_converse + log(1+x) ≤ x       ⟹  log M ≤ E_s/N₀ ≤ 2WT²P/N₀              — 有限 ⟹ BddAbove
+∑ᵢ ⟨f, φᵢ⟩²  ≤  ‖f‖₂²  ≤  T·P                        — Bessel、k について一様、2W を経由しない
+awgn_converse + log(1+x) ≤ x  ⟹  log M ≤ TP/N₀       — 有限 ⟹ BddAbove
 ```
 
-**この上界は crude（rate は `2WTP/N₀` で T→∞ に発散）**。ゆえに **BddAbove は閉じるが
-`contAwgn_eq_shannonHartley` は閉じない** — exact 定数には依然 `≈2WT` DOF カウント（Leg E）が要る。
-**この非対称性が下記「禁止の撤回」の判別子そのもの**。概算 **~150–250 行の壁非依存 plumbing**。
+**この上界は crude だが、Proposal A の crude 上界 `2WT²P/N₀` より真に強い**（rate `≤ P/N₀` = 広帯域極限で
+**T→∞ でも有界**）。それでも `contAwgn_eq_shannonHartley` は閉じない — `ln(1+x) ≤ x` ゆえ
+`P/N₀ ≥ W·ln(1+P/(W·N₀))` = SH で、**等号でない**。exact 定数には依然 `≈2WT` DOF カウント（Leg E）が要る。
+**この非対称性が下記「禁止の撤回」の判別子そのもの**（偽装なら壁が消える → 消えない）。
+**循環警報は鳴らない**（handoff の機械検査可能な予測: crude 経路が rate まで SH に閉じたら循環。閉じない ✓）。
 
-**Proposal C（park、削除しない）— Landau-Pollak モデル**: 時間制限 + 帯域集中（`f` を `[0,T]` に時間制限し
-帯域 `[-W,W]` への集中度を field 化）。LPS により忠実だが ripple が桁違いに大きい（`IsBandlimited` の
-使われ方を書き換える）。**Leg 0 が Proposal A を反証したときの撤退先**。
-
+**⚠️ 破棄された案（復活させないこと、根拠 → 台帳 §OBSERVATION-MAP）**:
+- ~~**Proposal A 単独**（`encoder_power` → 全直線のみ）~~ = **FAIL**。sub-Nyquist で SH を超過。
+  ただし `encoder_power` → 全直線という**変更自体は Proposal O の一部として維持**（A は誤りでなく不十分）。
+- ~~**Proposal C（Landau-Pollak = 時間制限 + 帯域集中）**~~ = **FAIL**。旧 plan の指定退避先だったが
+  **同じ観測写像欠陥を継承**（反例の補間子はエネルギーの 99.76% が窓内 ⟹ 時間制限で死なない）。park 解除せず破棄。
+- ~~**per-sample 雑音分散を `(N₀/2)·2W·Δ` にスケール**~~ = **FAIL**。sub-Nyquist は塞ぐが oversampling で
+  非有界に漏れる（`ν → 0` かつ信号部分空間は `≈2WT` 次元固定 ⟹ 部分空間内の総雑音 `2WT·ν → 0`）。
+- ~~**`sampleCount ≥ ⌈2WT⌉` を field で要求**~~ = **数学的には動くが tier-5 で禁止**。DOF カウントを def に
+  密輸 = C4 の存在理由そのもの。**honesty で reject（math で reject ではない）**。
 ---
 
 ## 禁止の撤回 — 「`ContAwgnCode` に全直線エネルギー field 追加は禁止」は **REVOKED**
@@ -124,12 +140,13 @@ FALSE 枝に対して更新されないまま残った。**撤回は禁止の破
 
 **偽装なら壁は消える。この修正では消えない。**
 
-| | 壁偽装（tier-5） | Proposal A（正しい def-fix） |
+| | 壁偽装（tier-5） | Proposal O（正しい def-fix） |
 |---|---|---|
 | WSEB=TRUE 下で field 追加 | 実在する prolate 定理を仮定に降格 ⟹ **壁が消える** | — |
-| Proposal A 適用後 | — | `BddAbove` は**壁非依存**で閉じるが、`contAwgn_eq_shannonHartley` は **依然 `≈2WT` DOF カウント（Leg E）を要する** ⟹ **壁は在るべき場所に残る** |
+| `k ≥ ⌈2WT⌉` を field で要求 | DOF カウントを def に密輸 ⟹ **壁が消える**（Leg 0 で名指し reject） | — |
+| Proposal O 適用後 | — | `BddAbove` は **Bessel 単独・壁非依存**で閉じるが、`contAwgn_eq_shannonHartley` は **依然 `≈2WT` DOF カウント（Leg E）を要する** ⟹ **壁は在るべき場所に残る** |
 
-⟹ **`wall:nyquist-2w-dof` は Proposal A の後も retire されない**（DORMANT のまま Leg E で consumer が復活）。
+⟹ **`wall:nyquist-2w-dof` は Proposal O の後も retire されない**（DORMANT のまま Leg E で consumer が復活）。
 壁が消えないことが、この field 追加が偽装でない**機械的に確認可能な**証拠。
 **受入検査**: Leg P/D' 着地後に `contAwgn_eq_shannonHartley` が壁を要さず閉じたら、それは修正でなく偽装
 （= 循環の tell）。その時は Leg 0 に差し戻す。
@@ -156,93 +173,79 @@ theorem synthSignal_window_energy_le … :                                      
 
 ---
 
-## Leg 0 — 修正後 def の gateway 検査 🚦 **[NEXT、実装を block、make-or-break]**
+## Leg 0 — 修正後 def の gateway 検査 🚦 ✅ **CLOSED（leg 13）— verdict: Proposal A/C = FAIL、Proposal O = PASS**
 
-**目的**: **Proposal A の下で `contAwgn_eq_shannonHartley` が TRUE になることを、実装が 1 行も着地する前に
-敵対的に検査する**。proof-log: yes。**実装ゼロ**（解析 + probe のみ）。
+**目的だった**: 実装が 1 行も着地する前に、修正後 def の下で `contAwgn_eq_shannonHartley` が TRUE かを
+敵対的に検査する。**gateway は仕事をした** — Proposal A は実装ゼロで反証された。
 
-**なぜ最優先か（leg 9 の失敗の再演を防ぐ）**: leg 9 は WSEB について
-**implementer probe / orchestrator 解析 / 既存 docstring の三者に「どれくらい難しいか」を問い、三者が一致した。
-誰も「そもそも真か」を問わなかった**（`shannon-hartley-facts.md` §NUMERIC-TRUE-ARTIFACT）。
-その一致の上に 3 leg・~2000 行が積まれた。**修正後 def が TRUE である保証は現時点で誰も検査していない**。
-⟹ **Leg 0 を通すまで Leg P/D' に着手しない**。
+**証拠・機序・数値・教訓は台帳が SoT** → `shannon-hartley-facts.md` **§OBSERVATION-MAP**。
+再検証: `python3 docs/shannon/leg0-gateway-probe.py`。ここに再キャッシュしない。
 
-### 名指しの攻撃（全て実施必須、各 1 行で結果を記録）
+### verdict（3 行）
 
-1. **オーバーサンプリング漏れ**: `sampleCount : ℕ` は code が自由に選ぶ field（C4）で、各標本に iid
-   `N(0, N₀/2)` が乗る。`n → ∞` で無限容量が漏れないか？
-   - **verbatim 確認済**: `sampledSignal f T n i = √(T/n) · f(i·(T/n))`
-     （`ShannonHartleyOperational.lean:396-397`）= `√(T/n)` 正規化は**実在する**。
-   - **⚠️ orchestrator の読み（「`√(T/n)` で総標本エネルギーが有界に留まり、雑音は固定 `≈2WT` 次元の
-     信号部分空間に射影されるので漏れない」）は仮説であって確立した事実ではない — 攻撃対象**。
-     r8 で TRUE⟷FALSE に振れたのは正にこの型の armchair 解析。機械的裏取りか反証を要する。
-   - **本 plan が検出した齟齬（要注意）**: その読みの後半「雑音は固定 `≈2WT` 次元部分空間に射影される」は
-     **DOF カウント = 壁そのもの**を前提している。もし BddAbove がそれを要するなら BddAbove は壁 gated に戻る。
-     **しかし Leg D' の実際の route はそれを要さない** — `bandlimited_sup_bound`（点値 sup）+ Riemann 正規化だけで
-     `E_s ≤ 2WT·(T·P)` が n 一様に出る（上記 Approach）。⟹ **正当化理由を「部分空間次元」でなく
-     「sup 境界 + `√(T/n)` 正規化」に置き換えて検査すること**（前者を使うと壁を誤輸入する）。
-2. **時間制限されていない**: codeword は `ℝ` 全体にエネルギーを広げられ、標本は `[0,T]` でしか取らない。
-   窓エネルギー ≤ 全直線エネルギー ≤ `T·P` の下で、これが Shannon-Hartley を**超え**うるか（converse 漏れ）？
-   - 検査軸: `[0,T]` 外に置いたエネルギーは観測されない = 捨てるだけ、が本当か。
-     達成可能標本ベクトル集合 `{sampledSignal f | f band-limited, ‖f‖₂² ≤ TP}` ⊂ ℝⁿ の形状が問題で、
-     これは正に prolate 作用素の Gram 構造 = Leg E の対象。**BddAbove（crude）には不要だが
-     `eq`（exact）には要る**ことを確認する。
-3. **退化境界（構造的に異なる 2 つ以上）**: `P = 0` / `T → 0` / `W → 0` / `M = 0` / `M = 1`。
-   - `contAwgnMaxMessages = sSup {…}`（`:424`）は ℕ-`sSup` ゆえ unbounded で junk `0`、
-     `contAwgnRate = limsup_T (log M(T,ε))/T`（`:428`）は `Real.log 0 = 0` を経由。
-     `contAwgnOperationalCapacity = ⨅ ε ∈ Ioo 0 1, contAwgnRate`（`:436`）。
-     **退化値は「直感で `-∞`」でなく verbatim 確認すること**（CLAUDE.md 数値/型の逐語確認）。
-   - **class であって instance でない**（CLAUDE.md 過小評価ガード）: 反例を 1 つ殺す fix で満足せず、
-     **全 field を満たす最も一般の対象を特徴づけて再 test する**。
-4. **textbook-object strength diff（build 前に必須）**: 修正後 `ContAwgnCode` を標準モデルと diff する。
-   - **Wyner**: `PW_W` + 全直線エネルギー `≤ TP`。
-   - **Landau-Pollak**: 時間制限 + 帯域集中。
-   - **現行 def はどちらでもない**。**Proposal A が実際にどちらに着地するかを記録**し、そのモデルの
-     標準命題が `contAwgn_eq_shannonHartley` と**逐語一致**するかを確認する（一致しないなら statement 側を直す）。
-   - 最安シグナル = **最寄り in-project 資産の名前**（`Strong…`/`Robust…` 等の strength 修飾子の有無）。
+- **Proposal A（`encoder_power` → 全直線エネルギー）= FAIL**。`sampleCount` が自由（C4）ゆえ code は
+  **Nyquist より粗く**標本でき、`sampledSignal` の `√(T/n)` は `Δ = 1/(2W)` でのみ等長 ⟹
+  `s := P/(W·N₀) < 2` の全てで SH を超過（s→0 で比は非有界）。**厳密証明は整数事実に落ちる**（`5 > 4`）。
+  独立 `proof-pivot-advisor` が周波数領域から再導出して確認 + 私の代替案（雑音分散スケール）を逆向きに反証。
+- **Proposal C（Landau-Pollak）= FAIL**。plan が指定した退避先だったが**同じ欠陥を継承**する
+  （反例の補間子はエネルギーの 99.76% が窓内 ⟹ 時間制限で死なない）。**park 解除せず破棄**。
+- **Proposal O（点標本 → `[0,T]` 台の正規直交テスト関数）= PASS**。4 攻撃 + 収束テスト + 敵対的 φ 探索
+  200 試行を生存。**Leg P の新ターゲット**。
 
-### 受入基準 / retreat line
+### なぜ 4 攻撃が漏れを捕まえられなかったか（次の gateway 設計への入力）
 
-- **PASS（生存）**: 4 攻撃すべてが反証に失敗 + strength diff で Wyner 標準命題と逐語一致 → **Leg P へ GO**。
-- **FAIL（反証成功）**: Proposal A 破棄 → **Proposal C（Landau-Pollak）へ pivot**。3 宣言は
-  `@residual(defect:false-statement)` のまま維持（sorry は充填不能、audit-tags.md「`defect` の (b) 用法」）、
-  `@audit:closed-by-successor` の slug を後継 plan に張り替える。
-- **UNKNOWN のまま 3 turn 停滞**: Leg 0 の verdict を出さずに Leg P へ進むことは**禁止**（leg 9 の再演）。
-  park して user-decision に上げる。
-- **proof-log: yes**（TRUE/FALSE いずれの verdict も、判定根拠を判定時に固定する。壁判定の必須メタデータ →
-  `docs/audit/audit-tags.md`）。
+**名指しの 4 攻撃はすべて*入力クラス*軸だった**（`encoder_power` を何に替えるか）。実際の欠陥は
+**観測写像**軸（`sampledSignal` + `errorProbAt`）にあった。攻撃 1 は oversampling（`n → ∞`）だけを名指し、
+**実際の漏れは真逆の向き**（under-sampling）— しかも oversampling は実際には漏れないことが確認された。
+攻撃 1 が疑えと命じた「`√(T/n)` tight-frame ⟹ 実効ランク ≈2WT」という未検証仮説は、**疑うべき方向が
+逆だった**（仮説は over 側では正しく、under 側で崩れる）。
 
+**転用可能な tell（次の def にも適用せよ）**: **モデルがちょうど 1 つのパラメータ値でのみ較正されており、
+その値が定理の証明すべき当の量であるとき、そのモデルは定義でなく代用である。** `sampledSignal` は
+Nyquist 間隔でのみ等長 = Nyquist を仮定して Nyquist を証明する構図だった。
+
+**gateway の無限後退を止める打ち切り**: 「新 def は代用か定義か」を問う 1 段のみ。Proposal O は
+`Measure.pi`（独立雑音）を**厳密**にする（正規直交 ⟹ 白色雑音係数が厳密に iid）ので、この軸で止まる。
 ---
 
-## Leg P — `ContAwgnCode.encoder_power` def-fix 📋 **[Leg 0 に gated]**
+## Leg P — 観測写像の def-fix（Proposal O = 正規直交テスト関数）📋 **[NEXT]**
 
-**目的**: Proposal A を適用し 3 宣言を false-as-framed から救出する。proof-log: yes。概算 **~80–150 行**（大半は
-achievability 側の code 構成の書換）。
+**目的**: Proposal O を適用し 3 宣言を false-as-framed から救出する。proof-log: yes。
+**⚠️ 概算行数は意図的に置かない** — 旧 Leg P の「~80–150 行」は Proposal A（field 1 本の型変更）の
+見積であり、Proposal O は**観測写像の差し替え**で ripple の桁が違う。**Leg P の最初の仕事は
+`scripts/dep_consumers.sh` による ripple の実測**（見積を先に書くと leg 9 型の「合意された数字」になる）。
 
-**変更**: `encoder_power : ∀ m, (∫ t in Set.Icc (0:ℝ) T, (encoder m t)^2) ≤ T * P`
-→ `encoder_power : ∀ m, (∫ t, (encoder m t)^2) ≤ T * P`（`ShannonHartleyOperational.lean:381` 近傍）。
+**変更（`ShannonHartleyOperational.lean`）**: `sampleCount` / `decoder` / `decoder_meas` と
+`sampledSignal` / `ContAwgnCode.errorProbAt` を、Karhunen-Loève 展開へ差し替える:
 
-**ripple（実測、上記 Approach の表）**: direct 5 / transitive 9 / 2 file。consumer の署名は不変。
-実質 touch = `ContAwgnCode` を構成する achievability 側 + docstring 群。
+- `ContAwgnCode` に `testFn : Fin k → (ℝ → ℝ)` + `testFn_support : ∀ i, Function.support (testFn i) ⊆ Set.Icc 0 T`
+  + `testFn_orthonormal : ∀ i j, (∫ t, testFn i t * testFn j t) = if i = j then 1 else 0`（+ `MemLp` 等の regularity）。
+  `k`（= 旧 `sampleCount`）は**自由 `ℕ` のまま**（C4 ✓）。
+- 観測 `yᵢ = ∫ (encoder m)·testFn i + zᵢ`、`zᵢ ~ N(0, N₀/2)` iid。`errorProbAt` は `Measure.pi` の**まま**
+  — 正規直交ゆえ白色雑音係数が**厳密に** iid（現行 def と違い代用でない）。
+- `encoder_power` も**全直線へ直す**（Proposal A の変更自体は独立に正しい — Leg 0 は「A **だけ**では
+  不十分」を示したのであって「A が誤り」を示したのではない。§OBSERVATION-MAP の 3 行目：A は
+  `BddAbove` を TRUE にする）。窓限定のままだと `∫ f·φᵢ` が窓外エネルギーに拘束されず漏れが残る。
 
 **同時に行う（def-fix の一部）**:
-- `ContAwgnCode` docstring（`:346-365`）の defect 記述 + `@audit:defect(degenerate)` +
-  `@audit:closed-by-successor(...)` を除去 / 更新。
-- 3 宣言の `sorry -- @residual(defect:false-statement)` を、**Leg D'/E の実状に応じた tag へ**:
+- `ContAwgnCode` docstring の defect 記述 + `@audit:defect(degenerate)` + `@audit:closed-by-successor(...)` を更新。
+  **⚠️ 現 docstring は `encoder_power` を "the root cause" と名指すが Leg 0 でそれは誤りと判明** —
+  修正後に残すと「修理済フィールドを欠陥と呼ぶ」誤誘導になる。**同一 commit で書き換える**。
+- 3 宣言の `sorry -- @residual(defect:false-statement)` を実状に応じた tag へ:
   `contAwgnMaxMessages_bddAbove` → Leg D' で genuine（tag 消滅）/ `contAwgn_ge_shannonHartley` → 同上 /
   `contAwgn_eq_shannonHartley` → `@residual(wall:nyquist-2w-dof)` へ**復帰**（= 壁 consumer が 1 本戻る）。
-- `Operational.lean:444-463`（`contAwgn_eq_shannonHartley` の false 説明）+ `:346-365` の
-  「Only a def-fix restores them」記述を実施後の状態へ更新。
 
 **再利用資産**: `synthSignal_energy`（`ShannonHartleyAchievability.lean:398`、全直線**等号**、`@audit:ok`）が
-修正後 field を**そのまま**満たす。`synthSignal_window_energy_le`（`:451`、consumer 0）は削除候補。
+修正後 `encoder_power` を**そのまま**満たす。`synthSignal_window_energy_le`（consumer 0）は削除候補。
 
-**循環チェック**: 全直線エネルギー field は **codeword の物理的電力予算**（regularity/model 制約）であって
-DOF カウント `2W`/`⌊2WT⌋` の埋め込みではない（C1–C3 維持）。`encoder : Fin M → (ℝ → ℝ)` は関数のまま（C1 ✓）。
-`sampleCount` は自由 field のまま（C4 ✓）。**受入検査 = 上記「判別子」**（壁が消えたら偽装）。
+**循環チェック（Leg 0 で機械接地済）**: C1 ✓（`encoder` は関数のまま）/ **C3 ✓ どの def にも `2W`/`⌊2WT⌋` が
+現れない**（`testFn` は正規直交としか言わない）/ C4 ✓（`k` 自由）。**`2WT` カウントは prolate 固有値分布
+からのみ出現** ⟹ 壁は Leg E に残る = **偽装でない**（判別子: 偽装なら壁が消える）。
+**⚠️ 反対に `k ≥ ⌈2WT⌉` を field で課すのは tier-5 禁止**（DOF カウントを def に密輸 = C4 の存在理由そのもの。
+数学的には動くが honesty で不可 — Leg 0 の独立チェッカーも同判定）。
 
-**retreat line**: def-fix 自体が Mathlib 不足で詰まることは想定しない（field 型の変更）。achievability 側の
-再構成が 3 turn 停滞 → `sorry + @residual(plan:shannon-hartley-phase2-spectral-plan)` で type-check done を保つ。
+**retreat line**: `testFn_orthonormal` を課した状態で achievability 側の code 構成が 3 turn 停滞 →
+`sorry + @residual(plan:shannon-hartley-phase2-spectral-plan)` で type-check done を保つ。
 **禁止**: 3 宣言のどれかを `*Hypothesis` predicate に束ねて救出すること（tier-5）。
 
 ---
@@ -261,20 +264,23 @@ theorem contAwgnMaxMessages_bddAbove (T W N₀ P ε : ℝ)
 ```
 
 **構成**:
-- **点値 sup 境界**: `bandlimited_sup_bound`（`:247`、`@audit:ok`）で `|f t| ≤ √(2W)·‖f‖₂`、
-  Proposal A の `‖f‖₂² ≤ T·P` と合わせ `‖f‖_∞² ≤ 2W·T·P`。**ここが def-fix で初めて有効になる一点**。
-- **標本エネルギーの n 一様上界**: `E_s(f,n) = (T/n)∑_{i<n} f(iT/n)² ≤ T·‖f‖_∞² ≤ 2WT·(T·P)`。
-  固有値・作用素論を経由しない。
-- **`ContAwgnCode → AwgnCode` 配線**: per-sample power `P' = E_s/n` で `AwgnCode M n P'` を構成
+- **Bessel の不等式**（Proposal O の `testFn_orthonormal` から直接）: `∑ᵢ ⟨f, φᵢ⟩² ≤ ‖f‖₂² ≤ T·P`、
+  **k について一様、`2W` を経由しない**。⚠️ 旧計画の点値 sup 境界ルート（`bandlimited_sup_bound` +
+  `‖f‖_∞² ≤ 2W·T·P` ⟹ `E_s ≤ 2WT²P`）は **Proposal O では不要**（Bessel の方が単純かつ真に強い）。
+  `bandlimited_sup_bound` は Leg D' からは落ちる — Leg E での再利用候補として残す。
+- **`ContAwgnCode → AwgnCode` 配線**: per-observation power `P' = (∑ᵢ⟨f,φᵢ⟩²)/k` で `AwgnCode M k P'` を構成
   （`power_constraint` は構成から成立）。
-- **`errorProbAt` 等式**: `ContAwgnCode.errorProbAt`（`:407`、`Measure.pi` の per-sample AWGN）=
-  `AwgnCode` 側の離散 `errorProbAt`（`sampledSignal = cᵢ` で一致、親 Phase 3 で verbatim 確認済）。
-- **`awgn_converse` + `log(1+x) ≤ x`**: `log M ≤ E_s/N₀ + Fano ≤ 2WT²P/N₀ + Fano`（n 一様）。
+- **`errorProbAt` 等式**: `ContAwgnCode.errorProbAt`（`Measure.pi` の per-observation AWGN）=
+  `AwgnCode` 側の離散 `errorProbAt`。**⚠️ Proposal O で観測が `⟨f, φᵢ⟩` に変わるので、親 Phase 3 の
+  verbatim 確認（`sampledSignal = cᵢ`）は無効 — Leg P 後に取り直すこと**。
+- **`awgn_converse` + `log(1+x) ≤ x`**: `log M ≤ (∑ᵢ⟨f,φᵢ⟩²)/N₀ + Fano ≤ TP/N₀ + Fano`（k 一様）。
 - **Fano 再配置**（`ε<1` 使用）+ edge case（`n=0` / `M<2`）+ **ℕ-sSup 罠**（unbounded `sSup` は junk `0`）。
 
-**再利用資産**: `awgn_converse`（`AWGN/Converse.lean:607`、genuine）+ `bandlimited_sup_bound`（`:247`）。
+**再利用資産**: `awgn_converse`（`AWGN/Converse.lean:607`、genuine）+ Mathlib の Bessel 不等式
+（`inner_mul_le_norm_mul_norm` 族 / `Orthonormal.sum_inner_products_le` — **Leg D' 着手時に loogle で
+verbatim 確認すること**、ここに署名をキャッシュしない）。
 **Legs A/B/C/C'（作用素論）は参照しない** — reduction はスカラー。
-**feasibility**: **self-buildable・壁非依存**（Leg 0 PASS 条件付き）。
+**feasibility**: **self-buildable・壁非依存**（Leg 0 PASS 済 = 条件付きでなくなった）。
 **consumer wiring**: `contAwgn_ge_shannonHartley`（`ShannonHartleyAchievability.lean:488`）が `le_csSup` で消費
 ⟹ Leg D' genuine 化で **leg 3 も transitive に closure**。
 
