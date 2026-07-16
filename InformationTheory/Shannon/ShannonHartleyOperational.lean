@@ -17,46 +17,33 @@ the continuous-time band-limited AWGN channel and states the Shannon-Hartley ide
 
     `contAwgnOperationalCapacity W N₀ P = W · log(1 + P / (N₀ · W))`
 
-as `contAwgn_eq_shannonHartley`. That theorem is currently false as framed and is published with
-a `sorry` body carrying `@audit:defect(false-statement)`; the intended mathematical content (the
-prolate-spheroidal / Landau-Pollak-Slepian time-bandwidth degrees-of-freedom count) is a genuine
-Mathlib gap, but it is not what blocks the statement today. The definition is non-circular but not
-faithful: the observation map is a surrogate for the physical channel rather than a model of it,
-and that is the decisive defect.
+as `contAwgn_eq_shannonHartley`. That theorem is published with a `sorry` body tagged to the
+`nyquist-2w-dof` wall: what blocks it is the prolate-spheroidal / Landau-Pollak-Slepian
+time-bandwidth degrees-of-freedom count, a genuine Mathlib gap.
 
 `IsBandlimited` uses the *L²-Fourier spectral support* of the complexification (a genuine
-band-limit constraint, not junk-`0`), and `ContAwgnCode.encoder` carries `encoder_continuous` +
-`encoder_memLp` regularity fields that pin each codeword to its canonical continuous `L²`
-representative. The Paley-Wiener sup bound `bandlimited_sup_bound` (`|f(t)| ≤ √(2W)·‖f‖₂`) is
-fully proven (`sorryAx`-free) over the `L²↔L¹` Fourier-agreement bridges
-`l2Fourier_eq_fourierIntegral` / `l2FourierInv_eq_fourierIntegralInv`; it caps the pointwise
-samples by the *full-line* `L²` energy `‖f‖₂` (the norm over all of `ℝ`).
+band-limit constraint, not junk-`0`). The Paley-Wiener sup bound `bandlimited_sup_bound`
+(`|f(t)| ≤ √(2W)·‖f‖₂`) is fully proven (`sorryAx`-free) over the `L²↔L¹` Fourier-agreement
+bridges `l2Fourier_eq_fourierIntegral` / `l2FourierInv_eq_fourierIntegralInv`; it caps pointwise
+values by the *full-line* `L²` energy `‖f‖₂`.
 
-There is, however, no tie from `‖f‖₂` to the *window* energy `∫_{[0,T]} f² ≤ T·P`: `ContAwgnCode`
-has no essential-time-limitation field, and attributing such a tie to the degrees-of-freedom count
-was an error. The window-energy-to-point-value ratio of a band-limited signal is in fact
-unbounded, which refutes `contAwgnMaxMessages_bddAbove` and, through the ℕ-`sSup` junk value,
-`contAwgn_eq_shannonHartley` as well.
-
-Restoring that tie is not sufficient, and the two theorems part company here. Constraining the
-full-line energy repairs `contAwgnMaxMessages_bddAbove`, but the identity stays false, because a
-second defect sits in the observation map rather than in the input class: `sampledSignal` is an
-isometry only at the Nyquist spacing and `ContAwgnCode.errorProbAt` prices the noise as if the
-spacing were always Nyquist, while `sampleCount` is free to be coarser. Time-limiting the codewords
-does not repair it either. Details, refutation and counterexample are recorded on those
-declarations and on `ContAwgnCode`; the def-fix — an orthonormal-test-function observation map,
-with the full-line power constraint as one component — is pending under
-`shannon-hartley-phase2-spectral-plan`.
+`ContAwgnCode` models the receiver as a bank of `k` matched filters: `k` orthonormal test
+functions supported in `[0, T]`, against which the codeword is correlated
+(`ContAwgnCode.observation`) before independent Gaussian noise is added
+(`ContAwgnCode.errorProbAt`). This is the Karhunen-Loève discretization, and orthonormality is
+what makes the independent per-observation noise law exact. An earlier version of this file read
+the codeword pointwise on a grid, which is an isometry only at the Nyquist spacing and hence
+assumed what the theorem must prove; the refutation and the def-fix are recorded in
+`docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP.
 
 ## Main definitions
 
 * `IsBandlimited f W` — the L²-Fourier transform of the complexification of `f : ℝ → ℝ` has
   spectral support in `[-W, W]` (vanishes a.e. on `{ξ | W < |ξ|}`).
-* `ContAwgnCode T W P M` — a continuous-time AWGN code: `M` band-limited signals
-  (average power `≤ P` over the window `[0, T]`) together with a decoder acting on a *free*
-  number `sampleCount` of observations. The window-only power constraint makes this class too
-  broad, and the point-sampling observation map is unfaithful on top of that; see the defect note
-  on the structure.
+* `ContAwgnCode T W P M` — a continuous-time AWGN code: `M` band-limited signals of whole-line
+  energy `≤ T·P`, observed through a *free* number `k` of orthonormal test functions supported in
+  `[0, T]`, together with a decoder acting on the observation vector.
+* `ContAwgnCode.observation` — the noiseless correlation `∫ (encoder m)·(testFn i)`.
 * `contAwgnOperationalCapacity W N₀ P` — the per-second operational rate
   `⨅ ε, limsup_T (log M(T, ε)) / T`.
 
@@ -68,34 +55,27 @@ with the full-line power constraint as one component — is pending under
 ## Implementation notes — the three honesty risks and how the definition fares
 
 The definition aims to make `contAwgn_eq_shannonHartley` *true*, *non-circular*, and
-*non-degenerate*. Non-circularity and non-degeneracy hold as described below; truth does not,
-which is exactly why the statement carries a defect marker rather than a wall tag.
+*non-degenerate*.
 
-* **Truth (not attained).** Observations are the `√(T/n)`-normalized samples `sampledSignal`,
-  each corrupted by independent Gaussian noise of variance `N₀/2` — the standard Nyquist
-  per-sample noise. At the Nyquist rate, and for signals whose energy really lives in `[0, T]`,
-  the discrete energy `∑ᵢ (T/n)·f(t_i)²` tracks `∫_{[0,T]} f² ≤ T·P`, giving per-dimension SNR
-  `(T·P/(2WT)) / (N₀/2) = P/(N₀·W)` and per-second rate `W·log(1 + P/(N₀·W))`, matching
-  `bandlimitedAwgnCapacity`. That correspondence is a Riemann-sum heuristic, not an identity: at
-  fixed `n` the discrete energy is *not* pinned by `∫_{[0,T]} f²`. For `n = 1` it is `T·f(0)²`,
-  which the window constraint leaves unbounded. Truth therefore fails as framed, and it fails for
-  a second reason that no constraint on the codewords can remove: the whole per-dimension SNR
-  computation above is valid only at the Nyquist spacing, which the code is free not to use (see
-  the defect notes on `ContAwgnCode`, `sampledSignal` and `ContAwgnCode.errorProbAt`).
+* **Truth.** Observations are the correlations `⟨encoder m, testFn i⟩` against an orthonormal
+  family supported in `[0, T]`, each corrupted by independent noise of variance `N₀/2`. Against an
+  orthonormal family, white-noise coefficients are exactly i.i.d., so no spacing or rate condition
+  is smuggled into the noise law. For band-limited `f`, `⟨f, φᵢ⟩ = ⟨f, P_W φᵢ⟩`, so the signal
+  energy the receiver can see is controlled by the compression of the time-band-limiting operator
+  onto `span{φᵢ}`; Bessel caps it by `‖f‖₂² ≤ T·P` uniformly in `k`, and Cauchy interlacing caps
+  the per-dimension gains by the prolate eigenvalues. Rate `W·log(1 + P/(N₀·W))` is reached in the
+  `T → ∞` limit exactly when `≈ 2WT` of those eigenvalues are near `1`.
 * **Non-circularity (C1–C4).** A codeword is a genuine band-limited *function* `ℝ → ℝ`
   (C1), never a length-`⌊2WT⌋` sample vector; `contAwgnMaxMessages` contains no `2W` or
-  `⌊2WT⌋` (C2); the observation count `sampleCount` is a *free* `ℕ` field, not pinned to
-  `⌊2WT⌋` (C4); the factor `2W` is not in any definition and must emerge from the DOF proof
-  (C3). Consequently `contAwgn_eq_shannonHartley` cannot be closed by `rfl`/`unfold`.
-* **Non-degeneracy (partial).** The noise genuinely corrupts the signal (variance `N₀/2 > 0`
-  whenever `N₀ > 0`), and the `√(T/n)` normalization does stop *oversampling* from inflating the
-  signal-to-noise ratio. That is the wrong direction to guard, however, and the normalization
-  guards only it: the scaling is an isometry solely at the Nyquist spacing, so *under*-sampling
-  inflates the signal-to-noise ratio instead, by a factor the free `sampleCount` may choose. Nor
-  does the normalization bound the capacity: even at `n = 1` the single in-window sample
-  `√T·f(0)` is unconstrained, because an integral bound on `∫_{[0,T]} f²` does not control a point
-  value. For band-limited `f` the pointwise bound available is `|f(t)| ≤ √(2W)·‖f‖₂` through the
-  *full-line* norm, which `encoder_power` leaves free.
+  `⌊2WT⌋` (C2); the observation count `k` is a *free* `ℕ` field, not pinned to `⌊2WT⌋` (C4); the
+  factor `2W` is not in any definition and must emerge from the DOF proof (C3) — `testFn` is asked
+  only for orthonormality and `[0, T]` support. Consequently `contAwgn_eq_shannonHartley` cannot
+  be closed by `rfl`/`unfold`.
+* **Non-degeneracy.** The noise genuinely corrupts the signal (variance `N₀/2 > 0` whenever
+  `N₀ > 0`). Neither oversampling nor undersampling inflates the signal-to-noise ratio: raising
+  `k` adds observations but Bessel holds `∑ᵢ ⟨f, φᵢ⟩² ≤ ‖f‖₂²` uniformly, so extra observations
+  split the same energy budget rather than duplicating it, and the whole-line `encoder_power`
+  leaves no energy outside the window for the reproducing kernel to reflect back in.
 
 ## References
 
@@ -353,115 +333,86 @@ theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
 `P`, and `M` messages.
 
 The encoder maps each message to a genuine band-limited *function* `ℝ → ℝ` (never a fixed
-sample vector — this is the non-circularity constraint C1), with average power `≤ P` over
-`[0, T]`. The decoder acts on a *free* number `sampleCount` of observations (constraint C4: the
-observation count is not pinned to `⌊2WT⌋`).
+sample vector — this is the non-circularity constraint C1), whose whole-line energy is at most
+`T · P`. The receiver does not read the codeword pointwise; it correlates it against `k`
+**orthonormal test functions supported in `[0, T]`**, observing the vector
+`i ↦ ∫ (encoder m)·(testFn i)` corrupted by independent Gaussian noise
+(`ContAwgnCode.observation`, `ContAwgnCode.errorProbAt`). This is the textbook Karhunen-Loève /
+matched-filter discretization of the channel: against an orthonormal family the coefficients of
+white noise are *exactly* i.i.d. `N(0, N₀/2)`, which is what makes the product law `Measure.pi`
+in `errorProbAt` an exact description of the physical channel rather than a surrogate for one.
+It replaces a point-sampling observation map that was an isometry only at the Nyquist spacing —
+i.e. calibrated at exactly the value the Shannon-Hartley identity has to prove; the refutation is
+recorded in `docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP.
 
-This model carries two independent defects, and the theorems quantifying over it are false as a
-result.
-
-The first is in the input class. `encoder_power` constrains only the energy inside the window
-`[0, T]`, and no field imposes essential time-limitation or a full-line energy budget. A
-band-limited signal may therefore hold arbitrary energy outside `[0, T]` and, through the sinc
-reproducing-kernel tail, exhibit an arbitrarily large in-window point value at fixed window
-energy — the classical superdirectivity / superoscillation paradox. This is what refutes
-`contAwgnMaxMessages_bddAbove`, and constraining the whole-line energy `‖encoder m‖₂` does repair
-that theorem.
-
-The second is in the observation map (`sampledSignal` and `ContAwgnCode.errorProbAt`), and it
-survives the first repair, so it is what refutes `contAwgn_eq_shannonHartley`. Because
-`sampleCount` is free, a code may sample *below* the Nyquist rate; the `√(T/n)` scaling is an
-isometry only at the Nyquist spacing, while the per-sample noise variance is held fixed
-independently of the spacing. Sub-Nyquist sampling therefore inflates the signal-to-noise ratio,
-and a whole-line energy budget does not prevent it. Time-limiting the codewords does not prevent
-it either: the counterexample's signal already concentrates essentially all of its energy inside
-the window. The repair is to discretize the observation against an orthonormal family supported
-in `[0, T]` (the Karhunen-Loève / matched-filter construction), which makes the independent
-per-sample noise law exact rather than a surrogate; a whole-line power constraint is one
-component of it. It is deliberately not applied here, since it changes the theory's statements.
-
-The defect is not that this structure is false — it is inhabited and internally consistent — but
-that it under-constrains the object it models. That is the `cause:signature-drops-constraint`
-axis, understood to run through the observation map as well as through `encoder_power`: the
-dropped constraint is not only the codeword energy but the fidelity of the sampling model to the
-channel it stands for. `degenerate` is the closest available defect kind (the kind dichotomy in
-`docs/audit/audit-tags.md` routes a not-FALSE definition here); it is not `false-hypothesis`,
-which denotes a predicate with a refutation and vacuously-true consumers — the inverse failure of
-this one.
-
-@audit:defect(degenerate) @audit:closed-by-successor(shannon-hartley-phase2-spectral-plan) -/
+The observation count `k` is a *free* `ℕ` field (constraint C4), and no field mentions `2W` or
+`⌊2WT⌋` (constraint C3): `testFn` is asked only to be orthonormal and supported in `[0, T]`, and
+the `W` in `encoder_bandlimited` is a physical bandwidth, not a dimension count. The `≈ 2WT`
+degrees-of-freedom count is therefore not available from this definition. It has to come from the
+prolate-spheroidal eigenvalue distribution: a band-limited `f` satisfies `∫ f·φᵢ = ⟪f, P_W φᵢ⟫`,
+so the Gram matrix of the test family is a compression of the time-band-limiting operator of
+`TimeBandLimiting.lean`, and how many of its eigenvalues sit near `1` is exactly the
+Landau-Pollak-Slepian count. -/
 structure ContAwgnCode (T W P : ℝ) (M : ℕ) where
   /-- The `M` band-limited codewords, one per message. -/
   encoder : Fin M → (ℝ → ℝ)
-  /-- Each codeword lies in `L²` (regularity: makes the pointwise samples well-defined and
-  supplies the energy the Paley-Wiener sup bound caps against). -/
+  /-- Each codeword lies in `L²` (regularity: together with `testFn_memLp` this makes every
+  observation integral `∫ (encoder m)·(testFn i)` well-defined, by Cauchy-Schwarz). -/
   encoder_memLp : ∀ m, MemLp (encoder m) 2 volume
-  /-- Each codeword is continuous (regularity: pins the codeword to its canonical representative,
-  so the pointwise `sampledSignal` reads a determinate value rather than an a.e.-class artifact). -/
-  encoder_continuous : ∀ m, Continuous (encoder m)
   /-- Each codeword is band-limited to `[-W, W]`. -/
   encoder_bandlimited : ∀ m, IsBandlimited (encoder m) W
-  /-- Average-power constraint: energy over `[0, T]` is at most `T · P`. This window-only
-  constraint is one of the two defects recorded above: it leaves the full-line energy
-  `‖encoder m‖₂` free, so it does not pin the in-window samples, and that is what refutes
-  `contAwgnMaxMessages_bddAbove`. Constraining the full-line energy repairs that theorem but not
-  the Shannon-Hartley identity, whose falsity comes from the observation map instead. -/
-  encoder_power : ∀ m, (∫ t in Set.Icc (0 : ℝ) T, (encoder m t) ^ 2) ≤ T * P
-  /-- The number of observed samples (a free `ℕ` parameter; constraint C4). -/
-  sampleCount : ℕ
+  /-- Average-power constraint: the whole-line energy of each codeword is at most `T · P`. The
+  budget is over all of `ℝ`, not just the window: a band-limited signal cannot be supported in
+  `[0, T]`, and charging it only for the energy it happens to park inside the window leaves the
+  rest free to be reflected back in by the reproducing kernel. -/
+  encoder_power : ∀ m, (∫ t, (encoder m t) ^ 2) ≤ T * P
+  /-- The number of observations (a free `ℕ` parameter; constraint C4). -/
+  k : ℕ
+  /-- The test functions the receiver correlates the codeword against. -/
+  testFn : Fin k → (ℝ → ℝ)
+  /-- Each test function lies in `L²` (regularity, paired with `encoder_memLp`). -/
+  testFn_memLp : ∀ i, MemLp (testFn i) 2 volume
+  /-- Each test function is supported in the window `[0, T]`: the receiver may listen only while
+  the codeword is being transmitted. -/
+  testFn_support : ∀ i, Function.support (testFn i) ⊆ Set.Icc (0 : ℝ) T
+  /-- The test functions are orthonormal. This is the field that makes the coefficients of white
+  noise against them exactly i.i.d., hence `ContAwgnCode.errorProbAt`'s product law exact. -/
+  testFn_orthonormal : ∀ i j, (∫ t, testFn i t * testFn j t) = if i = j then 1 else 0
   /-- The decoder maps the observation vector back to a message. -/
-  decoder : (Fin sampleCount → ℝ) → Fin M
+  decoder : (Fin k → ℝ) → Fin M
   /-- The decoder is measurable (needed on the continuous output alphabet). -/
   decoder_meas : Measurable decoder
 
-/-- The Nyquist-normalized sample vector of `f` over `[0, T]` with `n` samples: the value at
-`t_i = i · T / n` scaled by `√(T/n)`. The `√(T/n)` scaling makes the discrete `ℓ²` energy
-`∑ᵢ (sampledSignal f T n i)²` a Riemann sum for the continuous energy `∫_{[0,T]} f²`.
+/-- The noiseless observation of message `m` along the `i`-th test function: the correlation
+`∫ (encoder m)·(testFn i)` of the codeword with the matched filter `testFn i`.
 
-This scaling is an isometry on band-limited signals only at the Nyquist spacing `Δ = 1/(2W)`. It
-is calibrated at exactly the one parameter value that the Shannon-Hartley identity is supposed to
-prove, which makes this definition a surrogate for the physical observation rather than a
-faithful model of it, and it is the reason `contAwgn_eq_shannonHartley` is false as framed. The
-leak runs opposite to the direction one expects: oversampling (`n → ∞`) does not inflate the
-signal-to-noise ratio, but *under*-sampling does. Since `ContAwgnCode.sampleCount` is free, a code
-may choose a spacing `Δ` coarser than Nyquist; at such a spacing the reproducing kernels at the
-sample points are mutually orthogonal, so a sample vector of given `ℓ²` norm is carried by a
-band-limited interpolant of proportionally *smaller* energy, and the energy budget admits sample
-vectors inflated by the factor `2WΔ` — against a per-sample noise level that
-`ContAwgnCode.errorProbAt` holds fixed. The rate obtained this way exceeds the Shannon-Hartley
-value, by an unbounded ratio at low signal-to-noise; the exact statement and its verification live
-in `docs/shannon/shannon-hartley-facts.md`.
+This is the analysis half of the Karhunen-Loève discretization. It depends on `encoder m` only
+through its a.e. class, and is finite because `encoder_memLp` and `testFn_memLp` put both factors
+in `L²`. Since `testFn i` is supported in `[0, T]`, the integral only sees the codeword during the
+transmission window; since `encoder m` is band-limited, `∫ f·φᵢ = ⟪f, P_W φᵢ⟫`, which is what
+routes the degrees-of-freedom question to the spectrum of the time-band-limiting operator. -/
+noncomputable def ContAwgnCode.observation {T W P : ℝ} {M : ℕ}
+    (c : ContAwgnCode T W P M) (m : Fin M) (i : Fin c.k) : ℝ :=
+  ∫ t, c.encoder m t * c.testFn i t
 
-The discrete and continuous energies also disagree at fixed `n` for a separate reason: for
-`n = 1` the discrete energy is `T · f(0)²`, which no bound on `∫_{[0,T]} f²` controls. Reading
-this correspondence as an exact isometry is what made `contAwgnMaxMessages_bddAbove` look
-provable; it is false. -/
-noncomputable def sampledSignal (f : ℝ → ℝ) (T : ℝ) (n : ℕ) : Fin n → ℝ :=
-  fun i => Real.sqrt (T / (n : ℝ)) * f (((i : ℕ) : ℝ) * (T / (n : ℝ)))
+/-- Point-wise error probability for message `m`: the noisy observation vector
+`y = ContAwgnCode.observation m + noise` (per-observation noise variance `N₀/2`, independent
+across observations) lands in the decoding-error region `{y | decoder y ≠ m}`.
 
-/-- Point-wise error probability for message `m`: the noisy observation
-`y = sampledSignal (encoder m) + noise` (per-sample noise variance `N₀/2`, independent
-across samples) lands in the decoding-error region `{y | decoder y ≠ m}`.
-
-Modelled directly as `Measure.pi (fun i => gaussianReal (sampleᵢ) (N₀/2))`, i.e. the
-memoryless per-sample AWGN law — the same law computed by the discrete
+Modelled directly as `Measure.pi (fun i => gaussianReal (observationᵢ) (N₀/2))`, i.e. the
+memoryless per-observation AWGN law — the same law computed by the discrete
 `ChannelCoding.Code.errorProbAt` for `awgnChannel (N₀/2)`, but inlined so that no
 `IsAwgnChannelMeasurable` kernel-measurability hypothesis is needed inside the definition.
 
-Both the fixed per-sample variance `N₀/2` and the independence across samples are correct only at
-the Nyquist spacing. The true covariance of band-limited noise on the sample vector at spacing `Δ`
-is `(N₀/2) · Δ · G`, where `G` is the Gram matrix of the reproducing kernels at the sample points;
-`G` is diagonal exactly when `2WΔ` is an integer, and the variance it yields then scales with `Δ`
-rather than staying fixed. So `Measure.pi` is an exact description of the physical channel only at
-`Δ = 1/(2W)`, and holding the variance fixed while `sampleCount` is free is the half of the
-observation-map defect that pairs with the `sampledSignal` scaling: together they let a
-sub-Nyquist code buy signal energy without paying in noise. Recovering an exact independent
-per-sample law requires the orthonormal-test-function repair described on `ContAwgnCode`. -/
+The product law is exact here, not an approximation: the noise coefficients are `⟪ξ, φᵢ⟫` for the
+orthonormal family `testFn`, and the coefficients of white noise along an orthonormal family are
+i.i.d. `N(0, N₀/2)` for that family alone — no spacing, rate or bandwidth condition enters. This
+is what `ContAwgnCode.testFn_orthonormal` buys. -/
 noncomputable def ContAwgnCode.errorProbAt {T W P : ℝ} {M : ℕ}
     (c : ContAwgnCode T W P M) (N₀ : ℝ) (m : Fin M) : ℝ≥0∞ :=
-  Measure.pi (fun i : Fin c.sampleCount =>
-      gaussianReal (sampledSignal (c.encoder m) T c.sampleCount i) (N₀ / 2).toNNReal)
-    {y : Fin c.sampleCount → ℝ | c.decoder y ≠ m}
+  Measure.pi (fun i : Fin c.k =>
+      gaussianReal (c.observation m i) (N₀ / 2).toNNReal)
+    {y : Fin c.k → ℝ | c.decoder y ≠ m}
 
 /-- Average error probability under a uniform message: `(1/M) ∑ₘ errorProbAt m`
 (`0` for the empty code `M = 0`). -/
@@ -494,47 +445,35 @@ noncomputable def contAwgnOperationalCapacity (W N₀ P : ℝ) : ℝ :=
 /-- The **continuous-time Shannon-Hartley formula**: the operational capacity of the
 band-limited AWGN channel equals `W · log(1 + P/(N₀·W))`.
 
-This statement is false as framed for every `P > 0`, so the `sorry` below can never be filled. It
-is kept in defect form because the falsity lives in the `ContAwgnCode` model, whose repair is a
-separate decision; the intended mathematical content (the time-bandwidth degrees-of-freedom count)
-is unaffected and remains the genuine obstruction for the repaired statement.
+Under the Karhunen-Loève observation map of `ContAwgnCode` this statement is expected true; an
+earlier point-sampling model made it false as framed, and the def-fix that repaired it is recorded
+in `docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP. What remains is the genuine
+mathematical obstruction, which no change of definition can remove: the time-bandwidth
+degrees-of-freedom count.
 
-Two independent mechanisms make it false, and repairing either one alone leaves it false.
+Both halves need it. `∫ f·φᵢ = ⟪f, P_W φᵢ⟫` for band-limited `f`, so the Gram matrix of the test
+family is a compression of the time-band-limiting operator `timeBandLimitingOp T W`
+(`TimeBandLimiting.lean`), and the achievable rate along any `[0, T]`-supported orthonormal family
+is governed by that compression's eigenvalues, which Cauchy interlacing caps by the prolate
+eigenvalues `prolateEigenvalues T W`. Reaching the closed form in the limit requires `≈ 2WT` of
+them to sit near `1` and the rest near `0` — the Landau-Pollak-Slepian concentration, whose
+statement is `prolate_eigenvalue_count` (Leg E of
+`shannon-hartley-phase2-spectral-plan`). The converse needs the upper half of the count, the
+achievability (`contAwgn_ge_shannonHartley`) the lower half.
 
-The first runs through `contAwgnMaxMessages_bddAbove`, which is itself false: `ContAwgnCode`
-constrains only the window energy, and the window-energy-to-point-value ratio of a band-limited
-signal is unbounded, so a one-sample scaled-superoscillation code achieves every `M` at every
-error level (the refutation and the explicit counterexample are recorded on that declaration).
-Falsity then propagates here by the junk-value chain: `¬ BddAbove` gives
-`contAwgnMaxMessages = 0` via `Nat.sSup_of_not_bddAbove`, hence `contAwgnRate = 0` via
-`Real.log_zero`, hence `contAwgnOperationalCapacity W N₀ P = 0`, while
-`bandlimitedAwgnCapacity W N₀ P > 0` whenever `P > 0`.
+Note the asymmetry that certifies the def-fix was a repair and not a disguise: the crude bound of
+`contAwgnMaxMessages_bddAbove` closes by Bessel alone, wall-free, but caps the rate only at
+`P/N₀`, and `ln(1+x) ≤ x` makes that strictly larger than the closed form. Boundedness comes for
+free; the exact constant does not.
 
-The second is independent of the power constraint and survives its repair. Constraining the
-full-line energy `‖f‖₂ ≤ T·P` does restore `contAwgnMaxMessages_bddAbove`, but it does not restore
-this identity: the observation map is itself unfaithful. Since `sampleCount` is free, a code may
-sample below the Nyquist rate, where `sampledSignal`'s `√(T/n)` scaling is no longer an isometry
-and `ContAwgnCode.errorProbAt`'s fixed per-sample variance is no longer the true noise law; the
-resulting capacity strictly exceeds the closed form, by an unbounded ratio at low
-signal-to-noise. The mechanism is recorded on those two declarations. So the earlier account —
-that the falsity is the absence of a tie between `‖f‖₂` and the window energy `∫_{[0,T]} f² ≤ T·P`,
-and that the Paley-Wiener sup bound `bandlimited_sup_bound` (`|f(t)| ≤ √(2W)·‖f‖₂`) would then cap
-the samples — identifies a real gap but not the decisive one: restoring that tie does not make
-this statement true.
+Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
 
-The repair is therefore the observation-map def-fix, replacing point sampling with an orthonormal
-family supported in `[0, T]`, with the full-line power constraint as one component. Hypotheses
-`hW`/`hN₀`/`hP` are regularity-only (not load-bearing). The def-fix is pending under
-`shannon-hartley-phase2-spectral-plan`.
-
-`@residual(defect:false-statement)` `@audit:defect(false-statement)`
-`@audit:closed-by-successor(shannon-hartley-phase2-spectral-plan)` -/
+`@residual(wall:nyquist-2w-dof)` -/
 @[entry_point]
 theorem contAwgn_eq_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     contAwgnOperationalCapacity W N₀ P = bandlimitedAwgnCapacity W N₀ P := by
-  -- FALSE as framed (see docstring): unfillable pending the observation-map def-fix of
-  -- `ContAwgnCode` (repairing `encoder_power` alone leaves it false).
-  sorry -- @residual(defect:false-statement)
+  -- Blocked on the `≈ 2WT` prolate eigenvalue count (Leg E); see docstring.
+  sorry -- @residual(wall:nyquist-2w-dof)
 
 end InformationTheory.Shannon.ShannonHartley

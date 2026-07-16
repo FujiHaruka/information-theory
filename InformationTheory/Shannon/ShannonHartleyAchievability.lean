@@ -15,24 +15,32 @@ The `≥` half of the operational Shannon-Hartley sandwich,
 
     `bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P`
 
-(`contAwgn_ge_shannonHartley`). This direction is *wall-independent*: a discrete
-per-sample AWGN codebook (`awgn_achievability`) is lifted to a continuous band-limited
-signal by **sinc synthesis** at the true sampler spacing `Δ = T/n` (with `n = ⌊2WT⌋`).
+(`contAwgn_ge_shannonHartley`), together with the boundedness obligation
+`contAwgnMaxMessages_bddAbove` that the operational `sSup` needs in order not to collapse to
+junk-`0`.
+
+The two have different characters, and the split is the point. Boundedness is *wall-independent*:
+Bessel's inequality against the orthonormal `ContAwgnCode.testFn` caps the observed energy by
+`T·P` uniformly in the observation count, which is enough for `BddAbove` but only enough for the
+crude rate `P/N₀`. Achievability at the *exact* constant is not wall-independent: it needs the
+`≈ 2WT` degrees-of-freedom count (the `nyquist-2w-dof` wall, Leg E), because the test family must
+recover near-unit gain on `≈ 2WT` dimensions. See the two declarations for detail.
 
 ## The synthesis bridge
 
 `synthSignal T n a` reconstructs a band-limited signal interpolating the sample values
-`a : Fin n → ℝ` at the grid `t_i = i·(T/n)`. Its three properties power the reduction:
+`a : Fin n → ℝ` at the grid `t_i = i·(T/n)`; it is how the band-limited codewords of a
+`ContAwgnCode` get built from a discrete `awgn_achievability` codebook. Its three properties power
+the reduction:
 
 * **(ii) interpolation exactness** — `synthSignal T n a (j·(T/n)) = a j`
-  (`synthSignal_sample`), whence `sampledSignal (synthSignal …) = c` after the
-  `√(T/n)·√(n/T)` cancellation.
+  (`synthSignal_sample`).
 * **(i) band-limitedness** — `IsBandlimited (synthSignal T n a) W` when `n ≤ 2WT`
   (`synthSignal_bandlimited`): each shifted `sincN(·/Δ)` has spectrum supported in
   `[-1/(2Δ), 1/(2Δ)] = [-n/(2T), n/(2T)] ⊆ [-W, W]`.
 * **(iii) Parseval energy** — `∫ t, (synthSignal T n a t)² = (T/n)·∑ᵢ (a i)²`
-  (`synthSignal_energy`), so with `a = √(n/T)·c` the whole-line energy is `∑ᵢ cᵢ² ≤ T·P`
-  and the in-window energy is `≤` that.
+  (`synthSignal_energy`), an equality on the *whole line*, which is exactly the shape
+  `ContAwgnCode.encoder_power` asks for: with `a = √(n/T)·c` it reads `∑ᵢ cᵢ² ≤ T·P`.
 
 ## References
 
@@ -92,27 +100,6 @@ theorem synthSignal_sample (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) 
       rw [if_neg hji, if_neg h, mul_zero]
   rw [Finset.sum_congr rfl (fun i _ => hterm i), Finset.sum_ite_eq' Finset.univ j a]
   simp
-
-/-- The `√(T/n)`-normalized samples of the synthesized signal recover `√(T/n)·a`. -/
-theorem sampledSignal_synthSignal (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
-    (hT : 0 < T) (hn : 0 < n) :
-    sampledSignal (synthSignal T n a) T n = fun j => Real.sqrt (T / (n : ℝ)) * a j := by
-  funext j
-  rw [sampledSignal, synthSignal_sample T n a hT hn j]
-
-/-- Choosing `a = √(n/T)·c` makes the synthesized signal's normalized samples equal to the
-discrete codeword `c` exactly (the `√(T/n)·√(n/T) = 1` cancellation). -/
-theorem sampledSignal_synthSignal_sqrt (T : ℝ) (n : ℕ) (c : Fin n → ℝ)
-    (hT : 0 < T) (hn : 0 < n) :
-    sampledSignal (synthSignal T n (fun i => Real.sqrt ((n : ℝ) / T) * c i)) T n = c := by
-  rw [sampledSignal_synthSignal T n _ hT hn]
-  funext j
-  have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
-  have h1 : Real.sqrt (T / (n : ℝ)) * Real.sqrt ((n : ℝ) / T) = 1 := by
-    rw [← Real.sqrt_mul (by positivity),
-      show (T / (n : ℝ)) * ((n : ℝ) / T) = 1 by field_simp]
-    exact Real.sqrt_one
-  rw [← mul_assoc, h1, one_mul]
 
 /-! ## §B2 — Sinc/boxcar L²-Fourier atom
 
@@ -443,113 +430,84 @@ theorem synthSignal_energy (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) 
     exact Finset.sum_congr rfl (fun i _ => by ring)
   exact_mod_cast hstep1.symm.trans hstep2
 
-/-- In-window energy is bounded by the whole-line energy (the integrand is `≥ 0`), giving the
-`ContAwgnCode.encoder_power` obligation directly. This reduction is genuine, resting on the
-(now genuine) `synthSignal_energy` (iii) and `synthSignal_sq_integrable`.
-
-@audit:ok -/
-theorem synthSignal_window_energy_le (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
-    (hT : 0 < T) (hn : 0 < n) :
-    (∫ t in Set.Icc (0 : ℝ) T, (synthSignal T n a t) ^ 2)
-      ≤ (T / (n : ℝ)) * ∑ i : Fin n, (a i) ^ 2 := by
-  rw [← synthSignal_energy T n a hT hn]
-  exact setIntegral_le_integral (synthSignal_sq_integrable T n a hT hn)
-    (Filter.Eventually.of_forall (fun t => sq_nonneg _))
-
-/-! ## §E — boundedness of the message set (defect-gated) -/
+/-! ## §E — boundedness of the message set -/
 
 /-- The message-count set is bounded above — the `BddAbove` obligation needed to lower-bound
 `contAwgnMaxMessages` via `le_csSup`.
 
-This statement is false for every `P > 0`, so the `sorry` below can never be filled. It is kept
-in defect form because repairing it means changing `ContAwgnCode` itself, which is a separate
-decision; the definition is where the falsity lives, not the proof.
+This is wall-independent: it closes by Bessel's inequality alone, without the `≈ 2WT`
+degrees-of-freedom count. The test family `testFn` is orthonormal, so for every codeword
 
-The following mechanism description is correct and is retained: it identified the unboundedness
-and then mislabeled it as difficulty. Applying `awgn_converse` to the sampled codeword vector
-reduces `BddAbove` to a bound on the sampled energy `E = (T/n)·∑ᵢ (encoder m (i·T/n))²` that is
-uniform over the whole code family and over `sampleCount = n`. The `ContAwgnCode` structure
-constrains only the window energy `∫₀ᵀ f² ≤ T·P`; `bandlimited_sup_bound` controls point values
-by the full-line `‖f‖₂`, which is unconstrained (a band-limited `L²` signal can carry arbitrary
-energy outside `[0,T]` while keeping the window energy small, and the sinc reproducing-kernel
-tail leaks it back into the in-window samples). No field of `ContAwgnCode` imposes essential
-time-limitation, so nothing ties `‖f‖₂` back to the window energy.
+    `∑ᵢ (observation m i)² = ∑ᵢ ⟨encoder m, testFn i⟩² ≤ ‖encoder m‖₂² ≤ T·P`,
 
-The inference drawn from that observation — that the sampled energy is finite anyway, and that
-only time-band concentration (prolate-spheroidal / Landau-Pollak-Slepian) can show it — does not
-hold. The window-energy-to-point-value ratio is itself unbounded: writing `PW_W` for the real
-band-limited `L²` signals, `sup { f 0 ^ 2 / ∫₀ᵀ f² | f ∈ PW_W } = ⊤`. Were it finite, Hahn-Banach
-and Riesz would supply `g ∈ L²[0,T]` with `f 0 = ∫₀ᵀ f · g` for every `f ∈ PW_W`; testing on the
-reproducing kernels `h a t = 2W · sinc (2W (t - a))` forces `P_W (g · 1_{[0,T]}) = k₀`, i.e.
-`û ≡ 1` on `[-W, W]` for `u := g · 1_{[0,T]}`. But `u` is compactly supported and `L²`, so `û` is
-entire and lies in `L²(ℝ)` by Plancherel, and `û ≡ 1` on an interval forces `û ≡ 1` on `ℂ` by the
-identity theorem, contradicting `û ∈ L²(ℝ)`.
+uniformly in the observation count `k` — no spacing, rate or bandwidth hypothesis enters, and the
+whole-line `encoder_power` supplies the right-hand side directly. Feeding that energy bound to
+`awgn_converse` on the induced discrete code (per-observation power `P' = (∑ᵢ ⟨f, φᵢ⟩²)/k`, whose
+`power_constraint` holds by construction) and using `log(1+x) ≤ x` bounds `log M` by `T·P/N₀` plus
+the Fano term, hence `BddAbove`.
 
-That unboundedness refutes this statement directly. Fix `A > 0` and choose a real `f ∈ PW_W` with
-`∫₀ᵀ f² = T·P` and `f 0 ≥ A`. Take `sampleCount := 1`, `encoder m := c m • f` where
-`c m = -1 + 2·m/(M-1) ∈ [-1, 1]`. The power constraint holds since `c m ^ 2 ≤ 1`, and
-band-limitedness, continuity and `MemLp` are all closed under scaling. The single observation has
-mean `√T · c m · f 0`, so the constellation spacing `2·√T·A/(M-1)` diverges as `A → ∞`: every `M`
-is achievable at every error level, the message set is all of `ℕ`, and `BddAbove` fails.
-
-The earlier numerical support for a finite supremum (`≈ 76.1` at `T = 4`, reported from two
-methods) was a double-precision artifact: both methods used `lstsq(..., rcond=None)` on a window
-sinc Gram whose singular values decay super-exponentially, so each precision level exhibits its
-own plateau. An arbitrary-precision recomputation is in `docs/shannon/wseb-highprec-probe.py`; a
-forward-evaluated witness, with no matrix inverse in the ratio, already attains `276.29` at
-`T = 4`.
-
-The cause is `ContAwgnCode.encoder_power`, a window-only energy constraint: it admits the
-classical superdirectivity / superoscillation signals, and the code class it defines therefore has
-infinite capacity.
-
-Unlike `contAwgn_eq_shannonHartley`, this statement is repaired by constraining the full-line
-energy `‖encoder m‖₂ ≤ T·P` alone. Under that constraint `bandlimited_sup_bound`
-(`|f(t)| ≤ √(2W)·‖f‖₂`) caps every sample uniformly in `sampleCount`, bounding the sampled energy
-by `2W·T²·P` and hence `log M` by `2W·T²·P/N₀`. The identity needs a strictly larger repair,
-because its falsity survives this one: the defect there is in the observation map, not in the
-input class (see `sampledSignal` and `ContAwgnCode.errorProbAt`). That one fix settles this
-theorem and not that one is itself the signal that the power constraint is not the whole story.
-The def-fix, of which the full-line power constraint is one component, is pending under
+The remaining work is plumbing: the `ContAwgnCode → AwgnCode` wiring, the identification of
+`ContAwgnCode.errorProbAt`'s `Measure.pi` law with the discrete `errorProbAt` for
+`awgnChannel (N₀/2)`, the Fano rearrangement (which is what `ε < 1` is for), and the edge cases
+`k = 0` / `M < 2` together with the ℕ-`sSup` junk-`0` convention. That is Leg D' of
 `shannon-hartley-phase2-spectral-plan`.
 
-`@residual(defect:false-statement)` `@audit:defect(false-statement)`
-`@audit:closed-by-successor(shannon-hartley-phase2-spectral-plan)` -/
+This bound is deliberately crude, and its crudeness is load-bearing evidence rather than a
+shortcoming: it caps the rate at `P/N₀`, which `ln(1+x) ≤ x` makes strictly larger than
+`bandlimitedAwgnCapacity W N₀ P`. Boundedness is free; the exact constant is not, and it is the
+part that still needs the prolate eigenvalue count (see `contAwgn_eq_shannonHartley`).
+
+Hypotheses are regularity-only (not load-bearing).
+
+`@residual(plan:shannon-hartley-phase2-spectral-plan)` -/
 theorem contAwgnMaxMessages_bddAbove (T W N₀ P ε : ℝ)
     (hT : 0 < T) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
     BddAbove { M : ℕ | ∃ c : ContAwgnCode T W P M, (c.averageError N₀).toReal ≤ ε } := by
-  -- FALSE as framed (see docstring): unfillable pending the `ContAwgnCode.encoder_power` def-fix.
-  sorry -- @residual(defect:false-statement)
+  -- Wall-independent (Bessel + `awgn_converse`); the wiring is Leg D'. See docstring.
+  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
 
-/-! ## §F — assembly (gated on §E's false boundedness statement) -/
+/-! ## §F — assembly -/
 
 /-- **Shannon-Hartley achievability (`≥`)**: the operational capacity is at least the
-Shannon-Hartley closed form. Proved by lifting a per-sample `awgn_achievability` codebook
-through the synthesis bridge.
+Shannon-Hartley closed form.
 
-This statement is false as framed for every `P > 0`, for the same root cause as §E, so the `sorry`
-below can never be filled. The achievability construction itself (per-sample `awgn_achievability`
-→ `synthSignal` bridge → per-`T` codebook) is genuine writeable work. But lower-bounding the
-operational capacity requires `contAwgnMaxMessages = sSup {M | …} ≥ M₀` via `le_csSup`, which
-consumes `contAwgnMaxMessages_bddAbove` (§E) — and the ℕ-`sSup` collapses to junk `0` without that
-`BddAbove`. Since §E is not merely unproven but false, that collapse is the actual value:
-`contAwgnOperationalCapacity W N₀ P = 0 < bandlimitedAwgnCapacity W N₀ P` whenever `P > 0`.
+Unlike the boundedness bound of §E, this direction is *not* wall-independent: it needs the
+`≈ 2WT` degrees-of-freedom count, in its lower-bound half.
 
-Repair needs the `ContAwgnCode` def-fix. Constraining the full-line energy is one component of it
-and is by itself enough to repair §E, but it does not make the model faithful: the observation map
-under-samples and misprices noise independently of the power constraint (see `sampledSignal` and
-`ContAwgnCode.errorProbAt`), which is why `contAwgn_eq_shannonHartley` stays false under that
-partial fix. Refactoring the capacity to the standard achievable-rate form (`sup` over rates
-achievable by code sequences) would decouple this direction from the converse's boundedness
-obligation, but would not by itself restore truth, since the underlying code class has infinite
-capacity. All of these are pending under `shannon-hartley-phase2-spectral-plan`.
+The reason is that the receiver of `ContAwgnCode` sees a band-limited codeword only through test
+functions supported in `[0, T]`, and those two constraints fight each other: a band-limited `f` is
+never supported in `[0, T]`, so `⟨f, φᵢ⟩ = ⟨f, P_W φᵢ⟩` and the energy the receiver recovers is
+governed by the Gram matrix `Gᵢⱼ = ⟨φᵢ, (timeBandLimitingOp T W) φⱼ⟩` — a compression of the
+prolate operator, whose eigenvalues Cauchy interlacing caps by `prolateEigenvalues T W`. To reach
+the closed form one must exhibit, for each `T`, a family achieving per-dimension gain `≈ 1` on
+`≈ 2WT` dimensions; that is exactly the Landau-Pollak-Slepian concentration
+`prolate_eigenvalue_count` (Leg E of `shannon-hartley-phase2-spectral-plan`), read from below.
 
-`@residual(defect:false-statement)` `@audit:defect(false-statement)`
-`@audit:closed-by-successor(shannon-hartley-phase2-spectral-plan)` -/
+No cheaper family is available, and this was checked rather than assumed. The obvious wall-free
+candidate — the boxcar family `φᵢ = 𝟙_{[iΔ,(i+1)Δ]}/√Δ` at `Δ = 1/(2W)`, which is orthonormal and
+`[0, T]`-supported by inspection — fails: a boxcar's spectrum is a sinc, so `‖P_W φᵢ‖ < 1` by a
+constant factor, the per-dimension gains are bounded away from `1`, and concavity of `log` puts
+the resulting rate strictly below the closed form. Adversarial search over random orthonormal
+families corroborates (`docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP: best `C/SH`
+`= 0.3250` against prolate's `0.9944`, with no family beating prolate). The convergence itself is
+the count: the finite-`T` shortfall is `O(log WT)`, the width of the prolate cliff's transition
+band, which is the error term of `prolate_eigenvalue_count`.
+
+The synthesis bridge of §A–§D (`synthSignal`, `synthSignal_energy`) remains the way to build the
+band-limited codewords, and `synthSignal_energy` discharges the whole-line `encoder_power`
+obligation as an equality. What it does not supply is the test family.
+
+This statement also consumes `contAwgnMaxMessages_bddAbove` (§E) through `le_csSup` — without a
+`BddAbove` the ℕ-`sSup` collapses to junk `0`. That obligation is wall-independent and its
+residual is tracked at its own declaration rather than duplicated here.
+
+Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
+
+`@residual(wall:nyquist-2w-dof)` -/
 theorem contAwgn_ge_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := by
-  -- FALSE as framed (see docstring): unfillable pending the `ContAwgnCode` def-fix.
-  sorry -- @residual(defect:false-statement)
+  -- Blocked on the lower half of the `≈ 2WT` prolate eigenvalue count (Leg E); see docstring.
+  sorry -- @residual(wall:nyquist-2w-dof)
 
 end InformationTheory.Shannon.ShannonHartley
