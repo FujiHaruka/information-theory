@@ -207,7 +207,8 @@ theorem timeBandLimitingOp_eq_bandProj_comp (T W : ℝ) :
 `Sᶜ`. Proven via the uniqueness of the orthogonal projection: the candidate `𝟙_{Sᶜ}·g` lies in the
 subspace, and the residual `𝟙_S·g` is orthogonal to it. Both Leaf 1 (`S = [0,T]ᶜ`, the time-limiting
 `Q_T`) and Leaf 2's frequency-side multiplier (`S = {|ξ| > W}`, giving `𝟙_[-W,W]·𝓕f`) are instances,
-so the projection-uniqueness argument is written once here. -/
+so the projection-uniqueness argument is written once here.
+@audit:ok -/
 theorem zeroOnLp_starProjection_apply_ae {S : Set ℝ} (hS : MeasurableSet S) (g : E) :
     ((zeroOnLp S).starProjection g : ℝ → ℂ) =ᵐ[volume]
       Sᶜ.indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ) := by
@@ -245,7 +246,8 @@ theorem zeroOnLp_starProjection_apply_ae {S : Set ℝ} (hS : MeasurableSet S) (g
 
 /-- **Leaf 1** (`Q_T` = multiplication by `𝟙_[0,T]`). The orthogonal projection onto the
 time-limited subspace acts, a.e., as multiplication by the indicator of `[0,T]`. The instance
-`S = [0,T]ᶜ` of `zeroOnLp_starProjection_apply_ae`. -/
+`S = [0,T]ᶜ` of `zeroOnLp_starProjection_apply_ae`.
+@audit:ok -/
 theorem timeLimitProj_apply_ae (T : ℝ) (g : E) :
     ((timeLimitSubspace T).starProjection g : ℝ → ℂ) =ᵐ[volume]
       (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ) := by
@@ -270,7 +272,8 @@ theorem timeLimitProj_apply_ae (T : ℝ) (g : E) :
 /-- Conjugating an orthogonal projection by a surjective linear isometry: the projection onto a
 `comap`ped subspace is the projection onto the subspace, conjugated. Mathlib has the `map` form
 (`LinearIsometry.map_starProjection`); this is the `comap` form, which is what a Fourier-multiplier
-subspace such as `bandLimitSubspace` is literally defined by. -/
+subspace such as `bandLimitSubspace` is literally defined by.
+@audit:ok -/
 theorem starProjection_comap_linearIsometryEquiv {𝕜 X Y : Type*} [RCLike 𝕜]
     [NormedAddCommGroup X] [InnerProductSpace 𝕜 X]
     [NormedAddCommGroup Y] [InnerProductSpace 𝕜 Y]
@@ -297,7 +300,8 @@ instance instHasOrthogonalProjectionBandLimitComap (W : ℝ) :
 
 /-- The band-limiting projection is the Fourier multiplier by `𝟙_[-W,W]`: conjugate the projection
 onto `zeroOnLp {ξ | W < |ξ|}` by the Plancherel isometry. Immediate from
-`starProjection_comap_linearIsometryEquiv` and the definition of `bandLimitSubspace`. -/
+`starProjection_comap_linearIsometryEquiv` and the definition of `bandLimitSubspace`.
+@audit:ok -/
 theorem bandLimitProj_eq_fourier_conj (W : ℝ) (f : E) :
     (bandLimitSubspace W).starProjection f
       = (Lp.fourierTransformₗᵢ ℝ ℂ).symm
@@ -317,7 +321,10 @@ conjugation identity `bandLimitProj_eq_fourier_conj` with the projection-uniquen
 `zeroOnLp_starProjection_apply_ae` on the frequency side. This is the "half" of Leaf 2 that lives
 entirely inside the abstract projection API; the remaining half is the identification of the
 multiplier's action with sinc convolution, which needs the Fourier transform to be evaluated
-concretely. -/
+concretely. Note this half needs no sign condition on `W`: for `W < 0` the interval `[-W,W]` is
+empty and both sides vanish, so the sign asymmetry of Leaf 2 is localized entirely in the passage
+from the multiplier `𝟙_[-W,W]` to the kernel `2W sincN(2W·)`.
+@audit:ok -/
 theorem fourier_bandLimitProj_apply_ae (W : ℝ) (f : E) :
     ((Lp.fourierTransformₗᵢ ℝ ℂ ((bandLimitSubspace W).starProjection f) : E) : ℝ → ℂ)
       =ᵐ[volume] (Set.Icc (-W) W).indicator (fun _ => (1 : ℂ)) *
@@ -328,7 +335,10 @@ theorem fourier_bandLimitProj_apply_ae (W : ℝ) (f : E) :
   rwa [compl_setOf_lt_abs] at h
 
 /-- For a negative band limit the band-limited subspace degenerates: `{ξ | W < |ξ|}` is everything,
-so only the zero function has an a.e.-vanishing Fourier transform. -/
+so only the zero function has an a.e.-vanishing Fourier transform. This is a true degeneracy of the
+band (`[-W,W] = ∅` for `W < 0`), not an artifact of the definition, and it is what lets the
+compactness headlines keep their unrestricted `(T W : ℝ)` signatures.
+@audit:ok -/
 theorem bandLimitSubspace_eq_bot_of_neg {W : ℝ} (hW : W < 0) : bandLimitSubspace W = ⊥ := by
   have huniv : {ξ : ℝ | W < |ξ|} = Set.univ :=
     Set.eq_univ_of_forall fun ξ => lt_of_lt_of_le hW (abs_nonneg ξ)
@@ -360,14 +370,24 @@ Mathlib fact: the `L¹ ∩ L²` agreement of `Lp.fourierTransformₗᵢ` with th
 `e_t ξ = 𝟙_[-W,W](ξ)·exp(-2πitξ)`, and `𝓕⁻ e_t s = 2W sincN(2W(s-t))` by rescaling the boxcar.
 
 Mathlib's `L²` Fourier transform is defined by extension from Schwartz space and is a black box:
-`Lp.fourierTransformₗᵢ` has *no* consumers anywhere in Mathlib, and no declaration mentions both
-`VectorFourier.fourierIntegral` and `Lp`/`MemLp`. Schwartz density (`SchwartzMap.denseRange_toLpCLM`)
-is per-exponent, so even the standard proof of the bridge — approximate `g` by Schwartz functions
-simultaneously in `L¹` and `L²`, then compare — needs a simultaneous-density self-build first
-(truncate + mollify; cf. `EPIApproxIdentityL1.lean`, which closed a similar approximate-identity `L¹`
-statement in-tree). This is a genuine gap, not plumbing, and is out of reach of the plan's
+`Lp.fourierTransformₗᵢ` has *no* consumers anywhere in Mathlib, no declaration mentions both
+`VectorFourier.fourierIntegral` and `Lp`/`MemLp`, and the tempered-distribution detour
+(`Lp.fourierInv_toTemperedDistribution_eq`) does not help — no Mathlib file mentions both
+`TemperedDistribution` and `fourierIntegral`, so `𝓢'` is a black box against the classical integral
+too. The bridge is therefore a genuine gap rather than plumbing; it is out of reach of the plan's
 `integral_exp_boxcar_eq_sincN`-only route, which presupposed an `L²` convolution/multiplier theorem
 that does not exist.
+
+It is, however, constructible (hence `plan:`, not `wall:`), and only the *compactly supported* case
+of the bridge is needed here — which is the cheap case. Since `g = 𝟙_[-W,W]·𝓕f` is supported in
+`[-W,W]`, a fixed smooth cutoff `χ ≡ 1` on `[-W,W]` turns any `L²`-approximating Schwartz sequence
+`ψₙ → g` (`SchwartzMap.denseRange_toLpCLM`, per-exponent, `p = 2`) into `χ·ψₙ`
+(`SchwartzMap.bilinLeftCLM`), still Schwartz, still `L²`-convergent, and supported in one fixed
+compact — on which `L¹` convergence is *free* by Cauchy–Schwarz. So no general simultaneous
+`L¹ ∩ L²` density machinery (truncate + mollify, cf. `EPIApproxIdentityL1.lean`) is required: pass to
+the limit with `SchwartzMap.toLp_fourierInv_eq` + `fourierInv_coe` (Schwartz-level `𝓕⁻` is the
+classical integral by `rfl`) on one side and `VectorFourier.norm_fourierIntegral_le_integral_norm`
+(uniform convergence from `L¹`) on the other.
 @residual(plan:shannon-hartley-phase2-spectral-plan) -/
 theorem bandLimitProj_apply_ae (W : ℝ) (hW : 0 ≤ W) (f : E) :
     ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume]
