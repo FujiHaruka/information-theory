@@ -3,6 +3,7 @@ import Mathlib.Analysis.InnerProductSpace.Positive
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 import Mathlib.Analysis.Normed.Operator.Compact.Basic
+import Mathlib.Analysis.Real.Pi.Bounds
 import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import InformationTheory.Shannon.NormalizedSinc
@@ -256,9 +257,51 @@ theorem bandLimitProj_apply_ae (W : ℝ) (f : E) :
         (f : ℝ → ℂ) s ∂volume := by
   sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
 
+/-- The normalized sinc is square-integrable on `ℝ`. The reusable crux for the kernel-`L²` bound:
+its Lebesgue `L²`-membership follows from the elementary majorant `sincN(x)² ≤ 2/(1 + x²)`
+(`|sincN| ≤ 1` near `0`, `sincN(x)² = sin²(πx)/(πx)² ≤ 1/(πx)²` away from it) against the
+integrable `2/(1 + x²)`. Mathlib's `Real.integrable_sinc` is finite-measure-only, so the Lebesgue
+`L²` fact is built here. -/
+theorem sincN_memLp_two :
+    MemLp (fun x : ℝ => (NormalizedSinc.sincN x : ℂ)) 2 volume := by
+  have hcont : Continuous (fun x : ℝ => (NormalizedSinc.sincN x : ℂ)) :=
+    Complex.continuous_ofReal.comp NormalizedSinc.continuous_sincN
+  -- Pointwise majorant `sincN x ^ 2 ≤ 2 / (1 + x ^ 2)`.
+  have hpt : ∀ x : ℝ, NormalizedSinc.sincN x ^ 2 ≤ 2 / (1 + x ^ 2) := by
+    intro x
+    have hden : (0 : ℝ) < 1 + x ^ 2 := by positivity
+    rcases le_total (x ^ 2) 1 with hx1 | hx1
+    · have hs1 : NormalizedSinc.sincN x ^ 2 ≤ 1 := by
+        nlinarith [NormalizedSinc.neg_one_le_sincN x, NormalizedSinc.sincN_le_one x]
+      rw [le_div_iff₀ hden]; nlinarith [hs1, hx1]
+    · have hx0 : x ≠ 0 := by rintro rfl; norm_num at hx1
+      have hπx : Real.pi * x ≠ 0 := mul_ne_zero Real.pi_ne_zero hx0
+      have hpx2 : (0 : ℝ) < (Real.pi * x) ^ 2 := by rw [sq]; exact mul_self_pos.mpr hπx
+      have hsc : NormalizedSinc.sincN x = Real.sin (Real.pi * x) / (Real.pi * x) :=
+        NormalizedSinc.sincN_of_ne_zero x hx0
+      have hsin2 : Real.sin (Real.pi * x) ^ 2 ≤ 1 := by
+        nlinarith [Real.neg_one_le_sin (Real.pi * x), Real.sin_le_one (Real.pi * x)]
+      have hsq : NormalizedSinc.sincN x ^ 2 ≤ 1 / (Real.pi * x) ^ 2 := by
+        rw [hsc, div_pow]; gcongr
+      have hπ2 : (9 : ℝ) < Real.pi ^ 2 := by nlinarith [Real.pi_gt_three, Real.pi_pos]
+      refine hsq.trans ?_
+      rw [le_div_iff₀ hden, div_mul_eq_mul_div, one_mul, div_le_iff₀ hpx2]
+      nlinarith [hπ2, hx1, sq_nonneg x]
+  rw [memLp_two_iff_integrable_sq_norm hcont.aestronglyMeasurable]
+  have hg : Integrable (fun x : ℝ => 2 / (1 + x ^ 2)) volume := by
+    simp_rw [div_eq_mul_inv]
+    exact integrable_inv_one_add_sq.const_mul 2
+  refine hg.mono' ((continuous_norm.comp hcont).pow 2).aestronglyMeasurable ?_
+  filter_upwards with x
+  have hnn : (0 : ℝ) ≤ ‖(NormalizedSinc.sincN x : ℂ)‖ ^ 2 := sq_nonneg _
+  rw [Real.norm_of_nonneg hnn, Complex.norm_real, Real.norm_eq_abs, sq_abs]
+  exact hpt x
+
 /-- **Leaf 3** (the kernel is `L²`). `sincConvKernel` is square-integrable on `ℝ × ℝ`: the
 `t`-indicator confines the mass to `[0,T]` and `∫_ℝ (2W sincN(2W u))² du = 2W` (Plancherel of the
-ideal low-pass), giving `‖k‖₂² = 2WT < ∞`.
+ideal low-pass, whose 1-D crux `sincN ∈ L²` is `sincN_memLp_two`), giving `‖k‖₂² = 2WT < ∞`. The
+remaining work is the 2-D lift: `AEStronglyMeasurable` of the product kernel + a Tonelli/`∫⁻`
+computation folding the `t`-indicator and the translation/scaling `∫⁻ sincN(2W(t−s))² ds`.
 @residual(plan:shannon-hartley-operational-moonshot-plan) -/
 theorem sincConvKernel_memLp (T W : ℝ) :
     MemLp (fun p : ℝ × ℝ => sincConvKernel T W p.1 p.2) 2 (volume.prod volume) := by
