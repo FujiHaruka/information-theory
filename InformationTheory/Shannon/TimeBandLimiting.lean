@@ -47,8 +47,18 @@ counting function `prolateCount` honest, and `prolateEigenvalues` is its general
 * `prolateEigenvalues_hasEigenvalue` — every nonzero entry is a genuine eigenvalue of `A`.
 * `prolateEigenvalues_tendsto_zero` — the enumeration tends to `0`.
 
+Leg C' makes that enumeration non-vacuous. The headlines above are all satisfied by the constant-zero
+sequence — and legitimately so, since `A` really does collapse for `W < 0` or `T < 0`. The single
+missing input is `timeBandLimitingOp_ne_zero`, proved by exhibiting the box `𝟙_[0,T]` as a witness:
+its spectrum is continuous with value `T` at the origin (via the `L¹ ∩ L²` Fourier bridge
+`ShannonHartley.l2Fourier_eq_fourierIntegral`), hence survives the band cutoff since `[-W,W]` is a
+neighborhood of `0`.
+
+* `timeBandLimitingOp_ne_zero` — `A ≠ 0` for `0 < T`, `0 < W`.
+* `prolateEigenvalues_zero_pos` — the leading eigenvalue is strictly positive.
+
 The Landau–Pollak–Slepian concentration count (`prolate_eigenvalue_count`, `≈ 2WT` eigenvalues near
-`1`) lives in a later leg.
+`1`) lives in a later leg, as does `λ n ≠ 0` for all `n` (which needs `A` to have infinite rank).
 -/
 
 namespace InformationTheory.Shannon.TimeBandLimiting
@@ -1391,18 +1401,15 @@ theorem prolateCount_one_eq_zero (T W : ℝ) : prolateCount T W 1 = 0 := by
 Defined as the generalized inverse of the counting function `prolateCount`: `λ n` is the least
 threshold `c > 0` above which `A` has at most `n` eigenvalues.
 
-Scope (audit, 2026-07-17): the enumeration is **not yet known to be nonzero**. Nothing in this file
-or its dependencies establishes `prolateEigenvalues T W 0 ≠ 0` for `0 < T`, `0 < W`, so the
-unconditional headlines below (`_nonneg`, `_le_one`, `_antitone`, `_tendsto_zero`) are all satisfied
-by the constant-zero sequence and carry no spectral content on their own; they are the shape
-statements, not the eigenvalue asymptotics. This is not a degenerate definition: at `W < 0` and at
-`T < 0` the operator genuinely collapses and the enumeration really is `≡ 0`, so a positivity input
-is needed to say more. The missing input is exactly one atom, `timeBandLimitingOp T W ≠ 0` for
-`0 < T`, `0 < W`; from it, Mathlib's `ContinuousLinearMap.eq_zero_of_forall_hasEigenvalue_eq_zero`
-(fed by `timeBandLimitingOp_isCompact` / `_isSymmetric` / `_isPositive`) yields a positive
-eigenvalue and hence `0 < prolateEigenvalues T W 0`. Note that atom bounds only the *first* entry:
-`λ n ≠ 0` for all `n` additionally needs `A` to have infinite rank. Neither is the
-`wall:nyquist-2w-dof` eigenvalue-concentration wall.
+Scope: the unconditional headlines below (`_nonneg`, `_le_one`, `_antitone`, `_tendsto_zero`) are
+shape statements — each is satisfied by the constant-zero sequence, so none of them carries spectral
+content on its own. That is not a defect of the definition: at `W < 0` and at `T < 0` the operator
+genuinely collapses and the enumeration really is `≡ 0`, so a nondegeneracy input is needed to say
+more. `prolateEigenvalues_zero_pos` supplies it, ruling out the zero sequence for `0 < T`, `0 < W`.
+
+Still open (a strictly larger obligation, not attempted here): `λ n ≠ 0` for *all* `n`, which needs
+`A` to have infinite rank. Neither that nor the above is the `wall:nyquist-2w-dof` eigenvalue-
+concentration wall.
 @audit:ok -/
 noncomputable def prolateEigenvalues (T W : ℝ) (n : ℕ) : ℝ :=
   sInf {c : ℝ | 0 < c ∧ prolateCount T W c ≤ n}
@@ -1447,9 +1454,9 @@ finitely many eigenvalues above `c/2` would leave a gap around it, making the co
 constant across `c` — contradicting that the count jumps there by definition of the infimum.
 
 The hypothesis is a non-degeneracy precondition, not the proof's core (granting it hands you
-nothing about eigenvalues; the gap argument below does the work). It is, however, **not currently
-dischargeable in-tree** — see the scope note on `prolateEigenvalues` — so this theorem has no
-consumer yet.
+nothing about eigenvalues; the gap argument below does the work). It is genuinely needed: for `n`
+past the rank of `A` the entry is `0`, which need not be an eigenvalue. At `n = 0` it is discharged
+in-tree by `prolateEigenvalues_zero_hasEigenvalue` for `0 < T`, `0 < W`.
 @audit:ok -/
 theorem prolateEigenvalues_hasEigenvalue (T W : ℝ) (n : ℕ) (h : prolateEigenvalues T W n ≠ 0) :
     (prolateEnd T W).HasEigenvalue ((prolateEigenvalues T W n : ℝ) : ℂ) := by
@@ -1498,5 +1505,181 @@ theorem prolateEigenvalues_hasEigenvalue (T W : ℝ) (n : ℕ) (h : prolateEigen
   exact h2 (hcount_eq ▸ h1)
 
 end Enumeration
+
+section NonVacuity
+
+/-- The indicator of the time window `[0,T]`, as an element of `L²(ℝ;ℂ)`. It is the witness that
+makes the eigenvalue enumeration non-vacuous: it lies in the time-limited subspace, and its
+spectrum is continuous with value `T` at the origin, hence survives the band cutoff. -/
+noncomputable def timeBox (T : ℝ) : E :=
+  indicatorConstLp 2 (measurableSet_Icc (a := (0 : ℝ)) (b := T))
+    (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top) (1 : ℂ)
+
+theorem timeBox_coeFn (T : ℝ) :
+    (timeBox T : ℝ → ℂ) =ᵐ[volume] (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) :=
+  indicatorConstLp_coeFn
+
+theorem timeBox_mem_timeLimitSubspace (T : ℝ) : timeBox T ∈ timeLimitSubspace T := by
+  show (timeBox T : ℝ → ℂ) =ᵐ[volume.restrict {t : ℝ | t < 0 ∨ T < t}] 0
+  filter_upwards [ae_restrict_of_ae (timeBox_coeFn T), self_mem_ae_restrict
+    (measurableSet_lt measurable_id measurable_const |>.union
+      (measurableSet_lt measurable_const measurable_id))] with t ht htS
+  simp only [Pi.zero_apply]
+  rw [ht, Set.indicator_of_notMem]
+  rintro ⟨h0, hT⟩
+  rcases htS with h | h
+  · exact absurd h0 (not_le.mpr h)
+  · exact absurd hT (not_le.mpr h)
+
+theorem indicatorIcc_memLp_one (T : ℝ) :
+    MemLp ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) 1 volume :=
+  memLp_indicator_const 1 measurableSet_Icc (1 : ℂ)
+    (Or.inr (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top))
+
+theorem fourierIntegral_indicatorIcc_continuous (T : ℝ) :
+    Continuous (𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)))) :=
+  VectorFourier.fourierIntegral_continuous Real.continuous_fourierChar (innerSL ℝ).continuous₂
+    (memLp_one_iff_integrable.mp (indicatorIcc_memLp_one T))
+
+theorem fourierIntegral_indicatorIcc_zero {T : ℝ} (hT : 0 < T) :
+    𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) 0 = (T : ℂ) := by
+  rw [Real.fourier_eq]
+  simp only [inner_zero_right, neg_zero, AddChar.map_zero_eq_one, one_smul]
+  rw [MeasureTheory.integral_indicator measurableSet_Icc]
+  simp [hT.le]
+
+theorem fourier_timeBox_ae_eq (T : ℝ) :
+    ((Lp.fourierTransformₗᵢ ℝ ℂ (timeBox T) : E) : ℝ → ℂ)
+      =ᵐ[volume] 𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) := by
+  have hmem2 : MemLp ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) 2 volume :=
+    memLp_indicator_const 2 measurableSet_Icc (1 : ℂ)
+      (Or.inr (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top))
+  have hbridge := ShannonHartley.l2Fourier_eq_fourierIntegral
+    ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) (indicatorIcc_memLp_one T) hmem2
+  have hLp : hmem2.toLp ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) = timeBox T := by
+    rw [← Lp.toLp_coeFn (timeBox T) (Lp.memLp _)]
+    exact (MemLp.toLp_eq_toLp_iff hmem2 (Lp.memLp _)).mpr (timeBox_coeFn T).symm
+  rw [hLp] at hbridge
+  exact hbridge
+
+theorem bandLimitProj_timeBox_ne_zero {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
+    (bandLimitSubspace W).starProjection (timeBox T) ≠ 0 := by
+  intro hzero
+  set F := 𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) with hF_def
+  -- The band cutoff of the box spectrum vanishes a.e.
+  have hae : ∀ᵐ ξ ∂(volume : Measure ℝ),
+      (Set.Icc (-W) W).indicator (fun _ => (1 : ℂ)) ξ * F ξ = 0 := by
+    have h1 := fourier_bandLimitProj_apply_ae W (timeBox T)
+    rw [hzero] at h1
+    have h0 : ((Lp.fourierTransformₗᵢ ℝ ℂ (0 : E) : E) : ℝ → ℂ) =ᵐ[volume] 0 := by
+      rw [map_zero]; exact Lp.coeFn_zero ℂ 2 volume
+    filter_upwards [h1, h0, fourier_timeBox_ae_eq T] with ξ h1ξ h0ξ hbξ
+    have := h1ξ.symm.trans h0ξ
+    simpa [Pi.mul_apply, hbξ] using this
+  -- But the spectrum is continuous and nonzero at the origin, which sits inside the band.
+  set U := (F ⁻¹' {0}ᶜ) ∩ Set.Ioo (-W) W with hU_def
+  have hUopen : IsOpen U :=
+    ((isOpen_compl_singleton).preimage (fourierIntegral_indicatorIcc_continuous T)).inter
+      isOpen_Ioo
+  have hUmem : (0 : ℝ) ∈ U := by
+    refine ⟨?_, ⟨by linarith, hW⟩⟩
+    simp only [Set.mem_preimage, Set.mem_compl_iff, Set.mem_singleton_iff]
+    rw [hF_def, fourierIntegral_indicatorIcc_zero hT]
+    exact_mod_cast hT.ne'
+  have hUpos : 0 < volume U := hUopen.measure_pos volume ⟨0, hUmem⟩
+  -- `U` lies in the null set where the cutoff spectrum is nonzero.
+  have hUnull : volume U = 0 := by
+    rw [MeasureTheory.ae_iff] at hae
+    refine measure_mono_null (fun ξ hξ => ?_) hae
+    have hband : ξ ∈ Set.Icc (-W) W := Set.Ioo_subset_Icc_self hξ.2
+    simp only [Set.mem_setOf_eq, Set.indicator_of_mem hband, one_mul]
+    exact hξ.1
+  exact absurd hUnull hUpos.ne'
+
+/-- The time-and-band limiting operator is nonzero whenever both the window and the band are
+nondegenerate. This is the non-vacuity input for the eigenvalue enumeration. -/
+theorem timeBandLimitingOp_ne_zero {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
+    timeBandLimitingOp T W ≠ 0 := by
+  intro hA
+  have hQg : (timeLimitSubspace T).starProjection (timeBox T) = timeBox T :=
+    Submodule.starProjection_eq_self_iff.mpr (timeBox_mem_timeLimitSubspace T)
+  have hApp : (bandLimitSubspace W).starProjection ((timeLimitSubspace T).starProjection
+      ((bandLimitSubspace W).starProjection (timeBox T))) = 0 := by
+    have h : timeBandLimitingOp T W (timeBox T) = 0 := by rw [hA]; simp
+    exact h
+  -- `⟪A g, g⟫ = ‖Q (P g)‖²`, so `A = 0` kills `Q (P g)`.
+  have h3 : (timeLimitSubspace T).starProjection
+      ((bandLimitSubspace W).starProjection (timeBox T)) = 0 := by
+    refine inner_self_eq_zero (𝕜 := ℂ).mp ?_
+    rw [Submodule.inner_starProjection_left_eq_right (timeLimitSubspace T),
+      Submodule.starProjection_eq_self_iff.mpr (Submodule.starProjection_apply_mem _ _),
+      Submodule.inner_starProjection_left_eq_right (bandLimitSubspace W), hApp,
+      inner_zero_right]
+  -- `‖P g‖² = ⟪Q g, P g⟫ = ⟪g, Q (P g)⟫ = 0`, since `g` is already time-limited.
+  have h4 : (bandLimitSubspace W).starProjection (timeBox T) = 0 := by
+    have key : (inner ℂ (timeBox T)
+        ((bandLimitSubspace W).starProjection (timeBox T)) : ℂ) = 0 := by
+      have h := Submodule.inner_starProjection_left_eq_right (𝕜 := ℂ) (timeLimitSubspace T)
+        (timeBox T) ((bandLimitSubspace W).starProjection (timeBox T))
+      rw [hQg] at h
+      rw [h, h3, inner_zero_right]
+    refine inner_self_eq_zero (𝕜 := ℂ).mp ?_
+    rw [Submodule.inner_starProjection_left_eq_right (bandLimitSubspace W),
+      Submodule.starProjection_eq_self_iff.mpr (Submodule.starProjection_apply_mem _ _)]
+    exact key
+  exact bandLimitProj_timeBox_ne_zero hT hW h4
+
+theorem exists_pos_hasEigenvalue {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
+    ∃ μ : ℝ, 0 < μ ∧ (prolateEnd T W).HasEigenvalue (μ : ℂ) := by
+  have hA : timeBandLimitingOp T W ≠ 0 := timeBandLimitingOp_ne_zero hT hW
+  have hiff := ContinuousLinearMap.eq_zero_of_forall_hasEigenvalue_eq_zero
+    (timeBandLimitingOp_isCompact T W) (timeBandLimitingOp_isSymmetric T W)
+  have hnot : ¬ (∀ μ : ℂ, Module.End.HasEigenvalue (prolateEnd T W) μ → μ = 0) :=
+    fun h => hA (hiff.mp h)
+  push Not at hnot
+  obtain ⟨μ, hμ, hμ0⟩ := hnot
+  have hconj := (timeBandLimitingOp_isSymmetric T W).conj_eigenvalue_eq_self hμ
+  have him : μ.im = 0 := Complex.conj_eq_iff_im.mp hconj
+  have hre : ((μ.re : ℝ) : ℂ) = μ := Complex.ext rfl (by simp [him])
+  have hμ' : (prolateEnd T W).HasEigenvalue ((μ.re : ℝ) : ℂ) := hre ▸ hμ
+  refine ⟨μ.re, ?_, hμ'⟩
+  have hnn : 0 ≤ μ.re := by
+    apply eigenvalue_nonneg_of_nonneg (𝕜 := ℂ) (T := (prolateEnd T W)) hμ'
+    intro x
+    have h := (timeBandLimitingOp_isPositive T W).inner_nonneg_right x
+    have := (Complex.le_def.mp h).1
+    simpa using this
+  rcases hnn.lt_or_eq with h | h
+  · exact h
+  · exact absurd (by rw [← hre, ← h]; simp) hμ0
+
+/-- The eigenvalue enumeration of the time-and-band limiting operator is non-vacuous: its leading
+entry is strictly positive whenever the window and the band are nondegenerate. -/
+theorem prolateEigenvalues_zero_pos {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
+    0 < prolateEigenvalues T W 0 := by
+  obtain ⟨μ, hμpos, hμ⟩ := exists_pos_hasEigenvalue hT hW
+  have hlb : ∀ c ∈ {c : ℝ | 0 < c ∧ prolateCount T W c ≤ 0}, μ ≤ c := by
+    rintro c ⟨hc, hcount⟩
+    by_contra hlt
+    push Not at hlt
+    haveI := prolateEigenspaceSup_finiteDimensional T W hc
+    have hmem : μ ∈ prolateEigenvalueSet T W c := ⟨hlt, hμ⟩
+    have hle : Module.End.eigenspace (prolateEnd T W) ((μ : ℝ) : ℂ)
+        ≤ prolateEigenspaceSup T W c := by
+      rw [prolateEigenspaceSup]
+      exact le_biSup (fun μ : ℝ => Module.End.eigenspace (prolateEnd T W) ((μ : ℝ) : ℂ)) hmem
+    have hbot : prolateEigenspaceSup T W c = ⊥ :=
+      Submodule.finrank_eq_zero.mp (Nat.le_zero.mp hcount)
+    exact hμ (le_bot_iff.mp (hbot ▸ hle))
+  exact lt_of_lt_of_le hμpos
+    (le_csInf (prolateEigenvalues_setOf_nonempty T W 0) hlb)
+
+/-- The leading entry of the enumeration is a genuine eigenvalue of `A`, discharging the
+non-degeneracy hypothesis of `prolateEigenvalues_hasEigenvalue` at `n = 0`. -/
+theorem prolateEigenvalues_zero_hasEigenvalue {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
+    (prolateEnd T W).HasEigenvalue ((prolateEigenvalues T W 0 : ℝ) : ℂ) :=
+  prolateEigenvalues_hasEigenvalue T W 0 (prolateEigenvalues_zero_pos hT hW).ne'
+
+end NonVacuity
 
 end InformationTheory.Shannon.TimeBandLimiting
