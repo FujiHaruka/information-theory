@@ -287,13 +287,51 @@ quantity is finite without the tight count) but it does not close the *operation
    (see §Self-build #2 note above); `isCompactOperator_of_tendsto` turned out not to be needed at all.
 
 3. **`prolateEigenvalues : ℕ → ℝ` (decreasing enumeration) + `_antitone` + `hasEigenvalue`** —
-   **MEDIUM effort (~200–400 lines)**, self-buildable, NOT the wall. From
-   `orthogonalComplement_iSup_eigenspaces_eq_bot` (dense span) + `finite_dimensional_eigenspace`
-   (finite multiplicity) + Fredholm (`hasEigenvalue_iff_mem_spectrum`): the nonzero spectrum is
-   countable, accumulates only at 0, each eigenvalue has finite multiplicity ⟹ list in decreasing
-   order (repeated by multiplicity), padding with 0. Pitfall: Mathlib gives no ordered enumeration —
-   you build the sorted list yourself; the "converge to 0 / discrete away from 0" fact needs the
-   Fredholm `antilipschitz_of_not_hasEigenvalue` machinery.
+   **DONE (de758f19, 243 lines, audit PASS 77a5fdf2)**. Estimate ~200–400 was right, but **the route
+   named below was wrong and is corrected here**.
+
+   **REALIZED route.** Only TWO ingredients: (i) a self-build atom `prolateEigenvalueSet_finite` —
+   for `c > 0` only finitely many eigenvalues exceed `c` (~40 lines: Cauchy–Schwarz against a single
+   unit eigenvector gives `μᵢ ≤ ‖A eᵢ − A eⱼ‖`, i.e. `c`-separation, then
+   `isCompact_closure_image_closedBall` + `IsCompact.tendsto_subseq` + `Metric.cauchySeq_iff`);
+   (ii) `finite_dimensional_eigenspace` (`Spectrum.lean:463`). No sorted-list construction is needed:
+   define the counting function `prolateCount c := finrank (⨆ μ ∈ eigenvalueSet c, eigenspace μ)` and
+   take `prolateEigenvalues n := sInf {c | 0 < c ∧ prolateCount c ≤ n}` — the generalized inverse.
+   `Antitone` is then 3 lines by set inclusion, and the Leg E bridge `#{n | c < λ n} = prolateCount c`
+   is statable without a re-shaping bridge.
+
+   **The old route above was FALSE in two places** (struck through, kept as a calibration record):
+   - `orthogonalComplement_iSup_eigenspaces_eq_bot` (`:443`, eigenbasis completeness) is **never used**.
+     Enumeration needs only *finitely many above `c`* + *finite multiplicity*. Completeness is where the
+     operator's spectral **content** enters ⟹ it is a **Leg D/E obligation** (trace / MI capture), not
+     Leg C's. Budget it there.
+   - "the converge-to-0 / discrete-away-from-0 fact needs the Fredholm `antilipschitz_of_not_hasEigenvalue`
+     machinery" is **false**: `_tendsto_zero` is 8 lines from the atom + the definition. Fredholm
+     (`:220`, `:54`) and `spectralRadius_eq_nnnorm` (`Rayleigh.lean:182`) all went unused.
+
+   **Meta-lesson (2nd occurrence in this inventory).** Naming a *real* Mathlib lemma as the route made an
+   unsound route look verified — the same shape as the Leg B "simple functions ⟹ finite rank" step that
+   had to be backtracked. Verifying that a lemma **exists** (verbatim signature check) says nothing about
+   whether the **steps reaching it** are sound. Symmetric to the wall protocol's "a dismissed asset must be
+   dismissed by the compiler": a **named route asset must be confirmed by the compiler to have been used**.
+
+   **Pitfall (tier-5 near-miss, caught by the compiler).** The guard must be `0 < c`, **not** `0 ≤ c`: at
+   `c = 0` the eigenspace span is infinite-dimensional, `finrank` returns junk `0`, so `0` satisfies the
+   constraint for **every** `n` and `prolateEigenvalues ≡ 0` — collapsing all five theorems to vacuous
+   truths (= abuse of a degenerate definition).
+
+3b. **Non-vacuity `0 < prolateEigenvalues T W 0` (Leg C', outstanding — NOT a wall).** #3 delivers a
+   genuinely-proven framework with **no spectral content yet**: nothing in-tree establishes
+   `prolateEigenvalues T W 0 ≠ 0`, and the four unconditional headlines (`_nonneg` / `_le_one` /
+   `_antitone` / `_tendsto_zero`) are all satisfied by the **constant-zero sequence** — machine-confirmed
+   by probes at `W < 0` and `T < 0` (two structurally different degenerate cases where `≡ 0` is a real
+   value). The **entire** gap is one atom, `timeBandLimitingOp T W ≠ 0` for `0 < T`, `0 < W`; the ~35 lines
+   downstream of it are already machine-verified in scratch via
+   `ContinuousLinearMap.eq_zero_of_forall_hasEigenvalue_eq_zero` (`Spectrum.lean:433`) fed by in-tree
+   `_isCompact` / `_isSymmetric` / `_isPositive`. Atom's expected route (**estimate, not machine-backed**):
+   `P_W(𝟙_[0,T]) ≠ 0` from `𝓕(𝟙_[0,T])(0) = T > 0` + continuity, via in-tree `fourier_bandLimitProj_apply_ae`
+   / `bandLimitSpec_eq_indicator`. Note the atom bounds only `λ 0`; `∀ n, λ n ≠ 0` additionally needs `A`
+   to have **infinite rank**.
 
 4. **`∑ prolateEigenvalues = 2WT` (trace)** — **MEDIUM effort**, self-buildable but tied to #2.
    The trace equals `∫_{[0,T]} k(t,t) dt = 2WT`. Without trace-class API this needs the HS/kernel

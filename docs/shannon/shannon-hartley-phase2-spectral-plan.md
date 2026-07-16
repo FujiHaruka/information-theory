@@ -15,7 +15,15 @@
     - **(b) の教訓 = `cause:loogle-blind`（family 標準手順に昇格）**。旧記述の 2 段（「`integral_exp_boxcar_eq_sincN` 経由の Lp² 畳み込み定理」route WRONG → 「真の blocker = L¹∩L² 橋、Mathlib 不在ゆえ self-build ~150-600 行」）のうち **後段が偽**だった: その橋は**プロジェクト内に既存**（`ShannonHartley.l2FourierInv_eq_fourierIntegralInv`、`ShannonHartleyOperational.lean:179`、一般 L¹∩L² 形・sorryAx-free・既存 consumer 2、しかも「閉じている」と記録した `𝓢'` 迂回を実際に通る）。loogle-neg 3 本は**逐語的に真だが的外れ**（検索範囲が Mathlib 限定、2 file 隣を grep せず）。implementer と auditor の**独立 2 者が同じ盲点**に落ちた。⟹ **「Mathlib に無い」を欠落の根拠にする前に必ず in-project を grep**（`rg` + `dep_consumers.sh`）。詳細 → `shannon-hartley-facts.md` §REVOKED。
   - **Leaf 3** `sincConvKernel_memLp`（kernel ∈ L²(ℝ²)）✅ genuine（679c954a / 6104d26b）。
   - **Leaf 4** `l2KernelOperator_isCompact`（generic L²-kernel⟹compact、存在形）✅ **genuine（e619b06c、~500 行、監査 PASS a04b1cec）**。HS bound `l2KernelApply_eLpNorm_le` + **閉部分加群 + π-λ 生成**（inventory の「simple function ⟹ finite rank」は**偽**だったので backtrack、`isCompactOperator_of_tendsto` は不要だった）。reusable。
-- [ ] Leg C — 固有値降順列挙 `prolateEigenvalues`（構造的 spectral thm 経由）📋 **[両方向 foundation: converse tight count + achievability WSEB の両方が要す]**
+- [x] Leg C — 固有値降順列挙 `prolateEigenvalues` ✅ **framework は genuine（de758f19、243 行、監査 PASS 77a5fdf2、14 decls ok / defect 0）**。**ただし spectral content は未達（下記 Leg C' が残債）**。
+  - 実測 route（**plan/inventory の旧記述「構造的 spectral thm 経由」は偽 — 訂正済**）: 要ったのは **(i) atom `prolateEigenvalueSet_finite`（`c` 超の固有値は有限個 = 0 以外に集積しない、Mathlib 不在ゆえ self-build ~40 行、Cauchy-Schwarz + `IsCompact.tendsto_subseq`）+ (ii) `finite_dimensional_eigenspace`（`:463`）** の 2 つだけ。**`orthogonalComplement_iSup_eigenspaces_eq_bot`（`:443`、固有基底の完全性）は一度も使わない** — 完全性は **Leg D/E の債務**（trace / MI capture でスペクトル内容が入る所）であって Leg C のものではない。Fredholm `:220` / `antilipschitz_of_not_hasEigenvalue`（`:54`）も不使用（inventory の「`_tendsto_zero` は Fredholm machinery を要す」は**偽**、atom から 8 行）。
+  - def 形 = **counting-function の一般逆**（`prolateCount c := finrank (⨆ μ ∈ eigenvalueSet c, eigenspace μ)`、`λ n := sInf {c | 0 < c ∧ prolateCount c ≤ n}`）。`Antitone` が集合包含で 3 行、Leg E の橋 `#{n | c < λ n} = prolateCount c` が re-shaping bridge 無しで statable。
+  - **guard は `0 < c` 必須（`0 ≤ c` は degenerate）**: `c=0` では span が無限次元 → `finrank` が junk `0` → `0` が全 `n` の制約集合に入り `λ ≡ 0` に潰れる。5 定理すべてが自明に真かつ空虚になる = tier-5「degenerate 定義の悪用」。implementer が compiler で捕捉（orchestrator ブリーフの `0 ≤ c` 推奨が誤り）。
+- [ ] **Leg C' — 非空虚性（Leg C の残債、壁ではない）** 🔄 **次の一手**。**Leg C を「固有値内容を delivered」と計上してはいけない**: `prolateEigenvalues T W 0 ≠ 0` は file にもその依存にも無く、4 つの無条件 headline（`_nonneg`/`_le_one`/`_antitone`/`_tendsto_zero`）は**定数ゼロ列で充足される**。監査が `W<0` / `T<0` の構造的に異なる 2 退化例でゼロ列が実際の値であることを probe で machine 確認済。
+  - **gap 全体 = 1 atom `timeBandLimitingOp T W ≠ 0`（`0<T`, `0<W`）**。そこから先の ~35 行は監査が scratch で machine 検証済: `eq_zero_of_forall_hasEigenvalue_eq_zero`（`Spectrum.lean:433`）+ in-tree `_isCompact`/`_isSymmetric`/`_isPositive` → `∃ μ>0, HasEigenvalue A μ` → `0 < prolateEigenvalues T W 0`。
+  - atom の想定 route（**未計測 = 見積であって machine 保証ではない**）: `P_W(𝟙_[0,T]) ≠ 0`（`𝓕(𝟙_[0,T])(0) = T > 0` + 連続性、in-tree `fourier_bandLimitProj_apply_ae` / `bandLimitSpec_eq_indicator`）。
+  - 追加債務: 上記 atom は **`λ 0` しか縛らない**。`∀ n, λ n ≠ 0` には `A` の **infinite rank** が別途要る。
+  - ⚠️ **罠（監査の「気づき」を採るな）**: 「`_hasEigenvalue` の `≠ 0` 仮説は除去可能かも（0 が固有値だから）」は**空虚さを増やす方向**。`λ n = 0` かつ `0` が固有値なら `HasEigenvalue A (λ n)` は自明成立 = 無条件化しても content はゼロのまま。content を運ぶのは `λ n > 0` の側なので、`≠ 0` の**discharge は必要**（仮説除去では代替不能）。「仮説が消せる＝前進」に見えて後退する under-estimation 形。
 - [ ] **WSEB**（achievability の勝ち筋）📋 **[`∑ψ_k(0)²/λ_k<∞` = 境界 reproducing kernel `k₀∈range(A^{1/2})`。Legs B/C 完了後に assess: constructible なら BddAbove `contAwgnMaxMessages_bddAbove` closure → Phase 3 achievability（LPS wall 無し）。second wall の可能性も要確認]**
 - [ ] Leg E — tight concentration `prolate_eigenvalue_count`（LPS）📋 **[converse exact 定数用、genuine wall 公算大（研究フロンティア、loogle Found 0）]**
 
@@ -74,7 +82,7 @@ leg 9 で WSEB gateway 決着（TRUE + genuine wall）後、**user が PAUSE を
 
 1. **Leg B — コンパクト性** `timeBandLimitingOp_isCompact`（`A=C†C`, `C=Q_T P_W` は HS、finite-rank 近似）。~500–900 行、
    NOT a wall。make-or-break = 抽象 `P_W` ↔ 具体 sinc convolution の橋。**[dispatch 済 `compact-legB`]**
-2. **Leg C — 固有値列挙** `prolateEigenvalues`（降順 + antitone + hasEigenvalue）。構造的 spectral thm 経由。~200–400 行。
+2. ~~**Leg C — 固有値列挙**~~ ✅ **framework CLOSED（de758f19、243 行、監査 PASS）**。実測 route = atom「`c` 超の固有値有限」+ `finite_dimensional_eigenspace` のみ（**構造的 spectral thm は不使用** = 旧記述は偽）。→ **残債 Leg C'（非空虚性、1 atom `timeBandLimitingOp T W ≠ 0`、壁ではない）が次の一手**。
 3. **WSEB**（achievability の勝ち筋）: `∑ψ_k(0)²/λ_k<∞`（境界 reproducing kernel `k₀∈range(A^{1/2})`）。**constructible
    なら achievability は LPS wall 無しで閉じる**（要 assess: 列挙 + soft 減衰で summability が出るか / second wall か）。
    → BddAbove closure → Phase 3 achievability。
@@ -250,10 +258,15 @@ make-or-break ではない**（それは Leg W = WSEB）。Leg A（DONE）の作
   ゆえ finite-rank kernel（sinc 積分作用素）極限で self-build（`isCompactOperator_of_tendsto`、`Compact/Basic.lean:459`）。
   ~500–900 行 zero-scaffolding。**Phase-4 専用**。proof-log: yes。
 - **Leg C — 固有値降順列挙 + qualitative effective-rank** `prolateEigenvalues : ℕ → ℝ`（降順）+ `#{k|λ_k>θ}<∞`。
-  構造的 spectral thm（`orthogonalComplement_iSup_eigenspaces_eq_bot` `Spectrum.lean:443` + `finite_dimensional_eigenspace`
-  `:463` + Fredholm `:220`）。~200–400 行。**Phase-4 専用**。**注意**: effective-rank の **count は BddAbove に対し
+  ✅ **framework CLOSED（de758f19、実測 243 行 vs 見積 ~200–400、監査 PASS 77a5fdf2）**。**Phase-4 専用**。
+  **route 訂正（実測）**: `finite_dimensional_eigenspace`（`:463`）+ self-build atom `prolateEigenvalueSet_finite` の 2 つのみ。
+  **`orthogonalComplement_iSup_eigenspaces_eq_bot`（`:443`）と Fredholm（`:220` / `:54`）は不使用** — 旧記述が挙げた 3 資産のうち 2 つは無関係だった（実在する Mathlib 補題を route に名指しすることは、その補題に至る手順の健全性を一切保証しない。同 inventory で 2 度目の同型失敗 → Leg B「simple function ⟹ finite rank」）。固有基底の完全性は **Leg D/E の債務**。
+  **注意**: effective-rank の **count は BddAbove に対し
   red herring**（tail-eigenvalue / trace gap、中心問題 verdict）— Phase 4 の tight count に属し Phase 3 ではない。
   proof-log: yes。
+- **Leg C' — 非空虚性（残債、壁ではない）** `timeBandLimitingOp T W ≠ 0`（`0<T`, `0<W`）→ `0 < prolateEigenvalues T W 0`。
+  Leg C の 4 無条件 headline は定数ゼロ列で充足されるため、この atom 無しではスペクトル内容ゼロ。下流 ~35 行は監査が
+  machine 検証済（`eq_zero_of_forall_hasEigenvalue_eq_zero` `Spectrum.lean:433` 経由）。`∀ n, λ n ≠ 0` には別途 infinite rank。
 - **Leg E — tight concentration** `prolate_eigenvalue_count`: `#{n|1/2<prolateEigenvalues T W n}` の
   `⌊2WT⌋ + O(log WT)` 集中（Landau-Pollak-Slepian）。**genuine irreducible 壁**（loogle `prolate`/`Slepian`/`Mercer`
   Found 0、2026-07-14 確認）。body `sorry + @residual(wall:nyquist-2w-dof)`。**Phase-4 専用**。proof-log: yes（撤退 rationale）。
