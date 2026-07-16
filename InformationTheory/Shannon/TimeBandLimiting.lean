@@ -161,13 +161,13 @@ Hilbert–Schmidt: its integral kernel
 
 lies in `L²(ℝ × ℝ)` (the `t`-indicator confines the mass to `[0,T]`, and Plancherel of the ideal
 low-pass gives `∫_ℝ (2W sincN(2W u))² du = 2W`, so `‖k‖₂² = 2WT < ∞`), and an `L²` kernel yields a
-compact operator by a rank-one approximation of the kernel. The genuinely analytic content lives in
-four leaves:
+compact operator because the kernels with compact operator form a closed submodule containing the
+rectangle indicators, which generate `L²(ℝ × ℝ)`. The genuinely analytic content lives in four
+leaves:
 
 * `timeLimitProj_apply_ae` — `Q_T` acts as multiplication by `𝟙_[0,T]` (proven);
 * `bandLimitProj_apply_ae` — `P_W` acts as convolution with `2W sincN(2W·)` (**the make-or-break
-  abstract-projection ↔ concrete-sinc bridge**; the file's only remaining
-  `@residual(plan:shannon-hartley-operational-moonshot-plan)`);
+  abstract-projection ↔ concrete-sinc bridge**; the file's only remaining residual);
 * `sincConvKernel_memLp` — the kernel is `L²` on `ℝ × ℝ` (proven);
 * `l2KernelOperator_isCompact` — a generic `L²`-kernel operator is compact (proven; the reusable
   Hilbert–Schmidt build, `l2KernelOp` and friends).
@@ -566,7 +566,8 @@ noncomputable def l2KernelBilin : L2Kernel →ₗ[ℂ] (E →ₗ[ℂ] E) where
     ring
 
 /-- The kernel-to-operator map `κ ↦ (f ↦ ∫ κ(·,s) f(s) ds)`, as a continuous linear map. Its
-continuity is exactly the Hilbert–Schmidt bound `‖l2KernelOp κ‖ ≤ ‖κ‖`. -/
+continuity is exactly the Hilbert–Schmidt bound `‖l2KernelOp κ‖ ≤ ‖κ‖`.
+@audit:ok -/
 noncomputable def l2KernelOp : L2Kernel →L[ℂ] (E →L[ℂ] E) :=
   LinearMap.mkContinuous₂ l2KernelBilin 1 (by
     intro κ f
@@ -585,7 +586,12 @@ theorem l2KernelOp_apply_ae (κ : L2Kernel) (f : E) :
     (l2KernelOp κ f : ℝ → ℂ) =ᵐ[volume] l2KernelApply κ f :=
   l2KernelLin_coeFn κ f
 
-/-- A rectangle kernel `c · 𝟙_{A×B}` induces a rank-one operator, hence a compact one. -/
+/-- A rectangle kernel `c · 𝟙_{A×B}` induces a rank-one operator, hence a compact one. The
+degenerate branch (`vol A * vol B = 0`, which by `0 * ∞ = 0` in `ℝ≥0∞` also covers a null side
+paired with an infinite one) is not an escape: `Measure.prod_prod` makes the rectangle genuinely
+product-null, so the kernel is the zero element of `L²(ℝ × ℝ)` and the induced operator really is
+`0`.
+@audit:ok -/
 theorem l2KernelOp_indicator_prod_isCompact {A B : Set ℝ} (hA : MeasurableSet A)
     (hB : MeasurableSet B) (hAB : (volume.prod volume) (A ×ˢ B) ≠ ∞) (c : ℂ) :
     IsCompactOperator (l2KernelOp (indicatorConstLp 2 (hA.prod hB) hAB c)) := by
@@ -890,7 +896,9 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
 kernel is `L²` on `ℝ × ℝ` is a compact operator; it is realized a.e. as `f ↦ ∫ k(·,s) f(s) ds`.
 Built via the reusable `l2KernelOp` Hilbert–Schmidt machinery above (Mathlib has no Hilbert–Schmidt
 API). Stated existentially so the operator object is genuinely constructed together with its
-compactness rather than assumed. -/
+compactness rather than assumed; the a.e.-representation clause pins `Op` uniquely (an `Lp` element
+is an a.e. class), so the existential is not weakened by it.
+@audit:ok -/
 theorem l2KernelOperator_isCompact {k : ℝ → ℝ → ℂ}
     (hk : MemLp (fun p : ℝ × ℝ => k p.1 p.2) 2 (volume.prod volume)) :
     ∃ Op : E →L[ℂ] E, (∀ f : E, (Op f : ℝ → ℂ) =ᵐ[volume]
