@@ -250,6 +250,43 @@ theorem timeLimitProj_apply_ae (T : ℝ) (g : E) :
       have hwx0 : (w : ℝ → ℂ) x = 0 := by simpa using hwx hxS
       rw [hwx0, inner_zero_right]
 
+/-- Conjugating an orthogonal projection by a surjective linear isometry: the projection onto a
+`comap`ped subspace is the projection onto the subspace, conjugated. Mathlib has the `map` form
+(`LinearIsometry.map_starProjection`); this is the `comap` form, which is what a Fourier-multiplier
+subspace such as `bandLimitSubspace` is literally defined by. -/
+theorem starProjection_comap_linearIsometryEquiv {𝕜 X Y : Type*} [RCLike 𝕜]
+    [NormedAddCommGroup X] [InnerProductSpace 𝕜 X]
+    [NormedAddCommGroup Y] [InnerProductSpace 𝕜 Y]
+    (L : X ≃ₗᵢ[𝕜] Y) (U : Submodule 𝕜 Y) [U.HasOrthogonalProjection]
+    [(U.comap (L.toLinearEquiv : X →ₗ[𝕜] Y)).HasOrthogonalProjection] (x : X) :
+    (U.comap (L.toLinearEquiv : X →ₗ[𝕜] Y)).starProjection x
+      = L.symm (U.starProjection (L x)) := by
+  refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero ?_ ?_
+  · -- `L.symm (P_U (L x)) ∈ U.comap L`, since `L (L.symm y) = y ∈ U`.
+    simp only [Submodule.mem_comap, LinearEquiv.coe_coe, LinearIsometryEquiv.coe_toLinearEquiv,
+      LinearIsometryEquiv.apply_symm_apply]
+    exact Submodule.coe_mem _
+  · -- Orthogonality transports through `L`, which preserves inner products.
+    intro w hw
+    have hLw : L w ∈ U := hw
+    have hinner := L.inner_map_map (x - L.symm (U.starProjection (L x))) w
+    rw [← hinner, map_sub, LinearIsometryEquiv.apply_symm_apply]
+    exact Submodule.starProjection_inner_eq_zero (L x) (L w) hLw
+
+instance instHasOrthogonalProjectionBandLimitComap (W : ℝ) :
+    (Submodule.comap ((Lp.fourierTransformₗᵢ ℝ ℂ).toLinearEquiv.toLinearMap : E →ₗ[ℂ] E)
+      (zeroOnLp {ξ : ℝ | W < |ξ|})).HasOrthogonalProjection :=
+  inferInstanceAs (bandLimitSubspace W).HasOrthogonalProjection
+
+/-- The band-limiting projection is the Fourier multiplier by `𝟙_[-W,W]`: conjugate the projection
+onto `zeroOnLp {ξ | W < |ξ|}` by the Plancherel isometry. Immediate from
+`starProjection_comap_linearIsometryEquiv` and the definition of `bandLimitSubspace`. -/
+theorem bandLimitProj_eq_fourier_conj (W : ℝ) (f : E) :
+    (bandLimitSubspace W).starProjection f
+      = (Lp.fourierTransformₗᵢ ℝ ℂ).symm
+          ((zeroOnLp {ξ : ℝ | W < |ξ|}).starProjection (Lp.fourierTransformₗᵢ ℝ ℂ f)) :=
+  starProjection_comap_linearIsometryEquiv (Lp.fourierTransformₗᵢ ℝ ℂ) _ f
+
 /-- **Leaf 2 — the make-or-break bridge** (`P_W` = convolution with `2W sincN(2W·)`). The
 orthogonal projection onto the band-limited subspace acts, a.e., as convolution with the ideal
 low-pass `2W sincN(2W·)` (whose Fourier transform is `𝟙_[-W,W]`). This is the abstract
