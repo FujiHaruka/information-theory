@@ -48,7 +48,7 @@ counting function `prolateCount` honest, and `prolateEigenvalues` is its general
 * `prolateEigenvalues_tendsto_zero` — the enumeration tends to `0`.
 
 Leg C' makes that enumeration non-vacuous. The headlines above are all satisfied by the constant-zero
-sequence — and legitimately so, since `A` really does collapse for `W < 0` or `T < 0`. The single
+sequence — and legitimately so, since `A` really does collapse for `W ≤ 0` or `T ≤ 0`. The single
 missing input is `timeBandLimitingOp_ne_zero`, proved by exhibiting the box `𝟙_[0,T]` as a witness:
 its spectrum is continuous with value `T` at the origin (via the `L¹ ∩ L²` Fourier bridge
 `ShannonHartley.l2Fourier_eq_fourierIntegral`), hence survives the band cutoff since `[-W,W]` is a
@@ -56,6 +56,13 @@ neighborhood of `0`.
 
 * `timeBandLimitingOp_ne_zero` — `A ≠ 0` for `0 < T`, `0 < W`.
 * `prolateEigenvalues_zero_pos` — the leading eigenvalue is strictly positive.
+
+Both of its hypotheses are tight, and the boundary lemmas witnessing that are in-tree rather than
+prose: the two subspaces collapse to `⊥` for a nonpositive parameter
+(`timeLimitSubspace_eq_bot_of_nonpos` / `bandLimitSubspace_eq_bot_of_nonpos`), hence so does `A`,
+hence the enumeration is identically `0` there (`prolateEigenvalues_eq_zero_of_time_nonpos` /
+`prolateEigenvalues_eq_zero_of_band_nonpos`). The degeneracy story is told once, at the section
+header preceding `zeroOnLp_eq_bot_of_ae_mem`.
 
 The Landau–Pollak–Slepian concentration count (`prolate_eigenvalue_count`, `≈ 2WT` eigenvalues near
 `1`) lives in a later leg, as does `λ n ≠ 0` for all `n` (which needs `A` to have infinite rank).
@@ -208,7 +215,8 @@ compose the four leaves, so the headline `timeBandLimitingOp_isCompact` is uncon
 
 Note the sign asymmetry: the kernel representation needs `0 ≤ W` (`sincN` is even, so a negative `W`
 flips the sign of the kernel while `P_W` collapses to `0`), but the compactness headlines hold for
-every real `W`, the degenerate band being handled separately via `bandLimitSubspace_eq_bot_of_neg`.
+every real `W`, the degenerate band being handled separately via
+`bandLimitSubspace_eq_bot_of_nonpos`.
 -/
 
 /-- The Hilbert–Schmidt kernel of the sinc integral operator `C = Q_T ∘ P_W`:
@@ -358,19 +366,54 @@ theorem fourier_bandLimitProj_apply_ae (W : ℝ) (f : E) :
     (Lp.fourierTransformₗᵢ ℝ ℂ f)
   rwa [compl_setOf_lt_abs] at h
 
-/-- For a negative band limit the band-limited subspace degenerates: `{ξ | W < |ξ|}` is everything,
-so only the zero function has an a.e.-vanishing Fourier transform. This is a true degeneracy of the
-band (`[-W,W] = ∅` for `W < 0`), not an artifact of the definition, and it is what lets the
-compactness headlines keep their unrestricted `(T W : ℝ)` signatures.
+/-! ### Degeneracy at the parameter boundary
+
+**The one place the degeneracy story is told.** Both subspaces collapse to `⊥` as soon as their
+parameter is nonpositive, and for structurally identical reasons: the set on which the `L²`
+functions are required to vanish becomes co-null — all of `ℝ` for a strictly negative parameter,
+the complement of the null set `{0}` at the boundary itself — and an `L²` function vanishing a.e.
+on a co-null set is `0`. This is a true degeneracy of the geometry (the band `[-W,W]` is empty or
+null, the window `[0,T]` likewise), not an artifact of the definitions, and it is what lets the
+compactness headlines below keep their unrestricted `(T W : ℝ)` signatures.
+
+The operator- and eigenvalue-level consequences are collected in `section Degeneracy` at the end of
+the file: `A = 0` on either boundary, hence `prolateEigenvalues` is identically `0` there. Those are
+what make the `0 < T` and `0 < W` hypotheses of `prolateEigenvalues_zero_pos` tight.
+-/
+
+theorem ae_ne_zero : ∀ᵐ x ∂(volume : Measure ℝ), x ≠ 0 := by
+  rw [ae_iff]
+  simp
+
+theorem zeroOnLp_eq_bot_of_ae_mem {S : Set ℝ} (hS : ∀ᵐ x ∂(volume : Measure ℝ), x ∈ S) :
+    zeroOnLp S = ⊥ := by
+  refine (Submodule.eq_bot_iff _).mpr fun g hg => ?_
+  have hg' : (g : ℝ → ℂ) =ᵐ[volume.restrict S] 0 := hg
+  rw [Measure.restrict_eq_self_of_ae_mem hS] at hg'
+  exact (Lp.eq_zero_iff_ae_eq_zero (f := g)).mpr hg'
+
+/-- For a nonpositive time limit the time-limited subspace degenerates: the window `[0,T]` is empty
+(`T < 0`) or null (`T = 0`), so only the zero function is supported in it. Tightness half of the
+`0 < T` hypothesis of `prolateEigenvalues_zero_pos`.
 @audit:ok -/
-theorem bandLimitSubspace_eq_bot_of_neg {W : ℝ} (hW : W < 0) : bandLimitSubspace W = ⊥ := by
-  have huniv : {ξ : ℝ | W < |ξ|} = Set.univ :=
-    Set.eq_univ_of_forall fun ξ => lt_of_lt_of_le hW (abs_nonneg ξ)
+theorem timeLimitSubspace_eq_bot_of_nonpos {T : ℝ} (hT : T ≤ 0) : timeLimitSubspace T = ⊥ := by
+  refine zeroOnLp_eq_bot_of_ae_mem ?_
+  filter_upwards [ae_ne_zero] with t ht
+  rcases lt_trichotomy t 0 with h | h | h
+  · exact Or.inl h
+  · exact absurd h ht
+  · exact Or.inr (lt_of_le_of_lt hT h)
+
+/-- For a nonpositive band limit the band-limited subspace degenerates: the band `[-W,W]` is empty
+(`W < 0`) or null (`W = 0`), so only the zero function has an a.e.-vanishing Fourier transform
+outside it. Tightness half of the `0 < W` hypothesis of `prolateEigenvalues_zero_pos`; it also
+discharges the degenerate band in the compactness headlines.
+@audit:ok -/
+theorem bandLimitSubspace_eq_bot_of_nonpos {W : ℝ} (hW : W ≤ 0) : bandLimitSubspace W = ⊥ := by
   have hzero : zeroOnLp {ξ : ℝ | W < |ξ|} = ⊥ := by
-    refine Submodule.eq_bot_iff _ |>.mpr fun g hg => ?_
-    have hg' : (g : ℝ → ℂ) =ᵐ[volume.restrict {ξ : ℝ | W < |ξ|}] 0 := hg
-    rw [huniv, Measure.restrict_univ] at hg'
-    exact (Lp.eq_zero_iff_ae_eq_zero (f := g)).mpr hg'
+    refine zeroOnLp_eq_bot_of_ae_mem ?_
+    filter_upwards [ae_ne_zero] with ξ hξ
+    exact lt_of_le_of_lt hW (abs_pos.mpr hξ)
   rw [bandLimitSubspace, hzero, Submodule.comap_bot, LinearMap.ker_eq_bot]
   exact (Lp.fourierTransformₗᵢ ℝ ℂ).toLinearEquiv.injective
 
@@ -491,7 +534,7 @@ integral operator with the Hilbert–Schmidt kernel `sincConvKernel`.
 
 The sign precondition `0 ≤ W` is necessary, not cosmetic: `sincN` is even, so for `W < 0` the stated
 kernel `2W sincN(2W·)` is *minus* the ideal low-pass at `|W|`, while the left-hand side collapses to
-`0` (`bandLimitSubspace_eq_bot_of_neg`). Concretely at `W = -1`, `f = 𝟙_[0,1]`, `t = 1/2` the
+`0` (`bandLimitSubspace_eq_bot_of_nonpos`). Concretely at `W = -1`, `f = 𝟙_[0,1]`, `t = 1/2` the
 right-hand side is `-∫_(-1)^(1) sincN ≈ -1.179 ≠ 0`, so the unrestricted statement is false; `0 ≤ W`
 is a precondition on the parameter, not a hypothesis carrying the proof.
 
@@ -1218,7 +1261,7 @@ theorem timeBandLimitingComp_isCompact (T W : ℝ) :
       have hmem : (bandLimitSubspace W).starProjection f ∈ bandLimitSubspace W :=
         Submodule.coe_mem _
       have hzf : (bandLimitSubspace W).starProjection f = 0 :=
-        (Submodule.eq_bot_iff _).mp (bandLimitSubspace_eq_bot_of_neg hW) _ hmem
+        (Submodule.eq_bot_iff _).mp (bandLimitSubspace_eq_bot_of_nonpos hW.le) _ hmem
       simp only [timeBandLimitingComp, ContinuousLinearMap.comp_apply, hzf, map_zero,
         zero_apply]
     rw [hzero]
@@ -1234,7 +1277,7 @@ theorem timeBandLimitingComp_isCompact (T W : ℝ) :
 
 Unconditional: the signature carries no hypothesis on `T` or `W`, and both degenerate parameter
 ranges are discharged by real proofs rather than assumed away — `W < 0` via
-`bandLimitSubspace_eq_bot_of_neg` (`P_W = 0`, so `C = 0`), `T < 0` via the empty `[0,T]`
+`bandLimitSubspace_eq_bot_of_nonpos` (`P_W = 0`, so `C = 0`), `T < 0` via the empty `[0,T]`
 (`Q_T = 0`), and `W = 0` inside Leaf 2 as a genuine null-band case.
 @audit:ok -/
 theorem timeBandLimitingOp_isCompact (T W : ℝ) :
@@ -1406,9 +1449,11 @@ threshold `c > 0` above which `A` has at most `n` eigenvalues.
 
 Scope: the unconditional headlines below (`_nonneg`, `_le_one`, `_antitone`, `_tendsto_zero`) are
 shape statements — each is satisfied by the constant-zero sequence, so none of them carries spectral
-content on its own. That is not a defect of the definition: at `W < 0` and at `T < 0` the operator
-genuinely collapses and the enumeration really is `≡ 0`, so a nondegeneracy input is needed to say
-more. `prolateEigenvalues_zero_pos` supplies it, ruling out the zero sequence for `0 < T`, `0 < W`.
+content on its own. That is not a defect of the definition: for `W ≤ 0` and for `T ≤ 0` the operator
+genuinely collapses and the enumeration really is `≡ 0` (`prolateEigenvalues_eq_zero_of_band_nonpos`
+/ `prolateEigenvalues_eq_zero_of_time_nonpos`), so a nondegeneracy input is needed to say more.
+`prolateEigenvalues_zero_pos` supplies it, ruling out the zero sequence for `0 < T`, `0 < W`; those
+two collapse lemmas are exactly what make its hypotheses tight.
 
 Still open (a strictly larger obligation, not attempted here): `λ n ≠ 0` for *all* `n`, which needs
 `A` to have infinite rank. Neither that nor the above is the `wall:nyquist-2w-dof` eigenvalue-
@@ -1606,10 +1651,10 @@ theorem bandLimitProj_timeBox_ne_zero {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
 nondegenerate. This is the non-vacuity input for the eigenvalue enumeration.
 
 Both hypotheses are tight, and on structurally distinct grounds: at `T = 0` the window collapses
-(`timeLimitSubspace 0 = ⊥`, so `Q = 0`) and at `W = 0` the band collapses
-(`bandLimitSubspace 0 = ⊥`, so `P = 0`); either forces `A = 0`. So neither can be relaxed to `≤`.
-The two boundary lemmas are not currently in-tree — only the strict-negative band case
-(`bandLimitSubspace_eq_bot_of_neg`) is.
+(`timeLimitSubspace_eq_bot_of_nonpos`, so `Q = 0`) and at `W = 0` the band collapses
+(`bandLimitSubspace_eq_bot_of_nonpos`, so `P = 0`); either forces `A = 0`
+(`timeBandLimitingOp_eq_zero_of_time_nonpos` / `timeBandLimitingOp_eq_zero_of_band_nonpos`). So
+neither can be relaxed to `≤`.
 @audit:ok -/
 theorem timeBandLimitingOp_ne_zero {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
     timeBandLimitingOp T W ≠ 0 := by
@@ -1700,5 +1745,75 @@ theorem prolateEigenvalues_zero_hasEigenvalue {T W : ℝ} (hT : 0 < T) (hW : 0 <
   prolateEigenvalues_hasEigenvalue T W 0 (prolateEigenvalues_zero_pos hT hW).ne'
 
 end NonVacuity
+
+/-! ### Degeneracy — the tightness half of the non-vacuity hypotheses
+
+The operator- and eigenvalue-level consequences of the subspace collapse established above (see the
+narrative anchor at `zeroOnLp_eq_bot_of_ae_mem`). Killing either projection kills `A`, and an `A`
+that is `0` has no positive eigenvalue, so the enumeration is identically `0`. Together with
+`prolateEigenvalues_zero_pos` this pins both of its hypotheses as tight: the conclusion
+`0 < prolateEigenvalues T W 0` genuinely fails at `T = 0` and at `W = 0`.
+-/
+
+section Degeneracy
+
+theorem timeBandLimitingOp_eq_zero_of_band_nonpos (T : ℝ) {W : ℝ} (hW : W ≤ 0) :
+    timeBandLimitingOp T W = 0 := by
+  refine ContinuousLinearMap.ext fun f => ?_
+  have hzf : (bandLimitSubspace W).starProjection f = 0 :=
+    (Submodule.eq_bot_iff _).mp (bandLimitSubspace_eq_bot_of_nonpos hW) _ (Submodule.coe_mem _)
+  simp only [timeBandLimitingOp, ContinuousLinearMap.comp_apply, hzf, map_zero, zero_apply]
+
+theorem timeBandLimitingOp_eq_zero_of_time_nonpos {T : ℝ} (hT : T ≤ 0) (W : ℝ) :
+    timeBandLimitingOp T W = 0 := by
+  refine ContinuousLinearMap.ext fun f => ?_
+  have hzf : (timeLimitSubspace T).starProjection ((bandLimitSubspace W).starProjection f) = 0 :=
+    (Submodule.eq_bot_iff _).mp (timeLimitSubspace_eq_bot_of_nonpos hT) _ (Submodule.coe_mem _)
+  simp only [timeBandLimitingOp, ContinuousLinearMap.comp_apply, hzf, map_zero, zero_apply]
+
+theorem prolateEigenvalues_eq_zero_of_op_eq_zero {T W : ℝ} (hA : timeBandLimitingOp T W = 0)
+    (n : ℕ) : prolateEigenvalues T W n = 0 := by
+  -- A zero operator has no eigenvalue above a positive threshold, so every count vanishes.
+  have hset : ∀ c : ℝ, 0 < c → prolateEigenvalueSet T W c = ∅ := by
+    intro c hc
+    refine Set.eq_empty_iff_forall_notMem.mpr fun μ hμ => ?_
+    obtain ⟨v, hv_mem, hv_ne⟩ := hμ.2.exists_hasEigenvector
+    rw [Module.End.mem_eigenspace_iff] at hv_mem
+    have hv0 : (μ : ℂ) • v = 0 := by
+      rw [← hv_mem]
+      simp [prolateEnd, hA]
+    have : (μ : ℂ) = 0 := by
+      rcases smul_eq_zero.mp hv0 with h | h
+      · exact h
+      · exact absurd h hv_ne
+    have hμ0 : μ = 0 := by exact_mod_cast this
+    exact absurd hμ.1 (by simp [hμ0, hc.le])
+  have hcount : ∀ c : ℝ, 0 < c → prolateCount T W c = 0 := by
+    intro c hc
+    have hbot : prolateEigenspaceSup T W c = ⊥ := by
+      rw [prolateEigenspaceSup, hset c hc]
+      simp
+    rw [prolateCount, hbot]
+    simp
+  refine le_antisymm ?_ (prolateEigenvalues_nonneg T W n)
+  refine le_of_forall_pos_le_add fun ε hε => ?_
+  have := prolateEigenvalues_le_of_count_le T W hε ((hcount ε hε).le.trans (Nat.zero_le n))
+  linarith
+
+/-- At a degenerate band the eigenvalue enumeration collapses to `0`, so the `0 < W` hypothesis of
+`prolateEigenvalues_zero_pos` cannot be relaxed to `0 ≤ W`.
+@audit:ok -/
+theorem prolateEigenvalues_eq_zero_of_band_nonpos (T : ℝ) {W : ℝ} (hW : W ≤ 0) (n : ℕ) :
+    prolateEigenvalues T W n = 0 :=
+  prolateEigenvalues_eq_zero_of_op_eq_zero (timeBandLimitingOp_eq_zero_of_band_nonpos T hW) n
+
+/-- At a degenerate window the eigenvalue enumeration collapses to `0`, so the `0 < T` hypothesis of
+`prolateEigenvalues_zero_pos` cannot be relaxed to `0 ≤ T`.
+@audit:ok -/
+theorem prolateEigenvalues_eq_zero_of_time_nonpos {T : ℝ} (hT : T ≤ 0) (W : ℝ) (n : ℕ) :
+    prolateEigenvalues T W n = 0 :=
+  prolateEigenvalues_eq_zero_of_op_eq_zero (timeBandLimitingOp_eq_zero_of_time_nonpos hT W) n
+
+end Degeneracy
 
 end InformationTheory.Shannon.TimeBandLimiting
