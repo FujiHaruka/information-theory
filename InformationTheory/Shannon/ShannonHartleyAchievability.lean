@@ -456,7 +456,7 @@ theorem synthSignal_window_energy_le (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
   exact setIntegral_le_integral (synthSignal_sq_integrable T n a hT hn)
     (Filter.Eventually.of_forall (fun t => sq_nonneg _))
 
-/-! ## §E — boundedness of the message set (wall-gated) -/
+/-! ## §E — boundedness of the message set (defect-gated) -/
 
 /-- The message-count set is bounded above — the `BddAbove` obligation needed to lower-bound
 `contAwgnMaxMessages` via `le_csSup`.
@@ -499,9 +499,19 @@ own plateau. An arbitrary-precision recomputation is in `docs/shannon/wseb-highp
 forward-evaluated witness, with no matrix inverse in the ratio, already attains `276.29` at
 `T = 4`.
 
-The root cause is `ContAwgnCode.encoder_power`, a window-only energy constraint: it admits the
+The cause is `ContAwgnCode.encoder_power`, a window-only energy constraint: it admits the
 classical superdirectivity / superoscillation signals, and the code class it defines therefore has
-infinite capacity. The def-fix is pending under `shannon-hartley-phase2-spectral-plan`.
+infinite capacity.
+
+Unlike `contAwgn_eq_shannonHartley`, this statement is repaired by constraining the full-line
+energy `‖encoder m‖₂ ≤ T·P` alone. Under that constraint `bandlimited_sup_bound`
+(`|f(t)| ≤ √(2W)·‖f‖₂`) caps every sample uniformly in `sampleCount`, bounding the sampled energy
+by `2W·T²·P` and hence `log M` by `2W·T²·P/N₀`. The identity needs a strictly larger repair,
+because its falsity survives this one: the defect there is in the observation map, not in the
+input class (see `sampledSignal` and `ContAwgnCode.errorProbAt`). That one fix settles this
+theorem and not that one is itself the signal that the power constraint is not the whole story.
+The def-fix, of which the full-line power constraint is one component, is pending under
+`shannon-hartley-phase2-spectral-plan`.
 
 `@residual(defect:false-statement)` `@audit:defect(false-statement)`
 `@audit:closed-by-successor(shannon-hartley-phase2-spectral-plan)` -/
@@ -525,18 +535,21 @@ consumes `contAwgnMaxMessages_bddAbove` (§E) — and the ℕ-`sSup` collapses t
 `BddAbove`. Since §E is not merely unproven but false, that collapse is the actual value:
 `contAwgnOperationalCapacity W N₀ P = 0 < bandlimitedAwgnCapacity W N₀ P` whenever `P > 0`.
 
-Repair needs the `ContAwgnCode.encoder_power` def-fix; refactoring the capacity to the standard
-achievable-rate form (`sup` over rates achievable by code sequences) would decouple this direction
-from the converse's boundedness obligation, but would not by itself restore truth, since the
-underlying code class has infinite capacity. Both are pending under
-`shannon-hartley-phase2-spectral-plan`.
+Repair needs the `ContAwgnCode` def-fix. Constraining the full-line energy is one component of it
+and is by itself enough to repair §E, but it does not make the model faithful: the observation map
+under-samples and misprices noise independently of the power constraint (see `sampledSignal` and
+`ContAwgnCode.errorProbAt`), which is why `contAwgn_eq_shannonHartley` stays false under that
+partial fix. Refactoring the capacity to the standard achievable-rate form (`sup` over rates
+achievable by code sequences) would decouple this direction from the converse's boundedness
+obligation, but would not by itself restore truth, since the underlying code class has infinite
+capacity. All of these are pending under `shannon-hartley-phase2-spectral-plan`.
 
 `@residual(defect:false-statement)` `@audit:defect(false-statement)`
 `@audit:closed-by-successor(shannon-hartley-phase2-spectral-plan)` -/
 theorem contAwgn_ge_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := by
-  -- FALSE as framed (see docstring): unfillable pending the `ContAwgnCode.encoder_power` def-fix.
+  -- FALSE as framed (see docstring): unfillable pending the `ContAwgnCode` def-fix.
   sorry -- @residual(defect:false-statement)
 
 end InformationTheory.Shannon.ShannonHartley

@@ -26,10 +26,16 @@ This file provides only the closed-form definitions and the algebraic `2W`-reduc
 *operational* Shannon-Hartley identity — that this closed form is the operational capacity of
 the continuous-time band-limited AWGN channel — lives in
 `InformationTheory.Shannon.ShannonHartleyOperational` (`contAwgn_eq_shannonHartley`), which
-builds a faithful, non-circular operational capacity `contAwgnOperationalCapacity` on top of
-these definitions and reduces the whole gap to the single genuine Mathlib wall
-`@residual(wall:nyquist-2w-dof)` (the prolate-spheroidal / Landau-Pollak-Slepian time-bandwidth
-degrees-of-freedom-per-second count).
+builds an operational capacity `contAwgnOperationalCapacity` on top of these definitions.
+
+That identity is not yet available: its `ContAwgnCode` model under-constrains the code class,
+so `contAwgn_eq_shannonHartley` is false as stated and carries a defect marker rather than a
+proof. The gap is therefore not a single missing Mathlib result. It is first a modelling
+repair — the observation map must discretize the received signal against an orthonormal family
+supported in the window, rather than by point sampling — after which the prolate-spheroidal /
+Landau-Pollak-Slepian time-bandwidth degrees-of-freedom-per-second count becomes the remaining
+mathematical obstruction. See `ShannonHartleyOperational` for the defect markers and the
+successor plan.
 
 ## References
 
