@@ -64,8 +64,26 @@ hence the enumeration is identically `0` there (`prolateEigenvalues_eq_zero_of_t
 `prolateEigenvalues_eq_zero_of_band_nonpos`). The degeneracy story is told once, at the section
 header preceding `zeroOnLp_eq_bot_of_ae_mem`.
 
-The Landau–Pollak–Slepian concentration count (`prolate_eigenvalue_count`, `≈ 2WT` eigenvalues near
-`1`) lives in a later leg, as does `λ n ≠ 0` for all `n` (which needs `A` to have infinite rank).
+Leg E adds the `2WT` degrees-of-freedom bound, in the Bessel form the Hilbert-space structure
+supports directly. `P_W` is the integral operator against the reproducing kernel
+`k_t = 2W sincN(2W(t − ·))`, so `(P_W f)(t) = ⟪k_t, f⟫` and `⟪A f, f⟫ = ∫_[0,T] |⟪k_t, f⟫|² dt`.
+Bessel's inequality applied under that integral, against the constant kernel norm `‖k_t‖² = 2W`,
+caps the trace of `A` along any finite orthonormal family; Markov converts this into the counting
+bound. Only a *finite* orthonormal family is involved, so no trace-class or Schatten theory (absent
+from Mathlib) is needed.
+
+* `bandKernelLp` — the reproducing kernel `k_t`, with `bandKernelLp_norm_sq : ‖k_t‖² = 2W`.
+* `bandLimitProj_apply_eq_inner` — the reproducing property `(P_W f)(t) = ⟪k_t, f⟫`.
+* `inner_timeBandLimitingOp_self_eq` — `⟪A f, f⟫` is the energy of `P_W f` on the window `[0,T]`.
+* `sum_inner_timeBandLimitingOp_le` — `∑ᵢ ⟪A eᵢ, eᵢ⟫ ≤ 2WT` for orthonormal `e`.
+* `prolateCount_mul_le` — `c · #{λ > c} ≤ 2WT`.
+
+Both hypotheses of the last two are tight in the same way as above: for `T < 0` or `W < 0` the
+operator collapses, so the trace is `0` while the claimed bound `2WT` is strictly negative.
+
+The sharp Landau–Pollak–Slepian concentration (`⌊2WT⌋ + O(log WT)` eigenvalues near `1`, i.e. the
+matching lower bound and the transition width) is not proved here, as is `λ n ≠ 0` for all `n`
+(which needs `A` to have infinite rank).
 -/
 
 namespace InformationTheory.Shannon.TimeBandLimiting
@@ -1815,5 +1833,293 @@ theorem prolateEigenvalues_eq_zero_of_time_nonpos {T : ℝ} (hT : T ≤ 0) (W : 
   prolateEigenvalues_eq_zero_of_op_eq_zero (timeBandLimitingOp_eq_zero_of_time_nonpos hT W) n
 
 end Degeneracy
+
+/-!
+### The `2WT` trace bound (Leg E)
+
+The Landau–Pollak–Slepian degrees-of-freedom count, in its Bessel form. The band-limiting projection
+is an integral operator against the reproducing kernel `k_t = 2W sincN(2W(t − ·))`
+(`bandLimitProj_apply_ae`), so `(P_W f)(t) = ⟪k_t, f⟫`. Two facts about that kernel drive everything
+here: its `L²`-norm is the constant `‖k_t‖² = 2W` (Plancherel against the spectral boxcar, which is
+already in-tree), and the quadratic form of `A` reads `⟪A f, f⟫ = ∫_[0,T] |⟪k_t, f⟫|² dt`.
+
+Bessel's inequality applied pointwise in `t` then caps the trace of `A` along any finite orthonormal
+family by `∫_[0,T] ‖k_t‖² dt = 2WT`, and Markov's inequality converts that into the eigenvalue
+counting bound `c · #{λ > c} ≤ 2WT`.
+-/
+
+section TraceBound
+
+/-- The reproducing kernel of the band-limited subspace at time `t`: the ideal low-pass
+`2W sincN(2W(t − ·))`, whose Fourier transform is the spectral boxcar `𝟙_[-W,W] e^{-2πi t ·}`. It
+is the integral kernel of `P_W`, so pairing against it evaluates a band-limited function at `t`. -/
+noncomputable def bandKernel (W t : ℝ) : ℝ → ℂ :=
+  fun s => ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ)
+
+/-- The kernel is a constant multiple of the shifted, dilated sinc `sincN((· − t)/Δ)` at
+`Δ = 1/(2W)`, whose `L²` membership is `ShannonHartley.shiftSinc_memLp`. -/
+theorem bandKernel_eq_smul_shiftSinc {W : ℝ} (hW : 0 < W) (t : ℝ) :
+    bandKernel W t
+      = fun s => (2 * W : ℂ) *
+          ((NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℝ) : ℂ) := by
+  funext s
+  simp only [bandKernel]
+  rw [show (s - t) / (1 / (2 * W)) = -(2 * W * (t - s)) by field_simp; ring,
+    NormalizedSinc.sincN_neg]
+  push_cast
+  ring
+
+theorem bandKernel_memLp (W t : ℝ) : MemLp (bandKernel W t) 2 volume := by
+  -- The positive-band case; the other two reduce to it.
+  have key : ∀ V : ℝ, 0 < V → ∀ u : ℝ, MemLp (bandKernel V u) 2 volume := by
+    intro V hV u
+    have hΔ : (0 : ℝ) < 1 / (2 * V) := by positivity
+    rw [bandKernel_eq_smul_shiftSinc hV u]
+    exact (ShannonHartley.shiftSinc_memLp u (1 / (2 * V)) hΔ).const_mul (2 * V : ℂ)
+  rcases lt_trichotomy W 0 with hW | hW | hW
+  · -- `W < 0`: `sincN` is even, so the kernel is minus the ideal low-pass at `-W > 0`.
+    have heq : bandKernel W t = -bandKernel (-W) t := by
+      funext s
+      simp only [bandKernel, Pi.neg_apply]
+      rw [show 2 * -W * (t - s) = -(2 * W * (t - s)) by ring, NormalizedSinc.sincN_neg]
+      push_cast
+      ring
+    rw [heq]
+    exact (key (-W) (by linarith) t).neg
+  · subst hW
+    have hz : bandKernel 0 t = fun _ => (0 : ℂ) := by funext s; simp [bandKernel]
+    rw [hz]
+    exact MemLp.zero'
+  · exact key W hW t
+
+/-- The reproducing kernel at time `t`, as an element of `L²(ℝ;ℂ)`. -/
+noncomputable def bandKernelLp (W t : ℝ) : E := (bandKernel_memLp W t).toLp (bandKernel W t)
+
+theorem bandKernelLp_norm_sq (W t : ℝ) (hW : 0 < W) : ‖bandKernelLp W t‖ ^ 2 = 2 * W := by
+  have hΔ : (0 : ℝ) < 1 / (2 * W) := by positivity
+  set S : E := (ShannonHartley.shiftSinc_memLp t (1 / (2 * W)) hΔ).toLp
+    (fun s => (NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℂ)) with hSdef
+  set B : E := (ShannonHartley.specBoxcar_memLp t (1 / (2 * W)) hΔ 2).toLp
+    (ShannonHartley.specBoxcar t (1 / (2 * W))) with hBdef
+  -- Plancherel on the band: `‖B‖² = Δ = 1/(2W)`, the boxcar's own energy.
+  have hBnorm : ‖B‖ ^ 2 = 1 / (2 * W) := by
+    have h := ShannonHartley.inner_specBoxcar_toLp t t (1 / (2 * W)) hΔ
+    rw [sub_self, zero_div, NormalizedSinc.sincN_zero, ← hBdef,
+      inner_self_eq_norm_sq_to_K] at h
+    have h' : (((‖B‖ ^ 2 : ℝ)) : ℂ) = (((1 / (2 * W) : ℝ)) : ℂ) := by
+      push_cast at h ⊢
+      linear_combination h
+    exact_mod_cast h'
+  -- The Fourier isometry carries `S` to `B`.
+  have hFS : Lp.fourierTransformₗᵢ ℝ ℂ S = B :=
+    ShannonHartley.fourier_shiftSinc_toLp t (1 / (2 * W)) hΔ
+  have hSnorm : ‖S‖ = ‖B‖ := by
+    rw [← hFS]
+    exact ((Lp.fourierTransformₗᵢ ℝ ℂ).norm_map S).symm
+  -- The kernel is `2W · S`.
+  have hfun : bandKernel W t
+      = (2 * W : ℂ) • (fun s : ℝ => ((NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℝ) : ℂ)) := by
+    rw [bandKernel_eq_smul_shiftSinc hW t]
+    rfl
+  have hk : bandKernelLp W t = (2 * W : ℂ) • S := by
+    rw [bandKernelLp, hSdef,
+      ← MemLp.toLp_const_smul (2 * W : ℂ) (ShannonHartley.shiftSinc_memLp t (1 / (2 * W)) hΔ)]
+    exact MemLp.toLp_congr _ _ (by rw [hfun])
+  have hn : ‖(2 * W : ℂ)‖ = 2 * W := by
+    rw [show (2 * W : ℂ) = ((2 * W : ℝ) : ℂ) by push_cast; ring, Complex.norm_real,
+      Real.norm_eq_abs, abs_of_pos (by linarith)]
+  rw [hk, norm_smul, mul_pow, hSnorm, hBnorm, hn]
+  field_simp
+
+theorem inner_bandKernelLp (W t : ℝ) (f : E) :
+    inner ℂ (bandKernelLp W t) f = ∫ s, bandKernel W t s * (f : ℝ → ℂ) s ∂volume := by
+  rw [MeasureTheory.L2.inner_def]
+  refine integral_congr_ae ?_
+  simp only [bandKernelLp]
+  filter_upwards [(bandKernel_memLp W t).coeFn_toLp] with s hs
+  rw [hs, RCLike.inner_apply]
+  simp only [bandKernel, Complex.conj_ofReal]
+  ring
+
+/-- The reproducing property of the band-limited subspace: `(P_W f)(t) = ⟪k_t, f⟫` for a.e. `t`,
+with `k_t = bandKernelLp W t` the ideal low-pass centered at `t`. This is
+`bandLimitProj_apply_ae` read as an `L²` pairing; the kernel is real-valued, so the conjugation in
+the (conjugate-linear-in-the-first-slot) inner product is invisible. -/
+theorem bandLimitProj_apply_eq_inner (W : ℝ) (hW : 0 ≤ W) (f : E) :
+    ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume]
+      fun t => inner ℂ (bandKernelLp W t) f := by
+  filter_upwards [bandLimitProj_apply_ae W hW f] with t ht
+  rw [ht, inner_bandKernelLp]
+  simp only [bandKernel]
+
+/-- The quadratic form of `A` is the energy of `P_W f` observed through the window `[0,T]`:
+`⟪A f, f⟫ = ∫_[0,T] |⟪k_t, f⟫|² dt`. Self-adjointness of `P_W` moves one copy across the pairing,
+and `timeLimitProj_apply_ae` turns `Q_T` into multiplication by `𝟙_[0,T]`. -/
+theorem inner_timeBandLimitingOp_self_eq (T W : ℝ) (hW : 0 ≤ W) (f : E) :
+    (inner ℂ (timeBandLimitingOp T W f) f).re
+      = ∫ t in Set.Icc (0 : ℝ) T, ‖inner ℂ (bandKernelLp W t) f‖ ^ 2 := by
+  set g : E := (bandLimitSubspace W).starProjection f with hgdef
+  -- Step 1: `P_W` is self-adjoint, so it moves to the right slot.
+  have hsym : ((bandLimitSubspace W).starProjection : E →ₗ[ℂ] E).IsSymmetric :=
+    ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.mp
+      (isSelfAdjoint_starProjection (bandLimitSubspace W))
+  have hstep1 : inner ℂ (timeBandLimitingOp T W f) f
+      = inner ℂ ((timeLimitSubspace T).starProjection g) g :=
+    hsym ((timeLimitSubspace T).starProjection g) f
+  -- Step 2: `Q_T` is multiplication by `𝟙_[0,T]`, so the pairing is the windowed energy.
+  have hstep2 : inner ℂ ((timeLimitSubspace T).starProjection g) g
+      = (((∫ t in Set.Icc (0 : ℝ) T, ‖(g : ℝ → ℂ) t‖ ^ 2) : ℝ) : ℂ) := by
+    rw [MeasureTheory.L2.inner_def]
+    have hcongr : (∫ t, (inner ℂ (((timeLimitSubspace T).starProjection g : ℝ → ℂ) t)
+          ((g : ℝ → ℂ) t) : ℂ))
+        = ∫ t, (Set.Icc (0 : ℝ) T).indicator
+            (fun t => (((‖(g : ℝ → ℂ) t‖ ^ 2) : ℝ) : ℂ)) t := by
+      refine integral_congr_ae ?_
+      filter_upwards [timeLimitProj_apply_ae T g] with t ht
+      rw [ht, Pi.mul_apply]
+      by_cases htm : t ∈ Set.Icc (0 : ℝ) T
+      · rw [Set.indicator_of_mem htm, Set.indicator_of_mem htm, one_mul,
+          inner_self_eq_norm_sq_to_K]
+        norm_cast
+      · rw [Set.indicator_of_notMem htm, Set.indicator_of_notMem htm, zero_mul,
+          inner_zero_left]
+    rw [hcongr, integral_indicator measurableSet_Icc, integral_complex_ofReal]
+  -- Step 3: the windowed energy is the kernel pairing, by the reproducing property.
+  have hstep3 : (∫ t in Set.Icc (0 : ℝ) T, ‖(g : ℝ → ℂ) t‖ ^ 2)
+      = ∫ t in Set.Icc (0 : ℝ) T, ‖inner ℂ (bandKernelLp W t) f‖ ^ 2 := by
+    refine integral_congr_ae ?_
+    filter_upwards [ae_restrict_of_ae (bandLimitProj_apply_eq_inner W hW f)] with t ht
+    rw [hgdef, ht]
+  rw [hstep1, hstep2, Complex.ofReal_re, hstep3]
+
+theorem integrableOn_inner_bandKernelLp_sq (T W : ℝ) (hW : 0 ≤ W) (f : E) :
+    IntegrableOn (fun t => ‖inner ℂ (bandKernelLp W t) f‖ ^ 2) (Set.Icc (0 : ℝ) T) volume := by
+  have hint : Integrable
+      (fun t => ‖((bandLimitSubspace W).starProjection f : ℝ → ℂ) t‖ ^ 2) volume :=
+    (memLp_two_iff_integrable_sq_norm (Lp.aestronglyMeasurable _)).mp (Lp.memLp _)
+  refine (hint.integrableOn (s := Set.Icc (0 : ℝ) T)).congr ?_
+  filter_upwards [ae_restrict_of_ae (bandLimitProj_apply_eq_inner W hW f)] with t ht
+  rw [ht]
+
+/-- **Leg E gateway atom.** The trace of the time-and-band limiting operator along any finite
+orthonormal family is at most `2WT`.
+
+This is the Landau–Pollak–Slepian degrees-of-freedom count in its Bessel form. The quadratic form
+`⟪A eᵢ, eᵢ⟫ = ∫_[0,T] |⟪k_t, eᵢ⟫|² dt` (`inner_timeBandLimitingOp_self_eq`) turns the trace into an
+integral of a *finite* sum, so the sum and the integral commute without any Fubini; Bessel's
+inequality then caps the integrand by the constant `‖k_t‖² = 2W` (`bandKernelLp_norm_sq`), and the
+window `[0,T]` supplies the factor `T`. No trace-class or Schatten theory is involved. -/
+theorem sum_inner_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
+    {d : ℕ} {e : Fin d → E} (he : Orthonormal ℂ e) :
+    ∑ i, (inner ℂ (timeBandLimitingOp T W (e i)) (e i)).re ≤ 2 * W * T := by
+  classical
+  have hint : ∀ i : Fin d,
+      IntegrableOn (fun t => ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2)
+        (Set.Icc (0 : ℝ) T) volume :=
+    fun i => integrableOn_inner_bandKernelLp_sq T W hW.le (e i)
+  -- The trace is the integral of the Bessel sum: a finite sum, so it commutes with `∫`.
+  have hsum : ∑ i, (inner ℂ (timeBandLimitingOp T W (e i)) (e i)).re
+      = ∫ t in Set.Icc (0 : ℝ) T, ∑ i, ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2 := by
+    rw [integral_finsetSum _ (fun i _ => hint i)]
+    exact Finset.sum_congr rfl fun i _ => inner_timeBandLimitingOp_self_eq T W hW.le (e i)
+  rw [hsum]
+  -- Bessel's inequality, pointwise in `t`, against the constant kernel norm `‖k_t‖² = 2W`.
+  have hle : ∀ t ∈ Set.Icc (0 : ℝ) T,
+      (∑ i, ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2) ≤ 2 * W := by
+    intro t _
+    have hb := he.sum_inner_products_le (x := bandKernelLp W t) (s := Finset.univ)
+    rw [bandKernelLp_norm_sq W t hW] at hb
+    refine le_trans (le_of_eq ?_) hb
+    exact Finset.sum_congr rfl fun i _ => by rw [← norm_inner_symm]
+  have hconst : IntegrableOn (fun _ : ℝ => 2 * W) (Set.Icc (0 : ℝ) T) volume :=
+    integrableOn_const (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
+  calc (∫ t in Set.Icc (0 : ℝ) T, ∑ i, ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2)
+      ≤ ∫ _t in Set.Icc (0 : ℝ) T, 2 * W :=
+        setIntegral_mono_on (integrable_finsetSum _ (fun i _ => hint i)) hconst
+          measurableSet_Icc hle
+    _ = 2 * W * T := by
+        rw [setIntegral_const, Real.volume_real_Icc_of_le hT, sub_zero, smul_eq_mul]
+        ring
+
+theorem prolateEigenspaceSup_invariant (T W c : ℝ) :
+    ∀ v ∈ prolateEigenspaceSup T W c,
+      (timeBandLimitingOp T W : E →ₗ[ℂ] E) v ∈ prolateEigenspaceSup T W c := by
+  intro v hv
+  have hle : prolateEigenspaceSup T W c
+      ≤ Submodule.comap (timeBandLimitingOp T W : E →ₗ[ℂ] E) (prolateEigenspaceSup T W c) := by
+    conv_lhs => rw [prolateEigenspaceSup]
+    refine iSup₂_le fun μ hμ => ?_
+    intro w hw
+    have hwV : w ∈ prolateEigenspaceSup T W c :=
+      Submodule.mem_iSup_of_mem μ (Submodule.mem_iSup_of_mem hμ hw)
+    rw [Module.End.mem_eigenspace_iff] at hw
+    refine Submodule.mem_comap.mpr ?_
+    rw [show (timeBandLimitingOp T W : E →ₗ[ℂ] E) w = (μ : ℂ) • w from hw]
+    exact Submodule.smul_mem _ _ hwV
+  exact hle hv
+
+/-- Markov bound on the eigenvalue counting function: at most `2WT/c` eigenvalues of the
+time-and-band limiting operator exceed `c`.
+
+The span `prolateEigenspaceSup T W c` of the eigenspaces above `c` is `A`-invariant and
+finite-dimensional, so the finite-dimensional spectral theorem supplies an orthonormal eigenbasis of
+it; every one of its eigenvalues exceeds `c` (an eigenvector for an eigenvalue `≤ c` would be
+orthogonal to every eigenspace above `c`, hence to the span containing it, hence zero). Feeding that
+basis to `sum_inner_timeBandLimitingOp_le` gives `c · #{λ > c} ≤ ∑ λᵢ ≤ 2WT`. -/
+theorem prolateCount_mul_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (hc : 0 < c) :
+    c * (prolateCount T W c : ℝ) ≤ 2 * W * T := by
+  classical
+  haveI := prolateEigenspaceSup_finiteDimensional T W hc
+  have hinv := prolateEigenspaceSup_invariant T W c
+  have hsymV : ((timeBandLimitingOp T W : E →ₗ[ℂ] E).restrict hinv).IsSymmetric :=
+    (timeBandLimitingOp_isSymmetric T W).restrict_invariant hinv
+  set d : ℕ := prolateCount T W c with hd
+  have hn : Module.finrank ℂ (prolateEigenspaceSup T W c) = d := rfl
+  set b := hsymV.eigenvectorBasis hn with hb
+  set ν := hsymV.eigenvalues hn with hνdef
+  set e : Fin d → E := fun i => ((b i : prolateEigenspaceSup T W c) : E) with he_def
+  have he : Orthonormal ℂ e :=
+    b.orthonormal.comp_linearIsometry (prolateEigenspaceSup T W c).subtypeₗᵢ
+  -- Each basis vector is an eigenvector of `A` in the ambient space.
+  have heig : ∀ i, timeBandLimitingOp T W (e i) = ((ν i : ℝ) : ℂ) • e i := by
+    intro i
+    have h := hsymV.apply_eigenvectorBasis hn i
+    have h' := congrArg (Subtype.val (p := fun x : E => x ∈ prolateEigenspaceSup T W c)) h
+    simp only [LinearMap.coe_restrict_apply, Submodule.coe_smul,
+      ContinuousLinearMap.coe_coe] at h'
+    exact h'
+  -- Every eigenvalue of the restriction exceeds `c`.
+  have hνgt : ∀ i, c < ν i := by
+    intro i
+    by_contra hcon
+    rw [not_lt] at hcon
+    have hperp : prolateEigenspaceSup T W c ≤ (ℂ ∙ (e i))ᗮ := by
+      conv_lhs => rw [prolateEigenspaceSup]
+      refine iSup₂_le fun μ hμ => ?_
+      intro w hw
+      rw [Module.End.mem_eigenspace_iff] at hw
+      refine Submodule.mem_orthogonal_singleton_iff_inner_right.mpr ?_
+      have hne : ν i ≠ μ := fun h => absurd hμ.1 (not_lt.mpr (h ▸ hcon))
+      exact inner_eq_zero_of_eigenvalue_ne hne (heig i) hw
+    have hzero : inner ℂ (e i) (e i) = (0 : ℂ) :=
+      Submodule.mem_orthogonal_singleton_iff_inner_right.mp (hperp (b i).2)
+    have hz : e i = 0 := inner_self_eq_zero.mp hzero
+    have h1 : ‖e i‖ = 1 := he.1 i
+    rw [hz, norm_zero] at h1
+    exact absurd h1 (by norm_num)
+  -- The trace along that basis is the eigenvalue sum, and the atom caps it by `2WT`.
+  have hval : ∀ i, (inner ℂ (timeBandLimitingOp T W (e i)) (e i)).re = ν i := by
+    intro i
+    rw [heig i, inner_smul_left, Complex.conj_ofReal, inner_self_eq_norm_sq_to_K, he.1 i]
+    simp
+  have hsum := sum_inner_timeBandLimitingOp_le T W hT hW he
+  rw [Finset.sum_congr rfl (fun i (_ : i ∈ Finset.univ) => hval i)] at hsum
+  have hlow : c * (d : ℝ) ≤ ∑ i, ν i := by
+    calc c * (d : ℝ) = ∑ _i : Fin d, c := by
+          rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, mul_comm]
+      _ ≤ ∑ i, ν i := Finset.sum_le_sum fun i _ => (hνgt i).le
+  linarith
+
+end TraceBound
 
 end InformationTheory.Shannon.TimeBandLimiting
