@@ -295,16 +295,62 @@ theorem bandLimitProj_eq_fourier_conj (W : ℝ) (f : E) :
           ((zeroOnLp {ξ : ℝ | W < |ξ|}).starProjection (Lp.fourierTransformₗᵢ ℝ ℂ f)) :=
   starProjection_comap_linearIsometryEquiv (Lp.fourierTransformₗᵢ ℝ ℂ) _ f
 
+theorem compl_setOf_lt_abs (W : ℝ) : {ξ : ℝ | W < |ξ|}ᶜ = Set.Icc (-W) W := by
+  ext x
+  simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_lt, Set.mem_Icc]
+  exact abs_le
+
+theorem measurableSet_setOf_lt_abs (W : ℝ) : MeasurableSet {ξ : ℝ | W < |ξ|} :=
+  measurableSet_lt measurable_const measurable_norm
+
+/-- **The band-limiting projection is the Fourier multiplier by `𝟙_[-W,W]`.** Combining the
+conjugation identity `bandLimitProj_eq_fourier_conj` with the projection-uniqueness computation
+`zeroOnLp_starProjection_apply_ae` on the frequency side. This is the "half" of Leaf 2 that lives
+entirely inside the abstract projection API; the remaining half is the identification of the
+multiplier's action with sinc convolution, which needs the Fourier transform to be evaluated
+concretely. -/
+theorem fourier_bandLimitProj_apply_ae (W : ℝ) (f : E) :
+    ((Lp.fourierTransformₗᵢ ℝ ℂ ((bandLimitSubspace W).starProjection f) : E) : ℝ → ℂ)
+      =ᵐ[volume] (Set.Icc (-W) W).indicator (fun _ => (1 : ℂ)) *
+        ((Lp.fourierTransformₗᵢ ℝ ℂ f : E) : ℝ → ℂ) := by
+  rw [bandLimitProj_eq_fourier_conj, LinearIsometryEquiv.apply_symm_apply]
+  have h := zeroOnLp_starProjection_apply_ae (measurableSet_setOf_lt_abs W)
+    (Lp.fourierTransformₗᵢ ℝ ℂ f)
+  rwa [compl_setOf_lt_abs] at h
+
+/-- For a negative band limit the band-limited subspace degenerates: `{ξ | W < |ξ|}` is everything,
+so only the zero function has an a.e.-vanishing Fourier transform. -/
+theorem bandLimitSubspace_eq_bot_of_neg {W : ℝ} (hW : W < 0) : bandLimitSubspace W = ⊥ := by
+  have huniv : {ξ : ℝ | W < |ξ|} = Set.univ :=
+    Set.eq_univ_of_forall fun ξ => lt_of_lt_of_le hW (abs_nonneg ξ)
+  have hzero : zeroOnLp {ξ : ℝ | W < |ξ|} = ⊥ := by
+    refine Submodule.eq_bot_iff _ |>.mpr fun g hg => ?_
+    have hg' : (g : ℝ → ℂ) =ᵐ[volume.restrict {ξ : ℝ | W < |ξ|}] 0 := hg
+    rw [huniv, Measure.restrict_univ] at hg'
+    exact (Lp.eq_zero_iff_ae_eq_zero (f := g)).mpr hg'
+  rw [bandLimitSubspace, hzero, Submodule.comap_bot, LinearMap.ker_eq_bot]
+  exact (Lp.fourierTransformₗᵢ ℝ ℂ).toLinearEquiv.injective
+
 /-- **Leaf 2 — the make-or-break bridge** (`P_W` = convolution with `2W sincN(2W·)`). The
 orthogonal projection onto the band-limited subspace acts, a.e., as convolution with the ideal
 low-pass `2W sincN(2W·)` (whose Fourier transform is `𝟙_[-W,W]`). This is the abstract
 `starProjection`-of-a-`comap`-under-`𝓕` ↔ concrete sinc-convolution identity.
-@residual(plan:shannon-hartley-operational-moonshot-plan) -/
-theorem bandLimitProj_apply_ae (W : ℝ) (f : E) :
+
+The sign precondition `0 ≤ W` is necessary, not cosmetic: `sincN` is even, so for `W < 0` the stated
+kernel `2W sincN(2W·)` is *minus* the ideal low-pass at `|W|`, while the left-hand side collapses to
+`0` (`bandLimitSubspace_eq_bot_of_neg`). Concretely at `W = -1`, `f = 𝟙_[0,1]`, `t = 1/2` the
+right-hand side is `-∫_(-1)^(1) sincN ≈ -1.179 ≠ 0`, so the unrestricted statement is false; `0 ≤ W`
+is a precondition on the parameter, not a hypothesis carrying the proof.
+
+Reduced to `bandLimitProj_fourierInv_apply_ae` — the `L¹ ∩ L²` agreement of Mathlib's abstract `L²`
+Fourier transform with the classical Fourier integral, which is the genuine gap (see that
+declaration).
+@residual(plan:shannon-hartley-phase2-spectral-plan) -/
+theorem bandLimitProj_apply_ae (W : ℝ) (hW : 0 ≤ W) (f : E) :
     ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume]
       fun t => ∫ s, ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ) *
         (f : ℝ → ℂ) s ∂volume := by
-  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
 
 /-- The normalized sinc is square-integrable on `ℝ`. The reusable crux for the kernel-`L²` bound:
 its Lebesgue `L²`-membership follows from the elementary majorant `sincN(x)² ≤ 2/(1 + x²)`
@@ -959,7 +1005,7 @@ theorem l2KernelOperator_isCompact {k : ℝ → ℝ → ℂ}
 
 /-- The sinc integral operator `C = Q_T ∘ P_W` acts a.e. as the integral operator of
 `sincConvKernel`. Genuine composition of Leaf 1 and Leaf 2. -/
-theorem timeBandLimitingComp_apply_ae (T W : ℝ) (f : E) :
+theorem timeBandLimitingComp_apply_ae (T W : ℝ) (hW : 0 ≤ W) (f : E) :
     (timeBandLimitingComp T W f : ℝ → ℂ) =ᵐ[volume]
       fun t => ∫ s, sincConvKernel T W t s * (f : ℝ → ℂ) s ∂volume := by
   have h1 : (timeBandLimitingComp T W f : ℝ → ℂ) =ᵐ[volume]
@@ -967,7 +1013,7 @@ theorem timeBandLimitingComp_apply_ae (T W : ℝ) (f : E) :
         ((bandLimitSubspace W).starProjection f : ℝ → ℂ) := by
     simpa only [timeBandLimitingComp, ContinuousLinearMap.comp_apply] using
       timeLimitProj_apply_ae T ((bandLimitSubspace W).starProjection f)
-  filter_upwards [h1, bandLimitProj_apply_ae W f] with t ht1 ht2
+  filter_upwards [h1, bandLimitProj_apply_ae W hW f] with t ht1 ht2
   rw [ht1]
   simp only [Pi.mul_apply]
   rw [ht2, ← MeasureTheory.integral_const_mul]
@@ -977,14 +1023,27 @@ theorem timeBandLimitingComp_apply_ae (T W : ℝ) (f : E) :
 
 /-- The sinc integral operator `C = Q_T ∘ P_W` is compact. Genuine reduction: the operator built by
 `l2KernelOperator_isCompact` for `sincConvKernel` coincides with `C` (both have the same a.e.
-representative, hence are equal in `Lp`). -/
+representative, hence are equal in `Lp`). No sign restriction on `W`: for `W < 0` the kernel
+representation is unavailable (and false), but there `P_W = 0`, so `C = 0` is compact outright. -/
 theorem timeBandLimitingComp_isCompact (T W : ℝ) :
     IsCompactOperator (timeBandLimitingComp T W) := by
-  obtain ⟨Op, hOp_ae, hOp_cpt⟩ := l2KernelOperator_isCompact (sincConvKernel_memLp T W)
-  have hEq : Op = timeBandLimitingComp T W := by
-    refine ContinuousLinearMap.ext (fun f => MeasureTheory.Lp.ext ?_)
-    exact (hOp_ae f).trans (timeBandLimitingComp_apply_ae T W f).symm
-  rwa [hEq] at hOp_cpt
+  rcases lt_or_ge W 0 with hW | hW
+  · -- Degenerate band: `bandLimitSubspace W = ⊥`, so `C = Q_T ∘ 0 = 0`.
+    have hzero : timeBandLimitingComp T W = 0 := by
+      refine ContinuousLinearMap.ext fun f => ?_
+      have hmem : (bandLimitSubspace W).starProjection f ∈ bandLimitSubspace W :=
+        Submodule.coe_mem _
+      have hzf : (bandLimitSubspace W).starProjection f = 0 :=
+        (Submodule.eq_bot_iff _).mp (bandLimitSubspace_eq_bot_of_neg hW) _ hmem
+      simp only [timeBandLimitingComp, ContinuousLinearMap.comp_apply, hzf, map_zero,
+        zero_apply]
+    rw [hzero]
+    exact isCompactOperator_zero
+  · obtain ⟨Op, hOp_ae, hOp_cpt⟩ := l2KernelOperator_isCompact (sincConvKernel_memLp T W)
+    have hEq : Op = timeBandLimitingComp T W := by
+      refine ContinuousLinearMap.ext (fun f => MeasureTheory.Lp.ext ?_)
+      exact (hOp_ae f).trans (timeBandLimitingComp_apply_ae T W hW f).symm
+    rwa [hEq] at hOp_cpt
 
 /-- **The time-and-band limiting operator is compact.** `A = P_W ∘ C` with `C = Q_T ∘ P_W` compact
 (the sinc integral operator) and `P_W` bounded, so `A` is compact by `clm_comp`. -/
