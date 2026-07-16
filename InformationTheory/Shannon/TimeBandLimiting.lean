@@ -194,17 +194,55 @@ theorem timeBandLimitingOp_eq_bandProj_comp (T W : ℝ) :
     timeBandLimitingOp T W =
       (bandLimitSubspace W).starProjection ∘L timeBandLimitingComp T W := rfl
 
+/-- The orthogonal projection onto `zeroOnLp S` acts, a.e., as multiplication by the indicator of
+`Sᶜ`. Proven via the uniqueness of the orthogonal projection: the candidate `𝟙_{Sᶜ}·g` lies in the
+subspace, and the residual `𝟙_S·g` is orthogonal to it. Both Leaf 1 (`S = [0,T]ᶜ`, the time-limiting
+`Q_T`) and Leaf 2's frequency-side multiplier (`S = {|ξ| > W}`, giving `𝟙_[-W,W]·𝓕f`) are instances,
+so the projection-uniqueness argument is written once here. -/
+theorem zeroOnLp_starProjection_apply_ae {S : Set ℝ} (hS : MeasurableSet S) (g : E) :
+    ((zeroOnLp S).starProjection g : ℝ → ℂ) =ᵐ[volume]
+      Sᶜ.indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ) := by
+  -- Candidate projection `P = 𝟙_{Sᶜ} · g` as an `Lp` element.
+  have hmem : MemLp (Sᶜ.indicator (g : ℝ → ℂ)) 2 volume := (Lp.memLp g).indicator hS.compl
+  set P : E := hmem.toLp _ with hP
+  have hP_ae : (P : ℝ → ℂ) =ᵐ[volume] Sᶜ.indicator (g : ℝ → ℂ) := hmem.coeFn_toLp
+  have hind : Sᶜ.indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ) = Sᶜ.indicator (g : ℝ → ℂ) := by
+    funext x
+    by_cases hx : x ∈ Sᶜ <;> simp [Set.indicator_of_mem, Set.indicator_of_notMem, hx]
+  rw [hind]
+  suffices hproj : (zeroOnLp S).starProjection g = P by rw [hproj]; exact hP_ae
+  refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero ?_ ?_
+  · -- `P ∈ zeroOnLp S`: `⇑P =ᵐ 0` on `S`.
+    show (P : ℝ → ℂ) =ᵐ[volume.restrict S] 0
+    refine (ae_restrict_iff' hS).mpr ?_
+    filter_upwards [hP_ae] with x hx hxS
+    rw [Pi.zero_apply, hx, Set.indicator_of_notMem (by simpa using hxS)]
+  · -- Orthogonality: `⟪g - P, w⟫ = 0` for every `w` in the subspace.
+    intro w hw
+    have hw' : (w : ℝ → ℂ) =ᵐ[volume.restrict S] 0 := hw
+    have hwS : ∀ᵐ x ∂volume, x ∈ S → (w : ℝ → ℂ) x = (0 : ℝ → ℂ) x :=
+      (ae_restrict_iff' hS).mp hw'
+    rw [MeasureTheory.L2.inner_def]
+    refine integral_eq_zero_of_ae ?_
+    filter_upwards [Lp.coeFn_sub g P, hP_ae, hwS] with x hsub hpx hwx
+    simp only [Pi.zero_apply]
+    by_cases hx : x ∈ S
+    · have hwx0 : (w : ℝ → ℂ) x = 0 := by simpa using hwx hx
+      rw [hwx0, inner_zero_right]
+    · have hgP : (g - P : E) x = 0 := by
+        rw [hsub]; simp only [Pi.sub_apply]
+        rw [hpx, Set.indicator_of_mem (by simpa using hx), sub_self]
+      rw [hgP, inner_zero_left]
+
 /-- **Leaf 1** (`Q_T` = multiplication by `𝟙_[0,T]`). The orthogonal projection onto the
-time-limited subspace acts, a.e., as multiplication by the indicator of `[0,T]`. Proven via the
-uniqueness of the orthogonal projection: the candidate `𝟙_[0,T]·g` lies in the subspace, and the
-residual `𝟙_[0,T]ᶜ·g` is orthogonal to it. -/
+time-limited subspace acts, a.e., as multiplication by the indicator of `[0,T]`. The instance
+`S = [0,T]ᶜ` of `zeroOnLp_starProjection_apply_ae`. -/
 theorem timeLimitProj_apply_ae (T : ℝ) (g : E) :
     ((timeLimitSubspace T).starProjection g : ℝ → ℂ) =ᵐ[volume]
       (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ) := by
-  set S : Set ℝ := {t : ℝ | t < 0 ∨ T < t} with hS
-  have hScompl : S = (Set.Icc (0 : ℝ) T)ᶜ := by
+  have hScompl : {t : ℝ | t < 0 ∨ T < t} = (Set.Icc (0 : ℝ) T)ᶜ := by
     ext x
-    simp only [hS, Set.mem_setOf_eq, Set.mem_compl_iff, Set.mem_Icc, not_and, not_le]
+    simp only [Set.mem_setOf_eq, Set.mem_compl_iff, Set.mem_Icc, not_and, not_le]
     constructor
     · rintro (h | h)
       · intro h0; exact absurd h0 (not_le.mpr h)
@@ -213,42 +251,12 @@ theorem timeLimitProj_apply_ae (T : ℝ) (g : E) :
       rcases lt_or_ge x 0 with h0 | h0
       · exact Or.inl h0
       · exact Or.inr (h h0)
-  have hSmeas : MeasurableSet S := by rw [hScompl]; exact measurableSet_Icc.compl
-  -- Candidate projection `P = 𝟙_[0,T] · g` as an `Lp` element.
-  have hmem : MemLp ((Set.Icc (0 : ℝ) T).indicator (g : ℝ → ℂ)) 2 volume :=
-    (Lp.memLp g).indicator measurableSet_Icc
-  set P : E := hmem.toLp _ with hP
-  have hP_ae : (P : ℝ → ℂ) =ᵐ[volume] (Set.Icc (0 : ℝ) T).indicator (g : ℝ → ℂ) := hmem.coeFn_toLp
-  have hind : (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ)
-      = (Set.Icc (0 : ℝ) T).indicator (g : ℝ → ℂ) := by
-    funext x
-    by_cases hx : x ∈ Set.Icc (0 : ℝ) T <;>
-      simp [Set.indicator_of_mem, Set.indicator_of_notMem, hx]
-  rw [hind]
-  suffices hproj : (timeLimitSubspace T).starProjection g = P by rw [hproj]; exact hP_ae
-  refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero ?_ ?_
-  · -- `P ∈ timeLimitSubspace T`: `⇑P =ᵐ 0` on `S = [0,T]ᶜ`.
-    show (P : ℝ → ℂ) =ᵐ[volume.restrict S] 0
-    refine (ae_restrict_iff' hSmeas).mpr ?_
-    filter_upwards [hP_ae] with x hx hxS
-    rw [Pi.zero_apply, hx, Set.indicator_of_notMem]
-    rw [hScompl] at hxS; exact hxS
-  · -- Orthogonality: `⟪g - P, w⟫ = 0` for every `w` in the subspace.
-    intro w hw
-    have hw' : (w : ℝ → ℂ) =ᵐ[volume.restrict S] 0 := hw
-    have hwS : ∀ᵐ x ∂volume, x ∈ S → (w : ℝ → ℂ) x = (0 : ℝ → ℂ) x :=
-      (ae_restrict_iff' hSmeas).mp hw'
-    rw [MeasureTheory.L2.inner_def]
-    refine integral_eq_zero_of_ae ?_
-    filter_upwards [Lp.coeFn_sub g P, hP_ae, hwS] with x hsub hpx hwx
-    simp only [Pi.zero_apply]
-    by_cases hx : x ∈ Set.Icc (0 : ℝ) T
-    · have hgP : (g - P : E) x = 0 := by
-        rw [hsub]; simp only [Pi.sub_apply]; rw [hpx, Set.indicator_of_mem hx, sub_self]
-      rw [hgP, inner_zero_left]
-    · have hxS : x ∈ S := by rw [hScompl]; exact hx
-      have hwx0 : (w : ℝ → ℂ) x = 0 := by simpa using hwx hxS
-      rw [hwx0, inner_zero_right]
+  have hSmeas : MeasurableSet {t : ℝ | t < 0 ∨ T < t} := by
+    rw [hScompl]; exact measurableSet_Icc.compl
+  have h := zeroOnLp_starProjection_apply_ae (S := {t : ℝ | t < 0 ∨ T < t}) hSmeas g
+  have hc : ({t : ℝ | t < 0 ∨ T < t})ᶜ = Set.Icc (0 : ℝ) T := by rw [hScompl, compl_compl]
+  rw [hc] at h
+  exact h
 
 /-- Conjugating an orthogonal projection by a surjective linear isometry: the projection onto a
 `comap`ped subspace is the projection onto the subspace, conjugated. Mathlib has the `map` form
