@@ -40,6 +40,7 @@ Landau–Pollak–Slepian concentration count live in later legs (`prolateEigenv
 namespace InformationTheory.Shannon.TimeBandLimiting
 
 open MeasureTheory
+open scoped ENNReal
 
 /-- The `L²(ℝ;ℂ)` Hilbert space the operator acts on. -/
 abbrev E : Type := Lp ℂ 2 (volume : Measure ℝ)
@@ -298,14 +299,90 @@ theorem sincN_memLp_two :
   exact hpt x
 
 /-- **Leaf 3** (the kernel is `L²`). `sincConvKernel` is square-integrable on `ℝ × ℝ`: the
-`t`-indicator confines the mass to `[0,T]` and `∫_ℝ (2W sincN(2W u))² du = 2W` (Plancherel of the
-ideal low-pass, whose 1-D crux `sincN ∈ L²` is `sincN_memLp_two`), giving `‖k‖₂² = 2WT < ∞`. The
-remaining work is the 2-D lift: `AEStronglyMeasurable` of the product kernel + a Tonelli/`∫⁻`
-computation folding the `t`-indicator and the translation/scaling `∫⁻ sincN(2W(t−s))² ds`.
-@residual(plan:shannon-hartley-operational-moonshot-plan) -/
+`t`-indicator confines the mass to `[0,T]` and the inner mass `∫_ℝ (2W sincN(2W(t−s)))² ds` is a
+finite constant `C` (independent of `t`, by translation invariance of Lebesgue measure), so
+`‖k‖₂² ≤ C · vol[0,T] < ∞`. The finite `L²` mass of the ideal low-pass `2W sincN(2W·)` is obtained by
+rescaling the 1-D crux `sincN ∈ L²` (`sincN_memLp_two`) through `integrable_comp_mul_left_iff`, and
+the 2-D lift is a Tonelli (`lintegral_prod_le`) + `lintegral_sub_left_eq_self` computation. -/
 theorem sincConvKernel_memLp (T W : ℝ) :
     MemLp (fun p : ℝ × ℝ => sincConvKernel T W p.1 p.2) 2 (volume.prod volume) := by
-  sorry -- @residual(plan:shannon-hartley-operational-moonshot-plan)
+  -- The ideal low-pass factor `2W sincN(2W·)`, as a one-variable function.
+  set g : ℝ → ℂ := fun u => ((2 * W * NormalizedSinc.sincN (2 * W * u) : ℝ) : ℂ) with hg_def
+  have hg_cont : Continuous g := by
+    rw [hg_def]; exact Complex.continuous_ofReal.comp (by fun_prop)
+  have hg_aesm : AEStronglyMeasurable g volume := hg_cont.aestronglyMeasurable
+  -- `sincN` is square-integrable (the 1-D crux, `sincN_memLp_two`).
+  have hsincN_sq_int : Integrable (fun x : ℝ => NormalizedSinc.sincN x ^ 2) volume := by
+    have h := (memLp_two_iff_integrable_sq_norm
+      (Complex.continuous_ofReal.comp NormalizedSinc.continuous_sincN).aestronglyMeasurable).mp
+      sincN_memLp_two
+    refine h.congr ?_
+    filter_upwards with x
+    simp only [Function.comp_apply, Complex.norm_real, Real.norm_eq_abs, sq_abs]
+  -- `g ∈ L²(ℝ)`: rescale `sincN ∈ L²` by the sample rate `2W` (Plancherel of the ideal low-pass).
+  have hg_memLp : MemLp g 2 volume := by
+    rcases eq_or_ne (2 * W) 0 with h2W | h2W
+    · have hz : g = (fun _ => (0 : ℂ)) := by
+        funext u; simp only [hg_def]; rw [h2W]; simp
+      rw [hz]; exact MemLp.zero'
+    · rw [memLp_two_iff_integrable_sq_norm hg_aesm]
+      have hφ : Integrable (fun x : ℝ => (2 * W * NormalizedSinc.sincN x) ^ 2) volume := by
+        have hpow : (fun x : ℝ => (2 * W * NormalizedSinc.sincN x) ^ 2)
+            = (fun x : ℝ => (2 * W) ^ 2 * NormalizedSinc.sincN x ^ 2) := by
+          funext x; rw [mul_pow]
+        rw [hpow]; exact hsincN_sq_int.const_mul _
+      have hcomp :=
+        (integrable_comp_mul_left_iff
+          (fun x : ℝ => (2 * W * NormalizedSinc.sincN x) ^ 2) h2W).mpr hφ
+      refine hcomp.congr ?_
+      filter_upwards with u
+      simp only [hg_def, Complex.norm_real, Real.norm_eq_abs, sq_abs]
+  -- The finite inner `L²` mass `C = ∫⁻ ‖g s‖ₑ² ds`.
+  have hC_lt : (∫⁻ s, ‖g s‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume) < ∞ :=
+    lintegral_rpow_enorm_lt_top_of_eLpNorm_lt_top (by norm_num) (by norm_num) hg_memLp.2
+  set C : ℝ≥0∞ := ∫⁻ s, ‖g s‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume with hC_def
+  -- The product kernel is a.e.-strongly-measurable.
+  have hk_meas : AEStronglyMeasurable (fun p : ℝ × ℝ => sincConvKernel T W p.1 p.2)
+      (volume.prod volume) := by
+    simp only [sincConvKernel]
+    refine AEStronglyMeasurable.mul ?_ ?_
+    · exact ((measurable_const.indicator measurableSet_Icc).comp
+        measurable_fst).aestronglyMeasurable
+    · exact (Complex.continuous_ofReal.comp (by fun_prop :
+        Continuous (fun p : ℝ × ℝ =>
+          2 * W * NormalizedSinc.sincN (2 * W * (p.1 - p.2))))).aestronglyMeasurable
+  refine ⟨hk_meas, ?_⟩
+  rw [eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num)]
+  -- Per-`t` inner integral: `∫⁻ s, ‖k t s‖ₑ² ds = 𝟙_[0,T](t) · C`.
+  have hinner : ∀ t : ℝ,
+      (∫⁻ s, ‖sincConvKernel T W t s‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume)
+        = (Set.Icc (0 : ℝ) T).indicator (fun _ => C) t := by
+    intro t
+    by_cases ht : t ∈ Set.Icc (0 : ℝ) T
+    · rw [Set.indicator_of_mem ht]
+      have hval : ∀ s, ‖sincConvKernel T W t s‖ₑ ^ (2 : ℝ≥0∞).toReal
+          = ‖g (t - s)‖ₑ ^ (2 : ℝ≥0∞).toReal := by
+        intro s
+        have hks : sincConvKernel T W t s = g (t - s) := by
+          simp only [sincConvKernel, Set.indicator_of_mem ht, one_mul, hg_def]
+        rw [hks]
+      rw [lintegral_congr hval, hC_def]
+      exact lintegral_sub_left_eq_self (fun u => ‖g u‖ₑ ^ (2 : ℝ≥0∞).toReal) t
+    · rw [Set.indicator_of_notMem ht]
+      have hval : ∀ s, ‖sincConvKernel T W t s‖ₑ ^ (2 : ℝ≥0∞).toReal = 0 := by
+        intro s
+        have hks : sincConvKernel T W t s = 0 := by
+          simp only [sincConvKernel, Set.indicator_of_notMem ht, zero_mul]
+        rw [hks, enorm_zero, ENNReal.zero_rpow_of_pos (by norm_num)]
+      rw [lintegral_congr hval, lintegral_zero]
+  -- Bound the double integral by `C · vol[0,T] < ∞`.
+  calc (∫⁻ p : ℝ × ℝ, ‖sincConvKernel T W p.1 p.2‖ₑ ^ (2 : ℝ≥0∞).toReal ∂(volume.prod volume))
+      ≤ ∫⁻ t, ∫⁻ s, ‖sincConvKernel T W t s‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume ∂volume :=
+        lintegral_prod_le _
+    _ = ∫⁻ t, (Set.Icc (0 : ℝ) T).indicator (fun _ => C) t ∂volume := lintegral_congr hinner
+    _ = ∫⁻ _ in Set.Icc (0 : ℝ) T, C ∂volume := lintegral_indicator measurableSet_Icc _
+    _ = C * volume (Set.Icc (0 : ℝ) T) := setLIntegral_const _ _
+    _ < ∞ := ENNReal.mul_lt_top hC_lt (by rw [Real.volume_Icc]; exact ENNReal.ofReal_lt_top)
 
 /-- **Leaf 4** (generic `L²`-kernel ⟹ compact operator). An integral operator on `L²(ℝ;ℂ)` whose
 kernel is `L²` on `ℝ × ℝ` is a compact operator; it is realized a.e. as `f ↦ ∫ k(·,s) f(s) ds`.
