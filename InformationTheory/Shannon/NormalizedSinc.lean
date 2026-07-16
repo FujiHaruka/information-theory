@@ -59,6 +59,9 @@ theorem sincN_le_one (x : ℝ) : sincN x ≤ 1 := by
 theorem neg_one_le_sincN (x : ℝ) : -1 ≤ sincN x := by
   unfold sincN; exact Real.neg_one_le_sinc _
 
+theorem sincN_neg (x : ℝ) : sincN (-x) = sincN x := by
+  unfold sincN; rw [mul_neg, Real.sinc_neg]
+
 @[entry_point, fun_prop]
 theorem continuous_sincN : Continuous sincN := by
   unfold sincN
