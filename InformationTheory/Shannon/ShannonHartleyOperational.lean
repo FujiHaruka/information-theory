@@ -354,8 +354,15 @@ restores them; it is deliberately not applied here, since choosing between a who
 constraint and an essential-time-limitation field changes the theory's statements and is a
 separate decision.
 
-@audit:defect(false-hypothesis) @audit:retract-candidate(false-hypothesis)
-@audit:closed-by-successor(shannon-hartley-phase2-spectral-plan) -/
+The defect is not that this structure is false — it is inhabited and internally consistent — but
+that it under-constrains the object it models, so the theorems quantifying over it are false. That
+is the `cause:signature-drops-constraint` axis: `encoder_power` drops the essential-time-limitation
+constraint the physical code class carries. `degenerate` is the closest available defect kind
+(the kind dichotomy in `docs/audit/audit-tags.md` routes a not-FALSE definition here); it is not
+`false-hypothesis`, which denotes a predicate with a refutation and vacuously-true consumers — the
+inverse failure of this one.
+
+@audit:defect(degenerate) @audit:closed-by-successor(shannon-hartley-phase2-spectral-plan) -/
 structure ContAwgnCode (T W P : ℝ) (M : ℕ) where
   /-- The `M` band-limited codewords, one per message. -/
   encoder : Fin M → (ℝ → ℝ)

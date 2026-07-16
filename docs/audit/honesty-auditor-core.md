@@ -91,10 +91,16 @@ recommend the rewrite. The new system requires sorry-based residuals, not honest
 - **`@residual(wall:<name>)`**: 当該 wall が真に Mathlib 不在か。loogle で裏取り:
   `./.lake/packages/loogle/.lake/build/bin/loogle --read-index .lake/build/loogle.index "<conclusion pattern>"`
   存在したら `mathlib_wall_misuse`、`misclassified_residual`。
-- **`@residual(defect:<kind>)`**: signature が defect 修正済み (循環解除 / `:True` slot 解除 等)
-  かを確認。signature がまだ defect 形のままなら未修正 → 撤回または再修正提案。
-  特に `defect:circular` と `defect:false-statement` の peer 区別: circular は仮説型 ≡ 結論型、
-  false-statement は precondition 欠落で universally false。
+- **`@residual(defect:<kind>)`**: **2 用法あり。取り違えると正しいタグを誤って撤回させる** (2026-07-17 追加、
+  詳細 → `audit-tags.md`「`defect` の (b) 用法」)。
+  - **(a) fix 待ち残置**: signature は defect 修正済み (循環解除 / `:True` slot 解除 等) で body だけ `sorry`。
+    signature がまだ defect 形のままなら未修正 → 撤回または再修正提案。
+  - **(b) false-as-framed の暫定置き場**: 命題自体が偽で `sorry` が**充填不能**、def-fix 待ち。
+    **signature が defect 形のまま残るのが正しい状態であり、撤回してはならない** (撤回先が存在しない —
+    `wall:`/`plan:` はいずれも偽を主張することになる)。`@audit:defect(...)` + `@audit:closed-by-successor(...)`
+    の併記と、充填不能である旨の散文があるかを確認する (無ければそれが指摘事項)。
+  - 特に `defect:circular` と `defect:false-statement` の peer 区別: circular は仮説型 ≡ 結論型、
+    false-statement は precondition 欠落で universally false。
 
 `@residual` が **無い** sorry を見つけたら `missing_residual_tag` verdict、orchestrator に
 タグ追加 (または signature 修正) を recommend。

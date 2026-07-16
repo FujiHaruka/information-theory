@@ -60,7 +60,23 @@ cross-ref (false-negative 事例): `csiszarGap1Source_deriv_le_zero` は audit:P
 |---|---|---|---|
 | `plan` | 別 plan で closure 予定 | plan filename stem (no `.md`) | `@residual(plan:epi-stam-closure)` |
 | `wall` | Mathlib に未整備の壁。長期残課題 | wall name (下記 register) | `@residual(wall:stam)`、`@residual(wall:n-dim-gaussian-aep)` |
-| `defect` | 旧 defect の fix 待ち残置 (signature は honest 化済、body だけ `sorry`) | defect kind (下記語彙) | `@residual(defect:circular)` |
+| `defect` | (a) 旧 defect の fix 待ち残置 (signature は honest 化済、body だけ `sorry`)、**または (b) signature が false-as-framed で def-fix 待ち** (`sorry` は充填不能 — 下記) | defect kind (下記語彙) | `@residual(defect:circular)`、`@residual(defect:false-statement)` |
+
+##### `defect` の (b) 用法 — false-as-framed な `sorry` の暫定置き場 (2026-07-17 追加)
+
+命題が**偽**と判明したとき、`sorry` は原理的に充填できない。しかし pre-commit hook は `sorry` に
+`@residual(<class>)` を要求し、クラス語彙は `plan|wall|defect` に固定されている。`wall:` は偽
+(「Mathlib に無い」ではなく「証明不能」)、`plan:` も偽 (as-framed では closure されず**置換**される)
+⟹ 消去法で `defect:` が唯一の受け皿。**この用法は正規**とし、以下を必須とする:
+
+- `@audit:defect(false-statement)` を併記 (tier 5 の grep シグナルを立てる)
+- `@audit:closed-by-successor(<plan-slug>)` を併記 (def-fix を負う後継 plan を名指す)
+- docstring 散文で「この `sorry` は充填不能であり、def-fix によって命題ごと置換される」ことを明示
+
+**監査側への注意**: `honesty-auditor-core.md` の「`@residual(defect:<kind>)` は signature が defect 修正済みかを
+確認、未修正なら撤回提案」は **(a) 用法にのみ適用**する。(b) 用法では signature が defect 形のまま残るのが
+**正しい状態**であり、撤回してはならない (撤回先が存在しない)。**これは恒久的な安定状態ではなく、def-fix 待ちの
+暫定マーカー**である点は (a) と同じ。
 
 #### Wall name register
 
@@ -74,7 +90,9 @@ cross-ref (false-negative 事例): `csiszarGap1Source_deriv_le_zero` は audit:P
 | `n-dim-gaussian-aep` | n 次元 Gaussian 上の AEP / typicality | Ch.9 AWGN |
 | `sphere-volume` | 高次元球の体積 + thin shell concentration | Ch.9 AWGN |
 | `continuous-aep` | 連続分布上の典型集合 / AEP の Mathlib 不在部 | Ch.9 |
-| `nyquist-2w-dof` | 時間帯域幅 DOF-per-second カウント: `[-W,W]` 帯域制限 & `[0,T]` 本質的時間制限の信号は `≈2WT` 自由度 (時間帯域制限作用素の prolate-spheroidal / Landau-Pollak-Slepian 固有値集中)。Mathlib 不在 (loogle Found 0: `prolate`/`whiteNoise`/`Bandlimited`/`Slepian`、2026-07-14 確認)、self-build ~1000-2000 行のスペクトル理論。**壁でない周辺 (すべて in-project 定義可能)**: 雑音測度 (帯域制限射影した白色雑音 = 有限分散 Gaussian 過程、Nyquist サンプルは iid Gaussian、`IsGaussianProcess`) / 連続時間 AEP / per-sample 符号化定理 (`awgn_achievability`/`awgn_converse` 所有)。**sampling theorem が operational を閉じない理由**: `whittaker_shannon_bandlimited` は全直線上の全単射 (両側無限サンプル ↔ 帯域制限 L² 信号) だが operational capacity は毎秒レート `limsup (log M(T))/T` — 全直線全単射は時間窓の次元カウントを与えない。**循環 caveat**: 連続時間 code をサンプルベクトルに制限して定義すると Landau-Pollak-Slepian converse DOF 限界を def に埋め込む循環、`2W` は DOF 証明側から emerge させる。標本化定理そのものは 2026-07-14 に proof done (`whittaker_shannon_hasSum`/`whittaker_shannon_bandlimited` sorryAx-free) で本壁から分離済。**consumer (2026-07-15 更新)**: (1) `ShannonHartley.contAwgn_eq_shannonHartley` (`ShannonHartleyOperational.lean`、main 定理、converse 側 prolate DOF)、(2) `ShannonHartley.contAwgnMaxMessages_bddAbove` (`ShannonHartleyAchievability.lean`、achievability leg 2 の `BddAbove`、標本↔窓エネルギーの同一集中を要する — 2026-07-15 に「crude・壁非依存」誤判定から是正、proof-pivot-advisor verdict 2 + 独立監査 CONFIRMED)、(3) `contAwgn_ge_shannonHartley` (leg 3) は `le_csSup` 経由で (2) を transitively 消費 (tag は `plan:`、壁は documented prerequisite)。旧 consumer `IsTwoWDegreesOfFreedom` / `shannon_hartley_formula` は Phase 1-fix (2026-07-15) で除去済 (stale)。 | Ch.9 Shannon-Hartley (連続時間 AWGN 2W-DOF; main `contAwgn_eq_shannonHartley` + achievability `contAwgnMaxMessages_bddAbove`) |
+| `nyquist-2w-dof` | 時間帯域幅 DOF-per-second カウント: `[-W,W]` 帯域制限 & `[0,T]` 本質的時間制限の信号は `≈2WT` 自由度 (時間帯域制限作用素の prolate-spheroidal / Landau-Pollak-Slepian 固有値集中)。Mathlib 不在 (loogle Found 0: `prolate`/`whiteNoise`/`Bandlimited`/`Slepian`、2026-07-14 確認)、self-build ~1000-2000 行のスペクトル理論。**壁でない周辺 (すべて in-project 定義可能)**: 雑音測度 (帯域制限射影した白色雑音 = 有限分散 Gaussian 過程、Nyquist サンプルは iid Gaussian、`IsGaussianProcess`) / 連続時間 AEP / per-sample 符号化定理 (`awgn_achievability`/`awgn_converse` 所有)。**sampling theorem が operational を閉じない理由**: `whittaker_shannon_bandlimited` は全直線上の全単射 (両側無限サンプル ↔ 帯域制限 L² 信号) だが operational capacity は毎秒レート `limsup (log M(T))/T` — 全直線全単射は時間窓の次元カウントを与えない。**循環 caveat**: 連続時間 code をサンプルベクトルに制限して定義すると Landau-Pollak-Slepian converse DOF 限界を def に埋め込む循環、`2W` は DOF 証明側から emerge させる。標本化定理そのものは 2026-07-14 に proof done (`whittaker_shannon_hasSum`/`whittaker_shannon_bandlimited` sorryAx-free) で本壁から分離済。**consumer (2026-07-17 更新): 0 — DORMANT。** 旧 consumer 3 本 (`contAwgn_eq_shannonHartley` / `contAwgnMaxMessages_bddAbove` / `contAwgn_ge_shannonHartley`) は **壁 consumer ではなく false-statement 欠陥だった** (commit `d2938749` で `@audit:defect(false-statement)` に再分類)。`ContAwgnCode.encoder_power` が窓 `[0,T]` のエネルギーのみを拘束する (`cause:signature-drops-constraint` — 全直線拘束も時間制限も無い) ため、超振動符号語を使った 1 標本コードで任意の `M` が達成でき `BddAbove` が破れる ⟹ junk chain (`Nat.sSup_of_not_bddAbove` → `Real.log_zero`) で容量 `=0`、閉形式は `>0`。**壁自体は実在するが def-fix まで dormant**: 修正後の `ContAwgnCode` (Wyner=全直線エネルギー or Landau-Pollak=時間制限+帯域集中) の下では converse に prolate/LPS の `≈2WT` DOF カウントが依然必要ゆえ **slug は retire しない**。def-fix は `shannon-hartley-phase2-spectral-plan` に負う。旧 consumer `IsTwoWDegreesOfFreedom` / `shannon_hartley_formula` は Phase 1-fix (2026-07-15) で除去済 (stale)。
+
+**overturn 記録 (2026-07-17)**: 2026-07-15 に `contAwgnMaxMessages_bddAbove` を「crude・壁非依存」から「壁 blocked」へ是正し、proof-pivot-advisor verdict 2 + 独立監査が CONFIRMED した。**その両方の読みが誤りだった** — 命題は false-as-framed。`cause:numeric-mispredict` (倍精度 `lstsq(rcond=None)` のプラトー 76.1 が sup を有限に見せた、詳細 → `docs/shannon/shannon-hartley-facts.md` §NUMERIC-TRUE-ARTIFACT)。**教訓**: 2 段ガード (pivot-advisor + honesty-auditor) が一致して外したのは、**両者とも「どれくらい難しいか」を問い、どちらも「そもそも真か」を問わなかった**ため。一致は、全員が同じ問いを間違えているときに最も説得力に見える。 | Ch.9 Shannon-Hartley (連続時間 AWGN 2W-DOF; main `contAwgn_eq_shannonHartley` + achievability `contAwgnMaxMessages_bddAbove`) |
 | `multivariate-mi` | 連続 `mutualInfo_pi_eq_sum` (多変量 MI 加法性) | Ch.9 ParallelGaussian |
 | `joint-typicality-multi` | 多変数 joint typicality / Fano | Ch.15 MAC/BC/Relay |
 | `epi-n-dim` | 多次元 EPI / n-dim Prékopa-Leindler の slice 解析的 readiness | Ch.17 BM |
