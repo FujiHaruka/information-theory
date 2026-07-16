@@ -5,6 +5,7 @@ import InformationTheory.Shannon.ShannonHartleyOperational
 import InformationTheory.Shannon.NormalizedSinc
 import InformationTheory.Shannon.WhittakerShannon
 import InformationTheory.Shannon.AWGN.Achievability
+import InformationTheory.Shannon.AWGN.ChannelMeasurability
 import InformationTheory.Shannon.AWGN.Converse
 import InformationTheory.Meta.EntryPoint
 
@@ -432,6 +433,188 @@ theorem synthSignal_energy (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) 
 
 /-! ## §E — boundedness of the message set -/
 
+/-- Bessel's inequality against the orthonormal test family: the total observed energy of any
+codeword is capped by its whole-line `L²` energy, hence by the power budget `T·P` — uniformly in
+the observation count `k`, with no bandwidth or spacing input. -/
+private theorem contAwgn_sum_observation_sq_le {T W P : ℝ} {M : ℕ}
+    (c : ContAwgnCode T W P M) (m : Fin M) :
+    ∑ i : Fin c.k, (c.observation m i) ^ 2 ≤ T * P := by
+  classical
+  -- The codeword and the test family, as elements of `L²(ℝ)`.
+  set f : Lp ℝ 2 volume := (c.encoder_memLp m).toLp (c.encoder m) with hf_def
+  set φ : Fin c.k → Lp ℝ 2 volume := fun i => (c.testFn_memLp i).toLp (c.testFn i) with hφ_def
+  -- `⟪φ i, g⟫ = ∫ t, g t * testFn i t` for any `g` given a.e. representatives.
+  have hinner : ∀ (i : Fin c.k) (g : Lp ℝ 2 volume),
+      (inner ℝ (φ i) g : ℝ) = ∫ t, g t * c.testFn i t := by
+    intro i g
+    rw [MeasureTheory.L2.inner_def]
+    refine integral_congr_ae ?_
+    filter_upwards [MemLp.coeFn_toLp (c.testFn_memLp i)] with t ht
+    simp only [hφ_def, ht, RCLike.inner_apply, conj_trivial]
+  -- The test family is orthonormal in `L²` — this is exactly `testFn_orthonormal`.
+  have hortho : Orthonormal ℝ φ := by
+    rw [orthonormal_iff_ite]
+    intro i j
+    rw [hinner i (φ j)]
+    have : (∫ t, (φ j : ℝ → ℝ) t * c.testFn i t) = ∫ t, c.testFn j t * c.testFn i t := by
+      refine integral_congr_ae ?_
+      filter_upwards [MemLp.coeFn_toLp (c.testFn_memLp j)] with t ht
+      simp only [hφ_def, ht]
+    rw [this, c.testFn_orthonormal j i]
+    by_cases h : i = j
+    · simp [h]
+    · simp [h, Ne.symm h]
+  -- Bessel's inequality, uniform in `k`.
+  have hbessel := hortho.sum_inner_products_le (x := f) (s := Finset.univ)
+  -- `⟪φ i, f⟫ = observation m i`.
+  have hobs : ∀ i : Fin c.k, (inner ℝ (φ i) f : ℝ) = c.observation m i := by
+    intro i
+    rw [hinner i f]
+    refine integral_congr_ae ?_
+    filter_upwards [MemLp.coeFn_toLp (c.encoder_memLp m)] with t ht
+    simp only [hf_def, ht]
+  -- `‖f‖² = ∫ t, (encoder m t)²`, which `encoder_power` caps by `T·P`.
+  have hnorm : ‖f‖ ^ 2 = ∫ t, (c.encoder m t) ^ 2 := by
+    rw [← real_inner_self_eq_norm_sq, MeasureTheory.L2.inner_def]
+    refine integral_congr_ae ?_
+    filter_upwards [MemLp.coeFn_toLp (c.encoder_memLp m)] with t ht
+    simp only [hf_def, ht, RCLike.inner_apply, conj_trivial, sq]
+  calc ∑ i : Fin c.k, (c.observation m i) ^ 2
+      = ∑ i : Fin c.k, ‖(inner ℝ (φ i) f : ℝ)‖ ^ 2 := by
+        refine Finset.sum_congr rfl fun i _ => ?_
+        rw [hobs i, Real.norm_eq_abs, sq_abs]
+    _ ≤ ‖f‖ ^ 2 := hbessel
+    _ = ∫ t, (c.encoder m t) ^ 2 := hnorm
+    _ ≤ T * P := c.encoder_power m
+
+/-- The discrete `AwgnCode` induced by reading a `ContAwgnCode` through its matched filters: the
+codewords are the observation vectors and the decoder is unchanged. The per-observation power
+budget `(T·P + 1)/k` is chosen strictly positive (the `+1` covers the degenerate `P = 0`), which
+`awgn_converse` requires. -/
+private noncomputable def contAwgnToAwgnCode {T W P : ℝ} {M : ℕ}
+    (c : ContAwgnCode T W P M) (hk : 0 < c.k) :
+    AWGN.AwgnCode M c.k ((T * P + 1) / (c.k : ℝ)) where
+  encoder m i := c.observation m i
+  decoder := c.decoder
+  decoder_meas := c.decoder_meas
+  power_constraint := by
+    intro m
+    have hkR : (0 : ℝ) < (c.k : ℝ) := by exact_mod_cast hk
+    rw [mul_div_cancel₀ _ (ne_of_gt hkR)]
+    linarith [contAwgn_sum_observation_sq_le c m]
+
+/-- The continuous-time error probability *is* the discrete one for the induced code: both are the
+same `Measure.pi` of per-observation Gaussians over the same decoding-error event. -/
+private theorem contAwgn_errorProbAt_eq {T W P : ℝ} {M : ℕ}
+    (c : ContAwgnCode T W P M) (hk : 0 < c.k) (N₀ : ℝ) (m : Fin M) :
+    c.errorProbAt N₀ m
+      = (contAwgnToAwgnCode c hk).toCode.errorProbAt
+          (AWGN.awgnChannel (N₀ / 2).toNNReal (AWGN.isAwgnChannelMeasurable _)) m := by
+  rfl
+
+/-- Each pointwise error probability is finite (it is a probability). -/
+private theorem contAwgn_errorProbAt_ne_top {T W P : ℝ} {M : ℕ}
+    (c : ContAwgnCode T W P M) (N₀ : ℝ) (m : Fin M) :
+    c.errorProbAt N₀ m ≠ ⊤ := by
+  unfold ContAwgnCode.errorProbAt
+  exact measure_ne_top _ _
+
+/-- The average error in the shape `awgn_converse` wants: a real average of real error
+probabilities. -/
+private theorem contAwgn_averageError_toReal {T W P : ℝ} {M : ℕ} (hM : 0 < M)
+    (c : ContAwgnCode T W P M) (N₀ : ℝ) :
+    (c.averageError N₀).toReal
+      = (1 / M : ℝ) * ∑ m : Fin M, (c.errorProbAt N₀ m).toReal := by
+  unfold ContAwgnCode.averageError
+  rw [if_neg hM.ne']
+  rw [ENNReal.toReal_mul, ENNReal.toReal_inv,
+    ENNReal.toReal_sum (fun m _ => contAwgn_errorProbAt_ne_top c N₀ m)]
+  simp [one_div]
+
+/-- The crude wall-free rate bound, for codes with at least one observation: `log M` is capped by
+`(T·P + 1)/N₀` plus the Fano terms, **uniformly in the observation count `k`**. This is where
+Bessel meets `awgn_converse`, and where `ln(1+x) ≤ x` discards the `k`-dependence. -/
+private theorem contAwgn_log_le_of_pos_k {T W N₀ P ε : ℝ} {M : ℕ}
+    (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hT : 0 < T) (hε0 : 0 < ε) (hε1 : ε < 1)
+    (hM : 2 ≤ M) (c : ContAwgnCode T W P M) (hk : 0 < c.k)
+    (hce : (c.averageError N₀).toReal ≤ ε) :
+    Real.log M ≤ ((T * P + 1) / N₀ + Real.log 2) / (1 - ε) := by
+  have hM0 : 0 < M := lt_of_lt_of_le (by norm_num) hM
+  have hkR : (0 : ℝ) < (c.k : ℝ) := by exact_mod_cast hk
+  have hTP : 0 ≤ T * P := mul_nonneg hT.le hP
+  -- The noise variance of the discretized channel is `N₀/2`.
+  set N : ℝ≥0 := (N₀ / 2).toNNReal with hN_def
+  have hNR : (N : ℝ) = N₀ / 2 := Real.coe_toNNReal _ (by linarith)
+  have hN : (N : ℝ) ≠ 0 := by rw [hNR]; linarith
+  set h_meas := AWGN.isAwgnChannelMeasurable N with hmeas_def
+  -- The induced discrete code and its (strictly positive) per-observation power budget.
+  set P' : ℝ := (T * P + 1) / (c.k : ℝ) with hP'_def
+  have hP'pos : 0 < P' := div_pos (by linarith) hkR
+  set dc := contAwgnToAwgnCode c hk with hdc_def
+  -- The continuous average error *is* the discrete one.
+  set Pe : ℝ := (c.averageError N₀).toReal with hPe_def
+  have hPe : Pe = (1 / M : ℝ) *
+      ∑ m : Fin M, (dc.toCode.errorProbAt (AWGN.awgnChannel N h_meas) m).toReal := by
+    rw [hPe_def, contAwgn_averageError_toReal hM0 c N₀]
+    exact congrArg _ (Finset.sum_congr rfl fun m _ => by
+      rw [contAwgn_errorProbAt_eq c hk N₀ m])
+  -- The discrete converse.
+  have hconv := AWGN.awgn_converse P' hP'pos N hN h_meas hM hk dc Pe hPe
+  -- `ln(1+x) ≤ x` kills the `k`-dependence: the whole observation bank is worth `≤ (T·P+1)/N₀`.
+  have hlog : (c.k : ℝ) * ((1 / 2) * Real.log (1 + P' / (N : ℝ))) ≤ (T * P + 1) / N₀ := by
+    have hx : 0 < 1 + P' / (N : ℝ) := by
+      have : 0 < P' / (N : ℝ) := div_pos hP'pos (by rw [hNR]; linarith)
+      linarith
+    have h1 : Real.log (1 + P' / (N : ℝ)) ≤ P' / (N : ℝ) := by
+      have := Real.log_le_sub_one_of_pos hx; linarith
+    have h2 : (c.k : ℝ) * ((1 / 2) * Real.log (1 + P' / (N : ℝ)))
+        ≤ (c.k : ℝ) * ((1 / 2) * (P' / (N : ℝ))) := by
+      apply mul_le_mul_of_nonneg_left _ hkR.le
+      linarith
+    refine h2.trans (le_of_eq ?_)
+    rw [hP'_def, hNR]
+    field_simp
+  -- Fano terms: `binEntropy ≤ log 2`, and `Pe·log(M-1) ≤ ε·log M`.
+  have hPe0 : 0 ≤ Pe := ENNReal.toReal_nonneg
+  have hPeε : Pe ≤ ε := hce
+  have hMR : (2 : ℝ) ≤ (M : ℝ) := by exact_mod_cast hM
+  have hlogM1 : 0 ≤ Real.log ((M : ℝ) - 1) := Real.log_nonneg (by linarith)
+  have hlogle : Real.log ((M : ℝ) - 1) ≤ Real.log (M : ℝ) :=
+    Real.log_le_log (by linarith) (by linarith)
+  have hfano : Pe * Real.log ((M : ℝ) - 1) ≤ ε * Real.log (M : ℝ) :=
+    le_trans (mul_le_mul_of_nonneg_right hPeε hlogM1)
+      (mul_le_mul_of_nonneg_left hlogle hε0.le)
+  have hbin : Real.binEntropy Pe ≤ Real.log 2 := Real.binEntropy_le_log_two
+  -- Rearrange: `(1-ε)·log M ≤ (T·P+1)/N₀ + log 2`.
+  have hkey : (1 - ε) * Real.log (M : ℝ) ≤ (T * P + 1) / N₀ + Real.log 2 := by nlinarith [hconv]
+  rw [le_div_iff₀ (by linarith)]
+  linarith [hkey]
+
+/-- With no observations at all the receiver learns nothing: every message is decoded to the same
+one, so the average error is exactly `(M-1)/M`. -/
+private theorem contAwgn_averageError_of_k_eq_zero {T W P : ℝ} {M : ℕ} (hM : 0 < M)
+    (c : ContAwgnCode T W P M) (hk : c.k = 0) (N₀ : ℝ) :
+    (c.averageError N₀).toReal = ((M : ℝ) - 1) / M := by
+  classical
+  haveI : IsEmpty (Fin c.k) := by rw [hk]; infer_instance
+  -- With no observations the sample space is a single point.
+  set x₀ : Fin c.k → ℝ := isEmptyElim with hx₀
+  set m₀ : Fin M := c.decoder x₀ with hm₀
+  -- Every error probability is `0` at `m₀` and `1` elsewhere.
+  have herr : ∀ m : Fin M,
+      (c.errorProbAt N₀ m).toReal = 1 - (if m₀ = m then (1 : ℝ) else 0) := by
+    intro m
+    have hmeas : MeasurableSet {y : Fin c.k → ℝ | c.decoder y ≠ m} :=
+      (c.decoder_meas (measurableSet_singleton m)).compl
+    unfold ContAwgnCode.errorProbAt
+    rw [Measure.pi_of_empty _ x₀, Measure.dirac_apply' _ hmeas]
+    simp only [Set.indicator_apply, Set.mem_setOf_eq, hm₀, Pi.one_apply]
+    by_cases h : c.decoder x₀ = m <;> simp [h]
+  rw [contAwgn_averageError_toReal hM c N₀]
+  simp_rw [herr]
+  rw [Finset.sum_sub_distrib, Finset.sum_ite_eq _ m₀ (fun _ => (1 : ℝ))]
+  simp [Finset.card_univ, div_eq_inv_mul]
+
 /-- The message-count set is bounded above — the `BddAbove` obligation needed to lower-bound
 `contAwgnMaxMessages` via `le_csSup`.
 
@@ -441,30 +624,56 @@ degrees-of-freedom count. The test family `testFn` is orthonormal, so for every 
     `∑ᵢ (observation m i)² = ∑ᵢ ⟨encoder m, testFn i⟩² ≤ ‖encoder m‖₂² ≤ T·P`,
 
 uniformly in the observation count `k` — no spacing, rate or bandwidth hypothesis enters, and the
-whole-line `encoder_power` supplies the right-hand side directly. Feeding that energy bound to
-`awgn_converse` on the induced discrete code (per-observation power `P' = (∑ᵢ ⟨f, φᵢ⟩²)/k`, whose
-`power_constraint` holds by construction) and using `log(1+x) ≤ x` bounds `log M` by `T·P/N₀` plus
-the Fano term, hence `BddAbove`.
+whole-line `encoder_power` supplies the right-hand side directly. That energy bound feeds
+`awgn_converse` on the induced discrete code `contAwgnToAwgnCode` (per-observation power
+`P' = (T·P + 1)/k`, whose `power_constraint` holds by construction; the `+1` keeps it strictly
+positive when `P = 0`), and `log(1+x) ≤ x` collapses the `k`-dependence:
 
-The remaining work is plumbing: the `ContAwgnCode → AwgnCode` wiring, the identification of
-`ContAwgnCode.errorProbAt`'s `Measure.pi` law with the discrete `errorProbAt` for
-`awgnChannel (N₀/2)`, the Fano rearrangement (which is what `ε < 1` is for), and the edge cases
-`k = 0` / `M < 2` together with the ℕ-`sSup` junk-`0` convention. That is Leg D' of
-`shannon-hartley-phase2-spectral-plan`.
+    `(k/2)·log(1 + 2(T·P+1)/(k·N₀)) ≤ (T·P+1)/N₀`.
+
+Rearranging the Fano terms against `ε < 1` gives `log M ≤ ((T·P+1)/N₀ + log 2)/(1-ε)`, a bound
+free of `k`, so the message set is capped. Two degenerate branches sit outside that argument and
+are handled separately: `M < 2` (below the converse's range) and `k = 0`, where the receiver
+observes nothing, every message decodes to the same one, the average error is exactly `(M-1)/M`,
+and `ε < 1` alone caps `M ≤ 1/(1-ε)`.
+
+That the bandwidth `W` is *unused* here is the point rather than an oversight: `hW` is retained
+only to keep the signature uniform with the rest of the sandwich.
 
 This bound is deliberately crude, and its crudeness is load-bearing evidence rather than a
 shortcoming: it caps the rate at `P/N₀`, which `ln(1+x) ≤ x` makes strictly larger than
 `bandlimitedAwgnCapacity W N₀ P`. Boundedness is free; the exact constant is not, and it is the
 part that still needs the prolate eigenvalue count (see `contAwgn_eq_shannonHartley`).
 
-Hypotheses are regularity-only (not load-bearing).
-
-`@residual(plan:shannon-hartley-phase2-spectral-plan)` -/
+Hypotheses are regularity-only (not load-bearing). -/
 theorem contAwgnMaxMessages_bddAbove (T W N₀ P ε : ℝ)
     (hT : 0 < T) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
     BddAbove { M : ℕ | ∃ c : ContAwgnCode T W P M, (c.averageError N₀).toReal ≤ ε } := by
-  -- Wall-independent (Bessel + `awgn_converse`); the wiring is Leg D'. See docstring.
-  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+  have hε : 0 < 1 - ε := by linarith
+  -- The two crude caps: the Bessel/converse one, and the observation-free one.
+  set B : ℝ := ((T * P + 1) / N₀ + Real.log 2) / (1 - ε) with hB
+  set C : ℝ := 1 / (1 - ε) with hC
+  refine ⟨max ⌈Real.exp B⌉₊ ⌈C⌉₊, ?_⟩
+  rintro M ⟨c, hce⟩
+  rcases lt_or_ge M 2 with hM | hM
+  · -- `M ≤ 1` is below `C = 1/(1-ε) > 1`.
+    have h1 : (1 : ℝ) ≤ C := by rw [hC, le_div_iff₀ hε]; linarith
+    have : (1 : ℕ) ≤ ⌈C⌉₊ := Nat.one_le_ceil_iff.mpr (by linarith)
+    omega
+  · have hM0 : 0 < M := lt_of_lt_of_le (by norm_num) hM
+    have hMR : (2 : ℝ) ≤ (M : ℝ) := by exact_mod_cast hM
+    rcases Nat.eq_zero_or_pos c.k with hk | hk
+    · -- No observations: the receiver guesses, so `(M-1)/M ≤ ε` pins `M ≤ 1/(1-ε)`.
+      rw [contAwgn_averageError_of_k_eq_zero hM0 c hk N₀] at hce
+      rw [div_le_iff₀ (by positivity : (0 : ℝ) < (M : ℝ))] at hce
+      have hMC : (M : ℝ) ≤ C := by rw [hC, le_div_iff₀ hε]; nlinarith
+      have : M ≤ ⌈C⌉₊ := by exact_mod_cast hMC.trans (Nat.le_ceil C)
+      omega
+    · -- Bessel + `awgn_converse`: `log M ≤ B`, uniformly in the observation count.
+      have hlog := contAwgn_log_le_of_pos_k hN₀ hP hT hε0 hε1 hM c hk hce
+      rw [← hB, Real.log_le_iff_le_exp (by linarith)] at hlog
+      have : M ≤ ⌈Real.exp B⌉₊ := by exact_mod_cast hlog.trans (Nat.le_ceil _)
+      omega
 
 /-! ## §F — assembly -/
 
