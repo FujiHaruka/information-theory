@@ -52,11 +52,11 @@
         `star_mem_prolateEigenspaceSup`（A1 解析核、`@audit:ok`）+ `le_inner_timeBandLimitingOp_of_mem`（V 上作用素下界、`@audit:ok`）。
   - [x] **R4-ACH-B ✅ CLOSED（leg 18、`53723ec2` + 監査 `231d96ab` `@audit:ok`）**: (B) 実基底 sorryAx-free。
         次元橋は判別子として cheap（standalone 不要、`finrank_span_eq_card` で直接）。ambient `InnerProductSpace ℝ E` 既存で diamond 回避。
-  - [ ] **R4-ACH-A2（NEXT、⚠️ 設計論点あり）** → KL 族 `φᵢ = Q_T ψᵢ/√μᵢ`。**(B) の `u` は V の ONB だが A-固有基底ではない**
-        （V = 固有値*集合*上の sup、監査確認）。A2 の `√μᵢ` 正規化は per-vector 固有値を要す ⟹ 選択肢:
-        (i) 実**固有**基底を別途構成（各 eigenspace 星不変 → 実基底、L3529 の複素固有基底 + A1 から）、または
-        (ii) A2 を作用素下界 `le_inner_timeBandLimitingOp_of_mem`（`A ≥ c on V`）で再定式化し per-vector 固有値を回避
-        （per-dim gain ≥ c → rate ≥ ½log(1+c·SNR)、`c→1`）。**次 leg で判断**。
+  - [ ] **R4-ACH-A2（IN PROGRESS、route ii 確定 leg 19）** → **作用素下界で再定式化（per-vector μᵢ 回避）**。
+        advisor 独立検証: `awgn_channel_coding_theorem`（`AWGN/Main.lean:55`）は**スカラー** ⟹ μᵢ に payoff 無し ⟹ (i) 実固有基底は strictly 重く却下。
+        ⚠️ **予測訂正**: V メンバは帯域制限で [0,T] 台でない ⟹「G≥cI を vector-channel 定理へ」は誤り（その定理は不在・不要）。
+        正しくは **encoder 側 pre-equalizer `b=R⁻¹x`** でスカラー定理へ帰着（`G≥cI ⟹ G⁻¹≤(1/c)I` だけ）。核 = 時間窓集中 `c‖v‖²≤‖Q_T v‖²` on V。
+        **最大コスト = Lp クラス→pointwise ℝ→ℝ lift（route 非依存）**。leg 19 で operator-level ブリック着手。
   - [ ] **R4-CONV-gate（並行可、⚠️ route 再検討）** → C1（converse interlacing、唯一の未 gateway-test）。
         plan の旧 route「R1 + finrank 単射」は **R1 dead で失効** ⟹ 新 route が要る（有限 V-固有基底 L3529 + min-max か）。PASS で壁再分類 license。
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
@@ -414,11 +414,11 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 
 **✅ 完了**: Leg R2/R3（count、r17）/ **Leg R4-gate A1（leg 18、gateway PASS）** / **Leg R4-ACH-B（leg 18、実基底 CLOSED）**。
 
-1. **Leg R4-ACH-A2（NEXT、⚠️ 設計判断が先）** — 実基底 `u` は A-固有基底でない。判断: (i) 実**固有**基底を別構成
-   （各 eigenspace 星不変 → L3529 の複素固有基底 + A1）か (ii) A2 を `le_inner_timeBandLimitingOp_of_mem`（`A≥c on V`）で
-   再定式化し per-vector 固有値を回避（per-dim gain ≥ c → `c→1`）。判断後に KL 族 → honest `ℝ→ℝ` testFn → encoder。
+1. **Leg R4-ACH-A2（route ii 確定 leg 19、IN PROGRESS）** — advisor 独立検証で **(ii)=作用素下界** に確定（`awgn` 定理スカラー ⟹ μᵢ 無用、(i) 却下）。
+   pre-equalizer `b=R⁻¹x` でスカラー帰着（`G⁻¹≤(1/c)I`）。leg 19 = operator-level ブリック（時間窓集中 + G≥cI）。
+   次: `Q_T(V)` の [0,T]-台 real ONB testFn（Lp→pointwise lift = 最大コスト）→ encoder → A4 transport。
 2. **Leg R4-CONV-gate（並行可、⚠️ route 再検討）** — C1（converse interlacing、唯一の未 gateway-test）。
-   旧 route「R1 + finrank 単射」は R1 dead で失効 → 新 route（L3529 + min-max か）。PASS で `wall:nyquist-2w-dof` → `plan:` 再分類を完全 license。
+   旧 route「R1 + finrank 単射」は R1 dead で失効 → 新 route（L3529 + min-max か）。**advisor 見立て: interlacing 非自明 = self-build 公算、gateway-atom-first 推奨**。PASS で壁→`plan:` 再分類 license。
 3. **Leg A4/C-assembly** — `awgn_channel_coding_theorem` 輸送 + capacity 計算 + rate/limsup。
 
 **壁再分類（leg 18 で証拠強化、判断は次 leg）**: `wall:nyquist-2w-dof` の named proposition（固有値集中）は r17 で CLOSED、A1 は leg 18 で plumbing 確定、有限 V-固有基底は in-tree、C3 は in-tree。**残る唯一の未計測 = C1（converse interlacing）**。CLAUDE.md の defect tell「choice(big) を blocked(hard) と偽る」に該当の疑いが強まった。次 leg: C1 gateway → PASS なら 2 consumer を `@residual(plan:shannon-hartley-phase2-spectral-plan)` へ再分類（code 編集は subagent + 独立 honesty-auditor）。同時に dangling name 掃除（`prolate_eigenvalue_count` docs 6 ファイル / `contAwgn_le_shannonHartley` = C0 指示対象なき名前）。
