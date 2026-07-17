@@ -2603,7 +2603,17 @@ theorem le_inner_timeBandLimitingOp_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
 quotient of `A = timeBandLimitingOp T W` strictly exceeds `c` has dimension at most
 `prolateCount T W c`: the number of "high-gain" directions is capped by the number of prolate
 eigenvalues above `c`. Finite-dimensional min-max half of Cauchy interlacing; converse companion
-to the achievability count. -/
+to the achievability count.
+
+Audited 2026-07-18 (independent): sorryAx-free (`#print axioms` = `[propext, Classical.choice,
+Quot.sound]`; its crux `inner_timeBandLimitingOp_le_of_mem_orthogonal` re-verified sorryAx-free too).
+The hypothesis `hS` is a genuine min-max precondition — it constrains only the Rayleigh-quotient
+form `c‖x‖² < Re⟪Ax,x⟫` on `S` and names no count/eigenvalue/prolate object, so it does not bundle
+the conclusion `finrank S ≤ prolateCount`. The body does real work: the strict form on `S` collides
+with the `≤ c` bound on `Vᗮ` (crux) to force `S ∩ Vᗮ = {0}`, whence orthogonal projection injects
+`S ↪ V` and `finrank S ≤ finrank V = prolateCount`. Not vacuous (a genuine `≤` on `finrank S`, not
+`0 ≤ _` or `finrank ⊥`).
+@audit:ok -/
 theorem finrank_le_prolateCount_of_form_gt (T W : ℝ) {c : ℝ} (hc : 0 < c)
     (S : Submodule ℂ E)
     (hS : ∀ x ∈ S, x ≠ 0 → c * ‖x‖ ^ 2 < (inner ℂ (timeBandLimitingOp T W x) x).re) :

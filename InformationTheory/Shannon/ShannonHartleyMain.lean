@@ -16,8 +16,10 @@ modules, so the theorems live here rather than at their original upstream sites.
 The achievability half is now **proved** (`contAwgn_ge_shannonHartley`, sorryAx-free): it needs
 only the *lower* count `le_prolateCount` (via `prolateCount_div_tendsto`) fed through the block
 `awgn_channel_coding_theorem`, not the tight Landau-Pollak-Slepian concentration. The identity
-`contAwgn_eq_shannonHartley` remains open on its converse (`≤`) half, which needs the *upper* count
-`prolateCount_le` plus the Gram-compression interlacing step — the genuine `nyquist-2w-dof` bridge.
+`contAwgn_eq_shannonHartley` remains open on its converse (`≤`) half. Its Gram-compression
+interlacing bridge (`finrank_le_prolateCount_of_form_gt`) is now proved and its crux is in-tree, so
+what remains is the project-internal operational-converse assembly on top of the *upper* count
+`prolateCount_le` (no Mathlib wall; tracked by `shannon-hartley-phase2-spectral-plan`).
 
 Both are stated over the phantom-free `contAwgnOperationalCapacity` (the subtype infimum
 `⨅ ε : ↥(Set.Ioo 0 1)`); the earlier bounded-binder `⨅ ε ∈ Set.Ioo 0 1` collapsed to `0` on the
@@ -45,23 +47,36 @@ The achievability (`≥`) half is proved: `contAwgn_ge_shannonHartley`. What rem
 compression of the time-band-limiting operator `timeBandLimitingOp T W` (`TimeBandLimiting.lean`),
 and the achievable rate along any `[0, T]`-supported orthonormal family is governed by that
 compression's eigenvalues, which Cauchy interlacing caps by the prolate eigenvalues
-`prolateEigenvalues T W`. The converse needs the *upper* count `prolateCount_le` plus that
-interlacing step and the capacity computation on top of it — the genuine `nyquist-2w-dof` bridge.
+`prolateEigenvalues T W`.
 
-The count itself is available (`prolateCount_le` / `le_prolateCount`, `TimeBandLimiting.lean`); the
-live obstruction is the interlacing bridge, not the count. This single `sorry` now stands only for
-the converse half — the achievability half is discharged by `contAwgn_ge_shannonHartley`.
+The interlacing / count-domination bridge itself is now proved:
+`finrank_le_prolateCount_of_form_gt` (`TimeBandLimiting.lean`, sorryAx-free) is the
+finite-dimensional min-max upper half of Cauchy interlacing, and its crux
+`inner_timeBandLimitingOp_le_of_mem_orthogonal` is in-tree — so no Mathlib gap remains at the bridge
+(this was the plan's sole designated wall candidate C1; it passed). What is left is project-internal
+assembly of the operational converse on top of the count (`prolateCount_le` / `le_prolateCount`,
+available): rotating the observations to the Gram eigenbasis by isotropic Gaussian invariance
+(Mathlib's `map_pi_eq_stdGaussian`), the unequal-gain parallel-Gaussian converse (in-tree
+`parallel_per_input_mi_le_sum` plus a self-built Fano/DPI chain), and water-filling with the
+`T → ∞` limit. None of these is a Mathlib wall; the residual is the plan-tracked assembly
+(`shannon-hartley-phase2-spectral-plan`, §R4-CONV), not a gap. This is why the class is `plan:`, not
+`wall:` — the earlier `wall:nyquist-2w-dof` tag overstated the remaining work as a Mathlib gap once
+C1 landed.
+
+This single `sorry` now stands only for the converse half — the achievability half is discharged by
+`contAwgn_ge_shannonHartley`.
 
 Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
 
-`@residual(wall:nyquist-2w-dof)` -/
+`@residual(plan:shannon-hartley-phase2-spectral-plan)` -/
 @[entry_point]
 theorem contAwgn_eq_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     contAwgnOperationalCapacity W N₀ P = bandlimitedAwgnCapacity W N₀ P := by
-  -- Blocked on the operational bridge (Gram compression ↔ prolate count, then capacity), not on
-  -- the count itself; see docstring.
-  sorry -- @residual(wall:nyquist-2w-dof)
+  -- The interlacing / count-domination bridge (`finrank_le_prolateCount_of_form_gt`) is proved; what
+  -- remains is the project-internal operational-converse assembly (Gauss rotation, parallel-Gaussian
+  -- converse, water-filling). See docstring — no Mathlib wall.
+  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
 
 /-!
 ### R4-ACH foundational leaves (L3/L5, L6)
