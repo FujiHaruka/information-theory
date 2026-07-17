@@ -110,6 +110,9 @@ consumed here, and remains open at `tsum_prolateEigenvalues_eq`.
 * `prolateEigenspaceSup_orthogonal_invariant` — `Vᗮ` is `A`-invariant.
 * `prolateRestrict` — `A` restricted to `Vᗮ`, with `prolateRestrict_norm_le : ‖S‖ ≤ c`.
 * `inner_timeBandLimitingOp_le_of_mem_orthogonal` — `⟪A v, v⟫ ≤ c‖v‖²` for `v ∈ Vᗮ`.
+* `le_inner_timeBandLimitingOp_of_mem` — the matched lower bound `c‖v‖² ≤ ⟪A v, v⟫` on `V`.
+* `finrank_le_prolateCount_of_form_gt` — converse min-max count domination: any `S` with Rayleigh
+  quotient `> c` has `finrank S ≤ prolateCount T W c`.
 
 Unlike the trace bounds above, this one is unconditional in `T` and `W`: `A` is compact, symmetric
 and positive for every parameter value, and the bound stays true where `A` collapses to `0`.
@@ -2595,6 +2598,33 @@ theorem le_inner_timeBandLimitingOp_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
   rw [hval, hnorm, Finset.mul_sum]
   refine Finset.sum_le_sum (fun i _ => ?_)
   exact mul_le_mul_of_nonneg_right (hνgt i).le (by positivity)
+
+/-- **Count domination (converse min-max upper bound).** Any subspace `S` on which the Rayleigh
+quotient of `A = timeBandLimitingOp T W` strictly exceeds `c` has dimension at most
+`prolateCount T W c`: the number of "high-gain" directions is capped by the number of prolate
+eigenvalues above `c`. Finite-dimensional min-max half of Cauchy interlacing; converse companion
+to the achievability count. -/
+theorem finrank_le_prolateCount_of_form_gt (T W : ℝ) {c : ℝ} (hc : 0 < c)
+    (S : Submodule ℂ E)
+    (hS : ∀ x ∈ S, x ≠ 0 → c * ‖x‖ ^ 2 < (inner ℂ (timeBandLimitingOp T W x) x).re) :
+    Module.finrank ℂ S ≤ prolateCount T W c := by
+  haveI := prolateEigenspaceSup_finiteDimensional T W hc
+  set V := prolateEigenspaceSup T W c with hV
+  -- On `S ∩ Vᗮ` the two Rayleigh bounds `> c` and `≤ c` collide, so it is `{0}`.
+  have hzero : ∀ x ∈ S, x ∈ Vᗮ → x = 0 := fun x hxS hxV => by
+    by_contra hx0
+    exact absurd (inner_timeBandLimitingOp_le_of_mem_orthogonal T W c hc hxV)
+      (not_le.mpr (hS x hxS hx0))
+  -- The orthogonal projection `E → V`, restricted to `S`, has trivial kernel, hence injects `S ↪ V`.
+  set f : ↥S →ₗ[ℂ] ↥V := (V.orthogonalProjectionOnto : E →L[ℂ] ↥V).toLinearMap ∘ₗ S.subtype with hf
+  have hinj : Function.Injective f := by
+    rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+    rintro ⟨x, hxS⟩ hfx
+    have hxV : x ∈ Vᗮ := Submodule.orthogonalProjectionOnto_eq_zero_iff.mp hfx
+    exact Subtype.ext (hzero x hxS hxV)
+  calc Module.finrank ℂ S ≤ Module.finrank ℂ V :=
+        LinearMap.finrank_le_finrank_of_injective hinj
+    _ = prolateCount T W c := rfl
 
 /-- Markov bound on the eigenvalue counting function: at most `2WT/c` eigenvalues of the
 time-and-band limiting operator exceed `c`.
