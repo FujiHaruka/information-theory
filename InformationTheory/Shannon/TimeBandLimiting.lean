@@ -2621,7 +2621,17 @@ than under an `∃ C`. It is not itself the Landau-Pollak-Slepian concentration 
 `wall:nyquist-2w-dof` names: reaching that still needs the polarized Parseval identity
 `∑ᵢ ‖A bᵢ‖² = ∫₀ᵀ∫₀ᵀ |k(t−s)|²` to read the double integral as `tr A²`, and the eigenbasis bridge of
 `tsum_prolateEigenvalues_eq` to read either moment against `prolateEigenvalues`. What it does settle
-is that the analytic content of the second moment is elementary calculus, not missing theory. -/
+is that the analytic content of the second moment is elementary calculus, not missing theory.
+
+Audited 2026-07-17 (independent). The tail estimate was re-derived rather than taken on trust:
+`∫_{[0,T]} k(t−s)² ds = 2W − ψ(t) − ψ(T−t)` by substituting `u = t − s` and reflecting the far tail
+through the evenness of `k²`, so the deficit is `2∫₀ᵀψ` as claimed. Non-vacuity is real, not formal:
+`∫∫ ≥ 0` always, so at `∫∫ = 0` the claim would read `2WT ≤ 2 + log(1+2WT)`, false for large `T` —
+the bound has content, and `2 + log(1+2WT) = o(T)` keeps it useful to the consumers. Two structurally
+different degenerate boundaries were checked live: `T = 0` gives `0 ≤ 2`, and `2WT < 1` gives
+`2∫₀ᵀψ ≤ 2WT ≤ 1`, the branch the constant `2` absorbs. `hW : 0 < W` is regularity (it keeps
+`log(1+2WT)` off its junk branch), not load-bearing.
+@audit:ok -/
 theorem bandKernel_window_deficit_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
     2 * W * T - ∫ t in Set.Icc (0 : ℝ) T, ∫ s in Set.Icc (0 : ℝ) T, ‖bandKernel W t s‖ ^ 2
       ≤ 2 + Real.log (1 + 2 * W * T) := by
@@ -2640,7 +2650,8 @@ theorem bandKernel_window_deficit_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
 /-- The reproducing kernel is itself band-limited. Its Fourier transform is the spectral boxcar
 `specBoxcar t (1/(2W))` (`fourier_shiftSinc_toLp`), whose support `[-1/(2Δ), 1/(2Δ)]` is exactly the
 band `[-W,W]` at `Δ = 1/(2W)`; membership in `bandLimitSubspace W` is then the definition of that
-subspace as a Fourier comap. This is what lets `P_W Q_T k_t` be read as `A k_t` below. -/
+subspace as a Fourier comap. This is what lets `P_W Q_T k_t` be read as `A k_t` below.
+@audit:ok -/
 theorem bandKernelLp_mem_bandLimitSubspace (W : ℝ) (hW : 0 < W) (t : ℝ) :
     bandKernelLp W t ∈ bandLimitSubspace W := by
   have hΔ : (0 : ℝ) < 1 / (2 * W) := by positivity
@@ -2843,7 +2854,8 @@ theorem summable_inner_timeBandLimitingOp_self (T W : ℝ) (hT : 0 ≤ T) (hW : 
 
 /-- `‖A f‖² ≤ ⟪A f, f⟫`: the operator inequality `A² ≤ A` for `A = P_W Q_T P_W`, proved from the
 two facts that build `A` — `P_W` is a contraction and `Q_T` is a self-adjoint idempotent — rather
-than from any spectral calculus. -/
+than from any spectral calculus.
+@audit:ok -/
 theorem norm_timeBandLimitingOp_sq_le_inner (T W : ℝ) (f : E) :
     ‖timeBandLimitingOp T W f‖ ^ 2 ≤ (inner ℂ (timeBandLimitingOp T W f) f).re := by
   have hsymP : ((bandLimitSubspace W).starProjection : E →ₗ[ℂ] E).IsSymmetric :=
@@ -2907,7 +2919,16 @@ Scope (asked before reporting): this is an *exact identity at every fixed `T`, `
 specialization to a constructed basis. It is not itself the Landau-Pollak-Slepian concentration
 that `wall:nyquist-2w-dof` names: reading either moment against `prolateEigenvalues` still needs
 the eigenbasis multiplicity bridge (`tsum_prolateEigenvalues_eq`), and the count `#{λₙ > c}` needs
-the split argument on top of the moments. -/
+the split argument on top of the moments.
+
+Audited 2026-07-17 (independent). The reading of the left side as `tr A²` was checked rather than
+assumed: `A` is self-adjoint in-tree (`timeBandLimitingOp_isSelfAdjoint`, consumed in the body), so
+`⟪A²bᵢ, bᵢ⟫ = ⟪A bᵢ, A bᵢ⟫ = ‖A bᵢ‖²`, and the identity is proved basis-independently — which is
+what makes the eigenbasis instance available for free once that basis is built. The quantification
+is not vacuous in form only: `E ≠ 0` is in-tree (`timeBandLimitingOp_ne_zero`,
+`bandKernelLp_norm_sq = 2W > 0`), so every `HilbertBasis` of it is inhabited, and
+`exists_hilbertBasis_tsum_norm_timeBandLimitingOp_sq_eq` witnesses one.
+@audit:ok -/
 theorem tsum_norm_timeBandLimitingOp_sq_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     {ι : Type*} (b : HilbertBasis ι ℂ E) :
     ∑' i, ‖timeBandLimitingOp T W (b i)‖ ^ 2
@@ -3032,7 +3053,23 @@ no `WT → ∞` limit, quantified over every Hilbert basis. It is the second mom
 `wall:nyquist-2w-dof` was narrowed to, but it does not by itself close that wall: the wall's
 content is the *count* `#{n | λₙ > c} = 2WT + O(log WT)`, which still needs (a) the eigenbasis
 multiplicity bridge to read this sum as `∑ₙ λₙ(1 − λₙ)` and (b) the Chebyshev split from the
-second moment to the count. What it does settle is that the analytic input to both is in hand. -/
+second moment to the count. What it does settle is that the analytic input to both is in hand.
+
+Audited 2026-07-17 (independent), on the one question that decides the leg: is this the object the
+wall's residue needs, or a *weaker relative* of it (the trap that overturned Leg E-atom)? It is the
+object, and the strength diff was checked in both directions. Textbook Landau-Widom is an asymptotic
+*equality* `tr A − tr A² ~ (1/π²)·log(2WT)`; this is only a one-sided upper bound with a loose
+constant — strictly weaker. That weaker form is nevertheless *sufficient*, and the argument was
+re-derived here rather than deferred: with `0 ≤ λ ≤ 1` (`timeBandLimitingOp_norm_le_one` plus
+`inner_timeBandLimitingOp_self_nonneg`), `tr A = 2WT` *exactly*, and `tr A − tr A² ≤ D`, the split
+`#{λ>c} − ∑_{λ>c}λ = ∑_{λ>c}(1−λ) ≤ D/c` gives `#{λ>c} ≤ 2WT + D/c`, and
+`∑_{λ≤c}λ ≤ D/(1−c)` gives `#{λ>c} ≥ 2WT − D/(1−c)`. Both halves of `#{λ>c} = 2WT + O(log WT)` — the
+converse's and the achievability's — thus follow from the upper bound alone at any fixed `c`; at the
+plan's `c = 1/2` the error is `2D`. Neither the sharp constant nor a matching *lower* bound on the
+second moment is needed, so nothing was quietly weakened: the wall was framed on a stronger relative
+than its consumers require. `.re` hides no sign error — `A = P_W Q_T P_W` is positive semidefinite,
+so `⟪A bᵢ, bᵢ⟫` is real (`inner_timeBandLimitingOp_self_nonneg`) and `.re` discards nothing.
+@audit:ok -/
 theorem tsum_inner_sub_norm_sq_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     {ι : Type*} (b : HilbertBasis ι ℂ E) :
     ∑' i, ((inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re
@@ -3049,7 +3086,8 @@ theorem tsum_inner_sub_norm_sq_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) 
 
 /-- Non-vacuity of the two identities above, machine-checked rather than asserted: a Hilbert basis
 of `L²(ℝ;ℂ)` exists (`exists_hilbertBasis`), so both the second-moment identity and the
-Landau-Widom bound are statements about a real object and not empty quantifications. -/
+Landau-Widom bound are statements about a real object and not empty quantifications.
+@audit:ok -/
 theorem exists_hilbertBasis_tsum_norm_timeBandLimitingOp_sq_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
     ∃ (w : Set E) (b : HilbertBasis w ℂ E),
       (∑' i, ‖timeBandLimitingOp T W (b i)‖ ^ 2
