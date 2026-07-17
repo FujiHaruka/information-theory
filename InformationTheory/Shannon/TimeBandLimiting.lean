@@ -2439,7 +2439,13 @@ equality, needs both halves sharply.
 Non-vacuity is machine-checked rather than assumed: for `0 < T`, `0 < W`,
 `exists_pos_hasEigenvalue` yields an eigenvalue `μ > 0`, so `prolateCount T W (μ/2) ≥ 1` and the
 bound bites (`μ/2 ≤ 2WT`) instead of holding by `0 ≤ 2WT`.
-@audit:ok -/
+@audit:ok
+@audit:retract-candidate(superseded by `prolateCount_le` for the family's purpose; 0 consumers as of
+2026-07-17, machine-checked via `scripts/dep_consumers.sh`. Caveat for the owner making the call:
+this is *asymptotic* supersession, not pointwise — `2WT/c` is strictly tighter than
+`2WT + (2+log(1+2WT))/c` for small `WT` (e.g. `2WT ≤ 8` at `c = 1/2`), so the two are incomparable
+as bounds. What makes it retractable is that the family's figure of merit is the `T → ∞` density,
+where this bound gives `2W/c` and `prolateCount_le` gives `2W`.) -/
 theorem prolateCount_mul_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (hc : 0 < c) :
     c * (prolateCount T W c : ℝ) ≤ 2 * W * T := by
   classical
@@ -3308,7 +3314,8 @@ section EigenvalueCount
 
 `A = C* C` for `C = Q_T ∘ P_W`, so the sesquilinear form of `A` *is* the inner product pulled back
 along `C`. This is the diagonal identity inside `norm_timeBandLimitingOp_sq_le_inner`, polarized;
-it is what makes Cauchy-Schwarz available for the form of `A` without a positive square root. -/
+it is what makes Cauchy-Schwarz available for the form of `A` without a positive square root.
+@audit:ok -/
 theorem inner_timeBandLimitingOp_eq_inner_timeLimit_bandLimit (T W : ℝ) (x y : E) :
     inner ℂ (timeBandLimitingOp T W x) y
       = inner ℂ ((timeLimitSubspace T).starProjection ((bandLimitSubspace W).starProjection x))
@@ -3338,7 +3345,8 @@ theorem inner_timeBandLimitingOp_eq_inner_timeLimit_bandLimit (T W : ℝ) (x y :
 Mathlib has Cauchy-Schwarz for an inner product (`norm_inner_le_norm`) but not for the semi-inner
 product of a general positive operator, which would need a positive square root. Here the square
 root is unnecessary: `A` is *concretely* `C* C`, so its form is an honest inner product pulled back
-along `C` and Mathlib's Cauchy-Schwarz applies verbatim. -/
+along `C` and Mathlib's Cauchy-Schwarz applies verbatim.
+@audit:ok -/
 theorem norm_inner_timeBandLimitingOp_sq_le (T W : ℝ) (x y : E) :
     ‖inner ℂ (timeBandLimitingOp T W x) y‖ ^ 2
       ≤ (inner ℂ (timeBandLimitingOp T W x) x).re
@@ -3373,7 +3381,11 @@ The proof needs no positive square root and no restricted operator. Cauchy-Schwa
 `A` (`norm_inner_timeBandLimitingOp_sq_le`), tested at `x = v` and `y = A v`, gives
 `‖A v‖⁴ ≤ ⟪A v, v⟫ ⟪A(A v), A v⟫`; since `Vᗮ` is `A`-invariant, `A v` is again in `Vᗮ`, so the
 spectral gap `inner_timeBandLimitingOp_le_of_mem_orthogonal` caps the second factor by `c ‖A v‖²`,
-and dividing by `‖A v‖²` finishes. -/
+and dividing by `‖A v‖²` finishes.
+
+Audited 2026-07-17 (independent). `hc : 0 < c` and `hv` are regularity/scoping, not load-bearing:
+the operator inequality is *derived* from Cauchy-Schwarz + the gap lemma, not assumed. sorryAx-free.
+@audit:ok -/
 theorem norm_timeBandLimitingOp_sq_le_of_mem_orthogonal (T W c : ℝ) (hc : 0 < c)
     {v : E} (hv : v ∈ (prolateEigenspaceSup T W c)ᗮ) :
     ‖timeBandLimitingOp T W v‖ ^ 2 ≤ c * (inner ℂ (timeBandLimitingOp T W v) v).re := by
@@ -3412,7 +3424,12 @@ of `A` on `E`. Previously this construction was inlined in the body of `prolateC
 exported nowhere, so it could not be reused; it is extracted here.
 
 The index type is `Fin (prolateCount T W c)` *definitionally* (`prolateCount` is the `finrank` of
-`V`), which is why no separate multiplicity bridge is needed to match the count. -/
+`V`), which is why no separate multiplicity bridge is needed to match the count.
+
+Audited 2026-07-17 (independent). The definitional claim is machine-confirmed, not prose: the body's
+`have hn : Module.finrank ℂ (prolateEigenspaceSup T W c) = d := rfl` type-checks, and
+`prolateCount T W c := Module.finrank ℂ (prolateEigenspaceSup T W c)` verbatim. sorryAx-free.
+@audit:ok -/
 theorem exists_orthonormal_eigenbasis_prolateEigenspaceSup (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ∃ (e : Fin (prolateCount T W c) → E) (ν : Fin (prolateCount T W c) → ℝ),
       Orthonormal ℂ e ∧
@@ -3475,7 +3492,16 @@ this one is what splits `tr A` and `tr A − tr A²` along the spectral cliff at
 The `Vᗮ` half is an arbitrary Hilbert basis of `Vᗮ` (`exists_hilbertBasis`, i.e. Zorn) and is *not*
 an eigenbasis: no complete eigenbasis of `A` is constructed anywhere. Completeness of the glued
 family comes from `V` being spanned by the finite eigenbasis and `Vᗮ` by its own Hilbert basis, so
-a vector orthogonal to all of them lies in `Vᗮ` with vanishing `Vᗮ`-coordinates, hence is zero. -/
+a vector orthogonal to all of them lies in `Vᗮ` with vanishing `Vᗮ`-coordinates, hence is zero.
+
+Audited 2026-07-17 (independent). The "no complete eigenbasis of `A` on `E`" claim is machine-confirmed
+by a constant-graph walk (validated against a positive control): this decl's closure does **not**
+contain `ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot`, the infinite-dimensional
+totality lemma. It *does* contain `LinearMap.IsSymmetric.orthogonalComplement_iSup_eigenspaces_eq_bot`
+and `IsCompactOperator` — both via the finite-dimensional spectral theorem for `A|_V` and
+`prolateEigenspaceSup_finiteDimensional`, i.e. about `V`, not about a complete eigenbasis on `E`.
+sorryAx-free.
+@audit:ok -/
 theorem exists_hilbertBasis_prolateSplit (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ∃ (κ : Type) (b : HilbertBasis (Fin (prolateCount T W c) ⊕ κ) ℂ E)
       (ν : Fin (prolateCount T W c) → ℝ),
@@ -3563,7 +3589,17 @@ is not used either (machine-checked: this half's constant closure contains neith
 `ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot`).
 
 Degenerate boundaries: at `T = 0` both sides collapse to `0 ≤ D/c`; at `c ≥ 1` the count is `0`
-(`prolateCount_one_eq_zero` and antitonicity) and the bound is slack. Neither refutes it. -/
+(`prolateCount_one_eq_zero` and antitonicity) and the bound is slack. Neither refutes it.
+
+Audited 2026-07-17 (independent). All four hypotheses are regularity on scalars; nothing of the
+form "`A` has a complete eigenbasis" / "`S² ≤ cS`" / "an adapted basis exists" is assumed — each is
+*derived* (`exists_hilbertBasis_prolateSplit`, `norm_timeBandLimitingOp_sq_le_of_mem_orthogonal`).
+sorryAx-free. The "not Markov" claim was re-adjudicated against the consumer docstrings rather than
+the plan: the consumers' figure of merit is the DOF density `n(T)/T` as `T → ∞`, where Markov gives
+`2W/c` (wrong constant, diverging as `c → 0`) and this bound gives exactly `2W` for every fixed
+`c > 0`. The pointwise incomparability at small `WT` is real but is not the figure of merit.
+The closure claim above was re-run with a probe validated against a positive control.
+@audit:ok -/
 theorem prolateCount_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (hc : 0 < c) :
     (prolateCount T W c : ℝ) ≤ 2 * W * T + (2 + Real.log (1 + 2 * W * T)) / c := by
   classical
@@ -3643,7 +3679,17 @@ deficits, so `∑_{Vᗮ} aⱼ ≤ D/(1 − c)`.
 `hc1 : c < 1` is a genuine precondition, not padding: at `c = 1` Lean's `x/0 = 0` convention would
 read the claim as `2WT ≤ #{λ > 1} = 0` (`prolateCount_one_eq_zero`), which is false for `WT > 0`.
 As `c ↑ 1` the bound degrades to `−∞`, consistently. At `T = 0` it reads `−D/(1−c) ≤ 0`, true.
-The bound has content rather than holding vacuously: at `c = 1/2` it bites once `2WT ≳ 8`. -/
+The bound has content rather than holding vacuously: at `c = 1/2` it bites once `2WT ≳ 8`.
+
+Audited 2026-07-17 (independent). sorryAx-free; hypotheses are regularity only. Two claims above
+were machine-checked rather than accepted: (a) `hc1` is genuinely load-bearing as a *precondition* —
+the `c = 1` instance of this conclusion was **proved false** at `T = W = 1` (via
+`prolateCount_one_eq_zero` + `x/0 = 0`), so dropping `hc1` would make the statement false, not merely
+weaker; (b) the `2WT ≳ 8` crossover is accurate (numerically, the bound turns positive at
+`2WT ≈ 8.5`). Markov (`prolateCount_mul_le`) cannot substitute here at any `c`: it is an upper bound
+only and supplies no lower half at all. Density `n(T)/T → 2W` for every fixed `c < 1`, which is what
+the achievability consumer's iterated limit (`T → ∞`, then `c → 1`) needs.
+@audit:ok -/
 theorem le_prolateCount (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (hc : 0 < c) (hc1 : c < 1) :
     2 * W * T - (2 + Real.log (1 + 2 * W * T)) / (1 - c) ≤ (prolateCount T W c : ℝ) := by
   classical
