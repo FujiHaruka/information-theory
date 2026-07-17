@@ -4298,6 +4298,70 @@ theorem exists_pointwise_repr_of_star_fixed {u : E} (hstar : star u = u) :
   refine ⟨fun s => ((u : ℝ → ℂ) s).re, (Lp.memLp u).re, ?_⟩
   filter_upwards [hre] with t ht using ht
 
+/-- Band-limitedness transports from the frequency-support subspace to a pointwise real
+representative. If `v ∈ bandLimitSubspace W` and `f : ℝ → ℝ` complexifies to an a.e.-representative
+of `v`, then `IsBandlimited f W`. This is the bridge that lets the operator-theoretic
+`bandLimitSubspace` feed the `L²`-Fourier-support predicate `IsBandlimited` used by the
+`ContAwgnCode` band-limit constraint. -/
+theorem isBandlimited_of_bandLimitSubspace_ae {W : ℝ} {v : E} (hv : v ∈ bandLimitSubspace W)
+    {f : ℝ → ℝ} (hf : (fun t => ((f t : ℝ) : ℂ)) =ᵐ[volume] (v : ℝ → ℂ)) :
+    ShannonHartley.IsBandlimited f W := by
+  -- The complexified real representative is `L²` (a.e. equal to the `Lp` element `v`).
+  have hf' : MemLp (fun t : ℝ => ((f t : ℝ) : ℂ)) 2 volume := MemLp.ae_eq hf.symm (Lp.memLp v)
+  -- Its canonical `Lp` representative is `v` itself.
+  have heq : hf'.toLp (fun t : ℝ => ((f t : ℝ) : ℂ)) = v :=
+    (MemLp.toLp_congr hf' (Lp.memLp v) hf).trans (Lp.toLp_coeFn v (Lp.memLp v))
+  rw [bandLimitSubspace, Submodule.mem_comap] at hv
+  refine ⟨hf', ?_⟩
+  rw [heq]
+  -- The goal is the a.e. vanishing of `𝓕 v` off the band; membership in `zeroOnLp` is defeq to it.
+  show (𝓕 v : E) ∈ zeroOnLp {ξ : ℝ | W < |ξ|}
+  exact hv
+
+/-- The real band-limited orthonormal encoder family for `V = prolateEigenspaceSup T W c`. Bundles
+the star-fixed `ℂ`-orthonormal basis `u` of `V` (needed to feed the operator lower bounds
+`le_norm_timeLimitProj_sq_of_mem` / `le_re_inner_timeBandLimitingOp_sum_smul`, which are stated on
+`V`) together with concrete real representatives `h i : ℝ → ℝ` of each `u i`, their `L²`-membership,
+the a.e. link `(h i : ℂ) =ᵐ u i`, band-limitedness `IsBandlimited (h i) W`, and the real
+orthonormality `∫ h i · h j = δ_{ij}`. This is the encoder-side family the achievability receiver
+constructs signals from. -/
+theorem exists_real_bandlimited_onb (T W : ℝ) {c : ℝ} (hc : 0 < c) :
+    ∃ (u : Fin (prolateCount T W c) → E) (h : Fin (prolateCount T W c) → (ℝ → ℝ)),
+      Orthonormal ℂ u ∧ (∀ i, star (u i) = u i) ∧
+      Submodule.span ℂ (Set.range u) = prolateEigenspaceSup T W c ∧
+      (∀ i, MemLp (h i) 2 volume) ∧
+      (∀ i, (fun t => ((h i t : ℝ) : ℂ)) =ᵐ[volume] (u i : ℝ → ℂ)) ∧
+      (∀ i, ShannonHartley.IsBandlimited (h i) W) ∧
+      (∀ i j, (∫ t, h i t * h j t) = if i = j then (1 : ℝ) else 0) := by
+  classical
+  obtain ⟨u, hu_on, hu_star, hu_span⟩ := exists_real_orthonormalBasis_prolateEigenspaceSup T W hc
+  -- Skolemize the per-`i` real representatives.
+  choose h hmem hae using fun i => exists_pointwise_repr_of_star_fixed (hu_star i)
+  -- Each `u i` lies in `V`, hence in `bandLimitSubspace W`.
+  have hmemV : ∀ i, u i ∈ prolateEigenspaceSup T W c := by
+    intro i
+    rw [← hu_span]
+    exact Submodule.subset_span (Set.mem_range_self i)
+  have hbl : ∀ i, ShannonHartley.IsBandlimited (h i) W := fun i =>
+    isBandlimited_of_bandLimitSubspace_ae
+      (prolateEigenspaceSup_le_bandLimitSubspace T W hc (hmemV i)) (hae i)
+  refine ⟨u, h, hu_on, hu_star, hu_span, hmem, hae, hbl, ?_⟩
+  -- Real orthonormality: transport `∫ h i · h j` to `Re ⟪u i, u j⟫_ℂ`.
+  intro i j
+  have hinner : (inner ℂ (u i) (u j) : ℂ) = ((∫ t, h i t * h j t : ℝ) : ℂ) := by
+    rw [MeasureTheory.L2.inner_def, ← integral_complex_ofReal]
+    apply integral_congr_ae
+    filter_upwards [hae i, hae j] with t hti htj
+    have hti' : (u i : ℝ → ℂ) t = ((h i t : ℝ) : ℂ) := hti.symm
+    have htj' : (u j : ℝ → ℂ) t = ((h j t : ℝ) : ℂ) := htj.symm
+    rw [RCLike.inner_apply, hti', htj', Complex.conj_ofReal]
+    push_cast
+    ring
+  have hval : (∫ t, h i t * h j t) = (inner ℂ (u i) (u j) : ℂ).re := by
+    rw [hinner, Complex.ofReal_re]
+  rw [hval, (orthonormal_iff_ite.mp hu_on) i j]
+  split_ifs <;> simp
+
 end Achievability
 
 end InformationTheory.Shannon.TimeBandLimiting
