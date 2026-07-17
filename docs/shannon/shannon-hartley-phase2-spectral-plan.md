@@ -410,18 +410,17 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 
 ### R2 の no-eigenbasis 路 ✅ **CLOSED（r17）** — `prolateCount_le`/`le_prolateCount`（両半分、sorryAx-free、`c` 自由）。詳細履歴は git / 台帳 §SPECTRAL-ASSETS。
 
-### 次 leg の順序（leg 20 改訂 — advisor 検証済 leaf DAG + architecture 発見）
+### 次 leg の順序（leg 21 改訂 — relocation 完了 + L3/L5/L6 proof-done）
 
-**✅ 完了**: Leg R2/R3（count、r17）/ R4-gate A1（leg 18）/ R4-ACH-B 実基底（leg 18）/ **R4-ACH-A2 route(ii) 確定 + keystone（leg 19、`5fcb5416`）** / **leg 20 = L0/L1/L2/L4 の 4 本 sorryAx-free**（`05abc71f`/`40c25674`）。
+**✅ 完了**: Leg R2/R3（count、r17）/ R4-gate A1（leg 18）/ R4-ACH-B 実基底（leg 18）/ **R4-ACH-A2 route(ii) 確定 + keystone（leg 19、`5fcb5416`）** / **leg 20 = L0/L1/L2/L4 の 4 本 sorryAx-free**（`05abc71f`/`40c25674`）/ **leg 21 = relocation（`2f9b4ec6`）+ L3/L5 + L6 proof-done sorryAx-free 監査 @audit:ok（`398fa01f`/`2c091f9c`）**。
 
-**A2 wiring leaf DAG（leg 20 advisor 独立確定、handoff `## R4-ACH leaf DAG` が最新の SoT）**。要点訂正 2 件:
-- **(U1) testFn = `stdOrthonormalBasis ℝ S`（S = Q_T(V) の real 版）**。Gram-Schmidt 不要（star-fixedness 貫通問題を回避）。
-- **(U2) energy = `le_norm_timeLimitProj_sq_of_mem`（‖Q_T v‖²≥c‖v‖²）に直乗**。行列 G⁻¹ 反転不要 = A は √c で下から有界 ⟹ `exists_preequalizer`（L0）で `‖a‖²≤(1/c)‖t‖²`。
+**A2 wiring leaf DAG（handoff `## R4-ACH leaf DAG` が最新の SoT）**。testFn = `stdOrthonormalBasis ℝ S`（S=Q_T(V) real 版、Gram-Schmidt 不要）+ energy = `le_norm_timeLimitProj_sq_of_mem` 直乗（G⁻¹ 不要、A が √c 下界 ⟹ L0 `exists_preequalizer` で `‖a‖²≤(1/c)‖t‖²`）= leg 21 で L3/L5+L6 として実現済（コード SoT）。
 
-**✅ CLOSED**: L0 `exists_preequalizer`（`ShannonHartleyPreequalizer.lean`, Mathlib-only）/ L1 `exists_pointwise_repr_of_star_fixed` / L2 `isBandlimited_of_bandLimitSubspace_ae` / L4 `exists_real_bandlimited_onb`（後 3 本 `TimeBandLimiting.lean`）。
-**残**: L3/L5（testFn φ 族: S ⊆ Lp ℝ, stdOrthonormalBasis, keystone 適用）/ L6（A 下から有界: P_S=Q_T on realV）/ L7（ContAwgnCode 組立、observation=x, energy≤TP）/ L8（transport rfl）/ L9/L10（rate/limsup + ⨅ε→c↑1）。
+**✅ CLOSED**: L0 `exists_preequalizer`（`ShannonHartleyPreequalizer.lean`）/ L1 `exists_pointwise_repr_of_star_fixed` / L2 `isBandlimited_of_bandLimitSubspace_ae` / L4 `exists_real_bandlimited_onb`（後 3 本 `TimeBandLimiting.lean`）/ **L3/L5 `exists_testFn_family`（testFn φ 族 + energy identity bundle）+ L6 `exists_crossMap_lower_bound`（cross-map A の √c 下界）= leg 21、`ShannonHartleyMain.lean`、proof-done sorryAx-free、監査 @audit:ok**。
+**残**: L7（ContAwgnCode 組立: encoder `fₘ=∑bⱼhⱼ`（b=A⁻¹xₘ, L6 下界 → L0 `exists_preequalizer` で `‖b‖²≤(1/c)‖xₘ‖²`）、testFn=L3/L5、observation=x、energy≤TP）/ L8（transport `contAwgn_errorProbAt_eq` の逆 = rfl 級）/ L9/L10（`awgn_channel_coding_theorem` へ食わせ rate/limsup + ⨅ε→c↑1 で `contAwgn_ge` 閉じる）。
+- **⚠️ 監査の気づき（L7 で必須の signature-scan）**: `exists_crossMap_lower_bound` の下界の非自明性は下流が `IsBandlimited (h i) W` + `∫hᵢhⱼ=δᵢⱼ` を thread し続けることに依存。L7 が operational encoder を組む際どちらかを落とすと「√c 下界は gameable でない」論拠が黙って壊れる（inflated 非 encoder h で充足可能に）。L7 配線後に h の 2 制約が生きているか signature-scan せよ。
 
-**⚠️ ARCHITECTURE 発見（leg 20、機械確認）**: import は `ShannonHartley ← Operational ← Achievability ← TimeBandLimiting`（TimeBandLimiting が最下流 sink、何にも import されない）。ゆえに entry-point 2 本（`contAwgn_ge`＝Achievability, `contAwgn_eq`＝Operational）は achievability 機械（TimeBandLimiting）の**上流**で、宣言場所で下流資産を消費できない。**解決 = 両 entry point を最下流の新 file `ShannonHartleyMain.lean`（imports TimeBandLimiting）へ relocate**（両者 direct consumer 0、relocation 安全、README/entry_point は名前解決 self-heal）。TimeBandLimiting の Achievability import は IsBandlimited（実体 Operational）への transitive アクセスのみ。
+**✅ ARCHITECTURE 解決（leg 21、relocation 完了 `2f9b4ec6`）**: import は `ShannonHartley ← Operational ← Achievability ← TimeBandLimiting`（TimeBandLimiting が最下流 sink）。entry-point 2 本を最下流の新 file **`ShannonHartleyMain.lean`（imports TimeBandLimiting + LpPointwise）** へ移設済（両者 direct consumer 0 を機械確認、名前解決 self-heal、3 ファイル clean 検証）。以降 achievability leaf（L3–L10）は全て `ShannonHartleyMain.lean` に配置。
 
 - **Leg R4-CONV-gate（並行可、⚠️ route 再検討）** — C1（converse interlacing、唯一の未 gateway-test）。旧 route「R1 + finrank 単射」は R1 dead で失効。**advisor 見立て: interlacing 非自明 = self-build 公算、gateway-atom-first 推奨**。PASS で壁→`plan:` 再分類 license。
 
