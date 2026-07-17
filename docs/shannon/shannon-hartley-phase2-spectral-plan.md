@@ -50,9 +50,15 @@
 - [ ] **R4 — operational bridge = 2 本（achievability / converse、独立）**。count の**下流**ゆえ R1–R3 では落ちない。
   - [x] **R4-gate A1（leg 18、gateway PASS = 壁でない・plumbing 確定）**: `timeBandLimitingOp_star_comm` +
         `star_mem_prolateEigenspaceSup`（A1 解析核、`@audit:ok`）+ `le_inner_timeBandLimitingOp_of_mem`（V 上作用素下界、`@audit:ok`）。
-        `exists_real_orthonormalBasis_prolateEigenspaceSup`（(B) 実基底）= honest `sorry + @residual(plan:)`、~150–250 で closable。
-  - [ ] **R4-ACH-B（NEXT）** → (B) を閉じる。以降 A2/A3（KL 族 + encoder → honest `ℝ→ℝ`）/ A4 輸送。
-  - [ ] **R4-CONV-gate（並行可）** → C1（converse interlacing、唯一の未 gateway-test）。PASS で壁再分類 license。
+  - [x] **R4-ACH-B ✅ CLOSED（leg 18、`53723ec2` + 監査 `231d96ab` `@audit:ok`）**: (B) 実基底 sorryAx-free。
+        次元橋は判別子として cheap（standalone 不要、`finrank_span_eq_card` で直接）。ambient `InnerProductSpace ℝ E` 既存で diamond 回避。
+  - [ ] **R4-ACH-A2（NEXT、⚠️ 設計論点あり）** → KL 族 `φᵢ = Q_T ψᵢ/√μᵢ`。**(B) の `u` は V の ONB だが A-固有基底ではない**
+        （V = 固有値*集合*上の sup、監査確認）。A2 の `√μᵢ` 正規化は per-vector 固有値を要す ⟹ 選択肢:
+        (i) 実**固有**基底を別途構成（各 eigenspace 星不変 → 実基底、L3529 の複素固有基底 + A1 から）、または
+        (ii) A2 を作用素下界 `le_inner_timeBandLimitingOp_of_mem`（`A ≥ c on V`）で再定式化し per-vector 固有値を回避
+        （per-dim gain ≥ c → rate ≥ ½log(1+c·SNR)、`c→1`）。**次 leg で判断**。
+  - [ ] **R4-CONV-gate（並行可、⚠️ route 再検討）** → C1（converse interlacing、唯一の未 gateway-test）。
+        plan の旧 route「R1 + finrank 単射」は **R1 dead で失効** ⟹ 新 route が要る（有限 V-固有基底 L3529 + min-max か）。PASS で壁再分類 license。
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
 
 ---
@@ -389,12 +395,13 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 | **A3** | encoder `f = ∑ xᵢψᵢ/√μᵢ`: 帯域制限 + `‖f‖² = ∑xᵢ²/μᵢ ≤ TP` + `observation m i = xᵢ` | self-build | ~200 | plumbing |
 | **A4** | `awgn_channel_coding_theorem` へ transport + rate/limsup 組立 | **in-tree, sorryAx-free**（`AWGN/Main.lean:55`、`@audit:ok`） | ~250–400 | plumbing |
 
-**次のレンガ (B) = `exists_real_orthonormalBasis_prolateEigenspaceSup`（L3759、honest `sorry + @residual(plan:...)`、leg 18、監査 PASS）**:
-`V` の**実正規直交基底**（星不変メンバ、`Fin (prolateCount) → E` span `V`）。3 sub-step（loogle 確認済、全て初等 plumbing・壁でない）:
-(1) inner–star bridge `⟪star x, star y⟫ = conj⟪x,y⟫`（~30–50、`Lp.coeFn_star` + `∫ conj x * y`）/
-(2) 実形 `V_ℝ := {v∈V | star v = v}` + `stdOrthonormalBasis ℝ ↥V_ℝ`（Mathlib 在庫）を ℂ-正規直交 & ℂ-span と示す /
-(3) **要の 1 本** 次元橋 `finrank ℝ V_ℝ = finrank ℂ V = prolateCount`。合計 ~150–250 = フルサブレグ。
-⚠️ **consumer shape は 1 歩手前**（監査確認）: `contAwgn_ge_shannonHartley` の `testFn`/`encoder` は **honest `ℝ → ℝ`**（`testFn` は `[0,T]` 台 + 実積分正規直交 `∫ testFn i * testFn j = δ`、`encoder` 帯域制限）。(B) は星不変 `Lp ℂ` 要素まで = A2/A3 橋（`Q_T ψᵢ/√μᵢ`）が残工程。docstring は overclaim せず明記済。
+**レンガ (B) ✅ CLOSED（`exists_real_orthonormalBasis_prolateEigenspaceSup`、L3840、`@audit:ok`、sorryAx-free、leg 18）**:
+`V` の**実正規直交基底**（星不変メンバ、`Fin (prolateCount) → E` span `V`）。実装で判明: 次元橋は standalone 不要
+（`finrank_span_eq_card` で直接）、ambient `InnerProductSpace ℝ E` は既存 instance で diamond 回避。self-build helper
+= `inner_star_star` / `real_inner_eq_re_complex` / `inner_complex_eq_real_of_star_fixed` / `star_sub_Lp` / `realForm`。
+⚠️ **2 点の残工程**（監査確認、次 leg の A2 に効く）: (i) **(B) の `u` は V の ONB だが A-固有基底ではない**
+（V = 固有値*集合*上の sup）— A2 の `√μᵢ` は per-vector 固有値を要すので、実固有基底の別構成 or 作用素下界での再定式化が要る。
+(ii) **consumer shape は 1 歩手前**: `contAwgn_ge_shannonHartley` の `testFn`/`encoder` は honest `ℝ → ℝ`（`[0,T]` 台 + 実積分正規直交、帯域制限）。(B) は星不変 `Lp ℂ` 要素まで。
 
 **総量 = ~10–15 leg**（~3 ではない）。駆動要因: (a) R4 = 2 本 ~1500–2500 行、(b) converse の headline が無い（C0）、
 (c) **`ParallelGaussian` の 0-sorry 面は *capacity* 側**（入力法上の MI の `sSup`）だが **consumer は *operational* 側**
@@ -405,14 +412,14 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 
 ### 次 leg の順序（leg 18 改訂）
 
-**✅ 完了**: Leg R2（count 両半分、r17）/ Leg R3（`prolateCount_le`/`le_prolateCount`、r17）/ **Leg R4-gate A1（leg 18、gateway PASS = 壁でない・plumbing）**。
+**✅ 完了**: Leg R2/R3（count、r17）/ **Leg R4-gate A1（leg 18、gateway PASS）** / **Leg R4-ACH-B（leg 18、実基底 CLOSED）**。
 
-1. **Leg R4-ACH-B（NEXT）** — **(B) `exists_real_orthonormalBasis_prolateEigenspaceSup` を閉じる**（上記 3 sub-step、~150–250）。
-   要の 1 本 = 次元橋 `finrank ℝ V_ℝ = finrank ℂ V` を先に打て（判別子）。**壁でない**（監査が loogle 反証済）。
-2. **Leg R4-ACH-A2/A3** — 実基底 → KL 族 `φᵢ = Q_T ψᵢ/√μᵢ`（`[0,T]` 台テスト関数）+ encoder。honest `ℝ→ℝ` へ落とす。
-3. **Leg R4-CONV-gate（並行可）** — C1（converse interlacing、Mathlib 0-hit）の gateway atom。**唯一の未 gateway-test 項**。
-   これが plumbing と確定すれば `wall:nyquist-2w-dof` → `plan:` 再分類が完全に license される（下記「壁再分類」）。
-4. **Leg A4/C-assembly** — `awgn_channel_coding_theorem` 輸送 + capacity 計算 + rate/limsup。
+1. **Leg R4-ACH-A2（NEXT、⚠️ 設計判断が先）** — 実基底 `u` は A-固有基底でない。判断: (i) 実**固有**基底を別構成
+   （各 eigenspace 星不変 → L3529 の複素固有基底 + A1）か (ii) A2 を `le_inner_timeBandLimitingOp_of_mem`（`A≥c on V`）で
+   再定式化し per-vector 固有値を回避（per-dim gain ≥ c → `c→1`）。判断後に KL 族 → honest `ℝ→ℝ` testFn → encoder。
+2. **Leg R4-CONV-gate（並行可、⚠️ route 再検討）** — C1（converse interlacing、唯一の未 gateway-test）。
+   旧 route「R1 + finrank 単射」は R1 dead で失効 → 新 route（L3529 + min-max か）。PASS で `wall:nyquist-2w-dof` → `plan:` 再分類を完全 license。
+3. **Leg A4/C-assembly** — `awgn_channel_coding_theorem` 輸送 + capacity 計算 + rate/limsup。
 
 **壁再分類（leg 18 で証拠強化、判断は次 leg）**: `wall:nyquist-2w-dof` の named proposition（固有値集中）は r17 で CLOSED、A1 は leg 18 で plumbing 確定、有限 V-固有基底は in-tree、C3 は in-tree。**残る唯一の未計測 = C1（converse interlacing）**。CLAUDE.md の defect tell「choice(big) を blocked(hard) と偽る」に該当の疑いが強まった。次 leg: C1 gateway → PASS なら 2 consumer を `@residual(plan:shannon-hartley-phase2-spectral-plan)` へ再分類（code 編集は subagent + 独立 honesty-auditor）。同時に dangling name 掃除（`prolate_eigenvalue_count` docs 6 ファイル / `contAwgn_le_shannonHartley` = C0 指示対象なき名前）。
 
