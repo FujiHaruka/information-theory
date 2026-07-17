@@ -534,7 +534,7 @@ private theorem contAwgn_averageError_toReal {T W P : ℝ} {M : ℕ} (hM : 0 < M
 /-- The crude wall-free rate bound, for codes with at least one observation: `log M` is capped by
 `(T·P + 1)/N₀` plus the Fano terms, **uniformly in the observation count `k`**. This is where
 Bessel meets `awgn_converse`, and where `ln(1+x) ≤ x` discards the `k`-dependence. -/
-private theorem contAwgn_log_le_of_pos_k {T W N₀ P ε : ℝ} {M : ℕ}
+theorem contAwgn_log_le_of_pos_k {T W N₀ P ε : ℝ} {M : ℕ}
     (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hT : 0 < T) (hε0 : 0 < ε) (hε1 : ε < 1)
     (hM : 2 ≤ M) (c : ContAwgnCode T W P M) (hk : 0 < c.k)
     (hce : (c.averageError N₀).toReal ≤ ε) :
@@ -592,7 +592,7 @@ private theorem contAwgn_log_le_of_pos_k {T W N₀ P ε : ℝ} {M : ℕ}
 
 /-- With no observations at all the receiver learns nothing: every message is decoded to the same
 one, so the average error is exactly `(M-1)/M`. -/
-private theorem contAwgn_averageError_of_k_eq_zero {T W P : ℝ} {M : ℕ} (hM : 0 < M)
+theorem contAwgn_averageError_of_k_eq_zero {T W P : ℝ} {M : ℕ} (hM : 0 < M)
     (c : ContAwgnCode T W P M) (hk : c.k = 0) (N₀ : ℝ) :
     (c.averageError N₀).toReal = ((M : ℝ) - 1) / M := by
   classical

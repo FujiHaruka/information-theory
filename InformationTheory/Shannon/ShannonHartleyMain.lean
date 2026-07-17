@@ -9,10 +9,19 @@ import InformationTheory.Meta.EntryPoint
 This file collects the two headline theorems of the continuous-time band-limited AWGN channel —
 the achievability half `contAwgn_ge_shannonHartley` (`≥`) and the identity
 `contAwgn_eq_shannonHartley` (`=`) — at a position downstream of the achievability assets they
-must consume. Both are blocked on the same `nyquist-2w-dof` operational bridge, which needs the
-prolate-eigenvalue count (`le_prolateCount` / `prolateCount_le`) of `TimeBandLimiting.lean`; those
-prolate assets are visible only below the achievability and operational modules, so the theorems
-live here rather than at their original upstream sites.
+must consume. Both rest on the prolate-eigenvalue count (`le_prolateCount` / `prolateCount_le`) of
+`TimeBandLimiting.lean`, whose assets are visible only below the achievability and operational
+modules, so the theorems live here rather than at their original upstream sites.
+
+The achievability half is now **proved** (`contAwgn_ge_shannonHartley`, sorryAx-free): it needs
+only the *lower* count `le_prolateCount` (via `prolateCount_div_tendsto`) fed through the block
+`awgn_channel_coding_theorem`, not the tight Landau-Pollak-Slepian concentration. The identity
+`contAwgn_eq_shannonHartley` remains open on its converse (`≤`) half, which needs the *upper* count
+`prolateCount_le` plus the Gram-compression interlacing step — the genuine `nyquist-2w-dof` bridge.
+
+Both are stated over the phantom-free `contAwgnOperationalCapacity` (the subtype infimum
+`⨅ ε : ↥(Set.Ioo 0 1)`); the earlier bounded-binder `⨅ ε ∈ Set.Ioo 0 1` collapsed to `0` on the
+conditionally-complete `ℝ` and made both false as framed (see `contAwgnOperationalCapacity`).
 
 ## References
 
@@ -24,92 +33,26 @@ namespace InformationTheory.Shannon.ShannonHartley
 
 set_option linter.unusedVariables false
 
-/-- **Shannon-Hartley achievability (`≥`)**: the operational capacity is at least the
-Shannon-Hartley closed form.
-
-Unlike the boundedness bound of §E, this direction does not close by Bessel alone: it needs the
-`≈ 2WT` degrees-of-freedom count, in its lower-bound half.
-
-The reason is that the receiver of `ContAwgnCode` sees a band-limited codeword only through test
-functions supported in `[0, T]`, and those two constraints fight each other: a band-limited `f` is
-never supported in `[0, T]`, so `⟨f, φᵢ⟩ = ⟨f, P_W φᵢ⟩` and the energy the receiver recovers is
-governed by the Gram matrix `Gᵢⱼ = ⟨φᵢ, (timeBandLimitingOp T W) φⱼ⟩` — a compression of the
-prolate operator, whose eigenvalues Cauchy interlacing caps by `prolateEigenvalues T W`. To reach
-the closed form one must exhibit, for each `T`, a family achieving per-dimension gain `≈ 1` on
-`≈ 2WT` dimensions; that is exactly the Landau-Pollak-Slepian concentration read from below,
-which is `le_prolateCount` (`TimeBandLimiting.lean`): `2WT − D/(1 − c) ≤ prolateCount T W c` for
-every threshold `c ∈ (0, 1)`, with `D = 2 + log(1 + 2WT)`. That count is proved; what this
-statement still lacks is the bridge from it to `contAwgnOperationalCapacity` — the interlacing
-step and the capacity computation on top of it.
-
-No cheaper family is available, and this was checked rather than assumed. The obvious wall-free
-candidate — the boxcar family `φᵢ = 𝟙_{[iΔ,(i+1)Δ]}/√Δ` at `Δ = 1/(2W)`, which is orthonormal and
-`[0, T]`-supported by inspection — fails: a boxcar's spectrum is a sinc, so `‖P_W φᵢ‖ < 1` by a
-constant factor, the per-dimension gains are bounded away from `1`, and concavity of `log` puts
-the resulting rate strictly below the closed form. Adversarial search over random orthonormal
-families corroborates (`docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP: best `C/SH`
-`= 0.3250` against prolate's `0.9944`, with no family beating prolate). The convergence itself is
-the count: the finite-`T` shortfall is `O(log WT)`, the width of the prolate cliff's transition
-band, which is the error term `D/(1 − c)` of `le_prolateCount`.
-
-The synthesis bridge of §A–§D (`synthSignal`, `synthSignal_energy`) remains the way to build the
-band-limited codewords, and `synthSignal_energy` discharges the whole-line `encoder_power`
-obligation as an equality. What it does not supply is the test family.
-
-This statement also consumes `contAwgnMaxMessages_bddAbove` (§E) through `le_csSup` — without a
-`BddAbove` the ℕ-`sSup` collapses to junk `0`. That obligation is wall-independent and its
-residual is tracked at its own declaration rather than duplicated here.
-
-Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
-
-The `wall:nyquist-2w-dof` slug is kept as the tracking tag, but its named proposition — the
-eigenvalue concentration — is closed (`le_prolateCount` is the half this direction needs). The live
-obstruction is the operational bridge above, not the count.
-
-`@residual(wall:nyquist-2w-dof)` -/
-theorem contAwgn_ge_shannonHartley
-    (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
-    bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := by
-  -- Blocked on the operational bridge (test family + interlacing + capacity), not on the count
-  -- itself; see docstring.
-  sorry -- @residual(wall:nyquist-2w-dof)
-
 /-- The **continuous-time Shannon-Hartley formula**: the operational capacity of the
 band-limited AWGN channel equals `W · log(1 + P/(N₀·W))`.
 
-Under the Karhunen-Loève observation map of `ContAwgnCode` this statement is expected true; an
-earlier point-sampling model made it false as framed, and the def-fix that repaired it is recorded
-in `docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP. What remains is not a matter of
-definition but of connecting the time-bandwidth degrees-of-freedom count to the operational
-quantity.
+The statement is true as framed over the phantom-free `contAwgnOperationalCapacity` (an earlier
+point-sampling model and the bounded-binder infimum each made it false; both are repaired — see
+`contAwgnOperationalCapacity` and `docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP).
 
-Both halves need that count. `∫ f·φᵢ = ⟪f, P_W φᵢ⟫` for band-limited `f`, so the Gram matrix of the
-test family is a compression of the time-band-limiting operator `timeBandLimitingOp T W`
-(`TimeBandLimiting.lean`), and the achievable rate along any `[0, T]`-supported orthonormal family
-is governed by that compression's eigenvalues, which Cauchy interlacing caps by the prolate
-eigenvalues `prolateEigenvalues T W`. Reaching the closed form in the limit requires `≈ 2WT` of
-them to sit near `1` and the rest near `0` — the Landau-Pollak-Slepian concentration.
+The achievability (`≥`) half is proved: `contAwgn_ge_shannonHartley`. What remains is the converse
+(`≤`) half. `∫ f·φᵢ = ⟪f, P_W φᵢ⟫` for band-limited `f`, so the Gram matrix of the test family is a
+compression of the time-band-limiting operator `timeBandLimitingOp T W` (`TimeBandLimiting.lean`),
+and the achievable rate along any `[0, T]`-supported orthonormal family is governed by that
+compression's eigenvalues, which Cauchy interlacing caps by the prolate eigenvalues
+`prolateEigenvalues T W`. The converse needs the *upper* count `prolateCount_le` plus that
+interlacing step and the capacity computation on top of it — the genuine `nyquist-2w-dof` bridge.
 
-That concentration is available. `prolateCount_le` and `le_prolateCount` (`TimeBandLimiting.lean`)
-bracket `prolateCount T W c`, the number of prolate eigenvalues exceeding a free threshold
-`c ∈ (0, 1)`, between `2WT − D/(1 − c)` and `2WT + D/c` with `D = 2 + log(1 + 2WT)`. The converse
-needs the upper half (`prolateCount_le`), the achievability (`contAwgn_ge_shannonHartley`) the
-lower half (`le_prolateCount`).
-
-What is still missing is the bridge from the count to `contAwgnOperationalCapacity`: the Cauchy
-interlacing step tying the Gram compression's eigenvalues to `prolateEigenvalues T W`, and the
-capacity computation built on it. That bridge, not the count, is what this residual stands for.
-
-Note the asymmetry that certifies the def-fix was a repair and not a disguise: the crude bound of
-`contAwgnMaxMessages_bddAbove` closes by Bessel alone, wall-free, but caps the rate only at
-`P/N₀`, and `ln(1+x) ≤ x` makes that strictly larger than the closed form. Boundedness comes for
-free; the exact constant does not.
+The count itself is available (`prolateCount_le` / `le_prolateCount`, `TimeBandLimiting.lean`); the
+live obstruction is the interlacing bridge, not the count. This single `sorry` now stands only for
+the converse half — the achievability half is discharged by `contAwgn_ge_shannonHartley`.
 
 Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
-
-The `wall:nyquist-2w-dof` slug is kept as the tracking tag, but its named proposition — the
-eigenvalue concentration — is closed (`prolateCount_le` / `le_prolateCount`). The live obstruction
-is the operational bridge above, not the count.
 
 `@residual(wall:nyquist-2w-dof)` -/
 @[entry_point]
@@ -701,5 +644,338 @@ theorem contAwgnMaxMessages_ge_of_awgnCode
   exact le_csSup (contAwgnMaxMessages_bddAbove T W N₀ P ε hT hW hN₀ hP hε0 hε1) ⟨cc, haverage⟩
 
 end Achievability
+
+/-! ### R4-ACH assembly (L9/L10): the achievability half `contAwgn_ge_shannonHartley`
+
+The lower bound `bandlimitedAwgnCapacity ≤ contAwgnOperationalCapacity` reduces, over the
+phantom-free `⨅ ε : ↥(Set.Ioo 0 1)` (`le_ciInf`), to a per-`ε` statement
+`bandlimitedAwgnCapacity ≤ contAwgnRate ε`. For `P > 0` that is proved by a
+`le_of_forall_lt` argument: for `y` below the closed form pick a threshold `c ∈ (0,1)`, a
+per-observation power `Q`, and a block rate `R` with `y < 2WR` and `R < ½ log(1 + 2Q/N₀)`
+(`exists_params_of_lt`), feed `Q, R` to the discrete `awgn_channel_coding_theorem`, and lift the
+resulting codes to continuous-time codes on `prolateCount T W c` observations
+(`contAwgnMaxMessages_ge_of_awgnCode`). Since `prolateCount T W c / T → 2W` (`prolateCount_div_tendsto`,
+from the `le_prolateCount` / `prolateCount_le` sandwich), the per-window rate `⌈exp(kR)⌉`-count gives
+`2WR ≤ limsup_T log(M(T))/T = contAwgnRate ε`. -/
+section AchievabilityHeadline
+
+open Filter MeasureTheory InformationTheory.Shannon.TimeBandLimiting InformationTheory.Shannon.AWGN
+open scoped Topology NNReal
+
+theorem deficit_div_tendsto_zero (W : ℝ) (hW : 0 < W) :
+    Tendsto (fun T : ℝ => (2 + Real.log (1 + 2 * W * T)) / T) atTop (𝓝 0) := by
+  have hatTop : Tendsto (fun T : ℝ => 1 + 2 * W * T) atTop atTop :=
+    tendsto_atTop_add_const_left _ 1 (tendsto_id.const_mul_atTop (by positivity : (0:ℝ) < 2*W))
+  have h2 : Tendsto (fun T : ℝ => (2:ℝ) / T) atTop (𝓝 0) :=
+    tendsto_const_nhds.div_atTop tendsto_id
+  have hlogu : Tendsto (fun T : ℝ => Real.log (1 + 2*W*T) / (1 + 2*W*T)) atTop (𝓝 0) := by
+    have := (Real.isLittleO_log_id_atTop.tendsto_div_nhds_zero).comp hatTop
+    simpa only [Function.comp_def, id_eq] using this
+  have hratio : Tendsto (fun T : ℝ => (1 + 2*W*T) / T) atTop (𝓝 (2*W)) := by
+    have heq : (fun T : ℝ => (1 + 2*W*T)/T) =ᶠ[atTop] (fun T => 1/T + 2*W) := by
+      filter_upwards [eventually_gt_atTop (0:ℝ)] with T hT
+      field_simp
+    rw [tendsto_congr' heq]
+    have : Tendsto (fun T : ℝ => (1:ℝ)/T + 2*W) atTop (𝓝 (0 + 2*W)) :=
+      (tendsto_const_nhds.div_atTop tendsto_id).add tendsto_const_nhds
+    simpa using this
+  have hlogT : Tendsto (fun T : ℝ => Real.log (1 + 2*W*T) / T) atTop (𝓝 0) := by
+    have hprod : Tendsto (fun T : ℝ =>
+        (Real.log (1 + 2*W*T) / (1 + 2*W*T)) * ((1 + 2*W*T) / T)) atTop (𝓝 (0 * (2*W))) :=
+      hlogu.mul hratio
+    rw [zero_mul] at hprod
+    refine (tendsto_congr' ?_).mp hprod
+    filter_upwards [hatTop.eventually_gt_atTop 0] with T hTpos
+    rw [div_mul_div_comm, mul_comm (Real.log _) _, mul_div_mul_left _ _ (ne_of_gt hTpos)]
+  have : Tendsto (fun T : ℝ => (2:ℝ)/T + Real.log (1 + 2*W*T)/T) atTop (𝓝 (0 + 0)) := h2.add hlogT
+  rw [add_zero] at this
+  refine (tendsto_congr' ?_).mp this
+  filter_upwards [eventually_gt_atTop (0:ℝ)] with T hT
+  rw [add_div]
+
+theorem prolateCount_div_tendsto (W : ℝ) (hW : 0 < W) {c : ℝ} (hc0 : 0 < c) (hc1 : c < 1) :
+    Tendsto (fun T : ℝ => (prolateCount T W c : ℝ) / T) atTop (𝓝 (2 * W)) := by
+  have hD := deficit_div_tendsto_zero W hW
+  have h1c : (0:ℝ) < 1 - c := by linarith
+  have hlow : Tendsto
+      (fun T : ℝ => 2*W - ((2 + Real.log (1 + 2*W*T)) / T) / (1 - c)) atTop (𝓝 (2*W)) := by
+    have h0 : Tendsto (fun T : ℝ => ((2 + Real.log (1 + 2*W*T)) / T) / (1 - c)) atTop (𝓝 0) := by
+      have := hD.div_const (1 - c); rwa [zero_div] at this
+    have := (tendsto_const_nhds (x := 2*W)).sub h0
+    simpa using this
+  have hupp : Tendsto
+      (fun T : ℝ => 2*W + ((2 + Real.log (1 + 2*W*T)) / T) / c) atTop (𝓝 (2*W)) := by
+    have h0 : Tendsto (fun T : ℝ => ((2 + Real.log (1 + 2*W*T)) / T) / c) atTop (𝓝 0) := by
+      have := hD.div_const c; rwa [zero_div] at this
+    have := (tendsto_const_nhds (x := 2*W)).add h0
+    simpa using this
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' hlow hupp ?_ ?_
+  · filter_upwards [eventually_gt_atTop (0:ℝ)] with T hT
+    have hb := le_prolateCount T W hT.le hW hc0 hc1
+    have hrw : 2*W - ((2 + Real.log (1 + 2*W*T)) / T) / (1 - c)
+        = (2*W*T - (2 + Real.log (1 + 2*W*T))/(1-c))/T := by field_simp
+    rw [hrw]; gcongr
+  · filter_upwards [eventually_gt_atTop (0:ℝ)] with T hT
+    have hb := prolateCount_le T W hT.le hW hc0
+    have hrw : 2*W + ((2 + Real.log (1 + 2*W*T)) / T) / c
+        = (2*W*T + (2 + Real.log (1 + 2*W*T))/c)/T := by field_simp
+    rw [hrw]; gcongr
+
+/-- The per-window rate `log(contAwgnMaxMessages T)/T` is bounded above (the operational
+capacity is finite): from the Bessel converse the message count grows no faster than
+`exp(T·P/(N₀(1-ε)))`, so the rate is capped near `P/(N₀(1-ε))`. -/
+theorem contAwgnRate_isBoundedUnder (W N₀ P ε : ℝ)
+    (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
+    IsBoundedUnder (· ≤ ·) atTop
+      (fun T : ℝ => Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) := by
+  have hε : (0:ℝ) < 1 - ε := by linarith
+  have hlog2 : (0:ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  set K1 : ℝ := ((P + 1) / N₀ + Real.log 2) / (1 - ε) with hK1
+  set K2 : ℝ := Real.log (1 / (1 - ε)) with hK2
+  have hK1nn : 0 ≤ K1 := by rw [hK1]; positivity
+  have hK2nn : 0 ≤ K2 := by
+    rw [hK2]; exact Real.log_nonneg (by rw [le_div_iff₀ hε]; linarith)
+  refine ⟨K1 + K2, ?_⟩
+  rw [Filter.eventually_map]
+  filter_upwards [eventually_ge_atTop (1:ℝ)] with T hT1
+  have hT : (0:ℝ) < T := by linarith
+  by_cases hne : {M : ℕ | ∃ c : ContAwgnCode T W P M, (c.averageError N₀).toReal ≤ ε}.Nonempty
+  · have hbdd := contAwgnMaxMessages_bddAbove T W N₀ P ε hT hW hN₀ hP hε0 hε1
+    obtain ⟨c, hce⟩ := Nat.sSup_mem hne hbdd
+    set M : ℕ := contAwgnMaxMessages T W N₀ P ε with hMdef
+    rcases Nat.lt_or_ge M 2 with hM2 | hM2
+    · have hlog0 : Real.log (M : ℝ) ≤ 0 := by interval_cases M <;> simp
+      calc Real.log (M : ℝ) / T ≤ 0 / T := by gcongr
+        _ = 0 := by simp
+        _ ≤ K1 + K2 := by positivity
+    · have hM0 : 0 < M := by omega
+      rcases Nat.eq_zero_or_pos c.k with hk | hk
+      · -- no observations: `M ≤ 1/(1-ε)`
+        have havg := contAwgn_averageError_of_k_eq_zero hM0 c hk N₀
+        have hce2 : ((M : ℝ) - 1) / (M : ℝ) ≤ ε := havg ▸ hce
+        rw [div_le_iff₀ (by positivity : (0:ℝ) < (M : ℝ))] at hce2
+        have hMC : (M : ℝ) ≤ 1 / (1 - ε) := by rw [le_div_iff₀ hε]; nlinarith [hce2]
+        have hlogM : Real.log (M : ℝ) ≤ K2 :=
+          hK2 ▸ Real.log_le_log (by positivity) hMC
+        calc Real.log (M : ℝ) / T ≤ K2 / T := by gcongr
+          _ ≤ K2 := by rw [div_le_iff₀ hT]; nlinarith [hK2nn, hT1]
+          _ ≤ K1 + K2 := by linarith
+      · -- with observations: `log M ≤ B_T`
+        have hlogM := contAwgn_log_le_of_pos_k hN₀ hP hT hε0 hε1 hM2 c hk hce
+        have hkey1 : (T * P + 1) / N₀ + Real.log 2
+            ≤ ((P + 1) / N₀ + Real.log 2) * T := by
+          have hdiff : ((P + 1) / N₀ + Real.log 2) * T - ((T * P + 1) / N₀ + Real.log 2)
+              = (T - 1) * (1 / N₀ + Real.log 2) := by field_simp; ring
+          have hprod : 0 ≤ (T - 1) * (1 / N₀ + Real.log 2) :=
+            mul_nonneg (by linarith) (by positivity)
+          linarith [hdiff, hprod]
+        have hBT : ((T * P + 1) / N₀ + Real.log 2) / (1 - ε) / T ≤ K1 := by
+          rw [hK1, div_div, div_le_div_iff₀ (by positivity) hε]
+          nlinarith [hkey1, hε.le, mul_le_mul_of_nonneg_right hkey1 hε.le]
+        calc Real.log (M : ℝ) / T
+            ≤ ((T * P + 1) / N₀ + Real.log 2) / (1 - ε) / T := by gcongr
+          _ ≤ K1 := hBT
+          _ ≤ K1 + K2 := by linarith
+  · have hM0 : contAwgnMaxMessages T W N₀ P ε = 0 := by
+      rw [contAwgnMaxMessages, Set.not_nonempty_iff_eq_empty.mp hne]
+      exact csSup_empty
+    rw [hM0]
+    simp only [Nat.cast_zero, Real.log_zero, zero_div]
+    positivity
+
+/-- The per-`ε` rate is nonnegative: `contAwgnMaxMessages` is a `ℕ`, so its log is `≥ 0`. -/
+theorem contAwgnRate_nonneg (W N₀ P ε : ℝ)
+    (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
+    0 ≤ contAwgnRate W N₀ P ε := by
+  rw [contAwgnRate]
+  refine le_limsup_of_frequently_le ?_ (contAwgnRate_isBoundedUnder W N₀ P ε hW hN₀ hP hε0 hε1)
+  refine Filter.Eventually.frequently ?_
+  filter_upwards [eventually_gt_atTop (0:ℝ)] with T hT
+  exact div_nonneg (Real.log_natCast_nonneg _) hT.le
+
+theorem exists_params_of_lt (W N₀ P y : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP0 : 0 < P)
+    (hy : y < W * Real.log (1 + P / (N₀ * W))) :
+    ∃ c Q R, 0 < c ∧ c < 1 ∧ 0 < Q ∧ Q < c * P / (2 * W) ∧ 0 < R ∧
+      R < (1 / 2) * Real.log (1 + 2 * Q / N₀) ∧ y < 2 * W * R := by
+  set a : ℝ := P / (2 * W) with ha
+  have hPW : 0 < a := by rw [ha]; positivity
+  set f : ℝ → ℝ := fun Q => W * Real.log (1 + 2 * Q / N₀) with hf
+  have hfa_pos : (0:ℝ) < 1 + 2 * a / N₀ := by
+    have : 0 < 2 * a / N₀ := by rw [ha]; positivity
+    linarith
+  have hcont : ContinuousAt f a := by
+    have hinner : ContinuousAt (fun Q : ℝ => 1 + 2*Q/N₀) a := by fun_prop
+    exact (hinner.log (ne_of_gt hfa_pos)).const_mul W
+  have hfa : y < f a := by
+    show y < W * Real.log (1 + 2 * a / N₀)
+    have h2a : 2 * a / N₀ = P / (N₀ * W) := by rw [ha]; field_simp
+    rw [h2a]; exact hy
+  have hev1 : ∀ᶠ Q in 𝓝[<] a, y < f Q :=
+    (hcont.eventually (Ioi_mem_nhds hfa)).filter_mono nhdsWithin_le_nhds
+  have hev2 : ∀ᶠ Q in 𝓝[<] a, Q < a := eventually_nhdsWithin_of_forall (fun Q hQ => hQ)
+  have hev3 : ∀ᶠ Q in 𝓝[<] a, 0 < Q :=
+    Filter.Eventually.filter_mono nhdsWithin_le_nhds (Ioi_mem_nhds hPW)
+  obtain ⟨Q, hQy, hQa, hQ0⟩ := (hev1.and (hev2.and hev3)).exists
+  have hr01 : Q * (2*W) / P < 1 := by
+    rw [div_lt_one hP0]
+    rw [ha] at hQa
+    rw [lt_div_iff₀ (by positivity : (0:ℝ) < 2*W)] at hQa
+    linarith [hQa]
+  have hrpos : 0 < Q * (2*W) / P := by positivity
+  set c : ℝ := (Q * (2*W) / P + 1) / 2 with hc
+  have hc0 : 0 < c := by rw [hc]; linarith
+  have hc1 : c < 1 := by rw [hc]; linarith
+  have hcQ : Q < c * P / (2 * W) := by
+    rw [hc, lt_div_iff₀ (by positivity : (0:ℝ) < 2*W)]
+    have hlt : Q * (2*W) / P < c := by rw [hc]; linarith
+    rw [hc, div_lt_iff₀ hP0] at hlt
+    nlinarith [hlt, hP0]
+  have hlogpos : 0 < Real.log (1 + 2 * Q / N₀) := by
+    apply Real.log_pos; have : 0 < 2*Q/N₀ := by positivity
+    linarith
+  set s : ℝ := (1/2) * Real.log (1 + 2 * Q / N₀) with hsdef
+  have hspos : 0 < s := by rw [hsdef]; positivity
+  have hys : y / (2*W) < s := by
+    have hfQ : y < W * Real.log (1 + 2 * Q / N₀) := hQy
+    rw [div_lt_iff₀ (by positivity : (0:ℝ) < 2*W), hsdef]; nlinarith [hfQ]
+  set lo : ℝ := max (y/(2*W)) 0 with hlo
+  have hlos : lo < s := by rw [hlo]; exact max_lt hys hspos
+  have hlo0 : 0 ≤ lo := le_max_right _ _
+  set R : ℝ := (lo + s) / 2 with hR
+  have hR0 : 0 < R := by rw [hR]; linarith
+  have hRs : R < s := by rw [hR]; linarith
+  have hRlo : lo < R := by rw [hR]; linarith
+  have hyR : y < 2 * W * R := by
+    have hle : y / (2*W) ≤ lo := le_max_left _ _
+    have hR_gt : y/(2*W) < R := lt_of_le_of_lt hle hRlo
+    rw [div_lt_iff₀ (by positivity : (0:ℝ) < 2*W)] at hR_gt
+    linarith [hR_gt]
+  exact ⟨c, Q, R, hc0, hc1, hQ0, hcQ, hR0, hRs, hyR⟩
+
+/-- The core per-`ε` achievability step: the closed form is below the operational rate at level
+`ε`. -/
+theorem sh_le_contAwgnRate (W N₀ P ε : ℝ)
+    (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
+    bandlimitedAwgnCapacity W N₀ P ≤ contAwgnRate W N₀ P ε := by
+  rcases hP.lt_or_eq with hP0 | hP0
+  · rw [bandlimitedAwgnCapacity]
+    refine le_of_forall_lt (fun y hy => ?_)
+    obtain ⟨c, Q, R, hc0, hc1, hQ0, hQlt, hR0, hRlt, hy2WR⟩ :=
+      exists_params_of_lt W N₀ P y hW hN₀ hP0 hy
+    have hkey : 2 * W * R ≤ contAwgnRate W N₀ P ε := by
+      set N : ℝ≥0 := (N₀ / 2).toNNReal with hNdef
+      have hNR : (N : ℝ) = N₀ / 2 := Real.coe_toNNReal _ (by positivity)
+      have hNne : (N : ℝ) ≠ 0 := by rw [hNR]; positivity
+      have hRC : R < (1 / 2) * Real.log (1 + Q / (N : ℝ)) := by
+        have hQN : Q / (N : ℝ) = 2 * Q / N₀ := by rw [hNR]; field_simp
+        rw [hQN]; exact hRlt
+      obtain ⟨n₀, hcode⟩ :=
+        awgn_channel_coding_theorem Q hQ0 N hNne (isAwgnChannelMeasurable N) hR0 hRC hε0
+      have hcount := prolateCount_div_tendsto W hW hc0 hc1
+      have hu : Tendsto (fun T : ℝ => (prolateCount T W c : ℝ) * R / T) atTop (𝓝 (2 * W * R)) := by
+        have h := hcount.mul_const R
+        refine (tendsto_congr ?_).mp h
+        intro T; ring_nf
+      have hev : ∀ᶠ T in atTop,
+          (prolateCount T W c : ℝ) * R / T
+            ≤ Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T := by
+        have hWT : Tendsto (fun T : ℝ => W * T) atTop atTop :=
+          tendsto_id.const_mul_atTop hW
+        have hcgtW : ∀ᶠ T in atTop, W < (prolateCount T W c : ℝ) / T :=
+          hcount.eventually_const_lt (by linarith)
+        have hkge : ∀ᶠ T in atTop, n₀ ≤ prolateCount T W c := by
+          filter_upwards [hcgtW, eventually_gt_atTop (0:ℝ),
+            hWT.eventually_ge_atTop (n₀ : ℝ)] with T hcw hT hWTn
+          have hWTc : W * T < (prolateCount T W c : ℝ) := by
+            rw [lt_div_iff₀ hT] at hcw; linarith [hcw]
+          have : (n₀ : ℝ) ≤ (prolateCount T W c : ℝ) := le_trans hWTn hWTc.le
+          exact_mod_cast this
+        have hP'tend : Tendsto (fun T : ℝ => c * T * P / (prolateCount T W c : ℝ)) atTop
+            (𝓝 (c * P / (2 * W))) := by
+          have hinv := hcount.inv₀ (by positivity : (2 * W) ≠ 0)
+          have hcp := hinv.const_mul (c * P)
+          refine (tendsto_congr' ?_).mp hcp
+          filter_upwards [hcgtW, eventually_gt_atTop (0:ℝ)] with T hcw hT
+          have hcT : (0 : ℝ) < (prolateCount T W c : ℝ) := by
+            rw [lt_div_iff₀ hT] at hcw; nlinarith [hcw, hW.le, hT.le]
+          rw [inv_div]
+          field_simp
+        have hP'ge : ∀ᶠ T in atTop, Q ≤ c * T * P / (prolateCount T W c : ℝ) := by
+          filter_upwards [hP'tend.eventually_const_lt hQlt] with T h
+          exact h.le
+        have hkpos : ∀ᶠ T in atTop, 0 < prolateCount T W c := by
+          filter_upwards [hcgtW, eventually_gt_atTop (0:ℝ)] with T hcw hT
+          have : (0 : ℝ) < (prolateCount T W c : ℝ) := by
+            rw [lt_div_iff₀ hT] at hcw; nlinarith [hcw, hW.le, hT.le]
+          exact_mod_cast this
+        filter_upwards [hkge, hP'ge, hkpos, eventually_gt_atTop (0:ℝ)]
+          with T hkge hP'ge hkpos hT
+        obtain ⟨M, hMlb, d, hderr⟩ := hcode (prolateCount T W c) hkge
+        set P' : ℝ := c * T * P / (prolateCount T W c : ℝ) with hP'def
+        have hQP' : Q ≤ P' := hP'ge
+        let d' : AwgnCode M (prolateCount T W c) P' :=
+          { encoder := d.encoder, decoder := d.decoder, decoder_meas := d.decoder_meas,
+            power_constraint := fun m => (d.power_constraint m).trans
+              (mul_le_mul_of_nonneg_left hQP' (by positivity)) }
+        have hMle : M ≤ contAwgnMaxMessages T W N₀ P ε :=
+          contAwgnMaxMessages_ge_of_awgnCode T W N₀ P hT hW hN₀ hP hc0 hc1 hε0 hε1 hkpos d' hderr
+        have hexp : Real.exp ((prolateCount T W c : ℝ) * R) ≤ M := by
+          calc Real.exp ((prolateCount T W c : ℝ) * R)
+              ≤ (⌈Real.exp ((prolateCount T W c : ℝ) * R)⌉₊ : ℝ) := Nat.le_ceil _
+            _ ≤ (M : ℝ) := by exact_mod_cast hMlb
+        have hMTle : (M : ℝ) ≤ (contAwgnMaxMessages T W N₀ P ε : ℝ) := by exact_mod_cast hMle
+        have hlogle : (prolateCount T W c : ℝ) * R
+            ≤ Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) := by
+          have h1 : Real.exp ((prolateCount T W c : ℝ) * R)
+              ≤ (contAwgnMaxMessages T W N₀ P ε : ℝ) := le_trans hexp hMTle
+          calc (prolateCount T W c : ℝ) * R
+              = Real.log (Real.exp ((prolateCount T W c : ℝ) * R)) := (Real.log_exp _).symm
+            _ ≤ Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) :=
+                Real.log_le_log (Real.exp_pos _) h1
+        gcongr
+      have hbv := contAwgnRate_isBoundedUnder W N₀ P ε hW hN₀ hP hε0 hε1
+      have hcompare :
+          limsup (fun T : ℝ => (prolateCount T W c : ℝ) * R / T) atTop
+            ≤ limsup (fun T : ℝ => Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) atTop :=
+        limsup_le_limsup hev hu.isCoboundedUnder_le hbv
+      rw [hu.limsup_eq] at hcompare
+      rw [contAwgnRate]
+      exact hcompare
+    linarith
+  · have hb0 : bandlimitedAwgnCapacity W N₀ P = 0 := by
+      rw [bandlimitedAwgnCapacity, ← hP0]; simp
+    rw [hb0]
+    exact contAwgnRate_nonneg W N₀ P ε hW hN₀ hP hε0 hε1
+
+/-- **Shannon-Hartley achievability (`≥`)**: the operational capacity is at least the
+Shannon-Hartley closed form.
+
+The infimum over `ε` reduces (via `le_ciInf` over the phantom-free subtype `↥(Set.Ioo 0 1)`) to
+the per-`ε` bound `sh_le_contAwgnRate`, which builds continuous-time band-limited codewords out of
+a discrete `AwgnCode` on `prolateCount T W c` observations (`contAwgnMaxMessages_ge_of_awgnCode`)
+fed by the block `awgn_channel_coding_theorem`, and reads off the `≈ 2WT` degrees-of-freedom count
+`prolateCount_div_tendsto` (from `le_prolateCount` / `prolateCount_le`) through a `limsup`
+comparison.
+
+Earlier this statement was tracked as `@residual(wall:nyquist-2w-dof)`, but the achievability half
+never needed the *tight* Landau-Pollak-Slepian concentration — only that `prolateCount T W c / T`
+converges to `2W`, which the crude two-sided count already gives. The genuine obstruction was a
+definitional one: `contAwgnOperationalCapacity` used the bounded binder `⨅ ε ∈ Set.Ioo 0 1`, which
+for the conditionally-complete `ℝ` picks up the phantom `sInf ∅ = 0` from every `ε ∉ (0,1)` and
+collapsed the capacity to `0`, making the statement false as framed. With the phantom-free subtype
+infimum the statement is true, and this proof closes it (modulo the still-open
+`contAwgnRate_isBoundedUnder`).
+
+Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing). -/
+theorem contAwgn_ge_shannonHartley
+    (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
+    bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := by
+  unfold contAwgnOperationalCapacity
+  haveI : Nonempty (Set.Ioo (0:ℝ) 1) := ⟨⟨1/2, by norm_num⟩⟩
+  refine le_ciInf ?_
+  rintro ⟨ε, hε0, hε1⟩
+  exact sh_le_contAwgnRate W N₀ P ε hW hN₀ hP hε0 hε1
+
+end AchievabilityHeadline
 
 end InformationTheory.Shannon.ShannonHartley

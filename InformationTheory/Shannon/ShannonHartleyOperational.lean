@@ -436,8 +436,16 @@ noncomputable def contAwgnRate (W N₀ P ε : ℝ) : ℝ :=
 the per-second rate in the vanishing-error limit, `⨅_{ε ∈ (0,1)} contAwgnRate W N₀ P ε`.
 The infimum over `ε` extracts the `ε → 0` capacity; `ε` is restricted to `(0, 1)` because
 `ε ≥ 1` is satisfied by every code (average error is `≤ 1`) and would make the message set
-unbounded. -/
+unbounded.
+
+The infimum is taken over the *subtype* `↥(Set.Ioo 0 1)`, not via the bounded-binder
+`⨅ ε ∈ Set.Ioo 0 1`. The two are not the same for the conditionally-complete order `ℝ`: the
+bounded-binder form unfolds to `⨅ ε, ⨅ (_ : ε ∈ Set.Ioo 0 1), contAwgnRate …`, and for every
+`ε ∉ (0, 1)` the inner `⨅` ranges over an empty index, contributing the junk value
+`sInf ∅ = 0`. Since `contAwgnRate ≥ 0`, that phantom `0` collapses the whole infimum to `0`,
+making both `contAwgn_ge_shannonHartley` and `contAwgn_eq_shannonHartley` false as framed for
+`P > 0`. The subtype infimum ranges only over the genuine `(0, 1)` and carries no phantom. -/
 noncomputable def contAwgnOperationalCapacity (W N₀ P : ℝ) : ℝ :=
-  ⨅ ε ∈ Set.Ioo (0 : ℝ) 1, contAwgnRate W N₀ P ε
+  ⨅ ε : Set.Ioo (0 : ℝ) 1, contAwgnRate W N₀ P ε
 
 end InformationTheory.Shannon.ShannonHartley
