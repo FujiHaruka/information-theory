@@ -1,6 +1,7 @@
 import Mathlib.Analysis.Fourier.LpSpace
 import Mathlib.Analysis.InnerProductSpace.Positive
 import Mathlib.Analysis.InnerProductSpace.Spectrum
+import Mathlib.Analysis.InnerProductSpace.Semisimple
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 import Mathlib.Analysis.Normed.Operator.Compact.Basic
@@ -97,6 +98,21 @@ matching lower bound and the transition width) is still not proved here, and the
 does not bring it closer: Markov uses only the `≤` half, while a lower bound on the count needs the
 *second* moment `∑ λₙ(1 − λₙ) = tr A − tr A²` to control the tail `∑_{λₙ ≤ c} λₙ`. Also still open
 is `λ n ≠ 0` for all `n` (which needs `A` to have infinite rank).
+
+Leg R1 adds the spectral gap below `c`: on the orthogonal complement of the span of the eigenspaces
+above `c`, the Rayleigh quotient of `A` is at most `c`. Notably this needs no eigenbasis. `Vᗮ` is
+`A`-invariant by symmetry, so `A` restricts there to a compact self-adjoint `S` whose eigenvalues
+all lie in `[0, c]`; for such an operator the norm *is* the spectral radius, so `‖S‖ ≤ c` and
+Cauchy-Schwarz finishes. The complete orthonormal eigenbasis that
+`ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot` would supply is therefore *not*
+consumed here, and remains open at `tsum_prolateEigenvalues_eq`.
+
+* `prolateEigenspaceSup_orthogonal_invariant` — `Vᗮ` is `A`-invariant.
+* `prolateRestrict` — `A` restricted to `Vᗮ`, with `prolateRestrict_norm_le : ‖S‖ ≤ c`.
+* `inner_timeBandLimitingOp_le_of_mem_orthogonal` — `⟪A v, v⟫ ≤ c‖v‖²` for `v ∈ Vᗮ`.
+
+Unlike the trace bounds above, this one is unconditional in `T` and `W`: `A` is compact, symmetric
+and positive for every parameter value, and the bound stays true where `A` collapses to `0`.
 -/
 
 namespace InformationTheory.Shannon.TimeBandLimiting
@@ -2217,6 +2233,124 @@ theorem prolateEigenspaceSup_invariant (T W c : ℝ) :
     rw [show (timeBandLimitingOp T W : E →ₗ[ℂ] E) w = (μ : ℂ) • w from hw]
     exact Submodule.smul_mem _ _ hwV
   exact hle hv
+
+/-! ### Leg R1 — the spectral gap below `c` -/
+
+theorem prolateEigenspaceSup_orthogonal_invariant (T W c : ℝ) :
+    ∀ v ∈ (prolateEigenspaceSup T W c)ᗮ,
+      (timeBandLimitingOp T W : E →ₗ[ℂ] E) v ∈ (prolateEigenspaceSup T W c)ᗮ :=
+  LinearMap.IsSymmetric.orthogonalComplement_mem_invtSubmodule
+    (timeBandLimitingOp_isSymmetric T W) (prolateEigenspaceSup_invariant T W c)
+
+/-- `A` restricted to the orthogonal complement of the span of the eigenspaces above `c`. -/
+noncomputable def prolateRestrict (T W c : ℝ) :
+    (prolateEigenspaceSup T W c)ᗮ →L[ℂ] (prolateEigenspaceSup T W c)ᗮ :=
+  (timeBandLimitingOp T W).restrict (prolateEigenspaceSup_orthogonal_invariant T W c)
+
+theorem prolateRestrict_hasEigenvalue_le (T W : ℝ) {c : ℝ} {μ : ℂ}
+    (hμ : Module.End.HasEigenvalue
+      ((prolateRestrict T W c : _ →L[ℂ] _) : Module.End ℂ ↥(prolateEigenspaceSup T W c)ᗮ) μ) :
+    ‖μ‖ ≤ c := by
+  obtain ⟨w, hw_mem, hw_ne⟩ := hμ.exists_hasEigenvector
+  rw [Module.End.mem_eigenspace_iff] at hw_mem
+  -- Transfer the eigenvector equation from `Vᗮ` to the ambient space.
+  have hwE : timeBandLimitingOp T W (w : E) = μ • (w : E) := by
+    have h := congrArg (Subtype.val (p := fun x : E => x ∈ (prolateEigenspaceSup T W c)ᗮ)) hw_mem
+    simpa [prolateRestrict] using h
+  have hwE_ne : (w : E) ≠ 0 := by simpa using hw_ne
+  have hμA : (prolateEnd T W).HasEigenvalue μ :=
+    Module.End.hasEigenvalue_of_hasEigenvector
+      ⟨Module.End.mem_eigenspace_iff.mpr hwE, hwE_ne⟩
+  -- Symmetry makes `μ` real.
+  have hconj := (timeBandLimitingOp_isSymmetric T W).conj_eigenvalue_eq_self hμA
+  have him : μ.im = 0 := Complex.conj_eq_iff_im.mp hconj
+  have hre : ((μ.re : ℝ) : ℂ) = μ := Complex.ext rfl (by simp [him])
+  have hμ' : (prolateEnd T W).HasEigenvalue ((μ.re : ℝ) : ℂ) := hre ▸ hμA
+  -- Positivity makes it nonnegative.
+  have hnn : 0 ≤ μ.re := by
+    apply eigenvalue_nonneg_of_nonneg (𝕜 := ℂ) (T := (prolateEnd T W)) hμ'
+    intro x
+    have h := (timeBandLimitingOp_isPositive T W).inner_nonneg_right x
+    have := (Complex.le_def.mp h).1
+    simpa using this
+  -- An eigenvalue above `c` would put its eigenvector in `V ⊓ Vᗮ = ⊥`.
+  have hle : μ.re ≤ c := by
+    by_contra hcon
+    push Not at hcon
+    have hmem : μ.re ∈ prolateEigenvalueSet T W c := ⟨hcon, hμ'⟩
+    have hsub : Module.End.eigenspace (prolateEnd T W) ((μ.re : ℝ) : ℂ)
+        ≤ prolateEigenspaceSup T W c := by
+      rw [prolateEigenspaceSup]
+      exact le_biSup (fun ν : ℝ => Module.End.eigenspace (prolateEnd T W) ((ν : ℝ) : ℂ)) hmem
+    have hwV : (w : E) ∈ prolateEigenspaceSup T W c :=
+      hsub (Module.End.mem_eigenspace_iff.mpr (by rw [hre]; exact hwE))
+    have hzero : inner ℂ (w : E) (w : E) = (0 : ℂ) :=
+      (Submodule.mem_orthogonal _ _).mp w.2 _ hwV
+    exact hwE_ne (inner_self_eq_zero.mp hzero)
+  rw [← hre, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hnn]
+  exact hle
+
+theorem prolateRestrict_norm_le (T W : ℝ) {c : ℝ} (hc : 0 < c) :
+    ‖prolateRestrict T W c‖ ≤ c := by
+  have hsa : IsSelfAdjoint (prolateRestrict T W c) :=
+    ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.mpr
+      ((timeBandLimitingOp_isSymmetric T W).restrict_invariant
+        (prolateEigenspaceSup_orthogonal_invariant T W c))
+  have hcpt : IsCompactOperator (prolateRestrict T W c) :=
+    (timeBandLimitingOp_isCompact T W).restrict'
+      (prolateEigenspaceSup_orthogonal_invariant T W c)
+  -- For a compact operator every nonzero spectral point is an eigenvalue, hence `≤ c`.
+  have hspec : ∀ z ∈ spectrum ℂ (prolateRestrict T W c), ‖z‖ ≤ c := by
+    intro z hz
+    rcases eq_or_ne z 0 with rfl | hz0
+    · simpa using hc.le
+    · exact prolateRestrict_hasEigenvalue_le T W
+        ((hcpt.hasEigenvalue_iff_mem_spectrum hz0).mpr hz)
+  -- Self-adjointness turns the spectral radius into the norm.
+  have hrad := (prolateRestrict T W c).spectralRadius_eq_nnnorm hsa
+  have hle : (‖prolateRestrict T W c‖₊ : ℝ≥0∞) ≤ ENNReal.ofReal c := by
+    rw [← hrad, spectralRadius]
+    refine iSup₂_le fun z hz => ?_
+    rw [← enorm_eq_nnnorm, ← ofReal_norm]
+    exact ENNReal.ofReal_le_ofReal (hspec z hz)
+  rw [← enorm_eq_nnnorm, ← ofReal_norm] at hle
+  exact (ENNReal.ofReal_le_ofReal_iff hc.le).mp hle
+
+/-- **The spectral gap below `c`.** On the orthogonal complement of the span of every eigenspace
+of `A` with eigenvalue exceeding `c`, the Rayleigh quotient of `A` is at most `c`.
+
+This is the qualitative half of the eigenvalue count: together with the exact trace
+`tsum_inner_timeBandLimitingOp_eq` (`tr A = 2WT`) and the second-moment bound
+`tsum_inner_sub_norm_sq_timeBandLimitingOp_le` (`tr A − tr A² = O(log WT)`), it is what lets a
+Chebyshev split localize the spectrum around the cliff at `c`.
+
+The proof needs no eigenbasis. `prolateEigenspaceSup_invariant` and symmetry make `Vᗮ` invariant,
+so `A` restricts to a compact self-adjoint operator `S` there; every eigenvalue of `S` is an
+eigenvalue of `A` lying in `[0, c]` (above `c` its eigenvector would land in `V ⊓ Vᗮ = ⊥`), and for
+a compact self-adjoint operator the norm *is* the spectral radius, so `‖S‖ ≤ c`. Cauchy-Schwarz
+then gives the Rayleigh bound. In particular this route does *not* construct a complete orthonormal
+eigenbasis of `A` — the obligation still open at `tsum_prolateEigenvalues_eq`.
+
+Unconditional in `T` and `W`: compactness, symmetry and positivity of `A` all hold for every
+parameter value, so no window or band nondegeneracy is assumed. Only `0 < c` is needed, and only to
+place the point `0` of the spectrum below the bound. -/
+theorem inner_timeBandLimitingOp_le_of_mem_orthogonal
+    (T W c : ℝ) (hc : 0 < c)
+    {v : E} (hv : v ∈ (prolateEigenspaceSup T W c)ᗮ) :
+    (inner ℂ (timeBandLimitingOp T W v) v).re ≤ c * ‖v‖ ^ 2 := by
+  have hAv : ‖timeBandLimitingOp T W v‖ ≤ c * ‖v‖ := by
+    have h1 := (prolateRestrict T W c).le_opNorm (⟨v, hv⟩ : ↥(prolateEigenspaceSup T W c)ᗮ)
+    have h2 : ‖prolateRestrict T W c‖ * ‖(⟨v, hv⟩ : ↥(prolateEigenspaceSup T W c)ᗮ)‖ ≤ c * ‖v‖ :=
+      mul_le_mul_of_nonneg_right (prolateRestrict_norm_le T W hc) (norm_nonneg _)
+    calc ‖timeBandLimitingOp T W v‖
+        = ‖prolateRestrict T W c (⟨v, hv⟩ : ↥(prolateEigenspaceSup T W c)ᗮ)‖ := rfl
+      _ ≤ ‖prolateRestrict T W c‖ * ‖(⟨v, hv⟩ : ↥(prolateEigenspaceSup T W c)ᗮ)‖ := h1
+      _ ≤ c * ‖v‖ := h2
+  calc (inner ℂ (timeBandLimitingOp T W v) v).re
+      ≤ ‖inner ℂ (timeBandLimitingOp T W v) v‖ := Complex.re_le_norm _
+    _ ≤ ‖timeBandLimitingOp T W v‖ * ‖v‖ := norm_inner_le_norm _ _
+    _ ≤ (c * ‖v‖) * ‖v‖ := mul_le_mul_of_nonneg_right hAv (norm_nonneg _)
+    _ = c * ‖v‖ ^ 2 := by ring
 
 /-- Markov bound on the eigenvalue counting function: at most `2WT/c` eigenvalues of the
 time-and-band limiting operator exceed `c`.
