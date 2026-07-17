@@ -633,6 +633,72 @@ theorem bandLimitProj_apply_ae (W : ℝ) (hW : 0 ≤ W) (f : E) :
   · filter_upwards [bandLimitProj_coeFn_ae_eq_fourierInv W f] with t ht
     rw [ht, fourierInv_bandLimitSpec_eq W hWpos f t]
 
+theorem star_zero_Lp : star (0 : E) = (0 : E) := by
+  refine Lp.ext ?_
+  filter_upwards [Lp.coeFn_star (0 : E), Lp.coeFn_zero ℂ 2 (volume : Measure ℝ)] with x hx h0
+  simp only [Pi.star_apply] at hx
+  rw [hx, h0]
+  simp
+
+theorem star_add_Lp (f g : E) : star (f + g) = star f + star g := by
+  refine Lp.ext ?_
+  filter_upwards [Lp.coeFn_star (f + g), Lp.coeFn_add f g, Lp.coeFn_star f, Lp.coeFn_star g,
+    Lp.coeFn_add (star f) (star g)] with x h1 h2 h3 h4 h5
+  simp only [Pi.star_apply] at h1 h3 h4
+  rw [h1, h5, Pi.add_apply, h3, h4, h2, Pi.add_apply, star_add]
+
+theorem star_smul_Lp (c : ℂ) (f : E) : star (c • f) = (starRingEnd ℂ) c • star f := by
+  refine Lp.ext ?_
+  filter_upwards [Lp.coeFn_star (c • f), Lp.coeFn_smul c f, Lp.coeFn_star f,
+    Lp.coeFn_smul ((starRingEnd ℂ) c) (star f)] with x h1 h2 h3 h4
+  simp only [Pi.star_apply] at h1 h3
+  rw [h1, h4, Pi.smul_apply, h3, h2, Pi.smul_apply, smul_eq_mul, smul_eq_mul, star_mul',
+    starRingEnd_apply]
+
+/-- Complex conjugation on `L²(ℝ;ℂ)` as a conjugate-linear map. Mathlib equips `Lp` with a bare
+`Star` instance only (no `StarAddMonoid` / `StarModule`), so the additivity and conjugate-homogeneity
+that bundle it into a semilinear map are supplied here by `star_add_Lp` / `star_smul_Lp`. -/
+noncomputable def starₗE : E →ₛₗ[starRingEnd ℂ] E where
+  toFun := star
+  map_add' := star_add_Lp
+  map_smul' := star_smul_Lp
+
+theorem timeLimitProj_star (T : ℝ) (f : E) :
+    (timeLimitSubspace T).starProjection (star f)
+      = star ((timeLimitSubspace T).starProjection f) := by
+  refine Lp.ext ?_
+  filter_upwards [timeLimitProj_apply_ae T (star f), Lp.coeFn_star f,
+    Lp.coeFn_star ((timeLimitSubspace T).starProjection f), timeLimitProj_apply_ae T f]
+    with x h1 h2 h3 h4
+  rw [h1, h3, Pi.star_apply, h4]
+  simp only [Pi.mul_apply, Pi.star_apply, h2, star_mul']
+  by_cases hx : x ∈ Set.Icc (0 : ℝ) T
+  · simp [Set.indicator_of_mem hx]
+  · simp [Set.indicator_of_notMem hx]
+
+theorem bandLimitProj_star (W : ℝ) (f : E) :
+    (bandLimitSubspace W).starProjection (star f)
+      = star ((bandLimitSubspace W).starProjection f) := by
+  rcases le_or_gt 0 W with hW | hW
+  · refine Lp.ext ?_
+    filter_upwards [bandLimitProj_apply_ae W hW (star f),
+      Lp.coeFn_star ((bandLimitSubspace W).starProjection f),
+      bandLimitProj_apply_ae W hW f] with t h1 h3 h4
+    rw [h1, h3, Pi.star_apply, h4, Complex.star_def, ← integral_conj]
+    refine integral_congr_ae ?_
+    filter_upwards [Lp.coeFn_star f] with s hs
+    rw [hs, Pi.star_apply, map_mul, Complex.conj_ofReal, Complex.star_def]
+  · -- `W < 0`: the band is empty, `P_W = 0`, and both sides collapse.
+    have hbot : ∀ g : E, (bandLimitSubspace W).starProjection g = 0 := fun g =>
+      (Submodule.eq_bot_iff _).mp (bandLimitSubspace_eq_bot_of_nonpos hW.le) _
+        (Submodule.starProjection_apply_mem _ g)
+    rw [hbot, hbot, star_zero_Lp]
+
+theorem timeBandLimitingOp_star_comm (T W : ℝ) (f : E) :
+    timeBandLimitingOp T W (star f) = star (timeBandLimitingOp T W f) := by
+  simp only [timeBandLimitingOp, ContinuousLinearMap.comp_apply, bandLimitProj_star,
+    timeLimitProj_star]
+
 /-- The normalized sinc is square-integrable on `ℝ`. The reusable crux for the kernel-`L²` bound:
 its Lebesgue `L²`-membership follows from the elementary majorant `sincN(x)² ≤ 2/(1 + x²)`
 (`|sincN| ≤ 1` near `0`, `sincN(x)² = sin²(πx)/(πx)² ≤ 1/(πx)²` away from it) against the
@@ -2230,6 +2296,28 @@ theorem exists_hilbertBasis_tsum_inner_timeBandLimitingOp_eq (T W : ℝ) (hT : 0
       ∑' i, (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re = 2 * W * T := by
   obtain ⟨w, b, -⟩ := exists_hilbertBasis ℂ E
   exact ⟨w, b, tsum_inner_timeBandLimitingOp_eq T W hT hW b⟩
+
+theorem star_mem_eigenspace {T W : ℝ} {μ : ℝ} {v : E}
+    (hv : v ∈ Module.End.eigenspace (prolateEnd T W) (μ : ℂ)) :
+    star v ∈ Module.End.eigenspace (prolateEnd T W) (μ : ℂ) := by
+  rw [Module.End.mem_eigenspace_iff] at hv ⊢
+  have h1 : (prolateEnd T W) (star v) = star ((prolateEnd T W) v) :=
+    timeBandLimitingOp_star_comm T W v
+  rw [h1, hv, star_smul_Lp, Complex.conj_ofReal]
+
+/-- Complex conjugation preserves the span of the high eigenspaces. The operator `A` commutes with
+`star` (`timeBandLimitingOp_star_comm`) and its eigenvalues are real, so each eigenspace above `c` is
+`star`-invariant; the span inherits it. This is the `ℂ/ℝ` bridge that lets the achievability path
+choose real-valued prolate eigenfunctions.
+@audit:ok -/
+theorem star_mem_prolateEigenspaceSup {T W c : ℝ} {v : E}
+    (hv : v ∈ prolateEigenspaceSup T W c) :
+    star v ∈ prolateEigenspaceSup T W c := by
+  rw [prolateEigenspaceSup, iSup_subtype'] at hv ⊢
+  induction hv using Submodule.iSup_induction' with
+  | mem i x hx => exact Submodule.mem_iSup_of_mem i (star_mem_eigenspace hx)
+  | zero => rw [star_zero_Lp]; exact zero_mem _
+  | add x y _ _ ihx ihy => rw [star_add_Lp]; exact add_mem ihx ihy
 
 theorem prolateEigenspaceSup_invariant (T W c : ℝ) :
     ∀ v ∈ prolateEigenspaceSup T W c,
