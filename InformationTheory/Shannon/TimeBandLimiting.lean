@@ -3742,47 +3742,155 @@ theorem exists_hilbertBasis_prolateSplit (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     rw [HilbertBasis.coe_mkOfOrthogonalEqBot]
     exact hgmem j
 
-/-- A real-valued (star-fixed) orthonormal basis of `V = prolateEigenspaceSup T W c`.
+-- The inner-product/`star` bridge on `E = Lp ℂ 2 volume`. Mathlib equips `Lp` with only a bare
+-- `Star` (no `StarAddMonoid`), so the interaction of complex conjugation with the L² inner product
+-- is supplied by hand from `Lp.coeFn_star` and `integral_conj`.
+theorem inner_star_star (x y : E) :
+    (inner ℂ (star x) (star y) : ℂ) = starRingEnd ℂ (inner ℂ x y) := by
+  rw [MeasureTheory.L2.inner_def, MeasureTheory.L2.inner_def, ← integral_conj]
+  apply integral_congr_ae
+  filter_upwards [Lp.coeFn_star x, Lp.coeFn_star y] with t hx hy
+  rw [hx, hy, Pi.star_apply, Pi.star_apply]
+  simp only [RCLike.inner_apply, map_mul, RCLike.star_def, RCLike.conj_conj]
 
-`V` is closed under complex conjugation (`star_mem_prolateEigenspaceSup`), so it is the
-complexification of its real form `V_ℝ = {v ∈ V | star v = v}`. A real orthonormal basis of `V_ℝ` is
-a complex orthonormal basis of `V` whose members are star-fixed. This is the `ℂ/ℝ` bridge the
-achievability path needs: it lets prolate eigenfunctions be chosen real-valued.
+theorem real_inner_eq_re_complex (x y : E) :
+    (inner ℝ x y : ℝ) = RCLike.re (inner ℂ x y) := by
+  rw [MeasureTheory.L2.inner_def, MeasureTheory.L2.inner_def,
+    ← integral_re (MeasureTheory.L2.integrable_inner x y)]
+  apply integral_congr_ae
+  filter_upwards with t
+  rw [real_inner_eq_re_inner]
 
-This exports star-fixed elements of `E = Lp ℂ 2 volume` (their a.e. representative is real-valued);
-turning them into the honest `ℝ → ℝ` matched-filter test functions the `ContAwgnCode` consumer wants
-(with `[0,T]` support / band-limit) is a further step (`Q_T ψᵢ / √μᵢ`), not established here.
+theorem inner_complex_eq_real_of_star_fixed (x y : E) (hx : star x = x) (hy : star y = y) :
+    (inner ℂ x y : ℂ) = ((inner ℝ x y : ℝ) : ℂ) := by
+  have hreal : starRingEnd ℂ (inner ℂ x y) = (inner ℂ x y : ℂ) := by
+    conv_rhs => rw [← hx, ← hy]
+    rw [inner_star_star]
+  have hre : (inner ℂ x y : ℂ) = ((RCLike.re (inner ℂ x y) : ℝ) : ℂ) :=
+    (RCLike.conj_eq_iff_re.mp hreal).symm
+  rw [hre, ← real_inner_eq_re_complex]
 
-Left open. The construction is genuine plumbing (not a wall), but a multi-step one; three inputs are
-missing from Mathlib and in-tree (loogle-confirmed: no `Complexification` / conjugation-fixed real
-inner-product-space orthonormal-basis machinery under `Analysis.InnerProductSpace`, and no
-`⟪star x, star y⟫ = conj ⟪x, y⟫` on the manual `Lp ℂ 2 volume` star algebra):
+theorem star_sub_Lp (f g : E) : star (f - g) = star f - star g := by
+  have := map_sub (starₗE) f g
+  simpa [starₗE] using this
 
-1. the inner–star bridge `⟪star x, star y⟫ = conj ⟪x, y⟫`, from `Lp.coeFn_star` + the L² inner as
-   `∫ conj x * y`, needed to make `⟪u, u'⟫` real for star-fixed `u, u'`;
-2. the real form `V_ℝ` as an `ℝ`-subspace with `stdOrthonormalBasis ℝ ↥V_ℝ`, its members shown
-   `ℂ`-orthonormal (via 1) and `ℂ`-spanning `V` (via `v = (v + star v)/2 + i·(v − star v)/(2i)`);
-3. the dimension bridge `finrank ℝ V_ℝ = finrank ℂ V = prolateCount T W c`, to land the index on
-   `Fin (prolateCount T W c)` — the delicate step (real dimension of the real form equals the
-   complex dimension of `V`).
+/-- The real form of `V = prolateEigenspaceSup T W c`: its star-fixed elements, viewed as an
+`ℝ`-subspace of `E`. Since `V` is conjugation-invariant (`star_mem_prolateEigenspaceSup`), it is the
+complexification of this real form, and a real orthonormal basis of the real form is a
+`ℂ`-orthonormal basis of `V` whose members are star-fixed (a.e. real-valued). -/
+def realForm (T W c : ℝ) : Submodule ℝ E where
+  carrier := {x | x ∈ prolateEigenspaceSup T W c ∧ star x = x}
+  add_mem' {x y} hx hy := by
+    refine ⟨add_mem hx.1 hy.1, ?_⟩
+    rw [star_add_Lp, hx.2, hy.2]
+  zero_mem' := ⟨zero_mem _, star_zero_Lp⟩
+  smul_mem' r x hx := by
+    refine ⟨Submodule.smul_mem _ _ hx.1, ?_⟩
+    show star ((r : ℂ) • x) = (r : ℂ) • x
+    rw [star_smul_Lp, hx.2, Complex.conj_ofReal]
 
-Audited 2026-07-18 (independent): honest residual, `plan:` classification stands. The signature is a
-plain existence claim with no bundled core (only `hc : 0 < c`, a well-definedness precondition — for
-`0 < c`, `V` is finite-dimensional with `dim = prolateCount = finrank ℂ V` by def, and conjugation-
-closed via `star_mem_prolateEigenspaceSup`, so a star-fixed orthonormal basis of that size exists;
-the statement is true, not `:True`/circular/vacuous). `plan:` over `wall:` is correct: the building
-block `stdOrthonormalBasis` for finite-dimensional real inner-product spaces is present in Mathlib
-(loogle-confirmed), no packaged `Complexification` real-basis lemma exists (loogle 0), so the three
-missing steps are elementary in-project plumbing, not a deep gap. No overclaim: the docstring
-explicitly scopes out the `ℝ → ℝ` matched-filter test functions the `ContAwgnCode` consumer needs as
-a further step, not established here. Plan referent `docs/shannon/shannon-hartley-phase2-spectral-plan.md`
-confirmed present.
-@residual(plan:shannon-hartley-phase2-spectral-plan) -/
+/-- The canonical `ℝ`-linear injection of the real form into `↥V`, used to transport
+finite-dimensionality of `V` over `ℝ` to its real form. -/
+def realFormToV (T W c : ℝ) : realForm T W c →ₗ[ℝ] ↥(prolateEigenspaceSup T W c) where
+  toFun x := ⟨(x : E), x.2.1⟩
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+
+theorem realForm_finiteDimensional (T W : ℝ) {c : ℝ} (hc : 0 < c) :
+    FiniteDimensional ℝ (realForm T W c) := by
+  haveI := prolateEigenspaceSup_finiteDimensional T W hc
+  haveI : FiniteDimensional ℝ (prolateEigenspaceSup T W c) :=
+    Module.Finite.trans ℂ (prolateEigenspaceSup T W c)
+  refine FiniteDimensional.of_injective (realFormToV T W c) ?_
+  intro a b hab
+  have hE : (a : E) = (b : E) := congrArg (fun z : ↥(prolateEigenspaceSup T W c) => (z : E)) hab
+  exact Subtype.coe_injective hE
+
+/-- A star-fixed (a.e. real-valued) `ℂ`-orthonormal basis of `V = prolateEigenspaceSup T W c`.
+
+`V` is finite-dimensional (`prolateEigenspaceSup_finiteDimensional`) and closed under complex
+conjugation (`star_mem_prolateEigenspaceSup`), so it is the complexification of its real form
+`V_ℝ = {v ∈ V | star v = v}` (`realForm`). A standard real orthonormal basis of `V_ℝ`
+(`stdOrthonormalBasis`) is `ℂ`-orthonormal — its inner products are real for star-fixed vectors
+(`inner_complex_eq_real_of_star_fixed`) — and `ℂ`-spans `V`: every `v ∈ V` decomposes as
+`(v + star v)/2 + I·(I/2)·(star v − v)`, two star-fixed summands. Counting shows the basis has
+`finrank ℂ V = prolateCount T W c` members, so it reindexes onto `Fin (prolateCount T W c)`. This is
+the `ℂ/ℝ` bridge the achievability path needs: it lets the prolate eigenfunctions be chosen
+real-valued.
+
+This exports star-fixed elements of `E = Lp ℂ 2 volume` (whose a.e. representative is real-valued);
+turning them into the `ℝ → ℝ` matched-filter test functions the `ContAwgnCode` consumer wants
+(with `[0,T]` support / band-limit) is a further step, not established here. -/
 theorem exists_real_orthonormalBasis_prolateEigenspaceSup (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ∃ u : Fin (prolateCount T W c) → E,
       Orthonormal ℂ u ∧ (∀ i, star (u i) = u i) ∧
       Submodule.span ℂ (Set.range u) = prolateEigenspaceSup T W c := by
-  sorry
+  classical
+  haveI := realForm_finiteDimensional T W hc
+  set m := Module.finrank ℝ (realForm T W c) with hm
+  set b := stdOrthonormalBasis ℝ (realForm T W c) with hb
+  set w : Fin m → E := fun i => ((b i : realForm T W c) : E) with hw
+  have hw_star : ∀ i, star (w i) = w i := fun i => (b i).2.2
+  have hw_memV : ∀ i, w i ∈ prolateEigenspaceSup T W c := fun i => (b i).2.1
+  have hrange : Set.range w = (realForm T W c).subtype '' (Set.range b) := by
+    rw [← Set.range_comp]; rfl
+  have hspanR : Submodule.span ℝ (Set.range w) = realForm T W c := by
+    rw [hrange, Submodule.span_image, ← OrthonormalBasis.coe_toBasis, b.toBasis.span_eq,
+      Submodule.map_top, Submodule.range_subtype]
+  -- The real basis is `ℂ`-orthonormal: inner products of star-fixed vectors are real.
+  have horth : Orthonormal ℂ w := by
+    rw [orthonormal_iff_ite]
+    intro i j
+    have hb2 := b.orthonormal
+    rw [orthonormal_iff_ite] at hb2
+    have h1 : (inner ℝ (w i) (w j) : ℝ) = if i = j then (1 : ℝ) else 0 := by
+      have := hb2 i j
+      rwa [Submodule.coe_inner] at this
+    rw [inner_complex_eq_real_of_star_fixed (w i) (w j) (hw_star i) (hw_star j), h1]
+    split <;> simp
+  -- The real basis `ℂ`-spans `V` via the star-fixed decomposition of each member.
+  have hspanC : Submodule.span ℂ (Set.range w) = prolateEigenspaceSup T W c := by
+    apply le_antisymm
+    · rw [Submodule.span_le]
+      rintro _ ⟨i, rfl⟩
+      exact hw_memV i
+    · intro v hv
+      have hmem_span : ∀ x ∈ realForm T W c, x ∈ Submodule.span ℂ (Set.range w) := by
+        intro x hx
+        exact Submodule.span_le_restrictScalars ℝ ℂ (Set.range w) (hspanR.ge hx)
+      have hsv : star v ∈ prolateEigenspaceSup T W c := star_mem_prolateEigenspaceSup hv
+      have hconj_half : starRingEnd ℂ ((1 : ℂ) / 2) = 1 / 2 := by
+        rw [show ((1 : ℂ) / 2) = (((1 : ℝ) / 2 : ℝ) : ℂ) by norm_num, Complex.conj_ofReal]
+      have hconj_I : starRingEnd ℂ (Complex.I / 2) = -(Complex.I / 2) := by
+        rw [map_div₀, Complex.conj_I, show starRingEnd ℂ 2 = 2 from map_ofNat _ 2, neg_div]
+      have hp_mem : ((1 : ℂ) / 2) • (v + star v) ∈ realForm T W c := by
+        refine ⟨Submodule.smul_mem _ _ (add_mem hv hsv), ?_⟩
+        rw [star_smul_Lp, star_add_Lp, star_star, hconj_half, add_comm]
+      have hq_mem : (Complex.I / 2) • (star v - v) ∈ realForm T W c := by
+        refine ⟨Submodule.smul_mem _ _ (sub_mem hsv hv), ?_⟩
+        rw [star_smul_Lp, star_sub_Lp, star_star, hconj_I, neg_smul, ← smul_neg, neg_sub]
+      have hvpq : v = ((1 : ℂ) / 2) • (v + star v)
+          + Complex.I • ((Complex.I / 2) • (star v - v)) := by
+        rw [smul_smul, show Complex.I * (Complex.I / 2) = ((-1) / 2 : ℂ) by
+          rw [← mul_div_assoc, Complex.I_mul_I]]
+        module
+      rw [hvpq]
+      exact add_mem (hmem_span _ hp_mem)
+        (Submodule.smul_mem _ _ (hmem_span _ hq_mem))
+  -- Being a `ℂ`-basis of `V`, the family has `finrank ℂ V = prolateCount` members.
+  have hcard : m = prolateCount T W c := by
+    have hli : LinearIndependent ℂ w := horth.linearIndependent
+    have hfr := finrank_span_eq_card hli
+    rw [hspanC] at hfr
+    rw [prolateCount, hfr, Fintype.card_fin]
+  refine ⟨fun i => w (Fin.cast hcard.symm i), ?_, ?_, ?_⟩
+  · exact horth.comp _ (Fin.cast_injective _)
+  · exact fun i => hw_star _
+  · have hsurj : Function.Surjective (Fin.cast hcard.symm) :=
+      fun y => ⟨Fin.cast hcard y, Fin.ext rfl⟩
+    have hru : Set.range (fun i => w (Fin.cast hcard.symm i)) = Set.range w :=
+      hsurj.range_comp w
+    rw [hru, hspanC]
 
 /-- **Upper half of the eigenvalue count concentration.** With `D := 2 + log(1 + 2WT)`, the number
 of eigenvalues of `A` exceeding `c` is at most `2WT + D/c`, for every free threshold `0 < c`.
