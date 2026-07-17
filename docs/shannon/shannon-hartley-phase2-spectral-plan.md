@@ -56,7 +56,7 @@
         advisor 独立検証: `awgn_channel_coding_theorem`（`AWGN/Main.lean:55`）は**スカラー** ⟹ μᵢ に payoff 無し ⟹ (i) 実固有基底は strictly 重く却下。
         ⚠️ **予測訂正**: V メンバは帯域制限で [0,T] 台でない ⟹「G≥cI を vector-channel 定理へ」は誤り（その定理は不在・不要）。
         正しくは **encoder 側 pre-equalizer `b=R⁻¹x`** でスカラー定理へ帰着（`G≥cI ⟹ G⁻¹≤(1/c)I` だけ）。核 = 時間窓集中 `c‖v‖²≤‖Q_T v‖²` on V。
-        **最大コスト = Lp クラス→pointwise ℝ→ℝ lift（route 非依存）**。leg 19 で operator-level ブリック着手。
+        **最大コスト = Lp→pointwise lift は leg 19 で CLOSED sorryAx-free**（`LpPointwise.lean`、`ff37d9a0`、wrapper `exists_pointwise_orthonormal_of_orthonormal` が testFn 3 フィールド直接供給）+ operator ブリック 3 本（`dadddd55`）。残 = A2 wiring（ℂ→ℝ ONB 変換 + hsupp discharge + encoder/observation identity + code 組立）。
   - [ ] **R4-CONV-gate（並行可、⚠️ route 再検討）** → C1（converse interlacing、唯一の未 gateway-test）。
         plan の旧 route「R1 + finrank 単射」は **R1 dead で失効** ⟹ 新 route が要る（有限 V-固有基底 L3529 + min-max か）。PASS で壁再分類 license。
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
@@ -415,8 +415,8 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 **✅ 完了**: Leg R2/R3（count、r17）/ **Leg R4-gate A1（leg 18、gateway PASS）** / **Leg R4-ACH-B（leg 18、実基底 CLOSED）**。
 
 1. **Leg R4-ACH-A2（route ii 確定 leg 19、IN PROGRESS）** — advisor 独立検証で **(ii)=作用素下界** に確定（`awgn` 定理スカラー ⟹ μᵢ 無用、(i) 却下）。
-   pre-equalizer `b=R⁻¹x` でスカラー帰着（`G⁻¹≤(1/c)I`）。leg 19 = operator-level ブリック（時間窓集中 + G≥cI）。
-   次: `Q_T(V)` の [0,T]-台 real ONB testFn（Lp→pointwise lift = 最大コスト）→ encoder → A4 transport。
+   pre-equalizer `b=R⁻¹x` でスカラー帰着（`G⁻¹≤(1/c)I`）。**leg 19 完了 = operator ブリック 3 本 + Lp→pointwise keystone、全 sorryAx-free**（`dadddd55`/`ff37d9a0`）。
+   次(leg 20) = A2 wiring: ℂ→ℝ real ONB 変換 + hsupp discharge（`timeLimitSubspace` a.e.-vanish）+ `exists_pointwise_orthonormal_of_orthonormal` 適用 → encoder/observation identity → A4 transport。
 2. **Leg R4-CONV-gate（並行可、⚠️ route 再検討）** — C1（converse interlacing、唯一の未 gateway-test）。
    旧 route「R1 + finrank 単射」は R1 dead で失効 → 新 route（L3529 + min-max か）。**advisor 見立て: interlacing 非自明 = self-build 公算、gateway-atom-first 推奨**。PASS で壁→`plan:` 再分類 license。
 3. **Leg A4/C-assembly** — `awgn_channel_coding_theorem` 輸送 + capacity 計算 + rate/limsup。
