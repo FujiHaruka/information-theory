@@ -14,7 +14,7 @@
 - [x] **Leg E — 固有値集中の解析核 ✅ CLOSED**（E-atom/E-trace/E-sharp、leg 15–16）
 - [x] **count — 集中の両半分 ✅ CLOSED**（R-atom/R2/R3、leg 17。R1 は DEAD = 構成上不要）
 - [x] **R4-ACH（achievability bridge）✅ CLOSED（leg 18–22）**: A1 gateway PASS / 実基底 (B) / route(ii) keystone / L0–L10 全 proof-done。**headline `contAwgn_ge_shannonHartley` = PROOF-DONE sorryAx-free + @audit:ok**（leg 22、`15a111ef`/`ef401a5d`/`173adcb3`）
-- [ ] **R4-CONV（converse bridge）= 唯一の未着手**。C0（headline `contAwgn_le` 未在）/ **C1（interlacing、唯一の未 gateway-test）** / C2 / C3 / C4 → `contAwgn_eq_shannonHartley` の残 sorry（converse 半分専用）を落とす
+- [ ] **R4-CONV（converse bridge）= 進行中**。**C1（interlacing count domination）✅ CLOSED（leg 23、`c5822fed`/`73ec6559`）** = `finrank_le_prolateCount_of_form_gt` proof-done sorryAx-free @audit:ok。**crux（Vᗮ form bound）は Leg E で既に in-tree**（`inner_timeBandLimitingOp_le_of_mem_orthogonal` @audit:ok）ゆえ C1 は線形代数のみ = advisor の「self-build 公算」を反証。**`contAwgn_eq` の残 sorry を `nyquist-2w-dof` → `plan:` へ再分類済**（監査 CONFIRMED、live wall residual 0）。残 = C0（headline）/ C2 / **C3（最大、operational parallel-Gaussian converse = self-build）** / C4
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
 
 ---
@@ -29,7 +29,7 @@
    CLOSED（leg 18–22）。
 
 **残る唯一の未着手 = converse bridge（R4-CONV / C0–C4）** → `contAwgn_eq_shannonHartley` の残 sorry
-（`ShannonHartleyMain.lean:64`、`@residual(wall:nyquist-2w-dof)`、**converse 専用に縮約済** = live consumer 2→1）を落とす。
+（`ShannonHartleyMain.lean:64`、`@residual(nyquist-2w-dof)`、**converse 専用に縮約済** = live consumer 2→1）を落とす。
 
 ### Approach（解の全体形）
 
@@ -104,21 +104,23 @@ converse（C1）配線時も同種 signature-scan を要す。
 ## R4-CONV（converse bridge）= 唯一の未着手
 
 **目標**: `contAwgnOperationalCapacity ≤ bandlimitedAwgnCapacity` を証明し `contAwgn_eq_shannonHartley` の残 sorry
-（`@residual(wall:nyquist-2w-dof)`、**converse 半分専用**）を落とす。**count の下流**ゆえ R1–R3 / E-sharp では落ちない。
+（`@residual(nyquist-2w-dof)`、**converse 半分専用**）を落とす。**count の下流**ゆえ R1–R3 / E-sharp では落ちない。
 **新しい壁はゼロ**（proof-pivot-advisor が leg 16 で機械確認、判別子 PASS）。
 
 | # | 要る命題 | 資産 | 級 |
 |---|---|---|---|
-| **C0** | headline `contAwgn_le_shannonHartley` が**宣言として存在しない**（achievability 半分が proof-done ⟹ 残 sorry は converse 専用だが、`le_antisymm` 用の `≤` 補題を実不等式として書き下ろす要あり） | 親 plan / inventory が名前だけ参照 = 指示対象なき名前 | 実装 |
-| **C1** | `νᵢ(Gram) ≤ μᵢ(A)` ⟹ `#{ν>c} ≤ prolateCount T W c`（**唯一の未 gateway-test**） | Mathlib **0 hit**（interlac / CourantFischer / min_max）。count（`prolateCount_le`、closed）+ 有限 V-固有基底（`exists_orthonormal_eigenbasis_prolateEigenspaceSup`、L3529、in-tree）から min-max で導出可 = 壁でない公算 | plumbing（gateway 未） |
+| **C0** | headline `contAwgn_le_shannonHartley` が**宣言として存在しない**（achievability 半分が proof-done ⟹ 残 sorry は converse 専用だが、`le_antisymm` 用の `≤` 補題を実不等式として書き下ろす要あり） | 親 plan / inventory が名前だけ参照 = 指示対象なき名前 | 実装（未着手） |
+| **C1 ✅ CLOSED** | `#{ν(Gram)>c} ≤ prolateCount T W c` = `finrank_le_prolateCount_of_form_gt`（`S` 上 Rayleigh 商 `>c` ⟹ `finrank S ≤ prolateCount`） | **proof-done sorryAx-free @audit:ok**（`TimeBandLimiting.lean:2617`、leg 23）。crux = 既在 in-tree `inner_timeBandLimitingOp_le_of_mem_orthogonal`（Vᗮ で `⟪Av,v⟫≤c‖v‖²`、@audit:ok、Leg E）+ matched pair `le_inner_timeBandLimitingOp_of_mem`。injection は `orthogonalProjectionOnto` + `LinearMap.finrank_le_finrank_of_injective` | ✅ 完了 |
 | **C2** | 観測を Gram 固有基底へ回転（等方 Gauss 不変性） | **Mathlib にある**: `stdGaussian_map` + `map_pi_eq_stdGaussian`（後者は `errorProbAt` の `Measure.pi` を橋渡し） | plumbing |
 | **C3** | 不等利得 operational converse `log M ≤ ∑ᵢ ½log(1+νᵢQᵢ/(N₀/2)) + Fano`（最大項） | **secretly in-tree**: `parallel_per_input_mi_le_sum`（`N : Fin n → ℝ≥0` slot = 利得構造、sorryAx-free）+ `shannon_converse_single_shot` | plumbing |
 | **C4** | water-filling + 極限（`∑Qᵢ ≤ TP`、`/T`、`T→∞`、`c→0`） | 初等 | plumbing |
 
-**次アクション = C1 gateway-atom-first probe**（1 interlacing atom を `lean-implementer` へ dispatch し wall/plumbing 判定）。
-**PASS で `wall:nyquist-2w-dof` → `plan:shannon-hartley-phase2-spectral-plan` 再分類 license**（コード編集 = subagent +
-独立 honesty-auditor）。旧 route「R1 + finrank 単射」は R1 dead で失効 ⟹ 新 route は有限 V-固有基底（in-tree）+ min-max。
-advisor 見立て: interlacing 非自明 = self-build 公算。
+**次アクション = C3（operational parallel-Gaussian converse、最大の残ピース）**。C1 は leg 23 で CLOSED（下記）。
+新 route（採用）= 抽象 count-domination `finrank_le_prolateCount_of_form_gt`：`S` 上 Rayleigh 商 `>c` ⟹ `S ⊓ Vᗮ = ⊥`
+（Vᗮ で `≤c` の既在 crux と衝突）⟹ `orthogonalProjectionOnto` で `S ↪ V` 単射 ⟹ `finrank S ≤ finrank V = prolateCount`。
+**advisor の「interlacing 非自明 = self-build 公算」は反証された** — crux（Vᗮ form bound）は Leg E で既に payが済んでおり
+（`cause:loogle-blind` の再演: in-project 資産を見落とす形）、C1 は純線形代数 ~一発で通った。
+**`nyquist-2w-dof` → `plan:` 再分類は監査 CONFIRMED で完了**（`73ec6559`、live wall residual 0）。
 
 **⚠️ converse で prolate カウントは Leg E の結論として使う（仮定してはならない）**: 「`√(T/n)` tight-frame ⟹ 有効ランク
 `≈2WT`」を C1 の前に仮定するのは循環（`prolate_eigenvalue_count` の内容そのもの、台帳 §OBSERVATION-MAP 攻撃 1）。
@@ -138,10 +140,11 @@ advisor 見立て: interlacing 非自明 = self-build 公算。
 
 ## 誠実性制約（explicit、active のみ）
 
-- **`wall:nyquist-2w-dof` はもう Leg E の撤退口ではない**（leg 16）。名指す命題（tight LPS 集中 = 第 2 モーメント）は
-  E-sharp で closure 済。残 obligation（C0–C4）に壁タグを付けてよいものは無い — 詰まったら
-  `@residual(plan:shannon-hartley-phase2-spectral-plan)`。**slug 自体は retire しない**（consumer 1 本 `eq`:64 が未
-  unblock、C1 PASS で `plan:` へ）。判別軸: 壁は `WT→∞` の**漸近**、固定 `c` / 有限 `T` で閉じる話は plumbing。
+- **`nyquist-2w-dof` の live residual は 0**（leg 23 で C1 PASS ⟹ `contAwgn_eq` の残 sorry を `plan:` へ再分類、
+  監査 CONFIRMED、`73ec6559`）。名指す命題（tight LPS 集中 = 第 2 モーメント）は E-sharp で closure 済、
+  interlacing count domination は C1 で closure 済。残 obligation（C0/C2/C3/C4）に**壁タグを付けてよいものは無い** —
+  詰まったら `@residual(plan:shannon-hartley-phase2-spectral-plan)`（C3 self-build が genuine Mathlib gap を露呈したら
+  その時点で新 slug を建てる、それまでは plumbing）。slug は `docs/audit/audit-tags.md` の register に残す（history）。
 - **load-bearing hyp bundling 禁止（不変）**: interlacing / converse / count を `*Hypothesis` / `*Reduction` /
   `IsXxxClaim` predicate に束ねて仮説で渡さない。`contAwgn_le` へ結論の核を hyp 化しない。
 - **def body に sorry 不可**: `prolateEigenvalues` / `ContAwgnCode` の field は real def（sorry は proof body のみ）。
@@ -181,12 +184,12 @@ append-only。決着済 entry は削除（git が履歴）、active な判断の
 
 1. **achievability CLOSED、converse が唯一の未着手（active、leg 22）**: `contAwgn_ge_shannonHartley` は proof-done
    sorryAx-free + @audit:ok（`15a111ef`/`ef401a5d`/`173adcb3`）。残 sorry（`contAwgn_eq`:64）は converse 専用に縮約
-   （live consumer 2→1）。次 = C1 gateway-atom-first probe → PASS で `wall:nyquist-2w-dof` → `plan:` 再分類。
+   （live consumer 2→1）。次 = C1 gateway-atom-first probe → PASS で `nyquist-2w-dof` → `plan:` 再分類。
 2. **capacity 定義の phantom biInf を修理（active、leg 22、§⨅-binder hazard / 台帳 §BIINF-PHANTOM が SoT）**:
    bounded binder `⨅ ε ∈ Ioo 0 1` が `sInf ∅ = 0` を拾い cap を `0` に潰し `ge`/`eq` を false-as-framed にしていた
    （壁 gated でなく定義バグ）。subtype infimum で修理、監査 all OK（intent-preserving + converse 壁無傷）。
    gateway probe が観測写像を検査しても binder 意味論の縮退は直交軸で捕まらない。
-3. **`wall:nyquist-2w-dof` の名指す命題は CLOSED、残渣は converse bridge の下流（active）**: 解析核（E-sharp）+
+3. **`nyquist-2w-dof` の名指す命題は CLOSED、残渣は converse bridge の下流（active）**: 解析核（E-sharp）+
    カウント両半分 + achievability bridge が全て閉じても consumer の sorry（`eq`）は落ちない。残るは C1 interlacing のみ
    = 未 gateway-test。壁論拠は 3 度誤り（台帳 §SPECTRAL-ASSETS）。
 4. **strength diff は壁を継承する各 leg で再適用（active）**: 残渣を教科書の名前（Landau-Widom / interlacing）で記述

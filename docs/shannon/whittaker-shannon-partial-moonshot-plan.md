@@ -12,7 +12,7 @@
 > plan [`whittaker-shannon-plan.md`](whittaker-shannon-plan.md) is CLOSED. The **only** residual now
 > carried by `IsTwoWDegreesOfFreedom` in `ShannonHartley.lean` is a *single* genuine wall — the
 > time-bandwidth **degrees-of-freedom-per-second** count (prolate-spheroidal /
-> Landau-Pollak-Slepian eigenvalue concentration, `@residual(wall:nyquist-2w-dof)`, Mathlib
+> Landau-Pollak-Slepian eigenvalue concentration, `@residual(nyquist-2w-dof)`, Mathlib
 > `Found 0`). The surrounding continuous-time channel model, continuous-time AEP, and band-limited
 > noise measure are all in-project definable and are *not* the wall — honestly disclosed,
 > load-bearing, unchanged by this closure.
@@ -34,7 +34,7 @@
 >   bridge remain. **Child (active) plan**: [`whittaker-shannon-plan.md`](whittaker-shannon-plan.md).
 > - Still genuinely out of scope: the **operational** `IsTwoWDegreesOfFreedom` capacity identity,
 >   whose single genuine wall is the time-bandwidth **DOF-per-second** count (prolate-spheroidal /
->   Landau-Pollak-Slepian, `@residual(wall:nyquist-2w-dof)`). The continuous-time channel,
+>   Landau-Pollak-Slepian, `@residual(nyquist-2w-dof)`). The continuous-time channel,
 >   continuous-time AEP, and band-limited noise measure around it are in-project definable, not the
 >   wall. Only that DOF-per-second part remains a disclosed residual once the sampling theorem lands.
 
