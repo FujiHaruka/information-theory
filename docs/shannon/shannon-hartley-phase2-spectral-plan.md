@@ -111,9 +111,9 @@ converse（C1）配線時も同種 signature-scan を要す。
 |---|---|---|---|
 | **C0** | headline `contAwgn_le_shannonHartley` が**宣言として存在しない**（achievability 半分が proof-done ⟹ 残 sorry は converse 専用だが、`le_antisymm` 用の `≤` 補題を実不等式として書き下ろす要あり） | 親 plan / inventory が名前だけ参照 = 指示対象なき名前 | 実装（未着手） |
 | **C1 ✅ CLOSED** | `#{ν(Gram)>c} ≤ prolateCount T W c` = `finrank_le_prolateCount_of_form_gt`（`S` 上 Rayleigh 商 `>c` ⟹ `finrank S ≤ prolateCount`） | **proof-done sorryAx-free @audit:ok**（`TimeBandLimiting.lean:2617`、leg 23）。crux = 既在 in-tree `inner_timeBandLimitingOp_le_of_mem_orthogonal`（Vᗮ で `⟪Av,v⟫≤c‖v‖²`、@audit:ok、Leg E）+ matched pair `le_inner_timeBandLimitingOp_of_mem`。injection は `orthogonalProjectionOnto` + `LinearMap.finrank_le_finrank_of_injective` | ✅ 完了 |
-| **C2** | 観測を Gram 固有基底へ回転（等方 Gauss 不変性） | **Mathlib にある**: `stdGaussian_map` + `map_pi_eq_stdGaussian`（後者は `errorProbAt` の `Measure.pi` を橋渡し） | plumbing |
-| **C3** | 不等利得 operational converse `log M ≤ ∑ᵢ ½log(1+νᵢQᵢ/(N₀/2)) + Fano`（最大項） | **secretly in-tree**: `parallel_per_input_mi_le_sum`（`N : Fin n → ℝ≥0` slot = 利得構造、sorryAx-free）+ `shannon_converse_single_shot` | plumbing |
-| **C4** | water-filling + 極限（`∑Qᵢ ≤ TP`、`/T`、`T→∞`、`c→0`） | 初等 | plumbing |
+| **C2** | 観測を Gram 固有基底へ回転（等方 Gauss 不変性）+ **利得 νᵢ を信号電力の ellipsoid 制約へ折り込む**（`∑Qᵢ/νᵢ ≤ TP`） | `stdGaussian_map` + `map_pi_eq_stdGaussian`。⚠️ **後者は `gaussianReal 0 1` 専用**（`errorProbAt` は平均≠0・分散 N₀/2）ゆえ `gaussianReal_map_const_mul` + `_add_const` の affine split を先に噛ませる（1 行 `rw` 不可） | plumbing（self-build wiring） |
+| **C3** | operational converse `log M ≤ (mutualInfoOfChannel).toReal + Fano ≤ ∑ᵢ ½log(1+P'ᵢ/(N₀/2))`（**等雑音**、利得は C2/C4 の信号電力側） | **chain 全 EXISTS（inventory 参照）**: `shannon_converse_single_shot`（`Converse.lean:70`）/ `mutualInfo_le_of_markov`（`CondMutualInfo.lean:356`、DPI）/ `mutualInfoOfChannel_eq_mutualInfo_prod`（`ChannelCoding/Basic.lean:92`）/ `parallel_per_input_mi_le_sum`（consumer 0 = C3 が初）/ `fano_inequality_measure_theoretic`（`Fano/Measure.lean:269`）。self-build ~180–280 行の配線 | plumbing（self-build、壁なし） |
+| **C4** | water-filling + 極限（ellipsoid `∑Qᵢ/νᵢ ≤ TP`、νᵢ≤1・`#{νᵢ>c}≤prolateCount`（C1）、`/T`、`T→∞`、`c→0`） | 初等 + C1 count | plumbing |
 
 **次アクション = C3（operational parallel-Gaussian converse、最大の残ピース）**。C1 は leg 23 で CLOSED（下記）。
 新 route（採用）= 抽象 count-domination `finrank_le_prolateCount_of_form_gt`：`S` 上 Rayleigh 商 `>c` ⟹ `S ⊓ Vᗮ = ⊥`
@@ -121,6 +121,18 @@ converse（C1）配線時も同種 signature-scan を要す。
 **advisor の「interlacing 非自明 = self-build 公算」は反証された** — crux（Vᗮ form bound）は Leg E で既に payが済んでおり
 （`cause:loogle-blind` の再演: in-project 資産を見落とす形）、C1 は純線形代数 ~一発で通った。
 **`nyquist-2w-dof` → `plan:` 再分類は監査 CONFIRMED で完了**（`73ec6559`、live wall residual 0）。
+
+**C3/C4 leaf DAG（詳細 inventory = [`shannon-hartley-converse-c3-inventory.md`](shannon-hartley-converse-c3-inventory.md)、leg 23、verdict: Mathlib gap なし・self-build ~180–280 行）**:
+新 file `ShannonHartleyConverse.lean` に skeleton-driven で建てる。leaf 順（EXISTS を消費、SELF-BUILD を埋める）:
+1. **L-CV1**: ContAwgn joint-measure builder（`awgnConverseJoint` の clone、SELF-BUILD）。
+2. **L-CV2**: single-shot wiring（`awgn_converse_single_shot_call` の clone、`shannon_converse_single_shot` 消費、SELF-BUILD）。
+3. **L-CV3**: `W→S→Y` Markov discharge（`mutualInfo_le_of_markov` = DPI 消費、SELF-BUILD）。
+4. **L-CV4**: `joint = p_S ⊗ₘ W` bridge（`mutualInfoOfChannel_eq_mutualInfo_prod` 消費、SELF-BUILD）。
+5. **L-CV5**: power-constraint-set membership（`parallelGaussianPowerConstraintSet`、SELF-BUILD）。
+6. **L-CV6**（最高リスク）: MI-finiteness discharge（離散 AWGN は ~900 行の `ConverseMutualInfoFiniteness.lean` を要したが、parallel family の `MixtureDensity.lean` integrability 補題で大幅短縮見込み）。
+7. **C2**: Gauss 回転（affine split 注意、上記）+ ellipsoid 制約導出。
+8. **C4**: water-filling + 極限 → `contAwgn_le_shannonHartley`（C0 headline）→ `le_antisymm(contAwgn_ge, contAwgn_le)` で `contAwgn_eq` closure、residual 削除（honesty 変更 → 独立監査必須）。
+typeclass: `mutualInfo_le_of_markov` の `[StandardBorelSpace (Fin k → ℝ)]` は `pi_countable` で充足（inventory 確認済）。
 
 **⚠️ converse で prolate カウントは Leg E の結論として使う（仮定してはならない）**: 「`√(T/n)` tight-frame ⟹ 有効ランク
 `≈2WT`」を C1 の前に仮定するのは循環（`prolate_eigenvalue_count` の内容そのもの、台帳 §OBSERVATION-MAP 攻撃 1）。
