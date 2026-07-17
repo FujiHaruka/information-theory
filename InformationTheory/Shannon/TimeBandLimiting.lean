@@ -2516,6 +2516,75 @@ theorem inner_timeBandLimitingOp_le_of_mem_orthogonal
     _ ≤ (c * ‖v‖) * ‖v‖ := mul_le_mul_of_nonneg_right hAv (norm_nonneg _)
     _ = c * ‖v‖ ^ 2 := by ring
 
+/-- V-side operator lower bound: on the span `V = prolateEigenspaceSup T W c` of the eigenspaces
+above `c`, the Rayleigh quotient of `A` is at least `c`. This is the matched pair to
+`inner_timeBandLimitingOp_le_of_mem_orthogonal`, which caps it by `c` on `Vᗮ`.
+
+`V` is finite-dimensional and `A`-invariant, so the finite-dimensional spectral theorem supplies an
+orthonormal eigenbasis `b` of `V` with every eigenvalue exceeding `c`. Expanding `v` along `b`,
+`⟪A v, v⟫ = ∑ᵢ νᵢ ‖⟪bᵢ, v⟫‖² ≥ c ∑ᵢ ‖⟪bᵢ, v⟫‖² = c ‖v‖²` by Parseval, since every `νᵢ > c`. -/
+theorem le_inner_timeBandLimitingOp_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
+    (hv : v ∈ prolateEigenspaceSup T W c) :
+    c * ‖v‖ ^ 2 ≤ (inner ℂ (timeBandLimitingOp T W v) v).re := by
+  classical
+  haveI := prolateEigenspaceSup_finiteDimensional T W hc
+  have hinv := prolateEigenspaceSup_invariant T W c
+  have hsymV : ((timeBandLimitingOp T W : E →ₗ[ℂ] E).restrict hinv).IsSymmetric :=
+    (timeBandLimitingOp_isSymmetric T W).restrict_invariant hinv
+  set S : ↥(prolateEigenspaceSup T W c) →ₗ[ℂ] ↥(prolateEigenspaceSup T W c) :=
+    (timeBandLimitingOp T W : E →ₗ[ℂ] E).restrict hinv with hSdef
+  set d : ℕ := prolateCount T W c with hd
+  have hn : Module.finrank ℂ (prolateEigenspaceSup T W c) = d := rfl
+  set b := hsymV.eigenvectorBasis hn with hb
+  set ν := hsymV.eigenvalues hn with hνdef
+  set e : Fin d → E := fun i => ((b i : prolateEigenspaceSup T W c) : E) with he_def
+  have he : Orthonormal ℂ e :=
+    b.orthonormal.comp_linearIsometry (prolateEigenspaceSup T W c).subtypeₗᵢ
+  have heig : ∀ i, timeBandLimitingOp T W (e i) = ((ν i : ℝ) : ℂ) • e i := fun i =>
+    congrArg (Subtype.val (p := fun x : E => x ∈ prolateEigenspaceSup T W c))
+      (hsymV.apply_eigenvectorBasis hn i)
+  have hνgt : ∀ i, c < ν i := by
+    intro i
+    by_contra hcon
+    rw [not_lt] at hcon
+    have hperp : prolateEigenspaceSup T W c ≤ (ℂ ∙ (e i))ᗮ := by
+      conv_lhs => rw [prolateEigenspaceSup]
+      refine iSup₂_le fun μ hμ => ?_
+      intro w hw
+      rw [Module.End.mem_eigenspace_iff] at hw
+      refine Submodule.mem_orthogonal_singleton_iff_inner_right.mpr ?_
+      have hne : ν i ≠ μ := fun h => absurd hμ.1 (not_lt.mpr (h ▸ hcon))
+      exact inner_eq_zero_of_eigenvalue_ne hne (heig i) hw
+    have hzero : inner ℂ (e i) (e i) = (0 : ℂ) :=
+      Submodule.mem_orthogonal_singleton_iff_inner_right.mp (hperp (b i).2)
+    have hz : e i = 0 := inner_self_eq_zero.mp hzero
+    have h1 : ‖e i‖ = 1 := he.1 i
+    rw [hz, norm_zero] at h1
+    exact absurd h1 (by norm_num)
+  set w : ↥(prolateEigenspaceSup T W c) := ⟨v, hv⟩ with hw
+  have hSb : ∀ i, S (b i) = (ν i : ℂ) • b i := fun i => hsymV.apply_eigenvectorBasis hn i
+  -- Expand the Rayleigh quotient of `A|_V` along the eigenbasis.
+  have hcoeff : inner ℂ (S w) w
+      = ((∑ i, ν i * ‖(inner ℂ (b i) w : ℂ)‖ ^ 2 : ℝ) : ℂ) := by
+    rw [← OrthonormalBasis.sum_inner_mul_inner b (S w) w, Complex.ofReal_sum]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    have h1 : inner ℂ (S w) (b i) = (ν i : ℂ) * (starRingEnd ℂ) (inner ℂ (b i) w) := by
+      rw [hsymV w (b i), hSb i, inner_smul_right w (b i) (ν i : ℂ), ← inner_conj_symm w (b i)]
+    rw [h1, mul_assoc, ← Complex.normSq_eq_conj_mul_self, Complex.normSq_eq_norm_sq,
+      ← Complex.ofReal_mul]
+  have hval : (inner ℂ (timeBandLimitingOp T W v) v).re
+      = ∑ i, ν i * ‖(inner ℂ (b i) w : ℂ)‖ ^ 2 := by
+    have hcoe : (S w : E) = timeBandLimitingOp T W v := by
+      rw [hSdef, hw]; rfl
+    have htrans : inner ℂ (timeBandLimitingOp T W v) v = inner ℂ (S w) w := by
+      rw [Submodule.coe_inner, hcoe, hw]
+    rw [htrans, hcoeff, Complex.ofReal_re]
+  have hnorm : ‖v‖ ^ 2 = ∑ i, ‖(inner ℂ (b i) w : ℂ)‖ ^ 2 := by
+    rw [show ‖v‖ = ‖w‖ from rfl, ← OrthonormalBasis.sum_sq_norm_inner_right b w]
+  rw [hval, hnorm, Finset.mul_sum]
+  refine Finset.sum_le_sum (fun i _ => ?_)
+  exact mul_le_mul_of_nonneg_right (hνgt i).le (by positivity)
+
 /-- Markov bound on the eigenvalue counting function: at most `2WT/c` eigenvalues of the
 time-and-band limiting operator exceed `c`.
 
@@ -3661,6 +3730,37 @@ theorem exists_hilbertBasis_prolateSplit (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   · intro j
     rw [HilbertBasis.coe_mkOfOrthogonalEqBot]
     exact hgmem j
+
+/-- A real-valued (star-fixed) orthonormal basis of `V = prolateEigenspaceSup T W c`.
+
+`V` is closed under complex conjugation (`star_mem_prolateEigenspaceSup`), so it is the
+complexification of its real form `V_ℝ = {v ∈ V | star v = v}`. A real orthonormal basis of `V_ℝ` is
+a complex orthonormal basis of `V` whose members are star-fixed. This is the `ℂ/ℝ` bridge the
+achievability path needs: it lets prolate eigenfunctions be chosen real-valued.
+
+This exports star-fixed elements of `E = Lp ℂ 2 volume` (their a.e. representative is real-valued);
+turning them into the honest `ℝ → ℝ` matched-filter test functions the `ContAwgnCode` consumer wants
+(with `[0,T]` support / band-limit) is a further step (`Q_T ψᵢ / √μᵢ`), not established here.
+
+Left open. The construction is genuine plumbing (not a wall), but a multi-step one; three inputs are
+missing from Mathlib and in-tree (loogle-confirmed: no `Complexification` / conjugation-fixed real
+inner-product-space orthonormal-basis machinery under `Analysis.InnerProductSpace`, and no
+`⟪star x, star y⟫ = conj ⟪x, y⟫` on the manual `Lp ℂ 2 volume` star algebra):
+
+1. the inner–star bridge `⟪star x, star y⟫ = conj ⟪x, y⟫`, from `Lp.coeFn_star` + the L² inner as
+   `∫ conj x * y`, needed to make `⟪u, u'⟫` real for star-fixed `u, u'`;
+2. the real form `V_ℝ` as an `ℝ`-subspace with `stdOrthonormalBasis ℝ ↥V_ℝ`, its members shown
+   `ℂ`-orthonormal (via 1) and `ℂ`-spanning `V` (via `v = (v + star v)/2 + i·(v − star v)/(2i)`);
+3. the dimension bridge `finrank ℝ V_ℝ = finrank ℂ V = prolateCount T W c`, to land the index on
+   `Fin (prolateCount T W c)` — the delicate step (real dimension of the real form equals the
+   complex dimension of `V`).
+
+@residual(plan:shannon-hartley-phase2-spectral-plan) -/
+theorem exists_real_orthonormalBasis_prolateEigenspaceSup (T W : ℝ) {c : ℝ} (hc : 0 < c) :
+    ∃ u : Fin (prolateCount T W c) → E,
+      Orthonormal ℂ u ∧ (∀ i, star (u i) = u i) ∧
+      Submodule.span ℂ (Set.range u) = prolateEigenspaceSup T W c := by
+  sorry
 
 /-- **Upper half of the eigenvalue count concentration.** With `D := 2 + log(1 + 2WT)`, the number
 of eigenvalues of `A` exceeding `c` is at most `2WT + D/c`, for every free threshold `0 < c`.
