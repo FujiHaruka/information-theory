@@ -2079,7 +2079,8 @@ Distinct members sit at distance `√2`, so the open balls of radius `1/2` aroun
 disjoint, and a separable space admits only countably many pairwise-disjoint nonempty open sets
 (`Pairwise.countable_of_isOpen_disjoint`). Mathlib has no such lemma (loogle `Orthonormal, Countable`
 = `Found 0`, 2026-07-17), so it is built here; it is what lets `tsum_inner_timeBandLimitingOp_eq`
-*derive* the countability its Tonelli step needs instead of assuming it. -/
+*derive* the countability its Tonelli step needs instead of assuming it.
+@audit:ok -/
 theorem orthonormal_countable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
     [TopologicalSpace.SeparableSpace H] {ι : Type*} {v : ι → H} (hv : Orthonormal ℂ v) :
     Countable ι := by
@@ -2138,7 +2139,8 @@ just the `≤` half and overcounts by `1/c`; the exactness buys nothing there. D
 strictly insufficient: a spectrum with `∑ λₙ = 2WT` and every `λₙ ≤ c` has `#{λₙ > c} = 0`, so no
 lower bound on the count follows from the first moment alone. Splitting the sum gives
 `#{λₙ > c} ≥ 2WT − ∑_{λₙ ≤ c} λₙ`, whose tail term is controlled only by the *second* moment
-`∑ λₙ(1 − λₙ) = tr A − tr A²`. That second moment — not this identity — remains the blocker. -/
+`∑ λₙ(1 − λₙ) = tr A − tr A²`. That second moment — not this identity — remains the blocker.
+@audit:ok -/
 theorem tsum_inner_timeBandLimitingOp_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     {ι : Type*} (b : HilbertBasis ι ℂ E) :
     ∑' i, (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re = 2 * W * T := by
@@ -2188,7 +2190,8 @@ theorem tsum_inner_timeBandLimitingOp_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
 
 /-- Non-vacuity of `tsum_inner_timeBandLimitingOp_eq`, machine-checked rather than asserted: a
 Hilbert basis of `L²(ℝ;ℂ)` exists (`exists_hilbertBasis`), so the trace identity is a statement
-about a real object and not an empty quantification over an uninhabited hypothesis. -/
+about a real object and not an empty quantification over an uninhabited hypothesis.
+@audit:ok -/
 theorem exists_hilbertBasis_tsum_inner_timeBandLimitingOp_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
     ∃ (w : Set E) (b : HilbertBasis w ℂ E),
       ∑' i, (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re = 2 * W * T := by
@@ -2303,7 +2306,16 @@ further pieces, neither of which is the `wall:nyquist-2w-dof` concentration:
    function rather than as a list.
 
 Both are plumbing onto assets that exist, not a missing theory, hence `plan:` and not `wall:`.
-@residual(plan:shannon-hartley-phase2-spectral) -/
+
+Audited 2026-07-17 (independent): the `plan:` classification stands. The three named assets were
+confirmed present rather than taken on trust (`Spectrum.lean:443`, `l2Space.lean:528`,
+`finite_dimensional_eigenspace`), and the multiplicity bridge was checked *not* to need the
+Landau-Pollak-Slepian concentration: it is the qualitative identity `#{i | μᵢ > c} = prolateCount`
+for an eigenbasis plus equality of tsums for two nonnegative families with the same distribution
+function (Mathlib's layer cake `lintegral_eq_lintegral_meas_lt` serves), all of which is
+`c`-by-`c` structure for a compact positive operator, not the asymptotics in `WT` that the wall
+names. `plan:` asserts closability, not cheapness — the eigenbasis gluing is real work.
+@residual(plan:shannon-hartley-phase2-spectral-plan) -/
 theorem tsum_prolateEigenvalues_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
     ∑' n, prolateEigenvalues T W n = 2 * W * T := by
   sorry
