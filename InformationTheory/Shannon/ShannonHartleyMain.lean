@@ -1,5 +1,6 @@
 import InformationTheory.Shannon.TimeBandLimiting
 import InformationTheory.Shannon.LpPointwise
+import InformationTheory.Shannon.ShannonHartleyPreequalizer
 import InformationTheory.Meta.EntryPoint
 
 /-!
@@ -467,6 +468,237 @@ theorem exists_crossMap_lower_bound (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   have hconc := le_norm_timeLimitProj_sq_of_mem T W c hc hwV
   rw [hnorm] at hconc
   exact hconc
+
+/-! ### L7 — assembly: lifting a discrete AWGN code to a continuous-time code
+
+Given a discrete `AwgnCode` on `k = prolateCount T W c` observations at per-observation power
+`c·T·P/k`, we synthesize a `ContAwgnCode` whose observations reproduce the discrete codewords
+exactly, transport the error probability, and read off a lower bound on `contAwgnMaxMessages`
+via `le_csSup`. The three foundational leaves feeding it are: `memLp_sum_smul` (`L²`-membership of a
+finite real combination of the band-limited encoders), `isBandlimited_sum_smul` (band-limitedness
+of that combination), and `integral_sum_smul_sq_eq` (its whole-line energy is the coefficient
+`ℓ²`-norm). -/
+
+/-- A finite real linear combination of `L²` functions is again `L²`. -/
+private theorem memLp_sum_smul {k : ℕ} (b : Fin k → ℝ) (h : Fin k → (ℝ → ℝ))
+    (h_memLp : ∀ j, MemLp (h j) 2 volume) :
+    MemLp (fun t => ∑ j, b j * h j t) 2 volume :=
+  memLp_finsetSum Finset.univ (fun j (_ : j ∈ Finset.univ) => (h_memLp j).const_mul (b j))
+
+/-- A finite real linear combination of band-limited functions is band-limited to the same band. -/
+private theorem isBandlimited_sum_smul {k : ℕ} {W : ℝ} (b : Fin k → ℝ) (h : Fin k → (ℝ → ℝ))
+    (h_bl : ∀ j, IsBandlimited (h j) W) :
+    IsBandlimited (fun t => ∑ j, b j * h j t) W := by
+  classical
+  choose hf hvanish using h_bl
+  set v : E := ∑ j, (b j : ℂ) • (hf j).toLp (fun t => ((h j t : ℝ) : ℂ)) with hv
+  -- Each summand's `Lp` class lies in `bandLimitSubspace W`, hence so does `v`.
+  have hmemj : ∀ j, ((hf j).toLp (fun t => ((h j t : ℝ) : ℂ))) ∈ bandLimitSubspace W := by
+    intro j
+    rw [bandLimitSubspace, Submodule.mem_comap]
+    exact hvanish j
+  have hvV : v ∈ bandLimitSubspace W :=
+    Submodule.sum_mem _ (fun j _ => Submodule.smul_mem _ _ (hmemj j))
+  -- `v` complexifies to the real combination a.e.
+  have hvc : (⇑v : ℝ → ℂ) =ᵐ[volume] (fun t => ∑ j, (b j : ℂ) * ((h j t : ℝ) : ℂ)) := by
+    have h1 := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ
+      (fun j => (b j : ℂ) • (hf j).toLp (fun t => ((h j t : ℝ) : ℂ)))
+    have h2 : ∀ j, ⇑((b j : ℂ) • (hf j).toLp (fun t => ((h j t : ℝ) : ℂ))) =ᵐ[volume]
+        (b j : ℂ) • (⇑((hf j).toLp (fun t => ((h j t : ℝ) : ℂ))) : ℝ → ℂ) :=
+      fun j => Lp.coeFn_smul _ _
+    have h3 : ∀ j, (⇑((hf j).toLp (fun t => ((h j t : ℝ) : ℂ))) : ℝ → ℂ)
+        =ᵐ[volume] (fun t => ((h j t : ℝ) : ℂ)) := fun j => (hf j).coeFn_toLp
+    rw [hv]
+    filter_upwards [h1, ae_all_iff.mpr h2, ae_all_iff.mpr h3] with t h1t h2t h3t
+    rw [h1t]
+    refine Finset.sum_congr rfl (fun j _ => ?_)
+    rw [h2t j, Pi.smul_apply, smul_eq_mul, h3t j]
+  refine isBandlimited_of_bandLimitSubspace_ae hvV ?_
+  refine Filter.EventuallyEq.trans ?_ hvc.symm
+  filter_upwards with t
+  rw [Complex.ofReal_sum]
+  exact Finset.sum_congr rfl (fun j _ => by rw [Complex.ofReal_mul])
+
+/-- The whole-line energy of a finite combination of a pointwise-orthonormal `L²` family is the
+`ℓ²`-norm of the coefficient vector. -/
+private theorem integral_sum_smul_sq_eq {k : ℕ} (b : Fin k → ℝ) (h : Fin k → (ℝ → ℝ))
+    (h_memLp : ∀ j, MemLp (h j) 2 volume)
+    (h_ortho : ∀ i j, (∫ t, h i t * h j t) = if i = j then (1 : ℝ) else 0) :
+    (∫ t, (∑ j, b j * h j t) ^ 2) = ∑ j, b j ^ 2 := by
+  have hInt : ∀ j l, Integrable (fun t => (b j * h j t) * (b l * h l t)) volume := by
+    intro j l
+    exact ((h_memLp j).const_mul (b j)).integrable_mul ((h_memLp l).const_mul (b l))
+  calc (∫ t, (∑ j, b j * h j t) ^ 2)
+      = ∫ t, ∑ j, ∑ l, (b j * h j t) * (b l * h l t) := by
+        refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+        show (∑ j, b j * h j t) ^ 2 = ∑ j, ∑ l, (b j * h j t) * (b l * h l t)
+        rw [sq, Finset.sum_mul_sum]
+    _ = ∑ j, ∑ l, ∫ t, (b j * h j t) * (b l * h l t) := by
+        rw [integral_finsetSum Finset.univ
+          (fun j _ => integrable_finsetSum Finset.univ (fun l _ => hInt j l))]
+        exact Finset.sum_congr rfl
+          (fun j _ => integral_finsetSum Finset.univ (fun l _ => hInt j l))
+    _ = ∑ j, ∑ l, b j * b l * (if j = l then (1 : ℝ) else 0) := by
+        refine Finset.sum_congr rfl (fun j _ => Finset.sum_congr rfl (fun l _ => ?_))
+        rw [show (fun t => (b j * h j t) * (b l * h l t))
+              = (fun t => (b j * b l) * (h j t * h l t)) from by funext t; ring]
+        rw [integral_const_mul, h_ortho j l]
+    _ = ∑ j, b j ^ 2 := by
+        refine Finset.sum_congr rfl (fun j _ => ?_)
+        simp_rw [mul_ite, mul_one, mul_zero]
+        rw [Finset.sum_ite_eq Finset.univ j (fun l => b j * b l)]
+        simp [sq]
+
+/-- **L7 — a discrete AWGN code on `prolateCount T W c` observations lifts to a continuous-time
+code, giving a lower bound on `contAwgnMaxMessages`.**
+
+Given a discrete `AwgnCode` on `k = prolateCount T W c` observations at per-observation power
+`c·T·P/k` whose every message decodes with error `< ε`, the receiver cross-map `A` of
+`exists_crossMap_lower_bound` (bounded below by `√c`) is invertible with norm control
+(`exists_preequalizer`), so each discrete codeword `xₘ` has a band-limited pre-image `bₘ`. The
+signals `∑ⱼ (bₘ)ⱼ hⱼ` are then band-limited codewords of a `ContAwgnCode` whose observations equal
+`xₘ` exactly; the error probability transports unchanged, and `le_csSup` (via the wall-free
+`contAwgnMaxMessages_bddAbove`) turns the discrete message count into the lower bound. -/
+theorem contAwgnMaxMessages_ge_of_awgnCode
+    (T W N₀ P : ℝ) (hT : 0 < T) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
+    {c : ℝ} (hc0 : 0 < c) (hc1 : c < 1)
+    {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε < 1)
+    (hkpos : 0 < prolateCount T W c)
+    {M : ℕ}
+    (d : AWGN.AwgnCode M (prolateCount T W c) (c * T * P / (prolateCount T W c : ℝ)))
+    (hd : ∀ m, (d.toCode.errorProbAt
+          (AWGN.awgnChannel (N₀ / 2).toNNReal (AWGN.isAwgnChannelMeasurable _)) m).toReal < ε) :
+    M ≤ contAwgnMaxMessages T W N₀ P ε := by
+  classical
+  let k := prolateCount T W c
+  obtain ⟨h, φ, h_memLp, h_bl, h_ortho, φ_supp, φ_memLp, φ_ortho, hlb⟩ :=
+    exists_crossMap_lower_bound T W hc0
+  -- The receiver cross-map as a linear endomorphism of `EuclideanSpace ℝ (Fin k)`.
+  have hIntprod : ∀ (v : EuclideanSpace ℝ (Fin k)) (i : Fin k),
+      Integrable (fun t => (∑ j, v j * h j t) * φ i t) volume :=
+    fun v i => (memLp_sum_smul (fun j => v j) h h_memLp).integrable_mul (φ_memLp i)
+  let A : EuclideanSpace ℝ (Fin k) →ₗ[ℝ] EuclideanSpace ℝ (Fin k) :=
+    { toFun := fun v => WithLp.toLp 2 (fun i => ∫ t, (∑ j, v j * h j t) * φ i t)
+      map_add' := by
+        intro v w
+        ext i
+        show (∫ t, (∑ j, (v + w) j * h j t) * φ i t)
+            = (∫ t, (∑ j, v j * h j t) * φ i t) + (∫ t, (∑ j, w j * h j t) * φ i t)
+        rw [← integral_add (hIntprod v i) (hIntprod w i)]
+        refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+        simp only [PiLp.add_apply]
+        rw [← add_mul, ← Finset.sum_add_distrib]
+        exact congrArg (· * φ i t) (Finset.sum_congr rfl (fun j _ => by ring))
+      map_smul' := by
+        intro a v
+        ext i
+        show (∫ t, (∑ j, (a • v) j * h j t) * φ i t)
+            = a • ∫ t, (∑ j, v j * h j t) * φ i t
+        rw [smul_eq_mul, ← integral_const_mul]
+        refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+        simp only [PiLp.smul_apply, smul_eq_mul]
+        rw [show (∑ x, a * v x * h x t) = a * (∑ x, v x * h x t) from by
+          rw [Finset.mul_sum]; exact Finset.sum_congr rfl (fun x _ => by ring)]
+        ring }
+  have hAcomp : ∀ (v : EuclideanSpace ℝ (Fin k)) (i : Fin k),
+      A v i = ∫ t, (∑ j, v j * h j t) * φ i t := fun v i => rfl
+  have hbdd : ∀ v : EuclideanSpace ℝ (Fin k), c * ‖v‖ ^ 2 ≤ ‖A v‖ ^ 2 := by
+    intro v
+    rw [EuclideanSpace.real_norm_sq_eq v, EuclideanSpace.real_norm_sq_eq (A v)]
+    simp_rw [hAcomp]
+    exact hlb (fun j => v j)
+  -- The discrete codewords as `EuclideanSpace` targets.
+  let xM : Fin M → EuclideanSpace ℝ (Fin k) := fun m => WithLp.toLp 2 (fun i => d.encoder m i)
+  have hxMcomp : ∀ m i, xM m i = d.encoder m i := fun m i => rfl
+  choose bpre hAb hbnorm using fun m =>
+    ShannonHartleyPreequalizer.exists_preequalizer hc0 A hbdd (xM m)
+  -- Energy bound: `‖bpre m‖² ≤ T·P`.
+  have hkR : (0 : ℝ) < ((prolateCount T W c : ℕ) : ℝ) := by exact_mod_cast hkpos
+  have hxMenergy : ∀ m, ‖xM m‖ ^ 2 ≤ c * T * P := by
+    intro m
+    rw [EuclideanSpace.real_norm_sq_eq (xM m)]
+    simp_rw [hxMcomp]
+    have hpc := d.power_constraint m
+    rwa [mul_div_cancel₀ _ (ne_of_gt hkR)] at hpc
+  have hbenergy : ∀ m, ‖bpre m‖ ^ 2 ≤ T * P := by
+    intro m
+    have hcne : c ≠ 0 := hc0.ne'
+    have h1 := hbnorm m
+    have h2 : (1 / c) * ‖xM m‖ ^ 2 ≤ (1 / c) * (c * T * P) :=
+      mul_le_mul_of_nonneg_left (hxMenergy m) (by positivity)
+    have heq : (1 / c) * (c * T * P) = T * P := by field_simp
+    rw [heq] at h2
+    linarith [h1, h2]
+  -- The continuous-time code.
+  let cc : ContAwgnCode T W P M :=
+    { encoder := fun m t => ∑ j, bpre m j * h j t
+      encoder_memLp := fun m => memLp_sum_smul (fun j => bpre m j) h h_memLp
+      encoder_bandlimited := fun m => isBandlimited_sum_smul (fun j => bpre m j) h h_bl
+      encoder_power := by
+        intro m
+        show (∫ t, (∑ j, bpre m j * h j t) ^ 2) ≤ T * P
+        rw [integral_sum_smul_sq_eq (fun j => bpre m j) h h_memLp h_ortho,
+          ← EuclideanSpace.real_norm_sq_eq (bpre m)]
+        exact hbenergy m
+      k := k
+      testFn := φ
+      testFn_memLp := φ_memLp
+      testFn_support := φ_supp
+      testFn_orthonormal := φ_ortho
+      decoder := d.decoder
+      decoder_meas := d.decoder_meas }
+  -- Observation identity: the continuous observations reproduce the discrete codewords.
+  have hobs : ∀ m i, cc.observation m i = d.encoder m i := by
+    intro m i
+    change (∫ t, (∑ j, bpre m j * h j t) * φ i t) = d.encoder m i
+    rw [← hAcomp (bpre m) i, hAb m, hxMcomp]
+  -- Error transport: the continuous error probability is the discrete one.
+  have herr : ∀ m, cc.errorProbAt N₀ m
+      = d.toCode.errorProbAt (AWGN.awgnChannel (N₀ / 2).toNNReal
+          (AWGN.isAwgnChannelMeasurable _)) m := by
+    intro m
+    have hfam : (fun i : Fin cc.k =>
+          ProbabilityTheory.gaussianReal (cc.observation m i) (N₀ / 2).toNNReal)
+        = (fun i => (AWGN.awgnChannel (N₀ / 2).toNNReal (AWGN.isAwgnChannelMeasurable _))
+            (d.toCode.encoder m i)) := by
+      funext i
+      rw [hobs m i]
+      rfl
+    have hset : {y : Fin cc.k → ℝ | cc.decoder y ≠ m} = d.toCode.errorEvent m := rfl
+    unfold ContAwgnCode.errorProbAt InformationTheory.Shannon.ChannelCoding.Code.errorProbAt
+    rw [hfam, hset]
+  -- Average error ≤ ε.
+  have hne : ∀ m, cc.errorProbAt N₀ m ≠ ⊤ := by
+    intro m
+    unfold ContAwgnCode.errorProbAt
+    exact measure_ne_top _ _
+  have haverage : (cc.averageError N₀).toReal ≤ ε := by
+    rcases Nat.eq_zero_or_pos M with hM0 | hM0
+    · have hz : cc.averageError N₀ = 0 := by
+        unfold ContAwgnCode.averageError
+        rw [if_pos hM0]
+      rw [hz, ENNReal.toReal_zero]
+      exact hε0.le
+    · have key : (cc.averageError N₀).toReal = (1 / M : ℝ) * ∑ m, (cc.errorProbAt N₀ m).toReal := by
+        unfold ContAwgnCode.averageError
+        rw [if_neg hM0.ne', ENNReal.toReal_mul, ENNReal.toReal_inv,
+          ENNReal.toReal_sum (fun m _ => hne m)]
+        simp [one_div]
+      rw [key]
+      have hterm : ∀ m, (cc.errorProbAt N₀ m).toReal ≤ ε := fun m => by
+        rw [herr m]; exact (hd m).le
+      have hsum : ∑ m, (cc.errorProbAt N₀ m).toReal ≤ (M : ℝ) * ε := by
+        calc ∑ m, (cc.errorProbAt N₀ m).toReal
+            ≤ ∑ _m : Fin M, ε := Finset.sum_le_sum (fun m _ => hterm m)
+          _ = (M : ℝ) * ε := by
+              rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+      have hMpos : (0 : ℝ) < M := by exact_mod_cast hM0
+      have hstep : (1 / M : ℝ) * ∑ m, (cc.errorProbAt N₀ m).toReal ≤ (1 / M) * ((M : ℝ) * ε) :=
+        mul_le_mul_of_nonneg_left hsum (by positivity)
+      have hfin : (1 / M : ℝ) * ((M : ℝ) * ε) = ε := by
+        field_simp
+      linarith [hstep, hfin.le, hfin.ge]
+  exact le_csSup (contAwgnMaxMessages_bddAbove T W N₀ P ε hT hW hN₀ hP hε0 hε1) ⟨cc, haverage⟩
 
 end Achievability
 
