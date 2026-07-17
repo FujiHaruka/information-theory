@@ -234,7 +234,8 @@ docstring は反証の機構（窓外に無限のエネルギーを置ける / s
 | Mathlib に trace-class / Schatten / Hilbert-Schmidt **作用素論は不在** | machine | `grep -n "FiniteDimensional" .lake/packages/mathlib/Mathlib/Analysis/InnerProductSpace/{Trace,SingularValues}.lean` → 両者とも有限次元前提 | `7c43417a` | `find Mathlib -iname "*Schatten*" -o -iname "*TraceClass*"` = 0 hit |
 | Mathlib に**コンパクト自己共役の無限次元スペクトル定理は存在** | machine | `grep -n "orthogonalComplement_iSup_eigenspaces_eq_bot" .lake/packages/mathlib/Mathlib/Analysis/InnerProductSpace/Spectrum.lean` → `:443` | `7c43417a` | 「固有空間の iSup の直交補 = `⊥`」形。`:464` `finite_dimensional_eigenspace` は本 family が既に消費中 |
 | crude trace bound `c·#{λ>c} ≤ 2WT` は**壁非依存**で closure 可能 | machine | `#print axioms InformationTheory.Shannon.TimeBandLimiting.prolateCount_mul_le` → sorryAx-free | `7c43417a` | Bessel + 既存 `bandLimitProj_apply_ae`。有限直交族しか要らず無限次元 trace 理論を経由しない |
-| **tight LPS 集中は依然未証明**（本 slug の本体） | human-judgment | Bessel は片方向 / Markov は `1/c` 倍の過大計上 | `7c43417a` | **独立監査が実装者の「壁でない」verdict を refute**。次 atom (E-trace) が再判別する |
+| **厳密 trace 等式** `∑' i, ⟪A bᵢ, bᵢ⟫ = 2WT`（任意の `HilbertBasis b`）は closure 済 | machine | `#print axioms InformationTheory.Shannon.TimeBandLimiting.tsum_inner_timeBandLimitingOp_eq` → sorryAx-free + `lake env lean InformationTheory/Shannon/TimeBandLimiting.lean` | `21981fc8` | leg 15 (E-trace)。**Parseval は任意の完全基底で効くのでスペクトル定理すら不要だった** = 旧壁論拠の二重の誤り |
+| **tight LPS 集中は依然未証明**（本 slug の本体）。**残渣は第 2 モーメント `tr A − tr A²` に絞られた** | human-judgment | Bessel は片方向 / Markov は `1/c` 倍の過大計上 / 第 1 モーメントは下界を与えない | `21981fc8` | leg 15 で **2 度独立に確認**: E-atom では監査が実装者の「壁でない」verdict を refute、E-trace では監査が**反例クラスを自作**して scope 主張を CONFIRM（`∑λₙ=2WT` かつ全 `λₙ ≤ c` な平坦スペクトルは `#{λ>c}=0`）|
 
 **教訓 1 — `cause:weaker-relative`（CLAUDE.md「textbook-object strength diff」の実発火）**: 実装者は
 gateway atom が通ったことから「`wall:nyquist-2w-dof` は genuine でない・`cause:single-route`」と結論した。
@@ -254,3 +255,18 @@ gateway atom が通ったことから「`wall:nyquist-2w-dof` は genuine でな
 0 sorry / 署名）は**全部正確**で、機械が検査しなかった 3 項目（非空虚性 probe の存在 / tightness witness /
 壁 verdict）が**すべてドリフト**した。うち唯一 `rg` でなく判断を要した壁 verdict が**最も遠くまでドリフト**した。
 probe と witness は監査が自分で書いてコンパイルし直し、主張自体は CONFIRMED（結論は正しく、根拠が tree に無かった）。
+
+**教訓 3 — drift パターンは法則ではない（leg 15 E-trace = 初の negative data point）**: §SELF-REPORT-DRIFT は
+「判断を要する主張ほど遠くドリフトする」を 3 度観測してきたが、E-trace の実装者は**自分の結果に対して
+第 2 の問い**（「Parseval が届く等式は、壁が名指す等式か」）**を自分で立て**、scope 主張・未検証行数見積の
+フラグ立て・probe の tree への landing をすべて自発的に行った。独立監査は**反例クラスを自作して再導出**した上で
+CONFIRM した。**差分は brief 側にある**: E-atom の brief は「壁か否かを判別せよ」と問い、E-trace の brief は
+**先行 leg の失敗形を名指しして「同じ誤りを繰り返すな・自分の結果に第 2 の問いを立てよ」と明示**した。
+⟹ drift は実装者の属性ではなく**問いの設計の関数**。brief に失敗形を逐語で埋め込むのは有効な介入。
+
+**教訓 4 — `plan:<slug>` の slug は機械解決されない（leg 15 監査の発見）**: E-trace は retreat を
+`@residual(plan:shannon-hartley-phase2-spectral)` とタグ付けしたが、実在する plan は
+`...-phase2-spectral-plan.md`。**`rg "plan:shannon-hartley-phase2-spectral-plan"`（= plan 自身が実装者に
+書けと指示している逐語文字列）はこの residual を取りこぼす** — コードタグが SoT であるのに、その grep が
+答えられない。既存 slug は両規約が混在（`epi-wall-reattack-plan` vs `wz-binning-covering`）。
+`plan:<slug>` を `docs/**/<slug>.md` に解決する linter 規則があれば沈黙の grep miss が WARN になる。

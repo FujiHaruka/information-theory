@@ -24,9 +24,13 @@
 - [ ] Leg E — tight concentration `prolate_eigenvalue_count`（LPS）📋 **[IN PROGRESS。`ge` と `eq` の両方がここ待ち]**
   - [x] **E-atom（leg 15）**: crude trace bound `c·#{λ>c} ≤ 2WT` = **壁非依存で closure**（`69152fd9` / 監査 `7c43417a`）。
         だが **tight LPS は無傷**（監査が実装者の「壁でない」verdict を refute、`cause:weaker-relative`）。
-  - [ ] **E-trace（NEXT）**: 厳密 trace 等式 `∑ₙ λₙ = 2WT`（Bessel → **Parseval** 昇格）。
-        **Mathlib に無限次元スペクトル定理が存在すると判明**（`Spectrum.lean:443`）= 旧壁論拠は誤り。
-  - [ ] **E-sharp**: 第 2 モーメント `∑ λₙ(1-λₙ) = O(log WT)`（Landau-Widom）← **壁の真の所在の候補**
+  - [x] **E-trace（leg 15）**: 厳密 trace 等式 **`∑' i, ⟪A bᵢ, bᵢ⟫ = 2WT`（任意の `HilbertBasis b`）= closure**
+        （`9f1129e1` / 監査 all OK `21981fc8`、sorryAx-free）。Bessel → **Parseval** 昇格。
+        **スペクトル定理すら不要**だった（Parseval は任意の完全基底で効く）= 旧壁論拠の二重の誤り。
+        残 = eigen 特殊化 `∑' n, prolateEigenvalues T W n = 2WT`（`sorry`、**`@residual(plan:...)` = 壁ではない**、
+        監査が独立に「多重度 bridge は LPS 集中を要さない」と確認）。
+  - [ ] **E-sharp（NEXT）**: 第 2 モーメント `∑ λₙ(1-λₙ) = tr A − tr A² = O(log WT)`（Landau-Widom）
+        ← **壁の所在はここに絞り込まれた**（監査が機械確認）
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
 
 ---
@@ -410,8 +414,15 @@ Leg E の土台として保持する。
   **`≥` 定理へ `BddAbove` を hyp 化しない**。
 - **Leg D' の詰まりは `wall:nyquist-2w-dof` へ退避しない** — この route は壁を経由しない（詰まり = plumbing）。
   退避先は `@residual(plan:shannon-hartley-phase2-spectral-plan)`。
-- **Leg E の詰まりのみ `wall:nyquist-2w-dof`**（同一 family 集約、compound 化しない）。**新 slug は**
-  loogle-0 + two-stage conclusion-shape 検索 + template lemma 行数見積 + **in-project 先行 grep** が揃った時のみ。
+- **⚠️ Leg E 節の sorry が自動的に壁タグなのではない**（leg 15 監査の指摘 — 旧文面「Leg E の詰まりのみ
+  `wall:nyquist-2w-dof`」は cold session に「Leg E 節の sorry は全部壁タグ」と誤読させうる）。**正しい線引き**:
+  `wall:nyquist-2w-dof` を負うのは **tight LPS 集中そのもの**（`#{λ>1/2}` の `⌊2WT⌋ + O(log WT)` 漸近、
+  = 現時点では **第 2 モーメント `tr A − tr A²`**）**のみ**。同じ Leg E 節でも、
+  **固定 `c` の構造的事実 / 多重度 bridge / 基底 gluing / L² plumbing は壁ではない**
+  → `@residual(plan:shannon-hartley-phase2-spectral-plan)`（実例: `tsum_prolateEigenvalues_eq`、leg 15、監査確認）。
+  **判別軸**: 壁は `WT → ∞` の**漸近**（量化子が違う）。固定 `c` で閉じる話は plumbing。
+  壁タグは同一 family へ集約し compound 化しない。**新 slug は** loogle-0 + two-stage conclusion-shape 検索 +
+  template lemma 行数見積 + **in-project 先行 grep** が揃った時のみ。
 - **def body に sorry 不可**: `prolateEigenvalues` は real def。`ContAwgnCode` の field も同様
   （def-fix は field の**型**を直す = sorry を置く場所ではない）。
 - **散文に「壁である/ない」をキャッシュしない**。コードの `@residual` が SoT、高コストな事実は
