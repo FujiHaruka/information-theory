@@ -2320,6 +2320,318 @@ theorem tsum_prolateEigenvalues_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
     ∑' n, prolateEigenvalues T W n = 2 * W * T := by
   sorry
 
+/-! ### The window deficit `tr A − ∫∫_[0,T]² |k|²` -/
+
+/-- The squared reproducing kernel as a function of the time offset `u = t − s` alone:
+`k(u)² = (2W sincN(2Wu))² = sin(2πWu)²/(π²u²)`. `bandKernel` depends on `(t, s)` only through
+`t − s`, so this loses nothing (`bandKernel_norm_sq_eq`) while making the evenness and the total
+energy `∫_ℝ k² = 2W` statable as one-variable facts. -/
+noncomputable def bandKernelSq (W u : ℝ) : ℝ := ‖bandKernel W 0 u‖ ^ 2
+
+theorem bandKernelSq_apply (W u : ℝ) :
+    bandKernelSq W u = (2 * W * NormalizedSinc.sincN (2 * W * u)) ^ 2 := by
+  simp only [bandKernelSq, bandKernel, Complex.norm_real, Real.norm_eq_abs, sq_abs]
+  rw [show 2 * W * (0 - u) = -(2 * W * u) by ring, NormalizedSinc.sincN_neg]
+
+theorem bandKernel_norm_sq_eq (W t s : ℝ) : ‖bandKernel W t s‖ ^ 2 = bandKernelSq W (t - s) := by
+  rw [bandKernelSq_apply]
+  simp only [bandKernel, Complex.norm_real, Real.norm_eq_abs, sq_abs]
+
+theorem bandKernelSq_nonneg (W u : ℝ) : 0 ≤ bandKernelSq W u := by
+  simp only [bandKernelSq]
+  positivity
+
+theorem bandKernelSq_neg (W u : ℝ) : bandKernelSq W (-u) = bandKernelSq W u := by
+  rw [bandKernelSq_apply, bandKernelSq_apply,
+    show 2 * W * -u = -(2 * W * u) by ring, NormalizedSinc.sincN_neg]
+
+theorem bandKernelSq_integrable (W : ℝ) : Integrable (bandKernelSq W) volume :=
+  (memLp_two_iff_integrable_sq_norm (bandKernel_memLp W 0).1).mp (bandKernel_memLp W 0)
+
+theorem bandKernelSq_integral (W : ℝ) (hW : 0 < W) : ∫ u, bandKernelSq W u = 2 * W := by
+  set k : E := bandKernelLp W 0 with hkdef
+  have hae : (k : ℝ → ℂ) =ᵐ[volume] bandKernel W 0 := (bandKernel_memLp W 0).coeFn_toLp
+  have hself : (inner ℂ k k : ℂ) = ((‖k‖ ^ 2 : ℝ) : ℂ) := by
+    rw [inner_self_eq_norm_sq_to_K]; norm_cast
+  have hint := inner_bandKernelLp W 0 k
+  have hcongr : (∫ s, bandKernel W 0 s * (k : ℝ → ℂ) s ∂volume)
+      = ∫ s, ((bandKernelSq W s : ℝ) : ℂ) ∂volume := by
+    refine integral_congr_ae ?_
+    filter_upwards [hae] with s hs
+    rw [hs]
+    simp only [bandKernelSq, bandKernel, Complex.norm_real, Real.norm_eq_abs, sq_abs]
+    push_cast
+    ring
+  rw [hcongr, integral_complex_ofReal, hself, bandKernelLp_norm_sq W 0 hW] at hint
+  exact_mod_cast hint.symm
+
+theorem bandKernelSq_le_inv_sq (W u : ℝ) (hW : 0 < W) (hu : u ≠ 0) :
+    bandKernelSq W u ≤ 1 / (Real.pi ^ 2 * u ^ 2) := by
+  have hx : 2 * W * u ≠ 0 := mul_ne_zero (by positivity) hu
+  have hpu : Real.pi * u ≠ 0 := mul_ne_zero Real.pi_ne_zero hu
+  -- `2W · sincN(2Wu) = sin(2πWu)/(πu)`: the gain cancels against the sinc denominator.
+  have hkey : 2 * W * (Real.sin (Real.pi * (2 * W * u)) / (Real.pi * (2 * W * u)))
+      = Real.sin (Real.pi * (2 * W * u)) / (Real.pi * u) := by
+    field_simp
+  have hs : Real.sin (Real.pi * (2 * W * u)) ^ 2 ≤ 1 := by
+    nlinarith [Real.neg_one_le_sin (Real.pi * (2 * W * u)),
+      Real.sin_le_one (Real.pi * (2 * W * u))]
+  have hden : (0 : ℝ) < Real.pi ^ 2 * u ^ 2 := by positivity
+  rw [bandKernelSq_apply, NormalizedSinc.sincN_of_ne_zero _ hx, hkey, div_pow, mul_pow]
+  gcongr
+
+/-- The one-sided energy tail `ψ(a) = ∫_{u>a} k(u)² du` of the reproducing kernel.
+
+This is the quantity the window deficit is built from: for `t` in `[0,T]`, the kernel energy that
+`[0,T]` fails to capture is exactly `ψ(t) + ψ(T−t)` (`setIntegral_bandKernelSq_window`). Two bounds
+control it, and their crossing at `a = 1/(2W)` is what produces the logarithm: `ψ(a) ≤ W`
+(`bandKernelTail_le_const`, from the total energy `2W`) and `ψ(a) ≤ 1/(π²a)`
+(`bandKernelTail_le_inv`, from `|sin| ≤ 1`). -/
+noncomputable def bandKernelTail (W a : ℝ) : ℝ := ∫ u in Set.Ioi a, bandKernelSq W u
+
+theorem bandKernelTail_nonneg (W a : ℝ) : 0 ≤ bandKernelTail W a :=
+  setIntegral_nonneg measurableSet_Ioi fun u _ => bandKernelSq_nonneg W u
+
+theorem bandKernelTail_antitone (W : ℝ) : Antitone (bandKernelTail W) := by
+  intro a b hab
+  exact setIntegral_mono_set (bandKernelSq_integrable W).integrableOn
+    (ae_of_all _ (bandKernelSq_nonneg W))
+    (HasSubset.Subset.eventuallyLE (Set.Ioi_subset_Ioi hab))
+
+theorem bandKernelTail_zero (W : ℝ) (hW : 0 < W) : bandKernelTail W 0 = W := by
+  have hsplit : (∫ u in Set.Iic (0 : ℝ), bandKernelSq W u)
+      + (∫ u in Set.Ioi (0 : ℝ), bandKernelSq W u) = ∫ u, bandKernelSq W u :=
+    intervalIntegral.integral_Iic_add_Ioi (bandKernelSq_integrable W).integrableOn
+      (bandKernelSq_integrable W).integrableOn
+  -- The two halves agree, because `k²` is even.
+  have hrefl : (∫ u in Set.Iic (0 : ℝ), bandKernelSq W u)
+      = ∫ u in Set.Ioi (0 : ℝ), bandKernelSq W u := by
+    have h := integral_comp_neg_Iic (0 : ℝ) (bandKernelSq W)
+    rw [neg_zero] at h
+    rw [← h]
+    exact setIntegral_congr_fun measurableSet_Iic fun x _ => (bandKernelSq_neg W x).symm
+  rw [bandKernelSq_integral W hW] at hsplit
+  rw [bandKernelTail]
+  linarith
+
+theorem bandKernelTail_le_inv (W a : ℝ) (hW : 0 < W) (ha : 0 < a) :
+    bandKernelTail W a ≤ 1 / (Real.pi ^ 2 * a) := by
+  have hrpow : IntegrableOn (fun t : ℝ => t ^ (-2 : ℝ)) (Set.Ioi a) volume :=
+    integrableOn_Ioi_rpow_of_lt (by norm_num) ha
+  have hpt : ∀ u : ℝ, 0 < u →
+      (1 / Real.pi ^ 2) * u ^ (-2 : ℝ) = 1 / (Real.pi ^ 2 * u ^ 2) := by
+    intro u hu
+    rw [show (-2 : ℝ) = -((2 : ℕ) : ℝ) by norm_num, Real.rpow_neg hu.le, Real.rpow_natCast]
+    field_simp
+  have hmaj : IntegrableOn (fun u : ℝ => 1 / (Real.pi ^ 2 * u ^ 2)) (Set.Ioi a) volume :=
+    IntegrableOn.congr_fun (hrpow.const_mul (1 / Real.pi ^ 2))
+      (fun u hu => hpt u (lt_trans ha hu)) measurableSet_Ioi
+  have hval : (∫ u in Set.Ioi a, (1 : ℝ) / (Real.pi ^ 2 * u ^ 2)) = 1 / (Real.pi ^ 2 * a) := by
+    have h1 : (∫ u in Set.Ioi a, (1 : ℝ) / (Real.pi ^ 2 * u ^ 2))
+        = (1 / Real.pi ^ 2) * ∫ u in Set.Ioi a, u ^ (-2 : ℝ) := by
+      rw [← integral_const_mul]
+      exact setIntegral_congr_fun measurableSet_Ioi fun u hu => (hpt u (lt_trans ha hu)).symm
+    rw [h1, integral_Ioi_rpow_of_lt (by norm_num) ha, show (-2 : ℝ) + 1 = -1 by norm_num,
+      Real.rpow_neg_one]
+    field_simp
+  rw [bandKernelTail, ← hval]
+  refine setIntegral_mono_on (bandKernelSq_integrable W).integrableOn hmaj measurableSet_Ioi ?_
+  exact fun u hu => bandKernelSq_le_inv_sq W u hW (ne_of_gt (lt_trans ha hu))
+
+theorem bandKernelTail_le_const (W a : ℝ) (hW : 0 < W) (ha : 0 ≤ a) : bandKernelTail W a ≤ W :=
+  (bandKernelTail_antitone W ha).trans_eq (bandKernelTail_zero W hW)
+
+theorem bandKernelTail_integrableOn (W T : ℝ) (hW : 0 < W) :
+    IntegrableOn (bandKernelTail W) (Set.Icc 0 T) volume := by
+  refine Measure.integrableOn_of_bounded (M := W)
+    (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
+    (bandKernelTail_antitone W).measurable.aestronglyMeasurable ?_
+  filter_upwards [ae_restrict_mem measurableSet_Icc] with t ht
+  rw [Real.norm_eq_abs, abs_of_nonneg (bandKernelTail_nonneg W t)]
+  exact bandKernelTail_le_const W t hW ht.1
+
+theorem setIntegral_bandKernelSq_window (W T t : ℝ) (hW : 0 < W) (hT : 0 ≤ T) :
+    ∫ s in Set.Icc (0 : ℝ) T, bandKernelSq W (t - s)
+      = 2 * W - bandKernelTail W t - bandKernelTail W (T - t) := by
+  have hf := bandKernelSq_integrable W
+  have hle : t - T ≤ t := by linarith
+  have ht' : bandKernelTail W t = ∫ u in Set.Ioi t, bandKernelSq W u := rfl
+  -- Change of variables `u = t − s`: the window `[0,T]` in `s` becomes `[t−T, t]` in `u`.
+  have hcov : (∫ s in Set.Icc (0 : ℝ) T, bandKernelSq W (t - s))
+      = ∫ u in Set.Ioc (t - T) t, bandKernelSq W u := by
+    rw [integral_Icc_eq_integral_Ioc, ← intervalIntegral.integral_of_le hT,
+      intervalIntegral.integral_comp_sub_left (bandKernelSq W) t, sub_zero,
+      intervalIntegral.integral_of_le hle]
+  -- The mass to the left of the window is the right tail at `T − t`, by evenness of `k²`.
+  have hleft : (∫ u in Set.Iic (t - T), bandKernelSq W u) = bandKernelTail W (T - t) := by
+    have h := integral_comp_neg_Iic (t - T) (bandKernelSq W)
+    rw [show -(t - T) = T - t by ring] at h
+    rw [bandKernelTail, ← h]
+    exact setIntegral_congr_fun measurableSet_Iic fun x _ => (bandKernelSq_neg W x).symm
+  -- Split `ℝ = (−∞, t−T] ⊍ (t−T, t] ⊍ (t, ∞)`.
+  have hsplit2 : (∫ u in Set.Ioc (t - T) t, bandKernelSq W u)
+      + (∫ u in Set.Ioi t, bandKernelSq W u) = ∫ u in Set.Ioi (t - T), bandKernelSq W u := by
+    rw [← setIntegral_union (Set.Ioc_disjoint_Ioi le_rfl) measurableSet_Ioi
+      hf.integrableOn hf.integrableOn, Set.Ioc_union_Ioi_eq_Ioi hle]
+  have hsplit1 : (∫ u in Set.Iic (t - T), bandKernelSq W u)
+      + (∫ u in Set.Ioi (t - T), bandKernelSq W u) = ∫ u, bandKernelSq W u :=
+    intervalIntegral.integral_Iic_add_Ioi hf.integrableOn hf.integrableOn
+  rw [bandKernelSq_integral W hW] at hsplit1
+  rw [hcov]
+  linarith
+
+theorem integral_bandKernelTail_le (W T : ℝ) (hW : 0 < W) (hT : 0 ≤ T) :
+    ∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W t
+      ≤ 1 / 2 + (1 / Real.pi ^ 2) * Real.log (1 + 2 * W * T) := by
+  have hpi : (0 : ℝ) < Real.pi ^ 2 := by positivity
+  have hlog : 0 ≤ Real.log (1 + 2 * W * T) := Real.log_nonneg (by nlinarith)
+  have hlognn : 0 ≤ (1 / Real.pi ^ 2) * Real.log (1 + 2 * W * T) := by positivity
+  have hψ := bandKernelTail_integrableOn W T hW
+  set a₀ : ℝ := 1 / (2 * W) with ha0def
+  have ha0 : (0 : ℝ) < a₀ := by rw [ha0def]; positivity
+  rcases le_or_gt T a₀ with hcase | hcase
+  · -- `2WT ≤ 1`: the flat bound `ψ ≤ W` alone already gives `∫₀ᵀ ψ ≤ WT ≤ 1/2`.
+    have hconstW : IntegrableOn (fun _ : ℝ => W) (Set.Icc (0 : ℝ) T) volume :=
+      integrableOn_const (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
+    have hb : (∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W t) ≤ ∫ _t in Set.Icc (0 : ℝ) T, W :=
+      setIntegral_mono_on hψ hconstW measurableSet_Icc
+        (fun t ht => bandKernelTail_le_const W t hW ht.1)
+    rw [setIntegral_const, Real.volume_real_Icc_of_le hT, sub_zero, smul_eq_mul] at hb
+    have hTW : T * W ≤ 1 / 2 := by
+      rw [ha0def, le_div_iff₀ (by positivity)] at hcase
+      linarith
+    linarith
+  · -- `2WT > 1`: split the window at `a₀ = 1/(2W)`, flat bound below, `1/(π²t)` above.
+    have hsub1 : IntegrableOn (bandKernelTail W) (Set.Ioc (0 : ℝ) a₀) volume :=
+      hψ.mono_set fun x hx => ⟨hx.1.le, le_trans hx.2 hcase.le⟩
+    have hsub2 : IntegrableOn (bandKernelTail W) (Set.Ioc a₀ T) volume :=
+      hψ.mono_set fun x hx => ⟨le_trans ha0.le hx.1.le, hx.2⟩
+    have hsplit : (∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W t)
+        = (∫ t in Set.Ioc (0 : ℝ) a₀, bandKernelTail W t)
+          + ∫ t in Set.Ioc a₀ T, bandKernelTail W t := by
+      rw [integral_Icc_eq_integral_Ioc,
+        ← setIntegral_union (Set.Ioc_disjoint_Ioc_of_le le_rfl) measurableSet_Ioc hsub1 hsub2,
+        Set.Ioc_union_Ioc_eq_Ioc ha0.le hcase.le]
+    -- Below `a₀`: total energy caps `ψ` by `W`, and `W · a₀ = 1/2`.
+    have hp1 : (∫ t in Set.Ioc (0 : ℝ) a₀, bandKernelTail W t) ≤ 1 / 2 := by
+      have hc : IntegrableOn (fun _ : ℝ => W) (Set.Ioc (0 : ℝ) a₀) volume :=
+        integrableOn_const (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top)
+      have hb := setIntegral_mono_on hsub1 hc measurableSet_Ioc
+        (fun t ht => bandKernelTail_le_const W t hW ht.1.le)
+      rw [setIntegral_const, Real.volume_real_Ioc_of_le ha0.le, sub_zero, smul_eq_mul] at hb
+      have : a₀ * W = 1 / 2 := by rw [ha0def]; field_simp
+      linarith
+    -- Above `a₀`: `|sin| ≤ 1` caps `ψ` by `1/(π²t)`, whose integral is the logarithm.
+    have hcont : ContinuousOn (fun t : ℝ => 1 / (Real.pi ^ 2 * t)) (Set.Icc a₀ T) := by
+      refine ContinuousOn.div continuousOn_const (by fun_prop) fun t ht => ?_
+      have ht0 : 0 < t := lt_of_lt_of_le ha0 ht.1
+      positivity
+    have hmaj : IntegrableOn (fun t : ℝ => 1 / (Real.pi ^ 2 * t)) (Set.Ioc a₀ T) volume :=
+      (hcont.integrableOn_compact isCompact_Icc).mono_set Set.Ioc_subset_Icc_self
+    have hval : (∫ t in Set.Ioc a₀ T, 1 / (Real.pi ^ 2 * t))
+        = (1 / Real.pi ^ 2) * Real.log (T / a₀) := by
+      rw [← intervalIntegral.integral_of_le hcase.le]
+      have hrw : ∀ t : ℝ, 1 / (Real.pi ^ 2 * t) = (1 / Real.pi ^ 2) * t⁻¹ := by
+        intro t; rw [one_div, mul_inv, one_div]
+      simp only [hrw]
+      rw [intervalIntegral.integral_const_mul, integral_inv_of_pos ha0 (lt_trans ha0 hcase)]
+    have hTa : T / a₀ = 2 * W * T := by
+      rw [ha0def]; field_simp
+    have hp2 : (∫ t in Set.Ioc a₀ T, bandKernelTail W t)
+        ≤ (1 / Real.pi ^ 2) * Real.log (1 + 2 * W * T) := by
+      have hb := setIntegral_mono_on hsub2 hmaj measurableSet_Ioc
+        (fun t ht => bandKernelTail_le_inv W t hW (lt_of_lt_of_le ha0 ht.1.le))
+      rw [hval, hTa] at hb
+      have hpos : (0 : ℝ) < 2 * W * T := by nlinarith
+      have hmono := Real.log_le_log hpos (by linarith : 2 * W * T ≤ 1 + 2 * W * T)
+      have hmul : (1 / Real.pi ^ 2) * Real.log (2 * W * T)
+          ≤ (1 / Real.pi ^ 2) * Real.log (1 + 2 * W * T) :=
+        mul_le_mul_of_nonneg_left hmono (by positivity)
+      linarith
+    linarith
+
+theorem bandKernel_window_deficit_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
+    2 * W * T - ∫ t in Set.Icc (0 : ℝ) T, ∫ s in Set.Icc (0 : ℝ) T, ‖bandKernel W t s‖ ^ 2
+      = 2 * ∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W t := by
+  have hψ := bandKernelTail_integrableOn W T hW
+  have hconst : IntegrableOn (fun _ : ℝ => 2 * W) (Set.Icc (0 : ℝ) T) volume :=
+    integrableOn_const (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
+  -- The inner integral, at each `t`, is the window identity.
+  have hinner : ∀ t : ℝ, (∫ s in Set.Icc (0 : ℝ) T, ‖bandKernel W t s‖ ^ 2)
+      = 2 * W - bandKernelTail W t - bandKernelTail W (T - t) := by
+    intro t
+    rw [← setIntegral_bandKernelSq_window W T t hW hT]
+    exact setIntegral_congr_fun measurableSet_Icc fun s _ => bandKernel_norm_sq_eq W t s
+  -- The reflected tail `t ↦ ψ(T − t)` is monotone and bounded by `W`, hence integrable.
+  have hmono : Monotone fun t => bandKernelTail W (T - t) :=
+    fun a b hab => bandKernelTail_antitone W (by linarith)
+  have hψ' : IntegrableOn (fun t => bandKernelTail W (T - t)) (Set.Icc 0 T) volume := by
+    refine Measure.integrableOn_of_bounded (M := W)
+      (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
+      hmono.measurable.aestronglyMeasurable ?_
+    filter_upwards [ae_restrict_mem measurableSet_Icc] with t ht
+    rw [Real.norm_eq_abs, abs_of_nonneg (bandKernelTail_nonneg W (T - t))]
+    exact bandKernelTail_le_const W (T - t) hW (by linarith [ht.2])
+  -- Reflecting `t ↦ T − t` maps the window to itself, so the two tail integrals agree.
+  have hrefl : (∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W (T - t))
+      = ∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W t := by
+    rw [integral_Icc_eq_integral_Ioc, integral_Icc_eq_integral_Ioc,
+      ← intervalIntegral.integral_of_le hT, ← intervalIntegral.integral_of_le hT,
+      intervalIntegral.integral_comp_sub_left (bandKernelTail W) T, sub_self, sub_zero]
+  have hsub : (∫ t in Set.Icc (0 : ℝ) T, (2 * W - bandKernelTail W t - bandKernelTail W (T - t)))
+      = 2 * W * T - (∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W t)
+        - ∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W (T - t) := by
+    have h1 : (∫ t in Set.Icc (0 : ℝ) T, (2 * W - bandKernelTail W t - bandKernelTail W (T - t)))
+        = (∫ t in Set.Icc (0 : ℝ) T, (2 * W - bandKernelTail W t))
+          - ∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W (T - t) :=
+      integral_sub (hconst.sub hψ) hψ'
+    have h2 : (∫ t in Set.Icc (0 : ℝ) T, (2 * W - bandKernelTail W t))
+        = (∫ _t in Set.Icc (0 : ℝ) T, (2 * W : ℝ))
+          - ∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W t :=
+      integral_sub hconst hψ
+    rw [h1, h2, setIntegral_const, Real.volume_real_Icc_of_le hT, sub_zero, smul_eq_mul]
+    ring
+  rw [setIntegral_congr_fun measurableSet_Icc (fun t _ => hinner t), hsub, hrefl]
+  ring
+
+/-- **Leg E-sharp gateway atom.** The trace deficit of the time-and-band limiting operator against
+its window is `O(log WT)`: the reproducing kernel `k(t − s) = sin(2πW(t−s))/(π(t−s))` loses only
+logarithmically much of its energy `‖k_t‖² = 2W` off the window `[0,T]`.
+
+This is the operator-free, non-asymptotic core of the Landau-Widom second moment
+`tr A − tr A² = O(log WT)`: the double integral is `tr A²` once the Parseval template of
+`tsum_inner_timeBandLimitingOp_eq` is polarized, and `2WT` is `tr A` exactly
+(`tsum_inner_timeBandLimitingOp_eq`), so the difference bounded here is the second moment
+`∑ λₙ(1 − λₙ)`.
+
+The mechanism is two facts about `k` and nothing else — no sinc theory, no spectral theory, no
+Schatten API. The tail `ψ(a) = ∫_{u>a} k(u)² du` obeys `ψ(a) ≤ W` (total energy `∫_ℝ k² = 2W`, by
+`bandKernelSq_integral`, split by evenness) and `ψ(a) ≤ 1/(π²a)` (from `|sin| ≤ 1`); the deficit is
+exactly `2∫₀ᵀ ψ` (`bandKernel_window_deficit_eq`), and splitting that integral at `a₀ = 1/(2W)` —
+the first bound below `a₀`, the second above — gives `1 + (2/π²)·log(1+2WT)`. The constant stated is
+the looser `2 + log(1+2WT)`, which absorbs the `2WT < 1` branch without a case split at the
+headline.
+
+Scope (asked before reporting): this is the *deficit* bound, an explicit inequality at every fixed
+`T` and `W` with no `WT → ∞` limit anywhere in it, and it is stated with a named constant rather
+than under an `∃ C`. It is not itself the Landau-Pollak-Slepian concentration that
+`wall:nyquist-2w-dof` names: reaching that still needs the polarized Parseval identity
+`∑ᵢ ‖A bᵢ‖² = ∫₀ᵀ∫₀ᵀ |k(t−s)|²` to read the double integral as `tr A²`, and the eigenbasis bridge of
+`tsum_prolateEigenvalues_eq` to read either moment against `prolateEigenvalues`. What it does settle
+is that the analytic content of the second moment is elementary calculus, not missing theory. -/
+theorem bandKernel_window_deficit_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
+    2 * W * T - ∫ t in Set.Icc (0 : ℝ) T, ∫ s in Set.Icc (0 : ℝ) T, ‖bandKernel W t s‖ ^ 2
+      ≤ 2 + Real.log (1 + 2 * W * T) := by
+  rw [bandKernel_window_deficit_eq T W hT hW]
+  have h := integral_bandKernelTail_le W T hW hT
+  have hlog : 0 ≤ Real.log (1 + 2 * W * T) := Real.log_nonneg (by nlinarith)
+  -- `2/π² < 1`, so the sharp coefficient is absorbed by the stated one.
+  have hpi2 : (2 : ℝ) ≤ Real.pi ^ 2 := by nlinarith [Real.pi_gt_three]
+  have hinv : (1 : ℝ) / Real.pi ^ 2 ≤ 1 / 2 := one_div_le_one_div_of_le (by norm_num) hpi2
+  have hprod : (1 / Real.pi ^ 2) * Real.log (1 + 2 * W * T)
+      ≤ (1 / 2) * Real.log (1 + 2 * W * T) := mul_le_mul_of_nonneg_right hinv hlog
+  linarith
+
 end TraceBound
 
 end InformationTheory.Shannon.TimeBandLimiting
