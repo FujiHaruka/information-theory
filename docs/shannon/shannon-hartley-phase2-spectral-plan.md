@@ -46,10 +46,13 @@
         副産物 5 本（`norm_timeBandLimitingOp_sq_le_of_mem_orthogonal` / `exists_hilbertBasis_prolateSplit` 等）。
         **監査の消費者検証**: Markov は密度 `2W/c` に収束（`c→0` で発散 = **converse の極限で誤った定数**）、
         本 bound は任意の固定 `c>0` で密度ちょうど `2W`。⟹ **Markov の弱い親戚ではない**（leg 15 の鏡像）。
-  - [ ] **R3（NEXT、ほぼ無料）**: 指示対象なき名前 `prolate_eigenvalue_count` を retire。**R2 の 2 本がその内容**。
-        3 docstring（`Operational.lean:460` / `Achievability.lean:698,708`）を実名へ張り替える。
-- [ ] **R4 — operational bridge（Gram + Cauchy interlacing + capacity 計算）= 最大の未計測債務**。
-      count の**下流**ゆえ R1–R3 では consumer の sorry は落ちない。**scope 判断の前に評価を dispatch**（監査の勧告）
+  - [x] **R3 = CLOSED（leg 17、`ec0553a6`）**: 3 docstring を `prolateCount_le`/`le_prolateCount` の実名へ張替。
+- [ ] **R4 — operational bridge = 2 本（achievability / converse、独立）**。count の**下流**ゆえ R1–R3 では落ちない。
+  - [x] **R4-gate A1（leg 18、gateway PASS = 壁でない・plumbing 確定）**: `timeBandLimitingOp_star_comm` +
+        `star_mem_prolateEigenspaceSup`（A1 解析核、`@audit:ok`）+ `le_inner_timeBandLimitingOp_of_mem`（V 上作用素下界、`@audit:ok`）。
+        `exists_real_orthonormalBasis_prolateEigenspaceSup`（(B) 実基底）= honest `sorry + @residual(plan:)`、~150–250 で closable。
+  - [ ] **R4-ACH-B（NEXT）** → (B) を閉じる。以降 A2/A3（KL 族 + encoder → honest `ℝ→ℝ`）/ A4 輸送。
+  - [ ] **R4-CONV-gate（並行可）** → C1（converse interlacing、唯一の未 gateway-test）。PASS で壁再分類 license。
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
 
 ---
@@ -381,43 +384,37 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 
 | # | 要る命題 | 資産 | 行数 | 級 |
 |---|---|---|---|---|
-| **A1** | **prolate 固有関数が実数値**。`E := Lp ℂ 2 volume`（L108）vs `ContAwgnCode.testFn : Fin k → (ℝ → ℝ)` の **ℂ/ℝ 境界**。`A` は共役と可換（核が実） | self-build。**どこにも名前が無い** | ~150–250 | plumbing、**未計測 = achievability の make-or-break** |
-| **A2** | KL 族 `φᵢ := Q_T ψᵢ/√μᵢ` の正規直交 + `[0,T]` 台（`⟪ψᵢ, Q_Tψⱼ⟫ = μⱼδᵢⱼ`） | self-build（R1 前提） | ~150 | plumbing |
+| **A1** | **prolate 固有関数が実数値**。`E := Lp ℂ 2 volume`（L138）vs `ContAwgnCode.testFn : Fin k → (ℝ → ℝ)` の **ℂ/ℝ 境界**。`A` は共役と可換（核が実） | **🎉 解析核 CLOSED（leg 18、gateway atom）**: `timeBandLimitingOp_star_comm`（`A(star f)=star(A f)`、L697）+ `star_mem_prolateEigenspaceSup`（`V` 星不変、L2313）、両者 sorryAx-free・`@audit:ok`。予測訂正: `Lp` は素の `Star` のみ（`StarAddMonoid` 無し）→ `star_add_Lp`/`star_smul_Lp` self-build。**壁でないと実測**。残 = 星不変 `Lp ℂ` → honest `ℝ→ℝ` | 残 ~120–200（B + repr 抽出） | **plumbing 確定**（gateway PASS） |
+| **A2** | KL 族 `φᵢ := Q_T ψᵢ/√μᵢ` の正規直交 + `[0,T]` 台（`⟪ψᵢ, Q_Tψⱼ⟫ = μⱼδᵢⱼ`） | **有限 V-固有基底 `exists_orthonormal_eigenbasis_prolateEigenspaceSup`（L3529、`@audit:ok`、既存・sorryAx-free）前提**。⚠️ **旧「R1 前提」は stale**: R1（フル無限固有基底）は *count* には dead だが achievability には**有限 V-固有基底**が要り、それは既に in-tree に存在。V 上作用素下界 `le_inner_timeBandLimitingOp_of_mem`（`c‖v‖²≤Re⟪Av,v⟫`、L2526、`@audit:ok`、leg 18）も所有 | ~150 | plumbing |
 | **A3** | encoder `f = ∑ xᵢψᵢ/√μᵢ`: 帯域制限 + `‖f‖² = ∑xᵢ²/μᵢ ≤ TP` + `observation m i = xᵢ` | self-build | ~200 | plumbing |
 | **A4** | `awgn_channel_coding_theorem` へ transport + rate/limsup 組立 | **in-tree, sorryAx-free**（`AWGN/Main.lean:55`、`@audit:ok`） | ~250–400 | plumbing |
+
+**次のレンガ (B) = `exists_real_orthonormalBasis_prolateEigenspaceSup`（L3759、honest `sorry + @residual(plan:...)`、leg 18、監査 PASS）**:
+`V` の**実正規直交基底**（星不変メンバ、`Fin (prolateCount) → E` span `V`）。3 sub-step（loogle 確認済、全て初等 plumbing・壁でない）:
+(1) inner–star bridge `⟪star x, star y⟫ = conj⟪x,y⟫`（~30–50、`Lp.coeFn_star` + `∫ conj x * y`）/
+(2) 実形 `V_ℝ := {v∈V | star v = v}` + `stdOrthonormalBasis ℝ ↥V_ℝ`（Mathlib 在庫）を ℂ-正規直交 & ℂ-span と示す /
+(3) **要の 1 本** 次元橋 `finrank ℝ V_ℝ = finrank ℂ V = prolateCount`。合計 ~150–250 = フルサブレグ。
+⚠️ **consumer shape は 1 歩手前**（監査確認）: `contAwgn_ge_shannonHartley` の `testFn`/`encoder` は **honest `ℝ → ℝ`**（`testFn` は `[0,T]` 台 + 実積分正規直交 `∫ testFn i * testFn j = δ`、`encoder` 帯域制限）。(B) は星不変 `Lp ℂ` 要素まで = A2/A3 橋（`Q_T ψᵢ/√μᵢ`）が残工程。docstring は overclaim せず明記済。
 
 **総量 = ~10–15 leg**（~3 ではない）。駆動要因: (a) R4 = 2 本 ~1500–2500 行、(b) converse の headline が無い（C0）、
 (c) **`ParallelGaussian` の 0-sorry 面は *capacity* 側**（入力法上の MI の `sSup`）だが **consumer は *operational* 側**
 （メッセージ数の `sSup`）で、operational な parallel-Gaussian converse は存在しない。
 **R1+R2+R3（~2–3 leg）は consumer の sorry を 1 本も落とさない。**
 
-### R2 の no-eigenbasis 路（leg 17 実装者の紙上スケッチ ⚠️ **未コンパイル**、監査が資産実在を確認）
+### R2 の no-eigenbasis 路 ✅ **CLOSED（r17）** — `prolateCount_le`/`le_prolateCount`（両半分、sorryAx-free、`c` 自由）。詳細履歴は git / 台帳 §SPECTRAL-ASSETS。
 
-**atom（leg 17）が gate の目的を固有基底なしで達成した**ことで、count 全体が固有基底なしで閉じる公算が立った。
-`E = V ⊕ Vᗮ` に適合する基底を取り、`tr A = 2WT`（E-trace、厳密）+ `tr A − tr A² ≤ D := 2 + log(1+2WT)`（E-sharp）と:
+### 次 leg の順序（leg 18 改訂）
 
-- **上半分** `n ≤ 2WT + D/c`: `V` 上は各 `λᵢ > c`、第 2 モーメントで `∑λᵢ(1−λᵢ) ≤ D`。
-- **下半分** `n ≥ 2WT − D/(1−c)`（`c < 1`）: `Vᗮ` 上は **atom より `aᵢ ≤ c`**、`A² ≤ cA` から欠損 `≥ aᵢ(1−c)`
-  ⟹ `∑_{Vᗮ} aᵢ ≤ D/(1−c)`。
+**✅ 完了**: Leg R2（count 両半分、r17）/ Leg R3（`prolateCount_le`/`le_prolateCount`、r17）/ **Leg R4-gate A1（leg 18、gateway PASS = 壁でない・plumbing）**。
 
-**未証明のギャップは 2 つだけ**（実装者の自己申告 = overclaim せず）: (a) `V ⊕ Vᗮ` から適合 `HilbertBasis` の構成、
-(b) 作用素不等式 `A² ≤ cA` on `Vᗮ`。**どちらも固有基底を要さない。**
+1. **Leg R4-ACH-B（NEXT）** — **(B) `exists_real_orthonormalBasis_prolateEigenspaceSup` を閉じる**（上記 3 sub-step、~150–250）。
+   要の 1 本 = 次元橋 `finrank ℝ V_ℝ = finrank ℂ V` を先に打て（判別子）。**壁でない**（監査が loogle 反証済）。
+2. **Leg R4-ACH-A2/A3** — 実基底 → KL 族 `φᵢ = Q_T ψᵢ/√μᵢ`（`[0,T]` 台テスト関数）+ encoder。honest `ℝ→ℝ` へ落とす。
+3. **Leg R4-CONV-gate（並行可）** — C1（converse interlacing、Mathlib 0-hit）の gateway atom。**唯一の未 gateway-test 項**。
+   これが plumbing と確定すれば `wall:nyquist-2w-dof` → `plan:` 再分類が完全に license される（下記「壁再分類」）。
+4. **Leg A4/C-assembly** — `awgn_channel_coding_theorem` 輸送 + capacity 計算 + rate/limsup。
 
-- ⚠️ **`prolateCount_mul_le`（L2375）の shape caveat**（監査が dispatch 前に捕捉）: スケッチは「`V` 上の有限次元
-  スペクトル定理」として本補題を引くが、**exported な結論は crude Markov 上界 `c·prolateCount ≤ 2WT`**（= `n ≤ 2WT/c`）
-  のみで、**スケッチの `n ≤ 2WT + D/c` は出ない**。再利用したい `V` の固有基底（`hsymV.eigenvectorBasis hn`）は
-  L2384 の**証明本体内 `set` で、どこにも export されていない**（`rg "eigenvectorBasis"` = 全 3 hit が同一 body 内）。
-  ⟹ **`apply prolateCount_mul_le` は効かない。次 leg は基底を抽出 or 再導出せよ。**
-- ⚠️ `A² ≤ cA` は**証明すべき主張であり、in-tree 資産ではない**（監査確認: 存在しない）。
-
-### 次 leg の順序（leg 17 改訂）
-
-1. **Leg R2（NEXT）** — 上記 no-eigenbasis 路でカウント両半分。**R1 に乗せない**（gate 論拠が反証済）。
-   ギャップ (a)(b) のうち **(b) `A² ≤ cA` on `Vᗮ` を先に打て**（atom の直接の帰結の公算 = 安い判別子）。
-2. **Leg R3** — `prolate_eigenvalue_count` を**自由 `c` + `D = 2 + log(1+2WT)` の 2 本の不等式**として
-   書き下ろし、指示対象なき名前を retire する。**型が強度の SoT になる**（散文でなく）。
-3. **Leg R4-gate** — **A1（prolate 固有関数の実数値性）の gateway atom を R4 の build 前に**。
-   achievability の make-or-break で、**ℂ/ℝ 境界は誰も見たことがない**。
+**壁再分類（leg 18 で証拠強化、判断は次 leg）**: `wall:nyquist-2w-dof` の named proposition（固有値集中）は r17 で CLOSED、A1 は leg 18 で plumbing 確定、有限 V-固有基底は in-tree、C3 は in-tree。**残る唯一の未計測 = C1（converse interlacing）**。CLAUDE.md の defect tell「choice(big) を blocked(hard) と偽る」に該当の疑いが強まった。次 leg: C1 gateway → PASS なら 2 consumer を `@residual(plan:shannon-hartley-phase2-spectral-plan)` へ再分類（code 編集は subagent + 独立 honesty-auditor）。同時に dangling name 掃除（`prolate_eigenvalue_count` docs 6 ファイル / `contAwgn_le_shannonHartley` = C0 指示対象なき名前）。
 
 ### 圧縮済 leg（履歴は git / 詳細は台帳 §SPECTRAL-ASSETS）
 
