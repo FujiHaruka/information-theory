@@ -154,7 +154,8 @@ time-limited energy of the corresponding `V`-combination:
 
 The `φ` family is the `[0, T]`-supported real orthonormal basis of `S = span_ℝ {Q_T uⱼ}`; the
 energy identity holds because the time-limited encoders `Q_T uⱼ` span `S`, so the receiver recovers
-the full time-limited energy of any `V`-combination. -/
+the full time-limited energy of any `V`-combination.
+@audit:ok -/
 theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ∃ (u : Fin (prolateCount T W c) → E) (h φ : Fin (prolateCount T W c) → (ℝ → ℝ)),
       Orthonormal ℂ u ∧
@@ -433,7 +434,8 @@ which then yields the norm-controlled pre-equalizer `‖a‖² ≤ (1/c) ‖x‖
 
 The bound is the energy identity of `exists_testFn_family` composed with the time-window energy
 concentration `le_norm_timeLimitProj_sq_of_mem` (`c ‖w‖² ≤ ‖Q_T w‖²` on `V`) and
-`‖∑ⱼ vⱼ uⱼ‖² = ∑ⱼ vⱼ²` (`u` is `ℂ`-orthonormal, `v` real). -/
+`‖∑ⱼ vⱼ uⱼ‖² = ∑ⱼ vⱼ²` (`u` is `ℂ`-orthonormal, `v` real).
+@audit:ok -/
 theorem exists_crossMap_lower_bound (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ∃ (h φ : Fin (prolateCount T W c) → (ℝ → ℝ)),
       (∀ i, MemLp (h i) 2 volume) ∧
