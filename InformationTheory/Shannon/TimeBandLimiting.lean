@@ -694,6 +694,11 @@ theorem bandLimitProj_star (W : ℝ) (f : E) :
         (Submodule.starProjection_apply_mem _ g)
     rw [hbot, hbot, star_zero_Lp]
 
+/-- `A = P_W ∘ Q_T ∘ P_W` commutes with complex conjugation: each factor does, since the
+time window `[0,T]` and the symmetric band `[-W,W]` are conjugation-invariant. Stated for all
+`W`; for `W < 0` the band is empty and both sides collapse to `0`. Independently audited
+2026-07-17: sorryAx-free, no hypotheses (no `hW`) so the statement is universal, not weakened.
+@audit:ok -/
 theorem timeBandLimitingOp_star_comm (T W : ℝ) (f : E) :
     timeBandLimitingOp T W (star f) = star (timeBandLimitingOp T W f) := by
   simp only [timeBandLimitingOp, ContinuousLinearMap.comp_apply, bandLimitProj_star,
@@ -2308,7 +2313,10 @@ theorem star_mem_eigenspace {T W : ℝ} {μ : ℝ} {v : E}
 /-- Complex conjugation preserves the span of the high eigenspaces. The operator `A` commutes with
 `star` (`timeBandLimitingOp_star_comm`) and its eigenvalues are real, so each eigenspace above `c` is
 `star`-invariant; the span inherits it. This is the `ℂ/ℝ` bridge that lets the achievability path
-choose real-valued prolate eigenfunctions.
+choose real-valued prolate eigenfunctions — it proves the *span is star-invariant*, not that any
+individual eigenfunction is real (the latter is the downstream real-basis extraction, not claimed
+here). Independently audited 2026-07-17: sorryAx-free, the `hv` hypothesis is the antecedent of a
+closure property (not load-bearing), and the prose does not overclaim.
 @audit:ok -/
 theorem star_mem_prolateEigenspaceSup {T W c : ℝ} {v : E}
     (hv : v ∈ prolateEigenspaceSup T W c) :
