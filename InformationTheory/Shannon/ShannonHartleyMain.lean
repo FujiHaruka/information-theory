@@ -154,9 +154,7 @@ time-limited energy of the corresponding `V`-combination:
 
 The `φ` family is the `[0, T]`-supported real orthonormal basis of `S = span_ℝ {Q_T uⱼ}`; the
 energy identity holds because the time-limited encoders `Q_T uⱼ` span `S`, so the receiver recovers
-the full time-limited energy of any `V`-combination.
-
-`@residual(plan:shannon-hartley-phase2-spectral-plan)` -/
+the full time-limited energy of any `V`-combination. -/
 theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ∃ (u : Fin (prolateCount T W c) → E) (h φ : Fin (prolateCount T W c) → (ℝ → ℝ)),
       Orthonormal ℂ u ∧
@@ -331,9 +329,39 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     filter_upwards [hgc, hφ_ae i] with t htg htφ
     rw [RCLike.inner_apply, conj_trivial, htg, htφ]
     ring
-  -- (E-c) `‖p‖² = ‖Q_T (∑ⱼ vⱼ uⱼ)‖²`.
+  -- (E-c) `‖p‖² = ‖Q_T (∑ⱼ vⱼ uⱼ)‖²` (`p` complexifies to the time-limited combination).
   have hEc : ‖p‖ ^ 2 = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ ^ 2 := by
-    sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+    have hpc : (fun t => ((⇑p t : ℝ) : ℂ)) =ᵐ[volume]
+        (⇑((timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)) : ℝ → ℂ) := by
+      have hQlin : (timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)
+          = ∑ j, (v j : ℂ) • (timeLimitSubspace T).starProjection (u j) := by
+        rw [map_sum]; simp_rw [map_smul]
+      rw [hQlin]
+      have hpr : (⇑p : ℝ → ℝ) =ᵐ[volume] (fun t => ∑ j, v j * ⇑(e j) t) := by
+        have h1 := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ
+          (fun j => v j • e j)
+        have h2 : ∀ j, ⇑(v j • e j) =ᵐ[volume] v j • (⇑(e j) : ℝ → ℝ) := fun j => Lp.coeFn_smul _ _
+        rw [hp]
+        filter_upwards [h1, ae_all_iff.mpr h2] with t h1t h2t
+        rw [h1t]
+        exact Finset.sum_congr rfl (fun j _ => by rw [h2t j, Pi.smul_apply, smul_eq_mul])
+      have hws := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ
+        (fun j => (v j : ℂ) • (timeLimitSubspace T).starProjection (u j))
+      have hwsmul : ∀ j, ⇑((v j : ℂ) • (timeLimitSubspace T).starProjection (u j)) =ᵐ[volume]
+          (v j : ℂ) • (⇑((timeLimitSubspace T).starProjection (u j)) : ℝ → ℂ) :=
+        fun j => Lp.coeFn_smul _ _
+      filter_upwards [hpr, hws, ae_all_iff.mpr hwsmul, ae_all_iff.mpr hlink]
+        with t hprt hwst hwsmt hlinkt
+      rw [hwst, hprt, Complex.ofReal_sum]
+      refine Finset.sum_congr rfl (fun j _ => ?_)
+      rw [hwsmt j, Pi.smul_apply, smul_eq_mul, ← hlinkt j, Complex.ofReal_mul]
+    have hnorm : ‖p‖ = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ := by
+      rw [Lp.norm_def, Lp.norm_def]
+      congr 1
+      rw [show eLpNorm (⇑p) 2 volume = eLpNorm (fun t => ((⇑p t : ℝ) : ℂ)) 2 volume from
+        eLpNorm_congr_norm_ae (by filter_upwards with t; rw [Complex.norm_real])]
+      exact eLpNorm_congr_ae hpc
+    rw [hnorm]
   -- On `[0,T]`, the encoder `h j` and its time-limited representative `f j` agree.
   have hj_fj_onT : ∀ j, (h j) =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)] (f j) := by
     intro j
