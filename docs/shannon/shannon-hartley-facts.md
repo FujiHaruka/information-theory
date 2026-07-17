@@ -235,7 +235,10 @@ docstring は反証の機構（窓外に無限のエネルギーを置ける / s
 | Mathlib に**コンパクト自己共役の無限次元スペクトル定理は存在** | machine | `grep -n "orthogonalComplement_iSup_eigenspaces_eq_bot" .lake/packages/mathlib/Mathlib/Analysis/InnerProductSpace/Spectrum.lean` → `:443` | `7c43417a` | 「固有空間の iSup の直交補 = `⊥`」形。`:464` `finite_dimensional_eigenspace` は本 family が既に消費中 |
 | crude trace bound `c·#{λ>c} ≤ 2WT` は**壁非依存**で closure 可能 | machine | `#print axioms InformationTheory.Shannon.TimeBandLimiting.prolateCount_mul_le` → sorryAx-free | `7c43417a` | Bessel + 既存 `bandLimitProj_apply_ae`。有限直交族しか要らず無限次元 trace 理論を経由しない |
 | **厳密 trace 等式** `∑' i, ⟪A bᵢ, bᵢ⟫ = 2WT`（任意の `HilbertBasis b`）は closure 済 | machine | `#print axioms InformationTheory.Shannon.TimeBandLimiting.tsum_inner_timeBandLimitingOp_eq` → sorryAx-free + `lake env lean InformationTheory/Shannon/TimeBandLimiting.lean` | `21981fc8` | leg 15 (E-trace)。**Parseval は任意の完全基底で効くのでスペクトル定理すら不要だった** = 旧壁論拠の二重の誤り |
-| **tight LPS 集中は依然未証明**（本 slug の本体）。**残渣は第 2 モーメント `tr A − tr A²` に絞られた** | human-judgment | Bessel は片方向 / Markov は `1/c` 倍の過大計上 / 第 1 モーメントは下界を与えない | `21981fc8` | leg 15 で **2 度独立に確認**: E-atom では監査が実装者の「壁でない」verdict を refute、E-trace では監査が**反例クラスを自作**して scope 主張を CONFIRM（`∑λₙ=2WT` かつ全 `λₙ ≤ c` な平坦スペクトルは `#{λ>c}=0`）|
+| ~~**tight LPS 集中は依然未証明**（本 slug の本体）。**残渣は第 2 モーメント `tr A − tr A²` に絞られた**~~ | ~~human-judgment~~ | — | `21981fc8` | **leg 16 で決着 → 下行**。leg 15 の判断自体は正しかった（残渣の同定は当たっていた）が、**その残渣が壁だという含意が誤り**だった |
+| **第 2 モーメント `tr A − tr A² ≤ 2 + log(1+2WT)` は closure 済** = 本 slug の名指す残渣は消滅 | machine | `#print axioms InformationTheory.Shannon.TimeBandLimiting.tsum_inner_sub_norm_sq_timeBandLimitingOp_le` → sorryAx-free（**olean が stale だと phantom `unknown constant` が出る。先に `lake build InformationTheory.Shannon.TimeBandLimiting`**） | `00cb1c8b` | leg 16 (E-sharp)、監査 all OK。任意 `HilbertBasis`、仮説は regularity のみ。2 段: (a) `bandKernel_window_deficit_le` = 純 calculus（`k(u)=sin(2πWu)/(πu)` ゆえ `k²≤1/(π²u²)`）、(b) `tsum_norm_timeBandLimitingOp_sq_eq` = `tr A² = ∫₀ᵀ∫₀ᵀ|k|²`（Parseval テンプレの polarize、`A↔B` bridge も三重 Fubini も不要） |
+| `P_W k_t = k_t`（再生核は自身が帯域制限）は in-tree・~35 行で導出可能 | machine | `#print axioms InformationTheory.Shannon.TimeBandLimiting.bandLimitProj_bandKernelLp` → sorryAx-free | `00cb1c8b` | leg 16 の scouting 回答。`bandKernel_eq_smul_shiftSinc` + `fourier_shiftSinc_toLp` → `𝓕(k_t) = 2W·specBoxcar`、`specBoxcar c Δ` は定義上 `Icc (-(1/(2Δ))) (1/(2Δ))` 上の指示関数 = `Δ=1/(2W)` で `Icc (-W) W`。**再利用可能** |
+| Mathlib に `HasSum (fun i => ‖⟪x, b i⟫‖²) (‖x‖²)`（norm² 形の Parseval）は**無い**が、`lp.hasSum_norm` 経由の代替路が**ある** | machine | `grep -n "hasSum_inner_mul_inner\|hasSum_norm" .lake/packages/mathlib/Mathlib/Analysis/InnerProductSpace/l2Space.lean .lake/packages/mathlib/Mathlib/Analysis/Normed/Lp/lpSpace.lean` | `00cb1c8b` | 監査が実装者の否定的主張を検証して**確認 + caveat 追加**: `l2Space.lean:457-469` は `hasSum_inner_mul_inner` 系のみ。だが `lpSpace.lean:468` `lp.hasSum_norm` + `HilbertBasis.repr` で同値に到達可（rpow/npow cast 除く）。どちらも ~12 行なので self-build (`hasSum_norm_inner_sq`) で可。**誠実性には無影響**（この主張に `@residual` も壁 verdict も乗っていない）が、本 family は「Mathlib に無い」主張で 3 度焼かれているので記録 |
 
 **教訓 1 — `cause:weaker-relative`（CLAUDE.md「textbook-object strength diff」の実発火）**: 実装者は
 gateway atom が通ったことから「`wall:nyquist-2w-dof` は genuine でない・`cause:single-route`」と結論した。
@@ -244,6 +247,31 @@ gateway atom が通ったことから「`wall:nyquist-2w-dof` は genuine でな
 `ShannonHartleyOperational.lean:461-462`「converse は上半分、achievability は下半分」）で訂正した。
 **問いの立て方が誤っていた**: 実装者は「Bessel は `2WT` 上界に届くか」(yes) を問い、
 「**Bessel が届く上界は、壁が名指す上界か**」(no) を問わなかった。
+
+**教訓 1' — 同じ軸の逆向き発火。strength diff は壁の側にも適用せよ（leg 16, E-sharp）**:
+教訓 1 は「**実装者**が弱い親戚を閉じて過大主張した」形だった。leg 16 で**同じ軸が逆向きに発火**した —
+**壁の側**が、consumer の要求より**強い親戚**で枠付けされていた。`wall:nyquist-2w-dof` の残渣は
+「Landau-Widom」= 鋭い漸近**等式** `tr A − tr A² ~ (1/π²)log(2WT)` として記述されていたが、
+consumer が実際に要するのは**緩い片側上界** `tr A − tr A² ≤ C₁ + C₂·log(1+2WT)` のみだった。
+差は決定的で、後者は `|sin| ≤ 1` と `∫1/u` だけで出る初等 calculus（前者は特殊関数論）。
+**なぜ両半分が片側上界だけで出るか**（監査が独立再導出、これが判定の核）: `0 ≤ λ ≤ 1` と
+`tr A = 2WT`（厳密値、E-trace）があれば、上半分は `#{λ>c} − ∑_{λ>c}λ = ∑_{λ>c}(1−λ) ≤ D/c`、
+下半分は `∑_{λ≤c}λ ≤ D/(1−c)` ⟹ `2WT − D/(1−c) ≤ #{λ>c} ≤ 2WT + D/c`。
+**鋭い定数も第 2 モーメントの下界も要らない。**
+⟹ **運用ルール**: 残渣を**教科書の名前**（Landau-Widom / Fano / Sanov …）で記述したら、
+その名前が指す標準対象の強度と、**consumer の docstring が要求する強度**を diff せよ。
+CLAUDE.md「textbook-object strength diff」は *reframe 時* の規則として書かれているが、
+**壁を継承する各 leg でも再適用すべき**（強度は名前に張り付いて leg 間を drift する）。
+**メタ所見**: E-atom を正しく refute した規律と、E-sharp を正しく是認した規律は**同一**。
+strength diff は「壁を守る道具」でも「壁を壊す道具」でもなく、**強度を測る道具**である。
+
+**教訓 1'' — 指示対象なき名前は残渣の強度を drift させる（leg 16 監査の気づき）**:
+`prolate_eigenvalue_count` は plan 散文 + 3 つの docstring（`ShannonHartleyOperational.lean:460` /
+`ShannonHartleyAchievability.lean:698,708`）が資産であるかのように参照しているが、
+**宣言として一度も書かれたことがない**。壁の headline に指示対象が無いまま 16 leg 推論してきた =
+**残渣の強度が leg 間で気づかれず drift しうる条件そのもの**（実際 3 度 drift した）。
+⟹ 壁を building する前に **headline を実不等式として書き下ろす**（`sorry` + `@residual` でよい）。
+名前でなく型が SoT なら、強度の diff は grep でなく**コンパイラ**が担う。
 
 **教訓 2 — 否定的主張はコンパイラに退けさせるまで退けたことにならない（3 度目の近接事例）**: 
 「無限次元スペクトル理論が Mathlib に無い」は**誰も検証していない否定的主張**として壁論拠に居座っていた。
