@@ -27,9 +27,17 @@
         （`tsum_inner_sub_norm_sq_timeBandLimitingOp_le`、`552ac8de` + `00cb1c8b`、監査 all OK・`@audit:ok` ×6）。
         **壁の解析核は消滅**。壁論拠は 3 度目の誤り = Landau-Widom を**鋭い漸近等式**として枠付けしていたが
         consumer は**緩い片側上界のみ**を要した（`cause:weaker-relative` の**逆向き**適用）。
-  - [ ] **R1（NEXT）**: 固有基底 + 多重度/カウント bridge（`plan:` 級、`tsum_prolateEigenvalues_eq` L2322 を subsume）。
-        **`prolateCount := finrank (prolateEigenspaceSup T W c)` ゆえ `prolateEigenvalues` は臨界路に載らない可能性**（監査の指摘）
-  - [ ] **R2**: Chebyshev 分割（初等、R1 に乗る cheap rider） / **R3**: `prolate_eigenvalue_count` を宣言として書く（現在**名前だけ存在**）
+  - [x] **R-atom（leg 17、`e8267457` + 監査 `ea979da1` all OK）**: **スペクトルギャップ `⟪A v,v⟫.re ≤ c‖v‖²` on `Vᗮ` = sorryAx-free**
+        （`inner_timeBandLimitingOp_le_of_mem_orthogonal`、`c` 自由、`hT`/`hW` は**不要と判明し削除** = plan の目標より強い）。
+        **経路は予測の第 3 の道**: 固有基底を作らず、`A|_Vᗮ` が compact self-adjoint ⟹ **作用素ノルム = スペクトル半径**
+        （`Rayleigh.lean:182` + `hasEigenvalue_iff_mem_spectrum`）で `‖A|_Vᗮ‖ ≤ c` → Cauchy-Schwarz。
+        副産物 = `prolateRestrict` / `prolateRestrict_norm_le`（再利用資産）。
+  - [ ] **R1 = 宙吊り（gate 前提が反証された）**: 固有基底 + 多重度 bridge。**⚠️ atom は `Spectrum.lean:443` を
+        0 回消費**（監査が定数グラフ 56,356 定数走査で機械確認、grep でなく）⟹ 「atom が通れば R1 も通る」という
+        gate 論拠は**成立しない**。かつ atom は**固有基底なしで gate の目的を達成**した ⟹ R1 は「未検証」でなく
+        **dead obligation の公算**（監査: 「両方向に unevidenced」）。**R2 を R1 の上でなく下記 no-eigenbasis 路で打て。**
+  - [ ] **R2（NEXT）**: カウント両半分。**R1 に乗せない** — 下記「R2 の no-eigenbasis 路」
+  - [ ] **R3**: `prolate_eigenvalue_count` を宣言として書く（現在**名前だけ存在**）。**自由 `c` + 明示 `D`**
 - [ ] **R4 — operational bridge（Gram + Cauchy interlacing + capacity 計算）= 最大の未計測債務**。
       count の**下流**ゆえ R1–R3 では consumer の sorry は落ちない。**scope 判断の前に評価を dispatch**（監査の勧告）
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
@@ -340,8 +348,8 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 
 | # | obligation | 級 | 状態 |
 |---|---|---|---|
-| **R1** | 固有基底 + 多重度/カウント bridge: `A` の完全正規直交固有基底 + `#{i | μᵢ > c} = prolateCount T W c` | `plan:` | 唯一の構造ギャップ。`tsum_prolateEigenvalues_eq`（L2322、既存 sorry）が部分追跡。資産は全て機械確認済（`Spectrum.lean:443` `orthogonalComplement_iSup_eigenspaces_eq_bot` / `:463` `finite_dimensional_eigenspace` / `l2Space.lean:528` `mkOfOrthogonalEqBot`）。**`prolateCount := finrank (prolateEigenspaceSup T W c)`（L1449）ゆえ `prolateEigenvalues` は count の臨界路に載らない可能性** — 監査の指摘、次 leg で検討 |
-| **R2** | Chebyshev 分割（上の両半分） | 初等 | 未記述。R1 に乗る cheap rider |
+| **R1** | 固有基底 + 多重度/カウント bridge: `A` の完全正規直交固有基底 + `#{i | μᵢ > c} = prolateCount T W c` | `plan:` | **宙吊り（leg 17）= dead obligation の公算**。「資産は全て機械確認済」（`Spectrum.lean:443` / `:463` / `l2Space.lean:528`）は**存在の確認であって必要性の確認ではなかった** — leg 17 の atom は**この 3 資産を 0 回消費**して gate の目的を達成（監査が定数グラフで機械確認）。`prolateCount := finrank (prolateEigenspaceSup T W c)`（L1449）は固有基底なしで**定義される**。⟹ 本行の `plan:` 級判定が依拠していた「資産の実在」は、いま**未検証の経路の上に載っている**（監査の 気づき）。`tsum_prolateEigenvalues_eq`（L2322、既存 sorry）が部分追跡 |
+| **R2** | Chebyshev 分割（上の両半分） | 初等 | 未記述。**R1 に乗せない** → §「R2 の no-eigenbasis 路」 |
 | **R3** | **`prolate_eigenvalue_count` が宣言として存在しない** | — | plan 散文 + 3 docstring（`Operational.lean:460` / `Achievability.lean:698,708`）が名前だけ参照 = **指示対象なき名前**。壁の headline が一度も書かれていない（監査の気づき: 残渣の強度が leg 間で気づかれず drift しうる条件そのもの） |
 | **R4** | operational bridge | 評価済（leg 16） | **監査の「Gram + Cauchy interlacing + capacity」枠付けは両方向に誤り**。実体は下表 = **独立した 2 本の bridge**（共有部分ほぼ無し）。count の**下流**ゆえ R1–R3 を閉じても consumer の sorry は落ちない |
 
@@ -373,19 +381,31 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 （メッセージ数の `sSup`）で、operational な parallel-Gaussian converse は存在しない。
 **R1+R2+R3（~2–3 leg）は consumer の sorry を 1 本も落とさない。**
 
-### 次 3 leg の順序（leg 16、advisor 提案）
+### R2 の no-eigenbasis 路（leg 17 実装者の紙上スケッチ ⚠️ **未コンパイル**、監査が資産実在を確認）
 
-1. **Leg R1（NEXT）** — 固有基底 + カウント bridge。**decisive atom**（`c` より下のスペクトルギャップ。
-   R1 / R2 / **C1 を同時に gate** し、`Spectrum.lean:443` を消費する。通れば count leg 全体が通り、
-   通らなければ R1 の形が誤り）:
-   ```lean
-   theorem inner_timeBandLimitingOp_le_of_mem_orthogonal
-       (T W c : ℝ) (hT : 0 ≤ T) (hW : 0 < W) (hc : 0 < c)
-       {v : E} (hv : v ∈ (prolateEigenspaceSup T W c)ᗮ) :
-       (inner ℂ (timeBandLimitingOp T W v) v).re ≤ c * ‖v‖ ^ 2
-   ```
-2. **Leg R2+R3** — Chebyshev 分割 + `prolate_eigenvalue_count` を**自由 `c` + `D = 2 + log(1+2WT)` の
-   2 本の不等式**として書き下ろし、指示対象なき名前を retire する。**型が強度の SoT になる**（散文でなく）。
+**atom（leg 17）が gate の目的を固有基底なしで達成した**ことで、count 全体が固有基底なしで閉じる公算が立った。
+`E = V ⊕ Vᗮ` に適合する基底を取り、`tr A = 2WT`（E-trace、厳密）+ `tr A − tr A² ≤ D := 2 + log(1+2WT)`（E-sharp）と:
+
+- **上半分** `n ≤ 2WT + D/c`: `V` 上は各 `λᵢ > c`、第 2 モーメントで `∑λᵢ(1−λᵢ) ≤ D`。
+- **下半分** `n ≥ 2WT − D/(1−c)`（`c < 1`）: `Vᗮ` 上は **atom より `aᵢ ≤ c`**、`A² ≤ cA` から欠損 `≥ aᵢ(1−c)`
+  ⟹ `∑_{Vᗮ} aᵢ ≤ D/(1−c)`。
+
+**未証明のギャップは 2 つだけ**（実装者の自己申告 = overclaim せず）: (a) `V ⊕ Vᗮ` から適合 `HilbertBasis` の構成、
+(b) 作用素不等式 `A² ≤ cA` on `Vᗮ`。**どちらも固有基底を要さない。**
+
+- ⚠️ **`prolateCount_mul_le`（L2375）の shape caveat**（監査が dispatch 前に捕捉）: スケッチは「`V` 上の有限次元
+  スペクトル定理」として本補題を引くが、**exported な結論は crude Markov 上界 `c·prolateCount ≤ 2WT`**（= `n ≤ 2WT/c`）
+  のみで、**スケッチの `n ≤ 2WT + D/c` は出ない**。再利用したい `V` の固有基底（`hsymV.eigenvectorBasis hn`）は
+  L2384 の**証明本体内 `set` で、どこにも export されていない**（`rg "eigenvectorBasis"` = 全 3 hit が同一 body 内）。
+  ⟹ **`apply prolateCount_mul_le` は効かない。次 leg は基底を抽出 or 再導出せよ。**
+- ⚠️ `A² ≤ cA` は**証明すべき主張であり、in-tree 資産ではない**（監査確認: 存在しない）。
+
+### 次 leg の順序（leg 17 改訂）
+
+1. **Leg R2（NEXT）** — 上記 no-eigenbasis 路でカウント両半分。**R1 に乗せない**（gate 論拠が反証済）。
+   ギャップ (a)(b) のうち **(b) `A² ≤ cA` on `Vᗮ` を先に打て**（atom の直接の帰結の公算 = 安い判別子）。
+2. **Leg R3** — `prolate_eigenvalue_count` を**自由 `c` + `D = 2 + log(1+2WT)` の 2 本の不等式**として
+   書き下ろし、指示対象なき名前を retire する。**型が強度の SoT になる**（散文でなく）。
 3. **Leg R4-gate** — **A1（prolate 固有関数の実数値性）の gateway atom を R4 の build 前に**。
    achievability の make-or-break で、**ℂ/ℝ 境界は誰も見たことがない**。
 
