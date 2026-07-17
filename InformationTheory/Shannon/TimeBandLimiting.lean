@@ -4223,6 +4223,59 @@ theorem le_re_inner_timeBandLimitingOp_sum_smul (T W c : ℝ) (hc : 0 < c)
   rw [hnorm] at h1
   exact h1
 
+/-- **Lp → pointwise `ℝ → ℝ` lift (the `testFn` representative lift, route-independent).** A
+star-fixed `L²(ℝ;ℂ)` element that is a.e.-supported in `[0,T]` — the shape `Q_T ψ` takes for a
+star-fixed `ψ ∈ V` — has a genuine pointwise real representative supported in `[0,T]`: a function
+`f : ℝ → ℝ` with `f` in `L²`, `Function.support f ⊆ [0,T]` *pointwise*, and `(f : ℝ → ℂ)` a.e. equal
+to the given class.
+
+This is the atom the plan flagged as the dominant cost of the `ContAwgnCode.testFn` construction: it
+converts an a.e. equivalence class into the honest pointwise `ℝ → ℝ` function the structure field
+`testFn` demands, pinning both the pointwise support (`testFn_support`) and the real-valuedness. Once
+the a.e. identity `(f : ℝ → ℂ) =ᵐ u` is in hand, every integral/inner-product fact about the family
+(orthonormality, energy) transfers from the `Lp` inner product for free, so a single lift lemma
+sizes the whole conversion. The representative is `𝟙_[0,T] · Re(u)`; the indicator pins the support
+pointwise while staying in the same class because `u` already vanishes a.e. off `[0,T]`, and `Re`
+recovers a real representative because `u` is star-fixed (a.e. real). -/
+theorem exists_pointwise_repr_of_mem_timeLimit_star_fixed (T : ℝ) {u : E}
+    (hmem : u ∈ timeLimitSubspace T) (hstar : star u = u) :
+    ∃ f : ℝ → ℝ, MemLp f 2 volume ∧ Function.support f ⊆ Set.Icc 0 T ∧
+      (fun t => ((f t : ℝ) : ℂ)) =ᵐ[volume] (u : ℝ → ℂ) := by
+  classical
+  -- `u` is a.e. real-valued (star-fixed): `star u = u` forces `u t = conj (u t)` a.e.
+  have hconj : (u : ℝ → ℂ) =ᵐ[volume] fun t => starRingEnd ℂ ((u : ℝ → ℂ) t) := by
+    have h1 : (⇑(star u) : ℝ → ℂ) =ᵐ[volume] fun t => starRingEnd ℂ ((u : ℝ → ℂ) t) := by
+      filter_upwards [Lp.coeFn_star u] with t ht
+      rw [ht]; rfl
+    rwa [hstar] at h1
+  have hre : ∀ᵐ t ∂volume, (((u : ℝ → ℂ) t).re : ℂ) = (u : ℝ → ℂ) t := by
+    filter_upwards [hconj] with t ht
+    exact Complex.conj_eq_iff_re.mp ht.symm
+  -- `u` is a.e. zero off `[0,T]` (it lies in the time-limited subspace).
+  have hset : MeasurableSet {t : ℝ | t < 0 ∨ T < t} := by
+    have hsplit : {t : ℝ | t < 0 ∨ T < t} = Set.Iio 0 ∪ Set.Ioi T := by
+      ext t; simp [Set.mem_Iio, Set.mem_Ioi]
+    rw [hsplit]; exact measurableSet_Iio.union measurableSet_Ioi
+  have hoff : ∀ᵐ t ∂volume, t ∈ {t : ℝ | t < 0 ∨ T < t} → (u : ℝ → ℂ) t = 0 := by
+    rw [← ae_restrict_iff' hset]
+    have hz : (⇑u : ℝ → ℂ) =ᵐ[volume.restrict {t : ℝ | t < 0 ∨ T < t}] 0 := hmem
+    filter_upwards [hz] with t ht using by simpa using ht
+  refine ⟨(Set.Icc (0 : ℝ) T).indicator (fun s => ((u : ℝ → ℂ) s).re), ?_, ?_, ?_⟩
+  · -- `MemLp`: the real part is `L²` (norm-1 Lipschitz image of `u`), and indicators preserve it.
+    exact MemLp.indicator measurableSet_Icc (Lp.memLp u).re
+  · -- Pointwise support: an indicator vanishes off its set.
+    intro x hx
+    by_contra hxS
+    exact hx (Set.indicator_of_notMem hxS _)
+  · -- The a.e. identity `(f : ℝ → ℂ) =ᵐ u`, split by membership in `[0,T]`.
+    filter_upwards [hre, hoff] with t ht htoff
+    by_cases hmem_t : t ∈ Set.Icc (0 : ℝ) T
+    · rw [Set.indicator_of_mem hmem_t]; exact ht
+    · rw [Set.indicator_of_notMem hmem_t, Complex.ofReal_zero]
+      have htc : t < 0 ∨ T < t := by
+        rw [Set.mem_Icc, not_and_or, not_le, not_le] at hmem_t; exact hmem_t
+      exact (htoff htc).symm
+
 end Achievability
 
 end InformationTheory.Shannon.TimeBandLimiting
