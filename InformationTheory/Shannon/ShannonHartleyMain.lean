@@ -334,9 +334,47 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   -- (E-c) `‖p‖² = ‖Q_T (∑ⱼ vⱼ uⱼ)‖²`.
   have hEc : ‖p‖ ^ 2 = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ ^ 2 := by
     sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+  -- On `[0,T]`, the encoder `h j` and its time-limited representative `f j` agree.
+  have hj_fj_onT : ∀ j, (h j) =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)] (f j) := by
+    intro j
+    have hQuj : (⇑((timeLimitSubspace T).starProjection (u j)) : ℝ → ℂ)
+        =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)] (u j : ℝ → ℂ) := by
+      filter_upwards [ae_restrict_of_ae (timeLimitProj_apply_ae T (u j)),
+        ae_restrict_mem measurableSet_Icc] with t ht htmem
+      rw [ht]; simp [Pi.mul_apply, Set.indicator_of_mem htmem]
+    have hcx : (fun t => ((h j t : ℝ) : ℂ))
+        =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)] (fun t => ((f j t : ℝ) : ℂ)) :=
+      Filter.EventuallyEq.trans (ae_restrict_of_ae (h_ae j))
+        (Filter.EventuallyEq.trans (Filter.EventuallyEq.symm hQuj)
+          (Filter.EventuallyEq.symm (ae_restrict_of_ae (hf_ae j))))
+    filter_upwards [hcx] with t ht
+    exact Complex.ofReal_inj.mp ht
+  -- On `[0,T]`, the encoder combination `gLp` and its `S`-image `p` agree.
+  have hgp_onT : (⇑gLp : ℝ → ℝ) =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)] (⇑p : ℝ → ℝ) := by
+    have hpc : (⇑p : ℝ → ℝ) =ᵐ[volume] (fun t => ∑ j, v j * (⇑(e j) t)) := by
+      have h1 := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ (fun j => v j • e j)
+      have h2 : ∀ j, ⇑(v j • e j) =ᵐ[volume] v j • (⇑(e j) : ℝ → ℝ) := fun j => Lp.coeFn_smul _ _
+      rw [hp]
+      filter_upwards [h1, ae_all_iff.mpr h2] with t h1t h2t
+      rw [h1t]
+      exact Finset.sum_congr rfl (fun j _ => by rw [h2t j, Pi.smul_apply, smul_eq_mul])
+    filter_upwards [ae_restrict_of_ae hgc, ae_restrict_of_ae hpc,
+      ae_all_iff.mpr (fun j => ae_restrict_of_ae ((hf_memLp j).coeFn_toLp)),
+      ae_all_iff.mpr hj_fj_onT] with t htg htp htec htfj
+    rw [htg, htp]
+    exact Finset.sum_congr rfl (fun j _ => by rw [htfj j, ← htec j])
   -- (E-a) `⟪gLp, e' i⟫ = ⟪p, e' i⟫` (`gLp - p ⊥ S ∋ e' i`).
   have hEa : ∀ i, (inner ℝ gLp (e' i) : ℝ) = (inner ℝ p (e' i) : ℝ) := by
-    sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+    intro i
+    rw [MeasureTheory.L2.inner_def, MeasureTheory.L2.inner_def]
+    refine integral_congr_ae ?_
+    have hgp' := (ae_restrict_iff' measurableSet_Icc).mp hgp_onT
+    have hoff' := (ae_restrict_iff' measurableSet_Icc.compl).mp (he'_supp i)
+    filter_upwards [hgp', hoff'] with t htgp htoff
+    rw [RCLike.inner_apply, RCLike.inner_apply, conj_trivial, conj_trivial]
+    by_cases ht : t ∈ Set.Icc (0:ℝ) T
+    · rw [htgp ht]
+    · simp [htoff ht]
   -- (E-b) Parseval on the orthonormal basis of `S`.
   have hp_mem : p ∈ S := by
     rw [hp]
