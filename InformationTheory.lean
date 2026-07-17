@@ -178,6 +178,7 @@ import InformationTheory.Shannon.LpPointwise
 import InformationTheory.Shannon.NormalizedSinc
 import InformationTheory.Shannon.WhittakerShannon
 import InformationTheory.Shannon.ShannonHartleyAchievability
+import InformationTheory.Shannon.ShannonHartleyPreequalizer
 import InformationTheory.Shannon.TimeBandLimiting
 import InformationTheory.Shannon.WynerZiv.Basic
 import InformationTheory.Shannon.WynerZiv.RateMonotonicity

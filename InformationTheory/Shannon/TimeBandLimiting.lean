@@ -4276,6 +4276,28 @@ theorem exists_pointwise_repr_of_mem_timeLimit_star_fixed (T : ℝ) {u : E}
         rw [Set.mem_Icc, not_and_or, not_le, not_le] at hmem_t; exact hmem_t
       exact (htoff htc).symm
 
+/-- **Lp → pointwise `ℝ → ℝ` lift, without a support constraint.** A star-fixed `L²(ℝ;ℂ)` element
+has a genuine pointwise real representative: a function `f : ℝ → ℝ` in `L²` with `(f : ℝ → ℂ)` a.e.
+equal to the given class. This is the support-free sibling of
+`exists_pointwise_repr_of_mem_timeLimit_star_fixed`, needed for the band-limited encoder family whose
+members are not `[0,T]`-supported. The representative is `Re ∘ u`: it is `L²` because `Re` is a norm-1
+Lipschitz image, and it recovers a representative of `u` because star-fixedness (`star u = u`) makes
+`u` a.e. real. -/
+theorem exists_pointwise_repr_of_star_fixed {u : E} (hstar : star u = u) :
+    ∃ f : ℝ → ℝ, MemLp f 2 volume ∧
+      (fun t => ((f t : ℝ) : ℂ)) =ᵐ[volume] (u : ℝ → ℂ) := by
+  -- `u` is a.e. real-valued (star-fixed): `star u = u` forces `u t = conj (u t)` a.e.
+  have hconj : (u : ℝ → ℂ) =ᵐ[volume] fun t => starRingEnd ℂ ((u : ℝ → ℂ) t) := by
+    have h1 : (⇑(star u) : ℝ → ℂ) =ᵐ[volume] fun t => starRingEnd ℂ ((u : ℝ → ℂ) t) := by
+      filter_upwards [Lp.coeFn_star u] with t ht
+      rw [ht]; rfl
+    rwa [hstar] at h1
+  have hre : ∀ᵐ t ∂volume, (((u : ℝ → ℂ) t).re : ℂ) = (u : ℝ → ℂ) t := by
+    filter_upwards [hconj] with t ht
+    exact Complex.conj_eq_iff_re.mp ht.symm
+  refine ⟨fun s => ((u : ℝ → ℂ) s).re, (Lp.memLp u).re, ?_⟩
+  filter_upwards [hre] with t ht using ht
+
 end Achievability
 
 end InformationTheory.Shannon.TimeBandLimiting
