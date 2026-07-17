@@ -685,7 +685,7 @@ theorem contAwgnMaxMessages_bddAbove (T W N₀ P ε : ℝ)
 /-- **Shannon-Hartley achievability (`≥`)**: the operational capacity is at least the
 Shannon-Hartley closed form.
 
-Unlike the boundedness bound of §E, this direction is *not* wall-independent: it needs the
+Unlike the boundedness bound of §E, this direction does not close by Bessel alone: it needs the
 `≈ 2WT` degrees-of-freedom count, in its lower-bound half.
 
 The reason is that the receiver of `ContAwgnCode` sees a band-limited codeword only through test
@@ -694,8 +694,11 @@ never supported in `[0, T]`, so `⟨f, φᵢ⟩ = ⟨f, P_W φᵢ⟩` and the en
 governed by the Gram matrix `Gᵢⱼ = ⟨φᵢ, (timeBandLimitingOp T W) φⱼ⟩` — a compression of the
 prolate operator, whose eigenvalues Cauchy interlacing caps by `prolateEigenvalues T W`. To reach
 the closed form one must exhibit, for each `T`, a family achieving per-dimension gain `≈ 1` on
-`≈ 2WT` dimensions; that is exactly the Landau-Pollak-Slepian concentration
-`prolate_eigenvalue_count` (Leg E of `shannon-hartley-phase2-spectral-plan`), read from below.
+`≈ 2WT` dimensions; that is exactly the Landau-Pollak-Slepian concentration read from below,
+which is `le_prolateCount` (`TimeBandLimiting.lean`): `2WT − D/(1 − c) ≤ prolateCount T W c` for
+every threshold `c ∈ (0, 1)`, with `D = 2 + log(1 + 2WT)`. That count is proved; what this
+statement still lacks is the bridge from it to `contAwgnOperationalCapacity` — the interlacing
+step and the capacity computation on top of it.
 
 No cheaper family is available, and this was checked rather than assumed. The obvious wall-free
 candidate — the boxcar family `φᵢ = 𝟙_{[iΔ,(i+1)Δ]}/√Δ` at `Δ = 1/(2W)`, which is orthonormal and
@@ -705,7 +708,7 @@ the resulting rate strictly below the closed form. Adversarial search over rando
 families corroborates (`docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP: best `C/SH`
 `= 0.3250` against prolate's `0.9944`, with no family beating prolate). The convergence itself is
 the count: the finite-`T` shortfall is `O(log WT)`, the width of the prolate cliff's transition
-band, which is the error term of `prolate_eigenvalue_count`.
+band, which is the error term `D/(1 − c)` of `le_prolateCount`.
 
 The synthesis bridge of §A–§D (`synthSignal`, `synthSignal_energy`) remains the way to build the
 band-limited codewords, and `synthSignal_energy` discharges the whole-line `encoder_power`
@@ -717,11 +720,16 @@ residual is tracked at its own declaration rather than duplicated here.
 
 Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
 
+The `wall:nyquist-2w-dof` slug is kept as the tracking tag, but its named proposition — the
+eigenvalue concentration — is closed (`le_prolateCount` is the half this direction needs). The live
+obstruction is the operational bridge above, not the count.
+
 `@residual(wall:nyquist-2w-dof)` -/
 theorem contAwgn_ge_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := by
-  -- Blocked on the lower half of the `≈ 2WT` prolate eigenvalue count (Leg E); see docstring.
+  -- Blocked on the operational bridge (test family + interlacing + capacity), not on the count
+  -- itself; see docstring.
   sorry -- @residual(wall:nyquist-2w-dof)
 
 end InformationTheory.Shannon.ShannonHartley

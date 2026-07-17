@@ -447,19 +447,26 @@ band-limited AWGN channel equals `W · log(1 + P/(N₀·W))`.
 
 Under the Karhunen-Loève observation map of `ContAwgnCode` this statement is expected true; an
 earlier point-sampling model made it false as framed, and the def-fix that repaired it is recorded
-in `docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP. What remains is the genuine
-mathematical obstruction, which no change of definition can remove: the time-bandwidth
-degrees-of-freedom count.
+in `docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP. What remains is not a matter of
+definition but of connecting the time-bandwidth degrees-of-freedom count to the operational
+quantity.
 
-Both halves need it. `∫ f·φᵢ = ⟪f, P_W φᵢ⟫` for band-limited `f`, so the Gram matrix of the test
-family is a compression of the time-band-limiting operator `timeBandLimitingOp T W`
+Both halves need that count. `∫ f·φᵢ = ⟪f, P_W φᵢ⟫` for band-limited `f`, so the Gram matrix of the
+test family is a compression of the time-band-limiting operator `timeBandLimitingOp T W`
 (`TimeBandLimiting.lean`), and the achievable rate along any `[0, T]`-supported orthonormal family
 is governed by that compression's eigenvalues, which Cauchy interlacing caps by the prolate
 eigenvalues `prolateEigenvalues T W`. Reaching the closed form in the limit requires `≈ 2WT` of
-them to sit near `1` and the rest near `0` — the Landau-Pollak-Slepian concentration, whose
-statement is `prolate_eigenvalue_count` (Leg E of
-`shannon-hartley-phase2-spectral-plan`). The converse needs the upper half of the count, the
-achievability (`contAwgn_ge_shannonHartley`) the lower half.
+them to sit near `1` and the rest near `0` — the Landau-Pollak-Slepian concentration.
+
+That concentration is available. `prolateCount_le` and `le_prolateCount` (`TimeBandLimiting.lean`)
+bracket `prolateCount T W c`, the number of prolate eigenvalues exceeding a free threshold
+`c ∈ (0, 1)`, between `2WT − D/(1 − c)` and `2WT + D/c` with `D = 2 + log(1 + 2WT)`. The converse
+needs the upper half (`prolateCount_le`), the achievability (`contAwgn_ge_shannonHartley`) the
+lower half (`le_prolateCount`).
+
+What is still missing is the bridge from the count to `contAwgnOperationalCapacity`: the Cauchy
+interlacing step tying the Gram compression's eigenvalues to `prolateEigenvalues T W`, and the
+capacity computation built on it. That bridge, not the count, is what this residual stands for.
 
 Note the asymmetry that certifies the def-fix was a repair and not a disguise: the crude bound of
 `contAwgnMaxMessages_bddAbove` closes by Bessel alone, wall-free, but caps the rate only at
@@ -468,12 +475,17 @@ free; the exact constant does not.
 
 Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
 
+The `wall:nyquist-2w-dof` slug is kept as the tracking tag, but its named proposition — the
+eigenvalue concentration — is closed (`prolateCount_le` / `le_prolateCount`). The live obstruction
+is the operational bridge above, not the count.
+
 `@residual(wall:nyquist-2w-dof)` -/
 @[entry_point]
 theorem contAwgn_eq_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     contAwgnOperationalCapacity W N₀ P = bandlimitedAwgnCapacity W N₀ P := by
-  -- Blocked on the `≈ 2WT` prolate eigenvalue count (Leg E); see docstring.
+  -- Blocked on the operational bridge (Gram compression ↔ prolate count, then capacity), not on
+  -- the count itself; see docstring.
   sorry -- @residual(wall:nyquist-2w-dof)
 
 end InformationTheory.Shannon.ShannonHartley
