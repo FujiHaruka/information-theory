@@ -3820,7 +3820,23 @@ real-valued.
 
 This exports star-fixed elements of `E = Lp ℂ 2 volume` (whose a.e. representative is real-valued);
 turning them into the `ℝ → ℝ` matched-filter test functions the `ContAwgnCode` consumer wants
-(with `[0,T]` support / band-limit) is a further step, not established here. -/
+(with `[0,T]` support / band-limit) is a further step, not established here. Also note `u` is an
+orthonormal basis of `V` (a *sum* of eigenspaces over `{μ > c}`), not per se an `A`-eigenbasis:
+its members span `V` but need not be single-eigenvalue eigenfunctions, so a downstream `ψᵢ/√μᵢ`
+normalization requires first refining `u` into an eigenbasis — the same real-form bridge applied
+eigenspace-by-eigenspace — which this theorem does not perform.
+
+Audited 2026-07-18 (independent). `#print axioms` = `[propext, Classical.choice, Quot.sound]`,
+sorryAx-free, validated against the positive control `tsum_prolateEigenvalues_eq` (which does
+show `sorryAx`) after refreshing the module olean. Signature is a plain existence: `hc : 0 < c`
+is a regularity precondition (it makes `V` finite-dimensional via
+`prolateEigenspaceSup_finiteDimensional`, otherwise `prolateCount` is a junk `0`), with no
+`:= h` circularity, no `:True` slot, no load-bearing hypothesis. Body proves all three conjuncts
+(`ℂ`-orthonormal, star-fixed, span `= V`); the count is *derived* (`finrank_span_eq_card` on the
+`ℂ`-independent star-fixed family, `= prolateCount`), and the `prolateCount = 0` case is the
+honest empty family with span `⊥ = V`, not a degenerate trick. No overclaim on
+`ℝ → ℝ` / `[0,T]`-support.
+@audit:ok -/
 theorem exists_real_orthonormalBasis_prolateEigenspaceSup (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ∃ u : Fin (prolateCount T W c) → E,
       Orthonormal ℂ u ∧ (∀ i, star (u i) = u i) ∧
