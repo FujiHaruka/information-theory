@@ -410,16 +410,20 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 
 ### R2 の no-eigenbasis 路 ✅ **CLOSED（r17）** — `prolateCount_le`/`le_prolateCount`（両半分、sorryAx-free、`c` 自由）。詳細履歴は git / 台帳 §SPECTRAL-ASSETS。
 
-### 次 leg の順序（leg 18 改訂）
+### 次 leg の順序（leg 20 改訂 — advisor 検証済 leaf DAG + architecture 発見）
 
-**✅ 完了**: Leg R2/R3（count、r17）/ **Leg R4-gate A1（leg 18、gateway PASS）** / **Leg R4-ACH-B（leg 18、実基底 CLOSED）**。
+**✅ 完了**: Leg R2/R3（count、r17）/ R4-gate A1（leg 18）/ R4-ACH-B 実基底（leg 18）/ **R4-ACH-A2 route(ii) 確定 + keystone（leg 19、`5fcb5416`）** / **leg 20 = L0/L1/L2/L4 の 4 本 sorryAx-free**（`05abc71f`/`40c25674`）。
 
-1. **Leg R4-ACH-A2（route ii 確定 leg 19、IN PROGRESS）** — advisor 独立検証で **(ii)=作用素下界** に確定（`awgn` 定理スカラー ⟹ μᵢ 無用、(i) 却下）。
-   pre-equalizer `b=R⁻¹x` でスカラー帰着（`G⁻¹≤(1/c)I`）。**leg 19 完了 = operator ブリック 3 本 + Lp→pointwise keystone、全 sorryAx-free**（`dadddd55`/`ff37d9a0`）。
-   次(leg 20) = A2 wiring: ℂ→ℝ real ONB 変換 + hsupp discharge（`timeLimitSubspace` a.e.-vanish）+ `exists_pointwise_orthonormal_of_orthonormal` 適用 → encoder/observation identity → A4 transport。
-2. **Leg R4-CONV-gate（並行可、⚠️ route 再検討）** — C1（converse interlacing、唯一の未 gateway-test）。
-   旧 route「R1 + finrank 単射」は R1 dead で失効 → 新 route（L3529 + min-max か）。**advisor 見立て: interlacing 非自明 = self-build 公算、gateway-atom-first 推奨**。PASS で壁→`plan:` 再分類 license。
-3. **Leg A4/C-assembly** — `awgn_channel_coding_theorem` 輸送 + capacity 計算 + rate/limsup。
+**A2 wiring leaf DAG（leg 20 advisor 独立確定、handoff `## R4-ACH leaf DAG` が最新の SoT）**。要点訂正 2 件:
+- **(U1) testFn = `stdOrthonormalBasis ℝ S`（S = Q_T(V) の real 版）**。Gram-Schmidt 不要（star-fixedness 貫通問題を回避）。
+- **(U2) energy = `le_norm_timeLimitProj_sq_of_mem`（‖Q_T v‖²≥c‖v‖²）に直乗**。行列 G⁻¹ 反転不要 = A は √c で下から有界 ⟹ `exists_preequalizer`（L0）で `‖a‖²≤(1/c)‖t‖²`。
+
+**✅ CLOSED**: L0 `exists_preequalizer`（`ShannonHartleyPreequalizer.lean`, Mathlib-only）/ L1 `exists_pointwise_repr_of_star_fixed` / L2 `isBandlimited_of_bandLimitSubspace_ae` / L4 `exists_real_bandlimited_onb`（後 3 本 `TimeBandLimiting.lean`）。
+**残**: L3/L5（testFn φ 族: S ⊆ Lp ℝ, stdOrthonormalBasis, keystone 適用）/ L6（A 下から有界: P_S=Q_T on realV）/ L7（ContAwgnCode 組立、observation=x, energy≤TP）/ L8（transport rfl）/ L9/L10（rate/limsup + ⨅ε→c↑1）。
+
+**⚠️ ARCHITECTURE 発見（leg 20、機械確認）**: import は `ShannonHartley ← Operational ← Achievability ← TimeBandLimiting`（TimeBandLimiting が最下流 sink、何にも import されない）。ゆえに entry-point 2 本（`contAwgn_ge`＝Achievability, `contAwgn_eq`＝Operational）は achievability 機械（TimeBandLimiting）の**上流**で、宣言場所で下流資産を消費できない。**解決 = 両 entry point を最下流の新 file `ShannonHartleyMain.lean`（imports TimeBandLimiting）へ relocate**（両者 direct consumer 0、relocation 安全、README/entry_point は名前解決 self-heal）。TimeBandLimiting の Achievability import は IsBandlimited（実体 Operational）への transitive アクセスのみ。
+
+- **Leg R4-CONV-gate（並行可、⚠️ route 再検討）** — C1（converse interlacing、唯一の未 gateway-test）。旧 route「R1 + finrank 単射」は R1 dead で失効。**advisor 見立て: interlacing 非自明 = self-build 公算、gateway-atom-first 推奨**。PASS で壁→`plan:` 再分類 license。
 
 **壁再分類（leg 18 で証拠強化、判断は次 leg）**: `wall:nyquist-2w-dof` の named proposition（固有値集中）は r17 で CLOSED、A1 は leg 18 で plumbing 確定、有限 V-固有基底は in-tree、C3 は in-tree。**残る唯一の未計測 = C1（converse interlacing）**。CLAUDE.md の defect tell「choice(big) を blocked(hard) と偽る」に該当の疑いが強まった。次 leg: C1 gateway → PASS なら 2 consumer を `@residual(plan:shannon-hartley-phase2-spectral-plan)` へ再分類（code 編集は subagent + 独立 honesty-auditor）。同時に dangling name 掃除（`prolate_eigenvalue_count` docs 6 ファイル / `contAwgn_le_shannonHartley` = C0 指示対象なき名前）。
 
