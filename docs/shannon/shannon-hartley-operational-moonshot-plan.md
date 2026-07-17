@@ -16,7 +16,7 @@
 機械的証拠** — def-fix 後も主定理は `≈2WT` DOF カウントを要する（壁が消えていたら Leg 0 差し戻しだった）。
 **Legs A/B/C/C' の作用素資産（`TimeBandLimiting.lean`）は本 refutation の影響を受けない**（有効資産、破棄しない）。
 
-**次アクション = 子 plan の Leg E-trace（= `wall:nyquist-2w-dof` の self-build 本体、in progress）**。
+**次アクション = 子 plan の Leg E-sharp（= 第 2 モーメント `tr A − tr A² = O(log WT)`、Landau-Widom。壁の残渣はここ 1 点）**。
 **Leg 0（gateway）✅（leg 13）→ Leg P（def-fix）✅（leg 14、`4fd8a47c`）→ Leg D'（BddAbove）✅ **PROOF-DONE**
 （leg 14、`fb18b681`、監査 `@audit:ok`、sorryAx-free・壁非依存が機械確認）→ **Leg E-atom ✅（leg 15、`69152fd9`
 + 監査 `7c43417a`）**。
