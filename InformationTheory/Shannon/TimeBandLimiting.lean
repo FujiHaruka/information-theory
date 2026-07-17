@@ -2242,7 +2242,14 @@ theorem prolateEigenspaceSup_orthogonal_invariant (T W c : ℝ) :
   LinearMap.IsSymmetric.orthogonalComplement_mem_invtSubmodule
     (timeBandLimitingOp_isSymmetric T W) (prolateEigenspaceSup_invariant T W c)
 
-/-- `A` restricted to the orthogonal complement of the span of the eigenspaces above `c`. -/
+/-- `A` restricted to the orthogonal complement of the span of the eigenspaces above `c`.
+
+Audited 2026-07-17 (independent). Checked for degenerate-definition abuse rather than assumed
+genuine: this is the honest restriction of `A`, not a disguised `0`. The machine says so — the
+`rfl` step in `inner_timeBandLimitingOp_le_of_mem_orthogonal` proves
+`(prolateRestrict T W c ⟨v, hv⟩ : E) = timeBandLimitingOp T W v` definitionally, which no zero map
+could satisfy for a nonzero `A` (`timeBandLimitingOp_ne_zero`).
+@audit:ok -/
 noncomputable def prolateRestrict (T W c : ℝ) :
     (prolateEigenspaceSup T W c)ᗮ →L[ℂ] (prolateEigenspaceSup T W c)ᗮ :=
   (timeBandLimitingOp T W).restrict (prolateEigenspaceSup_orthogonal_invariant T W c)
@@ -2290,6 +2297,15 @@ theorem prolateRestrict_hasEigenvalue_le (T W : ℝ) {c : ℝ} {μ : ℂ}
   rw [← hre, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hnn]
   exact hle
 
+/-- The restriction of `A` to `Vᗮ` is a contraction by `c`: `‖S‖ ≤ c`.
+
+Audited 2026-07-17 (independent). `hc : 0 < c` is regularity, not load-bearing: it is consumed only
+to place the spectral point `0` below the bound and to invert `ENNReal.ofReal`, never to supply
+spectral content. The route was machine-confirmed by walking the transitive constant graph rather
+than read off the prose — `ContinuousLinearMap.spectralRadius_eq_nnnorm` (Rayleigh) and
+`IsCompactOperator.hasEigenvalue_iff_mem_spectrum` are both genuinely consumed, and
+`ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot` is *not*.
+@audit:ok -/
 theorem prolateRestrict_norm_le (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ‖prolateRestrict T W c‖ ≤ c := by
   have hsa : IsSelfAdjoint (prolateRestrict T W c) :=
@@ -2333,7 +2349,45 @@ eigenbasis of `A` — the obligation still open at `tsum_prolateEigenvalues_eq`.
 
 Unconditional in `T` and `W`: compactness, symmetry and positivity of `A` all hold for every
 parameter value, so no window or band nondegeneracy is assumed. Only `0 < c` is needed, and only to
-place the point `0` of the spectrum below the bound. -/
+place the point `0` of the spectrum below the bound.
+
+Audited 2026-07-17 (independent), on the two questions this family keeps failing: is a hypothesis
+doing the work, and is this the planned object or a weaker relative?
+
+*No hypothesis carries the core.* The bundle is `hc : 0 < c` (positivity of a free threshold) and
+`hv : v ∈ Vᗮ` (membership in a submodule defined outright, not asserted). Granting both hands over
+no spectral fact: the substance — that compactness collapses the spectrum onto eigenvalues, and
+self-adjointness turns the spectral radius back into the norm — is all discharged in the body. The
+specific risk was an input amounting to *"A has a complete eigenbasis"* or *"the spectrum below `c`
+is discrete"*; no such hypothesis is present, and the transitive constant graph confirms
+mechanically that `orthogonalComplement_iSup_eigenspaces_eq_bot`, `HilbertBasis.mkOfOrthogonalEqBot`
+and `finite_dimensional_eigenspace` are all consumed *zero* times. The docstring's claim to need no
+eigenbasis is therefore machine-backed, not asserted.
+
+*It is the planned object, `c` free.* The statement is character-for-character the plan's target,
+less `hT : 0 ≤ T` and `hW : 0 < W`, which are dropped as unused — strictly stronger, nothing added.
+
+*Sufficiency, re-derived.* Symmetry forces every eigenvalue real (`conj_eigenvalue_eq_self`), so
+spanning only the *real* eigenvalues above `c` leaves no complex eigenvalue hiding in `Vᗮ` — the
+gap this shape could plausibly have had, and it is closed. Two structurally different degenerate
+boundaries were checked live rather than one: at `T ≤ 0` the operator collapses (`A = 0`, `V = ⊥`,
+`Vᗮ = ⊤`) and the claim reads `0 ≤ c‖v‖²`, true; at `c ≥ 1` we again get `V = ⊥`
+(`prolateEigenvalueSet_one_eq_empty`) and the claim reduces to `‖A‖ ≤ 1`, true. Neither refutes it.
+The invariant the hypotheses pin — `v ⊥ every eigenspace above c` — is exactly the granularity the
+conclusion needs, not coarser: it is what forces `spectrum (A|Vᗮ) ⊆ [0, c]`.
+
+*Not vacuous where it matters.* For `0 < c`, `V` is finite-dimensional
+(`prolateEigenspaceSup_finiteDimensional`) while `E = L²(ℝ;ℂ)` is not, so `Vᗮ ≠ ⊥` and the bound
+speaks about real vectors. Unlike its siblings in this file the non-vacuity is argued, not
+machine-checked by an in-tree witness lemma; nothing downstream currently depends on that witness.
+
+*Scope — read the name with care.* This closes the plan's decisive atom, **not** leg R1 as planned.
+R1 is *eigenbasis + multiplicity bridge*, and this route deliberately bypasses it: the eigenbasis
+obligation stands untouched at `tsum_prolateEigenvalues_eq`. What this does deliver is the `Vᗮ`
+half of the Chebyshev split (R2). The gate's premise — "the atom consumes `Spectrum.lean:443`, so
+its passing certifies the count leg" — is false, so its passing certifies nothing about the
+eigenbasis machinery either way.
+@audit:ok -/
 theorem inner_timeBandLimitingOp_le_of_mem_orthogonal
     (T W c : ℝ) (hc : 0 < c)
     {v : E} (hv : v ∈ (prolateEigenspaceSup T W c)ᗮ) :
