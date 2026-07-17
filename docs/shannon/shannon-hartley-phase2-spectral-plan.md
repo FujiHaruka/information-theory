@@ -32,12 +32,22 @@
         **経路は予測の第 3 の道**: 固有基底を作らず、`A|_Vᗮ` が compact self-adjoint ⟹ **作用素ノルム = スペクトル半径**
         （`Rayleigh.lean:182` + `hasEigenvalue_iff_mem_spectrum`）で `‖A|_Vᗮ‖ ≤ c` → Cauchy-Schwarz。
         副産物 = `prolateRestrict` / `prolateRestrict_norm_le`（再利用資産）。
-  - [ ] **R1 = 宙吊り（gate 前提が反証された）**: 固有基底 + 多重度 bridge。**⚠️ atom は `Spectrum.lean:443` を
-        0 回消費**（監査が定数グラフ 56,356 定数走査で機械確認、grep でなく）⟹ 「atom が通れば R1 も通る」という
-        gate 論拠は**成立しない**。かつ atom は**固有基底なしで gate の目的を達成**した ⟹ R1 は「未検証」でなく
-        **dead obligation の公算**（監査: 「両方向に unevidenced」）。**R2 を R1 の上でなく下記 no-eigenbasis 路で打て。**
-  - [ ] **R2（NEXT）**: カウント両半分。**R1 に乗せない** — 下記「R2 の no-eigenbasis 路」
-  - [ ] **R3**: `prolate_eigenvalue_count` を宣言として書く（現在**名前だけ存在**）。**自由 `c` + 明示 `D`**
+  - [x] **R1 = DEAD（構成上不要と確定、leg 17）**: 固有基底 + 多重度 bridge は**要らなかった**。
+        **2 本の独立証拠**: (i) atom も R2 両半分も `Spectrum.lean:443` を 0 回消費（**positive control で検証済の**
+        定数グラフ probe、leg 17 監査 → leg 18 監査が再確認）、(ii) **`prolateCount := finrank ℂ V` ゆえ
+        `hn : finrank ℂ V = prolateCount T W c` が `rfl`** — `V` 半分は `Fin (prolateCount T W c)` で
+        **定義上** index される ⟹ 多重度 bridge は**構成上存在しない**（graph walk に依存しない証拠）。
+        残る `tsum_prolateEigenvalues_eq`（L2322、既存 sorry）は**両半分から機械確認で unused**。
+  - [x] **R2 = CLOSED（leg 17、`65897bdb` + 監査 `43e473e3` all OK）**: **カウント両半分が sorryAx-free**、`c` 自由、`D` 明示:
+        `prolateCount_le : (prolateCount T W c : ℝ) ≤ 2WT + (2 + log(1+2WT))/c`（`0 < c`）/
+        `le_prolateCount : 2WT − (2 + log(1+2WT))/(1−c) ≤ prolateCount T W c`（`0 < c < 1`）。
+        **gap (b) `S² ≤ cS` は sqrt/CFC 不要**（`A = C*C` の具体形 ⟹ 形式が `C` に沿った引き戻し内積 ⟹
+        `norm_inner_le_norm` が逐語で効く、~25 行）。**gap (a) 適合基底は `mkOfOrthogonalEqBot` で closure**。
+        副産物 5 本（`norm_timeBandLimitingOp_sq_le_of_mem_orthogonal` / `exists_hilbertBasis_prolateSplit` 等）。
+        **監査の消費者検証**: Markov は密度 `2W/c` に収束（`c→0` で発散 = **converse の極限で誤った定数**）、
+        本 bound は任意の固定 `c>0` で密度ちょうど `2W`。⟹ **Markov の弱い親戚ではない**（leg 15 の鏡像）。
+  - [ ] **R3（NEXT、ほぼ無料）**: 指示対象なき名前 `prolate_eigenvalue_count` を retire。**R2 の 2 本がその内容**。
+        3 docstring（`Operational.lean:460` / `Achievability.lean:698,708`）を実名へ張り替える。
 - [ ] **R4 — operational bridge（Gram + Cauchy interlacing + capacity 計算）= 最大の未計測債務**。
       count の**下流**ゆえ R1–R3 では consumer の sorry は落ちない。**scope 判断の前に評価を dispatch**（監査の勧告）
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
