@@ -428,7 +428,8 @@ private theorem memLp_sum_smul {k : ℕ} (b : Fin k → ℝ) (h : Fin k → (ℝ
     MemLp (fun t => ∑ j, b j * h j t) 2 volume :=
   memLp_finsetSum Finset.univ (fun j (_ : j ∈ Finset.univ) => (h_memLp j).const_mul (b j))
 
-/-- A finite real linear combination of band-limited functions is band-limited to the same band. -/
+/-- A finite real linear combination of band-limited functions is band-limited to the same band.
+@audit:ok -/
 private theorem isBandlimited_sum_smul {k : ℕ} {W : ℝ} (b : Fin k → ℝ) (h : Fin k → (ℝ → ℝ))
     (h_bl : ∀ j, IsBandlimited (h j) W) :
     IsBandlimited (fun t => ∑ j, b j * h j t) W := by
@@ -501,7 +502,9 @@ Given a discrete `AwgnCode` on `k = prolateCount T W c` observations at per-obse
 (`exists_preequalizer`), so each discrete codeword `xₘ` has a band-limited pre-image `bₘ`. The
 signals `∑ⱼ (bₘ)ⱼ hⱼ` are then band-limited codewords of a `ContAwgnCode` whose observations equal
 `xₘ` exactly; the error probability transports unchanged, and `le_csSup` (via the wall-free
-`contAwgnMaxMessages_bddAbove`) turns the discrete message count into the lower bound. -/
+`contAwgnMaxMessages_bddAbove`) turns the discrete message count into the lower bound.
+
+@audit:ok -/
 theorem contAwgnMaxMessages_ge_of_awgnCode
     (T W N₀ P : ℝ) (hT : 0 < T) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
     {c : ℝ} (hc0 : 0 < c) (hc1 : c < 1)
@@ -853,7 +856,8 @@ theorem exists_params_of_lt (W N₀ P y : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (
   exact ⟨c, Q, R, hc0, hc1, hQ0, hcQ, hR0, hRs, hyR⟩
 
 /-- The core per-`ε` achievability step: the closed form is below the operational rate at level
-`ε`. -/
+`ε`.
+@audit:ok -/
 theorem sh_le_contAwgnRate (W N₀ P ε : ℝ)
     (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
     bandlimitedAwgnCapacity W N₀ P ≤ contAwgnRate W N₀ P ε := by
@@ -957,16 +961,18 @@ fed by the block `awgn_channel_coding_theorem`, and reads off the `≈ 2WT` degr
 `prolateCount_div_tendsto` (from `le_prolateCount` / `prolateCount_le`) through a `limsup`
 comparison.
 
-Earlier this statement was tracked as `@residual(wall:nyquist-2w-dof)`, but the achievability half
+Earlier this statement was tracked as a `wall:nyquist-2w-dof` residual, but the achievability half
 never needed the *tight* Landau-Pollak-Slepian concentration — only that `prolateCount T W c / T`
 converges to `2W`, which the crude two-sided count already gives. The genuine obstruction was a
 definitional one: `contAwgnOperationalCapacity` used the bounded binder `⨅ ε ∈ Set.Ioo 0 1`, which
 for the conditionally-complete `ℝ` picks up the phantom `sInf ∅ = 0` from every `ε ∉ (0,1)` and
 collapsed the capacity to `0`, making the statement false as framed. With the phantom-free subtype
-infimum the statement is true, and this proof closes it (modulo the still-open
-`contAwgnRate_isBoundedUnder`).
+infimum the statement is true, and this proof closes it outright: the finiteness lemma
+`contAwgnRate_isBoundedUnder` it relies on is itself proven, and the whole chain is `sorryAx`-free.
 
-Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing). -/
+Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
+
+@audit:ok -/
 theorem contAwgn_ge_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := by
