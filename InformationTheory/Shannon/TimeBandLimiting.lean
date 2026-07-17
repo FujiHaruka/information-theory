@@ -4108,4 +4108,121 @@ theorem le_prolateCount (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (hc : 
 
 end EigenvalueCount
 
+section Achievability
+
+/-!
+### Operator-level bricks for the achievability pre-equalizer (route ii)
+
+The continuous-time AWGN achievability receiver sees a band-limited codeword `v ∈ V =
+`prolateEigenspaceSup T W c`` through the time-limiting filter `Q_T`. The core operator fact is the
+*time-window energy concentration*: on `V` the time-limited energy `‖Q_T v‖²` retains at least the
+fraction `c` of the total energy `‖v‖²`. These three bricks package that into the exact shapes the
+pre-equalizer consumes: the concentration inequality itself, the injectivity of `Q_T|_V` it implies,
+and the Gram lower bound `G ≥ c·I` on a `V`-ONB used to bound the pre-equalizer gain `G⁻¹ ≤ (1/c)I`.
+
+Sizing memo for the next leg (A2 `testFn` construction): the dominant cost of the `testFn`
+construction is the `Lp`-class → pointwise `ℝ → ℝ` representative lift (route-independent); the
+`testFn` themselves are the `[0,T]`-supported real ONB of `Q_T(V)`.
+-/
+
+/-- Members of `V = prolateEigenspaceSup T W c` are band-limited: `V ≤ bandLimitSubspace W`.
+
+An eigenvector for eigenvalue `μ > c > 0` satisfies `A v = μ v`; since `A = P_W ∘ Q_T ∘ P_W` has
+range inside `bandLimitSubspace W`, so does `μ v`, and `μ ≠ 0` gives `v ∈ bandLimitSubspace W`. The
+span of these eigenspaces stays inside the closed subspace `bandLimitSubspace W`. -/
+theorem prolateEigenspaceSup_le_bandLimitSubspace (T W : ℝ) {c : ℝ} (hc : 0 < c) :
+    prolateEigenspaceSup T W c ≤ bandLimitSubspace W := by
+  rw [prolateEigenspaceSup]
+  refine iSup₂_le fun μ hμ => ?_
+  intro w hw
+  rw [Module.End.mem_eigenspace_iff] at hw
+  have hw' : timeBandLimitingOp T W w = (μ : ℂ) • w := hw
+  have hAmem : timeBandLimitingOp T W w ∈ bandLimitSubspace W := by
+    simp only [timeBandLimitingOp, ContinuousLinearMap.comp_apply]
+    exact Submodule.starProjection_apply_mem _ _
+  rw [hw'] at hAmem
+  have hμ0 : (μ : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr (hc.trans hμ.1).ne'
+  have := Submodule.smul_mem (bandLimitSubspace W) (μ : ℂ)⁻¹ hAmem
+  rwa [smul_smul, inv_mul_cancel₀ hμ0, one_smul] at this
+
+/-- **Time-window energy concentration.** For `v ∈ V = prolateEigenspaceSup T W c` and `0 < c`, the
+time-limited energy retains at least the fraction `c` of the total energy:
+`c ‖v‖² ≤ ‖Q_T v‖²`, where `Q_T = (timeLimitSubspace T).starProjection`.
+
+This is the prolate-spheroidal concentration statement the achievability receiver relies on. It comes
+straight from `le_inner_timeBandLimitingOp_of_mem` (the Rayleigh lower bound `c‖v‖² ≤ ⟪A v, v⟫`) once
+the polarization identity `inner_timeBandLimitingOp_eq_inner_timeLimit_bandLimit` collapses
+`⟪A v, v⟫` to `‖Q_T P_W v‖²` and `prolateEigenspaceSup_le_bandLimitSubspace` removes `P_W` on `V`. -/
+theorem le_norm_timeLimitProj_sq_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
+    (hv : v ∈ prolateEigenspaceSup T W c) :
+    c * ‖v‖ ^ 2 ≤ ‖(timeLimitSubspace T).starProjection v‖ ^ 2 := by
+  have hPv : (bandLimitSubspace W).starProjection v = v :=
+    Submodule.starProjection_eq_self_iff.mpr
+      (prolateEigenspaceSup_le_bandLimitSubspace T W hc hv)
+  have hself : ∀ z : E, (inner ℂ z z).re = ‖z‖ ^ 2 := fun z => by
+    rw [inner_self_eq_norm_sq_to_K]; simp [← Complex.ofReal_pow]
+  have h1 := le_inner_timeBandLimitingOp_of_mem T W c hc hv
+  have h2 : inner ℂ (timeBandLimitingOp T W v) v
+      = inner ℂ ((timeLimitSubspace T).starProjection v)
+          ((timeLimitSubspace T).starProjection v) := by
+    calc inner ℂ (timeBandLimitingOp T W v) v
+        = inner ℂ ((timeLimitSubspace T).starProjection
+              ((bandLimitSubspace W).starProjection v))
+            ((timeLimitSubspace T).starProjection
+              ((bandLimitSubspace W).starProjection v)) :=
+          inner_timeBandLimitingOp_eq_inner_timeLimit_bandLimit T W v v
+      _ = inner ℂ ((timeLimitSubspace T).starProjection v)
+            ((timeLimitSubspace T).starProjection v) := by rw [hPv]
+  rw [h2, hself] at h1
+  exact h1
+
+/-- **Injectivity of `Q_T` on `V`.** For `0 < c`, if a `V`-member is annihilated by the
+time-limiting projection then it is zero. Immediate corollary of the energy concentration:
+`Q_T v = 0` forces `c ‖v‖² ≤ 0`, and `c > 0` gives `v = 0`. -/
+theorem eq_zero_of_timeLimitProj_eq_zero (T W c : ℝ) (hc : 0 < c) {v : E}
+    (hv : v ∈ prolateEigenspaceSup T W c)
+    (hQ : (timeLimitSubspace T).starProjection v = 0) :
+    v = 0 := by
+  have h := le_norm_timeLimitProj_sq_of_mem T W c hc hv
+  rw [hQ, norm_zero] at h
+  have hz : ‖v‖ ^ 2 ≤ 0 := by nlinarith [hc, sq_nonneg ‖v‖]
+  have hnorm0 : ‖v‖ = 0 := le_antisymm (by nlinarith [norm_nonneg v]) (norm_nonneg v)
+  exact norm_eq_zero.mp hnorm0
+
+/-- **Gram lower bound `G ≥ c·I` on a `V`-ONB.** For a `ℂ`-orthonormal family `u` inside
+`V = prolateEigenspaceSup T W c` and real coefficients `b`, the quadratic form of `A` on the
+combination `x = ∑ᵢ bᵢ • uᵢ` dominates `c ∑ᵢ bᵢ²`:
+`c ∑ᵢ bᵢ² ≤ Re⟪A x, x⟫`.
+
+This is the operator matrix lower bound the pre-equalizer uses to get `G⁻¹ ≤ (1/c)I`. No per-vector
+eigenvalue `μᵢ` is used (`u` is only assumed orthonormal, not an eigenbasis): `x ∈ V` because `V` is
+a submodule, `‖x‖² = ∑ᵢ bᵢ²` because `u` is orthonormal, and `le_inner_timeBandLimitingOp_of_mem`
+supplies `c ‖x‖² ≤ Re⟪A x, x⟫` on `V`. -/
+theorem le_re_inner_timeBandLimitingOp_sum_smul (T W c : ℝ) (hc : 0 < c)
+    {u : Fin (prolateCount T W c) → E} (hu : Orthonormal ℂ u)
+    (hmem : ∀ i, u i ∈ prolateEigenspaceSup T W c) (b : Fin (prolateCount T W c) → ℝ) :
+    c * ∑ i, b i ^ 2
+      ≤ (inner ℂ (timeBandLimitingOp T W (∑ i, (b i : ℂ) • u i))
+          (∑ i, (b i : ℂ) • u i)).re := by
+  set x : E := ∑ i, (b i : ℂ) • u i with hx
+  have hxV : x ∈ prolateEigenspaceSup T W c := by
+    rw [hx]
+    exact Submodule.sum_mem _ (fun i _ => Submodule.smul_mem _ _ (hmem i))
+  have h1 := le_inner_timeBandLimitingOp_of_mem T W c hc hxV
+  have hself : (inner ℂ x x).re = ‖x‖ ^ 2 := by
+    rw [inner_self_eq_norm_sq_to_K]; simp [← Complex.ofReal_pow]
+  have hip : inner ℂ x x = ((∑ i, b i ^ 2 : ℝ) : ℂ) := by
+    rw [hx, hu.inner_sum (fun i => (b i : ℂ)) (fun i => (b i : ℂ)) Finset.univ,
+      Complex.ofReal_sum]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [Complex.conj_ofReal]
+    push_cast
+    ring
+  have hnorm : ‖x‖ ^ 2 = ∑ i, b i ^ 2 := by
+    rw [← hself, hip, Complex.ofReal_re]
+  rw [hnorm] at h1
+  exact h1
+
+end Achievability
+
 end InformationTheory.Shannon.TimeBandLimiting
