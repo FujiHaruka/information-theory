@@ -2522,7 +2522,18 @@ above `c`, the Rayleigh quotient of `A` is at least `c`. This is the matched pai
 
 `V` is finite-dimensional and `A`-invariant, so the finite-dimensional spectral theorem supplies an
 orthonormal eigenbasis `b` of `V` with every eigenvalue exceeding `c`. Expanding `v` along `b`,
-`⟪A v, v⟫ = ∑ᵢ νᵢ ‖⟪bᵢ, v⟫‖² ≥ c ∑ᵢ ‖⟪bᵢ, v⟫‖² = c ‖v‖²` by Parseval, since every `νᵢ > c`. -/
+`⟪A v, v⟫ = ∑ᵢ νᵢ ‖⟪bᵢ, v⟫‖² ≥ c ∑ᵢ ‖⟪bᵢ, v⟫‖² = c ‖v‖²` by Parseval, since every `νᵢ > c`.
+
+Audited 2026-07-18 (independent): sorryAx-free (`#print axioms` = `[propext, Classical.choice,
+Quot.sound]`, validated against the positive control `tsum_prolateEigenvalues_eq` which does show
+`sorryAx`). Both hypotheses are preconditions, not core: `hc : 0 < c` gives finite-dimensionality of
+`V` (so the spectral theorem applies) and `hv : v ∈ V` scopes the claim; neither is `:= h` circular,
+a `:True` slot, or a load-bearing bundle. The body proves the stated bound `c‖v‖² ≤ Re⟪Av,v⟫`, not a
+weaker `0`-bound: the `hνgt` block earns `νᵢ > c` from the orthogonality argument (an eigenvector for
+an eigenvalue `≤ c` would be `⊥` to every eigenspace above `c`, hence to `V ∋ bᵢ`, hence zero,
+contradicting unit norm), then Parseval closes it. Not vacuous where it bites (V non-trivial below the
+top eigenvalue via `exists_unit_eigenvector`); at the boundaries it degenerates to `0 ≤ c‖v‖²`, true.
+@audit:ok -/
 theorem le_inner_timeBandLimitingOp_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
     (hv : v ∈ prolateEigenspaceSup T W c) :
     c * ‖v‖ ^ 2 ≤ (inner ℂ (timeBandLimitingOp T W v) v).re := by
@@ -3755,6 +3766,17 @@ inner-product-space orthonormal-basis machinery under `Analysis.InnerProductSpac
    `Fin (prolateCount T W c)` — the delicate step (real dimension of the real form equals the
    complex dimension of `V`).
 
+Audited 2026-07-18 (independent): honest residual, `plan:` classification stands. The signature is a
+plain existence claim with no bundled core (only `hc : 0 < c`, a well-definedness precondition — for
+`0 < c`, `V` is finite-dimensional with `dim = prolateCount = finrank ℂ V` by def, and conjugation-
+closed via `star_mem_prolateEigenspaceSup`, so a star-fixed orthonormal basis of that size exists;
+the statement is true, not `:True`/circular/vacuous). `plan:` over `wall:` is correct: the building
+block `stdOrthonormalBasis` for finite-dimensional real inner-product spaces is present in Mathlib
+(loogle-confirmed), no packaged `Complexification` real-basis lemma exists (loogle 0), so the three
+missing steps are elementary in-project plumbing, not a deep gap. No overclaim: the docstring
+explicitly scopes out the `ℝ → ℝ` matched-filter test functions the `ContAwgnCode` consumer needs as
+a further step, not established here. Plan referent `docs/shannon/shannon-hartley-phase2-spectral-plan.md`
+confirmed present.
 @residual(plan:shannon-hartley-phase2-spectral-plan) -/
 theorem exists_real_orthonormalBasis_prolateEigenspaceSup (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ∃ u : Fin (prolateCount T W c) → E,
