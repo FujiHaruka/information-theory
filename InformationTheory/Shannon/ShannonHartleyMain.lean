@@ -301,6 +301,8 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     fun i => LpPointwise.support_ptRepr_subset _ _
   have hφ_memLp : ∀ i, MemLp (φ i) 2 volume :=
     fun i => LpPointwise.memLp_ptRepr measurableSet_Icc _
+  have hφ_ae : ∀ i, φ i =ᵐ[volume] (⇑(e' i) : ℝ → ℝ) :=
+    fun i => LpPointwise.ptRepr_ae_eq measurableSet_Icc (e' i) (he'_supp i)
   have hφ_ortho : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1:ℝ) else 0 := by
     intro i j
     rw [hφ]
@@ -310,7 +312,50 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   refine ⟨u, h, φ, hu_on, hu_mem, h_memLp, h_ae, h_bl, h_ortho, hφ_supp, hφ_memLp, hφ_ortho, ?_⟩
   -- Cross-map energy identity.
   intro v
-  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+  -- The encoder combination as a genuine `Lp ℝ` class, and its `S`-projection `p = ∑ⱼ vⱼ • eⱼ`.
+  have hg_memLp : MemLp (fun t => ∑ j, v j * h j t) 2 volume := by
+    have hsum : MemLp (fun t => ∑ j, (v j • h j) t) 2 volume :=
+      memLp_finsetSum Finset.univ (fun j (_ : j ∈ Finset.univ) => (h_memLp j).const_smul (v j))
+    refine MemLp.ae_eq ?_ hsum
+    filter_upwards with t
+    simp [Pi.smul_apply, smul_eq_mul]
+  set gLp : Lp ℝ 2 (volume : Measure ℝ) := hg_memLp.toLp _ with hgLp_def
+  set p : Lp ℝ 2 (volume : Measure ℝ) := ∑ j, v j • e j with hp
+  have hgc : ⇑gLp =ᵐ[volume] (fun t => ∑ j, v j * h j t) := by
+    rw [hgLp_def]; exact hg_memLp.coeFn_toLp
+  -- (B1) The receiver integral is the `Lp ℝ` inner product.
+  have hB1 : ∀ i, (∫ t, (∑ j, v j * h j t) * φ i t) = (inner ℝ gLp (e' i) : ℝ) := by
+    intro i
+    rw [MeasureTheory.L2.inner_def]
+    refine integral_congr_ae ?_
+    filter_upwards [hgc, hφ_ae i] with t htg htφ
+    rw [RCLike.inner_apply, conj_trivial, htg, htφ]
+    ring
+  -- (E-c) `‖p‖² = ‖Q_T (∑ⱼ vⱼ uⱼ)‖²`.
+  have hEc : ‖p‖ ^ 2 = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ ^ 2 := by
+    sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+  -- (E-a) `⟪gLp, e' i⟫ = ⟪p, e' i⟫` (`gLp - p ⊥ S ∋ e' i`).
+  have hEa : ∀ i, (inner ℝ gLp (e' i) : ℝ) = (inner ℝ p (e' i) : ℝ) := by
+    sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+  -- (E-b) Parseval on the orthonormal basis of `S`.
+  have hp_mem : p ∈ S := by
+    rw [hp]
+    exact Submodule.sum_mem _ (fun j _ => Submodule.smul_mem _ _
+      (by rw [hS]; exact Submodule.subset_span (Set.mem_range_self j)))
+  have hEb : (∑ i, (inner ℝ p (e' i) : ℝ) ^ 2) = ‖p‖ ^ 2 := by
+    have hcoe : ∀ i, (inner ℝ p (e' i) : ℝ)
+        = (inner ℝ (⟨p, hp_mem⟩ : ↥S) (b (Fin.cast hdim.symm i)) : ℝ) := fun i =>
+      (Submodule.coe_inner S (⟨p, hp_mem⟩ : ↥S) (b (Fin.cast hdim.symm i))).symm
+    simp_rw [hcoe]
+    rw [Fintype.sum_equiv (finCongr hdim.symm)
+      (fun i => (inner ℝ (⟨p, hp_mem⟩ : ↥S) (b (Fin.cast hdim.symm i))) ^ 2)
+      (fun j => (inner ℝ (⟨p, hp_mem⟩ : ↥S) (b j)) ^ 2)
+      (fun i => by rw [finCongr_apply])]
+    exact b.sum_sq_inner_left _
+  have hassemble : (∑ i, (∫ t, (∑ j, v j * h j t) * φ i t) ^ 2) = ‖p‖ ^ 2 := by
+    rw [← hEb]
+    exact Finset.sum_congr rfl (fun i _ => by rw [hB1 i, hEa i])
+  rw [hassemble, hEc]
 
 /-- **L6 — the receiver cross-map is bounded below by `√c`.**
 
