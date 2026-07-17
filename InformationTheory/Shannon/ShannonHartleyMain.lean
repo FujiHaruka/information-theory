@@ -202,9 +202,65 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
       (ae_restrict_iff' measurableSet_Icc.compl).mpr (ae_of_all volume h2)] with t hta htb
     simp only [Pi.zero_apply]
     rw [hta, htb]
+  -- a.e. link: complexified `e i` equals the time-limited encoder `Q_T (u i)`.
+  have hlink : ∀ i, (fun t => ((⇑(e i) t : ℝ) : ℂ)) =ᵐ[volume]
+      (⇑((timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ) := by
+    intro i
+    have h1 : (⇑(e i) : ℝ → ℝ) =ᵐ[volume] f i := (hf_memLp i).coeFn_toLp
+    exact (h1.fun_comp (fun r : ℝ => (r : ℂ))).trans (hf_ae i)
   -- Linear independence of `e` ⟹ `finrank ℝ S = prolateCount`.
   have he_li : LinearIndependent ℝ e := by
-    sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+    rw [Fintype.linearIndependent_iff]
+    intro g hg
+    -- Transfer the vanishing combination to `E`: `∑ (g i) • Q_T (u i) = 0`.
+    have hE : (∑ i, (g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) = 0 := by
+      refine Lp.ext ?_
+      have hcsum := Lp.coeFn_finsetSum Finset.univ
+        (fun i => (g i : ℂ) • (timeLimitSubspace T).starProjection (u i))
+      have hrsum := Lp.coeFn_finsetSum Finset.univ (fun i => g i • e i)
+      have hg0 : ⇑(∑ i, g i • e i) =ᵐ[volume] (0 : ℝ → ℝ) := by
+        rw [hg]; exact Lp.coeFn_zero ℝ 2 volume
+      have hz : ⇑(0 : E) =ᵐ[volume] (0 : ℝ → ℂ) := Lp.coeFn_zero ℂ 2 volume
+      have hcsmul : ∀ i, ⇑((g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) =ᵐ[volume]
+          (g i : ℂ) • (⇑((timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ) :=
+        fun i => Lp.coeFn_smul _ _
+      have hrsmul : ∀ i, ⇑(g i • e i) =ᵐ[volume] g i • (⇑(e i) : ℝ → ℝ) :=
+        fun i => Lp.coeFn_smul _ _
+      filter_upwards [hcsum, hrsum, hg0, hz, ae_all_iff.mpr hlink, ae_all_iff.mpr hcsmul,
+        ae_all_iff.mpr hrsmul] with t hct hrt hg0t hzt hlinkt hcsmt hrsmt
+      rw [hct, hzt, Finset.sum_apply, Pi.zero_apply]
+      -- Rewrite each complex summand as `(g i) * (e i t : ℂ)`.
+      have step : ∀ i, (⇑((g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ) t
+          = (g i : ℂ) * ((⇑(e i) t : ℝ) : ℂ) := by
+        intro i
+        rw [hcsmt i, Pi.smul_apply, smul_eq_mul, ← hlinkt i]
+      rw [Finset.sum_congr rfl (fun i _ => step i)]
+      -- The real combination vanishes pointwise.
+      have hrside : (∑ i, g i * (⇑(e i) t : ℝ)) = 0 := by
+        rw [Finset.sum_apply] at hrt
+        simp only [Pi.zero_apply] at hg0t
+        rw [hrt] at hg0t
+        rw [← hg0t]
+        exact Finset.sum_congr rfl (fun i _ => by rw [hrsmt i, Pi.smul_apply, smul_eq_mul])
+      have hcast : (∑ i, (g i : ℂ) * ((⇑(e i) t : ℝ) : ℂ))
+          = ((∑ i, g i * (⇑(e i) t : ℝ) : ℝ) : ℂ) := by
+        rw [Complex.ofReal_sum]
+        exact Finset.sum_congr rfl (fun i _ => by rw [Complex.ofReal_mul])
+      rw [hcast, hrside, Complex.ofReal_zero]
+    -- Pull `Q_T` out of the sum, then invert it on `V`.
+    have hQ0 : (timeLimitSubspace T).starProjection (∑ i, (g i : ℂ) • u i) = 0 := by
+      rw [map_sum]
+      simp_rw [map_smul]
+      exact hE
+    have hsum0 : (∑ i, (g i : ℂ) • u i) = 0 :=
+      eq_zero_of_timeLimitProj_eq_zero T W c hc
+        (Submodule.sum_mem _ (fun i _ => Submodule.smul_mem _ _ (hu_mem i))) hQ0
+    -- `u` is `ℂ`-independent, so all coefficients vanish.
+    intro i
+    have hli := hu_on.linearIndependent
+    rw [Fintype.linearIndependent_iff] at hli
+    have := hli (fun i => (g i : ℂ)) hsum0 i
+    exact_mod_cast this
   haveI hSfin : FiniteDimensional ℝ S := by
     rw [hS]; exact FiniteDimensional.span_of_finite ℝ (Set.finite_range e)
   have hdim : Module.finrank ℝ S = prolateCount T W c := by
