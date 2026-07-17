@@ -1,4 +1,5 @@
 import InformationTheory.Shannon.TimeBandLimiting
+import InformationTheory.Shannon.LpPointwise
 import InformationTheory.Meta.EntryPoint
 
 /-!
@@ -117,5 +118,187 @@ theorem contAwgn_eq_shannonHartley
   -- Blocked on the operational bridge (Gram compression ↔ prolate count, then capacity), not on
   -- the count itself; see docstring.
   sorry -- @residual(wall:nyquist-2w-dof)
+
+/-!
+### R4-ACH foundational leaves (L3/L5, L6)
+
+The achievability route (ii) builds continuous-time codewords as band-limited signals and reads
+them off through `[0, T]`-supported orthonormal test functions. This section supplies the two
+foundational leaves feeding the pre-equalizer (`ShannonHartleyPreequalizer.exists_preequalizer`):
+
+* **L3/L5** (`exists_testFn_family`) — a receiver test-function family `φ` supported in `[0, T]`,
+  paired with the band-limited encoder family `h` (real representatives of a `ℂ`-orthonormal basis
+  `u` of `V = prolateEigenspaceSup T W c`). The two families are tied by the *cross-map energy
+  identity*: the receiver's recovered energy `∑ᵢ ⟨∑ⱼ vⱼ hⱼ, φᵢ⟩²` equals the time-limited energy
+  `‖Q_T (∑ⱼ vⱼ uⱼ)‖²`. That identity is the shape L6 consumes.
+
+* **L6** (`exists_crossMap_lower_bound`) — the cross-map `A` (with `(A v)ᵢ = ∫ (∑ⱼ vⱼ hⱼ)·φᵢ`) is
+  bounded below by `√c`: `c ∑ᵢ vᵢ² ≤ ∑ᵢ (A v)ᵢ²`. This is exactly the `hbdd` hypothesis of
+  `exists_preequalizer` once `A` is packaged as an endomorphism of `EuclideanSpace ℝ (Fin k)`
+  (`‖v‖² = ∑ᵢ vᵢ²`, `‖A v‖² = ∑ᵢ (A v)ᵢ²`). The bound comes from the energy identity plus the
+  time-window energy concentration `le_norm_timeLimitProj_sq_of_mem`.
+-/
+
+section Achievability
+
+open MeasureTheory InformationTheory.Shannon.TimeBandLimiting InformationTheory.Shannon.LpPointwise
+
+/-- **L3/L5 — receiver test-function family with the cross-map energy identity.**
+
+For `V = prolateEigenspaceSup T W c` (`0 < c`), there is a `ℂ`-orthonormal basis `u` of `V`
+together with a band-limited real encoder family `h` (real representatives of `u`) and a receiver
+test-function family `φ`, `[0, T]`-supported and pointwise-orthonormal, such that for every
+coefficient vector `v : Fin (prolateCount T W c) → ℝ` the receiver's recovered energy equals the
+time-limited energy of the corresponding `V`-combination:
+`∑ᵢ (∫ (∑ⱼ vⱼ hⱼ)·φᵢ)² = ‖Q_T (∑ⱼ vⱼ uⱼ)‖²`, with `Q_T = (timeLimitSubspace T).starProjection`.
+
+The `φ` family is the `[0, T]`-supported real orthonormal basis of `S = span_ℝ {Q_T uⱼ}`; the
+energy identity holds because the time-limited encoders `Q_T uⱼ` span `S`, so the receiver recovers
+the full time-limited energy of any `V`-combination.
+
+`@residual(plan:shannon-hartley-phase2-spectral-plan)` -/
+theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
+    ∃ (u : Fin (prolateCount T W c) → E) (h φ : Fin (prolateCount T W c) → (ℝ → ℝ)),
+      Orthonormal ℂ u ∧
+      (∀ i, u i ∈ prolateEigenspaceSup T W c) ∧
+      (∀ i, MemLp (h i) 2 volume) ∧
+      (∀ i, (fun t => ((h i t : ℝ) : ℂ)) =ᵐ[volume] (u i : ℝ → ℂ)) ∧
+      (∀ i, IsBandlimited (h i) W) ∧
+      (∀ i j, (∫ t, h i t * h j t) = if i = j then (1 : ℝ) else 0) ∧
+      (∀ i, Function.support (φ i) ⊆ Set.Icc 0 T) ∧
+      (∀ i, MemLp (φ i) 2 volume) ∧
+      (∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0) ∧
+      (∀ v : Fin (prolateCount T W c) → ℝ,
+        (∑ i, (∫ t, (∑ j, v j * h j t) * φ i t) ^ 2)
+          = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ ^ 2) := by
+  classical
+  -- L4: encoder ONB `u` of `V` and band-limited real representatives `h`.
+  obtain ⟨u, h, hu_on, hu_star, hu_span, h_memLp, h_ae, h_bl, h_ortho⟩ :=
+    exists_real_bandlimited_onb T W hc
+  have hu_mem : ∀ i, u i ∈ prolateEigenspaceSup T W c := fun i => by
+    rw [← hu_span]; exact Submodule.subset_span (Set.mem_range_self i)
+  -- Time-limited encoders `w i = Q_T (u i)`: in `timeLimitSubspace`, star-fixed.
+  have hw_mem : ∀ i, (timeLimitSubspace T).starProjection (u i) ∈ timeLimitSubspace T :=
+    fun i => Submodule.starProjection_apply_mem _ _
+  have hw_star : ∀ i, star ((timeLimitSubspace T).starProjection (u i))
+      = (timeLimitSubspace T).starProjection (u i) := fun i => by
+    rw [← timeLimitProj_star T (u i), hu_star i]
+  -- Real `[0,T]`-supported representatives `f i` of `w i`.
+  choose f hf_memLp hf_supp hf_ae using fun i =>
+    exists_pointwise_repr_of_mem_timeLimit_star_fixed T (hw_mem i) (hw_star i)
+  -- `Lp ℝ` classes and their span `S`.
+  set e : Fin (prolateCount T W c) → Lp ℝ 2 (volume : Measure ℝ) :=
+    fun i => (hf_memLp i).toLp (f i) with he
+  set S : Submodule ℝ (Lp ℝ 2 (volume : Measure ℝ)) := Submodule.span ℝ (Set.range e) with hS
+  -- Each `e i` vanishes a.e. off `[0,T]` (it is `[0,T]`-supported).
+  have he_supp : ∀ i, (⇑(e i) : ℝ → ℝ) =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)ᶜ] 0 := by
+    intro i
+    have h1 : (⇑(e i) : ℝ → ℝ) =ᵐ[volume] f i := (hf_memLp i).coeFn_toLp
+    have h2 : ∀ t ∈ (Set.Icc (0:ℝ) T)ᶜ, f i t = 0 := by
+      intro t ht
+      by_contra hne
+      exact ht (hf_supp i (by simpa [Function.mem_support] using hne))
+    filter_upwards [ae_restrict_of_ae h1,
+      (ae_restrict_iff' measurableSet_Icc.compl).mpr (ae_of_all volume h2)] with t hta htb
+    simp only [Pi.zero_apply]
+    rw [hta, htb]
+  -- Linear independence of `e` ⟹ `finrank ℝ S = prolateCount`.
+  have he_li : LinearIndependent ℝ e := by
+    sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+  haveI hSfin : FiniteDimensional ℝ S := by
+    rw [hS]; exact FiniteDimensional.span_of_finite ℝ (Set.finite_range e)
+  have hdim : Module.finrank ℝ S = prolateCount T W c := by
+    rw [hS, finrank_span_eq_card he_li, Fintype.card_fin]
+  -- Orthonormal basis `b` of `S`, reindexed onto `Fin (prolateCount T W c)`.
+  set b := stdOrthonormalBasis ℝ S with hb
+  set e' : Fin (prolateCount T W c) → Lp ℝ 2 (volume : Measure ℝ) :=
+    fun i => (↑(b (Fin.cast hdim.symm i)) : Lp ℝ 2 (volume : Measure ℝ)) with he'
+  have hbLp_on : Orthonormal ℝ (fun i => (↑(b i) : Lp ℝ 2 (volume : Measure ℝ))) := by
+    rw [orthonormal_iff_ite]
+    intro i j
+    have hbo := (orthonormal_iff_ite.mp b.orthonormal) i j
+    rwa [Submodule.coe_inner] at hbo
+  have he'_on : Orthonormal ℝ e' :=
+    hbLp_on.comp (Fin.cast hdim.symm) (Fin.cast_injective _)
+  have hS_supp : ∀ x ∈ S, (⇑x : ℝ → ℝ) =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)ᶜ] 0 := by
+    intro x hx
+    rw [hS] at hx
+    induction hx using Submodule.span_induction with
+    | mem y hy => obtain ⟨i, rfl⟩ := hy; exact he_supp i
+    | zero => exact ae_restrict_of_ae (Lp.coeFn_zero ℝ 2 (volume : Measure ℝ))
+    | add y z _ _ hy' hz' =>
+        refine Filter.EventuallyEq.trans (ae_restrict_of_ae (Lp.coeFn_add y z)) ?_
+        filter_upwards [hy', hz'] with t hyt hzt
+        simp only [Pi.add_apply, Pi.zero_apply] at hyt hzt ⊢
+        rw [hyt, hzt, add_zero]
+    | smul a y _ hy' =>
+        refine Filter.EventuallyEq.trans (ae_restrict_of_ae (Lp.coeFn_smul a y)) ?_
+        filter_upwards [hy'] with t hyt
+        simp only [Pi.smul_apply, Pi.zero_apply, smul_eq_mul] at hyt ⊢
+        rw [hyt, mul_zero]
+  have he'_supp : ∀ i, (⇑(e' i) : ℝ → ℝ) =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)ᶜ] 0 :=
+    fun i => hS_supp (e' i) (Submodule.coe_mem (b (Fin.cast hdim.symm i)))
+  -- Test functions via the pointwise representative of the orthonormal basis.
+  set φ : Fin (prolateCount T W c) → (ℝ → ℝ) :=
+    fun i => LpPointwise.ptRepr (Set.Icc (0:ℝ) T) (e' i) with hφ
+  have hφ_supp : ∀ i, Function.support (φ i) ⊆ Set.Icc 0 T :=
+    fun i => LpPointwise.support_ptRepr_subset _ _
+  have hφ_memLp : ∀ i, MemLp (φ i) 2 volume :=
+    fun i => LpPointwise.memLp_ptRepr measurableSet_Icc _
+  have hφ_ortho : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1:ℝ) else 0 := by
+    intro i j
+    rw [hφ]
+    rw [LpPointwise.integral_ptRepr_mul measurableSet_Icc (e' i) (e' j)
+      (he'_supp i) (he'_supp j)]
+    exact orthonormal_iff_ite.mp he'_on i j
+  refine ⟨u, h, φ, hu_on, hu_mem, h_memLp, h_ae, h_bl, h_ortho, hφ_supp, hφ_memLp, hφ_ortho, ?_⟩
+  -- Cross-map energy identity.
+  intro v
+  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
+
+/-- **L6 — the receiver cross-map is bounded below by `√c`.**
+
+The cross-map `A v = (∫ (∑ⱼ vⱼ hⱼ)·φᵢ)ᵢ` sending encoder coefficients to receiver observations
+satisfies `c ∑ᵢ vᵢ² ≤ ∑ᵢ (A v)ᵢ²`. This is the `hbdd` input to
+`ShannonHartleyPreequalizer.exists_preequalizer` (once `A` is read as an endomorphism of
+`EuclideanSpace ℝ (Fin (prolateCount T W c))`, where `‖v‖² = ∑ᵢ vᵢ²` and `‖A v‖² = ∑ᵢ (A v)ᵢ²`),
+which then yields the norm-controlled pre-equalizer `‖a‖² ≤ (1/c) ‖x‖²`.
+
+The bound is the energy identity of `exists_testFn_family` composed with the time-window energy
+concentration `le_norm_timeLimitProj_sq_of_mem` (`c ‖w‖² ≤ ‖Q_T w‖²` on `V`) and
+`‖∑ⱼ vⱼ uⱼ‖² = ∑ⱼ vⱼ²` (`u` is `ℂ`-orthonormal, `v` real). -/
+theorem exists_crossMap_lower_bound (T W : ℝ) {c : ℝ} (hc : 0 < c) :
+    ∃ (h φ : Fin (prolateCount T W c) → (ℝ → ℝ)),
+      (∀ i, MemLp (h i) 2 volume) ∧
+      (∀ i, IsBandlimited (h i) W) ∧
+      (∀ i j, (∫ t, h i t * h j t) = if i = j then (1 : ℝ) else 0) ∧
+      (∀ i, Function.support (φ i) ⊆ Set.Icc 0 T) ∧
+      (∀ i, MemLp (φ i) 2 volume) ∧
+      (∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0) ∧
+      (∀ v : Fin (prolateCount T W c) → ℝ,
+        c * (∑ i, v i ^ 2) ≤ ∑ i, (∫ t, (∑ j, v j * h j t) * φ i t) ^ 2) := by
+  obtain ⟨u, h, φ, hu_on, hu_mem, h_memLp, _h_ae, h_bl, h_ortho, φ_supp, φ_memLp, φ_ortho,
+    henergy⟩ := exists_testFn_family T W hc
+  refine ⟨h, φ, h_memLp, h_bl, h_ortho, φ_supp, φ_memLp, φ_ortho, ?_⟩
+  intro v
+  rw [henergy v]
+  -- `w := ∑ⱼ vⱼ • uⱼ ∈ V`; the concentration bound and `‖w‖² = ∑ vⱼ²` finish it.
+  have hwV : (∑ j, (v j : ℂ) • u j) ∈ prolateEigenspaceSup T W c :=
+    Submodule.sum_mem _ (fun j _ => Submodule.smul_mem _ _ (hu_mem j))
+  have hself : (inner ℂ (∑ j, (v j : ℂ) • u j) (∑ j, (v j : ℂ) • u j)).re
+      = ‖∑ j, (v j : ℂ) • u j‖ ^ 2 := by
+    rw [inner_self_eq_norm_sq_to_K]; simp [← Complex.ofReal_pow]
+  have hip : inner ℂ (∑ j, (v j : ℂ) • u j) (∑ j, (v j : ℂ) • u j)
+      = ((∑ i, v i ^ 2 : ℝ) : ℂ) := by
+    rw [hu_on.inner_sum (fun i => (v i : ℂ)) (fun i => (v i : ℂ)) Finset.univ, Complex.ofReal_sum]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [Complex.conj_ofReal]; push_cast; ring
+  have hnorm : ‖∑ j, (v j : ℂ) • u j‖ ^ 2 = ∑ i, v i ^ 2 := by
+    rw [← hself, hip, Complex.ofReal_re]
+  have hconc := le_norm_timeLimitProj_sq_of_mem T W c hc hwV
+  rw [hnorm] at hconc
+  exact hconc
+
+end Achievability
 
 end InformationTheory.Shannon.ShannonHartley
