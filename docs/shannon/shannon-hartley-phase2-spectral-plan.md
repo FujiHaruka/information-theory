@@ -425,7 +425,7 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 
 - **Leg R4-CONV-gate（並行可、⚠️ route 再検討）** — C1（converse interlacing、唯一の未 gateway-test）。旧 route「R1 + finrank 単射」は R1 dead で失効。**advisor 見立て: interlacing 非自明 = self-build 公算、gateway-atom-first 推奨**。PASS で壁→`plan:` 再分類 license。
 
-**壁再分類（leg 18 で証拠強化、判断は次 leg）**: `wall:nyquist-2w-dof` の named proposition（固有値集中）は r17 で CLOSED、A1 は leg 18 で plumbing 確定、有限 V-固有基底は in-tree、C3 は in-tree。**残る唯一の未計測 = C1（converse interlacing）**。CLAUDE.md の defect tell「choice(big) を blocked(hard) と偽る」に該当の疑いが強まった。次 leg: C1 gateway → PASS なら 2 consumer を `@residual(plan:shannon-hartley-phase2-spectral-plan)` へ再分類（code 編集は subagent + 独立 honesty-auditor）。同時に dangling name 掃除（`prolate_eigenvalue_count` docs 6 ファイル / `contAwgn_le_shannonHartley` = C0 指示対象なき名前）。
+**壁再分類**: `wall:nyquist-2w-dof` の named proposition（固有値集中）は r17 で CLOSED、A1/有限 V-固有基底/C3 も in-tree。**残る未計測 = C1（converse interlacing）のみ**。leg 20 advisor: achievability 側 residual は `plan:`-class（構成であって Mathlib 壁でない）と判定 → relocation 後に 2 consumer を `@residual(plan:...)` へ再分類（subagent + 独立 honesty-auditor）。dangling name 掃除（`prolate_eigenvalue_count` docs / `contAwgn_le_shannonHartley` = C0 指示対象なき名前）も残。
 
 ### 圧縮済 leg（履歴は git / 詳細は台帳 §SPECTRAL-ASSETS）
 
