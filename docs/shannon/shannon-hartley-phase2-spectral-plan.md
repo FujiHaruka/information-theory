@@ -429,11 +429,7 @@ E-sharp を是認した**。この対称性は overturn 表に記録する価値
 
 ### 圧縮済 leg（履歴は git / 詳細は台帳 §SPECTRAL-ASSETS）
 
-| leg | 成果 | commit |
-|---|---|---|
-| E-atom（15） | crude bound `c·#{λ>c} ≤ 2WT` を壁非依存 closure。実装者の「壁は genuine でない」を**監査が refute**（閉じたのは**弱い親戚**、`cause:weaker-relative`） | `69152fd9` / 監査 `7c43417a` |
-| E-trace（15） | 厳密 trace 等式 `∑' i, ⟪A bᵢ,bᵢ⟫ = 2WT`（任意 `HilbertBasis`）。**スペクトル定理すら不要**（Parseval は任意の完全基底で効く）。旧論拠「無限次元スペクトル理論が Mathlib に無い」が誤りと確定 | `9f1129e1` / 監査 `21981fc8` |
-| E-sharp（16） | 上記 §E-sharp = **第 2 モーメント closure** | `552ac8de` `00cb1c8b` |
+E-atom/E-trace/E-sharp（leg 15–16）= §E-sharp 系列 closure（`69152fd9`/`9f1129e1`/`552ac8de`/`00cb1c8b`、監査 all OK）。教訓: 「Mathlib に無限次元スペクトル定理が無い」は誤り（Parseval は任意完全基底で効く）。
 
 **壁宣言の条件（新 slug を建てる場合のみ）**: loogle `Found 0` は必要条件であって十分条件でない。
 two-stage conclusion-shape 検索 + template lemma 行数見積 + **in-project 先行 grep** を揃える
