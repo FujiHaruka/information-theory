@@ -793,4 +793,55 @@ theorem contAwgn_rotated_secondMoment {T W P N₀ : ℝ} {M : ℕ} [NeZero M]
       simp [hgi0]
     · rw [if_neg hνi, ← mul_div_assoc, mul_div_cancel_left₀ _ hνi]
 
+/-- **C2 (per-code ellipsoid converse).** Rotating a `ContAwgnCode` by the real orthogonal
+eigenvector matrix of the band-Gram operator turns the operational parallel-Gaussian converse
+into the diagonal (eigenbasis) form: the log message count is bounded by the per-eigenvalue
+parallel-Gaussian sum with gains `νᵢ = bandGramRealEigenvalues …` folded into an ellipsoid power
+budget `∑ᵢ Qᵢ ≤ T·P`. Mechanically assembles the per-coordinate converse
+`contAwgn_operational_converse_percoord` applied to the rotated code with the rotation
+second-moment factorization `contAwgn_rotated_secondMoment`. -/
+theorem contAwgn_converse_ellipsoid {T W P N₀ : ℝ} {M : ℕ}
+    (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hM : 2 ≤ M)
+    (c : ContAwgnCode T W P M) (Pe : ℝ) (hPe : Pe = (c.averageError N₀).toReal) :
+    ∃ Q : Fin c.k → ℝ, (∀ i, 0 ≤ Q i) ∧ (∑ i, Q i ≤ T * P)
+      ∧ Real.log M ≤ (∑ i : Fin c.k, (1/2) * Real.log
+            (1 + bandGramRealEigenvalues W c.testFn c.testFn_memLp i * Q i / (N₀ / 2)))
+          + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
+  classical
+  haveI : NeZero M := ⟨by omega⟩
+  have hNpos : (0 : ℝ) < N₀ / 2 := by positivity
+  -- Rotate the code by the (transpose of the) real orthogonal eigenvector matrix of the band-Gram.
+  set c' := c.rotate (↑(bandGramRealUnitary W c.testFn c.testFn_memLp) :
+      Matrix (Fin c.k) (Fin c.k) ℝ)ᵀ
+    (bandGramRealUnitary_transpose_mem_orthogonalGroup W c.testFn c.testFn_memLp) with hc'
+  set ν : Fin c.k → ℝ := bandGramRealEigenvalues W c.testFn c.testFn_memLp with hν
+  -- The rotation leaves the average error probability unchanged.
+  have hPe' : Pe = (c'.averageError N₀).toReal := by
+    rw [hc', ContAwgnCode.rotate_averageError]; exact hPe
+  -- Per-coordinate operational parallel-Gaussian converse for the rotated code.
+  obtain ⟨P', hP'nn, hP'percoord, hP'log⟩ :=
+    contAwgn_operational_converse_percoord hN₀ hP hM c' Pe hPe'
+  -- Rotation second-moment factorization: the ellipsoid witness `Q` with `∫ (xᵢ)² = νᵢ · Qᵢ`.
+  obtain ⟨Q, hQnn, hQsum, hQid⟩ := contAwgn_rotated_secondMoment c
+  refine ⟨Q, hQnn, hQsum, ?_⟩
+  -- Per-coordinate: `P'ᵢ ≤ νᵢ · Qᵢ`, hence a per-coordinate log bound.
+  have hP'le : ∀ i, P' i ≤ ν i * Q i := fun i => (hP'percoord i).trans (hQid i).le
+  have hlog_le : ∀ i, (1 / 2) * Real.log (1 + P' i / (N₀ / 2))
+      ≤ (1 / 2) * Real.log (1 + ν i * Q i / (N₀ / 2)) := by
+    intro i
+    have hdiv : P' i / (N₀ / 2) ≤ ν i * Q i / (N₀ / 2) :=
+      (div_le_div_iff_of_pos_right hNpos).mpr (hP'le i)
+    have harg : 1 + P' i / (N₀ / 2) ≤ 1 + ν i * Q i / (N₀ / 2) := by linarith
+    have hposarg : (0 : ℝ) < 1 + P' i / (N₀ / 2) := by
+      have : 0 ≤ P' i / (N₀ / 2) := div_nonneg (hP'nn i) hNpos.le
+      linarith
+    exact mul_le_mul_of_nonneg_left (Real.log_le_log hposarg harg) (by norm_num)
+  -- Restate the rotated-code log bound over `Fin c.k` (defeq to `Fin c'.k`) and chain.
+  have hP'log' : Real.log M ≤ (∑ i : Fin c.k, (1 / 2) * Real.log (1 + P' i / (N₀ / 2)))
+      + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := hP'log
+  have hsum : (∑ i : Fin c.k, (1 / 2) * Real.log (1 + P' i / (N₀ / 2)))
+      ≤ ∑ i : Fin c.k, (1 / 2) * Real.log (1 + ν i * Q i / (N₀ / 2)) :=
+    Finset.sum_le_sum (fun i _ => hlog_le i)
+  linarith
+
 end InformationTheory.Shannon.ShannonHartley
