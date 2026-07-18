@@ -11,6 +11,33 @@ C3 headline is a WEAKER RELATIVE than C4 needs** — one real, in-tree-fixable d
 C2/C4 is pure plumbing (no wall), BUT do the gateway atoms + the per-coordinate companion FIRST —
 the current C3 headline exposes only `∑P'ᵢ ≤ T·P`, which is coarser than C4's water-filling needs.
 
+## PROGRESS (leg 26, 2026-07-18) — gateway atoms + count-domination + per-coord exposure ALL CLOSED
+
+The gateway-atom-first plan succeeded: both atoms passed ⇒ C2/C4 confirmed pure plumbing (no wall).
+The highest-risk piece (count domination) is CLOSED sorry-free + honesty-auditor @audit:ok. Done this leg:
+
+- **Gateway atom 1** `frame_form_le_op_form` (`TimeBandLimiting.lean`, after C1) — Bessel domination by
+  operator form, sorry-free (`39d7e613`). Takes NO `hW`.
+- **Gateway atom 2 / per-coord companion** `parallel_per_input_mi_le_sum_percoord`
+  (`MixtureDensity.lean`, before the original) — exposes `∀ i, P'ᵢ ≤ ∫(xᵢ)²∂p`; original is now a thin
+  corollary (`f87a9ee0`). sorry-free.
+- **(a) Count domination CORE** `gram_high_eigen_finrank_le_prolateCount` + def `bandGramEigenvalues`
+  (new file `ShannonHartleyConverseCount.lean`) — `#{band-Gram eigenvalues > c} ≤ prolateCount`,
+  sorry-free (`c2d31b84`). Uses Mathlib `Matrix.gram`/`isHermitian_gram`/`eigenvalues` (NO
+  linear-algebra self-build) + atom 1 + C1. **@audit:ok** (`0d2970f4`, def non-degeneracy confirmed).
+- **Real→E wrapper** `gram_high_eigen_finrank_le_prolateCount_real` + def `testFnLift` (same file) —
+  facade for real `ℝ→ℝ` testFn; extra hyp `hmem : ∀ i, MemLp (φ i) 2 volume` = genuine regularity
+  (auditor built a Vitali-set counterexample confirming it is NOT derivable from `h_on`), sorry-free
+  (`26466bb3`), **@audit:ok**.
+- **Per-coord C3 headline** `contAwgn_operational_converse_percoord` (`ShannonHartleyConverse.lean`,
+  before the original) — exposes `∀ i, P'ᵢ ≤ ∫ x, (x i)² ∂(contAwgnSignalLaw c N₀)`; original is a DRY
+  corollary (`1db1370c`). sorry-free. **Closes the per-coord gap named below.**
+
+**Remaining (fresh-judgment, intricate — leg 27+)**: (c) C2 rotation/ellipsoid (connect the observation
+second moments `∫(xᵢ)²∂signalLaw` to `νᵢQᵢ` = `bandGramEigenvalues` via Gaussian rotation invariance)
+→ C4 water-filling (head/tail split + double limits T→∞, c→0) → C0 `contAwgn_le_shannonHartley` (state
+as real inequality) → `le_antisymm` assembly closing `contAwgn_eq_shannonHartley`.
+
 ## THE GAP (name-the-pinned-invariant guard fired)
 
 `contAwgn_operational_converse` (`ShannonHartleyConverse.lean:593`, CLOSED) forwards only the
