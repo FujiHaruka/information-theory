@@ -160,6 +160,8 @@ Trigger: the user explicitly requests parallel execution ("in parallel", "N seed
 
 **Exception — planner / docs-only agents**: `lean-planner` / `mathlib-inventory` / audit agents only write to `docs/<family>/*.md` and don't compile Lean, so worktree isolation is unnecessary (there is a failure mode where the harness creates the worktree dir incompletely and the agent writes straight to main). For docs-only parallelism, just omit `isolation` and make file ownership explicit in the brief ("Agent N edits only file F"). Implementation agents (`lean-implementer`) need worktree isolation + boilerplate **only when running in parallel**.
 
+**Two gates close a leg**: after a leg's implementation lands, the orchestrator runs two independent gates on the touched files before closing / wiring the leg in — the **honesty gate** (`honesty-auditor`, when a new `sorry` + `@residual` / signature change was introduced → "Independent honesty audit" below) and the **code-surface convention gate** (`style-auditor`, on any `.lean` decl/docstring edit → "Code-surface convention gate" below). They are orthogonal (is the proof honest? vs. does the code read per `docs/rules/`); run whichever the leg triggers, both when both apply.
+
 ## Commits
 
 - Commits and pushes are autonomous. Decide when to commit and push on each turn without waiting for the user to ask. The user will not give commit instructions. Commit autonomously even for changes that did not originate in the current session (e.g. uncommitted edits already on disk).
@@ -291,3 +293,15 @@ When an implementation subagent makes a commit that introduces a new `sorry` + `
 **Closure verdict**: if the verdict is **all OK** → the session may complete (note it in the handoff); **questionable** → refine the docstring / add comments / an additional patch if needed; **DEFECT** → retract or fix the declaration (rewrite to sorry-based) within the session.
 
 **Relation to the inline policy**: "don't wait for a dedicated audit" is the principle of **inline detection** (flag immediately when you notice during implementation). This independent audit is a **second stage after implementation**, not a replacement for the inline one — run both. For the orchestrator to close a session having detected a new `@residual` introduction without launching the independent audit is a **honesty-workflow violation**.
+
+## Code-surface convention gate (style-auditor)
+
+`docs/rules/` (naming / docstrings / module-structure / lean-style) is the **SoT for how code reads**; honesty is a separate gate. As part of the orchestrator loop, after a leg's implementation lands (and after the honesty audit, when one ran), the orchestrator launches the **`style-auditor`** subagent (`subagent_type: "style-auditor"`) on the files the leg touched, and does **not** close the leg / wire it into `InformationTheory.lean` until the file **passes**: 0 compile errors, and every convention item either fixed in place or on the flag-only list.
+
+**Launch condition**: any leg that added or edited a `.lean` declaration or docstring under `InformationTheory/`. Inputs to pass = the touched file path(s) (`git diff --name-only <base>`) + the parent plan path. (A docs-only leg — `*-plan.md` / handoff — does not trigger it.)
+
+**What it does vs. flags**: the agent **applies** the safe, local fixes itself — line length (100 code points), `fun … ↦`, docstring form incl. American spelling and leading-bold removal, and the **process-vocabulary ban** (`docs/rules/docstrings.md`: no `Phase`/`Wall`/`leg N`/dated-audit narration or stale "still `sorry` / false as stated / wall-blocked" status prose in permanent records — git + the plan hold history). It **flags, never does** the blast-radius refactors: a file > 1500 lines (split), a flat prefix-cluster → `Shannon/<Topic>/` subdirectory promotion, declaration renames (staging vocabulary), and any honesty-note trim that would touch substantive reasoning.
+
+**Boundary with the honesty gate**: `honesty-auditor` owns whether the proof is honest (`sorry` / load-bearing hyps / tag correctness); `style-auditor` owns how the code reads and **preserves every `@residual` / `@audit:*` tag verbatim** — it only condenses the dated *process narration* that trails a tag, deferring the docstrings-vs-honesty-workflow tension to the orchestrator rather than gutting a note. Run both; neither replaces the other.
+
+**Closure**: **PASS** (or only flag-only items remain, which the orchestrator records in the handoff / a follow-up task) → the leg may close; **FAIL** → fix within the session. Commit is the orchestrator's job (the agent does not commit unless told to).
