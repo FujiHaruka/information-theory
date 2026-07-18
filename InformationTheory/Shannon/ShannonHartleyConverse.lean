@@ -371,7 +371,8 @@ private theorem contAwgnConverseMarkov_marginalA {T W P : ℝ} {M : ℕ} [NeZero
 
 /-- The Markov chain `W → observation ∘ W → Y` factorization for the ContAwgn joint. The
 signal-level analog of `AWGN.awgnConverseMarkov_holds`: `observation` is the deterministic encoder,
-so `Y` depends on `W` only through `S = observation ∘ W`. -/
+so `Y` depends on `W` only through `S = observation ∘ W`.
+@audit:ok -/
 lemma contAwgnConverseMarkov_holds {T W P : ℝ} {M : ℕ} [NeZero M]
     (c : ContAwgnCode T W P M) (N₀ : ℝ) :
     IsMarkovChain (contAwgnConverseJoint c N₀)
