@@ -400,7 +400,7 @@ noncomputable def ContAwgnCode.observation {T W P : ℝ} {M : ℕ}
 `y = ContAwgnCode.observation m + noise` (per-observation noise variance `N₀/2`, independent
 across observations) lands in the decoding-error region `{y | decoder y ≠ m}`.
 
-Modelled directly as `Measure.pi (fun i => gaussianReal (observationᵢ) (N₀/2))`, i.e. the
+Modeled directly as `Measure.pi (fun i => gaussianReal (observationᵢ) (N₀/2))`, i.e. the
 memoryless per-observation AWGN law — the same law computed by the discrete
 `ChannelCoding.Code.errorProbAt` for `awgnChannel (N₀/2)`, but inlined so that no
 `IsAwgnChannelMeasurable` kernel-measurability hypothesis is needed inside the definition.
