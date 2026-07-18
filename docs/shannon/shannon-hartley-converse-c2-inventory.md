@@ -38,6 +38,55 @@ second moments `∫(xᵢ)²∂signalLaw` to `νᵢQᵢ` = `bandGramEigenvalues` 
 → C4 water-filling (head/tail split + double limits T→∞, c→0) → C0 `contAwgn_le_shannonHartley` (state
 as real inequality) → `le_antisymm` assembly closing `contAwgn_eq_shannonHartley`.
 
+## LEG 27 BUILD PLAN (proof-pivot-advisor-locked, 2026-07-18)
+
+Independent advisor pass reconciled the leg-25 design with the leg-26 per-coord C3 headline +
+achievability limit precedents. Verdicts:
+
+**Q1 — rotation is UNAVOIDABLE + path (b) recommended**: the C3 headline exposes `P'ᵢ ≤ Rᵢᵢ`
+(diagonal of `R = (1/M)∑ₘ obs obsᵀ`) in the ORIGINAL basis; `∑½log(1+Rᵢᵢ/N)` is Schur-concave so it
+CANNOT be upper-bounded by the eigenvalue log-sum — you must rotate to the Gram eigenbasis. **Path (b)
+= physically build a rotated `ContAwgnCode c̃`** (rotated `testFn`, `decoder∘U`, same encoder/W/P/M/k) +
+prove `c̃.averageError = c.averageError`, then apply the audited C3 to `c̃` as a BLACK BOX (~265–365
+lines). Beats path (a) MI-level reshape (~330–430, re-derives audited C3 abstractly). Lesson: when a
+heavy audited theorem consumes the concrete object, rotate the concrete thing, not the abstract one.
+Shared core (needed by either path): **S1** multivariate Gaussian rotation invariance
+(`(Measure.pi gaussianReal).map U = Measure.pi (gaussianReal ∘ U)` via `gaussianReal_map_const_mul`/
+`_add_const` + `stdGaussian_map`, ~60–90 lines); **S2** real orthogonal eigenbasis of the band-Gram
+(`P_W φ` real ⇒ `Matrix.gram ℂ` is real-symmetric ⇒ real eigenbasis, eigenvalues = `bandGramEigenvalues`,
+~40–70); **S3** second-moment identity `∫x̃ₐ²∂p̃ = νₐQₐ`, `Qₐ:=(1/M)∑⟨fₘ,eₐ⟩²`, `∑Qₐ = tr R ≤ T·P`,
+`νₐ≤1` — **confirmed does NOT need R's eigenvalues**, only that U diagonalizes G (~60–100).
+
+**File architecture (3 layers, avoids import cycle — Main does NOT import Converse/ConverseCount)**:
+1. `ShannonHartleyWaterfill.lean` (imports Main): Q2 pure real-analysis. ← leg 27 initial dispatch.
+2. `ShannonHartleyRotation.lean` (imports Converse+ConverseCount+Main): S1/S2/S3 → per-code ellipsoid+count.
+3. `ShannonHartleyConverseFinal.lean` (imports Waterfill+Rotation): C0 `contAwgn_le_shannonHartley` +
+   MOVE `contAwgn_eq_shannonHartley` here for `le_antisymm` (delete Main's copy; `@[entry_point]` +
+   README self-heals by name; check `dep_consumers` first — likely a leaf).
+
+**Q2 — fixed-T water-filling (pure real-analysis, no rotation; in Waterfill.lean)**: three lemmas —
+`mul_log_one_add_div_monotone {a}(ha:0≤a) : MonotoneOn (fun x => x*log(1+a/x)) (Ioi 0)` (deriv≥0 via
+`u/(1+u)≤log(1+u)`, short); `waterfill_head_tail_bound` (head/tail split: tail≤c₀TP/N₀ via log(1+x)≤x,
+head≤B·½log(1+TP/(B·N₀/2)) via Jensen concavity + monotone K→B; abstract in count-bound B); and
+`waterfill_head_div_tendsto : Tendsto (fun T => count·½log(1+TP/(count·N₀/2))/T) atTop
+(𝓝 (bandlimitedAwgnCapacity W N₀ P))` via `prolateCount_div_tendsto` (count/T→2W) + continuity.
+
+**Q3 — C0 (in ConverseFinal.lean)**: Fano REUSES the block in `contAwgn_log_le_of_pos_k`
+(`ShannonHartleyAchievability.lean:577-591`): `(1-ε)·log M ≤ [waterfill] + log 2`. Then
+`contAwgn_log_le_waterfill` (fixed-T, consumes rotation ellipsoid+count + Q2 split) →
+`contAwgnRate_le : contAwgnRate W N₀ P ε ≤ bandlimitedAwgnCapacity W N₀ P / (1-ε)` (mirror
+`contAwgnRate_isBoundedUnder`: extract maximizing code via `Nat.sSup_mem`+`contAwgnMaxMessages_bddAbove`,
+k=0 via `contAwgn_averageError_of_k_eq_zero`, limsup via `waterfill_head_div_tendsto`, then c₀→0). C0
+exact statement (hyps = achievability headline, ≤ reversed):
+`theorem contAwgn_le_shannonHartley (W N₀ P : ℝ)(hW:0<W)(hN₀:0<N₀)(hP:0≤P) :
+contAwgnOperationalCapacity W N₀ P ≤ bandlimitedAwgnCapacity W N₀ P` — proof `le_of_forall_pos_le_add` +
+`ciInf_le_of_le` (BddBelow from `contAwgnRate_nonneg`) choosing ε with `RHS/(1-ε) ≤ RHS+δ`.
+
+**Q4 — build DAG / order**: Q2 (all 3, independent, 0 rotation) FIRST → S1 → S2 → S3 → path-(b) rotated
+code + averageError inv → `contAwgn_log_le_waterfill` → `contAwgnRate_le` → `contAwgn_le_shannonHartley`
+→ `le_antisymm`. Mathlib atoms all located (`stdGaussian_map` Multivariate:128, `klDiv_map_measurableEquiv`
+MutualInfo:47, `le_log_one_add_of_nonneg` Log/Basic:339, `prolateCount_le` TimeBandLimiting:4035) — no wall.
+
 ## THE GAP (name-the-pinned-invariant guard fired)
 
 `contAwgn_operational_converse` (`ShannonHartleyConverse.lean:593`, CLOSED) forwards only the
