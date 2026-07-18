@@ -396,4 +396,401 @@ theorem bandGramReal_high_count_le (T W : ℝ) {c : ℝ} (hc : 0 < c) {k : ℕ}
     _ ≤ prolateCount T W c :=
         gram_high_eigen_finrank_le_prolateCount_real T W hc φ hmem h_on h_supp
 
+/-!
+## S3 — second-moment identity for the rotated converse code
+
+For an arbitrary code `c`, rotating by `Oᵀ` (`O` = the band-Gram eigenvector matrix) makes the rotated
+observation's per-coordinate second moment factor as `νᵢ · Qᵢ`, where `νᵢ = bandGramRealEigenvalues`
+and `Qᵢ` is a per-mode input power with `∑Qᵢ ≤ T·P`. The three public deliverables consumed by the
+downstream ellipsoid/water-filling leg are:
+
+* `bandGramRealEigenvalues_nonneg` — the band-Gram is PSD, so `νᵢ ≥ 0`;
+* `bandGramRealEigenvalues_le_one` — `νᵢ ≤ 1` (projection contracts the orthonormal raw frame);
+* `contAwgn_rotated_secondMoment` — `∫ (x i)² ∂(rotated signal law) = νᵢ · Qᵢ`, `∑Qᵢ ≤ T·P`, `Qᵢ ≥ 0`.
+-/
+
+/-- The `i`-th eigenvector-image `gᵢ = ∑ⱼ Oⱼᵢ • P_W ψⱼ ∈ E` (column `i` of the band-Gram eigenvector
+matrix `O`, applied to the projected lifts `P_W ψⱼ`). Its `E`-inner products realize the band-Gram
+eigenvalues (`inner_bandGramColumn`), so `‖gᵢ‖² = νᵢ` and rotating the observation by `Oᵀ` produces
+`⟨gᵢ, Fₘ⟩` per coordinate. -/
+private noncomputable def bandGramColumn (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) (i : Fin k) : E :=
+  ∑ j, ((↑(bandGramRealUnitary W φ hmem) : Matrix (Fin k) (Fin k) ℝ) j i : ℂ) •
+    (bandLimitSubspace W).starProjection (testFnLift φ hmem j)
+
+/-- The complex lift of an orthonormal (in the `∫ φᵢ φⱼ = δᵢⱼ` sense) real family is orthonormal in
+`E`. -/
+private lemma testFnLift_orthonormal {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume)
+    (h_on : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0) :
+    Orthonormal ℂ (testFnLift φ hmem) := by
+  have hcoe : ∀ l, (testFnLift φ hmem l : ℝ → ℂ) =ᵐ[volume] fun t => ((φ l t : ℝ) : ℂ) :=
+    fun l => MemLp.coeFn_toLp _
+  rw [orthonormal_iff_ite]
+  intro i j
+  have hinner : (inner ℂ (testFnLift φ hmem i) (testFnLift φ hmem j) : ℂ)
+      = ((∫ t, φ i t * φ j t : ℝ) : ℂ) := by
+    rw [MeasureTheory.L2.inner_def, ← integral_complex_ofReal]
+    apply integral_congr_ae
+    filter_upwards [hcoe i, hcoe j] with t hti htj
+    rw [RCLike.inner_apply, hti, htj, Complex.conj_ofReal]
+    push_cast; ring
+  rw [hinner, h_on i j]
+  split_ifs <;> simp
+
+/-- **S3b.** The eigenvector images are `E`-orthogonal, with squared norm the band-Gram eigenvalue:
+`⟨gᵢ, gᵢ'⟩ = δᵢᵢ' · νᵢ`. -/
+private lemma inner_bandGramColumn (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) (i i' : Fin k) :
+    (inner ℂ (bandGramColumn W φ hmem i) (bandGramColumn W φ hmem i') : ℂ)
+      = if i = i' then (bandGramRealEigenvalues W φ hmem i : ℂ) else 0 := by
+  unfold bandGramColumn
+  set O := (↑(bandGramRealUnitary W φ hmem) : Matrix (Fin k) (Fin k) ℝ) with hO
+  -- inner product of two projected raw lifts is the real band-Gram entry
+  have hvinner : ∀ j l, (inner ℂ ((bandLimitSubspace W).starProjection (testFnLift φ hmem j))
+        ((bandLimitSubspace W).starProjection (testFnLift φ hmem l)) : ℂ)
+      = (bandGramRealMatrix W φ hmem j l : ℂ) := by
+    intro j l
+    have hmap := congrFun (congrFun (bandGram_eq_map_real W φ hmem) j) l
+    rw [Matrix.gram_apply] at hmap
+    rw [hmap, Matrix.map_apply, Complex.coe_algebraMap]
+  -- expand the sesquilinear form into a double sum
+  have hexp : (inner ℂ (∑ j, (O j i : ℂ) •
+          (bandLimitSubspace W).starProjection (testFnLift φ hmem j))
+        (∑ l, (O l i' : ℂ) •
+          (bandLimitSubspace W).starProjection (testFnLift φ hmem l)) : ℂ)
+      = ∑ j, ∑ l, (O j i : ℂ) * (O l i' : ℂ) * (bandGramRealMatrix W φ hmem j l : ℂ) := by
+    rw [sum_inner]
+    refine Finset.sum_congr rfl (fun j _ => ?_)
+    rw [inner_smul_left, inner_sum, Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun l _ => ?_)
+    rw [inner_smul_right, hvinner j l, Complex.conj_ofReal]
+    ring
+  rw [hexp]
+  -- the real double sum is the diagonalized entry
+  have hd := bandGramRealMatrix_diagonalize W φ hmem
+  rw [← hO] at hd
+  have hmat : (Oᵀ * bandGramRealMatrix W φ hmem * O) i i'
+      = ∑ j, ∑ l, O j i * O l i' * bandGramRealMatrix W φ hmem j l := by
+    simp_rw [Matrix.mul_apply, Matrix.transpose_apply, Finset.sum_mul]
+    rw [Finset.sum_comm]
+    exact Finset.sum_congr rfl (fun j _ => Finset.sum_congr rfl (fun l _ => by ring))
+  have hreal : (∑ j, ∑ l, O j i * O l i' * bandGramRealMatrix W φ hmem j l)
+      = if i = i' then bandGramRealEigenvalues W φ hmem i else 0 := by
+    rw [← hmat, hd, Matrix.diagonal_apply]
+  have hcast : (∑ j, ∑ l, (O j i : ℂ) * (O l i' : ℂ) * (bandGramRealMatrix W φ hmem j l : ℂ))
+      = ((∑ j, ∑ l, O j i * O l i' * bandGramRealMatrix W φ hmem j l : ℝ) : ℂ) := by
+    push_cast; ring
+  rw [hcast, hreal]
+  split_ifs <;> simp
+
+/-- `‖gᵢ‖² = νᵢ`. -/
+private lemma norm_sq_bandGramColumn (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) (i : Fin k) :
+    ‖bandGramColumn W φ hmem i‖ ^ 2 = bandGramRealEigenvalues W φ hmem i := by
+  have h := inner_bandGramColumn W φ hmem i i
+  rw [if_pos rfl] at h
+  have hself := inner_self_eq_norm_sq (𝕜 := ℂ) (bandGramColumn W φ hmem i)
+  rw [h] at hself
+  simpa using hself.symm
+
+/-- **Deliverable 1.** The band-Gram is PSD, so its eigenvalues are nonnegative. -/
+theorem bandGramRealEigenvalues_nonneg (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) :
+    ∀ i, 0 ≤ bandGramRealEigenvalues W φ hmem i := by
+  intro i
+  rw [← norm_sq_bandGramColumn W φ hmem i]
+  positivity
+
+/-- `gᵢ = P_W (∑ⱼ Oⱼᵢ • ψⱼ)`: the eigenvector image is the projection of the corresponding raw-frame
+combination. -/
+private lemma bandGramColumn_eq_starProjection (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) (i : Fin k) :
+    bandGramColumn W φ hmem i
+      = (bandLimitSubspace W).starProjection
+          (∑ j, ((↑(bandGramRealUnitary W φ hmem) : Matrix (Fin k) (Fin k) ℝ) j i : ℂ) •
+            testFnLift φ hmem j) := by
+  unfold bandGramColumn
+  rw [map_sum]
+  refine Finset.sum_congr rfl (fun j _ => ?_)
+  rw [map_smul]
+
+/-- The raw-frame combination indexed by a column of the orthogonal `O` has unit `E`-norm (the raw
+lift is orthonormal and `O` is orthogonal). -/
+private lemma norm_sq_testFnLift_combo (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume)
+    (h_on : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0) (i : Fin k) :
+    ‖∑ j, ((↑(bandGramRealUnitary W φ hmem) : Matrix (Fin k) (Fin k) ℝ) j i : ℂ) •
+        testFnLift φ hmem j‖ ^ 2 = 1 := by
+  have ho := testFnLift_orthonormal φ hmem h_on
+  set O := (↑(bandGramRealUnitary W φ hmem) : Matrix (Fin k) (Fin k) ℝ) with hO
+  -- inner product collapses to `∑ⱼ (Oⱼᵢ)²` by orthonormality
+  have hinner : (inner ℂ (∑ j, (O j i : ℂ) • testFnLift φ hmem j)
+        (∑ l, (O l i : ℂ) • testFnLift φ hmem l) : ℂ) = ((∑ j, O j i * O j i : ℝ) : ℂ) := by
+    rw [sum_inner, Complex.ofReal_sum]
+    refine Finset.sum_congr rfl (fun j _ => ?_)
+    rw [inner_smul_left, inner_sum]
+    simp_rw [inner_smul_right, orthonormal_iff_ite.mp ho, mul_ite, mul_one, mul_zero]
+    rw [Finset.sum_ite_eq Finset.univ j (fun l => (O l i : ℂ)), if_pos (Finset.mem_univ j),
+      Complex.conj_ofReal]
+    push_cast; ring
+  -- `∑ⱼ (Oⱼᵢ)² = 1` since `O` is orthogonal (`Oᵀ O = 1`)
+  have hOO : Oᵀ * O = 1 :=
+    (mem_orthogonalGroup_iff' (Fin k) ℝ).mp
+      (by rw [hO]; exact bandGramRealUnitary_mem_orthogonalGroup W φ hmem)
+  have horth : (∑ j, O j i * O j i) = 1 := by
+    have hcol := congrFun (congrFun hOO i) i
+    rw [Matrix.mul_apply, Matrix.one_apply_eq] at hcol
+    simp_rw [Matrix.transpose_apply] at hcol
+    exact hcol
+  have hself := inner_self_eq_norm_sq (𝕜 := ℂ)
+    (∑ j, (O j i : ℂ) • testFnLift φ hmem j)
+  rw [hinner, horth] at hself
+  simpa using hself.symm
+
+/-- **Deliverable 2.** The band-Gram eigenvalues are at most `1` (the projection `P_W` contracts the
+orthonormal raw frame). -/
+theorem bandGramRealEigenvalues_le_one (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume)
+    (h_on : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0) :
+    ∀ i, bandGramRealEigenvalues W φ hmem i ≤ 1 := by
+  intro i
+  rw [← norm_sq_bandGramColumn W φ hmem i, bandGramColumn_eq_starProjection W φ hmem i]
+  refine le_trans ?_ (le_of_eq (norm_sq_testFnLift_combo W φ hmem h_on i))
+  gcongr
+  exact (bandLimitSubspace W).norm_starProjection_apply_le _
+
+/-- The complex lift of a band-limited encoder lies in `bandLimitSubspace W`. -/
+private lemma testFnLift_encoder_mem_bandLimitSubspace {W : ℝ} {f : ℝ → ℝ} (hf : MemLp f 2 volume)
+    (hbl : IsBandlimited f W) :
+    ((hf.ofReal (K := ℂ)).toLp (fun t => ((f t : ℝ) : ℂ))) ∈ bandLimitSubspace W := by
+  obtain ⟨hf', hvanish⟩ := hbl
+  have heq : (hf.ofReal (K := ℂ)).toLp (fun t => ((f t : ℝ) : ℂ))
+      = hf'.toLp (fun t : ℝ => ((f t : ℝ) : ℂ)) := by
+    refine Lp.ext ?_
+    filter_upwards [MemLp.coeFn_toLp (hf.ofReal (K := ℂ)), MemLp.coeFn_toLp hf'] with t h1 h2
+    exact h1.trans h2.symm
+  rw [heq, bandLimitSubspace, Submodule.mem_comap]
+  exact hvanish
+
+/-- The observation `∫ (encoder m)·(testFn j)` equals `Re ⟨ψⱼ, Fₘ⟩` (real integrand, so no imaginary
+part). -/
+private lemma observation_eq_inner_re {T W P : ℝ} {M : ℕ} (c : ContAwgnCode T W P M)
+    (m : Fin M) (j : Fin c.k) :
+    c.observation m j
+      = (inner ℂ (testFnLift c.testFn c.testFn_memLp j)
+          (testFnLift c.encoder c.encoder_memLp m)).re := by
+  have hcoeψ : (testFnLift c.testFn c.testFn_memLp j : ℝ → ℂ)
+      =ᵐ[volume] fun t => ((c.testFn j t : ℝ) : ℂ) := MemLp.coeFn_toLp _
+  have hcoeF : (testFnLift c.encoder c.encoder_memLp m : ℝ → ℂ)
+      =ᵐ[volume] fun t => ((c.encoder m t : ℝ) : ℂ) := MemLp.coeFn_toLp _
+  have hinner : (inner ℂ (testFnLift c.testFn c.testFn_memLp j)
+        (testFnLift c.encoder c.encoder_memLp m) : ℂ)
+      = ((∫ t, c.encoder m t * c.testFn j t : ℝ) : ℂ) := by
+    rw [MeasureTheory.L2.inner_def, ← integral_complex_ofReal]
+    apply integral_congr_ae
+    filter_upwards [hcoeψ, hcoeF] with t htψ htF
+    rw [RCLike.inner_apply, htψ, htF, Complex.conj_ofReal]
+    push_cast; ring
+  rw [ContAwgnCode.observation, hinner, Complex.ofReal_re]
+
+/-- `⟨P_W ψⱼ, Fₘ⟩ = ⟨ψⱼ, Fₘ⟩` when `Fₘ` is band-limited (self-adjoint projection + `P_W Fₘ = Fₘ`). -/
+private lemma inner_starProjection_testFn_encoder {T W P : ℝ} {M : ℕ} (c : ContAwgnCode T W P M)
+    (m : Fin M) (j : Fin c.k) :
+    (inner ℂ ((bandLimitSubspace W).starProjection (testFnLift c.testFn c.testFn_memLp j))
+        (testFnLift c.encoder c.encoder_memLp m) : ℂ)
+      = inner ℂ (testFnLift c.testFn c.testFn_memLp j)
+          (testFnLift c.encoder c.encoder_memLp m) := by
+  have hFmem : testFnLift c.encoder c.encoder_memLp m ∈ bandLimitSubspace W :=
+    testFnLift_encoder_mem_bandLimitSubspace (c.encoder_memLp m) (c.encoder_bandlimited m)
+  have hPF : (bandLimitSubspace W).starProjection (testFnLift c.encoder c.encoder_memLp m)
+      = testFnLift c.encoder c.encoder_memLp m := Submodule.starProjection_eq_self_iff.mpr hFmem
+  rw [Submodule.inner_starProjection_left_eq_right, hPF]
+
+/-- **S3a.** The rotated observation is `Re ⟨gᵢ, Fₘ⟩` per coordinate. -/
+private lemma rotate_observation_eq_inner_re {T W P : ℝ} {M : ℕ} (c : ContAwgnCode T W P M)
+    (m : Fin M) (i : Fin c.k) :
+    (c.rotate (↑(bandGramRealUnitary W c.testFn c.testFn_memLp) :
+          Matrix (Fin c.k) (Fin c.k) ℝ)ᵀ
+        (bandGramRealUnitary_transpose_mem_orthogonalGroup W c.testFn c.testFn_memLp)).observation m i
+      = (inner ℂ (bandGramColumn W c.testFn c.testFn_memLp i)
+          (testFnLift c.encoder c.encoder_memLp m)).re := by
+  set O := (↑(bandGramRealUnitary W c.testFn c.testFn_memLp) :
+    Matrix (Fin c.k) (Fin c.k) ℝ) with hO
+  rw [c.rotate_observation Oᵀ
+    (bandGramRealUnitary_transpose_mem_orthogonalGroup W c.testFn c.testFn_memLp) m]
+  have hg : (inner ℂ (bandGramColumn W c.testFn c.testFn_memLp i)
+        (testFnLift c.encoder c.encoder_memLp m) : ℂ).re
+      = ∑ j, O j i * c.observation m j := by
+    unfold bandGramColumn
+    rw [sum_inner, Complex.re_sum]
+    refine Finset.sum_congr rfl (fun j _ => ?_)
+    rw [inner_smul_left, Complex.conj_ofReal, Complex.re_ofReal_mul,
+      inner_starProjection_testFn_encoder, ← observation_eq_inner_re]
+  rw [hg]
+  rfl
+
+/-- `‖Fₘ‖² = ∫ (encoder m)²` (real lift). -/
+private lemma norm_sq_testFnLift_encoder {T W P : ℝ} {M : ℕ} (c : ContAwgnCode T W P M) (m : Fin M) :
+    ‖testFnLift c.encoder c.encoder_memLp m‖ ^ 2 = ∫ t, (c.encoder m t) ^ 2 := by
+  have hcoeF : (testFnLift c.encoder c.encoder_memLp m : ℝ → ℂ)
+      =ᵐ[volume] fun t => ((c.encoder m t : ℝ) : ℂ) := MemLp.coeFn_toLp _
+  have hinner : (inner ℂ (testFnLift c.encoder c.encoder_memLp m)
+        (testFnLift c.encoder c.encoder_memLp m) : ℂ) = ((∫ t, (c.encoder m t) ^ 2 : ℝ) : ℂ) := by
+    rw [MeasureTheory.L2.inner_def, ← integral_complex_ofReal]
+    apply integral_congr_ae
+    filter_upwards [hcoeF] with t htF
+    rw [RCLike.inner_apply, htF, Complex.conj_ofReal]
+    push_cast; ring
+  have hself := inner_self_eq_norm_sq (𝕜 := ℂ) (testFnLift c.encoder c.encoder_memLp m)
+  rw [hinner] at hself
+  simpa using hself.symm
+
+/-- The signal law's per-coordinate second moment is the empirical average of squared observations. -/
+private lemma signalLaw_integral_coord_sq {T W P : ℝ} {M : ℕ} [NeZero M]
+    (c : ContAwgnCode T W P M) (N₀ : ℝ) (i : Fin c.k) :
+    (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c N₀))
+      = (M : ℝ)⁻¹ * ∑ m : Fin M, (c.observation m i) ^ 2 := by
+  have hint : ∀ m : Fin M,
+      Integrable (fun x : Fin c.k → ℝ => (x i) ^ 2) (Measure.dirac (c.observation m)) :=
+    fun m => integrable_dirac (by finiteness)
+  rw [contAwgnSignalLaw_eq_mixture c N₀, integral_smul_measure,
+    integral_finsetSum_measure (fun m _ => hint m)]
+  simp_rw [integral_dirac]
+  rw [ENNReal.toReal_inv, ENNReal.toReal_natCast, smul_eq_mul]
+
+/-- **Deliverable 3.** For an arbitrary code `c`, rotating by `Oᵀ` (the transpose of the band-Gram
+eigenvector matrix) factors the rotated observation's per-coordinate second moment as `νᵢ · Qᵢ`,
+where `νᵢ = bandGramRealEigenvalues` and the per-mode powers `Qᵢ ≥ 0` satisfy `∑Qᵢ ≤ T·P`. This is
+the ellipsoid data the water-filling converse consumes. -/
+theorem contAwgn_rotated_secondMoment {T W P N₀ : ℝ} {M : ℕ} [NeZero M]
+    (c : ContAwgnCode T W P M) :
+    ∃ Q : Fin c.k → ℝ, (∀ i, 0 ≤ Q i) ∧ (∑ i, Q i ≤ T * P) ∧
+      ∀ i, (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw
+          (c.rotate (↑(bandGramRealUnitary W c.testFn c.testFn_memLp) :
+              Matrix (Fin c.k) (Fin c.k) ℝ)ᵀ
+            (bandGramRealUnitary_transpose_mem_orthogonalGroup W c.testFn c.testFn_memLp)) N₀))
+        = bandGramRealEigenvalues W c.testFn c.testFn_memLp i * Q i := by
+  classical
+  set c' := c.rotate (↑(bandGramRealUnitary W c.testFn c.testFn_memLp) :
+      Matrix (Fin c.k) (Fin c.k) ℝ)ᵀ
+    (bandGramRealUnitary_transpose_mem_orthogonalGroup W c.testFn c.testFn_memLp) with hc'
+  set ν : Fin c.k → ℝ := bandGramRealEigenvalues W c.testFn c.testFn_memLp with hν
+  set g : Fin c.k → E := bandGramColumn W c.testFn c.testFn_memLp with hg
+  set F : Fin M → E := testFnLift c.encoder c.encoder_memLp with hF
+  -- shared facts
+  have hνnonneg : ∀ i, 0 ≤ ν i := bandGramRealEigenvalues_nonneg W c.testFn c.testFn_memLp
+  have hnormg : ∀ i, ‖g i‖ ^ 2 = ν i := fun i => norm_sq_bandGramColumn W c.testFn c.testFn_memLp i
+  have hinnerg : ∀ i i', (inner ℂ (g i) (g i') : ℂ) = if i = i' then (ν i : ℂ) else 0 :=
+    fun i i' => inner_bandGramColumn W c.testFn c.testFn_memLp i i'
+  have hFbound : ∀ m, ‖F m‖ ^ 2 ≤ T * P :=
+    fun m => (norm_sq_testFnLift_encoder c m).trans_le (c.encoder_power m)
+  have hRe : ∀ z : ℂ, z.re ^ 2 ≤ ‖z‖ ^ 2 := fun z => by
+    rw [Complex.sq_norm, Complex.normSq_apply]; nlinarith [sq_nonneg z.im]
+  have hAval : ∀ i, (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀))
+      = (M : ℝ)⁻¹ * ∑ m : Fin M, (inner ℂ (g i) (F m) : ℂ).re ^ 2 := by
+    intro i
+    rw [signalLaw_integral_coord_sq c' N₀ i]
+    congr 1
+    refine Finset.sum_congr rfl (fun m _ => ?_)
+    have hro : c'.observation m i = (inner ℂ (g i) (F m) : ℂ).re :=
+      rotate_observation_eq_inner_re c m i
+    rw [hro]
+  -- per-message Bessel bound
+  have hbessel_m : ∀ m : Fin M,
+      ∑ i, (if ν i = 0 then (0 : ℝ) else (inner ℂ (g i) (F m) : ℂ).re ^ 2 / ν i) ≤ ‖F m‖ ^ 2 := by
+    intro m
+    set e' : {i : Fin c.k // ν i ≠ 0} → E :=
+      fun j => ((Real.sqrt (ν j.1))⁻¹ : ℂ) • g j.1 with he'
+    have he'_on : Orthonormal ℂ e' := by
+      rw [orthonormal_iff_ite]
+      intro j j'
+      simp only [he', inner_smul_left, inner_smul_right, hinnerg j.1 j'.1, map_inv₀,
+        Complex.conj_ofReal]
+      by_cases hjj : j = j'
+      · subst hjj
+        have hνpos : 0 < ν j.1 := (hνnonneg j.1).lt_of_ne (Ne.symm j.2)
+        rw [if_pos rfl, if_pos rfl]
+        have hid : (Real.sqrt (ν j.1))⁻¹ * (Real.sqrt (ν j.1))⁻¹ * ν j.1 = 1 := by
+          rw [← mul_inv, Real.mul_self_sqrt hνpos.le, inv_mul_cancel₀ j.2]
+        rw [show ((Real.sqrt (ν j.1))⁻¹ : ℂ) * (((Real.sqrt (ν j.1))⁻¹ : ℂ) * (ν j.1 : ℂ))
+            = (((Real.sqrt (ν j.1))⁻¹ * (Real.sqrt (ν j.1))⁻¹ * ν j.1 : ℝ) : ℂ) by push_cast; ring,
+          hid, Complex.ofReal_one]
+      · rw [if_neg (fun h => hjj (Subtype.ext h)), if_neg hjj]; simp
+    have hnorm_e : ∀ j : {i : Fin c.k // ν i ≠ 0},
+        ‖(inner ℂ (e' j) (F m) : ℂ)‖ ^ 2 = ‖(inner ℂ (g j.1) (F m) : ℂ)‖ ^ 2 / ν j.1 := by
+      intro j
+      have hνpos : 0 < ν j.1 := (hνnonneg j.1).lt_of_ne (Ne.symm j.2)
+      rw [he', inner_smul_left, norm_mul, mul_pow, RCLike.norm_conj, norm_inv, Complex.norm_real,
+        Real.norm_eq_abs, abs_of_nonneg (Real.sqrt_nonneg _), inv_pow, Real.sq_sqrt hνpos.le]
+      ring
+    have hperj : ∀ j : {i : Fin c.k // ν i ≠ 0},
+        (inner ℂ (g j.1) (F m) : ℂ).re ^ 2 / ν j.1 ≤ ‖(inner ℂ (e' j) (F m) : ℂ)‖ ^ 2 := by
+      intro j
+      have hνpos : 0 < ν j.1 := (hνnonneg j.1).lt_of_ne (Ne.symm j.2)
+      rw [hnorm_e j, div_eq_mul_inv, div_eq_mul_inv]
+      exact mul_le_mul_of_nonneg_right (hRe _) (inv_nonneg.mpr hνpos.le)
+    have hsub : ∑ j : {i : Fin c.k // ν i ≠ 0}, (inner ℂ (g j.1) (F m) : ℂ).re ^ 2 / ν j.1
+        = ∑ i, (if ν i = 0 then (0 : ℝ) else (inner ℂ (g i) (F m) : ℂ).re ^ 2 / ν i) := by
+      rw [← Finset.sum_subtype (Finset.univ.filter (fun i => ν i ≠ 0)) (fun x => by simp)
+        (fun i => (inner ℂ (g i) (F m) : ℂ).re ^ 2 / ν i), Finset.sum_filter]
+      refine Finset.sum_congr rfl (fun i _ => ?_)
+      by_cases hνi : ν i = 0
+      · rw [if_neg (not_not.mpr hνi), if_pos hνi]
+      · rw [if_pos hνi, if_neg hνi]
+    rw [← hsub]
+    calc ∑ j : {i : Fin c.k // ν i ≠ 0}, (inner ℂ (g j.1) (F m) : ℂ).re ^ 2 / ν j.1
+        ≤ ∑ j : {i : Fin c.k // ν i ≠ 0}, ‖(inner ℂ (e' j) (F m) : ℂ)‖ ^ 2 :=
+          Finset.sum_le_sum (fun j _ => hperj j)
+      _ ≤ ‖F m‖ ^ 2 := he'_on.sum_inner_products_le (x := F m) (s := Finset.univ)
+  -- the ellipsoid witness
+  have hM : (M : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne M)
+  have hMinv : (0 : ℝ) ≤ (M : ℝ)⁻¹ := by positivity
+  have hQval : ∀ i, (if ν i = 0 then (0 : ℝ)
+        else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i)
+      = ∑ m : Fin M,
+          (M : ℝ)⁻¹ * (if ν i = 0 then (0 : ℝ) else (inner ℂ (g i) (F m) : ℂ).re ^ 2 / ν i) := by
+    intro i
+    by_cases hνi : ν i = 0
+    · simp [hνi]
+    · simp_rw [if_neg hνi]
+      rw [hAval i, ← Finset.mul_sum, ← Finset.sum_div, mul_div_assoc]
+  refine ⟨fun i => if ν i = 0 then 0 else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i,
+    ?_, ?_, ?_⟩
+  · -- nonnegativity
+    intro i
+    change (0 : ℝ) ≤ if ν i = 0 then 0 else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i
+    split_ifs with hνi
+    · exact le_refl 0
+    · exact div_nonneg (integral_nonneg (fun x => sq_nonneg _)) (hνnonneg i)
+  · -- power budget
+    change ∑ i, (if ν i = 0 then (0 : ℝ)
+        else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i) ≤ T * P
+    calc ∑ i, (if ν i = 0 then (0 : ℝ)
+          else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i)
+        = (M : ℝ)⁻¹ * ∑ m : Fin M, ∑ i,
+            (if ν i = 0 then (0 : ℝ) else (inner ℂ (g i) (F m) : ℂ).re ^ 2 / ν i) := by
+          rw [Finset.sum_congr rfl (fun i _ => hQval i)]
+          simp_rw [← Finset.mul_sum]
+          rw [Finset.sum_comm]
+      _ ≤ (M : ℝ)⁻¹ * ∑ m : Fin M, ‖F m‖ ^ 2 :=
+          mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ => hbessel_m m)) hMinv
+      _ ≤ (M : ℝ)⁻¹ * ∑ m : Fin M, (T * P) :=
+          mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ => hFbound m)) hMinv
+      _ = T * P := by
+          rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul,
+            ← mul_assoc, inv_mul_cancel₀ hM, one_mul]
+  · -- second-moment factorization
+    intro i
+    change (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀))
+        = ν i * if ν i = 0 then 0 else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i
+    by_cases hνi : ν i = 0
+    · rw [if_pos hνi, mul_zero, hAval i]
+      have hgi0 : g i = 0 := by
+        have hn : ‖g i‖ = 0 := by
+          have := hnormg i; rw [hνi] at this; nlinarith [norm_nonneg (g i)]
+        exact norm_eq_zero.mp hn
+      simp [hgi0]
+    · rw [if_neg hνi, ← mul_div_assoc, mul_div_cancel_left₀ _ hνi]
+
 end InformationTheory.Shannon.ShannonHartley
