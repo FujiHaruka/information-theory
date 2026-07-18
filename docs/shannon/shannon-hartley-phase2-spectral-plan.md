@@ -14,7 +14,7 @@
 - [x] **Leg E — 固有値集中の解析核 ✅ CLOSED**（E-atom/E-trace/E-sharp、leg 15–16）
 - [x] **count — 集中の両半分 ✅ CLOSED**（R-atom/R2/R3、leg 17。R1 は DEAD = 構成上不要）
 - [x] **R4-ACH（achievability bridge）✅ CLOSED（leg 18–22）**: A1 gateway PASS / 実基底 (B) / route(ii) keystone / L0–L10 全 proof-done。**headline `contAwgn_ge_shannonHartley` = PROOF-DONE sorryAx-free + @audit:ok**（leg 22、`15a111ef`/`ef401a5d`/`173adcb3`）
-- [ ] **R4-CONV（converse bridge）= 進行中**。**C1 ✅ CLOSED（leg 23）** = `finrank_le_prolateCount_of_form_gt` proof-done sorryAx-free @audit:ok（crux は Leg E で in-tree = advisor 反証、`nyquist-2w-dof`→`plan:` 再分類監査 CONFIRMED）。**C3 ✅ leaf 5/6 CLOSED（leg 24）**: 新 file `ShannonHartleyConverse.lean`、headline `contAwgn_operational_converse` type-check-done + 監査 CONFIRMED（hyp bundling なし・循環 guard PASS）、L0–L4 + Markov 全 sorryAx-free、残 1 sorry = L5 MI-finiteness（`contAwgn_mi_W_ne_top`、plan 分類）。残 = C3 L5 / C2（Gauss 回転）/ C4（water-filling+極限）/ C0 headline / assembly
+- [ ] **R4-CONV（converse bridge）= 進行中**。**C1 ✅ CLOSED（leg 23）** = `finrank_le_prolateCount_of_form_gt` proof-done sorryAx-free @audit:ok（crux は Leg E で in-tree = advisor 反証、`nyquist-2w-dof`→`plan:` 再分類監査 CONFIRMED）。**C3 ✅ FULLY CLOSED（leg 25）**: 新 file `ShannonHartleyConverse.lean`、headline `contAwgn_operational_converse` = **無条件 sorryAx-free**（L5 `contAwgn_mi_W_ne_top` = 離散 AWGN converse `awgnConverseJoint_mutualInfo_ne_top` への genuine reduction で closed、@audit:ok、leg 25）。全 6 leaf @audit:ok。残 = C2（Gauss 回転）/ C4（water-filling+極限）/ C0 headline / assembly
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
 
 ---
@@ -101,7 +101,7 @@ converse（C1）配線時も同種 signature-scan を要す。
 
 ---
 
-## R4-CONV（converse bridge）= 進行中（C3 skeleton 建 + leaf 5/6 CLOSED、残 L5 finiteness + C2/C4）
+## R4-CONV（converse bridge）= 進行中（C1 + C3 CLOSED、残 C2/C4/C0/assembly）
 
 **目標**: `contAwgnOperationalCapacity ≤ bandlimitedAwgnCapacity` を証明し `contAwgn_eq_shannonHartley` の残 sorry
 （`@residual(nyquist-2w-dof)`、**converse 半分専用**）を落とす。**count の下流**ゆえ R1–R3 / E-sharp では落ちない。
@@ -112,10 +112,10 @@ converse（C1）配線時も同種 signature-scan を要す。
 | **C0** | headline `contAwgn_le_shannonHartley` が**宣言として存在しない**（achievability 半分が proof-done ⟹ 残 sorry は converse 専用だが、`le_antisymm` 用の `≤` 補題を実不等式として書き下ろす要あり） | 親 plan / inventory が名前だけ参照 = 指示対象なき名前 | 実装（未着手） |
 | **C1 ✅ CLOSED** | `#{ν(Gram)>c} ≤ prolateCount T W c` = `finrank_le_prolateCount_of_form_gt`（`S` 上 Rayleigh 商 `>c` ⟹ `finrank S ≤ prolateCount`） | **proof-done sorryAx-free @audit:ok**（`TimeBandLimiting.lean:2617`、leg 23）。crux = 既在 in-tree `inner_timeBandLimitingOp_le_of_mem_orthogonal`（Vᗮ で `⟪Av,v⟫≤c‖v‖²`、@audit:ok、Leg E）+ matched pair `le_inner_timeBandLimitingOp_of_mem`。injection は `orthogonalProjectionOnto` + `LinearMap.finrank_le_finrank_of_injective` | ✅ 完了 |
 | **C2** | 観測を Gram 固有基底へ回転（等方 Gauss 不変性）+ **利得 νᵢ を信号電力の ellipsoid 制約へ折り込む**（`∑Qᵢ/νᵢ ≤ TP`） | `stdGaussian_map` + `map_pi_eq_stdGaussian`。⚠️ **後者は `gaussianReal 0 1` 専用**（`errorProbAt` は平均≠0・分散 N₀/2）ゆえ `gaussianReal_map_const_mul` + `_add_const` の affine split を先に噛ませる（1 行 `rw` 不可） | plumbing（self-build wiring） |
-| **C3 🔄 leaf 5/6 CLOSED** | operational converse `log M ≤ (mutualInfoOfChannel).toReal + Fano ≤ ∑ᵢ ½log(1+P'ᵢ/(N₀/2))`（**等雑音**、利得は C2/C4 の信号電力側） | **新 file `ShannonHartleyConverse.lean`（leg 24）に skeleton-driven で建了。headline `contAwgn_operational_converse` = type-check-done + 監査 CONFIRMED（hyp bundling なし・循環 guard PASS）。L0–L4 + Markov(L2) = 全 sorryAx-free @audit:ok。残 1 sorry = L5 MI-finiteness のみ** | plumbing（残 = L5 finiteness） |
+| **C3 ✅ FULLY CLOSED** | operational converse `log M ≤ (mutualInfoOfChannel).toReal + Fano ≤ ∑ᵢ ½log(1+P'ᵢ/(N₀/2))`（**等雑音**、利得は C2/C4 の信号電力側） | **`ShannonHartleyConverse.lean`（leg 24 建了 + leg 25 L5 closed）。headline `contAwgn_operational_converse` = 無条件 sorryAx-free + 監査 CONFIRMED（hyp bundling なし・循環 guard PASS）。全 6 leaf @audit:ok（L5 = 離散 AWGN converse への genuine reduction、密度 chain port 回避）** | ✅ 完了 |
 | **C4** | water-filling + 極限（ellipsoid `∑Qᵢ/νᵢ ≤ TP`、νᵢ≤1・`#{νᵢ>c}≤prolateCount`（C1）、`/T`、`T→∞`、`c→0`） | 初等 + C1 count | plumbing |
 
-**次アクション = C3 の L5（MI-finiteness、最高リスク）→ C2（Gauss 回転）→ C4（water-filling + 極限）→ C0 headline → `le_antisymm` で `contAwgn_eq` closure**。C3 の骨格 + L0–L4 + Markov は leg 24 で CLOSED（下記 leaf DAG）。C1 は leg 23 で CLOSED（下記）。
+**次アクション = C2（Gauss 回転）→ C4（water-filling + 極限）→ C0 headline → `le_antisymm` で `contAwgn_eq` closure**。C3 は leg 24（骨格 + L0–L4 + Markov）+ leg 25（L5 finiteness）で **FULLY CLOSED**。C1 は leg 23 で CLOSED。**⚠️ C2/C4 の設計上の要注意点（次 leg で確認）**: operational converse は等雑音の**単純和制約** `∑P'ᵢ ≤ T·P`（c.k は自由 ℕ）を出力する。νᵢ 固有値カウント `#{νᵢ>c}≤prolateCount≈2WT`（C1）が**有効座標数を ~2WT に上限する**のが DOF 論の核 — C2 が観測を Gram 固有基底へ回し（affine split → 等方不変性）、C4 が count + water-filling + `T→∞`/`c→0` 極限で SH 閉形式に落とす。νᵢ がどう converse chain に厳密に入るか（信号電力側 ellipsoid か）は C2 実装前に proof-pivot-advisor で design 検証推奨（循環 guard）。
 新 route（採用）= 抽象 count-domination `finrank_le_prolateCount_of_form_gt`：`S` 上 Rayleigh 商 `>c` ⟹ `S ⊓ Vᗮ = ⊥`
 （Vᗮ で `≤c` の既在 crux と衝突）⟹ `orthogonalProjectionOnto` で `S ↪ V` 単射 ⟹ `finrank S ≤ finrank V = prolateCount`。
 **advisor の「interlacing 非自明 = self-build 公算」は反証された** — crux（Vᗮ form bound）は Leg E で既に payが済んでおり
@@ -129,7 +129,7 @@ converse（C1）配線時も同種 signature-scan を要す。
 3. **L-CV3 ✅ (L2)**: `contAwgnConverseMarkov_holds`（`W→S→Y` Markov、`mutualInfo_le_of_markov` 消費、`converseMarkov_marginalA` clone + pair-law 再利用、proof-done sorryAx-free @audit:ok、leg 24）。
 4. **L-CV4 ✅ (L3)**: `contAwgn_mi_S_eq_mutualInfoOfChannel`（`joint = p_S ⊗ₘ W` bridge、`mutualInfoOfChannel_eq_mutualInfo_prod` 消費、sorryAx-free @audit:ok）。
 5. **L-CV5 ✅**: `contAwgn_signalLaw_mem_constraint`（power-constraint membership、Bessel `_sum_observation_sq_le`、sorryAx-free）。
-6. **L-CV6 ⬜ (L5、最高リスク・残る唯一の sorry)**: `contAwgn_mi_W_ne_top`（MI-finiteness `I(W;Y)≠∞`、`@residual(plan:shannon-hartley-phase2-spectral-plan)`、監査 = plan 分類 CONFIRMED）。port 先 = `awgnConverseJoint_mi_W_ne_top` の density chain（`MixtureDensity.lean` の `parallelFibre_logProxy_integrable_compProd` 等 + `klDiv_ne_top`）を再利用。**Mathlib gap でなく project-internal port**。
+6. **L-CV6 ✅ (L5、leg 25 CLOSED)**: `contAwgn_mi_W_ne_top`（MI-finiteness `I(W;Y)≠∞`、proof-done sorryAx-free @audit:ok）。**当初の density chain port（~120 行）を回避**: `contAwgnConverseJoint` は離散 `awgnConverseJoint` と構造同型（`awgnChannel x N = gaussianReal x N` ゆえ encoder=observation・N=(N₀/2).toNNReal で定義的一致）ゆえ、既存 `awgnConverseJoint_mutualInfo_ne_top`（de-privatize）への equality 帰着 ~33 行で closed。**loogle-blind near-miss 回避例**（資産が 2 file 隣に既存）。
 7. **C2**: Gauss 回転（affine split 注意、上記）+ ellipsoid 制約導出。
 8. **C4**: water-filling + 極限 → `contAwgn_le_shannonHartley`（C0 headline）→ `le_antisymm(contAwgn_ge, contAwgn_le)` で `contAwgn_eq` closure、residual 削除（honesty 変更 → 独立監査必須）。
 typeclass: `mutualInfo_le_of_markov` の `[StandardBorelSpace (Fin k → ℝ)]` は `pi_countable` で充足（inventory 確認済）。
