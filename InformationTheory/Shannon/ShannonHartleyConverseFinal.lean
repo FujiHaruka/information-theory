@@ -204,7 +204,10 @@ theorem contAwgnRate_le (W N₀ P : ℝ) {ε : ℝ}
 
 /-- **Shannon-Hartley converse (`≤`)**: the operational capacity of the band-limited AWGN channel is
 at most the closed form `W·log(1 + P/(N₀·W))`. The `ε → 0` infimum of the per-`ε` rate bound
-`contAwgnRate_le`. -/
+`contAwgnRate_le`.
+
+@audit:ok (independent honesty audit 2026-07-18: `#print axioms contAwgn_le_shannonHartley` =
+[propext, Classical.choice, Quot.sound], sorryAx-free; `hW`/`hN₀`/`hP` regularity-only.) -/
 theorem contAwgn_le_shannonHartley (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     contAwgnOperationalCapacity W N₀ P ≤ bandlimitedAwgnCapacity W N₀ P := by
   unfold contAwgnOperationalCapacity
@@ -241,7 +244,14 @@ Both halves are now proved: achievability (`≥`) by `contAwgn_ge_shannonHartley
 `T → ∞`, `c₀ → 0`, `ε → 0` limits). The statement is true as framed over the phantom-free
 `contAwgnOperationalCapacity` (the subtype infimum `⨅ ε : ↥(Set.Ioo 0 1)`).
 
-Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing). -/
+Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
+
+@audit:ok (independent honesty audit 2026-07-18: `#print axioms` =
+[propext, Classical.choice, Quot.sound], sorryAx-free — the `tsum_prolateEigenvalues_eq`
+`plan:` residual is off this converse path, which lands via the count domination
+`bandGramReal_high_count_le`, not the exact trace identity. Signature scan: both `le_antisymm`
+halves are regularity-only, no load-bearing hyp leaks into the identity; the two-sided sandwich
+over the phantom-free subtype infimum forecloses false-as-framed.) -/
 @[entry_point]
 theorem contAwgn_eq_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
