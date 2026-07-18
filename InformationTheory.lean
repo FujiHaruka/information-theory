@@ -182,6 +182,7 @@ import InformationTheory.Shannon.ShannonHartleyPreequalizer
 import InformationTheory.Shannon.TimeBandLimiting
 import InformationTheory.Shannon.ShannonHartleyMain
 import InformationTheory.Shannon.ShannonHartleyConverse
+import InformationTheory.Shannon.ShannonHartleyConverseCount
 import InformationTheory.Shannon.WynerZiv.Basic
 import InformationTheory.Shannon.WynerZiv.RateMonotonicity
 import InformationTheory.Shannon.Stationary.Basic
