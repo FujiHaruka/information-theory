@@ -2939,12 +2939,100 @@ theorem tsum_eigen_eq_two_mul (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
         tsum_congr fun i => (hval i).symm
     _ = 2 * W * T := tsum_inner_timeBandLimitingOp_eq T W hT hW b
 
+/-- **P3a-fin.** For `t > 0`, only finitely many eigenbasis vectors have eigenvalue above `t`: they
+are orthonormal (hence linearly independent) and lie in the finite-dimensional high eigenspace
+`prolateEigenspaceSup T W t`. -/
+theorem setOf_lt_lam_finite (T W : ℝ) {ι : Type} (b : HilbertBasis ι ℂ E) (lam : ι → ℝ)
+    (hspan : ∀ c : ℝ, 0 < c →
+      prolateEigenspaceSup T W c = Submodule.span ℂ (b '' {i | c < lam i}))
+    {t : ℝ} (ht : 0 < t) : {i | t < lam i}.Finite := by
+  haveI : FiniteDimensional ℂ (prolateEigenspaceSup T W t) :=
+    prolateEigenspaceSup_finiteDimensional T W ht
+  have hmem : ∀ i : ↥{i | t < lam i}, b ↑i ∈ prolateEigenspaceSup T W t := by
+    intro i
+    rw [hspan t ht]
+    exact Submodule.subset_span ⟨↑i, i.2, rfl⟩
+  have hli : LinearIndependent ℂ
+      (fun i : ↥{i | t < lam i} => (⟨b ↑i, hmem i⟩ : ↥(prolateEigenspaceSup T W t))) := by
+    apply LinearIndependent.of_comp (prolateEigenspaceSup T W t).subtype
+    exact (b.orthonormal.comp _ Subtype.val_injective).linearIndependent
+  exact Set.finite_coe_iff.mp hli.finite
+
+/-- **P3a.** The super-level count of the eigenbasis eigenvalues equals `prolateCount`: the vectors
+with eigenvalue above `t` form an orthonormal basis of `prolateEigenspaceSup T W t`, so their number
+is its `finrank`. -/
+theorem ncard_setOf_lt_lam (T W : ℝ) {ι : Type} (b : HilbertBasis ι ℂ E) (lam : ι → ℝ)
+    (hspan : ∀ c : ℝ, 0 < c →
+      prolateEigenspaceSup T W c = Submodule.span ℂ (b '' {i | c < lam i}))
+    {t : ℝ} (ht : 0 < t) : {i | t < lam i}.ncard = prolateCount T W t := by
+  haveI : Fintype ↥{i | t < lam i} := (setOf_lt_lam_finite T W b lam hspan ht).fintype
+  have hli : LinearIndependent ℂ (fun i : ↥{i | t < lam i} => b ↑i) :=
+    (b.orthonormal.comp _ Subtype.val_injective).linearIndependent
+  have hrange : Set.range (fun i : ↥{i | t < lam i} => b ↑i) = b '' {i | t < lam i} :=
+    (Set.image_eq_range b {i | t < lam i}).symm
+  simp only [prolateCount]
+  rw [hspan t ht, ← hrange, finrank_span_eq_card hli, ← Nat.card_eq_fintype_card,
+    Nat.card_coe_set_eq]
+
+/-- **P3b.** For `t > 0`, the decreasing enumeration exceeds `t` exactly on an initial segment
+`{0, …, prolateCount T W t − 1}`. This is the generalized-inverse duality
+`t < prolateEigenvalues T W n ↔ n < prolateCount T W t`, packaged as a set identity. The `←`
+direction uses the finiteness of the eigenvalue set above `t` to produce a spectral gap just above
+`t`, so the counting function is locally constant there and the infimum defining
+`prolateEigenvalues` clears `t` strictly. -/
+theorem setOf_lt_prolateEigenvalues_eq_Iio (T W : ℝ) {t : ℝ} (ht : 0 < t) :
+    {n | t < prolateEigenvalues T W n} = Set.Iio (prolateCount T W t) := by
+  have hiff : ∀ n, t < prolateEigenvalues T W n ↔ n < prolateCount T W t := by
+    intro n
+    constructor
+    · -- `t < λₙ → n < count`: else `count ≤ n` puts `λₙ ≤ t`.
+      intro hlt
+      by_contra hle
+      push Not at hle
+      exact absurd (prolateEigenvalues_le_of_count_le T W ht hle) (not_le.mpr hlt)
+    · -- `n < count → t < λₙ`: a spectral gap just above `t` clears the infimum strictly.
+      intro hn
+      have hFfin : (prolateEigenvalueSet T W t).Finite := prolateEigenvalueSet_finite T W ht
+      have hFne : (prolateEigenvalueSet T W t).Nonempty := by
+        by_contra hemp
+        rw [Set.not_nonempty_iff_eq_empty] at hemp
+        have hbot : prolateEigenspaceSup T W t = ⊥ := by
+          rw [prolateEigenspaceSup, hemp]; simp
+        have : prolateCount T W t = 0 := by rw [prolateCount, hbot]; simp
+        omega
+      -- The least eigenvalue above `t` is `> t` and bounds `prolateEigenvalues n` from below.
+      have hmem : sInf (prolateEigenvalueSet T W t) ∈ prolateEigenvalueSet T W t :=
+        hFne.csInf_mem hFfin
+      have hbdd : BddBelow (prolateEigenvalueSet T W t) := ⟨t, fun x hx => hx.1.le⟩
+      have hlb : ∀ c ∈ {c : ℝ | 0 < c ∧ prolateCount T W c ≤ n},
+          sInf (prolateEigenvalueSet T W t) ≤ c := by
+        rintro c ⟨hc0, hcn⟩
+        by_contra hlt
+        push Not at hlt
+        rcases le_or_gt c t with hct | htc
+        · exact absurd (le_trans (prolateCount_antitone T W hc0 hct) hcn) (by omega)
+        · have hseteq : prolateEigenvalueSet T W c = prolateEigenvalueSet T W t := by
+            refine Set.Subset.antisymm (prolateEigenvalueSet_subset T W htc.le) fun ev hev => ?_
+            exact ⟨lt_of_lt_of_le hlt (csInf_le hbdd hev), hev.2⟩
+          have : prolateCount T W c = prolateCount T W t := by
+            rw [prolateCount, prolateCount, prolateEigenspaceSup, prolateEigenspaceSup, hseteq]
+          omega
+      have hle : sInf (prolateEigenvalueSet T W t) ≤ prolateEigenvalues T W n :=
+        le_csInf (prolateEigenvalues_setOf_nonempty T W n) hlb
+      exact lt_of_lt_of_le hmem.1 hle
+  ext n
+  simp only [Set.mem_setOf_eq, Set.mem_Iio]
+  exact hiff n
+
 /-- **P3 — multiplicity bridge.** The eigenvalue sum along the eigenbasis equals the sum over the
 decreasing enumeration `prolateEigenvalues`, since both nonnegative families share the super-level
 counts `#{· > c} = prolateCount T W c` (the eigenbasis vectors above `c` span
-`prolateEigenspaceSup T W c`, whose `finrank` *is* `prolateCount`), transported through a layer-cake
-identity. Left as an honest sorry this leg (off the Shannon-Hartley converse path).
-@residual(plan:shannon-hartley-phase2-spectral-plan) -/
+`prolateEigenspaceSup T W c`, whose `finrank` *is* `prolateCount` — `ncard_setOf_lt_lam`; the
+enumeration exceeds `c` on the initial segment `{0, …, prolateCount T W c − 1}` —
+`setOf_lt_prolateEigenvalues_eq_Iio`), transported through the layer-cake identity
+`lintegral_eq_lintegral_meas_lt`: both `ℝ≥0∞` sums equal `∫⁻ t ∈ Ioi 0, prolateCount T W t`.
+Summability of both families (`summable_of_sum_le` from the Bessel bound, then `ENNReal.summable_toReal`)
+converts the `ℝ≥0∞` equality back to `ℝ`. -/
 theorem tsum_eigen_eq_tsum_prolateEigenvalues (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     {ι : Type} (b : HilbertBasis ι ℂ E) (lam : ι → ℝ)
     (heig : ∀ i, timeBandLimitingOp T W (b i) = (lam i : ℂ) • b i)
@@ -2952,35 +3040,93 @@ theorem tsum_eigen_eq_tsum_prolateEigenvalues (T W : ℝ) (hT : 0 ≤ T) (hW : 0
     (hspan : ∀ c : ℝ, 0 < c →
       prolateEigenspaceSup T W c = Submodule.span ℂ (b '' {i | c < lam i})) :
     ∑' i, lam i = ∑' n, prolateEigenvalues T W n := by
-  sorry
+  classical
+  letI : MeasurableSpace ι := ⊤
+  haveI : MeasurableSingletonClass ι := ⟨fun _ => MeasurableSpace.measurableSet_top⟩
+  -- Each Rayleigh quotient along the eigenbasis is its eigenvalue.
+  have hval : ∀ i, (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re = lam i := by
+    intro i
+    rw [heig i, inner_smul_left, Complex.conj_ofReal, inner_self_eq_norm_sq_to_K,
+      b.orthonormal.1 i]
+    simp
+  -- Summability of `lam` from the Bessel bound `∑ lam ≤ 2WT` on every finite subfamily.
+  have hsummL : Summable lam := by
+    refine summable_of_sum_le (fun i => hnn i) (c := 2 * W * T) fun u => ?_
+    have e : ↥u ≃ Fin u.card := Fintype.equivFinOfCardEq (Fintype.card_coe u)
+    have hinj : Function.Injective (fun k : Fin u.card => ((e.symm k : ↥u) : ι)) :=
+      Subtype.val_injective.comp e.symm.injective
+    have hbes := sum_inner_timeBandLimitingOp_le T W hT hW (b.orthonormal.comp _ hinj)
+    simp only [Function.comp_apply] at hbes
+    have heq : (∑ k, (inner ℂ (timeBandLimitingOp T W (b ((e.symm k : ↥u) : ι)))
+        (b ((e.symm k : ↥u) : ι))).re) = ∑ k : Fin u.card, lam ((e.symm k : ↥u) : ι) :=
+      Finset.sum_congr rfl fun k _ => hval ((e.symm k : ↥u) : ι)
+    rw [heq] at hbes
+    calc ∑ i ∈ u, lam i = ∑ i : ↥u, lam ↑i := (Finset.sum_coe_sort u lam).symm
+      _ = ∑ k : Fin u.card, lam ((e.symm k : ↥u) : ι) :=
+          (Equiv.sum_comp e.symm (fun i : ↥u => lam ↑i)).symm
+      _ ≤ 2 * W * T := hbes
+  -- Both distribution functions equal `prolateCount T W t` for `t > 0`.
+  have hLcount : ∀ t : ℝ, 0 < t →
+      Measure.count {i | t < lam i} = (prolateCount T W t : ℝ≥0∞) := by
+    intro t ht
+    have hfin := setOf_lt_lam_finite T W b lam hspan ht
+    rw [Measure.count_apply_finite {i | t < lam i} hfin,
+      ← Set.ncard_eq_toFinset_card {i | t < lam i} hfin, ncard_setOf_lt_lam T W b lam hspan ht]
+  have hRcount : ∀ t : ℝ, 0 < t →
+      Measure.count {n | t < prolateEigenvalues T W n} = (prolateCount T W t : ℝ≥0∞) := by
+    intro t ht
+    rw [setOf_lt_prolateEigenvalues_eq_Iio T W ht, ← Finset.coe_range,
+      Measure.count_apply_finset, Finset.card_range]
+  -- Layer cake: both `ℝ≥0∞` sums equal `∫⁻ t ∈ Ioi 0, prolateCount T W t`.
+  have hLint : (∑' i, ENNReal.ofReal (lam i))
+      = ∫⁻ t in Set.Ioi (0 : ℝ), (prolateCount T W t : ℝ≥0∞) := by
+    rw [← lintegral_count' (f := fun i => ENNReal.ofReal (lam i)) measurable_from_top,
+      lintegral_eq_lintegral_meas_lt Measure.count (ae_of_all _ fun i => hnn i)
+        measurable_from_top.aemeasurable]
+    exact setLIntegral_congr_fun measurableSet_Ioi fun t ht => hLcount t ht
+  have hRint : (∑' n, ENNReal.ofReal (prolateEigenvalues T W n))
+      = ∫⁻ t in Set.Ioi (0 : ℝ), (prolateCount T W t : ℝ≥0∞) := by
+    rw [← lintegral_count (fun n => ENNReal.ofReal (prolateEigenvalues T W n)),
+      lintegral_eq_lintegral_meas_lt Measure.count
+        (ae_of_all _ fun n => prolateEigenvalues_nonneg T W n)
+        (measurable_of_countable _).aemeasurable]
+    exact setLIntegral_congr_fun measurableSet_Ioi fun t ht => hRcount t ht
+  have hkey : (∑' i, ENNReal.ofReal (lam i))
+      = ∑' n, ENNReal.ofReal (prolateEigenvalues T W n) := by rw [hLint, hRint]
+  -- Transfer the identity back to `ℝ`.
+  have hLfin : (∑' i, ENNReal.ofReal (lam i)) ≠ ⊤ := by
+    rw [← ENNReal.ofReal_tsum_of_nonneg hnn hsummL]; exact ENNReal.ofReal_ne_top
+  have hsummR : Summable (prolateEigenvalues T W) := by
+    have hne : (∑' n, ENNReal.ofReal (prolateEigenvalues T W n)) ≠ ⊤ := hkey ▸ hLfin
+    refine (ENNReal.summable_toReal hne).congr fun n => ?_
+    rw [ENNReal.toReal_ofReal (prolateEigenvalues_nonneg T W n)]
+  have hfinal : ENNReal.ofReal (∑' i, lam i)
+      = ENNReal.ofReal (∑' n, prolateEigenvalues T W n) := by
+    rw [ENNReal.ofReal_tsum_of_nonneg hnn hsummL,
+      ENNReal.ofReal_tsum_of_nonneg (fun n => prolateEigenvalues_nonneg T W n) hsummR, hkey]
+  exact (ENNReal.ofReal_eq_ofReal_iff (tsum_nonneg hnn)
+    (tsum_nonneg fun n => prolateEigenvalues_nonneg T W n)).mp hfinal
 
 /-- The trace identity `tsum_inner_timeBandLimitingOp_eq`, transported onto the decreasing
-eigenvalue enumeration: `∑ₙ λₙ = 2WT`.
+eigenvalue enumeration: `∑ₙ λₙ = 2WT` (the exact first spectral moment of `A = timeBandLimitingOp`).
 
-Not attempted here (this is the *statement*, left honestly open rather than framed to look closed).
-The trace identity holds along any Hilbert basis; specializing it to `prolateEigenvalues` needs two
-further pieces, neither of which is the `wall:nyquist-2w-dof` concentration:
+Proof-done, sorryAx-free, and independent of the `wall:nyquist-2w-dof` concentration. It composes
+three pieces, each proved from assets already in Mathlib / this file:
 
-1. a complete orthonormal *eigen*basis of `A`. Mathlib's compact self-adjoint spectral theorem
-   (`ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot`: the eigenspaces are total)
-   plus `HilbertBasis.mkOfOrthogonalEqBot` supply the machinery, but gluing per-eigenspace bases
-   (finite-dimensional for `μ ≠ 0` by `finite_dimensional_eigenspace`, infinite-dimensional for the
-   kernel) into one orthonormal family indexed over the eigenvalue set is real work;
-2. the multiplicity bridge from that basis's eigenvalue multiset to `prolateEigenvalues`, which is
-   defined as the generalized inverse `sInf {c > 0 | prolateCount T W c ≤ n}` of the counting
-   function rather than as a list.
+1. **P1 (`exists_eigen_hilbertBasis`)** — a complete orthonormal *eigen*basis of `A`. The compact
+   self-adjoint spectral theorem (`ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot`:
+   the eigenspaces are total) glues per-eigenspace Hilbert bases (`exists_hilbertBasis`, uniform in
+   `μ`) into one orthonormal family via `HilbertBasis.mkOfOrthogonalEqBot`, with real nonnegative
+   eigenvalues whose above-`c` vectors span `prolateEigenspaceSup T W c`.
+2. **P2 (`tsum_eigen_eq_two_mul`)** — feeding that eigenbasis to the trace identity gives `∑ λ = 2WT`.
+3. **P3 (`tsum_eigen_eq_tsum_prolateEigenvalues`)** — the multiplicity bridge to `prolateEigenvalues`,
+   the generalized inverse `sInf {c > 0 | prolateCount T W c ≤ n}` of the counting function: both
+   nonnegative families share the super-level counts `prolateCount T W t`, so a layer-cake identity
+   equates their sums.
 
-Both are plumbing onto assets that exist, not a missing theory, hence `plan:` and not `wall:`.
-
-Audited 2026-07-17 (independent): the `plan:` classification stands. The three named assets were
-confirmed present rather than taken on trust (`Spectrum.lean:443`, `l2Space.lean:528`,
-`finite_dimensional_eigenspace`), and the multiplicity bridge was checked *not* to need the
-Landau-Pollak-Slepian concentration: it is the qualitative identity `#{i | μᵢ > c} = prolateCount`
-for an eigenbasis plus equality of tsums for two nonnegative families with the same distribution
-function (Mathlib's layer cake `lintegral_eq_lintegral_meas_lt` serves), all of which is
-`c`-by-`c` structure for a compact positive operator, not the asymptotics in `WT` that the wall
-names. `plan:` asserts closability, not cheapness — the eigenbasis gluing is real work.
-@residual(plan:shannon-hartley-phase2-spectral-plan) -/
+None of this is the Landau-Pollak-Slepian asymptotics in `WT`; it is `c`-by-`c` structure for a
+compact positive operator. This exact first moment is off the Shannon-Hartley converse path (a bonus:
+the converse lands via count domination `bandGramReal_high_count_le`, not this identity). -/
 theorem tsum_prolateEigenvalues_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
     ∑' n, prolateEigenvalues T W n = 2 * W * T := by
   obtain ⟨ι, b, lam, heig, hnn, hspan⟩ := exists_eigen_hilbertBasis T W
