@@ -203,6 +203,14 @@ lemma contAwgn_errorProb_eq_averageError {T W P : ℝ} {M : ℕ} [NeZero M]
 
 /-- `I(W; Y) ≠ ∞` on the ContAwgn converse joint. The parallel analog of
 `AWGN.awgnConverseJoint_mutualInfo_ne_top` — via the block mixture-density integrability.
+
+Project-internal port (NOT a Mathlib wall): the block output law
+`(1/M) ∑ₘ pi(gaussianReal (observation m i) (N₀/2))` is the same mixture-of-product-Gaussians as
+the discrete AWGN block, whose finiteness proof (`ConverseMutualInfoFiniteness.lean`,
+`awgnConverseJoint_mi_W_ne_top`) reuses the density-integrability machinery already built in
+`ParallelGaussian/Converse/MixtureDensity.lean` (`parallelFibre_logProxy_integrable_compProd`,
+`parallelOutput_joint_logDensity_integrable`) via `klDiv_ne_top`. Left as an honest sorry for a
+follow-up leg.
 @residual(plan:shannon-hartley-phase2-spectral-plan) -/
 lemma contAwgn_mi_W_ne_top {T W P : ℝ} {M : ℕ} [NeZero M]
     (c : ContAwgnCode T W P M) {N₀ : ℝ} (hN₀ : 0 < N₀) :
@@ -214,6 +222,13 @@ lemma contAwgn_mi_W_ne_top {T W P : ℝ} {M : ℕ} [NeZero M]
 /-! ## §L2 — Markov DPI `W → S → Y` -/
 
 /-- The Markov chain `W → observation ∘ W → Y` factorization for the ContAwgn joint.
+
+Project-internal port (NOT a Mathlib wall): the γ-form factorization is the signal-level analog
+of `AWGN.awgnConverseMarkov_holds` (`ConverseMIChainRule/Markov.lean`), with `c.observation`
+playing the deterministic-encoder role. The signal-level pair law `joint.map (S, Y) = p_S ⊗ₘ W_chan`
+is already available in-file (`contAwgnConverseJoint_map_pair_eq_compProd`); the remaining work is
+the `converseMarkov_marginalA` analog + the triple-joint `ext_of_lintegral` reduction. Left as an
+honest sorry for a follow-up leg.
 @residual(plan:shannon-hartley-phase2-spectral-plan) -/
 lemma contAwgnConverseMarkov_holds {T W P : ℝ} {M : ℕ} [NeZero M]
     (c : ContAwgnCode T W P M) (N₀ : ℝ) :
