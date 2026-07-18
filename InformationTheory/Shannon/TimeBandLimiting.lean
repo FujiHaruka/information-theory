@@ -2636,6 +2636,56 @@ theorem finrank_le_prolateCount_of_form_gt (T W : ℝ) {c : ℝ} (hc : 0 < c)
         LinearMap.finrank_le_finrank_of_injective hinj
     _ = prolateCount T W c := rfl
 
+-- **Operator-side Bessel domination.** For a band-limited `g` and an orthonormal family `φ` of
+-- time-limited vectors, the Bessel sum `∑ᵢ ‖⟪g, φᵢ⟫‖²` is dominated by the operator quadratic form
+-- `Re⟪A g, g⟫`. Since `P_W g = g` and `Q_T φᵢ = φᵢ`, the frame coefficient `⟪g, φᵢ⟫ = ⟪φᵢ, Q_T g⟫`,
+-- so Bessel against `Q_T g` caps the sum by `‖Q_T g‖² = Re⟪A g, g⟫`. This feeds
+-- `finrank_le_prolateCount_of_form_gt`: an arbitrary code's Gram spectrum is dominated by the
+-- operator spectrum. Pure complex `E`-space, no real↔E bridge.
+lemma frame_form_le_op_form (T W : ℝ) {k : ℕ} (φ : Fin k → E)
+    (h_on : Orthonormal ℂ φ) (h_tl : ∀ i, φ i ∈ timeLimitSubspace T)
+    (g : E) (hg : g ∈ bandLimitSubspace W) :
+    ∑ i, ‖inner ℂ g (φ i)‖ ^ 2 ≤ (inner ℂ (timeBandLimitingOp T W g) g).re := by
+  classical
+  have hQfix : ∀ i, (timeLimitSubspace T).starProjection (φ i) = φ i := fun i =>
+    Submodule.starProjection_eq_self_iff.mpr (h_tl i)
+  have hPg : (bandLimitSubspace W).starProjection g = g :=
+    Submodule.starProjection_eq_self_iff.mpr hg
+  have hQidem : (timeLimitSubspace T).starProjection ((timeLimitSubspace T).starProjection g)
+      = (timeLimitSubspace T).starProjection g :=
+    Submodule.starProjection_eq_self_iff.mpr (Submodule.starProjection_apply_mem _ _)
+  -- `A g = P_W (Q_T g)` since `P_W g = g`.
+  have hAg : timeBandLimitingOp T W g
+      = (bandLimitSubspace W).starProjection ((timeLimitSubspace T).starProjection g) := by
+    simp only [timeBandLimitingOp, ContinuousLinearMap.comp_apply, hPg]
+  -- The operator quadratic form is the squared norm of `Q_T g`.
+  have hinner : inner ℂ (timeBandLimitingOp T W g) g
+      = inner ℂ ((timeLimitSubspace T).starProjection g)
+          ((timeLimitSubspace T).starProjection g) := by
+    rw [hAg, Submodule.inner_starProjection_left_eq_right, hPg]
+    conv_lhs => rw [← hQidem]
+    rw [Submodule.inner_starProjection_left_eq_right]
+  have hform : (inner ℂ (timeBandLimitingOp T W g) g).re
+      = ‖(timeLimitSubspace T).starProjection g‖ ^ 2 := by
+    rw [hinner, inner_self_eq_norm_sq_to_K]
+    norm_cast
+  -- Each frame coefficient is a coefficient against `Q_T g`.
+  have hLHS : ∀ i, ‖inner ℂ g (φ i)‖ ^ 2
+      = ‖inner ℂ (φ i) ((timeLimitSubspace T).starProjection g)‖ ^ 2 := by
+    intro i
+    have hi : inner ℂ (φ i) g
+        = inner ℂ (φ i) ((timeLimitSubspace T).starProjection g) := by
+      conv_lhs => rw [← hQfix i]
+      rw [Submodule.inner_starProjection_left_eq_right]
+    rw [norm_inner_symm g (φ i), hi]
+  rw [hform]
+  calc ∑ i, ‖inner ℂ g (φ i)‖ ^ 2
+      = ∑ i, ‖inner ℂ (φ i) ((timeLimitSubspace T).starProjection g)‖ ^ 2 :=
+        Finset.sum_congr rfl (fun i _ => hLHS i)
+    _ ≤ ‖(timeLimitSubspace T).starProjection g‖ ^ 2 :=
+        h_on.sum_inner_products_le (x := (timeLimitSubspace T).starProjection g)
+          (s := Finset.univ)
+
 /-- Markov bound on the eigenvalue counting function: at most `2WT/c` eigenvalues of the
 time-and-band limiting operator exceed `c`.
 
