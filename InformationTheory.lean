@@ -95,6 +95,9 @@ import InformationTheory.Shannon.MultipleAccess.TimeSharingConverse
 import InformationTheory.Shannon.BroadcastChannel.Basic
 import InformationTheory.Shannon.BroadcastChannel.ConverseGateway
 import InformationTheory.Shannon.BroadcastChannel.Converse
+import InformationTheory.Shannon.BroadcastChannel.Achievability.Setup
+import InformationTheory.Shannon.BroadcastChannel.Achievability.ErrorAnalysis
+import InformationTheory.Shannon.BroadcastChannel.Achievability.Assembly
 import InformationTheory.Shannon.BroadcastChannel.Achievability
 import InformationTheory.Shannon.RelayCutset
 import InformationTheory.Shannon.BlockwiseChannel.Definition
