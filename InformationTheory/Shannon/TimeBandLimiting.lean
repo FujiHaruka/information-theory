@@ -2790,7 +2790,15 @@ self-adjoint, so its eigenspaces are total (`orthogonalComplement_iSup_eigenspac
 Collating a Hilbert basis of each eigenspace (`exists_hilbertBasis`, uniform in `μ`) over
 `Σ μ : ℂ, …` and gluing by `mkOfOrthogonalEqBot` yields a complete orthonormal eigenbasis of `E`,
 with real nonnegative eigenvalues, whose vectors with eigenvalue above `c` span the high eigenspace
-`prolateEigenspaceSup T W c`. -/
+`prolateEigenspaceSup T W c`.
+
+Independent honesty audit 2026-07-18 (`7a08b9c2`): no hypotheses; the whole construction is in the
+body. All three conjuncts are genuinely proven — the eigen-relation and nonnegativity pointwise, and
+the span identity by a real two-sided `le_antisymm` (not `:True`). The third conjunct is non-vacuous:
+were `{i | c < lam i}` empty for all `c > 0`, nonnegativity would force `lam ≡ 0`, contradicting P2's
+`∑ lam = 2WT ≠ 0` for `0 < W`, `0 < T`. sorryAx-free (`#print axioms` = `[propext, Classical.choice,
+Quot.sound]`).
+@audit:ok -/
 theorem exists_eigen_hilbertBasis (T W : ℝ) :
     ∃ (ι : Type) (b : HilbertBasis ι ℂ E) (lam : ι → ℝ),
       (∀ i, timeBandLimitingOp T W (b i) = (lam i : ℂ) • b i) ∧
@@ -3032,7 +3040,15 @@ enumeration exceeds `c` on the initial segment `{0, …, prolateCount T W c − 
 `setOf_lt_prolateEigenvalues_eq_Iio`), transported through the layer-cake identity
 `lintegral_eq_lintegral_meas_lt`: both `ℝ≥0∞` sums equal `∫⁻ t ∈ Ioi 0, prolateCount T W t`.
 Summability of both families (`summable_of_sum_le` from the Bessel bound, then `ENNReal.summable_toReal`)
-converts the `ℝ≥0∞` equality back to `ℝ`. -/
+converts the `ℝ≥0∞` equality back to `ℝ`.
+
+Independent honesty audit 2026-07-18 (`7a08b9c2`): `heig`/`hnn`/`hspan` are structural preconditions
+describing an abstract eigenbasis, not the conclusion in disguise — the multiplicity core (layer-cake
+`lintegral_eq_lintegral_meas_lt`, Bessel summability, the `Measure.count` distribution functions) is
+carried by the body. They are discharged by feeding `exists_eigen_hilbertBasis`'s output at the
+headline `tsum_prolateEigenvalues_eq`, which therefore assumes none of them (no load-bearing bundle).
+sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`).
+@audit:ok -/
 theorem tsum_eigen_eq_tsum_prolateEigenvalues (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     {ι : Type} (b : HilbertBasis ι ℂ E) (lam : ι → ℝ)
     (heig : ∀ i, timeBandLimitingOp T W (b i) = (lam i : ℂ) • b i)
@@ -3126,7 +3142,15 @@ three pieces, each proved from assets already in Mathlib / this file:
 
 None of this is the Landau-Pollak-Slepian asymptotics in `WT`; it is `c`-by-`c` structure for a
 compact positive operator. This exact first moment is off the Shannon-Hartley converse path (a bonus:
-the converse lands via count domination `bandGramReal_high_count_le`, not this identity). -/
+the converse lands via count domination `bandGramReal_high_count_le`, not this identity).
+
+Independent honesty audit 2026-07-18 (`7a08b9c2`): unconditional — the body `obtain`s the eigenbasis
+data `heig`/`hnn`/`hspan` from the hypothesis-free `exists_eigen_hilbertBasis`, so it discharges (does
+not assume) the P2/P3 preconditions. The only hypotheses `hT : 0 ≤ T`, `hW : 0 < W` are domain
+regularity (matching the already-audited `tsum_inner_timeBandLimitingOp_eq`), fixing the nonnegative
+value `2WT`. No load-bearing hypothesis, no circularity. sorryAx-free (`#print axioms` = `[propext,
+Classical.choice, Quot.sound]`).
+@audit:ok -/
 theorem tsum_prolateEigenvalues_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
     ∑' n, prolateEigenvalues T W n = 2 * W * T := by
   obtain ⟨ι, b, lam, heig, hnn, hspan⟩ := exists_eigen_hilbertBasis T W
