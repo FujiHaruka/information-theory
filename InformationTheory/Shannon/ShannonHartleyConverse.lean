@@ -549,7 +549,9 @@ lemma contAwgn_signalLaw_mem_constraint {T W P : ℝ} {M : ℕ} [NeZero M]
 finiteness `AWGN.awgnConverseJoint_mutualInfo_ne_top` by identifying `contAwgnConverseJoint` with
 `AWGN.awgnConverseJoint` at encoder `= observation`, `N = (N₀/2).toNNReal`. The identification is
 definitional (`awgnChannel x N = gaussianReal x N`, `Fintype.card (Fin M) = M`); the discrete
-finiteness needs only `N ≠ 0`, so the power value `T·P` is irrelevant to the reduction. -/
+finiteness needs only `N ≠ 0`, so the power value `T·P` is irrelevant to the reduction.
+
+@audit:ok -/
 lemma contAwgn_mi_W_ne_top {T W P : ℝ} {M : ℕ} [NeZero M]
     (c : ContAwgnCode T W P M) {N₀ : ℝ} (hN₀ : 0 < N₀) :
     mutualInfo (contAwgnConverseJoint c N₀)
