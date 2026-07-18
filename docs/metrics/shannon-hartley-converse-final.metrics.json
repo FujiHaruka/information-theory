@@ -1,0 +1,117 @@
+{
+  "problem": "Shannon-Hartley converse final leg (29): C4 fixed-T water-filling + double limit (T→∞, c₀→0), C0 contAwgn_le_shannonHartley, and le_antisymm assembly closing the main theorem contAwgn_eq_shannonHartley. New file ShannonHartleyConverseFinal.lean, proof-done sorryAx-free.",
+  "proof_log": "docs/proof-logs/proof-log-shannon-hartley-converse-final.md",
+  "generated_at": "2026-07-18T09:27:59.718Z",
+  "filters": {
+    "file_prefix": "InformationTheory/Shannon/ShannonHartleyConverseFinal"
+  },
+  "idle_gap_minutes": 5,
+  "sessions": [
+    {
+      "id": "agent-aafa1fc32579dfa1d",
+      "note": "lean-implementer subagent: skeleton-driven 7 decls (D1 contAwgn_log_le_waterfill / D2 contAwgnRate_le double-limit / D3 C0 / D4 assembly + 3 helpers), all sorry-free",
+      "start": "2026-07-18T08:10:28.918Z",
+      "end": "2026-07-18T08:51:57.710Z",
+      "wall_time_seconds": 2489,
+      "active_time_seconds": 2489,
+      "turns": 74,
+      "tool_calls": {
+        "Read": 14,
+        "Bash": 42,
+        "Write": 1,
+        "Edit": 20
+      },
+      "bash_breakdown": {
+        "ls": 2,
+        "echo": 2,
+        "other": 38
+      },
+      "bash_total": 42,
+      "edits_by_file": {
+        "InformationTheory/Shannon/ShannonHartleyConverseFinal.lean": 17,
+        "InformationTheory/Shannon/ShannonHartleyMain.lean": 2,
+        "InformationTheory.lean": 1
+      },
+      "writes_by_file": {
+        "InformationTheory/Shannon/ShannonHartleyConverseFinal.lean": 1
+      },
+      "reads_by_file": {
+        "/Users/haruka/.claude/CLAUDE.md": 1,
+        "CLAUDE.md": 1,
+        "docs/audit/audit-tags.md": 1,
+        "docs/shannon/shannon-hartley-converse-c2-inventory.md": 1,
+        "InformationTheory/Shannon/ShannonHartleyMain.lean": 3,
+        "InformationTheory/Shannon/ShannonHartleyOperational.lean": 1,
+        "InformationTheory/Shannon/ShannonHartleyAchievability.lean": 1,
+        ".lake/packages/mathlib/Mathlib/Order/Filter/IsBounded.lean": 1,
+        "InformationTheory/Shannon/ShannonHartleyConverseFinal.lean": 3,
+        "InformationTheory.lean": 1
+      },
+      "matched_edits": 17,
+      "matched_writes": 1,
+      "tool_errors": 2,
+      "tokens": {
+        "input": 332,
+        "output": 90147,
+        "cache_read": 27839311,
+        "cache_creation": 642015
+      },
+      "models": [
+        "claude-opus-4-8"
+      ],
+      "sidechain_entries": 245
+    }
+  ],
+  "totals": {
+    "start": "2026-07-18T08:10:28.918Z",
+    "end": "2026-07-18T08:51:57.710Z",
+    "wall_time_seconds": 2489,
+    "active_time_seconds": 2489,
+    "turns": 74,
+    "tool_calls": {
+      "Read": 14,
+      "Bash": 42,
+      "Write": 1,
+      "Edit": 20
+    },
+    "bash_breakdown": {
+      "ls": 2,
+      "echo": 2,
+      "other": 38
+    },
+    "bash_total": 42,
+    "edits_by_file": {
+      "InformationTheory/Shannon/ShannonHartleyConverseFinal.lean": 17,
+      "InformationTheory/Shannon/ShannonHartleyMain.lean": 2,
+      "InformationTheory.lean": 1
+    },
+    "writes_by_file": {
+      "InformationTheory/Shannon/ShannonHartleyConverseFinal.lean": 1
+    },
+    "reads_by_file": {
+      "/Users/haruka/.claude/CLAUDE.md": 1,
+      "CLAUDE.md": 1,
+      "docs/audit/audit-tags.md": 1,
+      "docs/shannon/shannon-hartley-converse-c2-inventory.md": 1,
+      "InformationTheory/Shannon/ShannonHartleyMain.lean": 3,
+      "InformationTheory/Shannon/ShannonHartleyOperational.lean": 1,
+      "InformationTheory/Shannon/ShannonHartleyAchievability.lean": 1,
+      ".lake/packages/mathlib/Mathlib/Order/Filter/IsBounded.lean": 1,
+      "InformationTheory/Shannon/ShannonHartleyConverseFinal.lean": 3,
+      "InformationTheory.lean": 1
+    },
+    "matched_edits": 17,
+    "matched_writes": 1,
+    "tool_errors": 2,
+    "tokens": {
+      "input": 332,
+      "output": 90147,
+      "cache_read": 27839311,
+      "cache_creation": 642015
+    },
+    "models": [
+      "claude-opus-4-8"
+    ],
+    "sidechain_entries": 245
+  }
+}
