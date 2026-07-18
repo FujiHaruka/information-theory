@@ -106,6 +106,10 @@ noncomputable def contAwgnConstChannel (k : ℕ) (Nv : ℝ≥0) :
 @[simp] lemma contAwgnConstChannel_apply (k : ℕ) (Nv : ℝ≥0) (x : Fin k → ℝ) :
     (contAwgnConstChannel k Nv) x = Measure.pi (fun i ↦ gaussianReal (x i) Nv) := rfl
 
+instance contAwgnConstChannel.instIsMarkovKernel (k : ℕ) (Nv : ℝ≥0) :
+    IsMarkovKernel (contAwgnConstChannel k Nv) :=
+  parallelGaussianChannel.instIsMarkovKernel _ _ _
+
 /-- The signal (codeword) law `p_S`: the law of `S = observation ∘ W` under the uniform message. -/
 noncomputable def contAwgnSignalLaw {T W P : ℝ} {M : ℕ}
     (c : ContAwgnCode T W P M) (N₀ : ℝ) : Measure (Fin c.k → ℝ) :=
@@ -221,9 +225,99 @@ lemma contAwgnConverseMarkov_holds {T W P : ℝ} {M : ℕ} [NeZero M]
 
 /-! ## §L3 — RV ↔ channel bridge -/
 
+/-- The signal law as a mixture of Diracs `(1/M) ∑ₘ δ(observation m)`. -/
+lemma contAwgnSignalLaw_eq_mixture {T W P : ℝ} {M : ℕ} [NeZero M]
+    (c : ContAwgnCode T W P M) (N₀ : ℝ) :
+    contAwgnSignalLaw c N₀
+      = (M : ℝ≥0∞)⁻¹ • ∑ m : Fin M, Measure.dirac (c.observation m) := by
+  classical
+  unfold contAwgnSignalLaw contAwgnConverseJoint
+  have h_meas_eval :
+      Measurable (fun ω : Fin M × (Fin c.k → ℝ) ↦ c.observation ω.1) :=
+    (measurable_of_countable (fun a : Fin M ↦ c.observation a)).comp measurable_fst
+  rw [Measure.map_smul,
+    Measure.map_finset_sum (s := Finset.univ)
+      (m := fun m ↦ (Measure.dirac m).prod
+        (Measure.pi (fun i : Fin c.k ↦ gaussianReal (c.observation m i) (N₀ / 2).toNNReal)))
+      h_meas_eval.aemeasurable]
+  congr 1
+  refine Finset.sum_congr rfl (fun m _ ↦ ?_)
+  have h_decomp : (fun ω : Fin M × (Fin c.k → ℝ) ↦ c.observation ω.1)
+      = (fun a : Fin M ↦ c.observation a) ∘ Prod.fst := rfl
+  rw [h_decomp,
+    ← Measure.map_map (measurable_of_countable (fun a : Fin M ↦ c.observation a)) measurable_fst,
+    Measure.map_fst_prod, measure_univ, one_smul,
+    Measure.map_dirac' (measurable_of_countable (fun a : Fin M ↦ c.observation a)) m]
+
+/-- The signal-vs-output pair law factors as `p_S ⊗ₘ W_chan`. -/
+lemma contAwgnConverseJoint_map_pair_eq_compProd {T W P : ℝ} {M : ℕ} [NeZero M]
+    (c : ContAwgnCode T W P M) (N₀ : ℝ) :
+    (contAwgnConverseJoint c N₀).map (fun ω ↦ (c.observation ω.1, ω.2))
+      = contAwgnSignalLaw c N₀ ⊗ₘ contAwgnConstChannel c.k (N₀ / 2).toNNReal := by
+  classical
+  set Nv : ℝ≥0 := (N₀ / 2).toNNReal with hNv
+  -- per-summand `δ_a ⊗ₘ W_chan = (δ_a).prod (W_chan a)`.
+  have h_dirac_compProd : ∀ a : Fin c.k → ℝ,
+      (Measure.dirac a) ⊗ₘ (contAwgnConstChannel c.k Nv)
+        = (Measure.dirac a).prod (contAwgnConstChannel c.k Nv a) := by
+    intro a
+    ext s hs
+    rw [Measure.dirac_compProd_apply hs, Measure.dirac_prod,
+      Measure.map_apply measurable_prodMk_left hs]
+  -- RHS: p_S ⊗ₘ W_chan as a mixture.
+  have h_rhs : contAwgnSignalLaw c N₀ ⊗ₘ (contAwgnConstChannel c.k Nv)
+      = (M : ℝ≥0∞)⁻¹ • ∑ m : Fin M,
+          (Measure.dirac (c.observation m)).prod
+            (contAwgnConstChannel c.k Nv (c.observation m)) := by
+    rw [contAwgnSignalLaw_eq_mixture c N₀,
+      ← Measure.sum_fintype (fun m : Fin M ↦ Measure.dirac (c.observation m)),
+      Measure.compProd_smul_left, Measure.compProd_sum_left, Measure.sum_fintype]
+    congr 1
+    exact Finset.sum_congr rfl (fun m _ ↦ h_dirac_compProd (c.observation m))
+  -- LHS: joint mapped through `(observation ∘ fst, snd)` as the same mixture.
+  have h_lhs : (contAwgnConverseJoint c N₀).map (fun ω ↦ (c.observation ω.1, ω.2))
+      = (M : ℝ≥0∞)⁻¹ • ∑ m : Fin M,
+          (Measure.dirac (c.observation m)).prod
+            (contAwgnConstChannel c.k Nv (c.observation m)) := by
+    unfold contAwgnConverseJoint
+    have hf_meas :
+        Measurable (fun ω : Fin M × (Fin c.k → ℝ) ↦ (c.observation ω.1, ω.2)) :=
+      ((measurable_of_countable (fun a : Fin M ↦ c.observation a)).comp measurable_fst).prodMk
+        measurable_snd
+    rw [Measure.map_smul,
+      Measure.map_finset_sum (s := Finset.univ)
+        (m := fun m ↦ (Measure.dirac m).prod
+          (Measure.pi (fun i : Fin c.k ↦ gaussianReal (c.observation m i) Nv)))
+        hf_meas.aemeasurable]
+    congr 1
+    refine Finset.sum_congr rfl (fun m _ ↦ ?_)
+    rw [Measure.dirac_prod, Measure.map_map hf_meas measurable_prodMk_left]
+    have h_comp : (fun ω : Fin M × (Fin c.k → ℝ) ↦ (c.observation ω.1, ω.2))
+          ∘ (Prod.mk m : (Fin c.k → ℝ) → Fin M × (Fin c.k → ℝ))
+        = fun y : Fin c.k → ℝ ↦ (c.observation m, y) := rfl
+    rw [h_comp, ← Measure.dirac_prod]
+    rfl
+  rw [h_lhs, h_rhs]
+
+/-- The output distribution equals the `Prod.snd` marginal of the joint. -/
+lemma contAwgn_outputDistribution_eq {T W P : ℝ} {M : ℕ} [NeZero M]
+    (c : ContAwgnCode T W P M) (N₀ : ℝ) :
+    outputDistribution (contAwgnSignalLaw c N₀) (contAwgnConstChannel c.k (N₀ / 2).toNNReal)
+      = (contAwgnConverseJoint c N₀).map Prod.snd := by
+  rw [show outputDistribution (contAwgnSignalLaw c N₀)
+        (contAwgnConstChannel c.k (N₀ / 2).toNNReal)
+        = (contAwgnSignalLaw c N₀ ⊗ₘ (contAwgnConstChannel c.k (N₀ / 2).toNNReal)).map Prod.snd
+      from rfl]
+  rw [← contAwgnConverseJoint_map_pair_eq_compProd c N₀]
+  have hf_meas :
+      Measurable (fun ω : Fin M × (Fin c.k → ℝ) ↦ (c.observation ω.1, ω.2)) :=
+    ((measurable_of_countable (fun a : Fin M ↦ c.observation a)).comp measurable_fst).prodMk
+      measurable_snd
+  rw [Measure.map_map measurable_snd hf_meas]
+  rfl
+
 /-- `I(S; Y) = mutualInfoOfChannel p_S W_chan` for `S = observation ∘ W` and the constant-noise
-parallel channel `W_chan`.
-@residual(plan:shannon-hartley-phase2-spectral-plan) -/
+parallel channel `W_chan`. -/
 lemma contAwgn_mi_S_eq_mutualInfoOfChannel {T W P : ℝ} {M : ℕ} [NeZero M]
     (c : ContAwgnCode T W P M) (N₀ : ℝ) :
     mutualInfo (contAwgnConverseJoint c N₀)
@@ -231,7 +325,13 @@ lemma contAwgn_mi_S_eq_mutualInfoOfChannel {T W P : ℝ} {M : ℕ} [NeZero M]
         (Prod.snd : Fin M × (Fin c.k → ℝ) → Fin c.k → ℝ)
       = mutualInfoOfChannel (contAwgnSignalLaw c N₀)
           (contAwgnConstChannel c.k (N₀ / 2).toNNReal) := by
-  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan) — L3 RV↔channel compProd bridge
+  unfold mutualInfo
+  rw [mutualInfoOfChannel_def, jointDistribution_def,
+    contAwgnConverseJoint_map_pair_eq_compProd c N₀]
+  congr 1
+  rw [show (contAwgnConverseJoint c N₀).map (fun ω ↦ c.observation ω.1)
+        = contAwgnSignalLaw c N₀ from rfl,
+    contAwgn_outputDistribution_eq c N₀]
 
 /-! ## §L4 — Power-constraint set membership (Bessel) -/
 
