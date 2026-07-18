@@ -430,9 +430,8 @@ lemma contAwgn_signalLaw_mem_constraint {T W P : ℝ} {M : ℕ} [NeZero M]
         refine Finset.sum_congr rfl (fun m _ ↦ ?_)
         rw [ENNReal.ofReal_sum_of_nonneg (fun i _ ↦ sq_nonneg _)]
     _ ≤ (M : ℝ≥0∞)⁻¹ * ∑ m : Fin M, ENNReal.ofReal (T * P) := by
-        refine mul_le_mul_left' ?_ _
-        exact Finset.sum_le_sum
-          (fun m _ ↦ ENNReal.ofReal_le_ofReal (contAwgn_sum_observation_sq_le c m))
+        gcongr with m
+        exact contAwgn_sum_observation_sq_le c m
     _ = ENNReal.ofReal (T * P) := by
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, ← mul_assoc,
           ENNReal.inv_mul_cancel (by exact_mod_cast NeZero.ne M) (ENNReal.natCast_ne_top M),
