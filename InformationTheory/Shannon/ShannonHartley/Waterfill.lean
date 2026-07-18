@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.ShannonHartleyMain
+import InformationTheory.Shannon.ShannonHartley.Main
 
 /-!
 # Water-filling arithmetic for the Shannon-Hartley converse

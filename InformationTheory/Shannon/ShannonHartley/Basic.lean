@@ -25,16 +25,16 @@ power constraint `E[X(t)²] ≤ P`, the capacity is
 This file provides only the closed-form definitions and the algebraic `2W`-reduction. The
 *operational* Shannon-Hartley identity — that this closed form is the operational capacity of
 the continuous-time band-limited AWGN channel — lives in
-`InformationTheory.Shannon.ShannonHartleyOperational` (`contAwgn_eq_shannonHartley`), which
+`InformationTheory.Shannon.ShannonHartley.Operational` (`contAwgn_eq_shannonHartley`), which
 builds an operational capacity `contAwgnOperationalCapacity` on top of these definitions.
 
-That identity is now proved (`sorryAx`-free) in `ShannonHartleyConverseFinal`. An earlier
+That identity is now proved (`sorryAx`-free) in `ConverseFinal`. An earlier
 `ContAwgnCode` model under-constrained the code class — its point-sampling observation map was an
 isometry only at the Nyquist spacing, i.e. calibrated at exactly the value the identity has to
 prove — so it was repaired to discretize the received signal against an orthonormal family
 supported in the window (a Karhunen-Loève / matched-filter map). The prolate-spheroidal /
 Landau-Pollak-Slepian time-bandwidth degrees-of-freedom-per-second count then closes the converse
-via the count domination `bandGramReal_high_count_le`. See `ShannonHartleyOperational` for the
+via the count domination `bandGramReal_high_count_le`. See `Operational` for the
 operational definitions.
 
 ## References

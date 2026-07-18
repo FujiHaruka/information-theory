@@ -1,6 +1,6 @@
 import InformationTheory.Shannon.TimeBandLimiting
 import InformationTheory.Shannon.LpPointwise
-import InformationTheory.Shannon.ShannonHartleyPreequalizer
+import InformationTheory.Shannon.ShannonHartley.Preequalizer
 import InformationTheory.Meta.EntryPoint
 
 /-!
@@ -16,8 +16,8 @@ The achievability half (`contAwgn_ge_shannonHartley`) needs only the *lower* cou
 `le_prolateCount` (via `prolateCount_div_tendsto`) fed through the block
 `awgn_channel_coding_theorem`, not the tight Landau-Pollak-Slepian concentration. The converse
 (`≤`) half and the identity `contAwgn_eq_shannonHartley` (`=`) live downstream in
-`ShannonHartleyConverseFinal.lean`, which bundles the water-filling (`ShannonHartleyWaterfill.lean`)
-and Gaussian rotation / band-Gram ellipsoid (`ShannonHartleyRotation.lean`) layers.
+`ConverseFinal.lean`, which bundles the water-filling (`Waterfill.lean`)
+and Gaussian rotation / band-Gram ellipsoid (`Rotation.lean`) layers.
 
 Both halves are stated over the phantom-free `contAwgnOperationalCapacity` (the subtype infimum
 `⨅ ε : ↥(Set.Ioo 0 1)`); the earlier bounded-binder `⨅ ε ∈ Set.Ioo 0 1` collapsed to `0` on the

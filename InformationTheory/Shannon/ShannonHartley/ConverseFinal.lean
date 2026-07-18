@@ -1,12 +1,12 @@
-import InformationTheory.Shannon.ShannonHartleyWaterfill
-import InformationTheory.Shannon.ShannonHartleyRotation
+import InformationTheory.Shannon.ShannonHartley.Waterfill
+import InformationTheory.Shannon.ShannonHartley.Rotation
 
 /-!
 # Continuous-time Shannon-Hartley: converse assembly and the identity
 
 This is the terminal file of the continuous-time band-limited AWGN converse. It bundles the two
-upstream layers — the fixed-`T` water-filling real analysis (`ShannonHartleyWaterfill.lean`) and the
-Gaussian rotation / band-Gram ellipsoid (`ShannonHartleyRotation.lean`) — into the converse half
+upstream layers — the fixed-`T` water-filling real analysis (`Waterfill.lean`) and the
+Gaussian rotation / band-Gram ellipsoid (`Rotation.lean`) — into the converse half
 `contAwgn_le_shannonHartley` (`≤`), and closes the headline identity `contAwgn_eq_shannonHartley`
 (`=`) by `le_antisymm` against the achievability half `contAwgn_ge_shannonHartley`.
 

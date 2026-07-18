@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.ShannonHartleyOperational
+import InformationTheory.Shannon.ShannonHartley.Operational
 import InformationTheory.Shannon.ParallelGaussian.Converse.MixtureDensity
 import InformationTheory.Shannon.Converse
 import InformationTheory.Shannon.CondMutualInfo

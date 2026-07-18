@@ -1,5 +1,5 @@
-import InformationTheory.Shannon.ShannonHartleyConverse
-import InformationTheory.Shannon.ShannonHartleyConverseCount
+import InformationTheory.Shannon.ShannonHartley.Converse
+import InformationTheory.Shannon.ShannonHartley.ConverseCount
 import Mathlib.Probability.Distributions.Gaussian.Multivariate
 import Mathlib.LinearAlgebra.Matrix.Charpoly.Basic
 import Mathlib.Algebra.Polynomial.Roots

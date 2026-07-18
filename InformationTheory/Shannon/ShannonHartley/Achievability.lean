@@ -1,7 +1,7 @@
 import Mathlib.Analysis.Fourier.FourierTransform
 import Mathlib.Analysis.Fourier.LpSpace
 import Mathlib.MeasureTheory.Integral.Bochner.Set
-import InformationTheory.Shannon.ShannonHartleyOperational
+import InformationTheory.Shannon.ShannonHartley.Operational
 import InformationTheory.Shannon.NormalizedSinc
 import InformationTheory.Shannon.WhittakerShannon
 import InformationTheory.Shannon.AWGN.Achievability

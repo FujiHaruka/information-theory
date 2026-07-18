@@ -6,7 +6,7 @@ import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.Order.LiminfLimsup
-import InformationTheory.Shannon.ShannonHartley
+import InformationTheory.Shannon.ShannonHartley.Basic
 import InformationTheory.Meta.EntryPoint
 
 /-!
@@ -17,7 +17,7 @@ the continuous-time band-limited AWGN channel and states the Shannon-Hartley ide
 
     `contAwgnOperationalCapacity W N₀ P = W · log(1 + P / (N₀ · W))`
 
-as `contAwgn_eq_shannonHartley` (now proved in `ShannonHartleyConverseFinal.lean`, `sorryAx`-free).
+as `contAwgn_eq_shannonHartley` (now proved in `ConverseFinal.lean`, `sorryAx`-free).
 The converse half lands via the prolate-count domination `bandGramReal_high_count_le` — it needs
 only `prolateCount T W c / T → 2W`, not the tight Landau-Pollak-Slepian concentration — so the once
 `nyquist-2w-dof`-tagged residual is history, not a live wall.

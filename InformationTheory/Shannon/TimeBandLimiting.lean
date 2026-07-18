@@ -10,7 +10,7 @@ import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.MeasureTheory.Measure.SeparableMeasure
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import InformationTheory.Shannon.NormalizedSinc
-import InformationTheory.Shannon.ShannonHartleyAchievability
+import InformationTheory.Shannon.ShannonHartley.Achievability
 
 /-!
 # The time-and-band-limiting operator on `L²(ℝ;ℂ)`
