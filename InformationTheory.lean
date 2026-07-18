@@ -313,6 +313,14 @@ import InformationTheory.Shannon.WynerZiv.Converse.Prelim
 import InformationTheory.Shannon.WynerZiv.Converse.SingleLetter
 import InformationTheory.Shannon.WynerZiv.Converse.Headline
 import InformationTheory.Shannon.WynerZiv.Converse
+import InformationTheory.Shannon.WynerZiv.Achievability.Covering
+import InformationTheory.Shannon.WynerZiv.Achievability.Concentration
+import InformationTheory.Shannon.WynerZiv.Achievability.MarkovCore
+import InformationTheory.Shannon.WynerZiv.Achievability.ChosenWord
+import InformationTheory.Shannon.WynerZiv.Achievability.Decomposition
+import InformationTheory.Shannon.WynerZiv.Achievability.SourceTransport
+import InformationTheory.Shannon.WynerZiv.Achievability.MassBound
+import InformationTheory.Shannon.WynerZiv.Achievability.Headline
 import InformationTheory.Shannon.WynerZiv.Achievability
 import InformationTheory.Shannon.MultivariateDiffEntropy
 import InformationTheory.Shannon.ParallelGaussian.PerCoord
