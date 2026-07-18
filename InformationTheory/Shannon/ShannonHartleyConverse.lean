@@ -332,7 +332,8 @@ lemma contAwgn_outputDistribution_eq {T W P : ℝ} {M : ℕ} [NeZero M]
   rfl
 
 /-- `I(S; Y) = mutualInfoOfChannel p_S W_chan` for `S = observation ∘ W` and the constant-noise
-parallel channel `W_chan`. -/
+parallel channel `W_chan`.
+@audit:ok -/
 lemma contAwgn_mi_S_eq_mutualInfoOfChannel {T W P : ℝ} {M : ℕ} [NeZero M]
     (c : ContAwgnCode T W P M) (N₀ : ℝ) :
     mutualInfo (contAwgnConverseJoint c N₀)
@@ -351,7 +352,8 @@ lemma contAwgn_mi_S_eq_mutualInfoOfChannel {T W P : ℝ} {M : ℕ} [NeZero M]
 /-! ## §L4 — Power-constraint set membership (Bessel) -/
 
 /-- Bessel's inequality against the orthonormal test family: the total observed energy of any
-codeword is capped by its whole-line `L²` energy, hence by the power budget `T·P`. -/
+codeword is capped by its whole-line `L²` energy, hence by the power budget `T·P`.
+@audit:ok -/
 lemma contAwgn_sum_observation_sq_le {T W P : ℝ} {M : ℕ}
     (c : ContAwgnCode T W P M) (m : Fin M) :
     ∑ i : Fin c.k, (c.observation m i) ^ 2 ≤ T * P := by
