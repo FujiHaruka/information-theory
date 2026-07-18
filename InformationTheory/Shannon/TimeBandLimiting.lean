@@ -131,8 +131,8 @@ This is the umbrella of the `Shannon/TimeBandLimiting/` family; it re-exports th
   norm bound, compactness, and boundary degeneracy (Leg A/B).
 * `TimeBandLimiting.Enumeration` — the decreasing eigenvalue enumeration and its non-vacuity
   (Leg C/C').
-* `TimeBandLimiting.TraceBound` — the reproducing kernel, the Bessel trace bound `≤ 2WT`, and the
+* `TimeBandLimiting.TraceBound` — the reproducing kernel, the Bessel trace bound `≤ 2WT`, and
   spectral gap below `c` (Leg E/R1).
 * `TimeBandLimiting.SecondMoment` — the window deficit and the second moment `tr A²` (Leg E).
-* `TimeBandLimiting.Count` — the two-sided eigenvalue count concentration and achievability (Leg R2).
+* `TimeBandLimiting.Count` — the two-sided eigenvalue count and achievability (Leg R2).
 -/

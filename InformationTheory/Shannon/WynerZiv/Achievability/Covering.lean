@@ -6,7 +6,7 @@ import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass
 import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality
 
 /-!
-# Wyner–Ziv achievability — covering + binning construction (gateway atoms, leaf atoms, ambient regularity)
+# Wyner–Ziv achievability — covering + binning construction
 -/
 
 namespace InformationTheory.Shannon

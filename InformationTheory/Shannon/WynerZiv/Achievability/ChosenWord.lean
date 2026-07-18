@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.WynerZiv.Achievability.MarkovCore
 
 /-!
-# Wyner–Ziv achievability — covering chosen-word side-information typicality and the joint lossy code
+# Wyner–Ziv achievability — covering chosen-word typicality and the joint lossy code
 -/
 
 namespace InformationTheory.Shannon

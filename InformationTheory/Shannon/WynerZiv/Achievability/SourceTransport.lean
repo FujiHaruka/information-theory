@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.WynerZiv.Achievability.Decomposition
 
 /-!
-# Wyner–Ziv achievability — source-measure change of variables and the distortion-decomposition bridge (Legs A–D)
+# Wyner–Ziv achievability — source transport and distortion bridge (Legs A–D)
 -/
 
 namespace InformationTheory.Shannon

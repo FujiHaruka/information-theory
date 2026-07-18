@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.WynerZiv.Achievability.Concentration
 
 /-!
-# Wyner–Ziv achievability — the Markov core and Gateway atom 3 (covering side-information acceptance)
+# Wyner–Ziv achievability — the Markov core and Gateway atom 3
 -/
 
 namespace InformationTheory.Shannon
