@@ -84,6 +84,8 @@ import InformationTheory.Shannon.MultipleAccess.Converse
 import InformationTheory.Shannon.MultipleAccess.JointTypicality
 import InformationTheory.Shannon.MultipleAccess.IIDAmbient
 import InformationTheory.Shannon.MultipleAccess.AchievabilityCore
+import InformationTheory.Shannon.MultipleAccess.Achievability.Codebook
+import InformationTheory.Shannon.MultipleAccess.Achievability.RandomCoding
 import InformationTheory.Shannon.MultipleAccess.Achievability
 import InformationTheory.Shannon.MultipleAccess.Reconciliation
 import InformationTheory.Shannon.MultipleAccess.TimeSharing
