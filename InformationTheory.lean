@@ -89,6 +89,8 @@ import InformationTheory.Shannon.MultipleAccess.Achievability.RandomCoding
 import InformationTheory.Shannon.MultipleAccess.Achievability
 import InformationTheory.Shannon.MultipleAccess.Reconciliation
 import InformationTheory.Shannon.MultipleAccess.TimeSharing
+import InformationTheory.Shannon.MultipleAccess.TimeSharingConverse.Bridge
+import InformationTheory.Shannon.MultipleAccess.TimeSharingConverse.Assembly
 import InformationTheory.Shannon.MultipleAccess.TimeSharingConverse
 import InformationTheory.Shannon.BroadcastChannel.Basic
 import InformationTheory.Shannon.BroadcastChannel.ConverseGateway
