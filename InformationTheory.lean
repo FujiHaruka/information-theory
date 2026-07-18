@@ -181,6 +181,11 @@ import InformationTheory.Shannon.NormalizedSinc
 import InformationTheory.Shannon.WhittakerShannon
 import InformationTheory.Shannon.ShannonHartley.Achievability
 import InformationTheory.Shannon.ShannonHartley.Preequalizer
+import InformationTheory.Shannon.TimeBandLimiting.Operator
+import InformationTheory.Shannon.TimeBandLimiting.Enumeration
+import InformationTheory.Shannon.TimeBandLimiting.TraceBound
+import InformationTheory.Shannon.TimeBandLimiting.SecondMoment
+import InformationTheory.Shannon.TimeBandLimiting.Count
 import InformationTheory.Shannon.TimeBandLimiting
 import InformationTheory.Shannon.ShannonHartley.Main
 import InformationTheory.Shannon.ShannonHartley.Converse
