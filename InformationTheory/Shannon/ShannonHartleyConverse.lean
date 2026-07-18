@@ -219,25 +219,6 @@ lemma contAwgn_mi_W_ne_top {T W P : ℝ} {M : ℕ} [NeZero M]
         (Prod.snd : Fin M × (Fin c.k → ℝ) → Fin c.k → ℝ) ≠ ∞ := by
   sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan) — L5 MI-finiteness (density chain)
 
-/-! ## §L2 — Markov DPI `W → S → Y` -/
-
-/-- The Markov chain `W → observation ∘ W → Y` factorization for the ContAwgn joint.
-
-Project-internal port (NOT a Mathlib wall): the γ-form factorization is the signal-level analog
-of `AWGN.awgnConverseMarkov_holds` (`ConverseMIChainRule/Markov.lean`), with `c.observation`
-playing the deterministic-encoder role. The signal-level pair law `joint.map (S, Y) = p_S ⊗ₘ W_chan`
-is already available in-file (`contAwgnConverseJoint_map_pair_eq_compProd`); the remaining work is
-the `converseMarkov_marginalA` analog + the triple-joint `ext_of_lintegral` reduction. Left as an
-honest sorry for a follow-up leg.
-@residual(plan:shannon-hartley-phase2-spectral-plan) -/
-lemma contAwgnConverseMarkov_holds {T W P : ℝ} {M : ℕ} [NeZero M]
-    (c : ContAwgnCode T W P M) (N₀ : ℝ) :
-    IsMarkovChain (contAwgnConverseJoint c N₀)
-      (Prod.fst : Fin M × (Fin c.k → ℝ) → Fin M)
-      (fun ω : Fin M × (Fin c.k → ℝ) ↦ c.observation ω.1)
-      (Prod.snd : Fin M × (Fin c.k → ℝ) → Fin c.k → ℝ) := by
-  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan) — L2 Markov γ-form factorization
-
 /-! ## §L3 — RV ↔ channel bridge -/
 
 /-- The signal law as a mixture of Diracs `(1/M) ∑ₘ δ(observation m)`. -/
@@ -348,6 +329,147 @@ lemma contAwgn_mi_S_eq_mutualInfoOfChannel {T W P : ℝ} {M : ℕ} [NeZero M]
   rw [show (contAwgnConverseJoint c N₀).map (fun ω ↦ c.observation ω.1)
         = contAwgnSignalLaw c N₀ from rfl,
     contAwgn_outputDistribution_eq c N₀]
+
+/-! ## §L2 — Markov DPI `W → S → Y` -/
+
+/-- Message-space marginal (A): the joint factors as `(uniform W) ⊗ₘ (W_chan.comap observation)`.
+Signal-level analog of `AWGN.converseMarkov_marginalA`. -/
+private theorem contAwgnConverseMarkov_marginalA {T W P : ℝ} {M : ℕ} [NeZero M]
+    (c : ContAwgnCode T W P M) (N₀ : ℝ)
+    (Wg : Kernel (Fin M) (Fin c.k → ℝ))
+    (hWg_def : Wg = (contAwgnConstChannel c.k (N₀ / 2).toNNReal).comap
+      (fun m : Fin M ↦ c.observation m) Measurable.of_discrete)
+    (h_map_Xs : (contAwgnConverseJoint c N₀).map (Prod.fst : Fin M × (Fin c.k → ℝ) → Fin M)
+      = ((M : ℝ≥0∞)⁻¹) • ∑ m : Fin M, Measure.dirac m) :
+    contAwgnConverseJoint c N₀
+      = ((contAwgnConverseJoint c N₀).map (Prod.fst : Fin M × (Fin c.k → ℝ) → Fin M)) ⊗ₘ Wg := by
+  haveI : IsMarkovKernel Wg := by rw [hWg_def]; infer_instance
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
+  rw [Measure.lintegral_compProd hf, h_map_Xs, lintegral_smul_measure,
+    lintegral_finsetSum_measure]
+  have hRHS_summand : ∀ m : Fin M,
+      ∫⁻ a : Fin M, ∫⁻ y : Fin c.k → ℝ, f (a, y) ∂(Wg a) ∂(Measure.dirac m)
+        = ∫⁻ y : Fin c.k → ℝ, f (m, y)
+            ∂(Measure.pi (fun i : Fin c.k ↦
+              gaussianReal (c.observation m i) (N₀ / 2).toNNReal)) := by
+    intro m
+    rw [lintegral_dirac, hWg_def]
+    rfl
+  simp_rw [hRHS_summand]
+  rw [contAwgnConverseJoint, lintegral_smul_measure, lintegral_finsetSum_measure]
+  have hLHS_summand : ∀ m : Fin M,
+      ∫⁻ ω : Fin M × (Fin c.k → ℝ), f ω
+          ∂((Measure.dirac m).prod
+            (Measure.pi (fun i : Fin c.k ↦
+              gaussianReal (c.observation m i) (N₀ / 2).toNNReal)))
+        = ∫⁻ y : Fin c.k → ℝ, f (m, y)
+            ∂(Measure.pi (fun i : Fin c.k ↦
+              gaussianReal (c.observation m i) (N₀ / 2).toNNReal)) := by
+    intro m
+    rw [lintegral_prod _ hf.aemeasurable, lintegral_dirac]
+  simp_rw [hLHS_summand]
+
+/-- The Markov chain `W → observation ∘ W → Y` factorization for the ContAwgn joint. The
+signal-level analog of `AWGN.awgnConverseMarkov_holds`: `observation` is the deterministic encoder,
+so `Y` depends on `W` only through `S = observation ∘ W`. -/
+lemma contAwgnConverseMarkov_holds {T W P : ℝ} {M : ℕ} [NeZero M]
+    (c : ContAwgnCode T W P M) (N₀ : ℝ) :
+    IsMarkovChain (contAwgnConverseJoint c N₀)
+      (Prod.fst : Fin M × (Fin c.k → ℝ) → Fin M)
+      (fun ω : Fin M × (Fin c.k → ℝ) ↦ c.observation ω.1)
+      (Prod.snd : Fin M × (Fin c.k → ℝ) → Fin c.k → ℝ) := by
+  set μ : Measure (Fin M × (Fin c.k → ℝ)) := contAwgnConverseJoint c N₀ with hμ_def
+  set Xs : Fin M × (Fin c.k → ℝ) → Fin M := Prod.fst with hXs_def
+  set Zc : Fin M × (Fin c.k → ℝ) → (Fin c.k → ℝ) := fun ω ↦ c.observation ω.1 with hZc_def
+  set Yo : Fin M × (Fin c.k → ℝ) → (Fin c.k → ℝ) := Prod.snd with hYo_def
+  set Wch : Kernel (Fin c.k → ℝ) (Fin c.k → ℝ) :=
+    contAwgnConstChannel c.k (N₀ / 2).toNNReal with hWch_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  have hXs_meas : Measurable Xs := measurable_fst
+  have hg_meas : Measurable (fun m : Fin M ↦ c.observation m) := measurable_of_countable _
+  have hZc_meas : Measurable Zc := by
+    rw [hZc_def]; exact hg_meas.comp measurable_fst
+  have hYo_meas : Measurable Yo := measurable_snd
+  set Wg : Kernel (Fin M) (Fin c.k → ℝ) :=
+    Wch.comap (fun m : Fin M ↦ c.observation m) hg_meas with hWg_def
+  -- Marginal (A): `μ = (μ.map Xs) ⊗ₘ Wg`.
+  have h_map_Xs : μ.map Xs
+      = ((M : ℝ≥0∞)⁻¹) • ∑ m : Fin M, Measure.dirac m := by
+    rw [hμ_def, hXs_def, contAwgnConverseJoint_map_fst, Fintype.card_fin,
+      count_eq_finset_sum_dirac]
+  have h_marginalA : μ = (μ.map Xs) ⊗ₘ Wg := by
+    rw [hμ_def, hXs_def]
+    exact contAwgnConverseMarkov_marginalA c N₀ Wg hWg_def
+      (by rw [← hμ_def, ← hXs_def]; exact h_map_Xs)
+  -- Linchpin pair law (already proven in-file): `μ.map (Zc, Yo) = (μ.map Zc) ⊗ₘ Wch`.
+  have h_pair_eq : μ.map (fun ω ↦ (Zc ω, Yo ω)) = (μ.map Zc) ⊗ₘ Wch := by
+    rw [hμ_def, hZc_def, hYo_def, hWch_def]
+    exact contAwgnConverseJoint_map_pair_eq_compProd c N₀
+  -- `condDistrib Yo Zc μ =ᵐ[μ.map Zc] Wch`.
+  haveI : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
+  have hK_Y_eq : condDistrib Yo Zc μ =ᵐ[μ.map Zc] Wch :=
+    condDistrib_ae_eq_of_measure_eq_compProd Zc hYo_meas.aemeasurable h_pair_eq
+  unfold IsMarkovChain
+  set K_X : Kernel (Fin c.k → ℝ) (Fin M) := condDistrib Xs Zc μ with hK_X_def
+  have h_compProd_eq :
+      (μ.map Zc) ⊗ₘ (K_X ×ₖ condDistrib Yo Zc μ) = (μ.map Zc) ⊗ₘ (K_X ×ₖ Wch) := by
+    refine Measure.compProd_congr ?_
+    filter_upwards [hK_Y_eq] with a ha
+    ext s hs
+    rw [Kernel.prod_apply, Kernel.prod_apply, ha]
+  rw [h_compProd_eq]
+  have h_LHS_meas : Measurable (fun ω ↦ (Zc ω, Xs ω, Yo ω)) :=
+    hZc_meas.prodMk (hXs_meas.prodMk hYo_meas)
+  have hKX_fold : (μ.map Zc) ⊗ₘ K_X = μ.map (fun ω ↦ (Zc ω, Xs ω)) :=
+    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := Xs) hXs_meas.aemeasurable
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
+  rw [lintegral_map hf h_LHS_meas]
+  rw [Measure.lintegral_compProd hf]
+  have h_inner_split : ∀ z : Fin c.k → ℝ,
+      ∫⁻ p : Fin M × (Fin c.k → ℝ), f (z, p.1, p.2) ∂((K_X ×ₖ Wch) z)
+        = ∫⁻ x : Fin M, ∫⁻ y : Fin c.k → ℝ, f (z, x, y) ∂(Wch z) ∂(K_X z) := by
+    intro z
+    rw [Kernel.prod_apply]
+    rw [lintegral_prod (fun p : Fin M × (Fin c.k → ℝ) ↦ f (z, p.1, p.2))
+      (hf.comp (measurable_const.prodMk
+        (measurable_fst.prodMk measurable_snd))).aemeasurable]
+  simp_rw [h_inner_split]
+  set G : (Fin c.k → ℝ) × Fin M → ℝ≥0∞ :=
+    fun p ↦ ∫⁻ y : Fin c.k → ℝ, f (p.1, p.2, y) ∂(Wch p.1) with hG_def
+  have hG_meas : Measurable G := by
+    let K' : Kernel ((Fin c.k → ℝ) × Fin M) (Fin c.k → ℝ) :=
+      Wch.comap (Prod.fst : (Fin c.k → ℝ) × Fin M → (Fin c.k → ℝ)) measurable_fst
+    have h_eq_K' : G = fun p : (Fin c.k → ℝ) × Fin M ↦
+        ∫⁻ y : Fin c.k → ℝ, f (p.1, p.2, y) ∂(K' p) := by
+      funext p; simp [G, K', Kernel.comap_apply]
+    rw [h_eq_K']
+    exact Measurable.lintegral_kernel_prod_right' (κ := K')
+      (f := fun pp : ((Fin c.k → ℝ) × Fin M) × (Fin c.k → ℝ) ↦ f (pp.1.1, pp.1.2, pp.2))
+      (hf.comp (((measurable_fst.comp measurable_fst).prodMk
+        ((measurable_snd.comp measurable_fst).prodMk measurable_snd))))
+  have h_RHS_is_G : ∀ z : Fin c.k → ℝ, ∀ x : Fin M,
+      ∫⁻ y : Fin c.k → ℝ, f (z, x, y) ∂(Wch z) = G (z, x) := fun _ _ ↦ rfl
+  simp_rw [h_RHS_is_G]
+  rw [← Measure.lintegral_compProd hG_meas, hKX_fold]
+  rw [lintegral_map hG_meas (hZc_meas.prodMk hXs_meas)]
+  rw [← hμ_def]
+  have h_reduce : ∀ H : Fin M × (Fin c.k → ℝ) → ℝ≥0∞, Measurable H →
+      ∫⁻ ω, H ω ∂μ
+        = ∫⁻ a : Fin M, ∫⁻ y : Fin c.k → ℝ, H (a, y) ∂(Wg a) ∂(μ.map Xs) := by
+    intro H hH
+    conv_lhs => rw [h_marginalA]
+    rw [Measure.lintegral_compProd hH]
+  rw [h_reduce (fun ω ↦ f (Zc ω, Xs ω, Yo ω)) (hf.comp h_LHS_meas),
+    h_reduce (fun ω ↦ G (Zc ω, Xs ω)) (hG_meas.comp (hZc_meas.prodMk hXs_meas))]
+  refine lintegral_congr fun a ↦ ?_
+  have hWg_eq : Wg a = Wch (c.observation a) := by rw [hWg_def, Kernel.comap_apply]
+  haveI : IsProbabilityMeasure (Wg a) := by rw [hWg_eq]; infer_instance
+  have hRHS_eval : (fun y : Fin c.k → ℝ ↦ G (Zc (a, y), Xs (a, y)))
+      = (fun _ : Fin c.k → ℝ ↦ ∫⁻ y' : Fin c.k → ℝ, f (c.observation a, a, y') ∂(Wg a)) := by
+    funext y
+    show G (c.observation a, a) = _
+    rw [hG_def, hWg_eq]
+  rw [hRHS_eval, lintegral_const, measure_univ, mul_one]
 
 /-! ## §L4 — Power-constraint set membership (Bessel) -/
 
