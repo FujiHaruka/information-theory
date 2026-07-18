@@ -17,9 +17,10 @@ the continuous-time band-limited AWGN channel and states the Shannon-Hartley ide
 
     `contAwgnOperationalCapacity W N₀ P = W · log(1 + P / (N₀ · W))`
 
-as `contAwgn_eq_shannonHartley`. That theorem is published with a `sorry` body tagged to the
-`nyquist-2w-dof` wall: what blocks it is the prolate-spheroidal / Landau-Pollak-Slepian
-time-bandwidth degrees-of-freedom count, a genuine Mathlib gap.
+as `contAwgn_eq_shannonHartley` (now proved in `ShannonHartleyConverseFinal.lean`, `sorryAx`-free).
+The converse half lands via the prolate-count domination `bandGramReal_high_count_le` — it needs
+only `prolateCount T W c / T → 2W`, not the tight Landau-Pollak-Slepian concentration — so the once
+`nyquist-2w-dof`-tagged residual is history, not a live wall.
 
 `IsBandlimited` uses the *L²-Fourier spectral support* of the complexification (a genuine
 band-limit constraint, not junk-`0`). The Paley-Wiener sup bound `bandlimited_sup_bound`

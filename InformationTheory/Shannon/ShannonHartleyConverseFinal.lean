@@ -247,9 +247,9 @@ Both halves are now proved: achievability (`≥`) by `contAwgn_ge_shannonHartley
 Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
 
 @audit:ok (independent honesty audit 2026-07-18: `#print axioms` =
-[propext, Classical.choice, Quot.sound], sorryAx-free — the `tsum_prolateEigenvalues_eq`
-`plan:` residual is off this converse path, which lands via the count domination
-`bandGramReal_high_count_le`, not the exact trace identity. Signature scan: both `le_antisymm`
+[propext, Classical.choice, Quot.sound], sorryAx-free — the exact trace identity
+`tsum_prolateEigenvalues_eq` (itself since closed, `sorryAx`-free) is off this converse path,
+which lands via the count domination `bandGramReal_high_count_le`. Signature scan: both `le_antisymm`
 halves are regularity-only, no load-bearing hyp leaks into the identity; the two-sided sandwich
 over the phantom-free subtype infimum forecloses false-as-framed.) -/
 @[entry_point]

@@ -942,7 +942,12 @@ infimum the statement is true, and this proof closes it outright: the finiteness
 
 Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
 
-@audit:ok -/
+@audit:ok (independent honesty audit 2026-07-18: `#print axioms` =
+[propext, Classical.choice, Quot.sound], sorryAx-free. Signature scan: regularity-only, no
+load-bearing hyp. The block `awgn_channel_coding_theorem`'s only non-rate hypothesis `h_meas`
+is genuinely DISCHARGED by the theorem `AWGN.isAwgnChannelMeasurable N`, not leaked into this
+signature; the load-bearing `awgn_capacity_closed_form` (`h_bridge_gauss`/`h_bdd`/`h_max_ent`)
+is off-path — 0 transitive references from this headline.) -/
 theorem contAwgn_ge_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := by
