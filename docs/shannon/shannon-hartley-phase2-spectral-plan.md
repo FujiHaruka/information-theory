@@ -14,22 +14,25 @@
 - [x] **Leg E — 固有値集中の解析核 ✅ CLOSED**（E-atom/E-trace/E-sharp、leg 15–16）
 - [x] **count — 集中の両半分 ✅ CLOSED**（R-atom/R2/R3、leg 17。R1 は DEAD = 構成上不要）
 - [x] **R4-ACH（achievability bridge）✅ CLOSED（leg 18–22）**: A1 gateway PASS / 実基底 (B) / route(ii) keystone / L0–L10 全 proof-done。**headline `contAwgn_ge_shannonHartley` = PROOF-DONE sorryAx-free + @audit:ok**（leg 22、`15a111ef`/`ef401a5d`/`173adcb3`）
-- [ ] **R4-CONV（converse bridge）= 進行中**。**C1 ✅ CLOSED（leg 23）** = `finrank_le_prolateCount_of_form_gt` proof-done sorryAx-free @audit:ok（crux は Leg E で in-tree = advisor 反証、`nyquist-2w-dof`→`plan:` 再分類監査 CONFIRMED）。**C3 ✅ FULLY CLOSED（leg 25）**: 新 file `ShannonHartleyConverse.lean`、headline `contAwgn_operational_converse` = **無条件 sorryAx-free**（L5 `contAwgn_mi_W_ne_top` = 離散 AWGN converse `awgnConverseJoint_mutualInfo_ne_top` への genuine reduction で closed、@audit:ok、leg 25）。全 6 leaf @audit:ok。**C2 gateway atoms + count-domination + per-coord 露出 ✅ CLOSED（leg 26）**: gateway atom 1 `frame_form_le_op_form`（`39d7e613`）+ atom 2 `parallel_per_input_mi_le_sum_percoord`（`f87a9ee0`）+ count-domination core `gram_high_eigen_finrank_le_prolateCount` + real wrapper（`c2d31b84`/`26466bb3`、全 @audit:ok `0d2970f4`、`bandGramEigenvalues` def 非退化・`hmem` regularity 確認）+ per-coord C3 headline `contAwgn_operational_converse_percoord`（`1db1370c`、`∀i,P'ᵢ≤∫(xᵢ)²∂signalLaw` 露出、gap 解消）。**残 = C2 rotation/ellipsoid（obs 第2モーメント↔νᵢQᵢ）/ C4 water-filling+二重極限 / C0 headline / assembly**（全 fresh-judgment・intricate、壁なし）
+- [x] **R4-CONV（converse bridge）✅ FULLY CLOSED（leg 23–29）**。C1（`finrank_le_prolateCount_of_form_gt`、leg 23）/ C3（`contAwgn_operational_converse`、leg 25）/ C2 gateway+count+per-coord（leg 26）/ C2 Gauss 回転+ellipsoid（leg 27–28、`ShannonHartleyRotation.lean` S1/S2/S3）/ **C4 water-filling+二重極限 / C0 `contAwgn_le_shannonHartley` / assembly `le_antisymm`（leg 29、`ShannonHartleyConverseFinal.lean`、`71903f08`）= 全 proof-done sorryAx-free + @audit:ok**。**🎉 メイン定理 `contAwgn_eq_shannonHartley` = 無条件証明完遂**（Main→ConverseFinal 移動で残 sorry 削除、`#print axioms` = `[propext, Classical.choice, Quot.sound]`、独立 honesty-auditor all-OK `2d267dfc` = 隠れ load-bearing hyp 無し確認）。
 - [ ] 残債 — `∀ n, prolateEigenvalues T W n ≠ 0`（infinite rank、壁ではない、未着手）
 
 ---
 
 ## ゴール / Approach
 
-### Goal — 2 負債は両方とも解消済、残るは converse bridge のみ
+### Goal — ✅ 全負債解消 = メイン定理完遂（leg 29、2026-07-18）
 
 1. **def-fix** ✅ 返済済（2 段）: 観測写像（Karhunen-Loève、Leg P、`4fd8a47c`）+ capacity 定義の phantom biInf
    （leg 22、下記 §⨅-binder hazard）。
 2. **壁核 self-build** ✅: 解析核 CLOSED（Leg E、leg 16）+ カウント両半分 CLOSED（leg 17）+ achievability bridge
-   CLOSED（leg 18–22）。
+   CLOSED（leg 18–22）+ **converse bridge CLOSED（R4-CONV、leg 23–29）**。
 
-**残る唯一の未着手 = converse bridge（R4-CONV / C0–C4）** → `contAwgn_eq_shannonHartley` の残 sorry
-（`ShannonHartleyMain.lean:64`、`@residual(nyquist-2w-dof)`、**converse 専用に縮約済** = live consumer 2→1）を落とす。
+**🎉 メイン定理 `contAwgn_eq_shannonHartley`（連続時間帯域 AWGN 容量 = Shannon-Hartley 閉形式）= genuine 無条件証明完遂**
+（`ShannonHartleyConverseFinal.lean`、`le_antisymm (contAwgn_le_shannonHartley) (contAwgn_ge_shannonHartley)`、
+proof-done sorryAx-free + 独立 honesty-auditor all-OK、`71903f08`/`2d267dfc`）。本 sub-plan の全 obligation 完了。
+残 off-path sorry = `tsum_prolateEigenvalues_eq`（`TimeBandLimiting.lean:2796`、R1 厳密 trace 等式 `∑λ=2WT`、
+converse の依存パス外・Shannon-Hartley に不要な bonus、下 L18 残債）のみ。
 
 ### Approach（解の全体形）
 
