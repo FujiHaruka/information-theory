@@ -58,6 +58,7 @@ jointDifferentialEntropyPi_le_sum
 
 @ 9 | Gaussian channel
 awgn_capacity_closed_form_genuine
+contAwgn_eq_shannonHartley | continuous-time Shannon–Hartley operational capacity, W·log(1+P/(N₀·W))
 parallel_gaussian_capacity_formula_minimal | water-filling
 whittaker_shannon_bandlimited | Whittaker–Shannon sampling theorem (band-limited signal from its Nyquist-rate samples)
 whittaker_shannon_hasSum | cardinal series, L² spectrum form
