@@ -115,7 +115,11 @@ converse（C1）配線時も同種 signature-scan を要す。
 | **C3 ✅ FULLY CLOSED** | operational converse `log M ≤ (mutualInfoOfChannel).toReal + Fano ≤ ∑ᵢ ½log(1+P'ᵢ/(N₀/2))`（**等雑音**、利得は C2/C4 の信号電力側） | **`ShannonHartleyConverse.lean`（leg 24 建了 + leg 25 L5 closed）。headline `contAwgn_operational_converse` = 無条件 sorryAx-free + 監査 CONFIRMED（hyp bundling なし・循環 guard PASS）。全 6 leaf @audit:ok（L5 = 離散 AWGN converse への genuine reduction、密度 chain port 回避）** | ✅ 完了 |
 | **C4** | water-filling + 極限（ellipsoid `∑Qᵢ/νᵢ ≤ TP`、νᵢ≤1・`#{νᵢ>c}≤prolateCount`（C1）、`/T`、`T→∞`、`c→0`） | 初等 + C1 count | plumbing |
 
-**次アクション = C2（Gauss 回転）→ C4（water-filling + 極限）→ C0 headline → `le_antisymm` で `contAwgn_eq` closure**。C3 は leg 24（骨格 + L0–L4 + Markov）+ leg 25（L5 finiteness）で **FULLY CLOSED**。C1 は leg 23 で CLOSED。**⚠️ C2/C4 の設計上の要注意点（次 leg で確認）**: operational converse は等雑音の**単純和制約** `∑P'ᵢ ≤ T·P`（c.k は自由 ℕ）を出力する。νᵢ 固有値カウント `#{νᵢ>c}≤prolateCount≈2WT`（C1）が**有効座標数を ~2WT に上限する**のが DOF 論の核 — C2 が観測を Gram 固有基底へ回し（affine split → 等方不変性）、C4 が count + water-filling + `T→∞`/`c→0` 極限で SH 閉形式に落とす。νᵢ がどう converse chain に厳密に入るか（信号電力側 ellipsoid か）は C2 実装前に proof-pivot-advisor で design 検証推奨（循環 guard）。
+**次アクション（gateway-atom-first、leg 25 advisor 検証済 → [C2 design doc](shannon-hartley-converse-c2-inventory.md) が SoT）**: C3 は leg 24+25 で FULLY CLOSED、C1 は leg 23 で CLOSED。C2/C4 の数学は **SOUND + 非循環**（advisor 確認）だが **1 個の実ギャップ**発見:
+1. **⚠️ C3 headline は粗すぎる（弱い親戚）**: `contAwgn_operational_converse` は等雑音の**単純和** `∑P'ᵢ≤T·P`（元座標）だけを露出。C4 の water-filling は**座標ごと** `P'ᵢ≤νᵢQᵢ` が必要。`parallel_per_input_mi_le_sum` は per-coord 束縛 `h_each` を内部証明済なのに ∃ 境界で捨てている → **C4 は C3 headline を消費してはならない**。
+2. **gateway atom 1（最高リスク de-risk）**: `frame_form_le_op_form`（band-limited g で `∑ⱼ⟨Q_T g,φⱼ⟩²≤⟨A g,g⟩` = Bessel + `inner_timeBandLimitingOp_self_eq`）。これが通れば count-domination が確定。**最高リスクは Gaussian 回転でなく Gram 固有基底 domination 帰着**（C1 は抽象補題、Gram 特殊化 ~60-120 行が未構築）。
+3. **gateway atom 2（同 session）**: companion `parallel_per_input_mi_le_sum_percoord`（`h_each` 露出、consumer 3 個ゆえ in-place 改変せず clone、0 ripple）。
+両 atom 通過 ⇒ C2/C4 は壁なし plumbing。順序: count domination →（rotation + ellipsoid）→ C4 water-filling + `T→∞`/`c→0` 極限 → C0 `contAwgn_le_shannonHartley` → `le_antisymm` assembly。**Mathlib gap ゼロ**。
 新 route（採用）= 抽象 count-domination `finrank_le_prolateCount_of_form_gt`：`S` 上 Rayleigh 商 `>c` ⟹ `S ⊓ Vᗮ = ⊥`
 （Vᗮ で `≤c` の既在 crux と衝突）⟹ `orthogonalProjectionOnto` で `S ↪ V` 単射 ⟹ `finrank S ≤ finrank V = prolateCount`。
 **advisor の「interlacing 非自明 = self-build 公算」は反証された** — crux（Vᗮ form bound）は Leg E で既に payが済んでおり
