@@ -13,9 +13,10 @@ Gaussian rotation / band-Gram ellipsoid (`ShannonHartleyRotation.lean`) — into
 The route: for a fixed window `[0, T]` the band-Gram ellipsoid (`contAwgn_converse_ellipsoid`) gives
 `log M ≤ ∑ᵢ ½log(1 + νᵢQᵢ/(N₀/2)) + Fano`, where the `νᵢ` are the band-Gram eigenvalues; the
 water-filling split (`waterfill_head_tail_bound`) with the prolate count
-(`bandGramReal_high_count_le`) caps the sum by `c₀·TP/N₀ + count·½log(1 + TP/(count·N₀/2))`. Dividing
-by `T` and letting `T → ∞` (`waterfill_head_div_tendsto`, `prolateCount/T → 2W`) then `c₀ → 0` yields
-`contAwgnRate ε ≤ bandlimitedAwgnCapacity/(1-ε)`, and the `ε → 0` infimum closes the converse.
+(`bandGramReal_high_count_le`) caps the sum by `c₀·TP/N₀ + count·½log(1 + TP/(count·N₀/2))`.
+Dividing by `T` and letting `T → ∞` (`waterfill_head_div_tendsto`, `prolateCount/T → 2W`) then
+`c₀ → 0` yields `contAwgnRate ε ≤ bandlimitedAwgnCapacity/(1-ε)`, and the `ε → 0` infimum closes
+the converse.
 
 ## References
 
@@ -53,8 +54,8 @@ theorem contAwgn_log_le_waterfill {T W N₀ P ε c₀ : ℝ} {M : ℕ}
   -- Water-filling head/tail split with `P'ᵢ := νᵢQᵢ`.
   have hwf := waterfill_head_tail_bound N₀ (T * P) c₀ hN₀ (mul_nonneg hT.le hP) hc₀0
     (bandGramRealEigenvalues W c.testFn c.testFn_memLp) Q
-    (fun i => bandGramRealEigenvalues W c.testFn c.testFn_memLp i * Q i)
-    (fun i => mul_nonneg (hν0 i) (hQ0 i)) (fun i => le_refl _)
+    (fun i ↦ bandGramRealEigenvalues W c.testFn c.testFn_memLp i * Q i)
+    (fun i ↦ mul_nonneg (hν0 i) (hQ0 i)) (fun i ↦ le_refl _)
     hQ0 hQsum hν0 hν1 hcount
   -- Fano terms.
   have hPe0 : 0 ≤ (c.averageError N₀).toReal := ENNReal.toReal_nonneg
@@ -134,25 +135,25 @@ theorem contAwgn_logMaxMessages_le_waterfill (W N₀ P ε c₀ : ℝ) {T : ℝ}
 the count term is `waterfill_head_div_tendsto`, and `log 2 / T → 0`. -/
 theorem waterfill_full_div_tendsto (W N₀ P ε c₀ : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀)
     (hP : 0 ≤ P) (hε1 : ε < 1) (hc₀0 : 0 < c₀) (hc₀1 : c₀ < 1) :
-    Filter.Tendsto (fun T : ℝ => (c₀ * (T * P) / N₀
+    Filter.Tendsto (fun T : ℝ ↦ (c₀ * (T * P) / N₀
         + (prolateCount T W c₀ : ℝ)
           * ((1 / 2) * Real.log (1 + T * P / ((prolateCount T W c₀ : ℝ) * (N₀ / 2))))
         + Real.log 2) / (1 - ε) / T) atTop
       (nhds ((c₀ * P / N₀ + bandlimitedAwgnCapacity W N₀ P) / (1 - ε))) := by
   have hN0ne : N₀ ≠ 0 := hN₀.ne'
   -- Head term: `c₀·(T·P)/N₀/T` is eventually the constant `c₀·P/N₀`.
-  have hA : Tendsto (fun T : ℝ => c₀ * (T * P) / N₀ / T) atTop (𝓝 (c₀ * P / N₀)) :=
+  have hA : Tendsto (fun T : ℝ ↦ c₀ * (T * P) / N₀ / T) atTop (𝓝 (c₀ * P / N₀)) :=
     tendsto_const_nhds.congr' (by
       filter_upwards [eventually_ne_atTop (0 : ℝ)] with T hT
       field_simp)
   -- Count term / T → bandlimitedAwgnCapacity.
   have hBt := waterfill_head_div_tendsto W N₀ P c₀ hW hN₀ hP hc₀0 hc₀1
   -- `log 2 / T → 0`.
-  have hC : Tendsto (fun T : ℝ => Real.log 2 / T) atTop (𝓝 0) := by
+  have hC : Tendsto (fun T : ℝ ↦ Real.log 2 / T) atTop (𝓝 0) := by
     simpa using tendsto_const_nhds.div_atTop tendsto_id
   have hsum := ((hA.add hBt).add hC).div_const (1 - ε)
   rw [add_zero] at hsum
-  refine (tendsto_congr fun T => ?_).mp hsum
+  refine (tendsto_congr fun T ↦ ?_).mp hsum
   rcases eq_or_ne T 0 with hT0 | hT0
   · subst hT0; simp
   · set B := (prolateCount T W c₀ : ℝ)
@@ -168,7 +169,7 @@ theorem contAwgnRate_le (W N₀ P : ℝ) {ε : ℝ}
   rw [contAwgnRate]
   -- Per-threshold `c₀ ∈ (0,1)` bound: the `T → ∞` limit of the water-filling bound.
   have hbound : ∀ c₀ : ℝ, 0 < c₀ → c₀ < 1 →
-      Filter.limsup (fun T : ℝ => Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) atTop
+      Filter.limsup (fun T : ℝ ↦ Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) atTop
         ≤ (c₀ * P / N₀ + bandlimitedAwgnCapacity W N₀ P) / (1 - ε) := by
     intro c₀ hc₀0 hc₀1
     have hev : ∀ᶠ T in atTop, Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T
@@ -180,7 +181,7 @@ theorem contAwgnRate_le (W N₀ P : ℝ) {ε : ℝ}
       exact (div_le_div_iff_of_pos_right hT).mpr
         (contAwgn_logMaxMessages_le_waterfill W N₀ P ε c₀ hW hN₀ hP hε0 hε1 hc₀0 hT)
     have hcob : IsCoboundedUnder (· ≤ ·) atTop
-        (fun T : ℝ => Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) := by
+        (fun T : ℝ ↦ Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) := by
       refine isCoboundedUnder_le_of_eventually_le atTop (x := 0) ?_
       filter_upwards [eventually_gt_atTop (0 : ℝ)] with T hT
       exact div_nonneg (Real.log_natCast_nonneg _) hT.le
@@ -189,9 +190,9 @@ theorem contAwgnRate_le (W N₀ P : ℝ) {ε : ℝ}
       (le_of_eq htend.limsup_eq)
   -- Send `c₀ → 0⁺`.
   refine ge_of_tendsto (x := 𝓝[>] (0 : ℝ))
-    (f := fun c₀ : ℝ => (c₀ * P / N₀ + bandlimitedAwgnCapacity W N₀ P) / (1 - ε)) ?_ ?_
+    (f := fun c₀ : ℝ ↦ (c₀ * P / N₀ + bandlimitedAwgnCapacity W N₀ P) / (1 - ε)) ?_ ?_
   · have hcont : Continuous
-        (fun c₀ : ℝ => (c₀ * P / N₀ + bandlimitedAwgnCapacity W N₀ P) / (1 - ε)) := by
+        (fun c₀ : ℝ ↦ (c₀ * P / N₀ + bandlimitedAwgnCapacity W N₀ P) / (1 - ε)) := by
       fun_prop
     have htc := hcont.tendsto (0 : ℝ)
     simp only [zero_mul, zero_div, zero_add] at htc
@@ -202,16 +203,16 @@ theorem contAwgnRate_le (W N₀ P : ℝ) {ε : ℝ}
     filter_upwards [h0, h1] with c₀ hc₀0 hc₀1
     exact hbound c₀ hc₀0 hc₀1
 
-/-- **Shannon-Hartley converse (`≤`)**: the operational capacity of the band-limited AWGN channel is
-at most the closed form `W·log(1 + P/(N₀·W))`. The `ε → 0` infimum of the per-`ε` rate bound
-`contAwgnRate_le`.
+/-- The operational capacity of the band-limited AWGN channel is at most the closed form
+`W·log(1 + P/(N₀·W))` — the Shannon-Hartley converse (`≤`). It is the `ε → 0` infimum of the
+per-`ε` rate bound `contAwgnRate_le`.
 
-@audit:ok (independent honesty audit 2026-07-18: `#print axioms contAwgn_le_shannonHartley` =
-[propext, Classical.choice, Quot.sound], sorryAx-free; `hW`/`hN₀`/`hP` regularity-only.) -/
+@audit:ok (`#print axioms contAwgn_le_shannonHartley` = [propext, Classical.choice, Quot.sound],
+sorryAx-free; `hW`/`hN₀`/`hP` regularity-only.) -/
 theorem contAwgn_le_shannonHartley (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     contAwgnOperationalCapacity W N₀ P ≤ bandlimitedAwgnCapacity W N₀ P := by
   unfold contAwgnOperationalCapacity
-  have hbdd : BddBelow (Set.range (fun ε : Set.Ioo (0 : ℝ) 1 => contAwgnRate W N₀ P ε)) := by
+  have hbdd : BddBelow (Set.range (fun ε : Set.Ioo (0 : ℝ) 1 ↦ contAwgnRate W N₀ P ε)) := by
     refine ⟨0, ?_⟩
     rintro _ ⟨⟨ε, hε0, hε1⟩, rfl⟩
     exact contAwgnRate_nonneg W N₀ P ε hW hN₀ hP hε0 hε1
@@ -224,8 +225,8 @@ theorem contAwgn_le_shannonHartley (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N�
       _ ≤ bandlimitedAwgnCapacity W N₀ P / (1 - ε) :=
           contAwgnRate_le W N₀ P hW hN₀ hP hε0 hε1
   refine ge_of_tendsto (x := 𝓝[>] (0 : ℝ))
-    (f := fun ε : ℝ => bandlimitedAwgnCapacity W N₀ P / (1 - ε)) ?_ ?_
-  · have hcont : ContinuousAt (fun ε : ℝ => bandlimitedAwgnCapacity W N₀ P / (1 - ε)) 0 :=
+    (f := fun ε : ℝ ↦ bandlimitedAwgnCapacity W N₀ P / (1 - ε)) ?_ ?_
+  · have hcont : ContinuousAt (fun ε : ℝ ↦ bandlimitedAwgnCapacity W N₀ P / (1 - ε)) 0 :=
       continuousAt_const.div (continuousAt_const.sub continuousAt_id) (by norm_num)
     have htc := hcont.tendsto
     simp only [sub_zero, div_one] at htc
@@ -236,22 +237,21 @@ theorem contAwgn_le_shannonHartley (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N�
     filter_upwards [h0, h1] with ε hε0 hε1
     exact hb ε hε0 hε1
 
-/-- The **continuous-time Shannon-Hartley formula**: the operational capacity of the band-limited
-AWGN channel equals `W·log(1 + P/(N₀·W))`.
+/-- The operational capacity of the band-limited AWGN channel equals the closed form
+`W·log(1 + P/(N₀·W))` — the continuous-time Shannon-Hartley formula.
 
-Both halves are now proved: achievability (`≥`) by `contAwgn_ge_shannonHartley`, and the converse
+Both halves are proved: achievability (`≥`) by `contAwgn_ge_shannonHartley`, and the converse
 (`≤`) by `contAwgn_le_shannonHartley` (band-Gram ellipsoid → prolate-count water-filling → the
 `T → ∞`, `c₀ → 0`, `ε → 0` limits). The statement is true as framed over the phantom-free
 `contAwgnOperationalCapacity` (the subtype infimum `⨅ ε : ↥(Set.Ioo 0 1)`).
 
 Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
 
-@audit:ok (independent honesty audit 2026-07-18: `#print axioms` =
-[propext, Classical.choice, Quot.sound], sorryAx-free — the exact trace identity
-`tsum_prolateEigenvalues_eq` (itself since closed, `sorryAx`-free) is off this converse path,
-which lands via the count domination `bandGramReal_high_count_le`. Signature scan: both `le_antisymm`
-halves are regularity-only, no load-bearing hyp leaks into the identity; the two-sided sandwich
-over the phantom-free subtype infimum forecloses false-as-framed.) -/
+@audit:ok (`#print axioms` = [propext, Classical.choice, Quot.sound], sorryAx-free — the exact
+trace identity `tsum_prolateEigenvalues_eq` (itself since closed, `sorryAx`-free) is off this
+converse path, which lands via the count domination `bandGramReal_high_count_le`. Signature scan:
+both `le_antisymm` halves are regularity-only, no load-bearing hyp leaks into the identity; the
+two-sided sandwich over the phantom-free subtype infimum forecloses false-as-framed.) -/
 @[entry_point]
 theorem contAwgn_eq_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :

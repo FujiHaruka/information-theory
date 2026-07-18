@@ -12,8 +12,8 @@ It rests on the prolate-eigenvalue count (`le_prolateCount` / `prolateCount_le`)
 `TimeBandLimiting.lean`, whose assets are visible only below the achievability and operational
 modules, so the theorem lives here rather than at its original upstream site.
 
-The achievability half is **proved** (`contAwgn_ge_shannonHartley`, sorryAx-free): it needs
-only the *lower* count `le_prolateCount` (via `prolateCount_div_tendsto`) fed through the block
+The achievability half (`contAwgn_ge_shannonHartley`) needs only the *lower* count
+`le_prolateCount` (via `prolateCount_div_tendsto`) fed through the block
 `awgn_channel_coding_theorem`, not the tight Landau-Pollak-Slepian concentration. The converse
 (`≤`) half and the identity `contAwgn_eq_shannonHartley` (`=`) live downstream in
 `ShannonHartleyConverseFinal.lean`, which bundles the water-filling (`ShannonHartleyWaterfill.lean`)
@@ -34,19 +34,19 @@ namespace InformationTheory.Shannon.ShannonHartley
 set_option linter.unusedVariables false
 
 /-!
-### R4-ACH foundational leaves (L3/L5, L6)
+### Foundational lemmas for continuous-time achievability
 
-The achievability route (ii) builds continuous-time codewords as band-limited signals and reads
+The achievability argument builds continuous-time codewords as band-limited signals and reads
 them off through `[0, T]`-supported orthonormal test functions. This section supplies the two
-foundational leaves feeding the pre-equalizer (`ShannonHartleyPreequalizer.exists_preequalizer`):
+supporting lemmas feeding the pre-equalizer (`ShannonHartleyPreequalizer.exists_preequalizer`):
 
-* **L3/L5** (`exists_testFn_family`) — a receiver test-function family `φ` supported in `[0, T]`,
+* `exists_testFn_family` — a receiver test-function family `φ` supported in `[0, T]`,
   paired with the band-limited encoder family `h` (real representatives of a `ℂ`-orthonormal basis
   `u` of `V = prolateEigenspaceSup T W c`). The two families are tied by the *cross-map energy
   identity*: the receiver's recovered energy `∑ᵢ ⟨∑ⱼ vⱼ hⱼ, φᵢ⟩²` equals the time-limited energy
-  `‖Q_T (∑ⱼ vⱼ uⱼ)‖²`. That identity is the shape L6 consumes.
+  `‖Q_T (∑ⱼ vⱼ uⱼ)‖²`. That identity is the shape `exists_crossMap_lower_bound` consumes.
 
-* **L6** (`exists_crossMap_lower_bound`) — the cross-map `A` (with `(A v)ᵢ = ∫ (∑ⱼ vⱼ hⱼ)·φᵢ`) is
+* `exists_crossMap_lower_bound` — the cross-map `A` (with `(A v)ᵢ = ∫ (∑ⱼ vⱼ hⱼ)·φᵢ`) is
   bounded below by `√c`: `c ∑ᵢ vᵢ² ≤ ∑ᵢ (A v)ᵢ²`. This is exactly the `hbdd` hypothesis of
   `exists_preequalizer` once `A` is packaged as an endomorphism of `EuclideanSpace ℝ (Fin k)`
   (`‖v‖² = ∑ᵢ vᵢ²`, `‖A v‖² = ∑ᵢ (A v)ᵢ²`). The bound comes from the energy identity plus the
@@ -57,9 +57,7 @@ section Achievability
 
 open MeasureTheory InformationTheory.Shannon.TimeBandLimiting InformationTheory.Shannon.LpPointwise
 
-/-- **L3/L5 — receiver test-function family with the cross-map energy identity.**
-
-For `V = prolateEigenspaceSup T W c` (`0 < c`), there is a `ℂ`-orthonormal basis `u` of `V`
+/-- For `V = prolateEigenspaceSup T W c` (`0 < c`), there is a `ℂ`-orthonormal basis `u` of `V`
 together with a band-limited real encoder family `h` (real representatives of `u`) and a receiver
 test-function family `φ`, `[0, T]`-supported and pointwise-orthonormal, such that for every
 coefficient vector `v : Fin (prolateCount T W c) → ℝ` the receiver's recovered energy equals the
@@ -75,7 +73,7 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
       Orthonormal ℂ u ∧
       (∀ i, u i ∈ prolateEigenspaceSup T W c) ∧
       (∀ i, MemLp (h i) 2 volume) ∧
-      (∀ i, (fun t => ((h i t : ℝ) : ℂ)) =ᵐ[volume] (u i : ℝ → ℂ)) ∧
+      (∀ i, (fun t ↦ ((h i t : ℝ) : ℂ)) =ᵐ[volume] (u i : ℝ → ℂ)) ∧
       (∀ i, IsBandlimited (h i) W) ∧
       (∀ i j, (∫ t, h i t * h j t) = if i = j then (1 : ℝ) else 0) ∧
       (∀ i, Function.support (φ i) ⊆ Set.Icc 0 T) ∧
@@ -85,23 +83,23 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
         (∑ i, (∫ t, (∑ j, v j * h j t) * φ i t) ^ 2)
           = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ ^ 2) := by
   classical
-  -- L4: encoder ONB `u` of `V` and band-limited real representatives `h`.
+  -- encoder ONB `u` of `V` and band-limited real representatives `h`.
   obtain ⟨u, h, hu_on, hu_star, hu_span, h_memLp, h_ae, h_bl, h_ortho⟩ :=
     exists_real_bandlimited_onb T W hc
-  have hu_mem : ∀ i, u i ∈ prolateEigenspaceSup T W c := fun i => by
+  have hu_mem : ∀ i, u i ∈ prolateEigenspaceSup T W c := fun i ↦ by
     rw [← hu_span]; exact Submodule.subset_span (Set.mem_range_self i)
   -- Time-limited encoders `w i = Q_T (u i)`: in `timeLimitSubspace`, star-fixed.
   have hw_mem : ∀ i, (timeLimitSubspace T).starProjection (u i) ∈ timeLimitSubspace T :=
-    fun i => Submodule.starProjection_apply_mem _ _
+    fun i ↦ Submodule.starProjection_apply_mem _ _
   have hw_star : ∀ i, star ((timeLimitSubspace T).starProjection (u i))
-      = (timeLimitSubspace T).starProjection (u i) := fun i => by
+      = (timeLimitSubspace T).starProjection (u i) := fun i ↦ by
     rw [← timeLimitProj_star T (u i), hu_star i]
   -- Real `[0,T]`-supported representatives `f i` of `w i`.
-  choose f hf_memLp hf_supp hf_ae using fun i =>
+  choose f hf_memLp hf_supp hf_ae using fun i ↦
     exists_pointwise_repr_of_mem_timeLimit_star_fixed T (hw_mem i) (hw_star i)
   -- `Lp ℝ` classes and their span `S`.
   set e : Fin (prolateCount T W c) → Lp ℝ 2 (volume : Measure ℝ) :=
-    fun i => (hf_memLp i).toLp (f i) with he
+    fun i ↦ (hf_memLp i).toLp (f i) with he
   set S : Submodule ℝ (Lp ℝ 2 (volume : Measure ℝ)) := Submodule.span ℝ (Set.range e) with hS
   -- Each `e i` vanishes a.e. off `[0,T]` (it is `[0,T]`-supported).
   have he_supp : ∀ i, (⇑(e i) : ℝ → ℝ) =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)ᶜ] 0 := by
@@ -116,11 +114,11 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     simp only [Pi.zero_apply]
     rw [hta, htb]
   -- a.e. link: complexified `e i` equals the time-limited encoder `Q_T (u i)`.
-  have hlink : ∀ i, (fun t => ((⇑(e i) t : ℝ) : ℂ)) =ᵐ[volume]
+  have hlink : ∀ i, (fun t ↦ ((⇑(e i) t : ℝ) : ℂ)) =ᵐ[volume]
       (⇑((timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ) := by
     intro i
     have h1 : (⇑(e i) : ℝ → ℝ) =ᵐ[volume] f i := (hf_memLp i).coeFn_toLp
-    exact (h1.fun_comp (fun r : ℝ => (r : ℂ))).trans (hf_ae i)
+    exact (h1.fun_comp (fun r : ℝ ↦ (r : ℂ))).trans (hf_ae i)
   -- Linear independence of `e` ⟹ `finrank ℝ S = prolateCount`.
   have he_li : LinearIndependent ℝ e := by
     rw [Fintype.linearIndependent_iff]
@@ -129,16 +127,16 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     have hE : (∑ i, (g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) = 0 := by
       refine Lp.ext ?_
       have hcsum := Lp.coeFn_finsetSum Finset.univ
-        (fun i => (g i : ℂ) • (timeLimitSubspace T).starProjection (u i))
-      have hrsum := Lp.coeFn_finsetSum Finset.univ (fun i => g i • e i)
+        (fun i ↦ (g i : ℂ) • (timeLimitSubspace T).starProjection (u i))
+      have hrsum := Lp.coeFn_finsetSum Finset.univ (fun i ↦ g i • e i)
       have hg0 : ⇑(∑ i, g i • e i) =ᵐ[volume] (0 : ℝ → ℝ) := by
         rw [hg]; exact Lp.coeFn_zero ℝ 2 volume
       have hz : ⇑(0 : E) =ᵐ[volume] (0 : ℝ → ℂ) := Lp.coeFn_zero ℂ 2 volume
       have hcsmul : ∀ i, ⇑((g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) =ᵐ[volume]
           (g i : ℂ) • (⇑((timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ) :=
-        fun i => Lp.coeFn_smul _ _
+        fun i ↦ Lp.coeFn_smul _ _
       have hrsmul : ∀ i, ⇑(g i • e i) =ᵐ[volume] g i • (⇑(e i) : ℝ → ℝ) :=
-        fun i => Lp.coeFn_smul _ _
+        fun i ↦ Lp.coeFn_smul _ _
       filter_upwards [hcsum, hrsum, hg0, hz, ae_all_iff.mpr hlink, ae_all_iff.mpr hcsmul,
         ae_all_iff.mpr hrsmul] with t hct hrt hg0t hzt hlinkt hcsmt hrsmt
       rw [hct, hzt, Finset.sum_apply, Pi.zero_apply]
@@ -147,18 +145,18 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
           = (g i : ℂ) * ((⇑(e i) t : ℝ) : ℂ) := by
         intro i
         rw [hcsmt i, Pi.smul_apply, smul_eq_mul, ← hlinkt i]
-      rw [Finset.sum_congr rfl (fun i _ => step i)]
+      rw [Finset.sum_congr rfl (fun i _ ↦ step i)]
       -- The real combination vanishes pointwise.
       have hrside : (∑ i, g i * (⇑(e i) t : ℝ)) = 0 := by
         rw [Finset.sum_apply] at hrt
         simp only [Pi.zero_apply] at hg0t
         rw [hrt] at hg0t
         rw [← hg0t]
-        exact Finset.sum_congr rfl (fun i _ => by rw [hrsmt i, Pi.smul_apply, smul_eq_mul])
+        exact Finset.sum_congr rfl (fun i _ ↦ by rw [hrsmt i, Pi.smul_apply, smul_eq_mul])
       have hcast : (∑ i, (g i : ℂ) * ((⇑(e i) t : ℝ) : ℂ))
           = ((∑ i, g i * (⇑(e i) t : ℝ) : ℝ) : ℂ) := by
         rw [Complex.ofReal_sum]
-        exact Finset.sum_congr rfl (fun i _ => by rw [Complex.ofReal_mul])
+        exact Finset.sum_congr rfl (fun i _ ↦ by rw [Complex.ofReal_mul])
       rw [hcast, hrside, Complex.ofReal_zero]
     -- Pull `Q_T` out of the sum, then invert it on `V`.
     have hQ0 : (timeLimitSubspace T).starProjection (∑ i, (g i : ℂ) • u i) = 0 := by
@@ -167,12 +165,12 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
       exact hE
     have hsum0 : (∑ i, (g i : ℂ) • u i) = 0 :=
       eq_zero_of_timeLimitProj_eq_zero T W c hc
-        (Submodule.sum_mem _ (fun i _ => Submodule.smul_mem _ _ (hu_mem i))) hQ0
+        (Submodule.sum_mem _ (fun i _ ↦ Submodule.smul_mem _ _ (hu_mem i))) hQ0
     -- `u` is `ℂ`-independent, so all coefficients vanish.
     intro i
     have hli := hu_on.linearIndependent
     rw [Fintype.linearIndependent_iff] at hli
-    have := hli (fun i => (g i : ℂ)) hsum0 i
+    have := hli (fun i ↦ (g i : ℂ)) hsum0 i
     exact_mod_cast this
   haveI hSfin : FiniteDimensional ℝ S := by
     rw [hS]; exact FiniteDimensional.span_of_finite ℝ (Set.finite_range e)
@@ -181,8 +179,8 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   -- Orthonormal basis `b` of `S`, reindexed onto `Fin (prolateCount T W c)`.
   set b := stdOrthonormalBasis ℝ S with hb
   set e' : Fin (prolateCount T W c) → Lp ℝ 2 (volume : Measure ℝ) :=
-    fun i => (↑(b (Fin.cast hdim.symm i)) : Lp ℝ 2 (volume : Measure ℝ)) with he'
-  have hbLp_on : Orthonormal ℝ (fun i => (↑(b i) : Lp ℝ 2 (volume : Measure ℝ))) := by
+    fun i ↦ (↑(b (Fin.cast hdim.symm i)) : Lp ℝ 2 (volume : Measure ℝ)) with he'
+  have hbLp_on : Orthonormal ℝ (fun i ↦ (↑(b i) : Lp ℝ 2 (volume : Measure ℝ))) := by
     rw [orthonormal_iff_ite]
     intro i j
     have hbo := (orthonormal_iff_ite.mp b.orthonormal) i j
@@ -206,16 +204,16 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
         simp only [Pi.smul_apply, Pi.zero_apply, smul_eq_mul] at hyt ⊢
         rw [hyt, mul_zero]
   have he'_supp : ∀ i, (⇑(e' i) : ℝ → ℝ) =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)ᶜ] 0 :=
-    fun i => hS_supp (e' i) (Submodule.coe_mem (b (Fin.cast hdim.symm i)))
+    fun i ↦ hS_supp (e' i) (Submodule.coe_mem (b (Fin.cast hdim.symm i)))
   -- Test functions via the pointwise representative of the orthonormal basis.
   set φ : Fin (prolateCount T W c) → (ℝ → ℝ) :=
-    fun i => LpPointwise.ptRepr (Set.Icc (0:ℝ) T) (e' i) with hφ
+    fun i ↦ LpPointwise.ptRepr (Set.Icc (0:ℝ) T) (e' i) with hφ
   have hφ_supp : ∀ i, Function.support (φ i) ⊆ Set.Icc 0 T :=
-    fun i => LpPointwise.support_ptRepr_subset _ _
+    fun i ↦ LpPointwise.support_ptRepr_subset _ _
   have hφ_memLp : ∀ i, MemLp (φ i) 2 volume :=
-    fun i => LpPointwise.memLp_ptRepr measurableSet_Icc _
+    fun i ↦ LpPointwise.memLp_ptRepr measurableSet_Icc _
   have hφ_ae : ∀ i, φ i =ᵐ[volume] (⇑(e' i) : ℝ → ℝ) :=
-    fun i => LpPointwise.ptRepr_ae_eq measurableSet_Icc (e' i) (he'_supp i)
+    fun i ↦ LpPointwise.ptRepr_ae_eq measurableSet_Icc (e' i) (he'_supp i)
   have hφ_ortho : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1:ℝ) else 0 := by
     intro i j
     rw [hφ]
@@ -226,15 +224,15 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   -- Cross-map energy identity.
   intro v
   -- The encoder combination as a genuine `Lp ℝ` class, and its `S`-projection `p = ∑ⱼ vⱼ • eⱼ`.
-  have hg_memLp : MemLp (fun t => ∑ j, v j * h j t) 2 volume := by
-    have hsum : MemLp (fun t => ∑ j, (v j • h j) t) 2 volume :=
-      memLp_finsetSum Finset.univ (fun j (_ : j ∈ Finset.univ) => (h_memLp j).const_smul (v j))
+  have hg_memLp : MemLp (fun t ↦ ∑ j, v j * h j t) 2 volume := by
+    have hsum : MemLp (fun t ↦ ∑ j, (v j • h j) t) 2 volume :=
+      memLp_finsetSum Finset.univ (fun j (_ : j ∈ Finset.univ) ↦ (h_memLp j).const_smul (v j))
     refine MemLp.ae_eq ?_ hsum
     filter_upwards with t
     simp [Pi.smul_apply, smul_eq_mul]
   set gLp : Lp ℝ 2 (volume : Measure ℝ) := hg_memLp.toLp _ with hgLp_def
   set p : Lp ℝ 2 (volume : Measure ℝ) := ∑ j, v j • e j with hp
-  have hgc : ⇑gLp =ᵐ[volume] (fun t => ∑ j, v j * h j t) := by
+  have hgc : ⇑gLp =ᵐ[volume] (fun t ↦ ∑ j, v j * h j t) := by
     rw [hgLp_def]; exact hg_memLp.coeFn_toLp
   -- (B1) The receiver integral is the `Lp ℝ` inner product.
   have hB1 : ∀ i, (∫ t, (∑ j, v j * h j t) * φ i t) = (inner ℝ gLp (e' i) : ℝ) := by
@@ -246,34 +244,34 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ring
   -- (E-c) `‖p‖² = ‖Q_T (∑ⱼ vⱼ uⱼ)‖²` (`p` complexifies to the time-limited combination).
   have hEc : ‖p‖ ^ 2 = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ ^ 2 := by
-    have hpc : (fun t => ((⇑p t : ℝ) : ℂ)) =ᵐ[volume]
+    have hpc : (fun t ↦ ((⇑p t : ℝ) : ℂ)) =ᵐ[volume]
         (⇑((timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)) : ℝ → ℂ) := by
       have hQlin : (timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)
           = ∑ j, (v j : ℂ) • (timeLimitSubspace T).starProjection (u j) := by
         rw [map_sum]; simp_rw [map_smul]
       rw [hQlin]
-      have hpr : (⇑p : ℝ → ℝ) =ᵐ[volume] (fun t => ∑ j, v j * ⇑(e j) t) := by
+      have hpr : (⇑p : ℝ → ℝ) =ᵐ[volume] (fun t ↦ ∑ j, v j * ⇑(e j) t) := by
         have h1 := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ
-          (fun j => v j • e j)
-        have h2 : ∀ j, ⇑(v j • e j) =ᵐ[volume] v j • (⇑(e j) : ℝ → ℝ) := fun j => Lp.coeFn_smul _ _
+          (fun j ↦ v j • e j)
+        have h2 : ∀ j, ⇑(v j • e j) =ᵐ[volume] v j • (⇑(e j) : ℝ → ℝ) := fun j ↦ Lp.coeFn_smul _ _
         rw [hp]
         filter_upwards [h1, ae_all_iff.mpr h2] with t h1t h2t
         rw [h1t]
-        exact Finset.sum_congr rfl (fun j _ => by rw [h2t j, Pi.smul_apply, smul_eq_mul])
+        exact Finset.sum_congr rfl (fun j _ ↦ by rw [h2t j, Pi.smul_apply, smul_eq_mul])
       have hws := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ
-        (fun j => (v j : ℂ) • (timeLimitSubspace T).starProjection (u j))
+        (fun j ↦ (v j : ℂ) • (timeLimitSubspace T).starProjection (u j))
       have hwsmul : ∀ j, ⇑((v j : ℂ) • (timeLimitSubspace T).starProjection (u j)) =ᵐ[volume]
           (v j : ℂ) • (⇑((timeLimitSubspace T).starProjection (u j)) : ℝ → ℂ) :=
-        fun j => Lp.coeFn_smul _ _
+        fun j ↦ Lp.coeFn_smul _ _
       filter_upwards [hpr, hws, ae_all_iff.mpr hwsmul, ae_all_iff.mpr hlink]
         with t hprt hwst hwsmt hlinkt
       rw [hwst, hprt, Complex.ofReal_sum]
-      refine Finset.sum_congr rfl (fun j _ => ?_)
+      refine Finset.sum_congr rfl (fun j _ ↦ ?_)
       rw [hwsmt j, Pi.smul_apply, smul_eq_mul, ← hlinkt j, Complex.ofReal_mul]
     have hnorm : ‖p‖ = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ := by
       rw [Lp.norm_def, Lp.norm_def]
       congr 1
-      rw [show eLpNorm (⇑p) 2 volume = eLpNorm (fun t => ((⇑p t : ℝ) : ℂ)) 2 volume from
+      rw [show eLpNorm (⇑p) 2 volume = eLpNorm (fun t ↦ ((⇑p t : ℝ) : ℂ)) 2 volume from
         eLpNorm_congr_norm_ae (by filter_upwards with t; rw [Complex.norm_real])]
       exact eLpNorm_congr_ae hpc
     rw [hnorm]
@@ -285,8 +283,8 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
       filter_upwards [ae_restrict_of_ae (timeLimitProj_apply_ae T (u j)),
         ae_restrict_mem measurableSet_Icc] with t ht htmem
       rw [ht]; simp [Pi.mul_apply, Set.indicator_of_mem htmem]
-    have hcx : (fun t => ((h j t : ℝ) : ℂ))
-        =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)] (fun t => ((f j t : ℝ) : ℂ)) :=
+    have hcx : (fun t ↦ ((h j t : ℝ) : ℂ))
+        =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)] (fun t ↦ ((f j t : ℝ) : ℂ)) :=
       Filter.EventuallyEq.trans (ae_restrict_of_ae (h_ae j))
         (Filter.EventuallyEq.trans (Filter.EventuallyEq.symm hQuj)
           (Filter.EventuallyEq.symm (ae_restrict_of_ae (hf_ae j))))
@@ -294,18 +292,18 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     exact Complex.ofReal_inj.mp ht
   -- On `[0,T]`, the encoder combination `gLp` and its `S`-image `p` agree.
   have hgp_onT : (⇑gLp : ℝ → ℝ) =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)] (⇑p : ℝ → ℝ) := by
-    have hpc : (⇑p : ℝ → ℝ) =ᵐ[volume] (fun t => ∑ j, v j * (⇑(e j) t)) := by
-      have h1 := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ (fun j => v j • e j)
-      have h2 : ∀ j, ⇑(v j • e j) =ᵐ[volume] v j • (⇑(e j) : ℝ → ℝ) := fun j => Lp.coeFn_smul _ _
+    have hpc : (⇑p : ℝ → ℝ) =ᵐ[volume] (fun t ↦ ∑ j, v j * (⇑(e j) t)) := by
+      have h1 := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ (fun j ↦ v j • e j)
+      have h2 : ∀ j, ⇑(v j • e j) =ᵐ[volume] v j • (⇑(e j) : ℝ → ℝ) := fun j ↦ Lp.coeFn_smul _ _
       rw [hp]
       filter_upwards [h1, ae_all_iff.mpr h2] with t h1t h2t
       rw [h1t]
-      exact Finset.sum_congr rfl (fun j _ => by rw [h2t j, Pi.smul_apply, smul_eq_mul])
+      exact Finset.sum_congr rfl (fun j _ ↦ by rw [h2t j, Pi.smul_apply, smul_eq_mul])
     filter_upwards [ae_restrict_of_ae hgc, ae_restrict_of_ae hpc,
-      ae_all_iff.mpr (fun j => ae_restrict_of_ae ((hf_memLp j).coeFn_toLp)),
+      ae_all_iff.mpr (fun j ↦ ae_restrict_of_ae ((hf_memLp j).coeFn_toLp)),
       ae_all_iff.mpr hj_fj_onT] with t htg htp htec htfj
     rw [htg, htp]
-    exact Finset.sum_congr rfl (fun j _ => by rw [htfj j, ← htec j])
+    exact Finset.sum_congr rfl (fun j _ ↦ by rw [htfj j, ← htec j])
   -- (E-a) `⟪gLp, e' i⟫ = ⟪p, e' i⟫` (`gLp - p ⊥ S ∋ e' i`).
   have hEa : ∀ i, (inner ℝ gLp (e' i) : ℝ) = (inner ℝ p (e' i) : ℝ) := by
     intro i
@@ -321,27 +319,25 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   -- (E-b) Parseval on the orthonormal basis of `S`.
   have hp_mem : p ∈ S := by
     rw [hp]
-    exact Submodule.sum_mem _ (fun j _ => Submodule.smul_mem _ _
+    exact Submodule.sum_mem _ (fun j _ ↦ Submodule.smul_mem _ _
       (by rw [hS]; exact Submodule.subset_span (Set.mem_range_self j)))
   have hEb : (∑ i, (inner ℝ p (e' i) : ℝ) ^ 2) = ‖p‖ ^ 2 := by
     have hcoe : ∀ i, (inner ℝ p (e' i) : ℝ)
-        = (inner ℝ (⟨p, hp_mem⟩ : ↥S) (b (Fin.cast hdim.symm i)) : ℝ) := fun i =>
+        = (inner ℝ (⟨p, hp_mem⟩ : ↥S) (b (Fin.cast hdim.symm i)) : ℝ) := fun i ↦
       (Submodule.coe_inner S (⟨p, hp_mem⟩ : ↥S) (b (Fin.cast hdim.symm i))).symm
     simp_rw [hcoe]
     rw [Fintype.sum_equiv (finCongr hdim.symm)
-      (fun i => (inner ℝ (⟨p, hp_mem⟩ : ↥S) (b (Fin.cast hdim.symm i))) ^ 2)
-      (fun j => (inner ℝ (⟨p, hp_mem⟩ : ↥S) (b j)) ^ 2)
-      (fun i => by rw [finCongr_apply])]
+      (fun i ↦ (inner ℝ (⟨p, hp_mem⟩ : ↥S) (b (Fin.cast hdim.symm i))) ^ 2)
+      (fun j ↦ (inner ℝ (⟨p, hp_mem⟩ : ↥S) (b j)) ^ 2)
+      (fun i ↦ by rw [finCongr_apply])]
     exact b.sum_sq_inner_left _
   have hassemble : (∑ i, (∫ t, (∑ j, v j * h j t) * φ i t) ^ 2) = ‖p‖ ^ 2 := by
     rw [← hEb]
-    exact Finset.sum_congr rfl (fun i _ => by rw [hB1 i, hEa i])
+    exact Finset.sum_congr rfl (fun i _ ↦ by rw [hB1 i, hEa i])
   rw [hassemble, hEc]
 
-/-- **L6 — the receiver cross-map is bounded below by `√c`.**
-
-The cross-map `A v = (∫ (∑ⱼ vⱼ hⱼ)·φᵢ)ᵢ` sending encoder coefficients to receiver observations
-satisfies `c ∑ᵢ vᵢ² ≤ ∑ᵢ (A v)ᵢ²`. This is the `hbdd` input to
+/-- The cross-map `A v = (∫ (∑ⱼ vⱼ hⱼ)·φᵢ)ᵢ` sending encoder coefficients to receiver observations
+is bounded below by `√c`: `c ∑ᵢ vᵢ² ≤ ∑ᵢ (A v)ᵢ²`. This is the `hbdd` input to
 `ShannonHartleyPreequalizer.exists_preequalizer` (once `A` is read as an endomorphism of
 `EuclideanSpace ℝ (Fin (prolateCount T W c))`, where `‖v‖² = ∑ᵢ vᵢ²` and `‖A v‖² = ∑ᵢ (A v)ᵢ²`),
 which then yields the norm-controlled pre-equalizer `‖a‖² ≤ (1/c) ‖x‖²`.
@@ -367,14 +363,14 @@ theorem exists_crossMap_lower_bound (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   rw [henergy v]
   -- `w := ∑ⱼ vⱼ • uⱼ ∈ V`; the concentration bound and `‖w‖² = ∑ vⱼ²` finish it.
   have hwV : (∑ j, (v j : ℂ) • u j) ∈ prolateEigenspaceSup T W c :=
-    Submodule.sum_mem _ (fun j _ => Submodule.smul_mem _ _ (hu_mem j))
+    Submodule.sum_mem _ (fun j _ ↦ Submodule.smul_mem _ _ (hu_mem j))
   have hself : (inner ℂ (∑ j, (v j : ℂ) • u j) (∑ j, (v j : ℂ) • u j)).re
       = ‖∑ j, (v j : ℂ) • u j‖ ^ 2 := by
     rw [inner_self_eq_norm_sq_to_K]; simp [← Complex.ofReal_pow]
   have hip : inner ℂ (∑ j, (v j : ℂ) • u j) (∑ j, (v j : ℂ) • u j)
       = ((∑ i, v i ^ 2 : ℝ) : ℂ) := by
-    rw [hu_on.inner_sum (fun i => (v i : ℂ)) (fun i => (v i : ℂ)) Finset.univ, Complex.ofReal_sum]
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [hu_on.inner_sum (fun i ↦ (v i : ℂ)) (fun i ↦ (v i : ℂ)) Finset.univ, Complex.ofReal_sum]
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     rw [Complex.conj_ofReal]; push_cast; ring
   have hnorm : ‖∑ j, (v j : ℂ) • u j‖ ^ 2 = ∑ i, v i ^ 2 := by
     rw [← hself, hip, Complex.ofReal_re]
@@ -382,7 +378,7 @@ theorem exists_crossMap_lower_bound (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   rw [hnorm] at hconc
   exact hconc
 
-/-! ### L7 — assembly: lifting a discrete AWGN code to a continuous-time code
+/-! ### Assembly: lifting a discrete AWGN code to a continuous-time code
 
 Given a discrete `AwgnCode` on `k = prolateCount T W c` observations at per-observation power
 `c·T·P/k`, we synthesize a `ContAwgnCode` whose observations reproduce the discrete codewords
@@ -395,43 +391,43 @@ of that combination), and `integral_sum_smul_sq_eq` (its whole-line energy is th
 /-- A finite real linear combination of `L²` functions is again `L²`. -/
 private theorem memLp_sum_smul {k : ℕ} (b : Fin k → ℝ) (h : Fin k → (ℝ → ℝ))
     (h_memLp : ∀ j, MemLp (h j) 2 volume) :
-    MemLp (fun t => ∑ j, b j * h j t) 2 volume :=
-  memLp_finsetSum Finset.univ (fun j (_ : j ∈ Finset.univ) => (h_memLp j).const_mul (b j))
+    MemLp (fun t ↦ ∑ j, b j * h j t) 2 volume :=
+  memLp_finsetSum Finset.univ (fun j (_ : j ∈ Finset.univ) ↦ (h_memLp j).const_mul (b j))
 
 /-- A finite real linear combination of band-limited functions is band-limited to the same band.
 @audit:ok -/
 private theorem isBandlimited_sum_smul {k : ℕ} {W : ℝ} (b : Fin k → ℝ) (h : Fin k → (ℝ → ℝ))
     (h_bl : ∀ j, IsBandlimited (h j) W) :
-    IsBandlimited (fun t => ∑ j, b j * h j t) W := by
+    IsBandlimited (fun t ↦ ∑ j, b j * h j t) W := by
   classical
   choose hf hvanish using h_bl
-  set v : E := ∑ j, (b j : ℂ) • (hf j).toLp (fun t => ((h j t : ℝ) : ℂ)) with hv
+  set v : E := ∑ j, (b j : ℂ) • (hf j).toLp (fun t ↦ ((h j t : ℝ) : ℂ)) with hv
   -- Each summand's `Lp` class lies in `bandLimitSubspace W`, hence so does `v`.
-  have hmemj : ∀ j, ((hf j).toLp (fun t => ((h j t : ℝ) : ℂ))) ∈ bandLimitSubspace W := by
+  have hmemj : ∀ j, ((hf j).toLp (fun t ↦ ((h j t : ℝ) : ℂ))) ∈ bandLimitSubspace W := by
     intro j
     rw [bandLimitSubspace, Submodule.mem_comap]
     exact hvanish j
   have hvV : v ∈ bandLimitSubspace W :=
-    Submodule.sum_mem _ (fun j _ => Submodule.smul_mem _ _ (hmemj j))
+    Submodule.sum_mem _ (fun j _ ↦ Submodule.smul_mem _ _ (hmemj j))
   -- `v` complexifies to the real combination a.e.
-  have hvc : (⇑v : ℝ → ℂ) =ᵐ[volume] (fun t => ∑ j, (b j : ℂ) * ((h j t : ℝ) : ℂ)) := by
+  have hvc : (⇑v : ℝ → ℂ) =ᵐ[volume] (fun t ↦ ∑ j, (b j : ℂ) * ((h j t : ℝ) : ℂ)) := by
     have h1 := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ
-      (fun j => (b j : ℂ) • (hf j).toLp (fun t => ((h j t : ℝ) : ℂ)))
-    have h2 : ∀ j, ⇑((b j : ℂ) • (hf j).toLp (fun t => ((h j t : ℝ) : ℂ))) =ᵐ[volume]
-        (b j : ℂ) • (⇑((hf j).toLp (fun t => ((h j t : ℝ) : ℂ))) : ℝ → ℂ) :=
-      fun j => Lp.coeFn_smul _ _
-    have h3 : ∀ j, (⇑((hf j).toLp (fun t => ((h j t : ℝ) : ℂ))) : ℝ → ℂ)
-        =ᵐ[volume] (fun t => ((h j t : ℝ) : ℂ)) := fun j => (hf j).coeFn_toLp
+      (fun j ↦ (b j : ℂ) • (hf j).toLp (fun t ↦ ((h j t : ℝ) : ℂ)))
+    have h2 : ∀ j, ⇑((b j : ℂ) • (hf j).toLp (fun t ↦ ((h j t : ℝ) : ℂ))) =ᵐ[volume]
+        (b j : ℂ) • (⇑((hf j).toLp (fun t ↦ ((h j t : ℝ) : ℂ))) : ℝ → ℂ) :=
+      fun j ↦ Lp.coeFn_smul _ _
+    have h3 : ∀ j, (⇑((hf j).toLp (fun t ↦ ((h j t : ℝ) : ℂ))) : ℝ → ℂ)
+        =ᵐ[volume] (fun t ↦ ((h j t : ℝ) : ℂ)) := fun j ↦ (hf j).coeFn_toLp
     rw [hv]
     filter_upwards [h1, ae_all_iff.mpr h2, ae_all_iff.mpr h3] with t h1t h2t h3t
     rw [h1t]
-    refine Finset.sum_congr rfl (fun j _ => ?_)
+    refine Finset.sum_congr rfl (fun j _ ↦ ?_)
     rw [h2t j, Pi.smul_apply, smul_eq_mul, h3t j]
   refine isBandlimited_of_bandLimitSubspace_ae hvV ?_
   refine Filter.EventuallyEq.trans ?_ hvc.symm
   filter_upwards with t
   rw [Complex.ofReal_sum]
-  exact Finset.sum_congr rfl (fun j _ => by rw [Complex.ofReal_mul])
+  exact Finset.sum_congr rfl (fun j _ ↦ by rw [Complex.ofReal_mul])
 
 /-- The whole-line energy of a finite combination of a pointwise-orthonormal `L²` family is the
 `ℓ²`-norm of the coefficient vector. -/
@@ -439,32 +435,32 @@ private theorem integral_sum_smul_sq_eq {k : ℕ} (b : Fin k → ℝ) (h : Fin k
     (h_memLp : ∀ j, MemLp (h j) 2 volume)
     (h_ortho : ∀ i j, (∫ t, h i t * h j t) = if i = j then (1 : ℝ) else 0) :
     (∫ t, (∑ j, b j * h j t) ^ 2) = ∑ j, b j ^ 2 := by
-  have hInt : ∀ j l, Integrable (fun t => (b j * h j t) * (b l * h l t)) volume := by
+  have hInt : ∀ j l, Integrable (fun t ↦ (b j * h j t) * (b l * h l t)) volume := by
     intro j l
     exact ((h_memLp j).const_mul (b j)).integrable_mul ((h_memLp l).const_mul (b l))
   calc (∫ t, (∑ j, b j * h j t) ^ 2)
       = ∫ t, ∑ j, ∑ l, (b j * h j t) * (b l * h l t) := by
-        refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+        refine integral_congr_ae (Filter.Eventually.of_forall (fun t ↦ ?_))
         show (∑ j, b j * h j t) ^ 2 = ∑ j, ∑ l, (b j * h j t) * (b l * h l t)
         rw [sq, Finset.sum_mul_sum]
     _ = ∑ j, ∑ l, ∫ t, (b j * h j t) * (b l * h l t) := by
         rw [integral_finsetSum Finset.univ
-          (fun j _ => integrable_finsetSum Finset.univ (fun l _ => hInt j l))]
+          (fun j _ ↦ integrable_finsetSum Finset.univ (fun l _ ↦ hInt j l))]
         exact Finset.sum_congr rfl
-          (fun j _ => integral_finsetSum Finset.univ (fun l _ => hInt j l))
+          (fun j _ ↦ integral_finsetSum Finset.univ (fun l _ ↦ hInt j l))
     _ = ∑ j, ∑ l, b j * b l * (if j = l then (1 : ℝ) else 0) := by
-        refine Finset.sum_congr rfl (fun j _ => Finset.sum_congr rfl (fun l _ => ?_))
-        rw [show (fun t => (b j * h j t) * (b l * h l t))
-              = (fun t => (b j * b l) * (h j t * h l t)) from by funext t; ring]
+        refine Finset.sum_congr rfl (fun j _ ↦ Finset.sum_congr rfl (fun l _ ↦ ?_))
+        rw [show (fun t ↦ (b j * h j t) * (b l * h l t))
+              = (fun t ↦ (b j * b l) * (h j t * h l t)) from by funext t; ring]
         rw [integral_const_mul, h_ortho j l]
     _ = ∑ j, b j ^ 2 := by
-        refine Finset.sum_congr rfl (fun j _ => ?_)
+        refine Finset.sum_congr rfl (fun j _ ↦ ?_)
         simp_rw [mul_ite, mul_one, mul_zero]
-        rw [Finset.sum_ite_eq Finset.univ j (fun l => b j * b l)]
+        rw [Finset.sum_ite_eq Finset.univ j (fun l ↦ b j * b l)]
         simp [sq]
 
-/-- **L7 — a discrete AWGN code on `prolateCount T W c` observations lifts to a continuous-time
-code, giving a lower bound on `contAwgnMaxMessages`.**
+/-- A discrete AWGN code on `prolateCount T W c` observations lifts to a continuous-time
+code, giving a lower bound on `contAwgnMaxMessages`.
 
 Given a discrete `AwgnCode` on `k = prolateCount T W c` observations at per-observation power
 `c·T·P/k` whose every message decodes with error `< ε`, the receiver cross-map `A` of
@@ -491,42 +487,42 @@ theorem contAwgnMaxMessages_ge_of_awgnCode
     exists_crossMap_lower_bound T W hc0
   -- The receiver cross-map as a linear endomorphism of `EuclideanSpace ℝ (Fin k)`.
   have hIntprod : ∀ (v : EuclideanSpace ℝ (Fin k)) (i : Fin k),
-      Integrable (fun t => (∑ j, v j * h j t) * φ i t) volume :=
-    fun v i => (memLp_sum_smul (fun j => v j) h h_memLp).integrable_mul (φ_memLp i)
+      Integrable (fun t ↦ (∑ j, v j * h j t) * φ i t) volume :=
+    fun v i ↦ (memLp_sum_smul (fun j ↦ v j) h h_memLp).integrable_mul (φ_memLp i)
   let A : EuclideanSpace ℝ (Fin k) →ₗ[ℝ] EuclideanSpace ℝ (Fin k) :=
-    { toFun := fun v => WithLp.toLp 2 (fun i => ∫ t, (∑ j, v j * h j t) * φ i t)
+    { toFun := fun v ↦ WithLp.toLp 2 (fun i ↦ ∫ t, (∑ j, v j * h j t) * φ i t)
       map_add' := by
         intro v w
         ext i
         show (∫ t, (∑ j, (v + w) j * h j t) * φ i t)
             = (∫ t, (∑ j, v j * h j t) * φ i t) + (∫ t, (∑ j, w j * h j t) * φ i t)
         rw [← integral_add (hIntprod v i) (hIntprod w i)]
-        refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+        refine integral_congr_ae (Filter.Eventually.of_forall (fun t ↦ ?_))
         simp only [PiLp.add_apply]
         rw [← add_mul, ← Finset.sum_add_distrib]
-        exact congrArg (· * φ i t) (Finset.sum_congr rfl (fun j _ => by ring))
+        exact congrArg (· * φ i t) (Finset.sum_congr rfl (fun j _ ↦ by ring))
       map_smul' := by
         intro a v
         ext i
         show (∫ t, (∑ j, (a • v) j * h j t) * φ i t)
             = a • ∫ t, (∑ j, v j * h j t) * φ i t
         rw [smul_eq_mul, ← integral_const_mul]
-        refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+        refine integral_congr_ae (Filter.Eventually.of_forall (fun t ↦ ?_))
         simp only [PiLp.smul_apply, smul_eq_mul]
         rw [show (∑ x, a * v x * h x t) = a * (∑ x, v x * h x t) from by
-          rw [Finset.mul_sum]; exact Finset.sum_congr rfl (fun x _ => by ring)]
+          rw [Finset.mul_sum]; exact Finset.sum_congr rfl (fun x _ ↦ by ring)]
         ring }
   have hAcomp : ∀ (v : EuclideanSpace ℝ (Fin k)) (i : Fin k),
-      A v i = ∫ t, (∑ j, v j * h j t) * φ i t := fun v i => rfl
+      A v i = ∫ t, (∑ j, v j * h j t) * φ i t := fun v i ↦ rfl
   have hbdd : ∀ v : EuclideanSpace ℝ (Fin k), c * ‖v‖ ^ 2 ≤ ‖A v‖ ^ 2 := by
     intro v
     rw [EuclideanSpace.real_norm_sq_eq v, EuclideanSpace.real_norm_sq_eq (A v)]
     simp_rw [hAcomp]
-    exact hlb (fun j => v j)
+    exact hlb (fun j ↦ v j)
   -- The discrete codewords as `EuclideanSpace` targets.
-  let xM : Fin M → EuclideanSpace ℝ (Fin k) := fun m => WithLp.toLp 2 (fun i => d.encoder m i)
-  have hxMcomp : ∀ m i, xM m i = d.encoder m i := fun m i => rfl
-  choose bpre hAb hbnorm using fun m =>
+  let xM : Fin M → EuclideanSpace ℝ (Fin k) := fun m ↦ WithLp.toLp 2 (fun i ↦ d.encoder m i)
+  have hxMcomp : ∀ m i, xM m i = d.encoder m i := fun m i ↦ rfl
+  choose bpre hAb hbnorm using fun m ↦
     ShannonHartleyPreequalizer.exists_preequalizer hc0 A hbdd (xM m)
   -- Energy bound: `‖bpre m‖² ≤ T·P`.
   have hkR : (0 : ℝ) < ((prolateCount T W c : ℕ) : ℝ) := by exact_mod_cast hkpos
@@ -547,13 +543,13 @@ theorem contAwgnMaxMessages_ge_of_awgnCode
     linarith [h1, h2]
   -- The continuous-time code.
   let cc : ContAwgnCode T W P M :=
-    { encoder := fun m t => ∑ j, bpre m j * h j t
-      encoder_memLp := fun m => memLp_sum_smul (fun j => bpre m j) h h_memLp
-      encoder_bandlimited := fun m => isBandlimited_sum_smul (fun j => bpre m j) h h_bl
+    { encoder := fun m t ↦ ∑ j, bpre m j * h j t
+      encoder_memLp := fun m ↦ memLp_sum_smul (fun j ↦ bpre m j) h h_memLp
+      encoder_bandlimited := fun m ↦ isBandlimited_sum_smul (fun j ↦ bpre m j) h h_bl
       encoder_power := by
         intro m
         show (∫ t, (∑ j, bpre m j * h j t) ^ 2) ≤ T * P
-        rw [integral_sum_smul_sq_eq (fun j => bpre m j) h h_memLp h_ortho,
+        rw [integral_sum_smul_sq_eq (fun j ↦ bpre m j) h h_memLp h_ortho,
           ← EuclideanSpace.real_norm_sq_eq (bpre m)]
         exact hbenergy m
       k := k
@@ -573,9 +569,9 @@ theorem contAwgnMaxMessages_ge_of_awgnCode
       = d.toCode.errorProbAt (AWGN.awgnChannel (N₀ / 2).toNNReal
           (AWGN.isAwgnChannelMeasurable _)) m := by
     intro m
-    have hfam : (fun i : Fin cc.k =>
+    have hfam : (fun i : Fin cc.k ↦
           ProbabilityTheory.gaussianReal (cc.observation m i) (N₀ / 2).toNNReal)
-        = (fun i => (AWGN.awgnChannel (N₀ / 2).toNNReal (AWGN.isAwgnChannelMeasurable _))
+        = (fun i ↦ (AWGN.awgnChannel (N₀ / 2).toNNReal (AWGN.isAwgnChannelMeasurable _))
             (d.toCode.encoder m i)) := by
       funext i
       rw [hobs m i]
@@ -598,14 +594,14 @@ theorem contAwgnMaxMessages_ge_of_awgnCode
     · have key : (cc.averageError N₀).toReal = (1 / M : ℝ) * ∑ m, (cc.errorProbAt N₀ m).toReal := by
         unfold ContAwgnCode.averageError
         rw [if_neg hM0.ne', ENNReal.toReal_mul, ENNReal.toReal_inv,
-          ENNReal.toReal_sum (fun m _ => hne m)]
+          ENNReal.toReal_sum (fun m _ ↦ hne m)]
         simp [one_div]
       rw [key]
-      have hterm : ∀ m, (cc.errorProbAt N₀ m).toReal ≤ ε := fun m => by
+      have hterm : ∀ m, (cc.errorProbAt N₀ m).toReal ≤ ε := fun m ↦ by
         rw [herr m]; exact (hd m).le
       have hsum : ∑ m, (cc.errorProbAt N₀ m).toReal ≤ (M : ℝ) * ε := by
         calc ∑ m, (cc.errorProbAt N₀ m).toReal
-            ≤ ∑ _m : Fin M, ε := Finset.sum_le_sum (fun m _ => hterm m)
+            ≤ ∑ _m : Fin M, ε := Finset.sum_le_sum (fun m _ ↦ hterm m)
           _ = (M : ℝ) * ε := by
               rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
       have hMpos : (0 : ℝ) < M := by exact_mod_cast hM0
@@ -618,7 +614,7 @@ theorem contAwgnMaxMessages_ge_of_awgnCode
 
 end Achievability
 
-/-! ### R4-ACH assembly (L9/L10): the achievability half `contAwgn_ge_shannonHartley`
+/-! ### Assembly: the achievability half `contAwgn_ge_shannonHartley`
 
 The lower bound `bandlimitedAwgnCapacity ≤ contAwgnOperationalCapacity` reduces, over the
 phantom-free `⨅ ε : ↥(Set.Ioo 0 1)` (`le_ciInf`), to a per-`ε` statement
@@ -627,58 +623,58 @@ phantom-free `⨅ ε : ↥(Set.Ioo 0 1)` (`le_ciInf`), to a per-`ε` statement
 per-observation power `Q`, and a block rate `R` with `y < 2WR` and `R < ½ log(1 + 2Q/N₀)`
 (`exists_params_of_lt`), feed `Q, R` to the discrete `awgn_channel_coding_theorem`, and lift the
 resulting codes to continuous-time codes on `prolateCount T W c` observations
-(`contAwgnMaxMessages_ge_of_awgnCode`). Since `prolateCount T W c / T → 2W` (`prolateCount_div_tendsto`,
-from the `le_prolateCount` / `prolateCount_le` sandwich), the per-window rate `⌈exp(kR)⌉`-count gives
-`2WR ≤ limsup_T log(M(T))/T = contAwgnRate ε`. -/
+(`contAwgnMaxMessages_ge_of_awgnCode`). Since `prolateCount T W c / T → 2W`
+(`prolateCount_div_tendsto`, from the `le_prolateCount` / `prolateCount_le` sandwich), the
+per-window rate `⌈exp(kR)⌉`-count gives `2WR ≤ limsup_T log(M(T))/T = contAwgnRate ε`. -/
 section AchievabilityHeadline
 
 open Filter MeasureTheory InformationTheory.Shannon.TimeBandLimiting InformationTheory.Shannon.AWGN
 open scoped Topology NNReal
 
 theorem deficit_div_tendsto_zero (W : ℝ) (hW : 0 < W) :
-    Tendsto (fun T : ℝ => (2 + Real.log (1 + 2 * W * T)) / T) atTop (𝓝 0) := by
-  have hatTop : Tendsto (fun T : ℝ => 1 + 2 * W * T) atTop atTop :=
+    Tendsto (fun T : ℝ ↦ (2 + Real.log (1 + 2 * W * T)) / T) atTop (𝓝 0) := by
+  have hatTop : Tendsto (fun T : ℝ ↦ 1 + 2 * W * T) atTop atTop :=
     tendsto_atTop_add_const_left _ 1 (tendsto_id.const_mul_atTop (by positivity : (0:ℝ) < 2*W))
-  have h2 : Tendsto (fun T : ℝ => (2:ℝ) / T) atTop (𝓝 0) :=
+  have h2 : Tendsto (fun T : ℝ ↦ (2:ℝ) / T) atTop (𝓝 0) :=
     tendsto_const_nhds.div_atTop tendsto_id
-  have hlogu : Tendsto (fun T : ℝ => Real.log (1 + 2*W*T) / (1 + 2*W*T)) atTop (𝓝 0) := by
+  have hlogu : Tendsto (fun T : ℝ ↦ Real.log (1 + 2*W*T) / (1 + 2*W*T)) atTop (𝓝 0) := by
     have := (Real.isLittleO_log_id_atTop.tendsto_div_nhds_zero).comp hatTop
     simpa only [Function.comp_def, id_eq] using this
-  have hratio : Tendsto (fun T : ℝ => (1 + 2*W*T) / T) atTop (𝓝 (2*W)) := by
-    have heq : (fun T : ℝ => (1 + 2*W*T)/T) =ᶠ[atTop] (fun T => 1/T + 2*W) := by
+  have hratio : Tendsto (fun T : ℝ ↦ (1 + 2*W*T) / T) atTop (𝓝 (2*W)) := by
+    have heq : (fun T : ℝ ↦ (1 + 2*W*T)/T) =ᶠ[atTop] (fun T ↦ 1/T + 2*W) := by
       filter_upwards [eventually_gt_atTop (0:ℝ)] with T hT
       field_simp
     rw [tendsto_congr' heq]
-    have : Tendsto (fun T : ℝ => (1:ℝ)/T + 2*W) atTop (𝓝 (0 + 2*W)) :=
+    have : Tendsto (fun T : ℝ ↦ (1:ℝ)/T + 2*W) atTop (𝓝 (0 + 2*W)) :=
       (tendsto_const_nhds.div_atTop tendsto_id).add tendsto_const_nhds
     simpa using this
-  have hlogT : Tendsto (fun T : ℝ => Real.log (1 + 2*W*T) / T) atTop (𝓝 0) := by
-    have hprod : Tendsto (fun T : ℝ =>
+  have hlogT : Tendsto (fun T : ℝ ↦ Real.log (1 + 2*W*T) / T) atTop (𝓝 0) := by
+    have hprod : Tendsto (fun T : ℝ ↦
         (Real.log (1 + 2*W*T) / (1 + 2*W*T)) * ((1 + 2*W*T) / T)) atTop (𝓝 (0 * (2*W))) :=
       hlogu.mul hratio
     rw [zero_mul] at hprod
     refine (tendsto_congr' ?_).mp hprod
     filter_upwards [hatTop.eventually_gt_atTop 0] with T hTpos
     rw [div_mul_div_comm, mul_comm (Real.log _) _, mul_div_mul_left _ _ (ne_of_gt hTpos)]
-  have : Tendsto (fun T : ℝ => (2:ℝ)/T + Real.log (1 + 2*W*T)/T) atTop (𝓝 (0 + 0)) := h2.add hlogT
+  have : Tendsto (fun T : ℝ ↦ (2:ℝ)/T + Real.log (1 + 2*W*T)/T) atTop (𝓝 (0 + 0)) := h2.add hlogT
   rw [add_zero] at this
   refine (tendsto_congr' ?_).mp this
   filter_upwards [eventually_gt_atTop (0:ℝ)] with T hT
   rw [add_div]
 
 theorem prolateCount_div_tendsto (W : ℝ) (hW : 0 < W) {c : ℝ} (hc0 : 0 < c) (hc1 : c < 1) :
-    Tendsto (fun T : ℝ => (prolateCount T W c : ℝ) / T) atTop (𝓝 (2 * W)) := by
+    Tendsto (fun T : ℝ ↦ (prolateCount T W c : ℝ) / T) atTop (𝓝 (2 * W)) := by
   have hD := deficit_div_tendsto_zero W hW
   have h1c : (0:ℝ) < 1 - c := by linarith
   have hlow : Tendsto
-      (fun T : ℝ => 2*W - ((2 + Real.log (1 + 2*W*T)) / T) / (1 - c)) atTop (𝓝 (2*W)) := by
-    have h0 : Tendsto (fun T : ℝ => ((2 + Real.log (1 + 2*W*T)) / T) / (1 - c)) atTop (𝓝 0) := by
+      (fun T : ℝ ↦ 2*W - ((2 + Real.log (1 + 2*W*T)) / T) / (1 - c)) atTop (𝓝 (2*W)) := by
+    have h0 : Tendsto (fun T : ℝ ↦ ((2 + Real.log (1 + 2*W*T)) / T) / (1 - c)) atTop (𝓝 0) := by
       have := hD.div_const (1 - c); rwa [zero_div] at this
     have := (tendsto_const_nhds (x := 2*W)).sub h0
     simpa using this
   have hupp : Tendsto
-      (fun T : ℝ => 2*W + ((2 + Real.log (1 + 2*W*T)) / T) / c) atTop (𝓝 (2*W)) := by
-    have h0 : Tendsto (fun T : ℝ => ((2 + Real.log (1 + 2*W*T)) / T) / c) atTop (𝓝 0) := by
+      (fun T : ℝ ↦ 2*W + ((2 + Real.log (1 + 2*W*T)) / T) / c) atTop (𝓝 (2*W)) := by
+    have h0 : Tendsto (fun T : ℝ ↦ ((2 + Real.log (1 + 2*W*T)) / T) / c) atTop (𝓝 0) := by
       have := hD.div_const c; rwa [zero_div] at this
     have := (tendsto_const_nhds (x := 2*W)).add h0
     simpa using this
@@ -700,7 +696,7 @@ capacity is finite): from the Bessel converse the message count grows no faster 
 theorem contAwgnRate_isBoundedUnder (W N₀ P ε : ℝ)
     (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hε0 : 0 < ε) (hε1 : ε < 1) :
     IsBoundedUnder (· ≤ ·) atTop
-      (fun T : ℝ => Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) := by
+      (fun T : ℝ ↦ Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) := by
   have hε : (0:ℝ) < 1 - ε := by linarith
   have hlog2 : (0:ℝ) < Real.log 2 := Real.log_pos (by norm_num)
   set K1 : ℝ := ((P + 1) / N₀ + Real.log 2) / (1 - ε) with hK1
@@ -772,12 +768,12 @@ theorem exists_params_of_lt (W N₀ P y : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (
       R < (1 / 2) * Real.log (1 + 2 * Q / N₀) ∧ y < 2 * W * R := by
   set a : ℝ := P / (2 * W) with ha
   have hPW : 0 < a := by rw [ha]; positivity
-  set f : ℝ → ℝ := fun Q => W * Real.log (1 + 2 * Q / N₀) with hf
+  set f : ℝ → ℝ := fun Q ↦ W * Real.log (1 + 2 * Q / N₀) with hf
   have hfa_pos : (0:ℝ) < 1 + 2 * a / N₀ := by
     have : 0 < 2 * a / N₀ := by rw [ha]; positivity
     linarith
   have hcont : ContinuousAt f a := by
-    have hinner : ContinuousAt (fun Q : ℝ => 1 + 2*Q/N₀) a := by fun_prop
+    have hinner : ContinuousAt (fun Q : ℝ ↦ 1 + 2*Q/N₀) a := by fun_prop
     exact (hinner.log (ne_of_gt hfa_pos)).const_mul W
   have hfa : y < f a := by
     show y < W * Real.log (1 + 2 * a / N₀)
@@ -785,7 +781,7 @@ theorem exists_params_of_lt (W N₀ P y : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (
     rw [h2a]; exact hy
   have hev1 : ∀ᶠ Q in 𝓝[<] a, y < f Q :=
     (hcont.eventually (Ioi_mem_nhds hfa)).filter_mono nhdsWithin_le_nhds
-  have hev2 : ∀ᶠ Q in 𝓝[<] a, Q < a := eventually_nhdsWithin_of_forall (fun Q hQ => hQ)
+  have hev2 : ∀ᶠ Q in 𝓝[<] a, Q < a := eventually_nhdsWithin_of_forall (fun Q hQ ↦ hQ)
   have hev3 : ∀ᶠ Q in 𝓝[<] a, 0 < Q :=
     Filter.Eventually.filter_mono nhdsWithin_le_nhds (Ioi_mem_nhds hPW)
   obtain ⟨Q, hQy, hQa, hQ0⟩ := (hev1.and (hev2.and hev3)).exists
@@ -833,7 +829,7 @@ theorem sh_le_contAwgnRate (W N₀ P ε : ℝ)
     bandlimitedAwgnCapacity W N₀ P ≤ contAwgnRate W N₀ P ε := by
   rcases hP.lt_or_eq with hP0 | hP0
   · rw [bandlimitedAwgnCapacity]
-    refine le_of_forall_lt (fun y hy => ?_)
+    refine le_of_forall_lt (fun y hy ↦ ?_)
     obtain ⟨c, Q, R, hc0, hc1, hQ0, hQlt, hR0, hRlt, hy2WR⟩ :=
       exists_params_of_lt W N₀ P y hW hN₀ hP0 hy
     have hkey : 2 * W * R ≤ contAwgnRate W N₀ P ε := by
@@ -846,14 +842,14 @@ theorem sh_le_contAwgnRate (W N₀ P ε : ℝ)
       obtain ⟨n₀, hcode⟩ :=
         awgn_channel_coding_theorem Q hQ0 N hNne (isAwgnChannelMeasurable N) hR0 hRC hε0
       have hcount := prolateCount_div_tendsto W hW hc0 hc1
-      have hu : Tendsto (fun T : ℝ => (prolateCount T W c : ℝ) * R / T) atTop (𝓝 (2 * W * R)) := by
+      have hu : Tendsto (fun T : ℝ ↦ (prolateCount T W c : ℝ) * R / T) atTop (𝓝 (2 * W * R)) := by
         have h := hcount.mul_const R
         refine (tendsto_congr ?_).mp h
         intro T; ring_nf
       have hev : ∀ᶠ T in atTop,
           (prolateCount T W c : ℝ) * R / T
             ≤ Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T := by
-        have hWT : Tendsto (fun T : ℝ => W * T) atTop atTop :=
+        have hWT : Tendsto (fun T : ℝ ↦ W * T) atTop atTop :=
           tendsto_id.const_mul_atTop hW
         have hcgtW : ∀ᶠ T in atTop, W < (prolateCount T W c : ℝ) / T :=
           hcount.eventually_const_lt (by linarith)
@@ -864,7 +860,7 @@ theorem sh_le_contAwgnRate (W N₀ P ε : ℝ)
             rw [lt_div_iff₀ hT] at hcw; linarith [hcw]
           have : (n₀ : ℝ) ≤ (prolateCount T W c : ℝ) := le_trans hWTn hWTc.le
           exact_mod_cast this
-        have hP'tend : Tendsto (fun T : ℝ => c * T * P / (prolateCount T W c : ℝ)) atTop
+        have hP'tend : Tendsto (fun T : ℝ ↦ c * T * P / (prolateCount T W c : ℝ)) atTop
             (𝓝 (c * P / (2 * W))) := by
           have hinv := hcount.inv₀ (by positivity : (2 * W) ≠ 0)
           have hcp := hinv.const_mul (c * P)
@@ -889,7 +885,7 @@ theorem sh_le_contAwgnRate (W N₀ P ε : ℝ)
         have hQP' : Q ≤ P' := hP'ge
         let d' : AwgnCode M (prolateCount T W c) P' :=
           { encoder := d.encoder, decoder := d.decoder, decoder_meas := d.decoder_meas,
-            power_constraint := fun m => (d.power_constraint m).trans
+            power_constraint := fun m ↦ (d.power_constraint m).trans
               (mul_le_mul_of_nonneg_left hQP' (by positivity)) }
         have hMle : M ≤ contAwgnMaxMessages T W N₀ P ε :=
           contAwgnMaxMessages_ge_of_awgnCode T W N₀ P hT hW hN₀ hP hc0 hc1 hε0 hε1 hkpos d' hderr
@@ -909,8 +905,8 @@ theorem sh_le_contAwgnRate (W N₀ P ε : ℝ)
         gcongr
       have hbv := contAwgnRate_isBoundedUnder W N₀ P ε hW hN₀ hP hε0 hε1
       have hcompare :
-          limsup (fun T : ℝ => (prolateCount T W c : ℝ) * R / T) atTop
-            ≤ limsup (fun T : ℝ => Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) atTop :=
+          limsup (fun T : ℝ ↦ (prolateCount T W c : ℝ) * R / T) atTop
+            ≤ limsup (fun T : ℝ ↦ Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) atTop :=
         limsup_le_limsup hev hu.isCoboundedUnder_le hbv
       rw [hu.limsup_eq] at hcompare
       rw [contAwgnRate]
@@ -921,8 +917,7 @@ theorem sh_le_contAwgnRate (W N₀ P ε : ℝ)
     rw [hb0]
     exact contAwgnRate_nonneg W N₀ P ε hW hN₀ hP hε0 hε1
 
-/-- **Shannon-Hartley achievability (`≥`)**: the operational capacity is at least the
-Shannon-Hartley closed form.
+/-- The operational capacity is at least the Shannon-Hartley closed form (achievability, `≥`).
 
 The infimum over `ε` reduces (via `le_ciInf` over the phantom-free subtype `↥(Set.Ioo 0 1)`) to
 the per-`ε` bound `sh_le_contAwgnRate`, which builds continuous-time band-limited codewords out of
@@ -931,23 +926,19 @@ fed by the block `awgn_channel_coding_theorem`, and reads off the `≈ 2WT` degr
 `prolateCount_div_tendsto` (from `le_prolateCount` / `prolateCount_le`) through a `limsup`
 comparison.
 
-Earlier this statement was tracked as a `wall:nyquist-2w-dof` residual, but the achievability half
-never needed the *tight* Landau-Pollak-Slepian concentration — only that `prolateCount T W c / T`
-converges to `2W`, which the crude two-sided count already gives. The genuine obstruction was a
-definitional one: `contAwgnOperationalCapacity` used the bounded binder `⨅ ε ∈ Set.Ioo 0 1`, which
-for the conditionally-complete `ℝ` picks up the phantom `sInf ∅ = 0` from every `ε ∉ (0,1)` and
-collapsed the capacity to `0`, making the statement false as framed. With the phantom-free subtype
-infimum the statement is true, and this proof closes it outright: the finiteness lemma
-`contAwgnRate_isBoundedUnder` it relies on is itself proven, and the whole chain is `sorryAx`-free.
+The achievability half needs only that `prolateCount T W c / T` converges to `2W` (the crude
+two-sided count), not the tight Landau-Pollak-Slepian concentration. The infimum is taken over the
+phantom-free subtype `↥(Set.Ioo 0 1)`: the bounded binder `⨅ ε ∈ Set.Ioo 0 1` would instead pick
+up the phantom `sInf ∅ = 0` from every `ε ∉ (0,1)` on the conditionally-complete `ℝ`, collapsing
+the capacity to `0`.
 
 Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
 
-@audit:ok (independent honesty audit 2026-07-18: `#print axioms` =
-[propext, Classical.choice, Quot.sound], sorryAx-free. Signature scan: regularity-only, no
-load-bearing hyp. The block `awgn_channel_coding_theorem`'s only non-rate hypothesis `h_meas`
-is genuinely DISCHARGED by the theorem `AWGN.isAwgnChannelMeasurable N`, not leaked into this
-signature; the load-bearing `awgn_capacity_closed_form` (`h_bridge_gauss`/`h_bdd`/`h_max_ent`)
-is off-path — 0 transitive references from this headline.) -/
+@audit:ok (sorryAx-free; signature scan regularity-only, no load-bearing hyp. The block
+`awgn_channel_coding_theorem`'s only non-rate hypothesis `h_meas` is discharged by the theorem
+`AWGN.isAwgnChannelMeasurable N`, not leaked into this signature; the load-bearing
+`awgn_capacity_closed_form` (`h_bridge_gauss`/`h_bdd`/`h_max_ent`) is off-path — 0 transitive
+references from this headline.) -/
 theorem contAwgn_ge_shannonHartley
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     bandlimitedAwgnCapacity W N₀ P ≤ contAwgnOperationalCapacity W N₀ P := by
