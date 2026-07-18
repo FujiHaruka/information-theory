@@ -2766,6 +2766,194 @@ theorem prolateCount_mul_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (h
       _ ≤ ∑ i, ν i := Finset.sum_le_sum fun i _ => (hνgt i).le
   linarith
 
+/-! ### The complete eigen-Hilbert basis and the trace transport -/
+
+/-- Every eigenspace of the compact operator `A = timeBandLimitingOp T W` is complete: it is the
+kernel of the continuous map `A − μ•1`, hence closed in the complete space `E`. Uniform in `μ`
+(both the finite-dimensional eigenspaces for `μ ≠ 0` and the possibly infinite-dimensional kernel),
+which is what lets the per-eigenspace Hilbert bases be chosen without a dimension case split. -/
+instance prolate_eigenspace_completeSpace (T W : ℝ) (μ : ℂ) :
+    CompleteSpace (Module.End.eigenspace (prolateEnd T W) μ) := by
+  haveI hclosed : IsClosed (Module.End.eigenspace (prolateEnd T W) μ : Set E) := by
+    have hset : (Module.End.eigenspace (prolateEnd T W) μ : Set E)
+        = {x : E | (timeBandLimitingOp T W - μ • ContinuousLinearMap.id ℂ E) x = 0} := by
+      ext x
+      rw [SetLike.mem_coe, Module.End.mem_eigenspace_iff, Set.mem_setOf_eq,
+        sub_apply, smul_apply, ContinuousLinearMap.id_apply, sub_eq_zero]
+      rfl
+    rw [hset]
+    exact isClosed_eq (ContinuousLinearMap.continuous _) continuous_const
+  infer_instance
+
+/-- **P1 — the complete eigen-Hilbert basis (gateway).** `A = timeBandLimitingOp T W` is compact and
+self-adjoint, so its eigenspaces are total (`orthogonalComplement_iSup_eigenspaces_eq_bot`).
+Collating a Hilbert basis of each eigenspace (`exists_hilbertBasis`, uniform in `μ`) over
+`Σ μ : ℂ, …` and gluing by `mkOfOrthogonalEqBot` yields a complete orthonormal eigenbasis of `E`,
+with real nonnegative eigenvalues, whose vectors with eigenvalue above `c` span the high eigenspace
+`prolateEigenspaceSup T W c`. -/
+theorem exists_eigen_hilbertBasis (T W : ℝ) :
+    ∃ (ι : Type) (b : HilbertBasis ι ℂ E) (lam : ι → ℝ),
+      (∀ i, timeBandLimitingOp T W (b i) = (lam i : ℂ) • b i) ∧
+      (∀ i, 0 ≤ lam i) ∧
+      (∀ c : ℝ, 0 < c →
+        prolateEigenspaceSup T W c = Submodule.span ℂ (b '' {i | c < lam i})) := by
+  classical
+  -- The eigenspaces of `A` form an orthogonal family.
+  have hof : OrthogonalFamily ℂ (fun μ : ℂ => Module.End.eigenspace (prolateEnd T W) μ)
+      (fun μ => (Module.End.eigenspace (prolateEnd T W) μ).subtypeₗᵢ) :=
+    (timeBandLimitingOp_isSymmetric T W).orthogonalFamily_eigenspaces
+  -- A Hilbert basis of each eigenspace, uniform in `μ` (completeness from the instance above).
+  choose w bμ hbμ using
+    fun μ : ℂ => exists_hilbertBasis ℂ (Module.End.eigenspace (prolateEnd T W) μ)
+  -- Collate them into one orthonormal family over `Σ μ, (per-eigenspace index)`.
+  have hv0 := hof.orthonormal_sigma_orthonormal fun μ => (bμ μ).orthonormal
+  set v : (Σ μ : ℂ, ↥(w μ)) → E :=
+    fun a => (Module.End.eigenspace (prolateEnd T W) a.1).subtypeₗᵢ (bμ a.1 a.2) with hvdef
+  have hv : Orthonormal ℂ v := hv0
+  -- Totality: a vector orthogonal to every collated basis vector is orthogonal to every eigenspace,
+  -- hence zero by the compact self-adjoint spectral theorem.
+  have htot : (Submodule.span ℂ (Set.range v))ᗮ = ⊥ := by
+    have hspec : (⨆ μ : ℂ, Module.End.eigenspace (prolateEnd T W) μ)ᗮ = ⊥ :=
+      ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot
+        (timeBandLimitingOp_isCompact T W) (timeBandLimitingOp_isSymmetric T W)
+    rw [Submodule.eq_bot_iff]
+    intro x hx
+    have hperp : ∀ μ : ℂ, x ∈ (Module.End.eigenspace (prolateEnd T W) μ)ᗮ := by
+      intro μ
+      rw [← Submodule.orthogonalProjectionOnto_eq_zero_iff]
+      have hz : ∀ k : ↥(w μ),
+          inner ℂ ((bμ μ k : ↥(Module.End.eigenspace (prolateEnd T W) μ)) : E) x = (0 : ℂ) :=
+        fun k => (Submodule.mem_orthogonal _ _).mp hx _ (Submodule.subset_span ⟨⟨μ, k⟩, rfl⟩)
+      have hsum := (bμ μ).hasSum_orthogonalProjectionOnto x
+      simp only [hz, zero_smul] at hsum
+      exact hsum.unique hasSum_zero
+    have hxsup : x ∈ (⨆ μ : ℂ, Module.End.eigenspace (prolateEnd T W) μ)ᗮ := by
+      rw [Submodule.mem_orthogonal]
+      intro u hu
+      induction hu using Submodule.iSup_induction' with
+      | mem μ y hy => exact (Submodule.mem_orthogonal _ _).mp (hperp μ) y hy
+      | zero => simp
+      | add y z _ _ ihy ihz => rw [inner_add_left, ihy, ihz, add_zero]
+    rw [hspec] at hxsup
+    simpa using hxsup
+  -- Glue into a Hilbert basis of `E`.
+  set b := HilbertBasis.mkOfOrthogonalEqBot hv htot with hb
+  have hbv : ⇑b = v := HilbertBasis.coe_mkOfOrthogonalEqBot hv htot
+  -- Each glued vector lies in the eigenspace indexed by its first coordinate.
+  have hmem : ∀ i, b i ∈ Module.End.eigenspace (prolateEnd T W) i.1 := by
+    intro i
+    rw [congrFun hbv i]
+    exact SetLike.coe_mem (bμ i.1 i.2)
+  have heigC : ∀ i, timeBandLimitingOp T W (b i) = i.1 • b i := fun i =>
+    Module.End.mem_eigenspace_iff.mp (hmem i)
+  -- Each glued vector is a unit vector, so its eigenvalue is real and nonnegative.
+  have hreal : ∀ i : (Σ μ : ℂ, ↥(w μ)), (i.1 : ℂ) = ((i.1.re : ℝ) : ℂ) ∧ 0 ≤ i.1.re := by
+    intro i
+    have hne : b i ≠ 0 := by
+      intro h
+      have h1 : ‖b i‖ = 1 := b.orthonormal.1 i
+      rw [h, norm_zero] at h1
+      exact one_ne_zero h1.symm
+    have hev : (prolateEnd T W).HasEigenvalue i.1 :=
+      Module.End.hasEigenvalue_of_hasEigenvector
+        ⟨Module.End.mem_eigenspace_iff.mpr (heigC i), hne⟩
+    have hconj := (timeBandLimitingOp_isSymmetric T W).conj_eigenvalue_eq_self hev
+    have him : i.1.im = 0 := Complex.conj_eq_iff_im.mp hconj
+    have hre : (i.1 : ℂ) = ((i.1.re : ℝ) : ℂ) := Complex.ext rfl (by simp [him])
+    refine ⟨hre, ?_⟩
+    have hev' : (prolateEnd T W).HasEigenvalue ((i.1.re : ℝ) : ℂ) := hre ▸ hev
+    apply eigenvalue_nonneg_of_nonneg (𝕜 := ℂ) (T := (prolateEnd T W)) hev'
+    intro x
+    have h := (timeBandLimitingOp_isPositive T W).inner_nonneg_right x
+    have := (Complex.le_def.mp h).1
+    simpa using this
+  -- Every glued vector is a genuine eigenvector, so it spans a genuine eigenvalue's eigenspace.
+  have hev : ∀ i : (Σ μ : ℂ, ↥(w μ)), (prolateEnd T W).HasEigenvalue i.1 := by
+    intro i
+    have hne : b i ≠ 0 := by
+      intro h
+      have h1 : ‖b i‖ = 1 := b.orthonormal.1 i
+      rw [h, norm_zero] at h1
+      exact one_ne_zero h1.symm
+    exact Module.End.hasEigenvalue_of_hasEigenvector
+      ⟨Module.End.mem_eigenspace_iff.mpr (heigC i), hne⟩
+  -- Each nonzero eigenspace is finite-dimensional, so the coerced per-eigenspace basis spans it.
+  have hspanμ : ∀ μ : ℂ, μ ≠ 0 →
+      Submodule.span ℂ (Set.range (fun k : ↥(w μ) =>
+        ((bμ μ k : ↥(Module.End.eigenspace (prolateEnd T W) μ)) : E)))
+        = Module.End.eigenspace (prolateEnd T W) μ := by
+    intro μ hμ0
+    haveI : FiniteDimensional ℂ ↥(Module.End.eigenspace (prolateEnd T W) μ) :=
+      ContinuousLinearMap.finite_dimensional_eigenspace (timeBandLimitingOp_isCompact T W) μ hμ0
+    have hcl := (Submodule.span ℂ (Set.range (bμ μ))).closed_of_finiteDimensional
+    have h1 : Submodule.span ℂ (Set.range (bμ μ)) = ⊤ := by
+      rw [← hcl.submodule_topologicalClosure_eq, (bμ μ).dense_span]
+    have hrange : Set.range (fun k : ↥(w μ) =>
+        ((bμ μ k : ↥(Module.End.eigenspace (prolateEnd T W) μ)) : E))
+        = (Module.End.eigenspace (prolateEnd T W) μ).subtype '' Set.range (bμ μ) := by
+      rw [← Set.range_comp]; rfl
+    rw [hrange, Submodule.span_image, h1, Submodule.map_top, Submodule.range_subtype]
+  refine ⟨_, b, fun a => a.1.re, ?_, fun i => (hreal i).2, ?_⟩
+  · intro i
+    rw [heigC i]
+    congr 1
+    exact (hreal i).1
+  · intro c hc
+    apply le_antisymm
+    · -- `prolateEigenspaceSup T W c ≤ span of the high eigenbasis vectors`
+      rw [prolateEigenspaceSup]
+      refine iSup₂_le fun ν hν => ?_
+      have hν0 : (ν : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr (ne_of_gt (hc.trans hν.1))
+      rw [← hspanμ (ν : ℂ) hν0]
+      apply Submodule.span_mono
+      rintro _ ⟨k, rfl⟩
+      refine ⟨⟨(ν : ℂ), k⟩, ?_, congrFun hbv ⟨(ν : ℂ), k⟩⟩
+      show c < ((ν : ℂ)).re
+      rw [Complex.ofReal_re]
+      exact hν.1
+    · -- `span of the high eigenbasis vectors ≤ prolateEigenspaceSup T W c`
+      rw [Submodule.span_le]
+      rintro _ ⟨i, hi, rfl⟩
+      rw [prolateEigenspaceSup]
+      have hi' : c < i.1.re := hi
+      have hmemν : (i.1.re : ℝ) ∈ prolateEigenvalueSet T W c :=
+        ⟨hi', (hreal i).1 ▸ hev i⟩
+      refine Submodule.mem_iSup_of_mem (i.1.re) (Submodule.mem_iSup_of_mem hmemν ?_)
+      have hbe := hmem i
+      rwa [(hreal i).1] at hbe
+
+/-- **P2 — trace transport.** The eigenvalue sum along the complete eigenbasis equals `2WT`, by
+feeding the eigenbasis to `tsum_inner_timeBandLimitingOp_eq` and simplifying each Rayleigh quotient
+`⟪A bᵢ, bᵢ⟫.re` to its eigenvalue `lam i`. -/
+theorem tsum_eigen_eq_two_mul (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
+    {ι : Type} (b : HilbertBasis ι ℂ E) (lam : ι → ℝ)
+    (heig : ∀ i, timeBandLimitingOp T W (b i) = (lam i : ℂ) • b i) :
+    ∑' i, lam i = 2 * W * T := by
+  have hval : ∀ i, (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re = lam i := by
+    intro i
+    rw [heig i, inner_smul_left, Complex.conj_ofReal, inner_self_eq_norm_sq_to_K,
+      b.orthonormal.1 i]
+    simp
+  calc ∑' i, lam i
+      = ∑' i, (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re :=
+        tsum_congr fun i => (hval i).symm
+    _ = 2 * W * T := tsum_inner_timeBandLimitingOp_eq T W hT hW b
+
+/-- **P3 — multiplicity bridge.** The eigenvalue sum along the eigenbasis equals the sum over the
+decreasing enumeration `prolateEigenvalues`, since both nonnegative families share the super-level
+counts `#{· > c} = prolateCount T W c` (the eigenbasis vectors above `c` span
+`prolateEigenspaceSup T W c`, whose `finrank` *is* `prolateCount`), transported through a layer-cake
+identity. Left as an honest sorry this leg (off the Shannon-Hartley converse path).
+@residual(plan:shannon-hartley-phase2-spectral-plan) -/
+theorem tsum_eigen_eq_tsum_prolateEigenvalues (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
+    {ι : Type} (b : HilbertBasis ι ℂ E) (lam : ι → ℝ)
+    (heig : ∀ i, timeBandLimitingOp T W (b i) = (lam i : ℂ) • b i)
+    (hnn : ∀ i, 0 ≤ lam i)
+    (hspan : ∀ c : ℝ, 0 < c →
+      prolateEigenspaceSup T W c = Submodule.span ℂ (b '' {i | c < lam i})) :
+    ∑' i, lam i = ∑' n, prolateEigenvalues T W n := by
+  sorry
+
 /-- The trace identity `tsum_inner_timeBandLimitingOp_eq`, transported onto the decreasing
 eigenvalue enumeration: `∑ₙ λₙ = 2WT`.
 
@@ -2795,7 +2983,10 @@ names. `plan:` asserts closability, not cheapness — the eigenbasis gluing is r
 @residual(plan:shannon-hartley-phase2-spectral-plan) -/
 theorem tsum_prolateEigenvalues_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
     ∑' n, prolateEigenvalues T W n = 2 * W * T := by
-  sorry
+  obtain ⟨ι, b, lam, heig, hnn, hspan⟩ := exists_eigen_hilbertBasis T W
+  have h2 := tsum_eigen_eq_two_mul T W hT hW b lam heig
+  have h3 := tsum_eigen_eq_tsum_prolateEigenvalues T W hT hW b lam heig hnn hspan
+  rw [← h3, h2]
 
 /-! ### The window deficit `tr A − ∫∫_[0,T]² |k|²` -/
 
