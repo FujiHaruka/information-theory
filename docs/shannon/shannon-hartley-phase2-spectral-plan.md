@@ -31,8 +31,14 @@
 **🎉 メイン定理 `contAwgn_eq_shannonHartley`（連続時間帯域 AWGN 容量 = Shannon-Hartley 閉形式）= genuine 無条件証明完遂**
 （`ShannonHartleyConverseFinal.lean`、`le_antisymm (contAwgn_le_shannonHartley) (contAwgn_ge_shannonHartley)`、
 proof-done sorryAx-free + 独立 honesty-auditor all-OK、`71903f08`/`2d267dfc`）。本 sub-plan の全 obligation 完了。
-残 off-path sorry = `tsum_prolateEigenvalues_eq`（`TimeBandLimiting.lean:2796`、R1 厳密 trace 等式 `∑λ=2WT`、
-converse の依存パス外・Shannon-Hartley に不要な bonus、下 L18 残債）のみ。
+残 off-path sorry = **なし**。`tsum_prolateEigenvalues_eq`（R1 厳密 trace 等式 `∑λ=2WT`）も
+**CLOSED（2026-07-18、proof-done sorryAx-free + 独立監査 all-OK）**: 完全固有 HilbertBasis 構築（compact
+self-adjoint spectral theorem `Spectrum.lean:443` を per-eigenspace ON 基底の糊付けで完成、P1）→ trace transport
+（`tsum_inner_timeBandLimitingOp_eq` を eigenbasis へ特殊化、P2）→ layer-cake 多重度 bridge
+（`lintegral_eq_lintegral_meas_lt` + generalized-inverse duality、P3）、`7832caf3`/`7a08b9c2`/`3d602c4b`。
+糊付けは real work だったが Mathlib gap 無し（inventory 予告どおり自前糊付けのみ）。プロジェクト全体
+`gen_readme_table.ts --check` = 0 sorry / 0 wall / 0 custom axiom。（下 L18 残債 = `∀ n, λₙ≠0` infinite-rank は
+別命題・未 stated・壁ではない。）
 
 ### Approach（解の全体形）
 

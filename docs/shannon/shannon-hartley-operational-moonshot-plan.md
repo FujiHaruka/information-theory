@@ -6,7 +6,7 @@
 （`ShannonHartleyConverseFinal.lean`、`71903f08`/`2d267dfc`、`#print axioms` = `[propext, Classical.choice, Quot.sound]`）。
 両半 = achievability `contAwgn_ge_shannonHartley`（leg 22）+ converse `contAwgn_le_shannonHartley`（leg 29、C0–C4
 全 CLOSED）を `le_antisymm` で束ねる。hyp 全 regularity（`0<W`/`0<N₀`/`0≤P`）、隠れ load-bearing hyp 無し（署名走査 CONFIRMED）。
-残 off-path sorry = `tsum_prolateEigenvalues_eq`（厳密 trace 等式 `∑λ=2WT`、converse の依存パス外・SH に不要な bonus）のみ。
+残 off-path sorry = **なし**。`tsum_prolateEigenvalues_eq`（厳密 trace 等式 `∑λ=2WT`）も **CLOSED（2026-07-18、proof-done sorryAx-free + 独立監査 all-OK、`7832caf3`/`7a08b9c2`/`3d602c4b`）**。プロジェクト全体 0 sorry / 0 wall / 0 custom axiom（`gen_readme_table.ts --check`）。
 
 **leg 22 の def-fix（honesty-critical、監査 all OK で intent-preserving 確認済）**: `contAwgnOperationalCapacity` を
 bounded binder `⨅ ε ∈ Set.Ioo 0 1` → **subtype infimum `⨅ ε : ↥(Set.Ioo 0 1)`** へ。旧 bounded-binder は
