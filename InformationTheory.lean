@@ -185,6 +185,7 @@ import InformationTheory.Shannon.ShannonHartleyConverse
 import InformationTheory.Shannon.ShannonHartleyConverseCount
 import InformationTheory.Shannon.ShannonHartleyWaterfill
 import InformationTheory.Shannon.ShannonHartleyRotation
+import InformationTheory.Shannon.ShannonHartleyConverseFinal
 import InformationTheory.Shannon.WynerZiv.Basic
 import InformationTheory.Shannon.WynerZiv.RateMonotonicity
 import InformationTheory.Shannon.Stationary.Basic

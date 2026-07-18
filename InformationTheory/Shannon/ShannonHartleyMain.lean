@@ -6,22 +6,20 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Continuous-time Shannon-Hartley: headline theorems
 
-This file collects the two headline theorems of the continuous-time band-limited AWGN channel —
-the achievability half `contAwgn_ge_shannonHartley` (`≥`) and the identity
-`contAwgn_eq_shannonHartley` (`=`) — at a position downstream of the achievability assets they
-must consume. Both rest on the prolate-eigenvalue count (`le_prolateCount` / `prolateCount_le`) of
+This file holds the achievability half `contAwgn_ge_shannonHartley` (`≥`) of the continuous-time
+band-limited AWGN channel — at a position downstream of the achievability assets it must consume.
+It rests on the prolate-eigenvalue count (`le_prolateCount` / `prolateCount_le`) of
 `TimeBandLimiting.lean`, whose assets are visible only below the achievability and operational
-modules, so the theorems live here rather than at their original upstream sites.
+modules, so the theorem lives here rather than at its original upstream site.
 
-The achievability half is now **proved** (`contAwgn_ge_shannonHartley`, sorryAx-free): it needs
+The achievability half is **proved** (`contAwgn_ge_shannonHartley`, sorryAx-free): it needs
 only the *lower* count `le_prolateCount` (via `prolateCount_div_tendsto`) fed through the block
-`awgn_channel_coding_theorem`, not the tight Landau-Pollak-Slepian concentration. The identity
-`contAwgn_eq_shannonHartley` remains open on its converse (`≤`) half. Its Gram-compression
-interlacing bridge (`finrank_le_prolateCount_of_form_gt`) is now proved and its crux is in-tree, so
-what remains is the project-internal operational-converse assembly on top of the *upper* count
-`prolateCount_le` (no Mathlib wall; tracked by `shannon-hartley-phase2-spectral-plan`).
+`awgn_channel_coding_theorem`, not the tight Landau-Pollak-Slepian concentration. The converse
+(`≤`) half and the identity `contAwgn_eq_shannonHartley` (`=`) live downstream in
+`ShannonHartleyConverseFinal.lean`, which bundles the water-filling (`ShannonHartleyWaterfill.lean`)
+and Gaussian rotation / band-Gram ellipsoid (`ShannonHartleyRotation.lean`) layers.
 
-Both are stated over the phantom-free `contAwgnOperationalCapacity` (the subtype infimum
+Both halves are stated over the phantom-free `contAwgnOperationalCapacity` (the subtype infimum
 `⨅ ε : ↥(Set.Ioo 0 1)`); the earlier bounded-binder `⨅ ε ∈ Set.Ioo 0 1` collapsed to `0` on the
 conditionally-complete `ℝ` and made both false as framed (see `contAwgnOperationalCapacity`).
 
@@ -34,49 +32,6 @@ conditionally-complete `ℝ` and made both false as framed (see `contAwgnOperati
 namespace InformationTheory.Shannon.ShannonHartley
 
 set_option linter.unusedVariables false
-
-/-- The **continuous-time Shannon-Hartley formula**: the operational capacity of the
-band-limited AWGN channel equals `W · log(1 + P/(N₀·W))`.
-
-The statement is true as framed over the phantom-free `contAwgnOperationalCapacity` (an earlier
-point-sampling model and the bounded-binder infimum each made it false; both are repaired — see
-`contAwgnOperationalCapacity` and `docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP).
-
-The achievability (`≥`) half is proved: `contAwgn_ge_shannonHartley`. What remains is the converse
-(`≤`) half. `∫ f·φᵢ = ⟪f, P_W φᵢ⟫` for band-limited `f`, so the Gram matrix of the test family is a
-compression of the time-band-limiting operator `timeBandLimitingOp T W` (`TimeBandLimiting.lean`),
-and the achievable rate along any `[0, T]`-supported orthonormal family is governed by that
-compression's eigenvalues, which Cauchy interlacing caps by the prolate eigenvalues
-`prolateEigenvalues T W`.
-
-The interlacing / count-domination bridge itself is now proved:
-`finrank_le_prolateCount_of_form_gt` (`TimeBandLimiting.lean`, sorryAx-free) is the
-finite-dimensional min-max upper half of Cauchy interlacing, and its crux
-`inner_timeBandLimitingOp_le_of_mem_orthogonal` is in-tree — so no Mathlib gap remains at the bridge
-(this was the plan's sole designated wall candidate C1; it passed). What is left is project-internal
-assembly of the operational converse on top of the count (`prolateCount_le` / `le_prolateCount`,
-available): rotating the observations to the Gram eigenbasis by isotropic Gaussian invariance
-(Mathlib's `map_pi_eq_stdGaussian`), the unequal-gain parallel-Gaussian converse (in-tree
-`parallel_per_input_mi_le_sum` plus a self-built Fano/DPI chain), and water-filling with the
-`T → ∞` limit. None of these is a Mathlib wall; the residual is the plan-tracked assembly
-(`shannon-hartley-phase2-spectral-plan`, §R4-CONV), not a gap. This is why the class is `plan:`, not
-`wall:` — the earlier `wall:nyquist-2w-dof` tag overstated the remaining work as a Mathlib gap once
-C1 landed.
-
-This single `sorry` now stands only for the converse half — the achievability half is discharged by
-`contAwgn_ge_shannonHartley`.
-
-Hypotheses `hW`/`hN₀`/`hP` are regularity-only (not load-bearing).
-
-`@residual(plan:shannon-hartley-phase2-spectral-plan)` -/
-@[entry_point]
-theorem contAwgn_eq_shannonHartley
-    (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
-    contAwgnOperationalCapacity W N₀ P = bandlimitedAwgnCapacity W N₀ P := by
-  -- The interlacing / count-domination bridge (`finrank_le_prolateCount_of_form_gt`) is proved; what
-  -- remains is the project-internal operational-converse assembly (Gauss rotation, parallel-Gaussian
-  -- converse, water-filling). See docstring — no Mathlib wall.
-  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan)
 
 /-!
 ### R4-ACH foundational leaves (L3/L5, L6)
