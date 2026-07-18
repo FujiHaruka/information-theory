@@ -73,7 +73,8 @@ Mathlib 全体で `Defs.lean` 214 / `Basic.lean` 727 ディレクトリという
 
 - **namespace は変更していない**（flat `InformationTheory.Shannon` のまま）。Lean 4 では namespace とファイルパスは独立で、namespace を変えると宣言名が全変化し term 参照まで壊れ blast radius が激増するため、**移行はファイル移動 + import パス書換のみ**。
 - **完了**: ① 1500 行超 14 ファイルの分割（2026-06-09 完了。subdir + part + umbrella 方式、全 part < 1500 行、namespace 不変、各 `lake build InformationTheory` EXIT=0 で検証）。
-- **未完（別パス）**: ② 真の単独 40 ファイルはフラット維持（1 ファイルのサブ化は無価値）。③ docstring/プランの旧モジュールパス prose 参照の sweep（build 非依存）。
+- **後続の昇格**: `ShannonHartley*` フラットクラスタ（10 ファイル）を `Shannon/ShannonHartley/` へ昇格（2026-07-19、接頭辞を落とし `Basic`/`Operational`/`Achievability`/`Preequalizer`/`Main`/`Converse`/`ConverseCount`/`Waterfill`/`Rotation`/`ConverseFinal`）。namespace 不変・import 書換のみ・`lake build InformationTheory` EXIT=0。サブディレクトリは 26 に（`TimeBandLimiting.lean` は接頭辞非該当のためフラット維持）。
+- **未完（別パス）**: ② 真の単独フラットファイルはフラット維持（1 ファイルのサブ化は無価値）。③ docstring/プランの旧モジュールパス prose 参照の sweep（build 非依存。ShannonHartley 昇格分は移動ファイル内の docstring を更新済、docs/ 配下の歴史的 inventory prose は line 番号ごと stale なので未実施）。
 
 ### 残作業の進め方（1500 行分割 等）
 
