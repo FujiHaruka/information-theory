@@ -95,4 +95,124 @@ theorem measurePi_gaussianReal_map_orthogonal {k : ℕ} (N : ℝ≥0) (v : Fin k
     ring
   rw [key (Oᵀ *ᵥ t') v, key t' (O *ᵥ v), hmean, hnorm]
 
+/-- The rotated code: rotate a `ContAwgnCode`'s orthonormal test-function family by an orthogonal
+matrix `O` and post-compose the decoder with `Oᵀ = O⁻¹`. The encoder (hence the transmitted
+signals and the power budget) is untouched; only the receiver's coordinate frame turns. Because
+`O` is orthogonal, the rotated test functions stay orthonormal and supported in the window, so this
+is again a valid `ContAwgnCode`, and (by `ContAwgnCode.rotate_averageError`) it has exactly the same
+error probability. This is the coordinate change that diagonalizes the band-Gram operator in the
+Shannon–Hartley converse. -/
+noncomputable def ContAwgnCode.rotate {T W P : ℝ} {M : ℕ}
+    (c : ContAwgnCode T W P M) (O : Matrix (Fin c.k) (Fin c.k) ℝ)
+    (hO : O ∈ Matrix.orthogonalGroup (Fin c.k) ℝ) : ContAwgnCode T W P M where
+  encoder := c.encoder
+  encoder_memLp := c.encoder_memLp
+  encoder_bandlimited := c.encoder_bandlimited
+  encoder_power := c.encoder_power
+  k := c.k
+  testFn := fun i t => ∑ j, O i j * c.testFn j t
+  testFn_memLp := fun i =>
+    memLp_finsetSum Finset.univ (fun j _ => (c.testFn_memLp j).const_mul (O i j))
+  testFn_support := by
+    intro i
+    rw [Function.support_subset_iff]
+    intro t ht
+    by_contra htI
+    apply ht
+    refine Finset.sum_eq_zero (fun j _ => ?_)
+    have htfn : c.testFn j t = 0 := by
+      by_contra hne
+      exact htI (c.testFn_support j (Function.mem_support.mpr hne))
+    rw [htfn, mul_zero]
+  testFn_orthonormal := by
+    intro i j
+    have hInt : ∀ a b, Integrable
+        (fun t => (O i a * c.testFn a t) * (O j b * c.testFn b t)) volume :=
+      fun a b => ((c.testFn_memLp a).const_mul (O i a)).integrable_mul
+        ((c.testFn_memLp b).const_mul (O j b))
+    calc (∫ t, (∑ a, O i a * c.testFn a t) * (∑ b, O j b * c.testFn b t))
+        = ∫ t, ∑ a, ∑ b, (O i a * c.testFn a t) * (O j b * c.testFn b t) := by
+          refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+          change (∑ a, O i a * c.testFn a t) * (∑ b, O j b * c.testFn b t)
+              = ∑ a, ∑ b, (O i a * c.testFn a t) * (O j b * c.testFn b t)
+          rw [Finset.sum_mul_sum]
+      _ = ∑ a, ∑ b, ∫ t, (O i a * c.testFn a t) * (O j b * c.testFn b t) := by
+          rw [integral_finsetSum Finset.univ
+            (fun a _ => integrable_finsetSum Finset.univ (fun b _ => hInt a b))]
+          exact Finset.sum_congr rfl
+            (fun a _ => integral_finsetSum Finset.univ (fun b _ => hInt a b))
+      _ = ∑ a, ∑ b, O i a * O j b * (if a = b then (1 : ℝ) else 0) := by
+          refine Finset.sum_congr rfl (fun a _ => Finset.sum_congr rfl (fun b _ => ?_))
+          rw [show (fun t => (O i a * c.testFn a t) * (O j b * c.testFn b t))
+                = (fun t => (O i a * O j b) * (c.testFn a t * c.testFn b t)) from by
+              funext t; ring]
+          rw [integral_const_mul, c.testFn_orthonormal a b]
+      _ = ∑ a, O i a * O j a := by
+          refine Finset.sum_congr rfl (fun a _ => ?_)
+          simp_rw [mul_ite, mul_one, mul_zero]
+          rw [Finset.sum_ite_eq Finset.univ a (fun b => O i a * O j b)]
+          simp
+      _ = if i = j then 1 else 0 := by
+          have hmul : ∑ a, O i a * O j a = (O * Oᵀ) i j := by
+            rw [Matrix.mul_apply]
+            exact Finset.sum_congr rfl (fun a _ => by rw [Matrix.transpose_apply])
+          rw [hmul, (mem_orthogonalGroup_iff (Fin c.k) ℝ).mp hO, Matrix.one_apply]
+  decoder := fun y => c.decoder (Oᵀ *ᵥ y)
+  decoder_meas := c.decoder_meas.comp (by fun_prop)
+
+/-- Rotating the test functions rotates the observation vector by the same matrix:
+`(c.rotate O hO).observation m = O.mulVec (c.observation m)`. -/
+lemma ContAwgnCode.rotate_observation {T W P : ℝ} {M : ℕ}
+    (c : ContAwgnCode T W P M) (O : Matrix (Fin c.k) (Fin c.k) ℝ)
+    (hO : O ∈ Matrix.orthogonalGroup (Fin c.k) ℝ) (m : Fin M) :
+    (c.rotate O hO).observation m = O.mulVec (c.observation m) := by
+  funext i
+  have hInt : ∀ j, Integrable (fun t => c.encoder m t * c.testFn j t) volume :=
+    fun j => (c.encoder_memLp m).integrable_mul (c.testFn_memLp j)
+  change (∫ t, c.encoder m t * (∑ j, O i j * c.testFn j t)) = (O *ᵥ c.observation m) i
+  calc (∫ t, c.encoder m t * (∑ j, O i j * c.testFn j t))
+      = ∫ t, ∑ j, O i j * (c.encoder m t * c.testFn j t) := by
+        refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+        change c.encoder m t * (∑ j, O i j * c.testFn j t)
+            = ∑ j, O i j * (c.encoder m t * c.testFn j t)
+        rw [Finset.mul_sum]
+        exact Finset.sum_congr rfl (fun j _ => by ring)
+    _ = ∑ j, ∫ t, O i j * (c.encoder m t * c.testFn j t) :=
+        integral_finsetSum Finset.univ (fun j _ => (hInt j).const_mul (O i j))
+    _ = ∑ j, O i j * c.observation m j := by
+        exact Finset.sum_congr rfl (fun j _ => by
+          rw [integral_const_mul]; rfl)
+    _ = (O *ᵥ c.observation m) i := rfl
+
+/-- Rotating the code by an orthogonal matrix leaves the average error probability unchanged: the
+isotropic AWGN law is rotation-invariant (S1), and the decoder is pre-composed with the inverse
+rotation, so the error set transports back exactly. -/
+lemma ContAwgnCode.rotate_averageError {T W P : ℝ} {M : ℕ}
+    (c : ContAwgnCode T W P M) (O : Matrix (Fin c.k) (Fin c.k) ℝ)
+    (hO : O ∈ Matrix.orthogonalGroup (Fin c.k) ℝ) (N₀ : ℝ) :
+    (c.rotate O hO).averageError N₀ = c.averageError N₀ := by
+  have hEP : ∀ m, (c.rotate O hO).errorProbAt N₀ m = c.errorProbAt N₀ m := by
+    intro m
+    have hobs := c.rotate_observation O hO m
+    have hmeasO : Measurable (fun y : Fin c.k → ℝ => O *ᵥ y) := by fun_prop
+    have hcomp : Measurable (fun y : Fin c.k → ℝ => c.decoder (Oᵀ *ᵥ y)) :=
+      c.decoder_meas.comp (by fun_prop)
+    have hS_rot : MeasurableSet {y : Fin c.k → ℝ | c.decoder (Oᵀ *ᵥ y) ≠ m} :=
+      hcomp (t := {x : Fin M | x ≠ m}) MeasurableSet.of_discrete
+    have hpre : (fun y : Fin c.k → ℝ => O *ᵥ y) ⁻¹' {y | c.decoder (Oᵀ *ᵥ y) ≠ m}
+        = {z | c.decoder z ≠ m} := by
+      ext z
+      simp only [Set.mem_preimage, Set.mem_setOf_eq]
+      rw [mulVec_mulVec, (mem_orthogonalGroup_iff' (Fin c.k) ℝ).mp hO, one_mulVec]
+    change Measure.pi (fun i : Fin c.k =>
+          gaussianReal ((c.rotate O hO).observation m i) (N₀ / 2).toNNReal)
+          {y : Fin c.k → ℝ | c.decoder (Oᵀ *ᵥ y) ≠ m}
+        = Measure.pi (fun i : Fin c.k => gaussianReal (c.observation m i) (N₀ / 2).toNNReal)
+          {y : Fin c.k → ℝ | c.decoder y ≠ m}
+    rw [hobs,
+      (measurePi_gaussianReal_map_orthogonal (N₀ / 2).toNNReal (c.observation m) O hO).symm,
+      Measure.map_apply hmeasO hS_rot, hpre]
+  rw [ContAwgnCode.averageError, ContAwgnCode.averageError]
+  simp only [hEP]
+
 end InformationTheory.Shannon.ShannonHartley
