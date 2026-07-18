@@ -890,21 +890,23 @@ theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : �
 
 end Phase1Regularity
 
-/-- Per-coordinate max-entropy converse split (correlated input). For `0 ≤ P`, every
-feasible input admits a split `P'` (with `0 ≤ P'ᵢ`, `∑ P'ᵢ ≤ P`) whose per-coordinate sum
-bounds the MI. Assembled from the MI decomposition, output-entropy subadditivity, per-coord
-Gaussian max-entropy, and the variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ`.
+/-- Per-coordinate max-entropy converse split (correlated input), exposing the per-coordinate
+second-moment ellipsoid. For `0 ≤ P`, every feasible input admits a split `P'` (with
+`0 ≤ P'ᵢ` and `P'ᵢ ≤ E[Xᵢ²] = ∫ (xᵢ)² ∂p`) whose per-coordinate sum bounds the MI. Assembled
+from the MI decomposition, output-entropy subadditivity, per-coord Gaussian max-entropy, and
+the variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ`.
 
-The `0 ≤ P` precondition is necessary: for `P < 0` the constraint set is non-empty (it
-contains the Dirac at 0) yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable, so the
-statement would be false. -/
-theorem parallel_per_input_mi_le_sum {n : ℕ}
+This strengthens `parallel_per_input_mi_le_sum`'s `∑ P'ᵢ ≤ P` to the per-coordinate ellipsoid
+`P'ᵢ ≤ ∫ (xᵢ)² ∂p`, which water-filling needs; the plain-sum version is the corollary
+`parallel_per_input_mi_le_sum` directly below. The `0 ≤ P` precondition threads through the
+variance/integrability lemmas. -/
+theorem parallel_per_input_mi_le_sum_percoord {n : ℕ}
     (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
     (p : Measure (Fin n → ℝ)) [IsProbabilityMeasure p]
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :
-    ∃ P' : Fin n → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i : Fin n, P' i ≤ P) ∧
+    ∃ P' : Fin n → ℝ, (∀ i, 0 ≤ P' i) ∧ (∀ i, P' i ≤ ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p) ∧
       (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
         ≤ ∑ i : Fin n, (1/2) * Real.log (1 + P' i / (N i : ℝ)) := by
   classical
@@ -913,9 +915,6 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
   -- per-coordinate noise positivity
   have hN_pos : ∀ i, (0 : ℝ) < (N i : ℝ) :=
     fun i ↦ lt_of_le_of_ne (N i).coe_nonneg (Ne.symm (hN i))
-  -- integrability + Bochner second-moment bound from membership
-  obtain ⟨hp_2mom_int, hp_2mom⟩ :=
-    parallelGaussianPowerConstraintSet_mem_iff_integrable P hP p hp
   -- output law + marginals are probability measures
   haveI hμY_prob : IsProbabilityMeasure μY := by rw [hμY_def]; infer_instance
   haveI hμY_marg_prob : ∀ i, IsProbabilityMeasure (μY.map (fun z ↦ z i)) := by
@@ -931,16 +930,11 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
     have h := parallelOutput_variance_ge_noise N h_meas h_parallel_meas p P hP i (hN i) hp
     simp only [hvarY_def, hm_def]
     linarith [h]
-  · -- `∑ P'ᵢ ≤ P`: `∑ (Var(Yᵢ) − Nᵢ) ≤ ∑ E[Xᵢ²] ≤ P`
-    have h_each : ∀ i : Fin n, varY i - (N i : ℝ) ≤ ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p := by
-      intro i
-      have h := parallelOutput_variance_le N h_meas h_parallel_meas p P hP i (hN i) hp
-      simp only [hvarY_def, hm_def]
-      linarith [h]
-    calc ∑ i : Fin n, (varY i - (N i : ℝ))
-        ≤ ∑ i : Fin n, ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p :=
-          Finset.sum_le_sum (fun i _ ↦ h_each i)
-      _ ≤ P := hp_2mom
+  · -- `∀ i, P'ᵢ ≤ E[Xᵢ²]`: variance ≤ second moment coordinate-wise
+    intro i
+    have h := parallelOutput_variance_le N h_meas h_parallel_meas p P hP i (hN i) hp
+    simp only [hvarY_def, hm_def]
+    linarith [h]
   · -- the converse chain: MI decomp + subadditivity + per-coord max-entropy + log-algebra
     -- assembled via `parallelGaussian_max_ent_le_of_subadditivity`.
     set condTerm : ℝ := ∫ x, jointDifferentialEntropyPi (W x) ∂p with hcond_def
@@ -1027,6 +1021,28 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
     exact parallelGaussian_max_ent_le_of_subadditivity μY
       (mutualInfoOfChannel p W).toReal condTerm (fun i ↦ varY i - (N i : ℝ)) N
       h_decomp h_marg_ac hμ_ac h_joint_ac h_int_marg h_int_joint h_perCoord
+
+/-- Plain-sum corollary of `parallel_per_input_mi_le_sum_percoord`: for `0 ≤ P`, every
+feasible input admits a split `P'` (with `0 ≤ P'ᵢ`, `∑ P'ᵢ ≤ P`) whose per-coordinate sum
+bounds the MI. Follows from the per-coordinate ellipsoid `P'ᵢ ≤ ∫ (xᵢ)² ∂p` summed against
+the total power budget `∑ᵢ ∫ (xᵢ)² ∂p ≤ P`.
+
+The `0 ≤ P` precondition is necessary: for `P < 0` the constraint set is non-empty (it
+contains the Dirac at 0) yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable, so the
+statement would be false. -/
+theorem parallel_per_input_mi_le_sum {n : ℕ}
+    (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
+    (h_meas : IsParallelAwgnChannelMeasurable N)
+    (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
+    (p : Measure (Fin n → ℝ)) [IsProbabilityMeasure p]
+    (hp : p ∈ parallelGaussianPowerConstraintSet P) :
+    ∃ P' : Fin n → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i : Fin n, P' i ≤ P) ∧
+      (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
+        ≤ ∑ i : Fin n, (1/2) * Real.log (1 + P' i / (N i : ℝ)) := by
+  obtain ⟨P', hpos, hpercoord, hmi⟩ :=
+    parallel_per_input_mi_le_sum_percoord P hP N hN h_meas h_parallel_meas p hp
+  obtain ⟨_, hp_2mom⟩ := parallelGaussianPowerConstraintSet_mem_iff_integrable P hP p hp
+  exact ⟨P', hpos, (Finset.sum_le_sum (fun i _ ↦ hpercoord i)).trans hp_2mom, hmi⟩
 
 /-! ## Boundedness of the MI image -/
 
