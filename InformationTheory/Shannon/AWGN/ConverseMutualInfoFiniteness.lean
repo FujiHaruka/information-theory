@@ -917,7 +917,7 @@ private lemma awgnConverseJoint_pair_mi_ne_top
 `mutualInfo (awgnConverseJoint c) Prod.fst Prod.snd ≠ ∞`.
 
 @audit:ok -/
-private lemma awgnConverseJoint_mutualInfo_ne_top
+lemma awgnConverseJoint_mutualInfo_ne_top
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     mutualInfo (awgnConverseJoint h_meas c)

@@ -6,6 +6,7 @@ import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.AWGN.ChannelMeasurability
+import InformationTheory.Shannon.AWGN.ConverseMutualInfoFiniteness
 
 /-!
 # Shannon-Hartley converse — C3: operational parallel-Gaussian converse (equal-noise form)
@@ -198,26 +199,6 @@ lemma contAwgn_errorProb_eq_averageError {T W P : ℝ} {M : ℕ} [NeZero M]
     rw [Finset.sum_congr rfl (fun m _ ↦ h_each m),
       ContAwgnCode.averageError, if_neg (NeZero.ne M)]
   rw [Measure.real, h_mu_S]
-
-/-! ## §L5 — MI-finiteness (highest risk) -/
-
-/-- `I(W; Y) ≠ ∞` on the ContAwgn converse joint. The parallel analog of
-`AWGN.awgnConverseJoint_mutualInfo_ne_top` — via the block mixture-density integrability.
-
-Project-internal port (NOT a Mathlib wall): the block output law
-`(1/M) ∑ₘ pi(gaussianReal (observation m i) (N₀/2))` is the same mixture-of-product-Gaussians as
-the discrete AWGN block, whose finiteness proof (`ConverseMutualInfoFiniteness.lean`,
-`awgnConverseJoint_mi_W_ne_top`) reuses the density-integrability machinery already built in
-`ParallelGaussian/Converse/MixtureDensity.lean` (`parallelFibre_logProxy_integrable_compProd`,
-`parallelOutput_joint_logDensity_integrable`) via `klDiv_ne_top`. Left as an honest sorry for a
-follow-up leg.
-@residual(plan:shannon-hartley-phase2-spectral-plan) -/
-lemma contAwgn_mi_W_ne_top {T W P : ℝ} {M : ℕ} [NeZero M]
-    (c : ContAwgnCode T W P M) {N₀ : ℝ} (hN₀ : 0 < N₀) :
-    mutualInfo (contAwgnConverseJoint c N₀)
-        (Prod.fst : Fin M × (Fin c.k → ℝ) → Fin M)
-        (Prod.snd : Fin M × (Fin c.k → ℝ) → Fin c.k → ℝ) ≠ ∞ := by
-  sorry -- @residual(plan:shannon-hartley-phase2-spectral-plan) — L5 MI-finiteness (density chain)
 
 /-! ## §L3 — RV ↔ channel bridge -/
 
@@ -561,6 +542,48 @@ lemma contAwgn_signalLaw_mem_constraint {T W P : ℝ} {M : ℕ} [NeZero M]
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, ← mul_assoc,
           ENNReal.inv_mul_cancel (by exact_mod_cast NeZero.ne M) (ENNReal.natCast_ne_top M),
           one_mul]
+
+/-! ## §L5 — MI-finiteness -/
+
+/-- `I(W; Y) ≠ ∞` on the ContAwgn converse joint. Reduces to the discrete AWGN converse
+finiteness `AWGN.awgnConverseJoint_mutualInfo_ne_top` by identifying `contAwgnConverseJoint` with
+`AWGN.awgnConverseJoint` at encoder `= observation`, `N = (N₀/2).toNNReal`. The identification is
+definitional (`awgnChannel x N = gaussianReal x N`, `Fintype.card (Fin M) = M`); the discrete
+finiteness needs only `N ≠ 0`, so the power value `T·P` is irrelevant to the reduction. -/
+lemma contAwgn_mi_W_ne_top {T W P : ℝ} {M : ℕ} [NeZero M]
+    (c : ContAwgnCode T W P M) {N₀ : ℝ} (hN₀ : 0 < N₀) :
+    mutualInfo (contAwgnConverseJoint c N₀)
+        (Prod.fst : Fin M × (Fin c.k → ℝ) → Fin M)
+        (Prod.snd : Fin M × (Fin c.k → ℝ) → Fin c.k → ℝ) ≠ ∞ := by
+  classical
+  set Nv : ℝ≥0 := (N₀ / 2).toNNReal with hNv
+  have hNv_ne : Nv ≠ 0 := by
+    rw [hNv, ne_eq, Real.toNNReal_eq_zero, not_le]; positivity
+  have h_meas : AWGN.IsAwgnChannelMeasurable Nv := AWGN.isAwgnChannelMeasurable Nv
+  haveI : Nonempty (Fin M) := ⟨⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩⟩
+  have hTP : 0 ≤ T * P :=
+    le_trans (Finset.sum_nonneg (fun i _ ↦ sq_nonneg _))
+      (contAwgn_sum_observation_sq_le c (Classical.arbitrary (Fin M)))
+  -- the discrete code whose encoder IS the observation map; the power value is irrelevant here.
+  let ac : AWGN.AwgnCode M c.k (T * P) :=
+    { encoder := fun m ↦ c.observation m
+      decoder := c.decoder
+      decoder_meas := c.decoder_meas
+      power_constraint := fun m ↦ by
+        rcases Nat.eq_zero_or_pos c.k with hk | hk
+        · haveI : IsEmpty (Fin c.k) := hk ▸ inferInstance
+          simp only [Finset.univ_eq_empty, Finset.sum_empty]
+          exact mul_nonneg (Nat.cast_nonneg _) hTP
+        · calc ∑ i : Fin c.k, (c.observation m i) ^ 2 ≤ T * P :=
+                contAwgn_sum_observation_sq_le c m
+            _ ≤ (c.k : ℝ) * (T * P) :=
+                le_mul_of_one_le_left hTP (by exact_mod_cast hk) }
+  have h_eq : contAwgnConverseJoint c N₀ = AWGN.awgnConverseJoint h_meas ac := by
+    unfold contAwgnConverseJoint AWGN.awgnConverseJoint
+    simp only [AWGN.awgnChannel_apply, Fintype.card_fin, hNv]
+    rfl
+  rw [h_eq]
+  exact AWGN.awgnConverseJoint_mutualInfo_ne_top hNv_ne h_meas ac
 
 /-! ## §C3 — the operational parallel-Gaussian converse -/
 
