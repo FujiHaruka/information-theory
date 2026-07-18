@@ -589,16 +589,19 @@ lemma contAwgn_mi_W_ne_top {T W P : ℝ} {M : ℕ} [NeZero M]
 
 /-! ## §C3 — the operational parallel-Gaussian converse -/
 
-/-- **C3: operational parallel-Gaussian converse** (equal-noise form; gains `νᵢ` enter in C4).
-For a `ContAwgnCode` with `2 ≤ M` and average error `Pe`, the log message count is bounded by
-the per-coordinate parallel-Gaussian sum plus the Fano terms. -/
-theorem contAwgn_operational_converse {T W P N₀ : ℝ} {M : ℕ}
+/-- **C3 (per-coordinate form): operational parallel-Gaussian converse.** Strengthens
+`contAwgn_operational_converse` by exposing the per-coordinate second-moment ellipsoid
+`P'ᵢ ≤ ∫ (xᵢ)² ∂(contAwgnSignalLaw c N₀)` in place of the plain-sum budget `∑ P'ᵢ ≤ T·P`.
+Water-filling (C2/C4) needs the per-coordinate constraint; the plain-sum version is the
+corollary `contAwgn_operational_converse` directly below. -/
+theorem contAwgn_operational_converse_percoord {T W P N₀ : ℝ} {M : ℕ}
     (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hM : 2 ≤ M)
     (c : ContAwgnCode T W P M)
     (Pe : ℝ) (hPe : Pe = (c.averageError N₀).toReal) :
-    ∃ P' : Fin c.k → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i, P' i ≤ T * P) ∧
-      Real.log M ≤ (∑ i : Fin c.k, (1/2) * Real.log (1 + P' i / (N₀ / 2)))
-        + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
+    ∃ P' : Fin c.k → ℝ, (∀ i, 0 ≤ P' i)
+      ∧ (∀ i, P' i ≤ ∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c N₀))
+      ∧ Real.log M ≤ (∑ i : Fin c.k, (1/2) * Real.log (1 + P' i / (N₀ / 2)))
+          + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
   classical
   haveI : NeZero M := ⟨by omega⟩
   haveI : StandardBorelSpace (Fin c.k → ℝ) := inferInstance
@@ -645,12 +648,12 @@ theorem contAwgn_operational_converse {T W P N₀ : ℝ} {M : ℕ}
     intro i
     rw [Real.coe_toNNReal _ (by positivity)]
     exact (by positivity : (0 : ℝ) < N₀ / 2).ne'
-  obtain ⟨P', hP'nonneg, hP'sum, hP'bound⟩ :=
-    parallel_per_input_mi_le_sum (T * P) hTP (fun _ ↦ (N₀ / 2).toNNReal) hN_ne
+  obtain ⟨P', hP'nonneg, hP'percoord, hP'bound⟩ :=
+    parallel_per_input_mi_le_sum_percoord (T * P) hTP (fun _ ↦ (N₀ / 2).toNNReal) hN_ne
       (contAwgn_isParallelAwgnChannelMeasurable _)
       (contAwgn_isParallelGaussianKernelMeasurable _)
       (contAwgnSignalLaw c N₀) (contAwgn_signalLaw_mem_constraint c N₀ hTP)
-  refine ⟨P', hP'nonneg, hP'sum, ?_⟩
+  refine ⟨P', hP'nonneg, hP'percoord, ?_⟩
   -- fold the channel term and rewrite the noise coercion `((N₀/2).toNNReal : ℝ) = N₀/2`.
   have hbound2 : (mutualInfoOfChannel (contAwgnSignalLaw c N₀)
         (contAwgnConstChannel c.k (N₀ / 2).toNNReal)).toReal
@@ -665,5 +668,27 @@ theorem contAwgn_operational_converse {T W P N₀ : ℝ} {M : ℕ}
           (contAwgnConstChannel c.k (N₀ / 2).toNNReal)).toReal :=
     ENNReal.toReal_mono hSfin h23
   linarith
+
+/-- **C3: operational parallel-Gaussian converse** (equal-noise form; gains `νᵢ` enter in C4).
+For a `ContAwgnCode` with `2 ≤ M` and average error `Pe`, the log message count is bounded by
+the per-coordinate parallel-Gaussian sum plus the Fano terms. Plain-sum corollary of
+`contAwgn_operational_converse_percoord`: the per-coordinate ellipsoid `P'ᵢ ≤ ∫ (xᵢ)² ∂p`
+summed against the total power budget `∑ᵢ ∫ (xᵢ)² ∂p ≤ T·P` yields `∑ P'ᵢ ≤ T·P`. -/
+theorem contAwgn_operational_converse {T W P N₀ : ℝ} {M : ℕ}
+    (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hM : 2 ≤ M)
+    (c : ContAwgnCode T W P M)
+    (Pe : ℝ) (hPe : Pe = (c.averageError N₀).toReal) :
+    ∃ P' : Fin c.k → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i, P' i ≤ T * P) ∧
+      Real.log M ≤ (∑ i : Fin c.k, (1/2) * Real.log (1 + P' i / (N₀ / 2)))
+        + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
+  haveI : NeZero M := ⟨by omega⟩
+  obtain ⟨P', hP'nonneg, hP'percoord, hbound⟩ :=
+    contAwgn_operational_converse_percoord hN₀ hP hM c Pe hPe
+  have hTP : 0 ≤ T * P :=
+    le_trans (integral_nonneg (fun t ↦ sq_nonneg _)) (c.encoder_power ⟨0, by omega⟩)
+  obtain ⟨_, hp_2mom⟩ :=
+    parallelGaussianPowerConstraintSet_mem_iff_integrable (T * P) hTP
+      (contAwgnSignalLaw c N₀) (contAwgn_signalLaw_mem_constraint c N₀ hTP)
+  exact ⟨P', hP'nonneg, (Finset.sum_le_sum (fun i _ ↦ hP'percoord i)).trans hp_2mom, hbound⟩
 
 end InformationTheory.Shannon.ShannonHartley
