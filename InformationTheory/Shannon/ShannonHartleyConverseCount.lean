@@ -22,10 +22,11 @@ It is genuinely non-circular: it does not assume codewords = prolate basis.
 namespace InformationTheory.Shannon
 
 open scoped ComplexConjugate
-open TimeBandLimiting Matrix
+open TimeBandLimiting Matrix MeasureTheory
 
 /-- The eigenvalues of the band-limited Gram matrix `Gᵢⱼ = ⟪P_W φᵢ, P_W φⱼ⟫` of a test family
-`φ : Fin k → E`. These are the per-coordinate channel gains consumed by the water-filling converse. -/
+`φ : Fin k → E`. These are the per-coordinate channel gains consumed by the water-filling
+converse. -/
 noncomputable def bandGramEigenvalues (W : ℝ) {k : ℕ} (φ : Fin k → E) : Fin k → ℝ :=
   (Matrix.isHermitian_gram ℂ fun i => (bandLimitSubspace W).starProjection (φ i)).eigenvalues
 
@@ -244,5 +245,59 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
       = Fintype.card {j : Fin k // c < ν j} := (Fintype.card_subtype _).symm
     _ = Module.finrank ℂ S := hcard.symm
     _ ≤ prolateCount T W c := finrank_le_prolateCount_of_form_gt T W hc S hS
+
+/-- The complex `L²` lift of a real, square-integrable test family: `ψᵢ = (φᵢ : ℝ → ℂ)` as an `Lp`
+element. This bridges a real code's `testFn : Fin k → ℝ → ℝ` to the operator-theoretic `E`-space,
+feeding the count domination `gram_high_eigen_finrank_le_prolateCount`. -/
+noncomputable def testFnLift {k : ℕ} (φ : Fin k → ℝ → ℝ) (hmem : ∀ i, MemLp (φ i) 2 volume) :
+    Fin k → E :=
+  fun i => ((hmem i).ofReal (K := ℂ)).toLp (fun t => ((φ i t : ℝ) : ℂ))
+
+/-- **Count domination for a real test family.** For an orthonormal, `[0,T]`-supported real test
+family `φ`, the number of band-limited Gram eigenvalues of its complex lift exceeding `c` is at most
+`prolateCount T W c`. Real-`ℝ → ℝ` façade of `gram_high_eigen_finrank_le_prolateCount`, consumed by
+the continuous-time AWGN code's `testFn`. -/
+theorem gram_high_eigen_finrank_le_prolateCount_real (T W : ℝ) {c : ℝ} (hc : 0 < c)
+    {k : ℕ} (φ : Fin k → ℝ → ℝ) (hmem : ∀ i, MemLp (φ i) 2 volume)
+    (h_on : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0)
+    (h_supp : ∀ i, Function.support (φ i) ⊆ Set.Icc 0 T) :
+    (Finset.univ.filter (fun j => c < bandGramEigenvalues W (testFnLift φ hmem) j)).card
+      ≤ prolateCount T W c := by
+  have hcoe : ∀ l, (testFnLift φ hmem l : ℝ → ℂ) =ᵐ[volume] fun t => ((φ l t : ℝ) : ℂ) :=
+    fun l => MemLp.coeFn_toLp _
+  -- Complex orthonormality of the lift transfers from the real integral orthonormality.
+  have hψ_on : Orthonormal ℂ (testFnLift φ hmem) := by
+    rw [orthonormal_iff_ite]
+    intro i j
+    have hinner : (inner ℂ (testFnLift φ hmem i) (testFnLift φ hmem j) : ℂ)
+        = ((∫ t, φ i t * φ j t : ℝ) : ℂ) := by
+      rw [MeasureTheory.L2.inner_def, ← integral_complex_ofReal]
+      apply integral_congr_ae
+      filter_upwards [hcoe i, hcoe j] with t hti htj
+      rw [RCLike.inner_apply, hti, htj, Complex.conj_ofReal]
+      push_cast; ring
+    rw [hinner, h_on i j]
+    split_ifs <;> simp
+  -- Time-limitedness of the lift transfers from the pointwise `[0,T]` support.
+  have hset : MeasurableSet {t : ℝ | t < 0 ∨ T < t} := by
+    have hsplit : {t : ℝ | t < 0 ∨ T < t} = Set.Iio 0 ∪ Set.Ioi T := by
+      ext t; simp [Set.mem_Iio, Set.mem_Ioi]
+    rw [hsplit]; exact measurableSet_Iio.union measurableSet_Ioi
+  have hψ_tl : ∀ i, testFnLift φ hmem i ∈ timeLimitSubspace T := by
+    intro i
+    change (testFnLift φ hmem i : ℝ → ℂ) =ᵐ[volume.restrict {t : ℝ | t < 0 ∨ T < t}] 0
+    have h0 : (fun t => ((φ i t : ℝ) : ℂ)) =ᵐ[volume.restrict {t : ℝ | t < 0 ∨ T < t}] 0 := by
+      rw [Filter.EventuallyEq, ae_restrict_iff' hset]
+      refine Filter.Eventually.of_forall (fun t ht => ?_)
+      have hφ0 : φ i t = 0 := by
+        by_contra hne
+        have hin := h_supp i (show t ∈ Function.support (φ i) from hne)
+        rw [Set.mem_Icc] at hin
+        rcases ht with h | h
+        · linarith [hin.1]
+        · linarith [hin.2]
+      simp [hφ0]
+    exact Filter.EventuallyEq.trans (ae_restrict_of_ae (hcoe i)) h0
+  exact gram_high_eigen_finrank_le_prolateCount T W hc (testFnLift φ hmem) hψ_on hψ_tl
 
 end InformationTheory.Shannon
