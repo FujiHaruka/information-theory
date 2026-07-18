@@ -1,6 +1,8 @@
 import InformationTheory.Shannon.ShannonHartleyConverse
 import InformationTheory.Shannon.ShannonHartleyConverseCount
 import Mathlib.Probability.Distributions.Gaussian.Multivariate
+import Mathlib.LinearAlgebra.Matrix.Charpoly.Basic
+import Mathlib.Algebra.Polynomial.Roots
 
 /-!
 # Shannon–Hartley converse — S1: isotropic-Gaussian rotation invariance
@@ -28,8 +30,8 @@ the exponentials.
 
 namespace InformationTheory.Shannon.ShannonHartley
 
-open MeasureTheory ProbabilityTheory Matrix Complex WithLp
-open scoped NNReal RealInnerProductSpace
+open MeasureTheory ProbabilityTheory Matrix Complex WithLp TimeBandLimiting
+open scoped NNReal RealInnerProductSpace ComplexConjugate
 
 /-- Isotropic Gaussian rotation invariance (S1): the law of `v + Z` with `Z ~ N(0, N·I)` on
 `Fin k → ℝ`, pushed forward by an orthogonal matrix `O`, equals the law of `(O v) + Z`.  Concretely,
@@ -214,5 +216,184 @@ lemma ContAwgnCode.rotate_averageError {T W P : ℝ} {M : ℕ}
       Measure.map_apply hmeasO hS_rot, hpre]
   rw [ContAwgnCode.averageError, ContAwgnCode.averageError]
   simp only [hEP]
+
+/-!
+## S2 — real orthogonal eigenbasis of the band-Gram + count bridge
+
+For a real, orthonormal, `[0,T]`-supported test family `φ : Fin k → ℝ → ℝ`, the band-limited Gram
+`Gᵢⱼ = ⟪P_W (φᵢ)ℂ, P_W (φⱼ)ℂ⟫_ℂ` has *real* entries (the lifted functions are self-conjugate, so
+each entry equals its own complex conjugate). Hence the complex-Hermitian band-Gram is the
+`ℝ → ℂ`-image of a genuine real symmetric matrix `bandGramRealMatrix`, which the real spectral
+theorem diagonalizes by an orthogonal matrix. This exposes, for the S3 rotation:
+
+* `bandGramRealMatrix` / `bandGramRealEigenvalues` (`μ`) / `bandGramRealUnitary` (`O`);
+* `bandGramRealUnitary_mem_orthogonalGroup` (`↑O ∈ orthogonalGroup`, feeds `ContAwgnCode.rotate`);
+* `bandGramRealMatrix_diagonalize` (`Oᵀ Gᵣ O = diagonal μ`);
+* `bandGramReal_high_count_le` (`#{c < μⱼ} ≤ prolateCount T W c`, the count bound of the converse).
+-/
+
+/-- A `ℂ`-valued `Lp` function that is the complex lift of a real test function is self-conjugate:
+`star (testFnLift φ hmem i) = testFnLift φ hmem i`. -/
+private lemma testFnLift_star {k : ℕ} (φ : Fin k → ℝ → ℝ) (hmem : ∀ i, MemLp (φ i) 2 volume)
+    (i : Fin k) : star (testFnLift φ hmem i) = testFnLift φ hmem i := by
+  refine Lp.ext ?_
+  have hcoe : (testFnLift φ hmem i : ℝ → ℂ) =ᵐ[volume] fun t => ((φ i t : ℝ) : ℂ) :=
+    MemLp.coeFn_toLp _
+  filter_upwards [Lp.coeFn_star (testFnLift φ hmem i), hcoe] with t h1 h2
+  rw [h1, Pi.star_apply, h2, Complex.star_def, Complex.conj_ofReal]
+
+/-- For two self-conjugate `L²` functions, the inner product is symmetric (both integrands are real
+a.e.): `⟪b, a⟫ = ⟪a, b⟫`. -/
+private lemma inner_symm_of_star_fixed {a b : E} (ha : star a = a) (hb : star b = b) :
+    (inner ℂ b a : ℂ) = inner ℂ a b := by
+  rw [MeasureTheory.L2.inner_def, MeasureTheory.L2.inner_def]
+  refine integral_congr_ae ?_
+  have hae_a : (a : ℝ → ℂ) =ᵐ[volume] star (a : ℝ → ℂ) := by
+    have h := Lp.coeFn_star a; rw [ha] at h; exact h
+  have hae_b : (b : ℝ → ℂ) =ᵐ[volume] star (b : ℝ → ℂ) := by
+    have h := Lp.coeFn_star b; rw [hb] at h; exact h
+  filter_upwards [hae_a, hae_b] with t hta htb
+  rw [Pi.star_apply] at hta htb
+  rw [RCLike.inner_apply, RCLike.inner_apply, starRingEnd_apply, starRingEnd_apply,
+    ← hta, ← htb, mul_comm]
+
+/-- The real symmetric band-Gram matrix `Gᵣ ᵢⱼ = Re ⟪P_W (φᵢ)ℂ, P_W (φⱼ)ℂ⟫_ℂ` of a real test
+family `φ`. Its complex lift is the band-limited Gram of `testFnLift φ hmem`, and its real
+eigen-decomposition diagonalizes the band-Gram for the Shannon–Hartley converse rotation. -/
+noncomputable def bandGramRealMatrix (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) : Matrix (Fin k) (Fin k) ℝ :=
+  fun i j =>
+    (Matrix.gram ℂ (fun i => (bandLimitSubspace W).starProjection (testFnLift φ hmem i)) i j).re
+
+/-- **B1 (gateway atom).** The band-limited Gram of the complex lift of a real test family has real
+entries: it is the `ℝ → ℂ`-image of `bandGramRealMatrix`. -/
+theorem bandGram_eq_map_real (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) :
+    Matrix.gram ℂ (fun i => (bandLimitSubspace W).starProjection (testFnLift φ hmem i))
+      = (bandGramRealMatrix W φ hmem).map (algebraMap ℝ ℂ) := by
+  have hvstar : ∀ l, star ((bandLimitSubspace W).starProjection (testFnLift φ hmem l))
+      = (bandLimitSubspace W).starProjection (testFnLift φ hmem l) := fun l => by
+    rw [← bandLimitProj_star, testFnLift_star]
+  ext i j
+  simp only [Matrix.map_apply, bandGramRealMatrix, Complex.coe_algebraMap]
+  refine (Complex.conj_eq_iff_re.mp ?_).symm
+  rw [Matrix.gram_apply]
+  calc (starRingEnd ℂ) (inner ℂ
+        ((bandLimitSubspace W).starProjection (testFnLift φ hmem i))
+        ((bandLimitSubspace W).starProjection (testFnLift φ hmem j)))
+      = inner ℂ ((bandLimitSubspace W).starProjection (testFnLift φ hmem j))
+          ((bandLimitSubspace W).starProjection (testFnLift φ hmem i)) :=
+        inner_conj_symm _ _
+    _ = inner ℂ ((bandLimitSubspace W).starProjection (testFnLift φ hmem i))
+          ((bandLimitSubspace W).starProjection (testFnLift φ hmem j)) :=
+        inner_symm_of_star_fixed (hvstar i) (hvstar j)
+
+/-- `bandGramRealMatrix` is real-symmetric (Hermitian). -/
+theorem bandGramRealMatrix_isHermitian (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) : (bandGramRealMatrix W φ hmem).IsHermitian := by
+  have hvstar : ∀ l, star ((bandLimitSubspace W).starProjection (testFnLift φ hmem l))
+      = (bandLimitSubspace W).starProjection (testFnLift φ hmem l) := fun l => by
+    rw [← bandLimitProj_star, testFnLift_star]
+  ext i j
+  simp only [Matrix.conjTranspose_apply, bandGramRealMatrix, Matrix.gram_apply, star_trivial]
+  rw [inner_symm_of_star_fixed (hvstar i) (hvstar j)]
+
+/-- The eigenvalues `μ` of the real band-Gram (= per-coordinate channel gains for the converse). -/
+noncomputable def bandGramRealEigenvalues (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) : Fin k → ℝ :=
+  (bandGramRealMatrix_isHermitian W φ hmem).eigenvalues
+
+/-- The orthogonal eigenvector matrix `O` diagonalizing the real band-Gram. -/
+noncomputable def bandGramRealUnitary (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) : Matrix.unitaryGroup (Fin k) ℝ :=
+  (bandGramRealMatrix_isHermitian W φ hmem).eigenvectorUnitary
+
+/-- `↑O ∈ orthogonalGroup`, the hypothesis consumed by `ContAwgnCode.rotate`. -/
+lemma bandGramRealUnitary_mem_orthogonalGroup (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) :
+    (↑(bandGramRealUnitary W φ hmem) : Matrix (Fin k) (Fin k) ℝ)
+      ∈ Matrix.orthogonalGroup (Fin k) ℝ :=
+  (bandGramRealUnitary W φ hmem).2
+
+/-- `↑Oᵀ ∈ orthogonalGroup` (the orthogonal group is closed under transpose). -/
+lemma bandGramRealUnitary_transpose_mem_orthogonalGroup (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) :
+    (↑(bandGramRealUnitary W φ hmem) : Matrix (Fin k) (Fin k) ℝ)ᵀ
+      ∈ Matrix.orthogonalGroup (Fin k) ℝ := by
+  rw [Matrix.mem_orthogonalGroup_iff (Fin k) ℝ, Matrix.transpose_transpose]
+  exact (Matrix.mem_orthogonalGroup_iff' (Fin k) ℝ).mp
+    (bandGramRealUnitary_mem_orthogonalGroup W φ hmem)
+
+/-- **Real spectral diagonalization.** `Oᵀ Gᵣ O = diagonal μ`, the frame S3 rotates the code by. -/
+theorem bandGramRealMatrix_diagonalize (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
+    (hmem : ∀ i, MemLp (φ i) 2 volume) :
+    (↑(bandGramRealUnitary W φ hmem) : Matrix (Fin k) (Fin k) ℝ)ᵀ
+        * bandGramRealMatrix W φ hmem * (↑(bandGramRealUnitary W φ hmem) : Matrix (Fin k) (Fin k) ℝ)
+      = Matrix.diagonal (bandGramRealEigenvalues W φ hmem) := by
+  have h := (bandGramRealMatrix_isHermitian W φ hmem).conjStarAlgAut_star_eigenvectorUnitary
+  rw [Unitary.conjStarAlgAut_star_apply, Matrix.star_eq_conjTranspose,
+    Matrix.conjTranspose_eq_transpose_of_trivial, RCLike.ofReal_real_eq_id, Function.id_comp] at h
+  simpa only [bandGramRealUnitary, bandGramRealEigenvalues] using h
+
+/-- The characteristic polynomial `∏ (X - C aᵢ)` has roots exactly the multiset `{aᵢ}`. -/
+private lemma roots_prod_X_sub_C_fun {k : ℕ} (a : Fin k → ℂ) :
+    (∏ i, (Polynomial.X - Polynomial.C (a i))).roots = Multiset.map a Finset.univ.val := by
+  rw [Polynomial.roots_prod]
+  · simp [Polynomial.roots_X_sub_C]
+  · simp [Finset.prod_ne_zero_iff, Polynomial.X_sub_C_ne_zero]
+
+/-- **Count bridge (converse head-count).** The number of real band-Gram eigenvalues exceeding `c`
+is at most `prolateCount T W c`. The real-eigenvalue façade of
+`gram_high_eigen_finrank_le_prolateCount_real`, obtained by matching the real spectrum against the
+complex band-Gram spectrum at the characteristic-polynomial level. -/
+theorem bandGramReal_high_count_le (T W : ℝ) {c : ℝ} (hc : 0 < c) {k : ℕ}
+    (φ : Fin k → ℝ → ℝ) (hmem : ∀ i, MemLp (φ i) 2 volume)
+    (h_on : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0)
+    (h_supp : ∀ i, Function.support (φ i) ⊆ Set.Icc 0 T) :
+    (Finset.univ.filter (fun j => c < bandGramRealEigenvalues W φ hmem j)).card
+      ≤ prolateCount T W c := by
+  classical
+  set v : Fin k → E := fun i => (bandLimitSubspace W).starProjection (testFnLift φ hmem i) with hv_def
+  have hC : (Matrix.gram ℂ v).IsHermitian := Matrix.isHermitian_gram ℂ v
+  have hR := bandGramRealMatrix_isHermitian W φ hmem
+  have hmap : Matrix.gram ℂ v = (bandGramRealMatrix W φ hmem).map (algebraMap ℝ ℂ) :=
+    bandGram_eq_map_real W φ hmem
+  -- Match the complex and real characteristic polynomials at the factored level.
+  have hcharC : (Matrix.gram ℂ v).charpoly
+      = ∏ i, (Polynomial.X - Polynomial.C ((hC.eigenvalues i : ℂ))) := hC.charpoly_eq
+  have hcharR : (Matrix.gram ℂ v).charpoly
+      = ∏ i, (Polynomial.X - Polynomial.C ((hR.eigenvalues i : ℂ))) := by
+    rw [hmap, Matrix.charpoly_map, hR.charpoly_eq, Polynomial.map_prod]
+    refine Finset.prod_congr rfl (fun i _ => ?_)
+    rw [Polynomial.map_sub, Polynomial.map_X, Polynomial.map_C, Complex.coe_algebraMap,
+      RCLike.ofReal_real_eq_id, id_eq]
+  have hprod : (∏ i, (Polynomial.X - Polynomial.C ((hC.eigenvalues i : ℂ))))
+      = ∏ i, (Polynomial.X - Polynomial.C ((hR.eigenvalues i : ℂ))) := hcharC.symm.trans hcharR
+  -- Hence the eigenvalue multisets coincide over ℂ, then over ℝ by injectivity of `ofReal`.
+  have hroots : Multiset.map (fun i => (hC.eigenvalues i : ℂ)) Finset.univ.val
+      = Multiset.map (fun i => (hR.eigenvalues i : ℂ)) Finset.univ.val := by
+    rw [← roots_prod_X_sub_C_fun (fun i => (hC.eigenvalues i : ℂ)),
+      ← roots_prod_X_sub_C_fun (fun i => (hR.eigenvalues i : ℂ)), hprod]
+  have hcancel : Multiset.map hC.eigenvalues Finset.univ.val
+      = Multiset.map hR.eigenvalues Finset.univ.val := by
+    apply Multiset.map_injective Complex.ofReal_injective
+    rw [Multiset.map_map, Multiset.map_map]
+    exact hroots
+  -- The high-eigenvalue counts are equal since they are `countP` over equal multisets.
+  have hbridge : ∀ (f : Fin k → ℝ),
+      (Finset.univ.filter (fun i => c < f i)).card
+        = Multiset.countP (fun x => c < x) (Multiset.map f Finset.univ.val) := by
+    intro f
+    rw [Multiset.countP_map, ← Finset.filter_val]
+    rfl
+  have hfinal : (Finset.univ.filter (fun j => c < hR.eigenvalues j)).card
+      = (Finset.univ.filter (fun j => c < hC.eigenvalues j)).card := by
+    rw [hbridge hR.eigenvalues, hbridge hC.eigenvalues, hcancel]
+  calc (Finset.univ.filter (fun j => c < bandGramRealEigenvalues W φ hmem j)).card
+      = (Finset.univ.filter (fun j => c < hC.eigenvalues j)).card := hfinal
+    _ = (Finset.univ.filter
+          (fun j => c < bandGramEigenvalues W (testFnLift φ hmem) j)).card := rfl
+    _ ≤ prolateCount T W c :=
+        gram_high_eigen_finrank_le_prolateCount_real T W hc φ hmem h_on h_supp
 
 end InformationTheory.Shannon.ShannonHartley
