@@ -1017,6 +1017,7 @@ theorem stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty
   exact hω
 
 -- Slope limit `log (1 + λ t) / λ → t` as `λ → 0`: the derivative of `λ ↦ log (1 + λ t)` at `0`.
+-- @audit:ok
 private theorem log_slope_tendsto_nhdsWithin (t : ℝ) :
     Tendsto (fun lam : ℝ ↦ Real.log (1 + lam * t) / lam) (𝓝[≠] (0 : ℝ)) (𝓝 t) := by
   have hd : HasDerivAt (fun x : ℝ ↦ Real.log (1 + x * t)) t 0 := by
@@ -1031,6 +1032,7 @@ private theorem log_slope_tendsto_nhdsWithin (t : ℝ) :
 
 -- Two-sided bound on the slope: `log (1 + t) ≤ log (1 + λ t) / λ ≤ t` for `λ ∈ (0, 1]`, `t > -1`.
 -- Upper bound is the tangent inequality `log x ≤ x − 1`; lower bound is concavity of `log`.
+-- @audit:ok
 private theorem log_slope_bounds {t : ℝ} (ht : -1 < t) {lam : ℝ} (hlam0 : 0 < lam)
     (hlam1 : lam ≤ 1) :
     Real.log (1 + t) ≤ Real.log (1 + lam * t) / lam ∧ Real.log (1 + lam * t) / lam ≤ t := by
@@ -1051,6 +1053,7 @@ private theorem log_slope_bounds {t : ℝ} (ht : -1 < t) {lam : ℝ} (hlam0 : 0 
 
 -- An `m`-measurable conditional expectation whose set-integral over every `m`-measurable set is
 -- nonpositive is a.e. nonpositive. Reduces `≤ᵐ` on `μ` to `≤ᵐ` on the trimmed measure `μ.trim`.
+-- @audit:ok
 private theorem condExp_nonpos_of_forall_setIntegral_nonpos {α : Type*}
     {mα m0α : MeasurableSpace α} (hmα : mα ≤ m0α) (ν : @MeasureTheory.Measure α m0α)
     [IsFiniteMeasure ν] {f : α → ℝ} (hf : Integrable f ν)
@@ -1065,7 +1068,7 @@ private theorem condExp_nonpos_of_forall_setIntegral_nonpos {α : Type*}
   exact H s hs
 
 /-- Conditional Kuhn–Tucker inequality for the infinite-past (`⨆ j, ℱ j`) conditional log-optimal
-portfolio `bstarInf` (Cover–Thomas §16.5, Route M). For every `⨆ j, ℱ j`-measurable simplex
+portfolio `bstarInf` (Cover–Thomas §16.5). For every `⨆ j, ℱ j`-measurable simplex
 competitor `c`, the conditional expectation of the one-step wealth ratio
 `(∑ⱼ cⱼ Xⱼ) / (∑ⱼ bstarInfⱼ Xⱼ)` given the infinite past is at most `1`. This is the multiplicative
 form of the additive dominance `hInf_dom` — the one-step supermartingale bound at the heart of the
@@ -1077,11 +1080,12 @@ so `hInf_dom bλ` gives `μ[log ((∑ bλ·X)/(∑ bstarInf·X)) | ⨆ ℱ] ≤�
 `μ[log (1 + λ (r − 1)) | ⨆ ℱ] ≤ᵐ 0` where `r` is the wealth ratio. Dividing by `λ` and letting
 `λ → 0` (dominated convergence, since `log r ≤ log (1 + λ (r − 1))/λ ≤ r − 1`) yields
 `μ[r − 1 | ⨆ ℱ] ≤ᵐ 0`, hence `μ[r | ⨆ ℱ] ≤ᵐ 1`. The `hint_coord` hypothesis (integrability of the
-coordinate ratios `Xᵢ / (∑ bstarInf·X)`) is a market-regularity precondition, mirroring the fixed-`b`
-Kuhn–Tucker theorem `stationaryLogReturn_integral_le_of_kuhnTucker`; it makes the wealth ratio `r`
-integrable so the conditional expectation is genuine. `hpos`/`hint` are the market-regularity
-positivity/integrability preconditions; `[StandardBorelSpace Ω] [Nonempty Ω]` are inherited for
-compatibility with the infinite-past filtration constructions. -/
+coordinate ratios `Xᵢ / (∑ bstarInf·X)`) is a market-regularity precondition, mirroring the
+fixed-`b` Kuhn–Tucker theorem `stationaryLogReturn_integral_le_of_kuhnTucker`; it makes the wealth
+ratio `r` integrable so the conditional expectation is genuine. `hpos`/`hint` are the
+market-regularity positivity/integrability preconditions; `[StandardBorelSpace Ω] [Nonempty Ω]`
+are inherited for compatibility with the infinite-past filtration constructions.
+@audit:ok -/
 theorem condKuhnTucker_infPast [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ] (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ)
     [Nonempty (Fin m)] (hX : Measurable X)
@@ -1113,7 +1117,8 @@ theorem condKuhnTucker_infPast [StandardBorelSpace Ω] [Nonempty Ω]
         ((measurable_pi_apply j).comp hc_m).mul ((measurable_pi_apply j).comp hX)).div
       (Finset.measurable_sum _ fun j _ ↦
         ((measurable_pi_apply j).comp hbInf_m).mul ((measurable_pi_apply j).comp hX))
-  -- `r` is integrable: `0 ≤ r ω ≤ ∑ᵢ Xᵢ / (∑ bstarInf·X)`, and the bound is integrable via `hint_coord`.
+  -- `r` is integrable: `0 ≤ r ω ≤ ∑ᵢ Xᵢ / (∑ bstarInf·X)`, and the bound is integrable
+  -- via `hint_coord`.
   have hr_int : Integrable r μ := by
     have hbound_int : Integrable (fun ω ↦ ∑ i, X ω i / (∑ j, bstarInf ω j * X ω j)) μ :=
       integrable_finsetSum Finset.univ fun i _ ↦ hint_coord i
