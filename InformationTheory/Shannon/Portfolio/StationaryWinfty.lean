@@ -363,7 +363,7 @@ private noncomputable def condGrowthObjective [StandardBorelSpace Ω] (μ : Meas
   ∫ y, Real.log (∑ j, b j * X y j) ∂(condExpKernel μ (ℱ k) ω)
 
 -- Each price relative is positive: from `hpos` at the vertex portfolios `Pi.single j 1`.
-private theorem market_pos {X : Ω → Fin m → ℝ}
+theorem market_pos {X : Ω → Fin m → ℝ}
     (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j) (ω : Ω) (j : Fin m) :
     0 < X ω j := by
   have h := hpos ω (Pi.single j 1) (single_mem_stdSimplex ℝ j)
@@ -762,7 +762,7 @@ theorem exists_condOptGrowth_tendsto_condOptGrowthInfty [StandardBorelSpace Ω] 
   exact tendsto_atTop_ciSup h_mono h_bdd
 
 -- Each simplex coordinate is at most `1` (nonnegative and summing to `1`).
-private theorem stdSimplex_component_le_one {x : Fin m → ℝ}
+theorem stdSimplex_component_le_one {x : Fin m → ℝ}
     (hx : x ∈ stdSimplex ℝ (Fin m)) (j : Fin m) : x j ≤ 1 :=
   hx.2 ▸ Finset.single_le_sum (fun i _ ↦ hx.1 i) (Finset.mem_univ j)
 

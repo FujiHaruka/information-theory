@@ -48,7 +48,7 @@ private theorem wealthRatioProcess_pos {X : Ω → Fin m → ℝ} {bstar : ℕ �
   · exact hpos (T^[i] ω) (bstar i (T^[i] ω)) (hbstar_simplex i (T^[i] ω))
   · exact hpos (T^[i] ω) (bstarInf (T^[i] ω)) (hInf_simplex (T^[i] ω))
 
--- `log M_n` is the sum of the per-epoch log-return differences `log(bstar i · Xᵢ) − log(bstarInf · Xᵢ)`.
+-- `log M_n` is the sum of the per-epoch log-return differences (numerator − denominator).
 private theorem wealthRatioProcess_log_eq {X : Ω → Fin m → ℝ} {bstar : ℕ → Ω → Fin m → ℝ}
     {bstarInf : Ω → Fin m → ℝ} {T : Ω → Ω}
     (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
@@ -74,22 +74,23 @@ private theorem wealthRatioProcess_log_eq {X : Ω → Fin m → ℝ} {bstar : �
     exact div_ne_zero hnum.ne' hden.ne'
 
 /-- Supermartingale integral bound for the wealth-ratio process (Cover–Thomas §16.5): the mean
-wealth ratio `E[M_n]` stays at most `1`. The base case `n = 0` is the conditional Kuhn–Tucker
-inequality `condKuhnTucker_infPast` (the `⨆ⱼℱⱼ`-conditional mean of the one-step ratio is `≤ 1`,
-then the tower property `integral_condExp` removes the conditioning). The inductive step needs the
-one-step ratio at epoch `n+1`, conditioned on the growing history `𝒢ₙ`, to have conditional mean
-`≤ 1`; this transports `condKuhnTucker_infPast` (conditioned on the fixed infinite past `⨆ⱼℱⱼ` at the
-base point) to epoch `n+1` under the measure-preserving shift `T` via the shift-coherence identity
-`(μ[r | ⨆ⱼℱⱼ]) ∘ Tⁿ⁺¹ =ᵐ μ[r ∘ Tⁿ⁺¹ | (⨆ⱼℱⱼ).comap Tⁿ⁺¹]`. This is not a Mathlib gap: the in-project
-`InformationTheory.Shannon.TwoSided.condExp_comp_measurePreserving`
-(`InformationTheory/Probability/TwoSidedExtension/CondExpMeasurePreserving.lean`) supplies exactly
-this transport, and an analogous mean-ratio-`≤ 1` argument already consumes it (its
-`integral_MRatioLowerZ_le_one`). The increment bound is thus plumbing (wire that transport + KT into
-an induction over `n`, adapting `Mₙ` to a growing history filtration `𝒢`), deferred to the closure
-plan only because the growing-filtration/adaptedness setup exceeds this file's size budget (already
-> 1500 lines; a split precedes it). `hpos`/`hint`/`hint_coord` are market-regularity preconditions;
-`hInf_dom` is the KT dominance of `bstarInf`, received (not the proof core), mirroring
-`condKuhnTucker_infPast`.
+wealth ratio `E[M_n]` stays at most `1`. The base case `n = 0` is proved here: the conditional
+Kuhn–Tucker inequality `condKuhnTucker_infPast` (the `⨆ⱼℱⱼ`-conditional mean of the one-step ratio
+is `≤ 1`) plus the tower property `integral_condExp` give `∫ M₀ ≤ 1`, hence `∫⁻ ofReal M₀ ≤ 1`. The
+inductive step (`∫⁻ M_{k+1} ≤ ∫⁻ M_k`) factors `M_{k+1} = M_k · (ρ_{k+1} ∘ Tᵏ⁺¹)` and needs the
+increment's conditional mean `≤ 1` given the growing history, then pulls `M_k` out. The increment
+bound is available: transporting `condKuhnTucker_infPast` (conditioned on `⨆ⱼℱⱼ` at the base point)
+to epoch `k+1` under the measure-preserving shift via the in-project
+`InformationTheory.Shannon.TwoSided.condExp_comp_measurePreserving` gives
+`μ[ρ_{k+1} ∘ Tᵏ⁺¹ | (⨆ⱼℱⱼ).comap Tᵏ⁺¹] ≤ᵐ 1`. The **missing** piece is the pull-out's adaptedness:
+`M_k` must be `(⨆ⱼℱⱼ).comap Tᵏ⁺¹`-measurable. The abstract `ℱ`/`T`/`X` hypotheses assert no
+compatibility (`ℱ` is an arbitrary filtration, `X` an arbitrary measurable map, `T` an arbitrary
+measure-preserving map), so this adaptedness does not hold abstractly — it is exactly the concrete
+past-filtration/shift coherence (R3-a in the closure plan, where `ℱ := pastFiltration` and
+`T := shift` make `M_k` a function of coordinates `≤ k`, hence `(past).comap Tᵏ⁺¹`-measurable). The
+closure therefore depends on R3-a, not merely on file size. `hpos`/`hint`/`hint_coord` are
+market-regularity preconditions; `hInf_dom` is the KT dominance of `bstarInf`, received (not the
+proof core), mirroring `condKuhnTucker_infPast`.
 @residual(plan:portfolio-stationary-woo-plan) -/
 private theorem wealthRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ] (ℱ : Filtration ℕ m0) {X : Ω → Fin m → ℝ}
@@ -107,12 +108,65 @@ private theorem wealthRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [Non
         μ[causalLogReturn X c | ⨆ j, ℱ j] ≤ᵐ[μ] μ[causalLogReturn X bstarInf | ⨆ j, ℱ j])
     (n : ℕ) :
     ∫⁻ ω, ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T n ω) ∂μ ≤ 1 := by
-  sorry
+  classical
+  induction n with
+  | zero =>
+    have hsup_le : (⨆ j, ℱ j) ≤ m0 := iSup_le ℱ.le
+    have hSb : ∀ ω, (0:ℝ) < ∑ j, bstarInf ω j * X ω j :=
+      fun ω ↦ hpos ω (bstarInf ω) (hInf_simplex ω)
+    have hSc : ∀ ω, (0:ℝ) < ∑ j, bstar 0 ω j * X ω j :=
+      fun ω ↦ hpos ω (bstar 0 ω) (hbstar_simplex 0 ω)
+    have hc : StronglyMeasurable[⨆ j, ℱ j] (bstar 0) :=
+      (hbstar_meas 0).mono (le_iSup (fun j ↦ ℱ j) 0)
+    have hKT := condKuhnTucker_infPast μ ℱ X hX hpos hint bstarInf hInf_meas hInf_simplex
+      hint_coord hInf_dom (bstar 0) hc (hbstar_simplex 0)
+    set r : Ω → ℝ := fun ω ↦ (∑ j, bstar 0 ω j * X ω j) / (∑ j, bstarInf ω j * X ω j) with hr_def
+    have hr_pos : ∀ ω, 0 < r ω := fun ω ↦ div_pos (hSc ω) (hSb ω)
+    have hr_meas : Measurable r := by
+      rw [hr_def]
+      exact (Finset.measurable_sum _ fun j _ ↦
+          ((measurable_pi_apply j).comp ((hbstar_meas 0).mono (ℱ.le 0)).measurable).mul
+            ((measurable_pi_apply j).comp hX)).div
+        (Finset.measurable_sum _ fun j _ ↦
+          ((measurable_pi_apply j).comp (hInf_meas.mono hsup_le).measurable).mul
+            ((measurable_pi_apply j).comp hX))
+    have hr_int : Integrable r μ := by
+      have hbound : Integrable (fun ω ↦ ∑ i, X ω i / (∑ j, bstarInf ω j * X ω j)) μ :=
+        integrable_finsetSum Finset.univ fun i _ ↦ hint_coord i
+      refine Integrable.mono' hbound hr_meas.aestronglyMeasurable (Eventually.of_forall fun ω ↦ ?_)
+      rw [Real.norm_eq_abs, abs_of_nonneg (le_of_lt (hr_pos ω))]
+      simp only [hr_def]
+      rw [Finset.sum_div]
+      refine Finset.sum_le_sum fun i _ ↦ ?_
+      rw [mul_div_assoc]
+      refine mul_le_of_le_one_left (le_of_lt (div_pos (market_pos hpos ω i) (hSb ω))) ?_
+      exact stdSimplex_component_le_one (hbstar_simplex 0 ω) i
+    have hint_r : ∫ ω, r ω ∂μ ≤ 1 := by
+      rw [← integral_condExp hsup_le]
+      calc ∫ ω, (μ[r | ⨆ j, ℱ j]) ω ∂μ
+          ≤ ∫ _, (1:ℝ) ∂μ := integral_mono_ae integrable_condExp (integrable_const 1) hKT
+        _ = 1 := by simp
+    have hM0 : ∀ ω, wealthRatioProcess X bstar bstarInf T 0 ω = r ω := fun ω ↦ by
+      simp only [wealthRatioProcess, zero_add, Finset.prod_range_one, Function.iterate_zero,
+        id_eq, hr_def]
+    simp_rw [hM0]
+    rw [← ofReal_integral_eq_lintegral_ofReal hr_int
+      (Eventually.of_forall fun ω ↦ le_of_lt (hr_pos ω))]
+    exact ENNReal.ofReal_le_one.mpr hint_r
+  | succ k ih =>
+    -- Inductive step: `∫⁻ M_{k+1} ≤ ∫⁻ M_k ≤ 1`. The increment factor `ρ_{k+1} ∘ Tᵏ⁺¹` has
+    -- conditional mean `≤ 1` given `(⨆ⱼℱⱼ).comap Tᵏ⁺¹` (transport `condKuhnTucker_infPast` via
+    -- `condExp_comp_measurePreserving`), but pulling `M_k` out of that conditional mean needs
+    -- `M_k` to be `(⨆ⱼℱⱼ).comap Tᵏ⁺¹`-measurable (growing-history adaptedness). The abstract
+    -- `ℱ`/`T`/`X` hypotheses state no compatibility, so this adaptedness is unavailable here; it is
+    -- supplied by the concrete past-filtration/shift instantiation (R3-a in the closure plan).
+    -- @residual(plan:portfolio-stationary-woo-plan)
+    sorry
 
 -- The time-averaged log wealth ratio is eventually below any positive threshold a.e. (Markov +
 -- Borel–Cantelli on the integral bound `E[M_n] ≤ 1`, then `(1/n) log M_n ≤ 2 log(n+1)/(n+1) → 0`).
--- This eventual-upper-bound form is the honest content of `limsup ≤ 0`, avoiding the `ℝ`-limsup junk
--- value on paths where `M_n → 0` super-exponentially (there `(1/n) log M_n → -∞`).
+-- This eventual-upper-bound form is the honest content of `limsup ≤ 0`, avoiding the `ℝ`-limsup
+-- junk value on paths where `M_n → 0` super-exponentially (there `(1/n) log M_n → -∞`).
 private theorem wealthRatio_logAvg_eventually_le [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ] (ℱ : Filtration ℕ m0) {X : Ω → Fin m → ℝ}
     [Nonempty (Fin m)] (hX : Measurable X) {T : Ω → Ω} (hT : MeasurePreserving T μ μ)
@@ -232,8 +286,9 @@ Birkhoff's ergodic theorem (`birkhoff_ergodic_ae`) and the gateway identity
 (the `ℝ`-`limsup` value is junk on paths where the growing memory underperforms to `−∞`, which only
 the lower half rules out). `bstar`/`bstarInf` and their conditional-dominance properties
 (`hbstar_dom`/`hInf_dom`) are received as the stagewise/infinite-past conditional log-optimal
-selections (constructed separately, e.g. via `exists_condLogOptimalSeq`/`exists_infPast_condLogOptimal`);
-the remaining hypotheses are market-regularity/ergodicity preconditions. -/
+selections (constructed separately, e.g. via `exists_condLogOptimalSeq` /
+`exists_infPast_condLogOptimal`); the remaining hypotheses are market-regularity/ergodicity
+preconditions. -/
 theorem growingMemory_eventually_le_condOptGrowthInfty [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
@@ -263,7 +318,7 @@ theorem growingMemory_eventually_le_condOptGrowthInfty [StandardBorelSpace Ω] [
     hInf_meas hInf_simplex hint_coord hInf_dom
   filter_upwards [hbirk, hupper] with ω hbirk_ω hupper_ω
   intro ε hε
-  -- Decompose the growing-memory average into the log wealth ratio plus the fixed-`bstarInf` average.
+  -- Decompose the growing-memory average into the log wealth ratio plus the `bstarInf` average.
   have hdecomp : ∀ n : ℕ, growingMemoryLogAvg X bstar T n ω
       = Real.log (wealthRatioProcess X bstar bstarInf T n ω) / (n + 1 : ℝ)
         + (∑ i ∈ Finset.range (n + 1), causalLogReturn X bstarInf (T^[i] ω)) / (n + 1 : ℝ) := by
