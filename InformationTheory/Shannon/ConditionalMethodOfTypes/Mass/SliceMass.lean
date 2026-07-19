@@ -21,8 +21,8 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
-/-- **Conditional slice mass lower bound (Cover-Thomas 10.6.1, strong form,
-mutual-information form).** For `x` X-strongly-typical and `Y ∼ μ.map (Ys 0)^n`
+/-- Conditional slice mass lower bound (Cover-Thomas 10.6.1, strong form,
+mutual-information form). For `x` X-strongly-typical and `Y ∼ μ.map (Ys 0)^n`
 i.i.d., the Y-product mass of the joint strongly-typical slice at `x` is bounded
 below by `exp(-n · (I(X;Y) + slack)) = exp(-n · (H(X) + H(Y) - H(Z) + slack))`,
 eventually in `n` (the slack absorbs the polynomial floor error and the
@@ -150,7 +150,7 @@ theorem conditionalStronglyTypicalSlice_mass_ge
     intro y hy
     -- y ∈ Cset = conditionalTypeClass x c_floor;
     -- want ∈ ⋃ c ∈ slice, conditionalTypeClass x (c : ℕ).
-    -- Note: c_idx : TypeCountIndex (α × β) n; (fun p => (c_idx p : ℕ)) = c_floor by defeq.
+    -- Note: c_idx : TypeCountIndex (α × β) n; (fun p ↦ (c_idx p : ℕ)) = c_floor by defeq.
     have h_idx_unfold : (fun p ↦ ((c_idx p : Fin (n + 1)) : ℕ)) = c_floor := by
       funext p; rfl
     refine Set.mem_iUnion.mpr ⟨c_idx, Set.mem_iUnion.mpr ⟨h_floor_in_slice, ?_⟩⟩
