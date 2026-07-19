@@ -139,15 +139,40 @@ theorem growthRate_concaveOn (p : α → ℝ) (X : α → Fin m → ℝ) (hp : p
   exact h
 
 /-- Theorem 16.2.1 (Cover–Thomas), reverse direction: a portfolio `bs` satisfying the
-Kuhn–Tucker condition is log-optimal (maximizes the growth rate on the simplex).
-@residual(plan:portfolio-reverse-kt) -/
+Kuhn–Tucker condition is log-optimal (maximizes the growth rate on the simplex). -/
 @[entry_point]
 theorem logOptimal_of_kuhnTucker (p : α → ℝ) (X : α → Fin m → ℝ) (bs : Fin m → ℝ)
     (hp : p ∈ stdSimplex ℝ α) (hbs : bs ∈ stdSimplex ℝ (Fin m))
     (hpos : ∀ a, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < wealthRelative X b a)
     (hKT : ∀ i, (∑ a, p a * X a i / wealthRelative X bs a) ≤ 1) :
     IsMaxOn (growthRate p X) (stdSimplex ℝ (Fin m)) bs := by
-  sorry
+  rw [isMaxOn_iff]
+  intro b hb
+  -- Each ratio `S_b(a) / S_bs(a)` is positive, hence in the domain `Ioi 0` of `log`.
+  have hratio_pos : ∀ a, 0 < wealthRelative X b a / wealthRelative X bs a :=
+    fun a => div_pos (hpos a b hb) (hpos a bs hbs)
+  -- Finite concave Jensen for `log` against the weights `p`.
+  have hjensen : (∑ a, p a * Real.log (wealthRelative X b a / wealthRelative X bs a))
+      ≤ Real.log (∑ a, p a * (wealthRelative X b a / wealthRelative X bs a)) := by
+    have hlog : ConcaveOn ℝ (Set.Ioi 0) Real.log := strictConcaveOn_log_Ioi.concaveOn
+    have h := hlog.le_map_sum (t := Finset.univ) (w := p)
+      (p := fun a => wealthRelative X b a / wealthRelative X bs a)
+      (fun a _ => hp.1 a) hp.2 (fun a _ => Set.mem_Ioi.mpr (hratio_pos a))
+    simpa only [smul_eq_mul] using h
+  -- The weighted log-ratio sum equals `W(b) − W(bs)`.
+  have hdecomp : (∑ a, p a * Real.log (wealthRelative X b a / wealthRelative X bs a))
+      = growthRate p X b - growthRate p X bs := by
+    unfold growthRate
+    rw [← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl (fun a _ => ?_)
+    rw [Real.log_div (ne_of_gt (hpos a b hb)) (ne_of_gt (hpos a bs hbs))]
+    ring
+  -- Competitive optimality bounds the expected ratio by one, so its log is nonpositive.
+  have hlog_nonpos :
+      Real.log (∑ a, p a * (wealthRelative X b a / wealthRelative X bs a)) ≤ 0 := by
+    refine Real.log_nonpos ?_ (competitive_optimality p X bs b hb hKT)
+    exact Finset.sum_nonneg (fun a _ => mul_nonneg (hp.1 a) (hratio_pos a).le)
+  linarith [hdecomp, hjensen, hlog_nonpos]
 
 /-- Theorem 16.2.1 (Cover–Thomas), forward direction: a log-optimal portfolio `bs`
 satisfies the Kuhn–Tucker condition `∀ i, ∑ a, p a · X a i / S_bs(a) ≤ 1`.
