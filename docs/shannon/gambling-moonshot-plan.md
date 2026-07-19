@@ -39,7 +39,7 @@ bridge で genuine closure する自立サブ計画。壁想定無し。
 
 | サブテーマ | 子プラン | 状態 |
 |---|---|---|
-| Ch.16 log-optimal portfolio (concavity / Kuhn–Tucker / competitive optimality) | [`portfolio-moonshot-plan.md`](portfolio-moonshot-plan.md) | 📋 未着手 (在庫完備・壁ゼロ: [`portfolio-mathlib-inventory.md`](portfolio-mathlib-inventory.md)) |
+| Ch.16 log-optimal portfolio (concavity / Kuhn–Tucker / competitive optimality) | [`portfolio-moonshot-plan.md`](portfolio-moonshot-plan.md) | ✅ DONE (2026-07-19) — 4 headline proof-done sorryAx-free + @audit:ok、`InformationTheory/Shannon/Portfolio/Basic.lean` |
 
 ## 進捗 (全 Phase DONE)
 

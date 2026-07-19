@@ -9,7 +9,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 
 ## scope-out
 
-**章単位で元から外す**: Ch.6 stock-market 部 / Ch.14 Kolmogorov Complexity / Ch.16 Portfolio Theory / Ch.13 LZ 詳細 (LZ78 漸近最適性は in)。
+**章単位で元から外す**: Ch.14 Kolmogorov Complexity / Ch.13 LZ 詳細 (LZ78 漸近最適性は in)。(Ch.16 Portfolio は 2026-07-19 に復帰・完遂 — 下表参照。Ch.6 stock-market 部も log-optimal portfolio として Ch.16 で回収。)
 
 **当初 scope-out だが後に genuine closure して復帰済** (もはや scope-out ではない):
 
@@ -55,7 +55,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 | 13 | Universal Coding | ✅ | Arithmetic ✅, `lz78TokenCode_entropyD_le_expectedLength` (M1 converse), `lz78_asymptotic_optimality_with_greedy` (M3+M4 closed, sorryAx-free) |
 | 14 | Kolmogorov | ✖ | — |
 | 15 | Network IT (DSC mini-chapter) | 🟢 | Slepian-Wolf 完全 (corner + full rate region `slepian_wolf_full_rate_region_achievability` + 4 converse), Wyner-Ziv convexity body + operational main (`wyner_ziv_achievability` + `wyner_ziv_converse`), MAC 容量領域 full (`mac_converse` + `mac_achievability` + `mac_capacity_region_reconciliation`), degraded BC (`bc_converse` + `bc_achievability`), relay `relay_cutset_outer_bound` |
-| 16 | Portfolio | ✖ | — |
+| 16 | Portfolio | ✅ | log-optimal portfolio 4 定理 proof-done sorryAx-free + @audit:ok: `growthRate_concaveOn` (CT 16.2.2 凹性), `logOptimal_of_kuhnTucker` / `kuhnTucker_of_logOptimal` (CT 16.2.1 KT 特徴付け 双方向), `competitive_optimality` (CT 16.3.1)。gambling (Ch.6) の非対角一般化。子 SoT → `docs/shannon/portfolio-moonshot-plan.md` |
 | 17 | Inequalities | 🟢 | `han_inequality`, `shearer_inequality`, `loomis_whitney`, `brascamp_lieb_finset`, `jointEntropySubset_submodular` (polymatroid), `tvNorm_le_sqrt_klDiv`, `edgeBoundary_entropy_sharp`, 一般 EPI `entropyPowerExt_add_ge_unconditional` + a.c. 版, `entropyPower_gaussian_additivity`, `minkowskiDeterminantInequality` (CT 17.9), Stam `stam_inequality_smoothed_density` + de Bruijn `debruijn_identity_*`。詳細 SoT → `docs/shannon/ch17-inequalities-status.md` |
 
 ## 「Mathlib 壁」5 分類 (scope 内 frontier に残る型)

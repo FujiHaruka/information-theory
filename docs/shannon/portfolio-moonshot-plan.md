@@ -15,14 +15,20 @@ genuine closure する (operational な株式市場・連続時間投資は scop
 コードは新規 file `InformationTheory/Shannon/Portfolio/Basic.lean`、namespace
 `InformationTheory.Shannon.Portfolio`。
 
-## 進捗
+## 進捗 — ✅ DONE (2026-07-19)
 
-- [ ] Phase 0 — M0 在庫再確認 📋 → [`portfolio-mathlib-inventory.md`](portfolio-mathlib-inventory.md)
-- [ ] P1 — `competitive_optimality` (gateway atom、CT 16.3.1) 📋
-- [ ] P2 — `growthRate_concaveOn` (CT 16.2.2) 📋
-- [ ] P3 — `logOptimal_of_kuhnTucker` (reverse KT、CT 16.2.1) 📋
-- [ ] P4 — `kuhnTucker_of_logOptimal` (forward KT、CT 16.2.1) + support 等号 📋
-- [ ] P5 — 配線 (root import / README / roadmap / facts / 独立監査) 📋
+- [x] Phase 0 — M0 在庫再確認 → [`portfolio-mathlib-inventory.md`](portfolio-mathlib-inventory.md)
+- [x] P1 — `competitive_optimality` (gateway atom、CT 16.3.1) — proof-done sorryAx-free + @audit:ok
+- [x] P2 — `growthRate_concaveOn` (CT 16.2.2) — proof-done sorryAx-free + @audit:ok
+- [x] P3 — `logOptimal_of_kuhnTucker` (reverse KT、CT 16.2.1) — proof-done sorryAx-free + @audit:ok
+- [x] P4 — `kuhnTucker_of_logOptimal` (forward KT、CT 16.2.1) — proof-done sorryAx-free + @audit:ok（**撤退ライン不発**、FDeriv-at-max を無条件で構築）
+- [x] P5 — 配線 (root import 登録 / README 表 / roadmap Ch.16 `✅` / 独立監査 honesty+style 両 PASS)
+
+**Closure summary**: 4 headline 定理すべて proof-done (0 sorry / 0 @residual / sorryAx-free
+`[propext, Classical.choice, Quot.sound]` / 独立 `honesty-auditor` PASS で `@audit:ok`)。`competitive_optimality`
+の gateway probe が def 形の Mathlib 適合を確認し、以降 concavity → reverse KT → forward KT が予定どおり壁なく着地。
+support 上等号 (`bs_i > 0 ⟹ KT_i = 1`) は headline に含めず未実装 (CT 16.2.1 の `≤ 1` 方向で closure)。
+実装差分 2 点 → 判断ログ 3/4。
 
 ## ゴール / Approach
 
@@ -200,8 +206,11 @@ theorem kuhnTucker_of_logOptimal (p : α → ℝ) (X : α → Fin m → ℝ) (bs
 
 書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。決着済 entry は削除 (git が履歴)。
 
-1. **撤退ライン (active)**: forward KT (P4) が想定超過なら P1–P3 で 3/4 着地、forward KT のみ
-   `sorry` + `@residual(plan:portfolio-forward-kt)`。発動時に本 entry を結果へ更新。
-2. **precondition packaging (active)**: `hpos` を「simplex 上一様 `∀ b ∈ simplex, S_b > 0`」で持つか
-   「`∀ a i, 0 < X a i`」で持つかは skeleton (Phase 0) 時に確定。concavity は前者を、competitive/forward KT は
-   `bs` での positivity のみを要するため署名が Phase で微妙に異なる (在庫 skeleton の 2 形を踏襲)。
+1. **撤退ライン (resolved 2026-07-19、不発)**: forward KT (P4) の多次元 FDeriv-at-max は想定内 (~実装で closure)
+   で着地し、縮退 (3/4) は発動せず。`portfolio-forward-kt` slug は使わず終い。
+2. **precondition packaging (resolved)**: concavity/reverse KT は simplex 上一様 `hpos`、forward KT は `bs`
+   のみの positivity で確定 (在庫 skeleton の 2 形を踏襲)。honesty gate で全て regularity precondition と判定。
+3. **forward KT の hXnn 削除 (resolved 2026-07-19)**: skeleton 署名は `hXnn : ∀ a i, 0 ≤ X a i` を持っていたが、
+   forward KT の FDeriv/tangent-cone 論法は X の符号に非依存で hXnn を一切使わず → honest な強化として signature
+   から削除 (honesty-auditor が「theorem-hypothesis の削除は monotone-safe、falseness risk なし」と検証、`@audit:ok`)。
+   `competitive_optimality` は skeleton どおり hXnn/hpos を保持 (前セッションで proof-done、未変更)。

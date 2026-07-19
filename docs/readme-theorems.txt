@@ -97,6 +97,12 @@ bc_converse | degraded broadcast-channel converse, single-letter auxiliary-varia
 bc_achievability | degraded broadcast-channel achievability, superposition-coding inner bound (Cover–Thomas Thm 15.6.2)
 relay_cutset_outer_bound | relay-channel cut-set outer bound, min of broadcast-cut and MAC-cut per-letter sums (Cover–Thomas Thm 15.10.1)
 
+@ 16 | Log-optimal portfolio
+growthRate_concaveOn | growth rate is concave in the portfolio (Cover–Thomas Thm 16.2.2)
+logOptimal_of_kuhnTucker | Kuhn–Tucker condition ⟹ log-optimal portfolio (Cover–Thomas Thm 16.2.1, reverse)
+kuhnTucker_of_logOptimal | log-optimal portfolio ⟹ Kuhn–Tucker condition (Cover–Thomas Thm 16.2.1, forward)
+competitive_optimality | competitive optimality of the log-optimal portfolio, E[S_b/S_b*] ≤ 1 (Cover–Thomas Thm 16.3.1)
+
 @ 17 | Entropy inequalities
 han_inequality
 shearer_inequality
