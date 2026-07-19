@@ -307,6 +307,7 @@ import InformationTheory.Shannon.Gambling.SideInformation
 import InformationTheory.Shannon.Gambling.OperationalSequences
 import InformationTheory.Shannon.Portfolio.Basic
 import InformationTheory.Shannon.Portfolio.OperationalSequences
+import InformationTheory.Shannon.Portfolio.SideInformation
 import InformationTheory.Shannon.LZ78.ZivEntropyBridge
 import InformationTheory.Shannon.Stationary.Kernel
 import InformationTheory.Shannon.LZ78.ConverseUDObject
