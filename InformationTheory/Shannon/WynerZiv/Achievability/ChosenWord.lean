@@ -96,6 +96,303 @@ private lemma wz_coveringSuccessStrong_compl_measureReal_le
         exact hx (wz_jointStrongly_mem_coveringSuccessJoint P_XY qStar hqStar_mem hn
           hε_enc_nn h_le_cov hX hY hJ x (c.decoder (c.encoder x)) hxu)
 
+
+set_option maxHeartbeats 1600000 in
+private lemma wz_covering_joint_slack_params
+    {R₁ Dδ mi ed ε' ε Lx Ly Lj Sd cA cB qZ_min εcov : ℝ}
+    (hI : mi < R₁) (hfeas : ed ≤ Dδ) (hε' : 0 < ε') (hε : 0 < ε)
+    (hLx_nn : 0 ≤ Lx) (hLy_nn : 0 ≤ Ly) (hLj_nn : 0 ≤ Lj) (hSd_nn : 0 ≤ Sd)
+    (hcA_pos : 0 < cA) (hcB_pos : 0 < cB) (hqZ_pos : 0 < qZ_min) (hεcov_pos : 0 < εcov) :
+    ∃ ε_join ε_X ε_dist δ_typ δ_kl : ℝ,
+      0 < ε_join ∧ 0 < ε_X ∧ ε_X < ε_join ∧ 0 < δ_kl ∧
+        8 * cA * cB * ε_X ^ 2 ≤ δ_kl * qZ_min ∧
+        mi + (cA * ε_X * Ly + ε_X * Lx + ε_X * Lj + δ_kl) < R₁ ∧
+        ed + δ_typ ≤ Dδ + ε' / 2 ∧
+        ε_join * Sd ≤ δ_typ ∧
+        cB * ε_join * Lx < ε_dist ∧ cA * ε_join * Ly < ε_dist ∧ ε_join * Lj < ε_dist ∧
+        cB * ε_join * Lx < ε ∧ cA * ε_join * Ly < ε ∧ ε_join * Lj < ε ∧
+        ε_join ≤ εcov ∧ 0 ≤ δ_typ := by
+  set gap : ℝ := R₁ - mi with hgap_def
+  have hgap_pos : 0 < gap := by rw [hgap_def]; linarith
+  clear_value gap
+  set Cc : ℝ := cA * Ly + Lx + Lj with hCc_def
+  have hCc_nn : 0 ≤ Cc := by
+    rw [hCc_def]; have : 0 ≤ cA * Ly := mul_nonneg hcA_pos.le hLy_nn; linarith
+  clear_value Cc
+  set Kk : ℝ := 8 * cA * cB / qZ_min with hKk_def
+  have hKk_nn : 0 ≤ Kk := by
+    rw [hKk_def]
+    exact div_nonneg (mul_nonneg (mul_nonneg (by norm_num) hcA_pos.le) hcB_pos.le) hqZ_pos.le
+  -- Radius-bridge widths: ε_cov and the combined logSumAbs width.
+  set Lrad : ℝ := 1 + cB * Lx + cA * Ly + Lj with hLrad_def
+  have hLrad_pos : 0 < Lrad := by
+    rw [hLrad_def]
+    have h1 : 0 ≤ cB * Lx := mul_nonneg hcB_pos.le hLx_nn
+    have h2 : 0 ≤ cA * Ly := mul_nonneg hcA_pos.le hLy_nn
+    linarith
+  -- The slack quintet: choose everything small against the rate gap, `ε'`, and radius widths.
+  have hden1 : 0 < 2 * (Cc + Kk + 1) := by nlinarith [hCc_nn, hKk_nn]
+  have hden2 : 0 < 2 * (Sd + 1) := by nlinarith [hSd_nn]
+  have hden3 : 0 < 2 * Lrad := by linarith
+  set ε_join : ℝ :=
+    min 1 (min (gap / (2 * (Cc + Kk + 1)))
+      (min (ε' / (2 * (Sd + 1))) (min εcov (ε / (2 * Lrad))))) with hej_def
+  have hej_pos : 0 < ε_join := by
+    rw [hej_def]
+    exact lt_min one_pos (lt_min (div_pos hgap_pos hden1)
+      (lt_min (div_pos hε' hden2) (lt_min hεcov_pos (div_pos hε hden3))))
+  have hej_le1 : ε_join ≤ 1 := by rw [hej_def]; exact min_le_left _ _
+  have hej_le_gap : ε_join ≤ gap / (2 * (Cc + Kk + 1)) := by
+    rw [hej_def]; exact le_trans (min_le_right _ _) (min_le_left _ _)
+  have hej_le_eps : ε_join ≤ ε' / (2 * (Sd + 1)) := by
+    rw [hej_def]
+    exact le_trans (min_le_right _ _) (le_trans (min_le_right _ _) (min_le_left _ _))
+  have hej_le_cov : ε_join ≤ εcov := by
+    rw [hej_def]
+    exact le_trans (min_le_right _ _) (le_trans (min_le_right _ _)
+      (le_trans (min_le_right _ _) (min_le_left _ _)))
+  have hej_le_rad : ε_join ≤ ε / (2 * Lrad) := by
+    rw [hej_def]
+    exact le_trans (min_le_right _ _) (le_trans (min_le_right _ _)
+      (le_trans (min_le_right _ _) (min_le_right _ _)))
+  clear_value Kk ε_join
+  set ε_X : ℝ := ε_join / 2 with hex_def
+  have hex_pos : 0 < ε_X := by rw [hex_def]; linarith
+  have hex_lt_ej : ε_X < ε_join := by rw [hex_def]; linarith
+  have hex_le1 : ε_X ≤ 1 := by rw [hex_def]; linarith
+  clear_value ε_X
+  set δ_typ : ℝ := ε' / 2 with hdtyp_def
+  have hdtyp_nn : 0 ≤ δ_typ := by rw [hdtyp_def]; linarith
+  set ε_dist : ℝ := cB * ε_join * Lx + cA * ε_join * Ly + ε_join * Lj + 1 with hed_def
+  have hed_pos : 0 < ε_dist := by
+    rw [hed_def]
+    have h1 : 0 ≤ cB * ε_join * Lx :=
+      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h2 : 0 ≤ cA * ε_join * Ly :=
+      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    linarith
+  set δ_kl : ℝ := Kk * ε_X ^ 2 with hdkl_def
+  have hdkl_pos : 0 < δ_kl := by
+    rw [hdkl_def, hKk_def]
+    have hnum : 0 < 8 * cA * cB := mul_pos (mul_pos (by norm_num) hcA_pos) hcB_pos
+    positivity
+  -- Numeric obligations.
+  have h_rategap : mi
+      + (cA * ε_X * Ly + ε_X * Lx + ε_X * Lj + δ_kl) < R₁ := by
+    have hlin : cA * ε_X * Ly + ε_X * Lx + ε_X * Lj = ε_X * Cc := by
+      rw [hCc_def]; ring
+    have hdkl_le : δ_kl ≤ Kk * ε_X := by
+      rw [hdkl_def]; nlinarith [hKk_nn, hex_pos.le, hex_le1]
+    have hεX_le : ε_X * (2 * (Cc + Kk + 1)) ≤ gap :=
+      (le_div_iff₀ hden1).mp (le_trans hex_lt_ej.le hej_le_gap)
+    have hkey : ε_X * Cc + δ_kl < gap := by
+      nlinarith [hdkl_le, hεX_le, hex_pos, hCc_nn, hKk_nn]
+    rw [hlin]; linarith [hkey, hgap_def]
+  have h_slack : ed + δ_typ ≤ Dδ + ε' / 2 := by
+    rw [hdtyp_def]; linarith
+  have h_distslack : ε_join * Sd ≤ δ_typ := by
+    rw [hdtyp_def]
+    have h1 : ε_join * (2 * (Sd + 1)) ≤ ε' := (le_div_iff₀ hden2).mp hej_le_eps
+    nlinarith [hej_pos.le, hSd_nn, h1]
+  have h_dominates : 8 * cA * cB * ε_X ^ 2 ≤ δ_kl * qZ_min := by
+    have hne : qZ_min ≠ 0 := ne_of_gt hqZ_pos
+    have hKq : Kk * qZ_min = 8 * cA * cB := by
+      rw [hKk_def]; exact div_mul_cancel₀ _ hne
+    have heq : δ_kl * qZ_min = 8 * cA * cB * ε_X ^ 2 := by
+      rw [hdkl_def, mul_right_comm, hKq]
+    exact le_of_eq heq.symm
+  -- Strong-typicality ⟹ distortion-typicality bridge slacks.
+  have hbX : cB * ε_join * Lx < ε_dist := by
+    rw [hed_def]
+    have h2 : 0 ≤ cA * ε_join * Ly :=
+      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    nlinarith [h2, h3]
+  have hbY : cA * ε_join * Ly < ε_dist := by
+    rw [hed_def]
+    have h1 : 0 ≤ cB * ε_join * Lx :=
+      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    nlinarith [h1, h3]
+  have hbJ : ε_join * Lj < ε_dist := by
+    rw [hed_def]
+    have h1 : 0 ≤ cB * ε_join * Lx :=
+      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h2 : 0 ≤ cA * ε_join * Ly :=
+      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    nlinarith [h1, h2]
+  -- Radius-bridge obligations (for `wz_coveringSuccessStrong_compl_measureReal_le`).
+  have hLrad_ineq : ε_join * (2 * Lrad) ≤ ε := (le_div_iff₀ hden3).mp hej_le_rad
+  have hradX : cB * ε_join * Lx < ε := by
+    rw [hLrad_def] at hLrad_ineq
+    have h2 : 0 ≤ cA * ε_join * Ly :=
+      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    nlinarith [hej_pos, hLx_nn, h2, h3]
+  have hradY : cA * ε_join * Ly < ε := by
+    rw [hLrad_def] at hLrad_ineq
+    have h1 : 0 ≤ cB * ε_join * Lx :=
+      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
+    nlinarith [hej_pos, hLy_nn, h1, h3]
+  have hradJ : ε_join * Lj < ε := by
+    rw [hLrad_def] at hLrad_ineq
+    have h1 : 0 ≤ cB * ε_join * Lx :=
+      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
+    have h2 : 0 ≤ cA * ε_join * Ly :=
+      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
+    nlinarith [hej_pos, hLj_nn, h1, h2]
+  exact ⟨ε_join, ε_X, ε_dist, δ_typ, δ_kl, hej_pos, hex_pos, hex_lt_ej, hdkl_pos,
+    h_dominates, h_rategap, h_slack, h_distslack, hbX, hbY, hbJ, hradX, hradY, hradJ,
+    hej_le_cov, hdtyp_nn⟩
+
+open ChannelCoding in
+set_option maxHeartbeats 1600000 in
+private lemma wz_covering_joint_pigeonhole
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hmem : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (d' : DistortionFn {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k))
+    {n : ℕ} (hn_pos : 0 < n)
+    (P_X : (n : ℕ) → Measure (Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}}))
+    (hPX_prob : IsProbabilityMeasure (P_X n))
+    (Mn : ℕ → ℕ) (hMn_pos : ∀ n, 0 < Mn n)
+    {ε_X ε_join ε_dist δ_typ : ℝ} (hej_pos : 0 < ε_join)
+    (hbX : (Fintype.card (Fin k) : ℝ) * ε_join
+        * logSumAbs (rdAmbient qStar) ChannelCoding.iidXs < ε_dist)
+    (hbY : (Fintype.card {x : α // 0 < ∑ y, P_XY.real {(x, y)}} : ℝ) * ε_join
+        * logSumAbs (rdAmbient qStar) ChannelCoding.iidYs < ε_dist)
+    (hbJ : ε_join * logSumAbs (rdAmbient qStar)
+        (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) < ε_dist)
+    (h_distslack : ε_join * ∑ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
+        ((d' p.1 p.2 : NNReal) : ℝ) ≤ δ_typ)
+    (target : ℕ → ℝ) (upper : ℕ → ℝ)
+    (hupper_def : upper = fun n ↦ (P_X n).real
+        {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+          x ∉ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X}
+      + Real.exp (-((Mn n : ℝ) * target n)))
+    (h_typical : ∀ x ∈ {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+          x ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X},
+        (Measure.pi (fun _ : Fin (Mn n) ↦
+            Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidYs 0)))).real
+          { c : Fin (Mn n) → (Fin n → Fin k) |
+              ¬ ∃ m, (x, c m) ∈ jointStronglyTypicalSet (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs n ε_join }
+          ≤ Real.exp (-((Mn n : ℝ) * target n))) :
+    ∃ c₀ : Codebook (Mn n) n (Fin k),
+      (P_X n).real {x | (x, c₀ (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c₀ x))
+          ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+              d' n ε_dist δ_typ}
+        + (P_X n).real {x | (x, c₀ (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c₀ x))
+          ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+              ChannelCoding.iidYs n ε_join}
+      ≤ 2 * upper n := by
+  classical
+  haveI := hPX_prob
+  haveI hμY_prob : IsProbabilityMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) :=
+    rdAmbient_iidYs_isProbabilityMeasure qStar hmem
+  have h_dist_bound : ∑ c : Codebook (Mn n) n (Fin k),
+      (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+        * (P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+            (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+                  ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+              ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+                  d' n ε_dist δ_typ}
+      ≤ upper n := by
+    rw [hupper_def]
+    exact weightedSum_encoderFailure_le_notTypical_add_bound (P_X n)
+      (Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidYs 0)))
+      {x | x ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X}
+      (distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+        d' n ε_dist δ_typ)
+      (jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs n ε_join)
+      (fun c ↦ jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+        ChannelCoding.iidYs (hMn_pos n) ε_join c)
+      (Real.exp (-((Mn n : ℝ) * target n))) (Real.exp_pos _).le
+      (fun _ ↦ (Set.toFinite _).measurableSet) (Set.toFinite _).measurableSet
+      (fun x _ y hy ↦ wz_jointStronglyTypical_mem_distortionTypical qStar hmem d' hej_pos.le
+        hbX hbY hbJ h_distslack hn_pos x y hy)
+      (fun c x hex ↦ jointStronglyTypicalLossyEncoder_spec_of_exists (rdAmbient qStar)
+        ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x hex)
+      h_typical
+  -- Covering-failure codebook average ≤ upper.
+  have h_cov_bound : ∑ c : Codebook (Mn n) n (Fin k),
+      (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+        * (P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+            (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+                  ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+              ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+                  ChannelCoding.iidYs n ε_join}
+      ≤ upper n := by
+    rw [hupper_def]
+    exact weightedSum_encoderFailure_le_notTypical_add_bound (P_X n)
+      (Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidYs 0)))
+      {x | x ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X}
+      (jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs n ε_join)
+      (jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs n ε_join)
+      (fun c ↦ jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+        ChannelCoding.iidYs (hMn_pos n) ε_join c)
+      (Real.exp (-((Mn n : ℝ) * target n))) (Real.exp_pos _).le
+      (fun _ ↦ (Set.toFinite _).measurableSet) (Set.toFinite _).measurableSet
+      (fun x _ y hy ↦ hy)
+      (fun c x hex ↦ jointStronglyTypicalLossyEncoder_spec_of_exists (rdAmbient qStar)
+        ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x hex)
+      h_typical
+  -- Joint average ≤ 2·upper, then pigeonhole.
+  have h_avg : ∑ c : Codebook (Mn n) n (Fin k),
+      (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+        * ((P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+              (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+                    ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+                    d' n ε_dist δ_typ}
+            + (P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
+              (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
+                    ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+                    ChannelCoding.iidYs n ε_join})
+      ≤ 2 * upper n := by
+    have hsplit : ∑ c : Codebook (Mn n) n (Fin k),
+        (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+          * ((P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+                ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+                    d' n ε_dist δ_typ}
+              + (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+                ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+                    ChannelCoding.iidYs n ε_join})
+        = (∑ c : Codebook (Mn n) n (Fin k),
+            (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+              * (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                  ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+                      d' n ε_dist δ_typ})
+          + (∑ c : Codebook (Mn n) n (Fin k),
+            (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
+              * (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+                  ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+                  ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+                      ChannelCoding.iidYs n ε_join}) := by
+      rw [← Finset.sum_add_distrib]
+      refine Finset.sum_congr rfl (fun c _ ↦ ?_); ring
+    rw [hsplit]; linarith only [h_dist_bound, h_cov_bound]
+  exact exists_codebook_low_avg ((rdAmbient qStar).map (ChannelCoding.iidYs 0))
+    (fun c : Codebook (Mn n) n (Fin k) ↦
+      (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+          ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
+              d' n ε_dist δ_typ}
+        + (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
+            ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
+          ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
+              ChannelCoding.iidYs n ε_join})
+    h_avg
+
 set_option maxHeartbeats 1600000 in
 open ChannelCoding in
 /-- **(Atom G — joint derandomize.)** On a single covering code good for BOTH the covering
@@ -162,141 +459,13 @@ private lemma wz_covering_lossyCode_joint_exists
     intro p
     rw [pmfToMeasure_real_singleton hmem p, hqZ_def]
     exact Finset.inf'_le _ (Finset.mem_univ p)
-  -- Rate gap and its linear/quadratic coefficients.
-  set gap : ℝ := R₁ - mutualInfoPmf qStar with hgap_def
-  have hgap_pos : 0 < gap := by rw [hgap_def]; linarith
-  clear_value gap
-  set Cc : ℝ := cA * Ly + Lx + Lj with hCc_def
-  have hCc_nn : 0 ≤ Cc := by
-    rw [hCc_def]; have : 0 ≤ cA * Ly := mul_nonneg hcA_pos.le hLy_nn; linarith
-  clear_value Cc
-  set Kk : ℝ := 8 * cA * cB / qZ_min with hKk_def
-  have hKk_nn : 0 ≤ Kk := by
-    rw [hKk_def]
-    exact div_nonneg (mul_nonneg (mul_nonneg (by norm_num) hcA_pos.le) hcB_pos.le) hqZ_pos.le
-  -- Radius-bridge widths: ε_cov and the combined logSumAbs width.
   set εcov : ℝ := wzCoveringStrongRadius P_XY κ' ε with hεcov_def
   have hεcov_pos : 0 < εcov := by rw [hεcov_def]; exact wzCoveringStrongRadius_pos P_XY κ' hε
-  set Lrad : ℝ := 1 + cB * Lx + cA * Ly + Lj with hLrad_def
-  have hLrad_pos : 0 < Lrad := by
-    rw [hLrad_def]
-    have h1 : 0 ≤ cB * Lx := mul_nonneg hcB_pos.le hLx_nn
-    have h2 : 0 ≤ cA * Ly := mul_nonneg hcA_pos.le hLy_nn
-    linarith
-  -- The slack quintet: choose everything small against the rate gap, `ε'`, and radius widths.
-  have hden1 : 0 < 2 * (Cc + Kk + 1) := by nlinarith [hCc_nn, hKk_nn]
-  have hden2 : 0 < 2 * (Sd + 1) := by nlinarith [hSd_nn]
-  have hden3 : 0 < 2 * Lrad := by linarith
-  set ε_join : ℝ :=
-    min 1 (min (gap / (2 * (Cc + Kk + 1)))
-      (min (ε' / (2 * (Sd + 1))) (min εcov (ε / (2 * Lrad))))) with hej_def
-  have hej_pos : 0 < ε_join := by
-    rw [hej_def]
-    exact lt_min one_pos (lt_min (div_pos hgap_pos hden1)
-      (lt_min (div_pos hε' hden2) (lt_min hεcov_pos (div_pos hε hden3))))
-  have hej_le1 : ε_join ≤ 1 := by rw [hej_def]; exact min_le_left _ _
-  have hej_le_gap : ε_join ≤ gap / (2 * (Cc + Kk + 1)) := by
-    rw [hej_def]; exact le_trans (min_le_right _ _) (min_le_left _ _)
-  have hej_le_eps : ε_join ≤ ε' / (2 * (Sd + 1)) := by
-    rw [hej_def]
-    exact le_trans (min_le_right _ _) (le_trans (min_le_right _ _) (min_le_left _ _))
-  have hej_le_cov : ε_join ≤ εcov := by
-    rw [hej_def]
-    exact le_trans (min_le_right _ _) (le_trans (min_le_right _ _)
-      (le_trans (min_le_right _ _) (min_le_left _ _)))
-  have hej_le_rad : ε_join ≤ ε / (2 * Lrad) := by
-    rw [hej_def]
-    exact le_trans (min_le_right _ _) (le_trans (min_le_right _ _)
-      (le_trans (min_le_right _ _) (min_le_right _ _)))
-  clear_value Kk ε_join
-  set ε_X : ℝ := ε_join / 2 with hex_def
-  have hex_pos : 0 < ε_X := by rw [hex_def]; linarith
-  have hex_lt_ej : ε_X < ε_join := by rw [hex_def]; linarith
-  have hex_le1 : ε_X ≤ 1 := by rw [hex_def]; linarith
-  clear_value ε_X
-  set δ_typ : ℝ := ε' / 2 with hdtyp_def
-  have hdtyp_nn : 0 ≤ δ_typ := by rw [hdtyp_def]; linarith
-  set ε_dist : ℝ := cB * ε_join * Lx + cA * ε_join * Ly + ε_join * Lj + 1 with hed_def
-  have hed_pos : 0 < ε_dist := by
-    rw [hed_def]
-    have h1 : 0 ≤ cB * ε_join * Lx :=
-      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
-    have h2 : 0 ≤ cA * ε_join * Ly :=
-      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
-    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
-    linarith
-  set δ_kl : ℝ := Kk * ε_X ^ 2 with hdkl_def
-  have hdkl_pos : 0 < δ_kl := by
-    rw [hdkl_def, hKk_def]
-    have hnum : 0 < 8 * cA * cB := mul_pos (mul_pos (by norm_num) hcA_pos) hcB_pos
-    positivity
-  -- Numeric obligations.
-  have h_rategap : mutualInfoPmf qStar
-      + (cA * ε_X * Ly + ε_X * Lx + ε_X * Lj + δ_kl) < R₁ := by
-    have hlin : cA * ε_X * Ly + ε_X * Lx + ε_X * Lj = ε_X * Cc := by
-      rw [hCc_def]; ring
-    have hdkl_le : δ_kl ≤ Kk * ε_X := by
-      rw [hdkl_def]; nlinarith [hKk_nn, hex_pos.le, hex_le1]
-    have hεX_le : ε_X * (2 * (Cc + Kk + 1)) ≤ gap :=
-      (le_div_iff₀ hden1).mp (le_trans hex_lt_ej.le hej_le_gap)
-    have hkey : ε_X * Cc + δ_kl < gap := by
-      nlinarith [hdkl_le, hεX_le, hex_pos, hCc_nn, hKk_nn]
-    rw [hlin]; linarith [hkey, hgap_def]
-  have h_slack : expectedDistortionPmf d' qStar + δ_typ ≤ Dδ + ε' / 2 := by
-    rw [hdtyp_def]; linarith
-  have h_distslack : ε_join * Sd ≤ δ_typ := by
-    rw [hdtyp_def]
-    have h1 : ε_join * (2 * (Sd + 1)) ≤ ε' := (le_div_iff₀ hden2).mp hej_le_eps
-    nlinarith [hej_pos.le, hSd_nn, h1]
-  have h_dominates : 8 * cA * cB * ε_X ^ 2 ≤ δ_kl * qZ_min := by
-    have hne : qZ_min ≠ 0 := ne_of_gt hqZ_pos
-    have hKq : Kk * qZ_min = 8 * cA * cB := by
-      rw [hKk_def]; exact div_mul_cancel₀ _ hne
-    have heq : δ_kl * qZ_min = 8 * cA * cB * ε_X ^ 2 := by
-      rw [hdkl_def, mul_right_comm, hKq]
-    exact le_of_eq heq.symm
-  -- Strong-typicality ⟹ distortion-typicality bridge slacks.
-  have hbX : cB * ε_join * Lx < ε_dist := by
-    rw [hed_def]
-    have h2 : 0 ≤ cA * ε_join * Ly :=
-      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
-    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
-    nlinarith [h2, h3]
-  have hbY : cA * ε_join * Ly < ε_dist := by
-    rw [hed_def]
-    have h1 : 0 ≤ cB * ε_join * Lx :=
-      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
-    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
-    nlinarith [h1, h3]
-  have hbJ : ε_join * Lj < ε_dist := by
-    rw [hed_def]
-    have h1 : 0 ≤ cB * ε_join * Lx :=
-      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
-    have h2 : 0 ≤ cA * ε_join * Ly :=
-      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
-    nlinarith [h1, h2]
-  -- Radius-bridge obligations (for `wz_coveringSuccessStrong_compl_measureReal_le`).
-  have hLrad_ineq : ε_join * (2 * Lrad) ≤ ε := (le_div_iff₀ hden3).mp hej_le_rad
-  have hradX : cB * ε_join * Lx < ε := by
-    rw [hLrad_def] at hLrad_ineq
-    have h2 : 0 ≤ cA * ε_join * Ly :=
-      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
-    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
-    nlinarith [hej_pos, hLx_nn, h2, h3]
-  have hradY : cA * ε_join * Ly < ε := by
-    rw [hLrad_def] at hLrad_ineq
-    have h1 : 0 ≤ cB * ε_join * Lx :=
-      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
-    have h3 : 0 ≤ ε_join * Lj := mul_nonneg hej_pos.le hLj_nn
-    nlinarith [hej_pos, hLy_nn, h1, h3]
-  have hradJ : ε_join * Lj < ε := by
-    rw [hLrad_def] at hLrad_ineq
-    have h1 : 0 ≤ cB * ε_join * Lx :=
-      mul_nonneg (mul_nonneg hcB_pos.le hej_pos.le) hLx_nn
-    have h2 : 0 ≤ cA * ε_join * Ly :=
-      mul_nonneg (mul_nonneg hcA_pos.le hej_pos.le) hLy_nn
-    nlinarith [hej_pos, hLj_nn, h1, h2]
-  clear_value ε_dist δ_kl δ_typ qZ_min
+  obtain ⟨ε_join, ε_X, ε_dist, δ_typ, δ_kl, hej_pos, hex_pos, hex_lt_ej, hdkl_pos,
+    h_dominates, h_rategap, h_slack, h_distslack, hbX, hbY, hbJ, hradX, hradY, hradJ,
+    hej_le_cov, hdtyp_nn⟩ :=
+    wz_covering_joint_slack_params hI hfeas hε' hε hLx_nn hLy_nn hLj_nn hSd_nn hcA_pos hcB_pos
+      hqZ_pos hεcov_pos
   -- ## Probabilistic content.
   have hindepX_pair : Pairwise fun i j ↦
       ChannelCoding.iidXs (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (β := Fin k) i
@@ -402,104 +571,8 @@ private lemma wz_covering_lossyCode_joint_exists
       ext c; simp [not_exists]
     rw [h_set_eq, show -((Mn n : ℝ) * target n) = -(Mn n : ℝ) * target n from by ring, htarget_def]
     exact h_step
-  -- Distortion-failure codebook average ≤ upper.
-  have h_dist_bound : ∑ c : Codebook (Mn n) n (Fin k),
-      (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
-        * (P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
-            (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
-                  ChannelCoding.iidYs (hMn_pos n) ε_join c x))
-              ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
-                  d' n ε_dist δ_typ}
-      ≤ upper n := by
-    rw [hupper_def]
-    exact weightedSum_encoderFailure_le_notTypical_add_bound (P_X n)
-      (Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidYs 0)))
-      {x | x ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X}
-      (distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
-        d' n ε_dist δ_typ)
-      (jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs n ε_join)
-      (fun c ↦ jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
-        ChannelCoding.iidYs (hMn_pos n) ε_join c)
-      (Real.exp (-((Mn n : ℝ) * target n))) (Real.exp_pos _).le
-      (fun _ ↦ (Set.toFinite _).measurableSet) (Set.toFinite _).measurableSet
-      (fun x _ y hy ↦ wz_jointStronglyTypical_mem_distortionTypical qStar hmem d' hej_pos.le
-        hbX hbY hbJ h_distslack hn_pos x y hy)
-      (fun c x hex ↦ jointStronglyTypicalLossyEncoder_spec_of_exists (rdAmbient qStar)
-        ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x hex)
-      h_typical
-  -- Covering-failure codebook average ≤ upper.
-  have h_cov_bound : ∑ c : Codebook (Mn n) n (Fin k),
-      (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
-        * (P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
-            (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
-                  ChannelCoding.iidYs (hMn_pos n) ε_join c x))
-              ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
-                  ChannelCoding.iidYs n ε_join}
-      ≤ upper n := by
-    rw [hupper_def]
-    exact weightedSum_encoderFailure_le_notTypical_add_bound (P_X n)
-      (Measure.pi (fun _ : Fin n ↦ (rdAmbient qStar).map (ChannelCoding.iidYs 0)))
-      {x | x ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X}
-      (jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs n ε_join)
-      (jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs n ε_join)
-      (fun c ↦ jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
-        ChannelCoding.iidYs (hMn_pos n) ε_join c)
-      (Real.exp (-((Mn n : ℝ) * target n))) (Real.exp_pos _).le
-      (fun _ ↦ (Set.toFinite _).measurableSet) (Set.toFinite _).measurableSet
-      (fun x _ y hy ↦ hy)
-      (fun c x hex ↦ jointStronglyTypicalLossyEncoder_spec_of_exists (rdAmbient qStar)
-        ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x hex)
-      h_typical
-  -- Joint average ≤ 2·upper, then pigeonhole.
-  have h_avg : ∑ c : Codebook (Mn n) n (Fin k),
-      (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
-        * ((P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
-              (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
-                    ChannelCoding.iidYs (hMn_pos n) ε_join c x))
-                ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
-                    d' n ε_dist δ_typ}
-            + (P_X n).real {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
-              (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar) ChannelCoding.iidXs
-                    ChannelCoding.iidYs (hMn_pos n) ε_join c x))
-                ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
-                    ChannelCoding.iidYs n ε_join})
-      ≤ 2 * upper n := by
-    have hsplit : ∑ c : Codebook (Mn n) n (Fin k),
-        (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
-          * ((P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
-                ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
-                ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
-                    d' n ε_dist δ_typ}
-              + (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
-                ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
-                ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
-                    ChannelCoding.iidYs n ε_join})
-        = (∑ c : Codebook (Mn n) n (Fin k),
-            (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
-              * (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
-                  ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
-                  ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
-                      d' n ε_dist δ_typ})
-          + (∑ c : Codebook (Mn n) n (Fin k),
-            (codebookMeasure ((rdAmbient qStar).map (ChannelCoding.iidYs 0)) (Mn n) n).real {c}
-              * (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
-                  ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
-                  ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
-                      ChannelCoding.iidYs n ε_join}) := by
-      rw [← Finset.sum_add_distrib]
-      refine Finset.sum_congr rfl (fun c _ ↦ ?_); ring
-    rw [hsplit]; linarith only [h_dist_bound, h_cov_bound]
-  obtain ⟨c₀, hc₀⟩ := exists_codebook_low_avg ((rdAmbient qStar).map (ChannelCoding.iidYs 0))
-    (fun c : Codebook (Mn n) n (Fin k) ↦
-      (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
-            ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
-          ∉ distortionTypicalSet (rdAmbient qStar) ChannelCoding.iidXs ChannelCoding.iidYs
-              d' n ε_dist δ_typ}
-        + (P_X n).real {x | (x, c (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
-            ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c x))
-          ∉ jointStronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs
-              ChannelCoding.iidYs n ε_join})
-    h_avg
+  obtain ⟨c₀, hc₀⟩ := wz_covering_joint_pigeonhole P_XY qStar hmem d' hn_pos P_X hPXprob Mn
+    hMn_pos hej_pos hbX hbY hbJ h_distslack target upper hupper_def h_typical
   -- Abstract the two failure functionals for the chosen codebook (keeps `linarith` cheap).
   set df0 : ℝ := (P_X n).real {x | (x, c₀ (jointStronglyTypicalLossyEncoder (rdAmbient qStar)
       ChannelCoding.iidXs ChannelCoding.iidYs (hMn_pos n) ε_join c₀ x))
