@@ -37,7 +37,7 @@ support 上等号 (`bs_i > 0 ⟹ KT_i = 1`) は headline に含めず未実装 (
 
 | Sub-plan | scope | 状態 |
 |---|---|---|
-| [`portfolio-operational-plan.md`](portfolio-operational-plan.md) | CT §16.3 (AO-iid) / §16.4 (side-info) / §16.5 (stationary) / §16.7 (universal) の operational / universal 定理 | Leg A/B-core/C/D **proof-done + @audit:ok**、Leg B 完全形 (W_∞ AEP、CT 16.5.1) は後継 [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md) で進行中 (R1 + R2 core proof-done、R3/R4 残) |
+| [`portfolio-operational-plan.md`](portfolio-operational-plan.md) | CT §16.3 (AO-iid) / §16.4 (side-info) / §16.5 (stationary) / §16.7 (universal) の operational / universal 定理 | Leg A/B-core/C/D **proof-done + @audit:ok**、Leg B 完全形 (W_∞ AEP、CT 16.5.1) は後継 [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md) で進行中 (R1 + R2 proof-done + @audit:ok、R3/R4 残) |
 
 **CT 節ラベル (2nd ed 実節に是正済)**: §16.2 KT characterization / §16.3 asymptotic optimality (iid、子 Leg A) /
 §16.4 side info / §16.5 stationary markets / §16.6 competitive optimality (`competitive_optimality` = **Thm 16.6.1**) /

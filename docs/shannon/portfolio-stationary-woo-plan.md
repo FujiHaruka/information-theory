@@ -110,13 +110,23 @@ Tikhonov 狭義凹正則化 (判断ログ 2 参照)。
 ### R3 — real-valued SMB 級 AEP (proof-log: yes、独立 gateway)
 
 `(1/n) log S*_n → W_∞` を Algoet–Cover sandwich で。下界 = `birkhoff_ergodic_ae` を k 次条件付き log-return に
-適用、上界 = 真の log-optimal 富 ≤ k 次近似富 + R2。**独立 gateway**: 「finite SMB の sandwich 骨格のうち
-alphabet 非依存部を real-valued log-wealth に効かせられるか」を単独 atom で早期に壁判定。
+適用、上界 = 真の log-optimal 富 ≤ k 次近似富 + R2。sandwich close = Mathlib `tendsto_of_le_liminf_of_limsup_le`。
 
-**新規 scope (R2 のアーキテクチャ選択から surface)**: R2 が抽象 `ℱ : Filtration ℕ m0` でパラメータ化されたため、
-R3 は R2/R4 を市場に接続する際 **抽象 `ℱ` を具体的な market-past filtration で instantiate** する必要がある
-(family は antitone な `backwardFiltration` / `tailSigma` のみ所有、CT 16.5.1 が要する増加 past filtration は新規 =
-two-sided 構成の deferral 分)。
+**R3 在庫 (詳細 → `portfolio-winfty-inventory.md` "R3 inventory")、wall-risk = (b) 中程度 self-build、genuine gap なし**:
+
+- **増加 filtration は in-project 既存** (判断ログ 3 の「新規・balloon」を覆す): `TwoSidedExtension/Backward.lean:84`
+  `pastFiltration : Filtration ℕ MeasurableSpace.pi` が増加 (`pastSigma_mono`、`Backward.lean:70`)、`⨆ k =
+  negPastSigma`。構造は **Fintype-free** ⟹ `α = Fin m → ℝ` に ~5 行で再述 or 直接再利用。R2 の `[StandardBorelSpace Ω]`
+  も具体空間 `∀ _ : ℤ, (Fin m → ℝ)` で `StandardBorelSpace.pi_countable` 発火。**deferral 分は real-alphabet の
+  ambient measure/shift のみ** = 親 Leg B 同様 `(μ, T, hT, hT_erg)` を regularity 仮説で受ける (theorem の核でない)。
+- **下界 = 親 Leg B `seqLogWealth_div_tendsto_stationary` (`StationaryMarket.lean:66`) が 2 行テンプレ**。fixed-b →
+  `bstar k` に一般化した新規 decl で `condOptGrowth k = W*_k` を得る。
+- **最大の未知 = pathwise 上界 (独立 gateway atom)**: R2 は stage-wise **条件付き (in-expectation) dominance** のみ提供
+  (`exists_condLogOptimalSeq` 3rd conjunct)。`limsup (1/n) log S*_n ≤ W*_k` へ変換するには **新規 wealth-ratio
+  supermartingale + Borel–Cantelli** (SMB `MRatioUp_le_sq_eventually` の portfolio 版、finite-alphabet 版は lift 不可)。
+  ~150–300 行見積。**gateway atom = `causalLogWealth_limsup_le_condOptGrowth` を solo `lean-implementer` に dispatch し
+  Ville/Doob + Borel–Cantelli で閉じるか壁判定** (loogle-0 単独で壁宣言しない、gateway-atom-first)。Barron/Breiman
+  一般 log-ratio AEP が要ると判明した場合のみ genuine wall (`@residual(wall:<slug>)` + audit-tags register)。
 
 ### R4 — 組立 + 配線 + 独立監査 (proof-log: no)
 
@@ -134,9 +144,12 @@ R1–R3 を CT 16.5.1 headline に組み、root import 登録 / README / roadmap
   disintegration) で closure。crux (ℱk-可測 a.e.-定数 pull-out) のみ Mathlib 補題不在で ~35 行自作、他はすべて
   既存資産 (`condExp_ae_eq_integral_condExpKernel` / `integral_concaveOn_of_integrand_ae` /
   `continuousOn_of_dominated`)。
-- **R3 real-valued AEP**: **最リスク**。finite SMB decl は lift 不可 (機械確認済) ゆえ sandwich を real-valued で
-  再構築。Algoet–Cover 骨格の alphabet 非依存部がどれだけ救えるかは M0 / gateway で確定するまで未知
-  (`human-judgment`、low-trust)。genuine Mathlib gap を露呈したら新 wall slug を建てる。
+- **R3 real-valued AEP**: **最リスク、但し在庫後 wall-risk = (b) 中程度 self-build (genuine gap なし)**。
+  finite SMB decl は lift 不可 (機械確認済) だが sandwich close (`tendsto_of_le_liminf_of_limsup_le`) + 下界
+  (Birkhoff テンプレ) + 増加 filtration (`TwoSidedExtension/Backward.lean:84` 既存) は wired。**残る唯一の
+  human-judgment 未知 = pathwise 上界** (`limsup ≤ W*_k`): wealth-ratio supermartingale + Borel–Cantelli の
+  ~150–300 行 self-build、gateway atom `causalLogWealth_limsup_le_condOptGrowth` で早期壁判定。Barron/Breiman
+  一般 log-ratio AEP が要ると判明した場合のみ新 wall slug。
 - **総評**: real-valued SMB 級 AEP が本計画の重心。fixed-b (親 Leg B) が Birkhoff だけで閉じたのに対し、
   W_∞ は可測選択 + 単調収束 + sandwich の 3 段を要し格段に重い。
 
@@ -192,6 +205,8 @@ R1–R3 を CT 16.5.1 headline に組み、root import 登録 / README / roadmap
    `exists_measurable_argmax_on_stdSimplex` proof-done で着地。
 3. **R2 は抽象 `Filtration ℕ m0` でパラメータ化 (active、設計ピボット、`36482092`)**: R2 は具体的な `T`/`X` から
    構築した market-past filtration ではなく、**抽象な増加フィルトレーション `ℱ : Filtration ℕ m0`** 上で
-   monotone-convergence を証明する。理由: family は *antitone* な `backwardFiltration` / `tailSigma` のみ所有し、
-   CT 16.5.1 が要する *増加* past filtration は genuine に新規、two-sided 構成は balloon する。⟹ **R3/R4 が抽象
-   `ℱ` を具体的 market-past filtration で instantiate する新規 obligation を負う** (deferral した two-sided 構成)。
+   monotone-convergence を証明する。⟹ **R3/R4 が抽象 `ℱ` を具体的 market-past filtration で instantiate する
+   obligation を負う**。**訂正 (R3 在庫、2026-07-20)**: 当初「増加 past filtration は genuine 新規で two-sided 構成が
+   balloon する」と見たが誤り — `TwoSidedExtension/Backward.lean:84` `pastFiltration : Filtration ℕ MeasurableSpace.pi`
+   が既に増加 filtration を Fintype-free に提供 (`pastSigma_mono`)。instantiate は cheap (real-alphabet の ambient
+   measure/shift のみ regularity 仮説で deferral、親 Leg B と同型)。R4 は from-scratch filtration build を再見積しないこと。

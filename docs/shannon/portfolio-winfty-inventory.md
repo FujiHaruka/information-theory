@@ -293,3 +293,225 @@ end InformationTheory.Shannon.Portfolio
 - 親 Leg B `seqLogWealth_div_tendsto_stationary` (`StationaryMarket.lean:66`) が「Birkhoff → 市場 log-return 時間平均」を既に実証済 = R3 が写経するテンプレ。
 - finite-alphabet SMB decl 群 (`blockLogAvg`/`MRatioLowerZ*`/`algoet_cover_*`) は decl lift 不可だが **portfolio では不要** (救うべきは論理骨格のみ、それは上記 core で足りる)。
 - **残る human-judgment (low-trust)**: k 次近似の**上界誤差制御** (log-optimal ≤ k 近似 + 補正) は単一既存 lemma に落ちず、R3 gateway atom の実機判定を待って初めて「Birkhoff で閉じるか」が確定。M0 段階では新 wall slug の根拠なし。
+
+---
+
+# R3 inventory — real-valued Algoet–Cover sandwich + increasing filtration
+
+> R1+R2 = proof-done sorryAx-free (`StationaryWinfty.lean`)。本節は R3 の 2 obligation の在庫:
+> **(a) 抽象 `ℱ : Filtration ℕ m0` を具体 market-past filtration で instantiate**、
+> **(b) real-valued AEP `(1/n) log S*_n → W_∞` を Algoet–Cover sandwich で証明**。
+> 全署名は Mathlib / in-project を Read して verbatim 確認済。
+
+## 一行サマリ (R3)
+
+**R3 の壁リスク判定 = (b) moderate–heavy self-build、genuine Mathlib primitive gap は無い。**
+使う骨格 (sandwich core `tendsto_of_le_liminf_of_limsup_le` + Birkhoff `birkhoff_ergodic_ae` + 親 Leg B テンプレ
+`seqLogWealth_div_tendsto_stationary` + R2 monotone-close) は**全て在庫**。
+**最重要発見: `TwoSidedExtension/Backward.lean` は既に増加 (not antitone) past filtration `pastFiltration : Filtration ℕ (MeasurableSpace.pi)` を所有**、
+向きは CT 16.5.1 と一致 (`pastSigma_mono` 証明済)。ただし **finite alphabet 専用の変数ブロックで宣言**され、
+本体構成 (`pastSigma`/`iSup_pastSigma_eq_negPastSigma`) は Fintype-FREE (全 `omit`) ゆえ `α = Fin m → ℝ` で ~5 行再掲可。
+**新規 self-build ≈ 2 点**: (i) 具体 filtration の instantiate + `(T,hT,hT_erg)` 正則性配線 (plumbing、壁でない)、
+(ii) **上界の pathwise 誤差制御** (真の causal log-wealth ≤ k 次近似 + 消失誤差) = 解析の心臓、R3 gateway atom で
+「Barron/Breiman 型 wealth-ratio martingale 自作 (~150–300 行) で閉じるか / genuine wall か」を早期判定。
+**最危険所見**: R2 が `[StandardBorelSpace Ω]` を要求 → 具体空間 `ℤ → (Fin m → ℝ)` は `StandardBorelSpace.pi_countable`
+(ℤ 可算 × `Fin m → ℝ` 標準 Borel) で発火するが、**ambient 測度 `μZ` と ergodic shift `ergodic_shiftZ` は Fintype 依存で
+再利用不可** — R3 は `(μ,T,hT,hT_erg)` を親 Leg B と同様に**正則性仮説**として受ける (二側構成の deferral、load-bearing でない)。
+
+## R3 主定理の見込み形 (R4 で確定)
+
+```lean
+-- 具体化: Ω = ℤ → (Fin m → ℝ)、T = 座標シフト、ℱ = pastFiltration、X = coord0
+theorem logOptimal_growth_tendsto_Winfty
+    (μ : Measure (∀ _ : ℤ, Fin m → ℝ)) [IsProbabilityMeasure μ]         -- pi 測度 (μZ を仮説化)
+    (hT : MeasurePreserving shift μ μ) (hT_erg : Ergodic shift μ)        -- 定常エルゴード = 正則性仮説
+    (X : (∀ _ : ℤ, Fin m → ℝ) → Fin m → ℝ) (hX : Measurable X)          -- X = coord0
+    /- + hpos / hint / hUB (R2 と同じ市場正則性) -/ :
+    ∀ᵐ ω ∂μ, Tendsto
+      (fun n ↦ (∑ i ∈ Finset.range (n+1), causalLogReturn X (bstar i) (shift^[i] ω)) / (n+1))
+      atTop (𝓝 (condOptGrowthInfty μ X bstar))         -- = W_∞ (R2 が同定)
+```
+
+証明戦略 (pseudo-Lean、SMB Algoet–Cover を real-valued へ写経):
+
+```
+-- (a) instantiate: ℱ := pastFiltration (α := Fin m → ℝ);  [StandardBorelSpace] ← pi_countable
+--     R2 exists_condOptGrowth_tendsto_condOptGrowthInfty μ ℱ X … で bstar / W*_k / W_∞ を得る
+-- (b-lower): birkhoff_ergodic_ae hT hT_erg (hint (bstar k)) を causalLogReturn X (bstar k) に適用
+--            ⟹ (1/n)∑ log(bstar_k·X∘T^i) → condOptGrowth k = W*_k       (親 Leg B と同型)
+--            真の causal ≥ k 近似 (bstar_k は ℱk-可測 = 過去のみ) ⟹ liminf(1/n log S*_n) ≥ W*_k
+--            sup_k ⟹ liminf ≥ ⨆ W*_k = W_∞
+-- (b-upper): (1/n) log S*_n ≤ (1/n)∑ log(bstar_k·X∘T^i) + err_k(n),  err_k(n) → 0 a.s.
+--            ⟹ limsup ≤ W*_k  (per-k)、k↑ で W_∞ (R2 monotone-close = entropyRate_eq_lim の類似)
+-- sandwich: tendsto_of_le_liminf_of_limsup_le (W_∞ ≤ liminf ∧ limsup ≤ W_∞)
+```
+
+## R3-A. 増加 market-past filtration (in-project 既存 = 最重要発見)
+
+> **SMB two-sided extension が既に「増加 past filtration」を所有**。M0 の Block 1D は antitone な
+> `backwardFiltration`/`tailSigma` のみ記録していたが、`TwoSidedExtension/Backward.lean` は別に
+> **増加 `Filtration ℕ`** を持つ。plan 判断ログ 3 の「family は antitone のみ所有、増加は genuine 新規」は
+> **部分的に誤り** — 構成は既存 (Fintype-free)、真に新規なのは real-alphabet ambient 測度のみ。
+
+| 概念 | in-project decl (verbatim 署名) | file:line | 向き | R3 での扱い |
+|---|---|---|---|---|
+| **finite past σ-代数** | `@[reducible] def pastSigma (k : ℕ) : MeasurableSpace (∀ _ : ℤ, α) := cylinderEvents (X := fun _ : ℤ ↦ α) {i : ℤ \| -(k : ℤ) ≤ i ∧ i ≤ -1}` | `Backward.lean:64` | **増加** | `α := Fin m → ℝ` で再掲 (本体 Fintype-free)。`{-k ≤ i ≤ -1}` = 直近 k 過去 |
+| **単調性 (増加の証明)** | `lemma pastSigma_mono : Monotone (pastSigma (α := α))` (`omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [IsProbabilityMeasure μ]`) | `Backward.lean:70` | — | **increasing 確定** (longer past = larger σ-algebra)。CT 16.5.1 の向きと一致 |
+| **増加 filtration 本体** | `@[entry_point] def pastFiltration : Filtration ℕ (MeasurableSpace.pi : MeasurableSpace (∀ _ : ℤ, α)) where seq k := pastSigma k; mono' _ _ hij := pastSigma_mono hij; le' _ := cylinderEvents_le_pi` | `Backward.lean:84` | **増加** | **R2 の `ℱ : Filtration ℕ m0` に直接 instantiate 可** (m0 = `MeasurableSpace.pi`)。本体は `pastSigma`/`pastSigma_mono`/`cylinderEvents_le_pi` のみ参照 = Fintype-FREE (需要インスタンスは `[MeasurableSpace α]` のみ) |
+| **無限過去 σ-代数** | `@[reducible] def negPastSigma : MeasurableSpace (∀ _ : ℤ, α) := cylinderEvents (X := fun _ : ℤ ↦ α) {i : ℤ \| i ≤ -1}` | `Backward.lean:97` | — | `⨆ k, pastSigma k` の閉形。W_∞ の tail 条件付け先 |
+| **⨆ = 無限過去 (向き整合)** | `lemma iSup_pastSigma_eq_negPastSigma : ⨆ k : ℕ, pastSigma (α := α) k = negPastSigma (α := α)` (`omit [Fintype…] [IsProbabilityMeasure μ]`) | `Backward.lean:107` | — | R2 の `⨆ k, ℱ k` が無限過去に一致することを保証 (Fintype-free) |
+| **座標0 (= X = 観測)** | `def coord0 : (∀ _ : ℤ, α) → α := fun x ↦ x 0` / `theorem measurable_coord0 : Measurable coord0` | `Backward.lean:144,149` | — | R3 の `X := coord0` (現在の市場観測)。`Fin m → ℝ` 値でそのまま |
+
+**⚠️ 再利用境界 (Fintype 依存の分水嶺)**:
+
+| 資産 | Fintype 依存? | R3 での扱い |
+|---|---|---|
+| `pastSigma` / `pastFiltration` / `negPastSigma` / `iSup_pastSigma_eq_negPastSigma` / `pastSigma_mono` / `coord0` | **無** (全 `omit` または未参照) | `α = Fin m → ℝ` で再掲 or 直接再利用。**plumbing** |
+| **`μZ` (二側拡張測度)** (`Core.lean:296`) | **有** (finite-alphabet 射影族 `isProjectiveMeasureFamily_shiftedMarginal` + `stationaryContent_tendsto_zero` tightness + `ClosedCompactCylinders`) | **再利用不可**。R3 は pi 測度 `μ` + `MeasurePreserving shift`/`Ergodic shift` を**正則性仮説**として受ける (親 Leg B と同様) |
+| **`measurePreserving_shiftZ` (`Core.lean:370`) / `ergodic_shiftZ` (`Core.lean:1045`)** | **有** (`p : ErgodicProcess μ α`、finite alphabet) | **再利用不可**。R3 の `hT`/`hT_erg` は仮説 (二側構成の deferral) |
+
+**標準 Borel 発火 (R2 の新規前提)**: `StandardBorelSpace.pi_countable {ι : Type*} [Countable ι] {α : ι → Type*}
+[∀ n, MeasurableSpace (α n)] [∀ n, StandardBorelSpace (α n)] : StandardBorelSpace (∀ n, α n)`
+(`Mathlib/MeasureTheory/Constructions/Polish/Basic.lean:150`、**instance**)。
+`ι = ℤ` (Countable) × `α n = Fin m → ℝ` (有限 pi of ℝ ⟹ StandardBorel) ⟹ `∀ _ : ℤ, Fin m → ℝ` は `[StandardBorelSpace]`。
+測度構造は `MeasurableSpace.pi` = `pastFiltration` の `m0` と一致。**R2 の `[StandardBorelSpace Ω]` + `[Nonempty Ω]` は発火する。**
+
+## R3-B. Birkhoff 下界の再利用面 (親 Leg B + SMB テンプレ)
+
+| decl (verbatim 署名) | file:line | R3 で直接 consume? | 備考 |
+|---|---|---|---|
+| **Birkhoff 本体** `theorem birkhoff_ergodic_ae {μ : Measure Ω} [IsProbabilityMeasure μ] {T : Ω → Ω} (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ) {f : Ω → ℝ} (hf : Integrable f μ) : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ birkhoffAverageReal T f n ω) atTop (𝓝 (∫ x, f x ∂μ))` | `BirkhoffErgodic.lean:1000` | ✅ | `f := causalLogReturn X (bstar k)` (固定可積分観測量) で下界。`bstar k` が ℱk-可測 (= 過去のみ) でも `f` は ω の固定関数 ⟹ 適用可 |
+| `noncomputable def birkhoffAverageReal (T : Ω → Ω) (f : Ω → ℝ) (n : ℕ) : Ω → ℝ := fun ω ↦ (∑ i ∈ Finset.range (n + 1), f (T^[i] ω)) / (n + 1 : ℝ)` | `BirkhoffErgodic.lean:80` | ✅ | 正規化 `(n+1)`-項/`(n+1)`。R3 主定理の time-average 形と一致 |
+| **親 Leg B テンプレ** `@[entry_point] theorem seqLogWealth_div_tendsto_stationary (μ : Measure Ω) [IsProbabilityMeasure μ] {T : Ω → Ω} (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ) (X : Ω → (Fin m → ℝ)) (b : Fin m → ℝ) (hint : Integrable (stationaryLogReturn X b) μ) : ∀ᵐ ω ∂μ, Tendsto (fun n ↦ (∑ i ∈ Finset.range (n + 1), stationaryLogReturn X b (T^[i] ω)) / (n + 1 : ℝ)) atTop (𝓝 (∫ ω, stationaryLogReturn X b ω ∂μ))` | `StationaryMarket.lean:66` | △ (写経) | **証明本体 2 行**: `filter_upwards [birkhoff_ergodic_ae hT hT_erg hint]`。R3 は `stationaryLogReturn X b` (固定 b) → `causalLogReturn X (bstar k)` (ω 依存 bstar) に一般化 = 新 decl。積分先 `∫ causalLogReturn X (bstar k) = condOptGrowth k = W*_k` |
+| **SMB k 次条件付き Birkhoff** `theorem birkhoffAverage_pmfLogCondMarkov_tendsto` (署名は `pmfLogCondMarkov`/`ErgodicProcess` 依存) | `KMarkovApproximation.lean:119` | ✗ (finite) | R3 下界の**構造アナログ**: k 次条件付き量に Birkhoff → `conditionalEntropyTail k`。real-valued では `condOptGrowth k` へ写経 (decl lift 不可、pattern のみ) |
+| **SMB 無限過去 Birkhoff** `theorem birkhoffAverage_pmfLogCondInfty_tendsto (μ) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) : ∀ᵐ x ∂(μZ …), Tendsto (fun n ↦ negLogQInftyZ … n x / n) atTop (𝓝 (entropyRate …))` | `Liminf.lean:144` | ✗ (finite) | 同上。`measurePreserving_shiftZ`+`ergodic_shiftZ`+`integrable_pmfLogCondInfty`+`birkhoff_ergodic_ae` の 4 部品組立 = R3 が写経する骨格 |
+
+## R3-C. sandwich 骨格: alphabet 非依存 vs finite-essential (機械確認)
+
+各 decl が `Fintype`/pmf を署名/本体で参照するかで判定。
+
+| 補題 | file:line | Fintype/pmf 依存? | R3 再利用 |
+|---|---|---|---|
+| **`tendsto_of_le_liminf_of_limsup_le` (Mathlib、sandwich core)** `theorem … {f : Filter β} {u : β → α} {a : α} (hinf : a ≤ liminf u f) (hsup : limsup u f ≤ a) (h : …) (h' : …) : Tendsto u f (𝓝 a)` | `Mathlib/Topology/Order/LiminfLimsup.lean:306` | **無 (完全一般)** | ✅ **sandwich の心臓、直接 consume** (`a := W_∞`) |
+| `Filter.limsup_le_limsup` / `ge_of_tendsto'` | Mathlib | 無 | ✅ per-k 上界を tendsto と比較 (Limsup.lean が実証済使用) |
+| `Real.tendsto_pow_log_div_mul_add_atTop` (`log n / n → 0`) | Mathlib | 無 | ✅ 誤差項 `2 log n / n → 0` に使用 (Limsup.lean:80 が実証) |
+| **R2 monotone-close** `exists_condOptGrowth_tendsto_condOptGrowthInfty` (`Tendsto (condOptGrowth) atTop (𝓝 condOptGrowthInfty)`) | `StationaryWinfty.lean:735` | 無 (real-valued) | ✅ SMB `entropyRate_eq_lim_condEntropy` の役割 = W*_k → W_∞。**R2 が既に所有** |
+| `algoet_cover_limsup_bound` (per-k 上界 → k↑ close) | `Limsup.lean:125` | pmf (`blockLogAvg`/`entropyRate`) | ✗ decl / ✅ **組立 pattern** (per-k `limsup ≤ H_k` → `H_k → entropyRate` で close) を写経 |
+| `algoet_cover_liminf_bound` (`entropyRate ≤ liminf blockLogAvg`) | `Liminf.lean:395` | pmf (`blockLogAvgZ`/`natProj`) | ✗ decl / ✅ 下界 pattern のみ |
+| `limsup_blockLogAvg_le_condEntropyTail` (`limsup ≤ H_k`) | `Limsup.lean:66` | pmf (`blockLogAvg`/`negLogQk`) | ✗ decl / △ **nearest template** for R3 上界 (`limsup (1/n log S*_n) ≤ W*_k`) |
+| `blockLogAvg_le_negLogQk_plus_error` (`blockLogAvg ≤ negLogQk/n + 2 log n/n`) | `Limsup.lean:26` | pmf (`negLogQk`) | ✗ | R3 上界誤差の**構造アナログ** (真値 ≤ k 近似 + `2 log n / n`) |
+| **`MRatioUp_le_sq_eventually` (SMB 上界誤差の実体)** `(μ) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k : ℕ) : ∀ᵐ ω, ∀ᶠ n, MRatioUp μ p k n ω ≤ ENNReal.ofReal ((n:ℝ)^2)` | `MarkovLikelihoodRatio.lean:697` | **本質的 (block 尤度比 + Markov + Borel-Cantelli p-series)** | ✗ **SMB 固有、portfolio では別構造** — wealth-ratio martingale が要る (下記自作) |
+| `blockLogAvg`/`negLogQk`/`pmfLogCondMarkov`/`entropyRate`/`conditionalEntropyTail` (defs) | McMillanBreiman/KMarkov | pmf block prob (`measurable_of_finite`) | ✗ | R3 は `causalLogReturn`/`condOptGrowth`/`condOptGrowthInfty` (R2 既存) で代替 |
+
+**結論 (R3-C)**: sandwich を閉じる 3 本の alphabet 非依存 core — Mathlib `tendsto_of_le_liminf_of_limsup_le` +
+in-project `birkhoff_ergodic_ae` + **R2 `exists_condOptGrowth_tendsto_condOptGrowthInfty`** — は全在庫。
+finite-alphabet SMB decl (`blockLogAvg`/`negLogQ*`/`MRatio*`/`algoet_cover_*`) は decl lift 不可だが、
+**救うべきは論理骨格 (per-k 挟み込み → k↑ close) のみで、それは上記 core で足りる**。
+救えないのは SMB 固有の上界誤差 `MRatioUp_le_sq_eventually` (block 尤度比) — portfolio の上界誤差は
+**wealth-ratio martingale** (別構造、自作) から出る。
+
+## R3-D. 上界: 真の causal log-optimal ≤ k 次近似 (最大 gap)
+
+| 資産 | 状態 | R3 での使用可否 |
+|---|---|---|
+| **R2 条件付き優越** `exists_condLogOptimalSeq` の第 3 項: `∀ k c, StronglyMeasurable[ℱ k] c → (∀ ω, c ω ∈ stdSimplex …) → μ[causalLogReturn X c \| ℱ k] ≤ᵐ[μ] μ[causalLogReturn X (bstar k) \| ℱ k]` | ✅ 既存 (`StationaryWinfty.lean:600`) | **stage-wise 条件付き優越のみ** — 任意の ℱk-可測 simplex 競合 `c` に対する `μ[·\|ℱk]`-order。**pathwise wealth-ratio bound ではない** |
+| **pathwise 上界** `limsup (1/n) log S*_n ≤ W*_k`(+ 誤差) | ❌ 不在 | R2 の条件付き優越 → pathwise limsup への変換に **新規 martingale/Barron 型論法**が要る (下記) |
+
+**gap の正体**: R2 は「各段 k で `bstar_k` が全 ℱk-可測競合を条件付き優越」を与える (stage-wise, in-expectation)。
+R3 上界が要するのは「真の causal 富 `S*_n` の time-average log が pathwise (a.s.) に `W*_k + o(1)` で抑えられる」。
+この**変換 = wealth-ratio `S*_n / Ŝ_n^{(k)}` の super-martingale 性 + Borel-Cantelli (or Barron/Breiman)** で、
+`MRatioUp_le_sq_eventually` の SMB 版 (block 尤度比) の**portfolio アナログ**。単一既存 lemma に落ちない = R3 の解析の心臓。
+
+## Key-preconditions box (R3 で前提事故が起きやすい)
+
+- **`birkhoff_ergodic_ae`** — `{μ} [IsProbabilityMeasure μ]`; `MeasurePreserving T μ μ`; `Ergodic T μ`; `{f : Ω → ℝ} Integrable f μ`。観測量 `f = causalLogReturn X (bstar k)` は**ω の固定関数** (bstar_k が過去可測でも可)。
+- **`StandardBorelSpace.pi_countable`** — `[Countable ι]` (ℤ OK) + `[∀ n, StandardBorelSpace (α n)]` (各 `Fin m → ℝ` OK)。測度構造は `MeasurableSpace.pi`。R2 の `[StandardBorelSpace Ω] [Nonempty Ω]` を発火 (Nonempty: pi 空間は `Fin m → ℝ` が Nonempty ⟹ OK)。
+- **R2 headline `exists_condOptGrowth_tendsto_condOptGrowthInfty`** — `[StandardBorelSpace Ω] [Nonempty Ω]`; `[IsProbabilityMeasure μ]`; `ℱ : Filtration ℕ m0`; `[Nonempty (Fin m)]` (m≥1); `hX : Measurable X`; `hpos`/`hint`/`hUB` (市場正則性)。**R3 は `ℱ := pastFiltration`、`m0 := MeasurableSpace.pi` で instantiate**。
+- **`pastFiltration` 再利用** — 本体は `[MeasurableSpace α]` のみ需要 (Fintype 未参照)。`α = Fin m → ℝ` で再掲時、Lean が未使用 Fintype を auto-omit するか要確認 (最悪 ~5 行再宣言)。**ambient `μZ`/`ergodic_shiftZ` は Fintype 依存で再利用不可** (仮説化)。
+- **`tendsto_of_le_liminf_of_limsup_le`** — `IsBoundedUnder (· ≤ ·)` / `(· ≥ ·)` は `isBoundedDefault` で自動、ただし `(1/n) log S*_n` の a.s. bddness を別途要する場合あり (SMB `blockLogAvgZ_bddAbove_ae` の類似)。
+
+## 自作が必要な要素 (R3、優先度順)
+
+1. **[R3-a、plumbing] 具体 filtration instantiate + 正則性配線** (~30–80 行)
+   - `pastFiltration (α := Fin m → ℝ)` を再掲 (or 直接) → R2 `exists_condOptGrowth_tendsto_condOptGrowthInfty` に食わせる。
+   - `[StandardBorelSpace (∀ _ : ℤ, Fin m → ℝ)]` を `pi_countable` で導出。`(μ, shift, hT, hT_erg)` を仮説化 (μZ/ergodic_shiftZ の代替)。
+   - 落とし穴: `MeasurableSpace.pi` (pastFiltration の m0) と `pi_countable` の測度構造の syntactic 一致確認。**壁でない。**
+2. **[R3-b-lower、写経] Birkhoff 下界** (~80–150 行)
+   - 親 Leg B `seqLogWealth_div_tendsto_stationary` を b→bstar_k に一般化 → `(1/n)∑ log(bstar_k·X∘T^i) → W*_k`。
+   - `liminf(1/n log S*_n) ≥ W*_k` (真の causal ≥ k 近似、bstar_k は過去可測) → sup_k で `≥ W_∞`。
+   - 落とし穴: 「真の causal ≥ k 近似」の pathwise 不等式 (S*_n は各段 full-past 最適、Ŝ_n^{(k)} は k-past 最適)。
+3. **[R3-b-upper、解析の心臓] pathwise 上界誤差制御** (~150–300 行、**最大リスク**)
+   - `(1/n) log S*_n ≤ (1/n)∑ log(bstar_k·X∘T^i) + err_k(n)`、`err_k(n) → 0` a.s.
+   - 実装候補: wealth-ratio `S*_n/Ŝ_n^{(k)}` の super-martingale + Ville/Doob + Borel-Cantelli (SMB `MRatioUp_le_sq_eventually` の portfolio 版)。
+   - **nearest template**: `limsup_blockLogAvg_le_condEntropyTail` (`Limsup.lean:66`) — per-k `limsup ≤ H_k` を eventual bound + tendsto で。real-valued 版 `limsup(1/n log S*_n) ≤ W*_k + 0`。
+   - 落とし穴: R2 の条件付き優越 (`μ[·\|ℱk]`-order) は stage-wise であり pathwise limsup へ直結しない (§R3-D)。
+4. **[R3、close] sandwich** (~20 行): `tendsto_of_le_liminf_of_limsup_le` で `W_∞ ≤ liminf ∧ limsup ≤ W_∞` を突き合わせ。
+
+## Mathlib / in-project 壁の列挙 (`@residual` 候補)
+
+| 候補壁 | loogle / 機械確認 | 判定 |
+|---|---|---|
+| **増加 market-past filtration** | in-project `pastFiltration` (`Backward.lean:84`) 既存・増加・Fintype-free。`StandardBorelSpace.pi_countable` (Polish/Basic.lean:150) 発火 | **NOT a wall** — 構成既存、plumbing 自作 (~30–80 行)。**新 slug 不要** |
+| **real-alphabet 二側拡張測度 `μZ` + ergodic shift** | in-project `μZ`/`ergodic_shiftZ` は Fintype 依存 (機械確認)。real-alphabet Kolmogorov 拡張は tightness を要す | **NOT a wall (回避)** — R3 は `(μ,T,hT,hT_erg)` を正則性仮説化 (親 Leg B 前例)。二側構成の deferral、genuine gap でない |
+| **上界 pathwise 誤差制御** (真 causal ≤ k 近似 + 消失) | Mathlib: `Real.log`-ratio martingale AEP / Barron–Breiman は探索要 (下記)。in-project SMB `MRatioUp_le_sq_eventually` は block 尤度比 (portfolio に lift 不可) | **human-judgment (low-trust)** — wealth-ratio martingale 自作 (~150–300 行) で閉じる公算だが、Barron/Breiman 一般形が要れば genuine wall。**R3 gateway atom で実機判定**。M0/R3 在庫段階では新 slug の根拠なし |
+
+**loogle 確認 (上界誤差の Mathlib 直接資産)**:
+- `MeasureTheory.Martingale, Filter.limsup` 系 / general "log-likelihood-ratio AEP" は Mathlib に ready 形 **不在の見込み** (SMB を in-project 自作した事実が裏付け)。
+- **要 gateway 実機**: 上界を `sorry` で残しつつ骨格を組み、pathwise 誤差 lemma を単独 atom で `lean-implementer` に投げて「wealth-ratio super-martingale + Borel-Cantelli で閉じるか / genuine wall か」を早期判定 (gateway-atom-first)。**M0/R3 在庫段階で wall 断定はしない** (loogle 0-hit 単独では不十分、in-project SMB pattern の写経可否が未確定)。
+
+## 撤退ラインへの距離 (親 plan `portfolio-stationary-woo-plan.md`)
+
+plan の撤退ライン:
+1. **R1/R2/R3 のいずれか詰まり** → signature を target 形のまま body `sorry` + `@residual(plan:portfolio-stationary-woo-plan)` (load-bearing bundling 禁止)。
+2. **R3 が genuine Mathlib gap (real-valued SMB) 確定** → analytic core を `sorry` + 新 `@residual(wall:<name>)` 分離、組立骨格は救う。
+
+**判定 (R3 在庫時点)**:
+- **ライン 1**: R3-a (plumbing) / R3-b-lower (写経) は詰まる公算低 (骨格在庫)。R3-b-upper が詰まれば**上界 lemma のみ**を `sorry` + `@residual(plan:portfolio-stationary-woo-plan)` で残し、sandwich consumer (骨格) は生かす。**degenerate fallback 追加不要** (plan の 2 exit を維持)。
+- **ライン 2**: R3-b-upper の pathwise 誤差制御が gateway atom で「Barron/Breiman 一般形が要る = SMB 級 real-valued AEP の genuine gap」と確定した場合のみ発動 → analytic core (`limsup(1/n log S*_n) ≤ W*_k` の誤差 lemma) を `sorry` + **新 `@residual(wall:<slug>)`** で分離、上下界を仮定した sandwich 骨格 (`tendsto_of_le_liminf_of_limsup_le` consumer) は proof-done で救う。新 slug は `docs/audit/audit-tags.md` register へ。
+- **積分核 / AEP 極限 / W_∞ を `*Hypothesis` predicate に抱えさせる形は禁止** (plan 正直性メモ)。retreat exit は `sorry` のみ。
+
+## Starting skeleton (R3、`InformationTheory/Shannon/Portfolio/StationaryWinfty.lean` 追記 or 新 file)
+
+```lean
+import InformationTheory.Shannon.Portfolio.StationaryWinfty   -- R2 (condOptGrowth / 選択補題)
+import InformationTheory.Shannon.Portfolio.StationaryMarket    -- 親 Leg B (Birkhoff テンプレ)
+import InformationTheory.Shannon.BirkhoffErgodic               -- birkhoff_ergodic_ae
+import InformationTheory.Probability.TwoSidedExtension.Backward -- pastFiltration (増加、要 Fintype-free 再掲確認)
+import Mathlib.MeasureTheory.Constructions.Polish.Basic        -- StandardBorelSpace.pi_countable
+import Mathlib.Topology.Order.LiminfLimsup                     -- tendsto_of_le_liminf_of_limsup_le
+
+namespace InformationTheory.Shannon.Portfolio
+open MeasureTheory Filter Topology
+open scoped BigOperators ENNReal ProbabilityTheory
+
+variable {m : ℕ} [Nonempty (Fin m)]
+
+/-- R3 上界の解析核: 真の causal log-optimal 富の時間平均 log は k 次近似 + 消失誤差で抑えられる。
+    gateway atom (wealth-ratio martingale + Borel-Cantelli で閉じるか実機判定)。 -/
+theorem causalLogWealth_limsup_le_condOptGrowth
+    (μ : Measure (∀ _ : ℤ, Fin m → ℝ)) [IsProbabilityMeasure μ]
+    (X : (∀ _ : ℤ, Fin m → ℝ) → Fin m → ℝ)
+    (bstar : ℕ → (∀ _ : ℤ, Fin m → ℝ) → Fin m → ℝ) (k : ℕ)
+    /- + shift / hT / hT_erg / hpos / hint / 過去可測性前提 -/ :
+    ∀ᵐ ω ∂μ, Filter.limsup
+      (fun n ↦ (∑ i ∈ Finset.range (n+1), causalLogReturn X (bstar k) (shiftZ^[i] ω)) / (n+1 : ℝ))
+      atTop ≤ condOptGrowth μ X bstar k := by
+  sorry -- @residual(plan:portfolio-stationary-woo-plan) — R3-b-upper 解析の心臓、gateway atom
+
+/-- CT 16.5.1 完全形 headline (R4 で命名確定): causal log-optimal 富の成長率 → W_∞。
+    (a) pastFiltration で R2 を instantiate、(b) Algoet–Cover sandwich。 -/
+theorem logOptimal_growth_tendsto_Winfty
+    (μ : Measure (∀ _ : ℤ, Fin m → ℝ)) [IsProbabilityMeasure μ]
+    /- (hT : MeasurePreserving shiftZ μ μ) (hT_erg : Ergodic shiftZ μ) + 市場正則性 -/ :
+    True := by   -- 具体 signature は R4 で確定 (bstar は R2 選択補題から得る)
+  trivial
+
+end InformationTheory.Shannon.Portfolio
+```
+
+## Gateway verdict (R3、要約)
+
+**壁リスク判定 = (b) moderate–heavy self-build、genuine Mathlib primitive gap 無し (R3-b-upper に human-judgment 残 1)。**
+- **R3-a (増加 filtration instantiate)**: **NOT a wall**。`pastFiltration` (`Backward.lean:84`) が増加 `Filtration ℕ (MeasurableSpace.pi)` を既に所有 (Fintype-free)、`StandardBorelSpace.pi_countable` で R2 前提発火。ambient `μZ`/`ergodic_shiftZ` は Fintype 依存で `(μ,T,hT,hT_erg)` 仮説化 (親 Leg B 前例)。plumbing ~30–80 行。
+- **R3-b-lower (Birkhoff 下界)**: **NOT a wall**。`birkhoff_ergodic_ae` + 親 Leg B `seqLogWealth_div_tendsto_stationary` (2 行証明) の写経、b→bstar_k 一般化。~80–150 行。
+- **R3-b-upper (pathwise 上界誤差)**: **human-judgment (low-trust)、単一の R3 unknown**。R2 の条件付き優越は stage-wise であり pathwise limsup へ直結しない (§R3-D)。SMB `MRatioUp_le_sq_eventually` (block 尤度比) は portfolio に lift 不可 = wealth-ratio martingale 自作が要る。~150–300 行で閉じる公算だが、Barron/Breiman 一般形が要れば genuine wall。**次に解くべき gateway atom = `causalLogWealth_limsup_le_condOptGrowth` を単独 dispatch し、wealth-ratio super-martingale + Borel-Cantelli で閉じるか実機判定** (gateway-atom-first)。
