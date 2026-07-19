@@ -346,6 +346,14 @@ is the conditional (past-measurable) form of the R1 measurable-argmax gateway
 `exists_measurable_argmax_on_stdSimplex`, applied to the conditional growth rate
 `b ↦ μ[log (b · X) | ℱ k]`. The `hpos`/`hint` hypotheses are market-regularity preconditions
 (positivity for the `log` domain, integrability of simplex log-returns).
+
+The remaining work is the conditional lift of the R1 gateway, with two analytic sub-blockers:
+(1) a version of the conditional growth rate `F_k ω b = (μ[log (b · X) | ℱ k]) ω` that is
+concave and continuous in `b` for a.e. `ω` under a single null set (the raw `condExp` gives only
+`b`-pointwise a.e. control; making it uniform in the continuum of `b` needs a regular conditional
+version / disintegration), so that R1 applies with ambient σ-algebra `ℱ k`; and
+(2) the pull-out identity `(μ[log (c · X) | ℱ k]) ω = F_k ω (c ω)` for `ℱ k`-measurable `c`, which
+turns the pointwise argmax of `bstar k` into the conditional dominance stated here.
 @residual(plan:portfolio-stationary-woo-plan) -/
 theorem exists_condLogOptimalSeq (μ : Measure Ω) [IsProbabilityMeasure μ]
     (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) [Nonempty (Fin m)]
@@ -370,12 +378,26 @@ theorem condOptGrowth_monotone (μ : Measure Ω) [IsProbabilityMeasure μ]
     (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) (bstar : ℕ → Ω → Fin m → ℝ)
     (hmeas : ∀ k, StronglyMeasurable[ℱ k] (bstar k))
     (hsimplex : ∀ k ω, bstar k ω ∈ stdSimplex ℝ (Fin m))
-    (hintb : ∀ k, Integrable (causalLogReturn X (bstar k)) μ)
     (hdom : ∀ (k : ℕ) (c : Ω → Fin m → ℝ), StronglyMeasurable[ℱ k] c →
       (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
       μ[causalLogReturn X c | ℱ k] ≤ᵐ[μ] μ[causalLogReturn X (bstar k) | ℱ k]) :
     Monotone (condOptGrowth μ X bstar) := by
-  sorry -- @residual(plan:portfolio-stationary-woo-plan)
+  apply monotone_nat_of_le_succ
+  intro k
+  -- `bstar k` is `ℱ (k+1)`-measurable (`ℱ` increasing), so it is a legal competitor at stage `k+1`.
+  have hmeas_k1 : StronglyMeasurable[ℱ (k + 1)] (bstar k) :=
+    (hmeas k).mono (ℱ.mono (Nat.le_succ k))
+  have hle : ℱ (k + 1) ≤ m0 := ℱ.le (k + 1)
+  -- Conditional optimality of `bstar (k+1)` dominates the competitor `bstar k`.
+  have hdom_k : μ[causalLogReturn X (bstar k) | ℱ (k + 1)]
+      ≤ᵐ[μ] μ[causalLogReturn X (bstar (k + 1)) | ℱ (k + 1)] :=
+    hdom (k + 1) (bstar k) hmeas_k1 (hsimplex k)
+  -- Integrate the pointwise conditional dominance; `∫ μ[f | ℱ] = ∫ f` collapses both sides.
+  calc condOptGrowth μ X bstar k
+      = ∫ ω, (μ[causalLogReturn X (bstar k) | ℱ (k + 1)]) ω ∂μ := (integral_condExp hle).symm
+    _ ≤ ∫ ω, (μ[causalLogReturn X (bstar (k + 1)) | ℱ (k + 1)]) ω ∂μ :=
+        integral_mono_ae integrable_condExp integrable_condExp hdom_k
+    _ = condOptGrowth μ X bstar (k + 1) := integral_condExp hle
 
 /-- Boundedness above of the conditional-optimal expected growth, from a uniform expected-return
 bound `hUB` (a market-regularity/integrability precondition: expected simplex log-returns are
@@ -387,7 +409,10 @@ theorem condOptGrowth_bddAbove (μ : Measure Ω) (X : Ω → Fin m → ℝ)
     (hUB : ∃ C : ℝ, ∀ c : Ω → Fin m → ℝ, (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
       Integrable (causalLogReturn X c) μ → ∫ ω, causalLogReturn X c ω ∂μ ≤ C) :
     BddAbove (Set.range (condOptGrowth μ X bstar)) := by
-  sorry -- @residual(plan:portfolio-stationary-woo-plan)
+  obtain ⟨C, hC⟩ := hUB
+  refine ⟨C, ?_⟩
+  rintro _ ⟨k, rfl⟩
+  exact hC (bstar k) (hsimplex k) (hintb k)
 
 /-- **R2 (Cover–Thomas §16.5)**: the conditional-optimal expected growth converges monotonically to
 the infinite-past optimal growth `W_∞`. There is a stagewise conditional log-optimal portfolio
@@ -395,9 +420,12 @@ sequence `bstar` (past-measurable, dominating all past-measurable competitors) w
 growth `condOptGrowth` is monotone, bounded above, and converges to its supremum
 `condOptGrowthInfty = W_∞`. The monotone-convergence conclusion is proved, not assumed:
 monotonicity from the conditional optimality of `bstar`, boundedness from the regularity envelope
-`hUB`, convergence via `tendsto_atTop_ciSup`. R3 consumes `bstar`/`condOptGrowth`/`condOptGrowthInfty`
-for the Algoet–Cover sandwich `(1/n) log S*_n → W_∞`.
-@residual(plan:portfolio-stationary-woo-plan) -/
+`hUB`, convergence via `tendsto_atTop_ciSup`. R3 consumes
+`bstar`/`condOptGrowth`/`condOptGrowthInfty` for the Algoet–Cover sandwich `(1/n) log S*_n → W_∞`.
+
+This is a genuine reduction: its own body has no `sorry`. It is conditional only on the existence
+of the conditional log-optimal selection `exists_condLogOptimalSeq`, whose measurable-selection core
+is the sole open residual (`@residual(plan:portfolio-stationary-woo-plan)` there). -/
 theorem exists_condOptGrowth_tendsto_condOptGrowthInfty
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) [Nonempty (Fin m)]
@@ -418,7 +446,7 @@ theorem exists_condOptGrowth_tendsto_condOptGrowthInfty
   have hintb : ∀ k, Integrable (causalLogReturn X (bstar k)) μ := fun k ↦
     hint (bstar k) ((hmeas k).mono (ℱ.le k)).measurable (hsimplex k)
   refine ⟨bstar, hmeas, hsimplex, hdom, ?_⟩
-  have h_mono := condOptGrowth_monotone μ ℱ X bstar hmeas hsimplex hintb hdom
+  have h_mono := condOptGrowth_monotone μ ℱ X bstar hmeas hsimplex hdom
   have h_bdd := condOptGrowth_bddAbove μ X bstar hsimplex hintb hUB
   exact tendsto_atTop_ciSup h_mono h_bdd
 
