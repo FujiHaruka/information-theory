@@ -234,7 +234,7 @@ received through `hcoh`: a component-level shift/past coherence stating only tha
 `X`, `bstar i`, `bstarInf` composed with `T^[i]` (`i ≤ k`) are measurable w.r.t. the epoch-`k+1`
 conditioning σ-algebra. `hcoh` is a structural regularity precondition (measurability only; it
 encodes no integral, bound, or conditional-expectation inequality), discharged by the concrete
-past-filtration/shift instantiation (R3-a in the closure plan, where `ℱ := pastFiltration` and
+past-filtration/shift instantiation (where `ℱ := pastFiltration` and
 `T := shift` make each coordinate `≤ k` measurable w.r.t. `(past).comap Tᵏ⁺¹`). `hpos`/`hint`/
 `hint_coord` are market-regularity preconditions; `hInf_dom` is the KT dominance of `bstarInf`,
 received (not the proof core), mirroring `condKuhnTucker_infPast`. -/
