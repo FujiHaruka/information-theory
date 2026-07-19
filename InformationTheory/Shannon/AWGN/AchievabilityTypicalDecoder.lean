@@ -813,6 +813,44 @@ theorem awgn_unionBound_aliasMass_decay
 
 /-! ### Random-coding union bound -/
 
+private lemma awgn_unionBound_errorEvent_subset
+    {M n : ℕ} [NeZero M]
+    (A : Set ((Fin n → ℝ) × (Fin n → ℝ)))
+    (m : Fin M)
+    (E1 : (Fin M → Fin n → ℝ) → Set (Fin n → ℝ))
+    (E2 : (Fin M → Fin n → ℝ) → Fin M → Set (Fin n → ℝ))
+    (hE1_def : E1 = fun codebook ↦ {y | (codebook m, y) ∉ A})
+    (hE2_def : E2 = fun codebook m' ↦ {y | (codebook m', y) ∈ A}) :
+    ∀ codebook : Fin M → Fin n → ℝ,
+      (InformationTheory.Shannon.ChannelCoding.Code.mk
+          (M := M) (n := n) (α := ℝ) (β := ℝ)
+          codebook (jointTypicalDecoder A codebook)).errorEvent m
+        ⊆ E1 codebook ∪
+          ⋃ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2 codebook m' := by
+  classical
+  intro codebook y hy
+  rw [InformationTheory.Shannon.ChannelCoding.Code.mem_errorEvent] at hy
+  change jointTypicalDecoder A codebook y ≠ m at hy
+  simp only [hE1_def, hE2_def, Set.mem_union, Set.mem_setOf_eq, Set.mem_iUnion,
+    Finset.mem_erase, Finset.mem_univ, and_true]
+  by_cases hmA : (codebook m, y) ∈ A
+  · right
+    have hex : ∃ k : Fin M, (codebook k, y) ∈ A := ⟨m, hmA⟩
+    have hdec : jointTypicalDecoder A codebook y = Fin.find _ hex := by
+      unfold jointTypicalDecoder
+      rw [dif_pos hex]
+    set m' := Fin.find (fun k : Fin M ↦ (codebook k, y) ∈ A) hex with hm'_def
+    have hm'_mem : (codebook m', y) ∈ A := by
+      have := (Fin.find_eq_iff (i := m') hex).mp rfl
+      exact this.1
+    have hm'_ne : m' ≠ m := by
+      intro hmm
+      apply hy
+      rw [hdec]
+      exact hmm
+    exact ⟨m', hm'_ne, hm'_mem⟩
+  · exact Or.inl hmA
+
 /-- The random-coding union bound (Cover–Thomas 9.2, with the typicality slack
 `δ` separated from the error target `ε`). With the codebook drawn from the
 two-stage Gaussian product law and the decoder fixed to the joint-typicality
@@ -903,36 +941,8 @@ theorem awgn_random_coding_union_bound
           (M := M) (n := n) (α := ℝ) (β := ℝ)
           codebook (jointTypicalDecoder A codebook)).errorEvent m
         ⊆ E1 codebook ∪
-          ⋃ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2 codebook m' := by
-    intro codebook y hy
-    -- `hy : decoder y ≠ m`.
-    rw [InformationTheory.Shannon.ChannelCoding.Code.mem_errorEvent] at hy
-    change jointTypicalDecoder A codebook y ≠ m at hy
-    simp only [hE1_def, hE2_def, Set.mem_union, Set.mem_setOf_eq, Set.mem_iUnion,
-      Finset.mem_erase, Finset.mem_univ, and_true]
-    -- If the true codeword `m` is not typical, we land in `E1`.
-    by_cases hmA : (codebook m, y) ∈ A
-    · -- `m` is typical, so the decoder uses `Fin.find` and returns a typical index.
-      right
-      -- The decoder value: there *is* a typical index (`m` itself).
-      have hex : ∃ k : Fin M, (codebook k, y) ∈ A := ⟨m, hmA⟩
-      -- Unfold the decoder on the `dif_pos` branch.
-      have hdec : jointTypicalDecoder A codebook y = Fin.find _ hex := by
-        unfold jointTypicalDecoder
-        rw [dif_pos hex]
-      -- The found index is typical and (being ≠ m) gives the `E2` witness.
-      set m' := Fin.find (fun k : Fin M ↦ (codebook k, y) ∈ A) hex with hm'_def
-      have hm'_mem : (codebook m', y) ∈ A := by
-        have := (Fin.find_eq_iff (i := m') hex).mp rfl
-        exact this.1
-      have hm'_ne : m' ≠ m := by
-        intro hmm
-        apply hy
-        rw [hdec]
-        exact hmm
-      exact ⟨m', hm'_ne, hm'_mem⟩
-    · -- `m` not typical: `y ∈ E1`.
-      exact Or.inl hmA
+          ⋃ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2 codebook m' :=
+    awgn_unionBound_errorEvent_subset A m E1 E2 hE1_def hE2_def
   -- ── Pointwise (per-codebook) union bound on the channel measure. ──
   have h_ptwise : ∀ codebook : Fin M → Fin n → ℝ,
       (Wch codebook)
