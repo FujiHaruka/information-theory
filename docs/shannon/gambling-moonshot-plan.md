@@ -31,6 +31,16 @@ bridge で genuine closure する自立サブ計画。壁想定無し。
 | 6.1.3 副情報増分 = MI | [`gambling-side-information-plan.md`](gambling-side-information-plan.md) | ✅ proof-done + 監査 PASS (2026-07-04、headline `sideInfo_doublingRate_increment_eq_mutualInfo` + 条件付き Kelly `condDoublingRate_le_proportional`、ともに `@[entry_point]`・`@audit:ok`・sorryAx-free、root+README+roadmap 登録済) |
 | §6.3 operational 倍加率 (列レベル a.s. 収束) | [`gambling-operational-sequences-plan.md`](gambling-operational-sequences-plan.md) | ✅ 完了 (proof-done, sorryAx-free, `@audit:ok`) (2026-07-04、i.i.d. 競馬列で `(1/n)·log S_n → doublingRate b o p` a.s.、`aep_ae` SLLN clone + 期待値→pmf bridge。headline `seqLogWealth_div_tendsto_doublingRate` + Kelly 閉形式/最適性 corollary `seqLogWealth_proportional_div_tendsto` / `seqLogWealth_proportional_asymptotically_optimal`、すべて `@[entry_point]`、root+README+roadmap 登録済) |
 
+## 一般化 (Ch.16 log-optimal portfolio) — 子プラン
+
+有限アウトカム版 portfolio は本 `doublingRate` の非対角 price-relative への一般化
+(`X a i = o i · [a = i]` で gambling に一致)。KL 還元は非対角では効かず、証明ルートは凹性 + 有限 Jensen に
+分岐する (在庫が壁ゼロ確認済)。
+
+| サブテーマ | 子プラン | 状態 |
+|---|---|---|
+| Ch.16 log-optimal portfolio (concavity / Kuhn–Tucker / competitive optimality) | [`portfolio-moonshot-plan.md`](portfolio-moonshot-plan.md) | 📋 未着手 (在庫完備・壁ゼロ: [`portfolio-mathlib-inventory.md`](portfolio-mathlib-inventory.md)) |
+
 ## 進捗 (全 Phase DONE)
 
 - [x] Phase 0 — M0 API 在庫 (5 補題 verbatim 署名確認)
