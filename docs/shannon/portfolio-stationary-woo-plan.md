@@ -20,10 +20,10 @@ sorryAx-free @audit:ok。残 = R3-M 組立 (supermartingale limsup 上界 / Birk
 - [x] R2 — 条件付き成長率の単調収束 `W*_k ↑ W_∞` ✅ proof-done — `condOptGrowth_monotone` / `condOptGrowth_bddAbove` + 選択補題 `exists_condLogOptimalSeq` + headline `exists_condOptGrowth_tendsto_condOptGrowthInfty` すべて `@audit:ok` sorryAx-free。選択補題は `condExpKernel` (正則条件付き分布 / disintegration) 経由で closure — R1 gateway を ambient=`ℱ k` に instantiate + crux self-build `condExpKernel_ae_const` (ℱk-可測関数は κ_ω 下 a.e. 定数) + pull-out `condExp_causalLogReturn_eq`
 - [x] R3 (Route T 踏み台) — real-valued SMB 級 AEP: ✅ **fixed-stationary W_∞ AEP proof-done + 両 gate PASS** — 積分恒等式 `condOptGrowthInfty_eq_integral_infPast` (`:807`) + bstarInf 存在 `exists_infPast_condLogOptimal` (`:965`) + headline `stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty` (`:990`) すべて `@audit:ok` sorryAx-free。Route T は固定 bstarInf の漸近最適性 companion ⟹ **(B) 採択後は踏み台**として残置し Route M の下界/極限同定に再利用 (恒等式で W_∞ 同定)
 - [x] R3-M gateway — 加法→乗法変換 crux `condKuhnTucker_infPast` (`:1089`) ✅ **非壁確定 proof-done sorryAx-free @audit:ok** — R2 加法 dominance を wealth-ratio supermartingale が要する乗法 one-step 上界 `μ[(∑c·X)/(∑bstarInf·X)|⨆ℱ] ≤ᵐ 1` に変換。凸摂動一次条件 + setIntegral DCT で closure (κ_ω 還元不要)。補助 3 本 (`log_slope_tendsto_nhdsWithin`:1021 / `log_slope_bounds`:1036 / `condExp_nonpos_of_forall_setIntegral_nonpos`:1057) とも @audit:ok
-- [~] R3-M-upper — growing-memory 上界 🚧 **構造 landed + honesty gate PASS** (`growingMemory_eventually_le_condOptGrowthInfty`、eventual-bound 形、`StationaryWinftyAEP.lean` へ split 中)。crux `wealthRatioProcess_lintegral_le_one` (`∫⁻ M_n ≤ 1`) のみ honest sorry (`@residual(plan:...)`) 残 → closure は SMB テンプレ `integral_MRatioLowerZ_le_one` 手法 (n-induction + `condExp_comp_measurePreserving` tower)。**設計変更 (判断ログ 5)**: `Submartingale.ae_tendsto_limitProcess` 路は不採 (ℝ-limsup junk)、Markov+Borel–Cantelli で isolate
+- [~] R3-M-upper — growing-memory 上界 🚧 **構造 landed + honesty PASS + split 済 (`StationaryWinftyAEP.lean`) + crux base n=0 genuine closure** (`growingMemory_eventually_le_condOptGrowthInfty`、eventual-bound 形)。crux `wealthRatioProcess_lintegral_le_one` (`∫⁻ M_n ≤ 1`) の **succ のみ honest sorry** (`@residual(plan:...)`) → **R3-a 前提** (判断ログ 6)。**設計変更 (判断ログ 5)**: `Submartingale.ae_tendsto_limitProcess` 路は不採 (ℝ-limsup junk)、Markov+Borel–Cantelli で isolate
 - [ ] R3-M-lower — Birkhoff liminf 下界 (固定 k 戦略 → sup_k) 📋 **eventual-bound 形推奨** (`∀ε>0 ∀ᶠ n, gMLA ≥ W_∞−ε`、upper と組んで直接 Tendsto)
 - [ ] R3-M-sandwich — eventual 上下界を組んで直接 `Tendsto gMLA (𝓝 W_∞)` (limsup coboundedness 経由不要) 📋
-- [ ] R3-a — 抽象 ℱ を具体 `pastFiltration`+shift で instantiate 📋 (R4 plumbing)
+- [ ] R3-a — 抽象 ℱ を具体 `pastFiltration`+shift で instantiate 📋 **crux succ の前提 (前倒し、判断ログ 6)** — M_k の `(⨆ℱ).comap T^{k+1}`-可測性 (成長史 adaptedness) を供給
 - [ ] R4 — growing-memory headline 命名 (`@[entry_point]`) + 配線 (README/roadmap/facts) + 独立監査 📋
 
 ## ゴール / Approach
@@ -290,5 +290,19 @@ Birkhoff lower + sandwich、~260–430 行見込み) 追加で 1500 接近 ⟹ R
    `wealthRatioProcess_lintegral_le_one` (`∫⁻ M_n ≤ 1`) の increment transport は in-project `condExp_comp_measurePreserving`
    (`TwoSidedExtension/CondExpMeasurePreserving.lean:39`) + SMB 同型テンプレ `integral_MRatioLowerZ_le_one`
    (`SMB/AlgoetCover/TwoSidedRatio.lean:1261`、0 sorry) が供給 = **壁でなく plumbing** (honesty-auditor 両資産実在確認)。
-   crux は base=KT + n-induction tower で closure 予定 (file split 後、`StationaryWinftyAEP.lean`)。**次アクション =
-   split + crux closure → R3-M-lower (eventual 下界) → sandwich (直接 Tendsto)**。
+   crux は base=KT + n-induction tower で closure 予定 (file split 後、`StationaryWinftyAEP.lean`)。
+
+6. **crux succ は R3-a を前提とする — 順序是正 (active、finding、`213203fd`)**: split 済 (`StationaryWinftyAEP.lean`) +
+   crux **base n=0 genuine closure** (`condKuhnTucker_infPast` + tower、`market_pos`/`stdSimplex_component_le_one` de-private)。
+   だが **succ (inductive step) は現行の抽象-ℱ 署名で閉じない** (finding、crux docstring :76-93)。増分境界は利用可
+   (`condKuhnTucker_infPast` を `condExp_comp_measurePreserving` で epoch k+1 に transport)、**missing piece = pull-out の
+   adaptedness `M_k` の `(⨆ℱ).comap T^{k+1}`-可測性**。抽象 `ℱ`/`T`/`X` (任意・compatibility 未言明) はこれを与えず、
+   = 具体 pastFiltration/shift coherence = **R3-a そのもの**。⟹ **crux closure は file budget でなく R3-a を前提**。plan は
+   R3-a を「R4 plumbing」に置いていたが実際は crux の前提 ⟹ **R3-a を前倒し**。**判断待ち軸 (advisor-r3a 諮問、report 未 relay)**:
+   (a) concrete R3-a を先に instantiate (pastFiltration+shiftZ、plan の既定方向) vs (b) 最小 coherence 仮説 (`∀ i,
+   StronglyMeasurable[ℱ i] (fun ω ↦ X (T^[i] ω))` 級の shift-past compatibility) を crux+headline に precondition として
+   追加し R3-a で discharge (hybrid、R2 の抽象-parameterization と同型)。**orchestrator 暫定判断 = (b) hybrid 推奨** — adaptedness
+   は structural regularity precondition (MeasurePreserving/Ergodic と同類、`∫⁻ M_n≤1` を含意しない: adaptedness だけでは
+   KT/transport 無しに bound 出ず ⟹ 非 load-bearing、honest)、plan の抽象哲学に整合。**但し honesty-sensitive ゆえ次 leg で
+   advisor を clean に再諮問して確定推奨**。r3m-upper は署名変更を推測せず honest sorry 保持 (正しい)。**次アクション =
+   advisor 再諮問 → R3-a (or coherence-hyp) → crux succ closure → R3-M-lower (eventual 下界) → sandwich (直接 Tendsto) → R4**。
