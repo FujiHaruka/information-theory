@@ -124,14 +124,23 @@ lemma increment_eq (X : α → Fin m → ℝ) (bs : Fin m → ℝ) (bcond : γ �
   refine congrArg (pY y * ·) (Finset.sum_congr rfl (fun x _ ↦ ?_))
   rw [← mul_sub]
 
-/-- **Theorem 16.4.1** (Cover–Thomas, portfolio with side information): the increment of the
+/-- Theorem 16.4.1 (Cover–Thomas, portfolio with side information): the increment of the
 growth rate obtained from the side information `Y` is bounded above by the mutual
 information `I(X; Y)`. Here `bs` is a marginal log-optimal (Kuhn–Tucker) portfolio and
 `bcond y` an arbitrary portfolio on the simplex for each observed `y`, so
 `W(bcond | Y) − W*(X) ≤ I(X; Y)`.
 
 Unlike the horse-race mirror `sideInfo_doublingRate_increment_eq_mutualInfo` (an equality),
-the non-proportional log-optimal portfolio yields only an inequality. -/
+the non-proportional log-optimal portfolio yields only an inequality.
+
+@audit:ok — sorryAx-free (`[propext, Classical.choice, Quot.sound]`).
+`hbs`/`hbcond` are simplex-membership regularity (portfolio validity); without them the
+statement is false as framed (an off-simplex `bcond` gives `ΔW = log 100 > 0 = I` under
+`X ⊥ Y`). `hpos` is log-domain positivity and `hKT` the Kuhn–Tucker characterization of the
+marginal log-optimal baseline `bs`, consumed via the proven `competitive_optimality` — none
+is the conclusion. The `ΔW ≤ I` bound is genuinely derived from per-outcome Gibbs plus
+competitive optimality; the dropped `hKTcond` (optimality of `bcond`) is not needed for the
+upper bound. No load-bearing hypothesis. -/
 @[entry_point]
 theorem sideInfo_growthRate_increment_le_mutualInfo
     (X : α → Fin m → ℝ) (bs : Fin m → ℝ) (bcond : γ → Fin m → ℝ)
