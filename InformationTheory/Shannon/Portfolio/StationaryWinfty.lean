@@ -191,7 +191,9 @@ simplex, there is a measurable `bstar : Ω → (Fin m → ℝ)` picking, for eac
 simplex that maximizes `F ω` over the simplex.
 
 The domain-nonemptiness hypothesis `[Nonempty (Fin m)]` (i.e. `m ≥ 1`) is a regularity
-precondition: for `m = 0` the simplex is empty and no selection into it exists. -/
+precondition: for `m = 0` the simplex is empty and no selection into it exists.
+
+@audit:ok -/
 theorem exists_measurable_argmax_on_stdSimplex [Nonempty (Fin m)]
     (F : Ω → (Fin m → ℝ) → ℝ)
     (hF_meas : ∀ b : Fin m → ℝ, Measurable (fun ω ↦ F ω b))
