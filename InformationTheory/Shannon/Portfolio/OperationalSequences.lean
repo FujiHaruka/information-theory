@@ -100,7 +100,12 @@ lemma indepFun_portfolioLogReturn (μ : Measure Ω) (X : α → Fin m → ℝ) (
 market sequence `As`, a fixed rebalanced portfolio `b` under price relatives `X`, the
 time-averaged log-wealth growth `(1/n)·log S_n` converges almost surely to the growth rate
 `growthRate (lawPmf μ (As 0)) X b`, where `lawPmf μ (As 0)` is the law of a single
-outcome. -/
+outcome.
+@audit:ok — sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`). `lawPmf μ (As 0)` is a genuine definitional binding (pushforward law of
+`As 0`), not a bundled `(h : μ[…] = growthRate …)` slot. `hAs`/`hindep`/`hident` and
+`[IsProbabilityMeasure μ]` are the SLLN regularity preconditions. Routes through
+`strong_law_ae_real` + the expectation→pmf bridge `integral_comp_law`; non-circular. -/
 @[entry_point]
 theorem seqLogWealth_div_tendsto_growthRate
     (μ : Measure Ω) [IsProbabilityMeasure μ] (X : α → Fin m → ℝ) (b : Fin m → ℝ)
@@ -125,7 +130,15 @@ theorem seqLogWealth_div_tendsto_growthRate
 /-- **Operational asymptotic optimality** (Cover–Thomas §16.3): a log-optimal
 (Kuhn–Tucker) portfolio `bs` is asymptotically optimal. Almost surely both the arbitrary
 portfolio `b` and `bs` have a growth rate, and the arbitrary portfolio does not beat `bs`.
--/
+@audit:ok — sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`). `hKT` is the first-order Kuhn–Tucker condition on `bs` alone (gradient
+inequalities `∀ i, ∑ a, p a · X a i / S_bs(a) ≤ 1`), NOT the conclusion `W(b) ≤ W(bs)`:
+it is bridged to global optimality by the concavity/Jensen content proved sorry-free in
+`logOptimal_of_kuhnTucker` (Cover–Thomas Thm 16.2.1). Non-vacuous — a non-log-optimal `bs`
+fails `hKT` (by `kuhnTucker_of_logOptimal`), so the hypothesis genuinely pins the optimum
+rather than smuggling the comparison. `hb`/`hbs` are simplex membership, `hpos` is the
+log-domain positivity precondition; the two a.s. conjuncts come from H1 (×2) and the third
+deterministic inequality from the static theorem — no conjunct is passed as a hypothesis. -/
 @[entry_point]
 theorem seqLogWealth_asymptotically_optimal
     (μ : Measure Ω) [IsProbabilityMeasure μ] (X : α → Fin m → ℝ) (b bs : Fin m → ℝ)
