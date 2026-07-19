@@ -96,8 +96,8 @@ noncomputable def universalRegret (xs : ℕ → Fin (d + 1) → ℝ) (n : ℕ) :
 /-- A point of the corner simplex lifts to a genuine portfolio on `Fin (d + 1)`. -/
 theorem simplexLift_mem_stdSimplex {y : Fin d → ℝ} (hy : y ∈ cornerSimplex d) :
     simplexLift y ∈ stdSimplex ℝ (Fin (d + 1)) := by
-  refine ⟨fun j => ?_, ?_⟩
-  · refine Fin.lastCases ?_ (fun i => ?_) j
+  refine ⟨fun j ↦ ?_, ?_⟩
+  · refine Fin.lastCases ?_ (fun i ↦ ?_) j
     · simp only [simplexLift, Fin.snoc_last]
       have := hy.2
       linarith
@@ -110,11 +110,11 @@ theorem simplexLift_mem_stdSimplex {y : Fin d → ℝ} (hy : y ∈ cornerSimplex
 theorem wealthFactor_pos {xs : ℕ → Fin (d + 1) → ℝ} (hpos : ∀ i j, 0 < xs i j)
     {b : Fin (d + 1) → ℝ} (hb : b ∈ stdSimplex ℝ (Fin (d + 1))) (i : ℕ) :
     0 < ∑ j, b j * xs i j := by
-  refine Finset.sum_pos' (fun j _ => mul_nonneg (hb.1 j) (hpos i j).le) ?_
+  refine Finset.sum_pos' (fun j _ ↦ mul_nonneg (hb.1 j) (hpos i j).le) ?_
   obtain ⟨j, hj⟩ : ∃ j, 0 < b j := by
     by_contra h
     simp only [not_exists, not_lt] at h
-    have hle : ∑ j, b j ≤ 0 := Finset.sum_nonpos (fun j _ => h j)
+    have hle : ∑ j, b j ≤ 0 := Finset.sum_nonpos (fun j _ ↦ h j)
     rw [hb.2] at hle
     linarith
   exact ⟨j, Finset.mem_univ j, mul_pos hj (hpos i j)⟩
@@ -122,39 +122,39 @@ theorem wealthFactor_pos {xs : ℕ → Fin (d + 1) → ℝ} (hpos : ∀ i j, 0 <
 theorem constWealth_pos {xs : ℕ → Fin (d + 1) → ℝ} (hpos : ∀ i j, 0 < xs i j)
     {b : Fin (d + 1) → ℝ} (hb : b ∈ stdSimplex ℝ (Fin (d + 1))) (n : ℕ) :
     0 < constWealth xs b n :=
-  Finset.prod_pos (fun i _ => wealthFactor_pos hpos hb i)
+  Finset.prod_pos (fun i _ ↦ wealthFactor_pos hpos hb i)
 
 theorem isCompact_cornerSimplex : IsCompact (cornerSimplex d) := by
   have hclosed : IsClosed (cornerSimplex d) := by
     rw [cornerSimplex, Set.setOf_and, Set.setOf_forall]
-    refine IsClosed.inter (isClosed_iInter fun i => ?_) ?_
+    refine IsClosed.inter (isClosed_iInter fun i ↦ ?_) ?_
     · exact isClosed_le continuous_const (continuous_apply i)
-    · exact isClosed_le (continuous_finsetSum _ fun i _ => continuous_apply i) continuous_const
+    · exact isClosed_le (continuous_finsetSum _ fun i _ ↦ continuous_apply i) continuous_const
   have hbdd : Bornology.IsBounded (cornerSimplex d) := by
     refine (Metric.isBounded_closedBall (x := (0 : Fin d → ℝ)) (r := 1)).subset ?_
     intro y hy
     rw [mem_closedBall_zero_iff, pi_norm_le_iff_of_nonneg (by norm_num : (0 : ℝ) ≤ 1)]
     intro i
     rw [Real.norm_eq_abs, abs_of_nonneg (hy.1 i)]
-    exact (Finset.single_le_sum (fun j _ => hy.1 j) (Finset.mem_univ i)).trans hy.2
+    exact (Finset.single_le_sum (fun j _ ↦ hy.1 j) (Finset.mem_univ i)).trans hy.2
   exact Metric.isCompact_of_isClosed_isBounded hclosed hbdd
 
 theorem cornerSimplex_nonempty : (cornerSimplex d).Nonempty :=
-  ⟨0, fun _ => le_refl _, by simp⟩
+  ⟨0, fun _ ↦ le_refl _, by simp⟩
 
 theorem measurableSet_cornerSimplex : MeasurableSet (cornerSimplex d) :=
   isCompact_cornerSimplex.measurableSet
 
 theorem volume_cornerSimplex_pos : 0 < volume (cornerSimplex d) := by
   set U : Set (Fin d → ℝ) := {y | (∀ i, 0 < y i) ∧ ∑ i, y i < 1} with hU
-  have hUsub : U ⊆ cornerSimplex d := fun y hy => ⟨fun i => (hy.1 i).le, hy.2.le⟩
+  have hUsub : U ⊆ cornerSimplex d := fun y hy ↦ ⟨fun i ↦ (hy.1 i).le, hy.2.le⟩
   have hUopen : IsOpen U := by
     rw [hU, Set.setOf_and, Set.setOf_forall]
     exact IsOpen.inter
-      (isOpen_iInter_of_finite fun i => isOpen_lt continuous_const (continuous_apply i))
-      (isOpen_lt (continuous_finsetSum _ fun i _ => continuous_apply i) continuous_const)
+      (isOpen_iInter_of_finite fun i ↦ isOpen_lt continuous_const (continuous_apply i))
+      (isOpen_lt (continuous_finsetSum _ fun i _ ↦ continuous_apply i) continuous_const)
   have hUne : U.Nonempty := by
-    refine ⟨fun _ => 1 / (2 * ((d : ℝ) + 1)), fun i => by positivity, ?_⟩
+    refine ⟨fun _ ↦ 1 / (2 * ((d : ℝ) + 1)), fun i ↦ by positivity, ?_⟩
     rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, mul_one_div,
       div_lt_one (by positivity)]
     have : (0 : ℝ) ≤ (d : ℝ) := Nat.cast_nonneg d
@@ -170,15 +170,15 @@ theorem volume_cornerSimplex_toReal_pos : 0 < (volume (cornerSimplex d)).toReal 
 theorem continuous_liftWealth (xs : ℕ → Fin (d + 1) → ℝ) (n : ℕ) :
     Continuous (fun y : Fin d → ℝ ↦ constWealth xs (simplexLift y) n) := by
   have hlift : Continuous (fun y : Fin d → ℝ ↦ simplexLift y) := by
-    refine continuous_pi (fun j => ?_)
-    refine Fin.lastCases ?_ (fun i => ?_) j
+    refine continuous_pi (fun j ↦ ?_)
+    refine Fin.lastCases ?_ (fun i ↦ ?_) j
     · simp only [simplexLift, Fin.snoc_last]
-      exact continuous_const.sub (continuous_finsetSum _ fun i _ => continuous_apply i)
+      exact continuous_const.sub (continuous_finsetSum _ fun i _ ↦ continuous_apply i)
     · simp only [simplexLift, Fin.snoc_castSucc]
       exact continuous_apply i
   unfold constWealth
-  refine continuous_finsetProd _ (fun i _ => ?_)
-  refine continuous_finsetSum _ (fun j _ => ?_)
+  refine continuous_finsetProd _ (fun i _ ↦ ?_)
+  refine continuous_finsetSum _ (fun j _ ↦ ?_)
   exact ((continuous_apply j).comp hlift).mul continuous_const
 
 theorem integrableOn_liftWealth (xs : ℕ → Fin (d + 1) → ℝ) (n : ℕ) :
@@ -198,7 +198,7 @@ theorem simplexLift_init {b : Fin (d + 1) → ℝ} (hb : b ∈ stdSimplex ℝ (F
 
 theorem init_mem_cornerSimplex {b : Fin (d + 1) → ℝ} (hb : b ∈ stdSimplex ℝ (Fin (d + 1))) :
     Fin.init b ∈ cornerSimplex d := by
-  refine ⟨fun i => hb.1 i.castSucc, ?_⟩
+  refine ⟨fun i ↦ hb.1 i.castSucc, ?_⟩
   have hb2 := hb.2
   rw [Fin.sum_univ_castSucc] at hb2
   have hlast : 0 ≤ b (Fin.last d) := hb.1 _
@@ -221,14 +221,14 @@ theorem bestConstantWealth_attained (xs : ℕ → Fin (d + 1) → ℝ) (n : ℕ)
     rw [hb_eq]
     exact hystar_max (init_mem_cornerSimplex b.2)
   have hbdd : BddAbove (Set.range
-      (fun b : stdSimplex ℝ (Fin (d + 1)) => constWealth xs (b : Fin (d + 1) → ℝ) n)) :=
+      (fun b : stdSimplex ℝ (Fin (d + 1)) ↦ constWealth xs (b : Fin (d + 1) → ℝ) n)) :=
     ⟨_, by rintro _ ⟨b, rfl⟩; exact hUB b⟩
   haveI : Nonempty (stdSimplex ℝ (Fin (d + 1))) :=
     ⟨⟨simplexLift ystar, simplexLift_mem_stdSimplex hystar_mem⟩⟩
   have hBCW : bestConstantWealth xs n = constWealth xs (simplexLift ystar) n :=
     le_antisymm (ciSup_le hUB)
       (le_ciSup hbdd ⟨simplexLift ystar, simplexLift_mem_stdSimplex hystar_mem⟩)
-  refine ⟨ystar, hystar_mem, hBCW, fun z hz => ?_⟩
+  refine ⟨ystar, hystar_mem, hBCW, fun z hz ↦ ?_⟩
   rw [hBCW]
   exact hystar_max hz
 
@@ -236,7 +236,7 @@ theorem simplexLift_smul_add (lam : ℝ) (y z : Fin d → ℝ) :
     simplexLift ((1 - lam) • y + lam • z)
       = (1 - lam) • simplexLift y + lam • simplexLift z := by
   funext j
-  refine Fin.lastCases ?_ (fun i => ?_) j
+  refine Fin.lastCases ?_ (fun i ↦ ?_) j
   · simp only [simplexLift, Fin.snoc_last, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
     rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
     ring
@@ -270,18 +270,20 @@ theorem exp_neg_one_le_shrink (n : ℕ) :
 
 /-- Positivity of the universal wealth: with strictly positive price relatives every
 constant-rebalanced wealth is positive, and the uniform average over the
-positive-measure corner simplex stays positive. -/
+positive-measure corner simplex stays positive.
+
+@audit:ok — sorryAx-free (`[propext, Classical.choice, Quot.sound]`). `hpos` regularity. -/
 theorem universalWealth_pos
     (xs : ℕ → Fin (d + 1) → ℝ) (hpos : ∀ i j, 0 < xs i j) (n : ℕ) :
     0 < universalWealth xs n := by
   have hnn : 0 ≤ᵐ[volume.restrict (cornerSimplex d)]
       fun y ↦ constWealth xs (simplexLift y) n :=
     (ae_restrict_iff' measurableSet_cornerSimplex).mpr
-      (Eventually.of_forall fun y hy =>
+      (Eventually.of_forall fun y hy ↦
         (constWealth_pos hpos (simplexLift_mem_stdSimplex hy) n).le)
   have hsupp : Function.support (fun y ↦ constWealth xs (simplexLift y) n) ∩ cornerSimplex d
       = cornerSimplex d :=
-    Set.inter_eq_right.mpr fun y hy =>
+    Set.inter_eq_right.mpr fun y hy ↦
       ne_of_gt (constWealth_pos hpos (simplexLift_mem_stdSimplex hy) n)
   unfold universalWealth
   refine div_pos ?_ volume_cornerSimplex_toReal_pos
@@ -289,7 +291,10 @@ theorem universalWealth_pos
   exact volume_cornerSimplex_pos
 
 /-- The universal wealth never exceeds the best constant-rebalanced wealth: `Ŝ_n` is a
-uniform average of values `constWealth xs (simplexLift y) n ≤ S*_n`. -/
+uniform average of values `constWealth xs (simplexLift y) n ≤ S*_n`.
+
+@audit:ok — sorryAx-free (`[propext, Classical.choice, Quot.sound]`). `_hpos` is unused
+(dominance holds without positivity); underscored to keep the uniform core interface. -/
 theorem universalWealth_le_bestConstantWealth
     (xs : ℕ → Fin (d + 1) → ℝ) (_hpos : ∀ i j, 0 < xs i j) (n : ℕ) :
     universalWealth xs n ≤ bestConstantWealth xs n := by
@@ -301,7 +306,7 @@ theorem universalWealth_le_bestConstantWealth
   calc ∫ y in cornerSimplex d, constWealth xs (simplexLift y) n
       ≤ ∫ _ in cornerSimplex d, bestConstantWealth xs n :=
         setIntegral_mono_on (integrableOn_liftWealth xs n) hconst measurableSet_cornerSimplex
-          fun y hy => hmax y hy
+          fun y hy ↦ hmax y hy
     _ = bestConstantWealth xs n * (volume (cornerSimplex d)).toReal := by
         rw [setIntegral_const, smul_eq_mul, mul_comm]; rfl
 
@@ -309,7 +314,10 @@ theorem universalWealth_le_bestConstantWealth
 wealth by at most a factor `e · (n + 1) ^ d`. The homothety
 `b ↦ (1 − 1/(n+1)) b* + (1/(n+1)) b` scales simplex volume by `(n + 1)⁻ᵈ`
 (`MeasureTheory.Measure.addHaar_image_homothety`) and keeps the wealth within
-`(1 − 1/(n+1)) ^ n ≥ e⁻¹` of the optimum. -/
+`(1 − 1/(n+1)) ^ n ≥ e⁻¹` of the optimum.
+
+@audit:ok — sorryAx-free (`[propext, Classical.choice, Quot.sound]`). `hpos` regularity;
+the shrink bound is genuine (homothety volume scaling + setIntegral monotonicity). -/
 theorem bestConstantWealth_le_mul_universalWealth
     (xs : ℕ → Fin (d + 1) → ℝ) (hpos : ∀ i j, 0 < xs i j) (n : ℕ) :
     bestConstantWealth xs n ≤ Real.exp 1 * ((n : ℝ) + 1) ^ d * universalWealth xs n := by
@@ -331,7 +339,7 @@ theorem bestConstantWealth_le_mul_universalWealth
     rw [himg]
     rintro _ ⟨y, hy, rfl⟩
     rw [hhom y]
-    refine ⟨fun i => ?_, ?_⟩
+    refine ⟨fun i ↦ ?_, ?_⟩
     · simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
       exact add_nonneg (mul_nonneg (by linarith) (hystar_mem.1 i))
         (mul_nonneg hlam_pos.le (hy.1 i))
@@ -365,13 +373,13 @@ theorem bestConstantWealth_le_mul_universalWealth
           = (1 - lam) * (∑ j, simplexLift ystar j * xs i j)
             + lam * (∑ j, simplexLift y j * xs i j) := by
         rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib]
-        refine Finset.sum_congr rfl fun j _ => ?_
+        refine Finset.sum_congr rfl fun j _ ↦ ?_
         simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
         ring
       rw [hsplit]
       have hnn : 0 ≤ lam * (∑ j, simplexLift y j * xs i j) :=
         mul_nonneg hlam_pos.le
-          (Finset.sum_nonneg fun j _ => mul_nonneg (hbby_mem.1 j) (hpos i j).le)
+          (Finset.sum_nonneg fun j _ ↦ mul_nonneg (hbby_mem.1 j) (hpos i j).le)
       linarith
     calc (1 - lam) ^ n * constWealth xs (simplexLift ystar) n
         = ∏ i ∈ Finset.range n, (1 - lam) * (∑ j, simplexLift ystar j * xs i j) := by
@@ -379,14 +387,14 @@ theorem bestConstantWealth_le_mul_universalWealth
           rw [Finset.prod_mul_distrib, Finset.prod_const, Finset.card_range]
       _ ≤ ∏ i ∈ Finset.range n,
             (∑ j, ((1 - lam) • simplexLift ystar + lam • simplexLift y) j * xs i j) := by
-          refine Finset.prod_le_prod (fun i _ => ?_) (fun i _ => hfactor i)
+          refine Finset.prod_le_prod (fun i _ ↦ ?_) (fun i _ ↦ hfactor i)
           exact mul_nonneg (by linarith) (wealthFactor_pos hpos hbstar_mem i).le
       _ = constWealth xs ((1 - lam) • simplexLift ystar + lam • simplexLift y) n := rfl
   -- Integrating the pointwise bound over the image, then enlarging to the corner simplex.
   have hg_nonneg : 0 ≤ᵐ[volume.restrict (cornerSimplex d)]
       fun y ↦ constWealth xs (simplexLift y) n :=
     (ae_restrict_iff' measurableSet_cornerSimplex).mpr
-      (Eventually.of_forall fun y hy =>
+      (Eventually.of_forall fun y hy ↦
         (constWealth_pos hpos (simplexLift_mem_stdSimplex hy) n).le)
   have hint_img : IntegrableOn (fun y ↦ constWealth xs (simplexLift y) n) img :=
     (integrableOn_liftWealth xs n).mono_set himg_sub
@@ -402,7 +410,7 @@ theorem bestConstantWealth_le_mul_universalWealth
           setIntegral_mono_on hconst_img hint_img hcpt_img.measurableSet hfac
       _ ≤ ∫ y in cornerSimplex d, constWealth xs (simplexLift y) n :=
           setIntegral_mono_set (integrableOn_liftWealth xs n) hg_nonneg
-            (Eventually.of_forall fun x hx => himg_sub hx)
+            (Eventually.of_forall fun x hx ↦ himg_sub hx)
   -- Rewrite the corner integral through the definition of the universal wealth.
   have hInt_eq : ∫ y in cornerSimplex d, constWealth xs (simplexLift y) n
       = universalWealth xs n * (volume (cornerSimplex d)).toReal := by
@@ -446,7 +454,11 @@ theorem bestConstantWealth_le_mul_universalWealth
         mul_le_mul_of_nonneg_left hkey (by positivity)
 
 /-- Theorem 16.7.1 (Cover–Thomas): the per-period regret of the universal portfolio
-relative to the best constant-rebalanced portfolio chosen in hindsight tends to `0`. -/
+relative to the best constant-rebalanced portfolio chosen in hindsight tends to `0`.
+
+@audit:ok — sorryAx-free (`[propext, Classical.choice, Quot.sound]`). `hpos` (positive
+price relatives) is a regularity precondition; the squeeze is proven from the three
+analytic cores, none bundled into a hypothesis. -/
 @[entry_point]
 theorem universal_portfolio_regret_tendsto_zero
     (xs : ℕ → Fin (d + 1) → ℝ) (hpos : ∀ i j, 0 < xs i j) :
