@@ -443,6 +443,108 @@ private lemma wz_sum_reorder3 {A B W : Type*} [Fintype A] [Fintype B] [Fintype W
       = ∑ x, ∑ w, ∑ y, G x y w := Finset.sum_congr rfl (fun x _ => Finset.sum_comm)
     _ = ∑ w, ∑ x, ∑ y, G x y w := Finset.sum_comm
 
+private lemma wz_support_reduce_mixture_eq
+    {k : ℕ} {κ : α → Fin k → ℝ}
+    (PX : α → ℝ) (PU : Fin k → ℝ) (q : α × β × Fin k → ℝ)
+    (blk dst : Fin k → ℝ) (Φ : Fin k → (α ⊕ Bool → ℝ)) (M : α ⊕ Bool → ℝ)
+    (hcancel : ∀ a b : ℝ, (b = 0 → a = 0) → b * (a / b) = a)
+    (hΦ : Φ = fun u => Sum.elim (fun x => wzMarginalXU (Fin k) q (x, u) / PU u)
+             (fun b => bif b then dst u / PU u else blk u / PU u))
+    (hM : M = Sum.elim PX (fun b => bif b then ∑ u, dst u else ∑ u, blk u))
+    (hmXU : ∀ x u, wzMarginalXU (Fin k) q (x, u) = κ x u * PX x)
+    (hPU0X : ∀ u x, PU u = 0 → κ x u * PX x = 0)
+    (hblk0 : ∀ u, PU u = 0 → blk u = 0)
+    (hdst0 : ∀ u, PU u = 0 → dst u = 0)
+    (hκsum : ∀ x, ∑ u, κ x u = 1) :
+    ∑ u, PU u • Φ u = M := by
+  funext c
+  simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul]
+  cases c with
+  | inl x =>
+    simp only [hΦ, Sum.elim_inl, hM]
+    calc (∑ u, PU u * (wzMarginalXU (Fin k) q (x, u) / PU u))
+        = ∑ u, wzMarginalXU (Fin k) q (x, u) :=
+          Finset.sum_congr rfl (fun u _ =>
+            hcancel _ _ (fun h => by rw [hmXU]; exact hPU0X u x h))
+      _ = PX x := by
+          simp only [hmXU]
+          rw [← Finset.sum_mul, hκsum x, one_mul]
+  | inr b =>
+    cases b with
+    | false =>
+      simp only [hΦ, Sum.elim_inr, hM, cond_false]
+      exact Finset.sum_congr rfl (fun u _ => hcancel _ _ (hblk0 u))
+    | true =>
+      simp only [hΦ, Sum.elim_inr, hM, cond_true]
+      exact Finset.sum_congr rfl (fun u _ => hcancel _ _ (hdst0 u))
+
+private lemma wz_support_reduce_reducedKernel_sum
+    {k K : ℕ} {κ : α → Fin k → ℝ}
+    (PX : α → ℝ) (PU : Fin k → ℝ) (q : α × β × Fin k → ℝ)
+    (cc lam : Fin K → ℝ) (σ : Fin K → Fin k) (κ' : α → Fin K → ℝ) (j₀ : Fin K)
+    (hκ' : κ' = fun x j => if 0 < PX x then cc j * κ x (σ j) else (if j = j₀ then 1 else 0))
+    (hcc : cc = fun j => lam j / PU (σ j))
+    (hmXU : ∀ x u, wzMarginalXU (Fin k) q (x, u) = κ x u * PX x)
+    (hPcoord : ∀ x, ∑ j, lam j * (wzMarginalXU (Fin k) q (x, σ j) / PU (σ j)) = PX x) :
+    ∀ x, ∑ j, κ' x j = 1 := by
+  intro x
+  by_cases hpx : 0 < PX x
+  · have hkey : ∀ j, PX x * κ' x j
+        = lam j * (wzMarginalXU (Fin k) q (x, σ j) / PU (σ j)) := by
+      intro j
+      rw [hmXU x (σ j)]
+      have hval : κ' x j = cc j * κ x (σ j) := by simp only [hκ']; rw [if_pos hpx]
+      rw [hval]; simp only [hcc]; ring
+    have h1 : PX x * (∑ j, κ' x j) = PX x * 1 := by
+      rw [mul_one, Finset.mul_sum, Finset.sum_congr rfl (fun j _ => hkey j)]
+      exact hPcoord x
+    exact mul_left_cancel₀ hpx.ne' h1
+  · have hval : ∀ j, κ' x j = if j = j₀ then (1 : ℝ) else 0 := by
+      intro j; simp only [hκ']; rw [if_neg hpx]
+    rw [Finset.sum_congr rfl (fun j _ => hval j)]
+    simp
+
+private lemma wz_support_reduce_reducedBlock
+    {k K : ℕ}
+    (q : α × β × Fin k → ℝ) (q' : α × β × Fin K → ℝ)
+    (cc : Fin K → ℝ) (blk PU : Fin k → ℝ) (σ : Fin K → Fin k)
+    (hmXU' : ∀ x j, wzMarginalXU (Fin K) q' (x, j)
+      = cc j * wzMarginalXU (Fin k) q (x, σ j))
+    (hmYU' : ∀ y j, wzMarginalYU (Fin K) q' (y, j)
+      = cc j * wzMarginalYU (Fin k) q (y, σ j))
+    (hmassX : ∀ u, ∑ x, wzMarginalXU (Fin k) q (x, u) = PU u)
+    (hmassY : ∀ u, ∑ y, wzMarginalYU (Fin k) q (y, u) = PU u)
+    (hblk : blk = fun u => (∑ y, Real.negMulLog (wzMarginalYU (Fin k) q (y, u)))
+              - (∑ x, Real.negMulLog (wzMarginalXU (Fin k) q (x, u)))) :
+    ∀ j, (∑ y, Real.negMulLog (wzMarginalYU (Fin K) q' (y, j)))
+        - (∑ x, Real.negMulLog (wzMarginalXU (Fin K) q' (x, j)))
+      = cc j * blk (σ j) := by
+  intro j
+  simp only [hmYU', hmXU', Real.negMulLog_mul]
+  rw [Finset.sum_add_distrib, Finset.sum_add_distrib,
+      ← Finset.sum_mul, ← Finset.sum_mul, ← Finset.mul_sum, ← Finset.mul_sum,
+      hmassX (σ j), hmassY (σ j)]
+  simp only [hblk]
+  ring
+
+private lemma wz_support_reduce_reducedDistortion
+    {k K : ℕ} {d : α → γ → ℝ} {P_XY : α × β → ℝ} {κ : α → Fin k → ℝ}
+    (q' : α × β × Fin K → ℝ) (f : Fin k × β → γ) (f' : Fin K × β → γ)
+    (κ' : α → Fin K → ℝ) (cc : Fin K → ℝ) (dst : Fin k → ℝ) (σ : Fin K → Fin k)
+    (hq' : q' = wzJointOfKernel (Fin K) P_XY κ')
+    (hf' : f' = fun p => f (σ p.1, p.2))
+    (hdst : dst = fun u => ∑ x, ∑ y, κ x u * P_XY (x, y) * d x (f (u, y)))
+    (hkP' : ∀ x j y, κ' x j * P_XY (x, y) = cc j * (κ x (σ j) * P_XY (x, y))) :
+    wzExpectedDistortion (Fin K) d q' f' = ∑ j, cc j * dst (σ j) := by
+  have hslice : ∀ j, (∑ x, ∑ y, κ' x j * P_XY (x, y) * d x (f (σ j, y))) = cc j * dst (σ j) := by
+    intro j
+    simp only [hdst, Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun x _ => Finset.sum_congr rfl (fun y _ => ?_))
+    rw [hkP' x j y]; ring
+  simp only [wzExpectedDistortion, hq', wzJointOfKernel, hf', Fintype.sum_prod_type]
+  rw [wz_sum_reorder3]
+  exact Finset.sum_congr rfl (fun j _ => hslice j)
+
 /-- **Carathéodory support reduction (the L1 crux).** Any feasible factorisable kernel at
 an arbitrary finite auxiliary alphabet `Fin k` reduces to a feasible kernel at the fixed
 alphabet `Fin (|α| + 3)` with objective `≤` the original.
@@ -580,27 +682,8 @@ theorem wz_support_reduce
              (fun b => bif b then dst u / PU u else blk u / PU u) with hΦ
   set M : α ⊕ Bool → ℝ :=
     Sum.elim PX (fun b => bif b then ∑ u, dst u else ∑ u, blk u) with hM
-  have hmix : ∑ u, PU u • Φ u = M := by
-    funext c
-    simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul]
-    cases c with
-    | inl x =>
-      simp only [hΦ, Sum.elim_inl, hM]
-      calc (∑ u, PU u * (wzMarginalXU (Fin k) q (x, u) / PU u))
-          = ∑ u, wzMarginalXU (Fin k) q (x, u) :=
-            Finset.sum_congr rfl (fun u _ =>
-              hcancel _ _ (fun h => by rw [hmXU]; exact hPU0X u x h))
-        _ = PX x := by
-            simp only [hmXU]
-            rw [← Finset.sum_mul, hκsum x, one_mul]
-    | inr b =>
-      cases b with
-      | false =>
-        simp only [hΦ, Sum.elim_inr, hM, cond_false]
-        exact Finset.sum_congr rfl (fun u _ => hcancel _ _ (hblk0 u))
-      | true =>
-        simp only [hΦ, Sum.elim_inr, hM, cond_true]
-        exact Finset.sum_congr rfl (fun u _ => hcancel _ _ (hdst0 u))
+  have hmix : ∑ u, PU u • Φ u = M :=
+    wz_support_reduce_mixture_eq PX PU q blk dst Φ M hcancel hΦ hM hmXU hPU0X hblk0 hdst0 hκsum
   -- Carathéodory support reduction: `M` is a convex combination of `≤ |α|+3` letters.
   have hcardK : Fintype.card (α ⊕ Bool) + 1 ≤ Fintype.card α + 3 := by
     simp [Fintype.card_sum, Fintype.card_bool]
@@ -656,23 +739,8 @@ theorem wz_support_reduce
     · exact mul_nonneg (div_nonneg (hlam0 j) (hPUnn (σ j))) (hκnn x (σ j))
     · exact zero_le_one
     · exact le_refl 0
-  have hκ'sum : ∀ x, ∑ j, κ' x j = 1 := by
-    intro x
-    by_cases hpx : 0 < PX x
-    · have hkey : ∀ j, PX x * κ' x j
-          = lam j * (wzMarginalXU (Fin k) q (x, σ j) / PU (σ j)) := by
-        intro j
-        rw [hmXU x (σ j)]
-        have hval : κ' x j = cc j * κ x (σ j) := by simp only [hκ']; rw [if_pos hpx]
-        rw [hval]; simp only [hcc]; ring
-      have h1 : PX x * (∑ j, κ' x j) = PX x * 1 := by
-        rw [mul_one, Finset.mul_sum, Finset.sum_congr rfl (fun j _ => hkey j)]
-        exact hPcoord x
-      exact mul_left_cancel₀ hpx.ne' h1
-    · have hval : ∀ j, κ' x j = if j = j₀ then (1 : ℝ) else 0 := by
-        intro j; simp only [hκ']; rw [if_neg hpx]
-      rw [Finset.sum_congr rfl (fun j _ => hval j)]
-      simp
+  have hκ'sum : ∀ x, ∑ j, κ' x j = 1 :=
+    wz_support_reduce_reducedKernel_sum PX PU q cc lam σ κ' j₀ hκ' hcc hmXU hPcoord
   -- Reconstructed marginals scale by `cc j` against the original letter `σ j`.
   have hmXU' : ∀ x j, wzMarginalXU (Fin (Fintype.card α + 3)) q' (x, j)
       = cc j * wzMarginalXU (Fin k) q (x, σ j) := by
@@ -691,28 +759,15 @@ theorem wz_support_reduce
   -- Per-letter block-scaling: the objective density of `κ'` at `j` is `cc j · block (σ j)`.
   have hblk' : ∀ j, (∑ y, Real.negMulLog (wzMarginalYU (Fin (Fintype.card α + 3)) q' (y, j)))
         - (∑ x, Real.negMulLog (wzMarginalXU (Fin (Fintype.card α + 3)) q' (x, j)))
-      = cc j * blk (σ j) := by
-    intro j
-    simp only [hmYU', hmXU', Real.negMulLog_mul]
-    rw [Finset.sum_add_distrib, Finset.sum_add_distrib,
-        ← Finset.sum_mul, ← Finset.sum_mul, ← Finset.mul_sum, ← Finset.mul_sum,
-        hmassX (σ j), hmassY (σ j)]
-    simp only [hblk]
-    ring
+      = cc j * blk (σ j) :=
+    wz_support_reduce_reducedBlock q q' cc blk PU σ hmXU' hmYU' hmassX hmassY hblk
   -- Distortion of `κ'` equals that of `κ` (via the `δ`-coordinate).
   have hdst_eq : ∑ u, dst u = wzExpectedDistortion (Fin k) d q f := by
     simp only [hdst, wzExpectedDistortion, hq, wzJointOfKernel, Fintype.sum_prod_type]
     exact (wz_sum_reorder3 _).symm
   have hdisteq : wzExpectedDistortion (Fin (Fintype.card α + 3)) d q' f'
-      = ∑ j, cc j * dst (σ j) := by
-    have hslice : ∀ j, (∑ x, ∑ y, κ' x j * P_XY (x, y) * d x (f (σ j, y))) = cc j * dst (σ j) := by
-      intro j
-      simp only [hdst, Finset.mul_sum]
-      refine Finset.sum_congr rfl (fun x _ => Finset.sum_congr rfl (fun y _ => ?_))
-      rw [hkP' x j y]; ring
-    simp only [wzExpectedDistortion, hq', wzJointOfKernel, hf', Fintype.sum_prod_type]
-    rw [wz_sum_reorder3]
-    exact Finset.sum_congr rfl (fun j _ => hslice j)
+      = ∑ j, cc j * dst (σ j) :=
+    wz_support_reduce_reducedDistortion q' f f' κ' cc dst σ hq' hf' hdst hkP'
   have hdist' : wzExpectedDistortion (Fin (Fintype.card α + 3)) d q' f' ≤ D := by
     rw [hdisteq]
     calc (∑ j, cc j * dst (σ j))
