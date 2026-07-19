@@ -1014,6 +1014,61 @@ lemma conditionalKL_log_card_lb
     ring
   rw [h_split, h_chain]; linarith
 
+private lemma conditionalKL_target_lb_le_log_card
+    (n : ℕ) (hn_pos : (0 : ℝ) < n) (hn_pos_nat : 0 < n) (hn_ne : (n : ℝ) ≠ 0)
+    (ε_X ε_Z : ℝ)
+    (HX HZ HXemp HZemp LX LY LZ KL_val : ℝ)
+    (qZ_min hδ : ℝ) (hqZ_min_pos : 0 < qZ_min) (hδ_pos : 0 < hδ)
+    (hα_pos : (0 : ℝ) < Fintype.card α) (hβ_pos : (0 : ℝ) < Fintype.card β)
+    (hβ_nn : (0 : ℝ) ≤ Fintype.card β)
+    (T : α → ℕ) (target_lb card_real : ℝ)
+    (hε_Z_def : ε_Z = ε_X + (Fintype.card β : ℝ) / n)
+    (h_HXemp_le : HXemp ≤ HX + ε_X * LX)
+    (h_HZemp_ge : HZemp ≥ HZ - ε_Z * LZ - KL_val)
+    (hε_Z_sq_expand : ε_Z ^ 2 = ε_X ^ 2 + 2 * ε_X * ((Fintype.card β : ℝ) / n)
+        + ((Fintype.card β : ℝ) / n) ^ 2)
+    (hδ_dominates_kl : 8 * (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * ε_X ^ 2
+        ≤ hδ * qZ_min)
+    (h_KL_chi : KL_val ≤ (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * ε_Z ^ 2 / qZ_min)
+    (hKL_cross_n : 2 * (Fintype.card α : ℝ) * (Fintype.card β : ℝ) ^ 2 * ε_X / qZ_min
+        ≤ (n : ℝ) * (hδ / 8))
+    (hKL_inv_n : (Fintype.card α : ℝ) * (Fintype.card β : ℝ) ^ 3 / (n * qZ_min) ≤ hδ / 8)
+    (h_logT_sum_le : (∑ a : α, Real.log ((T a : ℝ) + 1))
+        ≤ (Fintype.card α : ℝ) * Real.log ((n : ℝ) + 1))
+    (hlog_n : Real.log ((n : ℝ) + 1) / n
+        ≤ hδ / (4 * (Fintype.card α : ℝ) * (Fintype.card β : ℝ)))
+    (hconst_n :
+        ((Fintype.card β : ℝ) * LZ + (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * LY) / n
+        ≤ hδ / 4)
+    (htarget_lb_def : target_lb =
+        (n : ℝ) * HZ - (n : ℝ) * HX
+          - (n : ℝ) * (ε_X * LX + ε_X * LZ + hδ)
+          + (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * LY)
+    (h_log_card_lb : (n : ℝ) * HZemp - (n : ℝ) * HXemp
+          - (Fintype.card β : ℝ) * ∑ a : α, Real.log ((T a : ℝ) + 1)
+        ≤ Real.log card_real) :
+    target_lb ≤ Real.log card_real := by
+  have h_HZ_HX_lb := conditionalKL_HZemp_HXemp_lb n hn_pos hn_ne
+    (Fintype.card β : ℝ) ε_X ε_Z HX HZ HXemp HZemp LX LZ KL_val hε_Z_def
+    h_HXemp_le h_HZemp_ge
+  have h_nKL_3_8 := conditionalKL_nKL_le_three_eighths n hn_pos hn_pos_nat hn_ne
+    (Fintype.card α : ℝ) (Fintype.card β : ℝ) ε_X ε_Z qZ_min hδ KL_val
+    hqZ_min_pos hδ_pos hε_Z_sq_expand hδ_dominates_kl h_KL_chi
+    hKL_cross_n hKL_inv_n
+  have h_logT_bound := conditionalKL_logT_card_le (γ := α) n hn_pos
+    (Fintype.card α : ℝ) (Fintype.card β : ℝ) hδ hα_pos hβ_pos hβ_nn
+    (fun a ↦ (T a : ℝ)) h_logT_sum_le hlog_n
+  have h_const_bound : (Fintype.card β : ℝ) * LZ
+        + (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * LY ≤ (n : ℝ) * (hδ / 4) := by
+    have h := hconst_n
+    rw [div_le_iff₀ hn_pos] at h
+    linarith
+  have hgoal := conditionalKL_final_domination (γ := α) n hn_pos
+    (Fintype.card α : ℝ) (Fintype.card β : ℝ) ε_X HX HZ HXemp HZemp LX LY LZ KL_val hδ
+    target_lb (fun a ↦ (T a : ℝ)) hδ_pos htarget_lb_def h_HZ_HX_lb h_nKL_3_8
+    h_logT_bound h_const_bound
+  exact le_trans hgoal h_log_card_lb
+
 set_option maxHeartbeats 4000000 in
 /-- Conditional KL concentration helper — combines `conditionalTypeClass_card_ge`
 with `weak_displacement_eq_strong_sum` (joint) and a χ²-style KL bound to produce
@@ -1223,29 +1278,14 @@ private lemma conditional_KL_concentration_ge
     (n : ℝ) * HZ - (n : ℝ) * HX
       - (n : ℝ) * (ε_X * LX + ε_X * LZ + hδ)
       + (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * LY with htarget_lb_def
-  -- The main analytic content: log card_real ≥ target_lb.
-  have h_log_card_target : target_lb ≤ Real.log card_real := by
-    -- Step (V) assembly is delegated to the four pure-arithmetic helpers below.
-    have h_HZ_HX_lb := conditionalKL_HZemp_HXemp_lb n hn_pos hn_ne
-      (Fintype.card β : ℝ) ε_X ε_Z HX HZ HXemp HZemp LX LZ KL_val hε_Z_def
-      h_HXemp_le h_HZemp_ge
-    have h_nKL_3_8 := conditionalKL_nKL_le_three_eighths n hn_pos hn_pos_nat hn_ne
-      (Fintype.card α : ℝ) (Fintype.card β : ℝ) ε_X ε_Z qZ_min hδ KL_val
-      hqZ_min_pos hδ_pos hε_Z_sq_expand hδ_dominates_kl h_KL_chi
-      (hN_KL_cross n hn_N_KL_cross) (hN_KL_inv n hn_N_KL_inv)
-    have h_logT_bound := conditionalKL_logT_card_le (γ := α) n hn_pos
-      (Fintype.card α : ℝ) (Fintype.card β : ℝ) hδ hα_pos hβ_pos hβ_nn
-      (fun a ↦ (T a : ℝ)) h_logT_sum_le (hN_log n hn_N_log)
-    have h_const_bound : (Fintype.card β : ℝ) * LZ
-          + (Fintype.card α : ℝ) * (Fintype.card β : ℝ) * LY ≤ (n : ℝ) * (hδ / 4) := by
-      have h := hN_const n hn_N_const
-      rw [div_le_iff₀ hn_pos] at h
-      linarith
-    have hgoal := conditionalKL_final_domination (γ := α) n hn_pos
-      (Fintype.card α : ℝ) (Fintype.card β : ℝ) ε_X HX HZ HXemp HZemp LX LY LZ KL_val hδ
-      target_lb (fun a ↦ (T a : ℝ)) hδ_pos htarget_lb_def h_HZ_HX_lb h_nKL_3_8
-      h_logT_bound h_const_bound
-    exact le_trans hgoal h_log_card_lb
+  -- The main analytic content: log card_real ≥ target_lb (Step (V) assembly).
+  have h_log_card_target : target_lb ≤ Real.log card_real :=
+    conditionalKL_target_lb_le_log_card n hn_pos hn_pos_nat hn_ne ε_X ε_Z
+      HX HZ HXemp HZemp LX LY LZ KL_val qZ_min hδ hqZ_min_pos hδ_pos
+      hα_pos hβ_pos hβ_nn T target_lb card_real hε_Z_def h_HXemp_le h_HZemp_ge
+      hε_Z_sq_expand hδ_dominates_kl h_KL_chi (hN_KL_cross n hn_N_KL_cross)
+      (hN_KL_inv n hn_N_KL_inv) h_logT_sum_le (hN_log n hn_N_log)
+      (hN_const n hn_N_const) htarget_lb_def h_log_card_lb
   -- ── Step (VI): exponentiate and finish. ──
   -- card_real ≥ exp(target_lb) (via Real.exp_log + Real.log_le_log).
   have hcard_pos : 0 < card_real := lt_of_lt_of_le hrowProd_pos h_card_ge_prod
