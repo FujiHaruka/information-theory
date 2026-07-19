@@ -14,7 +14,7 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **Ch.16 "Information Theo
 - [x] Leg A — AO-iid (operational 漸近最適性、CT §16.3 Thm 16.3.1) — proof-done sorryAx-free + @audit:ok
 - [x] Leg C — side-info & growth rate (`ΔW ≤ I(X;Y)`、CT §16.4 Thm 16.4.1) — proof-done + @audit:ok（署名 honesty 修正）
 - [x] Leg B — stationary market fixed-b (定常エルゴード成長率収束 + dominance、CT §16.5) — proof-done + @audit:ok
-- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — **🚧 R1 gateway proof-done、R2–R4 残** → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
+- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — **🚧 R1 proof-done + R2 core proof-done (selection残)、R3/R4 残** → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
 - [x] Leg D — Cover universal portfolio (regret bound、CT §16.7) — proof-done sorryAx-free + @audit:ok（**not-a-wall 判明**）
 
 ## Closure summary
@@ -59,14 +59,21 @@ theorem sideInfo_growthRate_increment_le_mutualInfo
 必須**であり、KT bundling で代替できない。独立 `honesty-auditor` が check 4 (増分不等式が仮説から semantic follow、
 coarse/fine ミスマッチ・向き逆転無し) を含め PASS で `@audit:ok`。
 
-## Leg B 完全形 (W_∞ AEP) — 🚧 R1 gateway proof-done、R2–R4 残
+## Leg B 完全形 (W_∞ AEP) — 🚧 R1 proof-done + R2 core proof-done (selection残)、R3/R4 残
 
 fixed-b core (固定 rebalance portfolio の成長率収束 + KT dominance) は proof-done。**CT 16.5.1 完全形** =
 log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | X_{-1..−k}) ↑ W_∞`) + AEP `(1/n) log S*_n → W_∞`
-は後継計画 [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md) で着手中。**R1 gateway = 条件付き
-log-optimal portfolio の可測選択 (`exists_measurable_argmax_on_stdSimplex`、`Portfolio/StationaryWinfty.lean`) は
-proof-done + `@audit:ok` sorryAx-free** で着地、残る R2–R4 (条件付き成長率の単調収束 / real-valued AEP / 組立) は
-未着手。要件:
+は後継計画 [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md) で着手中。着地状況:
+
+- **R1 gateway = 条件付き log-optimal portfolio の可測選択** (`exists_measurable_argmax_on_stdSimplex`) proof-done
+  + `@audit:ok` sorryAx-free。
+- **R2 core = 条件付き成長率の単調収束** (`condOptGrowth_monotone` / `condOptGrowth_bddAbove`) proof-done
+  + `@audit:ok` sorryAx-free、headline `exists_condOptGrowth_tendsto_condOptGrowthInfty` は honest reduction。残る
+  residual 1 本 = 条件付き log-optimal 選択 `exists_condLogOptimalSeq` (= R1 gateway の条件付きリフト、Mathlib 壁
+  ではない解析 disintegration lift)。R2 は抽象 `Filtration ℕ m0` でパラメータ化 (R3/R4 が具体化を負う)。
+- 残る **R3 (real-valued AEP) / R4 (組立)** は未着手。
+
+要件:
 
 - real-valued market の新規インフラを要する — 条件付き log-optimal portfolio の可測選択 + 条件付き成長率の単調収束
   + real-valued SMB 級 AEP。
