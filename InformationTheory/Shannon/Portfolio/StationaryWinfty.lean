@@ -16,6 +16,8 @@ import Mathlib.Probability.Kernel.MeasurableLIntegral
 import Mathlib.Probability.Martingale.Convergence
 import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.Topology.Order.MonotoneConvergence
+import Mathlib.Analysis.SpecialFunctions.Log.Deriv
+import Mathlib.Analysis.Calculus.Deriv.Slope
 import InformationTheory.Shannon.Portfolio.StationaryMarket
 
 /-!
@@ -1013,6 +1015,235 @@ theorem stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty
   filter_upwards [hbirk] with ω hω
   rw [← hid]
   exact hω
+
+-- Slope limit `log (1 + λ t) / λ → t` as `λ → 0`: the derivative of `λ ↦ log (1 + λ t)` at `0`.
+private theorem log_slope_tendsto_nhdsWithin (t : ℝ) :
+    Tendsto (fun lam : ℝ ↦ Real.log (1 + lam * t) / lam) (𝓝[≠] (0 : ℝ)) (𝓝 t) := by
+  have hd : HasDerivAt (fun x : ℝ ↦ Real.log (1 + x * t)) t 0 := by
+    have h1 : HasDerivAt (fun x : ℝ ↦ 1 + x * t) t 0 := by
+      simpa using ((hasDerivAt_id (0 : ℝ)).mul_const t).const_add 1
+    simpa using h1.log (by norm_num)
+  have hslope := hasDerivAt_iff_tendsto_slope.mp hd
+  refine hslope.congr' ?_
+  filter_upwards with lam
+  rw [slope_def_field]
+  simp
+
+-- Two-sided bound on the slope: `log (1 + t) ≤ log (1 + λ t) / λ ≤ t` for `λ ∈ (0, 1]`, `t > -1`.
+-- Upper bound is the tangent inequality `log x ≤ x − 1`; lower bound is concavity of `log`.
+private theorem log_slope_bounds {t : ℝ} (ht : -1 < t) {lam : ℝ} (hlam0 : 0 < lam)
+    (hlam1 : lam ≤ 1) :
+    Real.log (1 + t) ≤ Real.log (1 + lam * t) / lam ∧ Real.log (1 + lam * t) / lam ≤ t := by
+  have h1t : (0 : ℝ) < 1 + t := by linarith
+  have harg : (0 : ℝ) < 1 + lam * t := by nlinarith [mul_pos hlam0 h1t]
+  constructor
+  · rw [le_div_iff₀ hlam0]
+    have hconc := (strictConcaveOn_log_Ioi.concaveOn).2 (Set.mem_Ioi.mpr one_pos)
+      (Set.mem_Ioi.mpr h1t) (by linarith : (0 : ℝ) ≤ 1 - lam) (le_of_lt hlam0)
+      (by ring : (1 - lam) + lam = 1)
+    simp only [Real.log_one, smul_eq_mul, mul_zero, zero_add] at hconc
+    have he : (1 - lam) * 1 + lam * (1 + t) = 1 + lam * t := by ring
+    rw [he] at hconc
+    linarith [hconc]
+  · rw [div_le_iff₀ hlam0]
+    have := Real.log_le_sub_one_of_pos harg
+    nlinarith [this]
+
+-- An `m`-measurable conditional expectation whose set-integral over every `m`-measurable set is
+-- nonpositive is a.e. nonpositive. Reduces `≤ᵐ` on `μ` to `≤ᵐ` on the trimmed measure `μ.trim`.
+private theorem condExp_nonpos_of_forall_setIntegral_nonpos {α : Type*}
+    {mα m0α : MeasurableSpace α} (hmα : mα ≤ m0α) (ν : @MeasureTheory.Measure α m0α)
+    [IsFiniteMeasure ν] {f : α → ℝ} (hf : Integrable f ν)
+    (H : ∀ s, MeasurableSet[mα] s → ∫ ω in s, f ω ∂ν ≤ 0) :
+    ν[f | mα] ≤ᵐ[ν] 0 := by
+  refine ae_le_of_ae_le_trim (hm := hmα) ?_
+  refine ae_le_of_forall_setIntegral_le
+    (integrable_condExp.trim hmα stronglyMeasurable_condExp) (integrable_zero _ _ _) ?_
+  intro s hs _
+  simp only [Pi.zero_apply, integral_zero]
+  rw [← setIntegral_trim hmα stronglyMeasurable_condExp hs, setIntegral_condExp hmα hf hs]
+  exact H s hs
+
+/-- Conditional Kuhn–Tucker inequality for the infinite-past (`⨆ j, ℱ j`) conditional log-optimal
+portfolio `bstarInf` (Cover–Thomas §16.5, Route M). For every `⨆ j, ℱ j`-measurable simplex
+competitor `c`, the conditional expectation of the one-step wealth ratio
+`(∑ⱼ cⱼ Xⱼ) / (∑ⱼ bstarInfⱼ Xⱼ)` given the infinite past is at most `1`. This is the multiplicative
+form of the additive dominance `hInf_dom` — the one-step supermartingale bound at the heart of the
+growing-memory wealth-ratio process.
+
+The additive-to-multiplicative passage is the perturbation/first-order argument: for `λ ∈ (0, 1]`
+the convex mix `bλ := (1 − λ) bstarInf + λ c` is a legal `⨆ j, ℱ j`-measurable simplex competitor,
+so `hInf_dom bλ` gives `μ[log ((∑ bλ·X)/(∑ bstarInf·X)) | ⨆ ℱ] ≤ᵐ 0`, i.e.
+`μ[log (1 + λ (r − 1)) | ⨆ ℱ] ≤ᵐ 0` where `r` is the wealth ratio. Dividing by `λ` and letting
+`λ → 0` (dominated convergence, since `log r ≤ log (1 + λ (r − 1))/λ ≤ r − 1`) yields
+`μ[r − 1 | ⨆ ℱ] ≤ᵐ 0`, hence `μ[r | ⨆ ℱ] ≤ᵐ 1`. The `hint_coord` hypothesis (integrability of the
+coordinate ratios `Xᵢ / (∑ bstarInf·X)`) is a market-regularity precondition, mirroring the fixed-`b`
+Kuhn–Tucker theorem `stationaryLogReturn_integral_le_of_kuhnTucker`; it makes the wealth ratio `r`
+integrable so the conditional expectation is genuine. `hpos`/`hint` are the market-regularity
+positivity/integrability preconditions; `[StandardBorelSpace Ω] [Nonempty Ω]` are inherited for
+compatibility with the infinite-past filtration constructions. -/
+theorem condKuhnTucker_infPast [StandardBorelSpace Ω] [Nonempty Ω]
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ)
+    [Nonempty (Fin m)] (hX : Measurable X)
+    (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
+    (hint : ∀ c : Ω → Fin m → ℝ, Measurable c → (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ)
+    (bstarInf : Ω → Fin m → ℝ) (hInf_meas : StronglyMeasurable[⨆ j, ℱ j] bstarInf)
+    (hInf_simplex : ∀ ω, bstarInf ω ∈ stdSimplex ℝ (Fin m))
+    (hint_coord : ∀ i, Integrable (fun ω ↦ X ω i / (∑ j, bstarInf ω j * X ω j)) μ)
+    (hInf_dom : ∀ (c : Ω → Fin m → ℝ), StronglyMeasurable[⨆ j, ℱ j] c →
+        (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+        μ[causalLogReturn X c | ⨆ j, ℱ j] ≤ᵐ[μ] μ[causalLogReturn X bstarInf | ⨆ j, ℱ j])
+    (c : Ω → Fin m → ℝ) (hc : StronglyMeasurable[⨆ j, ℱ j] c)
+    (hcs : ∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) :
+    μ[fun ω ↦ (∑ j, c ω j * X ω j) / (∑ j, bstarInf ω j * X ω j) | ⨆ j, ℱ j] ≤ᵐ[μ] 1 := by
+  classical
+  have hm : (⨆ j, ℱ j) ≤ m0 := iSup_le ℱ.le
+  have hSb_pos : ∀ ω, 0 < ∑ j, bstarInf ω j * X ω j :=
+    fun ω ↦ hpos ω (bstarInf ω) (hInf_simplex ω)
+  have hSc_pos : ∀ ω, 0 < ∑ j, c ω j * X ω j := fun ω ↦ hpos ω (c ω) (hcs ω)
+  have hXpos : ∀ ω j, 0 < X ω j := fun ω j ↦ market_pos hpos ω j
+  set r : Ω → ℝ := fun ω ↦ (∑ j, c ω j * X ω j) / (∑ j, bstarInf ω j * X ω j) with hr_def
+  have hr_pos : ∀ ω, 0 < r ω := fun ω ↦ div_pos (hSc_pos ω) (hSb_pos ω)
+  have hc_m : Measurable c := (hc.mono hm).measurable
+  have hbInf_m : Measurable bstarInf := (hInf_meas.mono hm).measurable
+  have hr_meas : Measurable r := by
+    rw [hr_def]
+    exact (Finset.measurable_sum _ fun j _ ↦
+        ((measurable_pi_apply j).comp hc_m).mul ((measurable_pi_apply j).comp hX)).div
+      (Finset.measurable_sum _ fun j _ ↦
+        ((measurable_pi_apply j).comp hbInf_m).mul ((measurable_pi_apply j).comp hX))
+  -- `r` is integrable: `0 ≤ r ω ≤ ∑ᵢ Xᵢ / (∑ bstarInf·X)`, and the bound is integrable via `hint_coord`.
+  have hr_int : Integrable r μ := by
+    have hbound_int : Integrable (fun ω ↦ ∑ i, X ω i / (∑ j, bstarInf ω j * X ω j)) μ :=
+      integrable_finsetSum Finset.univ fun i _ ↦ hint_coord i
+    refine Integrable.mono' hbound_int
+      hr_meas.aestronglyMeasurable (Eventually.of_forall fun ω ↦ ?_)
+    rw [Real.norm_eq_abs, abs_of_nonneg (le_of_lt (hr_pos ω))]
+    change (∑ j, c ω j * X ω j) / (∑ j, bstarInf ω j * X ω j)
+      ≤ ∑ i, X ω i / (∑ j, bstarInf ω j * X ω j)
+    rw [Finset.sum_div]
+    refine Finset.sum_le_sum fun i _ ↦ ?_
+    rw [mul_div_assoc]
+    exact mul_le_of_le_one_left (le_of_lt (div_pos (hXpos ω i) (hSb_pos ω)))
+      (stdSimplex_component_le_one (hcs ω) i)
+  -- Core reduction: `μ[r − 1 | ⨆ ℱ] ≤ᵐ 0`.
+  have hkey : μ[fun ω ↦ r ω - 1 | ⨆ j, ℱ j] ≤ᵐ[μ] 0 := by
+    refine condExp_nonpos_of_forall_setIntegral_nonpos hm μ (hr_int.sub (integrable_const 1)) ?_
+    intro s hs
+    -- Perturbation scale `λ_n = 1/(n+1) ↓ 0` and convex competitors `bLam n`.
+    set lam : ℕ → ℝ := fun n ↦ 1 / ((n : ℝ) + 1) with hlam_def
+    have hlam_pos : ∀ n, 0 < lam n := fun n ↦ by rw [hlam_def]; positivity
+    have hlam_le : ∀ n, lam n ≤ 1 := fun n ↦ by
+      rw [hlam_def, div_le_one (by positivity)]; linarith [Nat.cast_nonneg (α := ℝ) n]
+    have hlam_tendsto : Tendsto lam atTop (𝓝[≠] (0 : ℝ)) := by
+      rw [tendsto_nhdsWithin_iff]
+      exact ⟨tendsto_one_div_add_atTop_nhds_zero_nat,
+        Eventually.of_forall fun n ↦ (hlam_pos n).ne'⟩
+    set bLam : ℕ → Ω → Fin m → ℝ :=
+      fun n ω j ↦ (1 - lam n) * bstarInf ω j + lam n * c ω j with hbLam_def
+    have hbLam_simplex : ∀ n ω, bLam n ω ∈ stdSimplex ℝ (Fin m) := fun n ω ↦
+      convex_stdSimplex ℝ (Fin m) (hInf_simplex ω) (hcs ω)
+        (by linarith [hlam_le n]) (le_of_lt (hlam_pos n)) (by ring)
+    have hbLam_meas : ∀ n, StronglyMeasurable[⨆ j, ℱ j] (bLam n) := by
+      intro n
+      have heq : bLam n = fun ω ↦ (1 - lam n) • bstarInf ω + lam n • c ω := by
+        funext ω j; simp [hbLam_def, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+      rw [heq]
+      exact (hInf_meas.const_smul (1 - lam n)).add (hc.const_smul (lam n))
+    have hbLam_ratio : ∀ n ω, ∑ j, bLam n ω j * X ω j
+        = (∑ j, bstarInf ω j * X ω j) * (1 + lam n * (r ω - 1)) := by
+      intro n ω
+      have hSc_eq : ∑ j, c ω j * X ω j = r ω * (∑ j, bstarInf ω j * X ω j) := by
+        have hne : (∑ j, bstarInf ω j * X ω j) ≠ 0 := ne_of_gt (hSb_pos ω)
+        rw [hr_def]; field_simp
+      have hexpand : ∑ j, bLam n ω j * X ω j
+          = (1 - lam n) * (∑ j, bstarInf ω j * X ω j) + lam n * (∑ j, c ω j * X ω j) := by
+        rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib]
+        exact Finset.sum_congr rfl fun j _ ↦ by simp only [hbLam_def]; ring
+      rw [hexpand, hSc_eq]; ring
+    have hbLam_pos : ∀ n ω, 0 < ∑ j, bLam n ω j * X ω j :=
+      fun n ω ↦ hpos ω (bLam n ω) (hbLam_simplex n ω)
+    have h_arg_pos : ∀ n ω, 0 < 1 + lam n * (r ω - 1) := by
+      intro n ω
+      have heq : 1 + lam n * (r ω - 1) = (1 - lam n) + lam n * r ω := by ring
+      rw [heq]; nlinarith [mul_pos (hlam_pos n) (hr_pos ω), hlam_le n]
+    have h_logdiff : ∀ n ω, causalLogReturn X (bLam n) ω - causalLogReturn X bstarInf ω
+        = Real.log (1 + lam n * (r ω - 1)) := by
+      intro n ω
+      unfold causalLogReturn
+      rw [hbLam_ratio n ω, Real.log_mul (ne_of_gt (hSb_pos ω)) (ne_of_gt (h_arg_pos n ω))]
+      ring
+    have hbn_int : ∀ n, Integrable (causalLogReturn X (bLam n)) μ := fun n ↦
+      hint (bLam n) ((hbLam_meas n).mono hm).measurable (hbLam_simplex n)
+    have hbInf_int : Integrable (causalLogReturn X bstarInf) μ :=
+      hint bstarInf hbInf_m hInf_simplex
+    -- Each perturbed log-ratio integral over `s` is nonpositive (from the additive dominance).
+    have hgn_setint_nonpos : ∀ n,
+        ∫ ω in s, Real.log (1 + lam n * (r ω - 1)) / lam n ∂μ ≤ 0 := by
+      intro n
+      rw [integral_div]
+      refine div_nonpos_iff.mpr (Or.inr ⟨?_, le_of_lt (hlam_pos n)⟩)
+      have heq : ∫ ω in s, Real.log (1 + lam n * (r ω - 1)) ∂μ
+          = ∫ ω in s, causalLogReturn X (bLam n) ω ∂μ
+            - ∫ ω in s, causalLogReturn X bstarInf ω ∂μ := by
+        rw [← integral_sub (hbn_int n).integrableOn hbInf_int.integrableOn]
+        refine setIntegral_congr_ae (hm _ hs) (Eventually.of_forall fun ω _ ↦ ?_)
+        rw [← h_logdiff n ω]
+      rw [heq, sub_nonpos, ← setIntegral_condExp hm (hbn_int n) hs,
+        ← setIntegral_condExp hm hbInf_int hs]
+      exact setIntegral_mono_ae integrable_condExp.integrableOn integrable_condExp.integrableOn
+        (hInf_dom (bLam n) (hbLam_meas n) (hbLam_simplex n))
+    -- Dominated convergence: the perturbed integrals converge to `∫ₛ (r − 1)`.
+    have hlogr_int : Integrable (fun ω ↦ Real.log (r ω)) μ := by
+      have heq : (fun ω ↦ Real.log (r ω))
+          = fun ω ↦ causalLogReturn X c ω - causalLogReturn X bstarInf ω := by
+        funext ω
+        simp only [hr_def]
+        unfold causalLogReturn
+        rw [Real.log_div (ne_of_gt (hSc_pos ω)) (ne_of_gt (hSb_pos ω))]
+      rw [heq]
+      exact (hint c hc_m hcs).sub hbInf_int
+    have hgn_conv : Tendsto
+        (fun n ↦ ∫ ω in s, Real.log (1 + lam n * (r ω - 1)) / lam n ∂μ) atTop
+        (𝓝 (∫ ω in s, (r ω - 1) ∂μ)) := by
+      set G : Ω → ℝ := fun ω ↦ |Real.log (r ω)| + |r ω - 1| with hG_def
+      have hG_int : Integrable G μ :=
+        hlogr_int.abs.add (hr_int.sub (integrable_const 1)).abs
+      have hgn_meas : ∀ n, Measurable (fun ω ↦ Real.log (1 + lam n * (r ω - 1)) / lam n) :=
+        fun n ↦ ((Real.measurable_log.comp (measurable_const.add
+          (measurable_const.mul (hr_meas.sub measurable_const)))).div measurable_const)
+      refine tendsto_integral_of_dominated_convergence G
+        (fun n ↦ (hgn_meas n).aestronglyMeasurable.restrict) hG_int.integrableOn
+        (fun n ↦ ?_) ?_
+      · refine ae_restrict_of_ae (Eventually.of_forall fun ω ↦ ?_)
+        rw [Real.norm_eq_abs]
+        obtain ⟨hlo, hhi⟩ := log_slope_bounds (t := r ω - 1) (by linarith [hr_pos ω])
+          (hlam_pos n) (hlam_le n)
+        have hlo' : Real.log (r ω) ≤ Real.log (1 + lam n * (r ω - 1)) / lam n := by
+          have hh : (1 : ℝ) + (r ω - 1) = r ω := by ring
+          rwa [hh] at hlo
+        rw [abs_le]
+        refine ⟨?_, ?_⟩
+        · have h1 := neg_abs_le (Real.log (r ω))
+          have h2 := abs_nonneg (r ω - 1)
+          simp only [hG_def]; linarith [hlo']
+        · have h1 := le_abs_self (r ω - 1)
+          have h2 := abs_nonneg (Real.log (r ω))
+          simp only [hG_def]; linarith [hhi]
+      · refine ae_restrict_of_ae (Eventually.of_forall fun ω ↦ ?_)
+        exact (log_slope_tendsto_nhdsWithin (r ω - 1)).comp hlam_tendsto
+    exact le_of_tendsto hgn_conv (Eventually.of_forall hgn_setint_nonpos)
+  -- Assemble: `μ[r | ⨆ ℱ] =ᵐ μ[r − 1 | ⨆ ℱ] + 1 ≤ᵐ 1`.
+  have hr_eq : (fun ω ↦ r ω - 1) + (fun _ ↦ (1 : ℝ)) = r := by funext ω; simp
+  have hadd := condExp_add (μ := μ) (f := fun ω ↦ r ω - 1) (g := fun _ ↦ (1 : ℝ))
+    (hr_int.sub (integrable_const 1)) (integrable_const 1) (⨆ j, ℱ j)
+  rw [hr_eq, condExp_const hm (1 : ℝ)] at hadd
+  filter_upwards [hadd, hkey] with ω hω hk
+  rw [hω]
+  simp only [Pi.add_apply, Pi.one_apply]
+  simp only [Pi.zero_apply] at hk
+  linarith
 
 end CondOptimalGrowth
 
