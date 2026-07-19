@@ -14,7 +14,7 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **Ch.16 "Information Theo
 - [x] Leg A — AO-iid (operational 漸近最適性、CT §16.3 Thm 16.3.1) — proof-done sorryAx-free + @audit:ok
 - [x] Leg C — side-info & growth rate (`ΔW ≤ I(X;Y)`、CT §16.4 Thm 16.4.1) — proof-done + @audit:ok（署名 honesty 修正）
 - [x] Leg B — stationary market fixed-b (定常エルゴード成長率収束 + dominance、CT §16.5) — proof-done + @audit:ok
-- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — **🚧 (B) Route M (growing-memory `S*_n` 逐語) 採択。R1+R2+R3(Route T 踏み台) proof-done + Route M gateway `condKuhnTucker_infPast` 非壁確定 @audit:ok、R3-M 組立 (supermartingale + Birkhoff + sandwich) + R3-a + R4 残** → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
+- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — **🚧 (B) Route M (growing-memory `S*_n` 逐語) 採択。R1+R2+R3(Route T 踏み台) proof-done + Route M gateway 非壁確定 @audit:ok + R3-M-upper 構造 landed (eventual-bound、honesty PASS)、crux `∫⁻ M_n≤1` closure / R3-M-lower / sandwich + R3-a + R4 残** → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
 - [x] Leg D — Cover universal portfolio (regret bound、CT §16.7) — proof-done sorryAx-free + @audit:ok（**not-a-wall 判明**）
 
 ## Closure summary
@@ -80,8 +80,10 @@ log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | 
 - **Route M gateway `condKuhnTucker_infPast` 非壁確定** (proof-done sorryAx-free @audit:ok、
   `StationaryWinfty.lean:1089`、commit `337ed270` → gates `1895ead4`) — R2 の**加法的** dominance を wealth-ratio
   supermartingale が要する**乗法的** one-step 上界に変換する crux を凸摂動一次条件 + setIntegral DCT で closure
-  (κ_ω 還元不要)。残 = R3-M 組立 (supermartingale limsup 上界 / Birkhoff liminf 下界 / sandwich) + R3-a 具体化 + R4。
-  残リスクは supermartingale 組立の shift-past coherence 1 点。子 plan 判断ログ 4 / R3 節が SoT。
+  (κ_ω 還元不要)。**R3-M-upper 構造 landed + honesty gate PASS** (`growingMemory_eventually_le_condOptGrowthInfty`、
+  eventual-bound 形、Markov+BC で isolate、shift-past coherence は `condExp_comp_measurePreserving` plumbing で非壁確定)、
+  crux `∫⁻ M_n ≤ 1` のみ honest sorry 残 (split 後 closure)。残 = crux closure / R3-M-lower (eventual 下界) / sandwich +
+  R3-a 具体化 + R4。子 plan 判断ログ 4-5 / R3 節が SoT。
 - 残る **R4 (growing-memory headline 命名 `@[entry_point]` + README/roadmap/facts 配線)** は R3-M 組立後。root
   import は登録済。
 
