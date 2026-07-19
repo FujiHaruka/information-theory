@@ -1,4 +1,6 @@
 import InformationTheory.Shannon.Portfolio.StationaryWinfty
+import InformationTheory.Probability.TwoSidedExtension.CondExpMeasurePreserving
+import Mathlib.MeasureTheory.Function.ConditionalLExpectation
 
 /-!
 # Growing-memory `W_∞` AEP for stationary markets (Cover–Thomas §16.5)
@@ -13,6 +15,152 @@ namespace InformationTheory.Shannon.Portfolio
 
 open MeasureTheory Filter Topology Set ProbabilityTheory
 open scoped BigOperators ENNReal
+
+section CondLExpPullOut
+
+-- General ENNReal conditional-Lebesgue-expectation pull-out, copied from
+-- `InformationTheory.Shannon.lintegral_mul_eq_lintegral_mul_condLExp`
+-- (`SMB/AlgoetCover/TwoSidedRatio.lean`). The original lives in the heavy finite-alphabet
+-- SMB machinery; both statements are alphabet-free, so we replicate them privately here to keep
+-- the portfolio file's import surface light rather than pull in McMillan–Breiman.
+
+-- Indicator special case of the pull-out property for the conditional Lebesgue expectation.
+private lemma lintegral_indicator_mul_eq
+    {Ω : Type*} {m₀ m : MeasurableSpace Ω} (hm : m ≤ m₀) (μ : @Measure Ω m₀)
+    [SigmaFinite (μ.trim hm)]
+    {B : Set Ω} (hB : MeasurableSet[m] B) (f : Ω → ℝ≥0∞) :
+    ∫⁻ x, B.indicator (fun _ ↦ (1 : ℝ≥0∞)) x * f x ∂μ
+      = ∫⁻ x, B.indicator (fun _ ↦ (1 : ℝ≥0∞)) x * μ⁻[f|m] x ∂μ := by
+  have h_rw : ∀ (h : Ω → ℝ≥0∞),
+      ∫⁻ x, B.indicator (fun _ ↦ (1 : ℝ≥0∞)) x * h x ∂μ = ∫⁻ x in B, h x ∂μ := by
+    intro h
+    rw [show (fun x ↦ B.indicator (fun _ ↦ (1 : ℝ≥0∞)) x * h x)
+          = B.indicator (fun x ↦ 1 * h x) from ?_]
+    · rw [MeasureTheory.lintegral_indicator (hm _ hB)]
+      simp
+    · funext x
+      by_cases hx : x ∈ B
+      · simp [Set.indicator_of_mem hx]
+      · simp [Set.indicator_of_notMem hx]
+  rw [h_rw, h_rw, MeasureTheory.setLIntegral_condLExp hm μ f hB]
+
+-- ENNReal pull-out (general): for `m`-measurable `g` and `m₀`-measurable `f`,
+-- `∫⁻ x, g · f dμ = ∫⁻ x, g · μ⁻[f|m] dμ`.
+private lemma lintegral_mul_eq_lintegral_mul_condLExp
+    {Ω : Type*} {m₀ m : MeasurableSpace Ω} (hm : m ≤ m₀) (μ : @Measure Ω m₀)
+    [SigmaFinite (μ.trim hm)]
+    {g : Ω → ℝ≥0∞} (hg : Measurable[m] g)
+    {f : Ω → ℝ≥0∞} (hf : @Measurable Ω ℝ≥0∞ m₀ _ f) :
+    ∫⁻ x, g x * f x ∂μ = ∫⁻ x, g x * μ⁻[f|m] x ∂μ := by
+  classical
+  set sn : ℕ → @SimpleFunc Ω m ℝ≥0∞ := SimpleFunc.eapprox g with hsn_def
+  have h_sn_mono : ∀ x, Monotone (fun n ↦ (sn n : Ω → ℝ≥0∞) x) :=
+    fun x i j hij ↦ SimpleFunc.monotone_eapprox _ hij x
+  have h_g_iSup : ∀ x, g x = ⨆ n, (sn n : Ω → ℝ≥0∞) x :=
+    fun x ↦ (SimpleFunc.iSup_eapprox_apply hg x).symm
+  have h_sn_meas_m₀ : ∀ n, @Measurable Ω ℝ≥0∞ m₀ _ (sn n : Ω → ℝ≥0∞) :=
+    fun n ↦ ((sn n).measurable).mono hm le_rfl
+  have h_cL_meas : Measurable[m] (μ⁻[f|m]) := MeasureTheory.measurable_condLExp m μ f
+  have h_cL_meas_m₀ : @Measurable Ω ℝ≥0∞ m₀ _ (μ⁻[f|m]) := h_cL_meas.mono hm le_rfl
+  have h_g_mul_iSup : ∀ (h : Ω → ℝ≥0∞), (fun x ↦ g x * h x)
+      = fun x ↦ ⨆ n, (sn n : Ω → ℝ≥0∞) x * h x := by
+    intro h
+    funext x
+    rw [h_g_iSup, ENNReal.iSup_mul]
+  have h_mono_mul : ∀ (h : Ω → ℝ≥0∞) x, Monotone (fun n ↦ (sn n : Ω → ℝ≥0∞) x * h x) := by
+    intro h x i j hij
+    have h_nn : (0 : ℝ≥0∞) ≤ h x := bot_le
+    exact mul_le_mul_of_nonneg_right (h_sn_mono x hij) h_nn
+  have h_meas_mul : ∀ (h : Ω → ℝ≥0∞), @Measurable Ω ℝ≥0∞ m₀ _ h →
+      ∀ n, @Measurable Ω ℝ≥0∞ m₀ _ (fun x ↦ (sn n : Ω → ℝ≥0∞) x * h x) :=
+    fun h hh n ↦ Measurable.mul (h_sn_meas_m₀ n) hh
+  have h_step : ∀ n, ∫⁻ x, (sn n : Ω → ℝ≥0∞) x * f x ∂μ
+      = ∫⁻ x, (sn n : Ω → ℝ≥0∞) x * μ⁻[f|m] x ∂μ := by
+    intro n
+    have h_sn_decomp : ∀ x, (sn n : Ω → ℝ≥0∞) x
+        = ∑ c ∈ (sn n).range, c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x := by
+      intro x
+      rw [Finset.sum_eq_single (sn n x)]
+      · simp
+      · intro c _ hc
+        have h_notmem : x ∉ (sn n) ⁻¹' {c} := fun hx ↦ hc hx.symm
+        simp [Set.indicator_of_notMem h_notmem]
+      · intro hcontra
+        exact absurd (SimpleFunc.mem_range_self _ x) hcontra
+    have h_decomp : ∀ x (h : Ω → ℝ≥0∞), (sn n : Ω → ℝ≥0∞) x * h x
+        = ∑ c ∈ (sn n).range, (c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x) * h x := by
+      intro x h
+      rw [h_sn_decomp x, Finset.sum_mul]
+    have h_preim_meas : ∀ c, MeasurableSet[m] ((sn n) ⁻¹' {c}) :=
+      fun c ↦ (sn n).measurableSet_fiber c
+    have h_preim_lt_top : ∀ c ∈ (sn n).range, c ≠ ∞ := by
+      intro c hc
+      rcases SimpleFunc.mem_range.mp hc with ⟨x, rfl⟩
+      exact (SimpleFunc.eapprox_lt_top g n x).ne
+    have h_per_c_LHS : ∀ c (h : Ω → ℝ≥0∞), c ≠ ∞ →
+        ∫⁻ x, (c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x) * h x ∂μ
+          = c * ∫⁻ x, ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x * h x ∂μ := by
+      intro c h hc_ne_top
+      rw [show (fun x ↦ c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x * h x)
+          = fun x ↦ c * (((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x * h x) from
+            funext (fun _ ↦ by ring)]
+      rw [MeasureTheory.lintegral_const_mul' _ _ hc_ne_top]
+    rw [show (fun x ↦ (sn n : Ω → ℝ≥0∞) x * f x)
+        = fun x ↦ ∑ c ∈ (sn n).range,
+          (c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x) * f x from
+            funext (fun x ↦ h_decomp x f)]
+    rw [show (fun x ↦ (sn n : Ω → ℝ≥0∞) x * μ⁻[f|m] x)
+        = fun x ↦ ∑ c ∈ (sn n).range,
+          (c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x) * μ⁻[f|m] x from
+            funext (fun x ↦ h_decomp x _)]
+    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦
+      ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul hf)]
+    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦
+      ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul
+        h_cL_meas_m₀)]
+    refine Finset.sum_congr rfl (fun c hc ↦ ?_)
+    rw [h_per_c_LHS c f (h_preim_lt_top c hc),
+        h_per_c_LHS c (μ⁻[f|m]) (h_preim_lt_top c hc),
+        lintegral_indicator_mul_eq hm μ (h_preim_meas c) f]
+  rw [h_g_mul_iSup f, h_g_mul_iSup (μ⁻[f|m])]
+  rw [MeasureTheory.lintegral_iSup (fun n ↦ h_meas_mul f hf n)
+        (fun i j hij x ↦ h_mono_mul f x hij)]
+  rw [MeasureTheory.lintegral_iSup (fun n ↦ h_meas_mul (μ⁻[f|m]) h_cL_meas_m₀ n)
+    (fun i j hij x ↦ h_mono_mul _ x hij)]
+  exact iSup_congr h_step
+
+-- Bridge from a real conditional-expectation upper bound to the ENNReal conditional Lebesgue
+-- expectation: a nonnegative integrable `f` with `μ[f|m] ≤ᵐ 1` satisfies `μ⁻[ofReal ∘ f|m] ≤ᵐ 1`.
+-- Both `μ⁻[·|·]` and `μ[·|·]` integrate `f` the same way over `m`-measurable sets, and `ofReal`
+-- transports the real set-integral bound (`f` nonnegative and integrable) to the ENNReal one.
+private lemma condLExp_ofReal_le_one_of_condExp_le_one
+    {Ω : Type*} {m0 mG : MeasurableSpace Ω} (hm : mG ≤ m0) (μ : @Measure Ω m0)
+    [IsFiniteMeasure μ] {f : Ω → ℝ} (hf_int : Integrable f μ)
+    (hf_nn : ∀ ω, 0 ≤ f ω) (hbound : μ[f | mG] ≤ᵐ[μ] 1) :
+    μ⁻[fun ω ↦ ENNReal.ofReal (f ω) | mG] ≤ᵐ[μ] 1 := by
+  haveI : SigmaFinite (μ.trim hm) := by
+    haveI : IsFiniteMeasure (μ.trim hm) := isFiniteMeasure_trim hm
+    infer_instance
+  apply ae_le_of_ae_le_trim
+  refine ae_le_of_forall_setLIntegral_le_of_sigmaFinite (measurable_condLExp _ _ _) ?_
+  intro s hs _
+  rw [setLIntegral_condLExp_trim hm _ _ hs]
+  have hRHS : ∫⁻ x in s, (1 : Ω → ℝ≥0∞) x ∂(μ.trim hm) = μ s := by
+    simp only [Pi.one_apply]
+    rw [setLIntegral_one, trim_measurableSet_eq hm hs]
+  rw [hRHS, ← ofReal_integral_eq_lintegral_ofReal hf_int.integrableOn
+    (ae_restrict_of_ae (Eventually.of_forall hf_nn)), ← setIntegral_condExp hm hf_int hs]
+  have hle : ∫ x in s, (μ[f | mG]) x ∂μ ≤ (μ s).toReal := by
+    calc ∫ x in s, (μ[f | mG]) x ∂μ
+        ≤ ∫ _ in s, (1 : ℝ) ∂μ :=
+          setIntegral_mono_ae integrable_condExp.integrableOn (integrable_const 1).integrableOn
+            hbound
+      _ = (μ s).toReal := by rw [setIntegral_const, smul_eq_mul, mul_one, measureReal_def]
+  calc ENNReal.ofReal (∫ x in s, (μ[f | mG]) x ∂μ)
+      ≤ ENNReal.ofReal ((μ s).toReal) := ENNReal.ofReal_le_ofReal hle
+    _ = μ s := ENNReal.ofReal_toReal (measure_ne_top μ s)
+
+end CondLExpPullOut
 
 section CondOptimalGrowth
 
@@ -74,24 +222,22 @@ private theorem wealthRatioProcess_log_eq {X : Ω → Fin m → ℝ} {bstar : �
     exact div_ne_zero hnum.ne' hden.ne'
 
 /-- Supermartingale integral bound for the wealth-ratio process (Cover–Thomas §16.5): the mean
-wealth ratio `E[M_n]` stays at most `1`. The base case `n = 0` is proved here: the conditional
-Kuhn–Tucker inequality `condKuhnTucker_infPast` (the `⨆ⱼℱⱼ`-conditional mean of the one-step ratio
-is `≤ 1`) plus the tower property `integral_condExp` give `∫ M₀ ≤ 1`, hence `∫⁻ ofReal M₀ ≤ 1`. The
-inductive step (`∫⁻ M_{k+1} ≤ ∫⁻ M_k`) factors `M_{k+1} = M_k · (ρ_{k+1} ∘ Tᵏ⁺¹)` and needs the
-increment's conditional mean `≤ 1` given the growing history, then pulls `M_k` out. The increment
-bound is available: transporting `condKuhnTucker_infPast` (conditioned on `⨆ⱼℱⱼ` at the base point)
-to epoch `k+1` under the measure-preserving shift via the in-project
-`InformationTheory.Shannon.TwoSided.condExp_comp_measurePreserving` gives
-`μ[ρ_{k+1} ∘ Tᵏ⁺¹ | (⨆ⱼℱⱼ).comap Tᵏ⁺¹] ≤ᵐ 1`. The **missing** piece is the pull-out's adaptedness:
-`M_k` must be `(⨆ⱼℱⱼ).comap Tᵏ⁺¹`-measurable. The abstract `ℱ`/`T`/`X` hypotheses assert no
-compatibility (`ℱ` is an arbitrary filtration, `X` an arbitrary measurable map, `T` an arbitrary
-measure-preserving map), so this adaptedness does not hold abstractly — it is exactly the concrete
-past-filtration/shift coherence (R3-a in the closure plan, where `ℱ := pastFiltration` and
-`T := shift` make `M_k` a function of coordinates `≤ k`, hence `(past).comap Tᵏ⁺¹`-measurable). The
-closure therefore depends on R3-a, not merely on file size. `hpos`/`hint`/`hint_coord` are
-market-regularity preconditions; `hInf_dom` is the KT dominance of `bstarInf`, received (not the
-proof core), mirroring `condKuhnTucker_infPast`.
-@residual(plan:portfolio-stationary-woo-plan) -/
+wealth ratio `E[M_n]` stays at most `1`. The base case `n = 0` uses the conditional Kuhn–Tucker
+inequality `condKuhnTucker_infPast` (the `⨆ⱼℱⱼ`-conditional mean of the one-step ratio is `≤ 1`)
+plus the tower property `integral_condExp` to get `∫ M₀ ≤ 1`, hence `∫⁻ ofReal M₀ ≤ 1`. The
+inductive step (`∫⁻ M_{k+1} ≤ ∫⁻ M_k`) factors `M_{k+1} = M_k · (ρ_{k+1} ∘ Tᵏ⁺¹)`, pulls `M_k` out
+of the conditional Lebesgue expectation over `(⨆ⱼℱⱼ).comap Tᵏ⁺¹`, and uses the increment bound
+`μ[ρ_{k+1} ∘ Tᵏ⁺¹ | (⨆ⱼℱⱼ).comap Tᵏ⁺¹] ≤ᵐ 1` (transporting `condKuhnTucker_infPast` to epoch `k+1`
+under the measure-preserving shift via `condExp_comp_measurePreserving`). The pull-out needs `M_k`
+to be `(⨆ⱼℱⱼ).comap Tᵏ⁺¹`-measurable, which the abstract `ℱ`/`T`/`X` do not supply, so it is
+received through `hcoh`: a component-level shift/past coherence stating only that the primitive maps
+`X`, `bstar i`, `bstarInf` composed with `T^[i]` (`i ≤ k`) are measurable w.r.t. the epoch-`k+1`
+conditioning σ-algebra. `hcoh` is a structural regularity precondition (measurability only; it
+encodes no integral, bound, or conditional-expectation inequality), discharged by the concrete
+past-filtration/shift instantiation (R3-a in the closure plan, where `ℱ := pastFiltration` and
+`T := shift` make each coordinate `≤ k` measurable w.r.t. `(past).comap Tᵏ⁺¹`). `hpos`/`hint`/
+`hint_coord` are market-regularity preconditions; `hInf_dom` is the KT dominance of `bstarInf`,
+received (not the proof core), mirroring `condKuhnTucker_infPast`. -/
 private theorem wealthRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ] (ℱ : Filtration ℕ m0) {X : Ω → Fin m → ℝ}
     [Nonempty (Fin m)] (hX : Measurable X) {T : Ω → Ω} (hT : MeasurePreserving T μ μ)
@@ -106,6 +252,10 @@ private theorem wealthRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [Non
     (hInf_dom : ∀ (c : Ω → Fin m → ℝ), StronglyMeasurable[⨆ j, ℱ j] c →
         (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
         μ[causalLogReturn X c | ⨆ j, ℱ j] ≤ᵐ[μ] μ[causalLogReturn X bstarInf | ⨆ j, ℱ j])
+    (hcoh : ∀ k, ∀ i, i ≤ k →
+        StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ X (T^[i] ω)) ∧
+          StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ bstar i (T^[i] ω)) ∧
+            StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ bstarInf (T^[i] ω)))
     (n : ℕ) :
     ∫⁻ ω, ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T n ω) ∂μ ≤ 1 := by
   classical
@@ -154,14 +304,113 @@ private theorem wealthRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [Non
       (Eventually.of_forall fun ω ↦ le_of_lt (hr_pos ω))]
     exact ENNReal.ofReal_le_one.mpr hint_r
   | succ k ih =>
-    -- Inductive step: `∫⁻ M_{k+1} ≤ ∫⁻ M_k ≤ 1`. The increment factor `ρ_{k+1} ∘ Tᵏ⁺¹` has
-    -- conditional mean `≤ 1` given `(⨆ⱼℱⱼ).comap Tᵏ⁺¹` (transport `condKuhnTucker_infPast` via
-    -- `condExp_comp_measurePreserving`), but pulling `M_k` out of that conditional mean needs
-    -- `M_k` to be `(⨆ⱼℱⱼ).comap Tᵏ⁺¹`-measurable (growing-history adaptedness). The abstract
-    -- `ℱ`/`T`/`X` hypotheses state no compatibility, so this adaptedness is unavailable here; it is
-    -- supplied by the concrete past-filtration/shift instantiation (R3-a in the closure plan).
-    -- @residual(plan:portfolio-stationary-woo-plan)
-    sorry
+    -- Inductive step: `∫⁻ M_{k+1} ≤ ∫⁻ M_k ≤ 1`, mirroring the Algoet–Cover tower argument
+    -- `integral_MRatioLowerZ_le_one` (`SMB/AlgoetCover/TwoSidedRatio.lean`).
+    -- Conditioning σ-algebra for epoch `k+1` is `(⨆ⱼℱⱼ).comap (T^[k+1])` (kept as an explicit
+    -- expression, not a local instance, to avoid shadowing the ambient `m0`).
+    have hsup_le : (⨆ j, ℱ j) ≤ m0 := iSup_le ℱ.le
+    have hTmeas : Measurable (T^[k + 1] : Ω → Ω) := hT.measurable.iterate (k + 1)
+    have hG_le : (⨆ j, ℱ j).comap (T^[k + 1]) ≤ m0 := by
+      intro s ⟨B, hB, hBs⟩
+      rw [← hBs]
+      exact hTmeas (hsup_le _ hB)
+    haveI hSF : SigmaFinite (μ.trim hG_le) := by
+      haveI : IsFiniteMeasure (μ.trim hG_le) := isFiniteMeasure_trim hG_le
+      infer_instance
+    -- The unshifted one-step ratio for competitor `bstar (k+1)` (the KT-form).
+    set r : Ω → ℝ := fun ω ↦ (∑ j, bstar (k + 1) ω j * X ω j) / (∑ j, bstarInf ω j * X ω j)
+      with hr_def
+    have hSb : ∀ ω, (0 : ℝ) < ∑ j, bstarInf ω j * X ω j :=
+      fun ω ↦ hpos ω (bstarInf ω) (hInf_simplex ω)
+    have hSc : ∀ ω, (0 : ℝ) < ∑ j, bstar (k + 1) ω j * X ω j :=
+      fun ω ↦ hpos ω (bstar (k + 1) ω) (hbstar_simplex (k + 1) ω)
+    have hr_pos : ∀ ω, 0 < r ω := fun ω ↦ div_pos (hSc ω) (hSb ω)
+    have hc' : StronglyMeasurable[⨆ j, ℱ j] (bstar (k + 1)) :=
+      (hbstar_meas (k + 1)).mono (le_iSup (fun j ↦ ℱ j) (k + 1))
+    have hbInf_m : Measurable bstarInf := (hInf_meas.mono hsup_le).measurable
+    have hr_meas : Measurable r := by
+      rw [hr_def]
+      exact (Finset.measurable_sum _ fun j _ ↦
+          ((measurable_pi_apply j).comp (hc'.mono hsup_le).measurable).mul
+            ((measurable_pi_apply j).comp hX)).div
+        (Finset.measurable_sum _ fun j _ ↦
+          ((measurable_pi_apply j).comp hbInf_m).mul ((measurable_pi_apply j).comp hX))
+    have hr_int : Integrable r μ := by
+      have hbound : Integrable (fun ω ↦ ∑ i, X ω i / (∑ j, bstarInf ω j * X ω j)) μ :=
+        integrable_finsetSum Finset.univ fun i _ ↦ hint_coord i
+      refine Integrable.mono' hbound hr_meas.aestronglyMeasurable (Eventually.of_forall fun ω ↦ ?_)
+      rw [Real.norm_eq_abs, abs_of_nonneg (le_of_lt (hr_pos ω))]
+      simp only [hr_def]
+      rw [Finset.sum_div]
+      refine Finset.sum_le_sum fun i _ ↦ ?_
+      rw [mul_div_assoc]
+      refine mul_le_of_le_one_left (le_of_lt (div_pos (market_pos hpos ω i) (hSb ω))) ?_
+      exact stdSimplex_component_le_one (hbstar_simplex (k + 1) ω) i
+    -- KT one-step bound at the base point, then transported to epoch `k+1`.
+    have hKT : μ[r | ⨆ j, ℱ j] ≤ᵐ[μ] 1 :=
+      condKuhnTucker_infPast μ ℱ X hX hpos hint bstarInf hInf_meas hInf_simplex hint_coord hInf_dom
+        (bstar (k + 1)) hc' (hbstar_simplex (k + 1))
+    have hmp : MeasurePreserving (T^[k + 1]) μ μ := hT.iterate (k + 1)
+    have htrans : (fun x ↦ (μ[r | ⨆ j, ℱ j]) (T^[k + 1] x)) =ᵐ[μ]
+        μ[fun ω ↦ r (T^[k + 1] ω) | (⨆ j, ℱ j).comap (T^[k + 1])] :=
+      InformationTheory.Shannon.TwoSided.condExp_comp_measurePreserving hmp hr_int
+        (⨆ j, ℱ j) hsup_le
+    have htrans_le : ∀ᵐ x ∂μ, (μ[r | ⨆ j, ℱ j]) (T^[k + 1] x) ≤ 1 := by
+      filter_upwards [hmp.quasiMeasurePreserving.ae hKT] with x hx
+      simpa using hx
+    have hcond_le : μ[fun ω ↦ r (T^[k + 1] ω) | (⨆ j, ℱ j).comap (T^[k + 1])] ≤ᵐ[μ] 1 := by
+      filter_upwards [htrans, htrans_le] with x hx_eq hx_le
+      rw [← hx_eq]; exact hx_le
+    -- Bridge to the ENNReal conditional Lebesgue expectation.
+    have hrshift_int : Integrable (fun ω ↦ r (T^[k + 1] ω)) μ :=
+      hmp.integrable_comp_of_integrable hr_int
+    have hcondL_le : μ⁻[fun ω ↦ ENNReal.ofReal (r (T^[k + 1] ω)) |
+        (⨆ j, ℱ j).comap (T^[k + 1])] ≤ᵐ[μ] 1 :=
+      condLExp_ofReal_le_one_of_condExp_le_one hG_le μ hrshift_int
+        (fun ω ↦ le_of_lt (hr_pos (T^[k + 1] ω))) hcond_le
+    -- Growing-history adaptedness of `M_k` from `hcoh`.
+    have hMk_meas : Measurable[(⨆ j, ℱ j).comap (T^[k + 1])]
+        (wealthRatioProcess X bstar bstarInf T k) := by
+      refine Finset.measurable_prod _ fun i hi ↦ ?_
+      have hik : i ≤ k := Nat.lt_succ_iff.mp (Finset.mem_range.mp hi)
+      obtain ⟨hX_i, hb_i, hInf_i⟩ := hcoh k i hik
+      refine Measurable.div ?_ ?_
+      · exact Finset.measurable_sum _ fun j _ ↦
+          ((measurable_pi_apply j).comp hb_i.measurable).mul
+            ((measurable_pi_apply j).comp hX_i.measurable)
+      · exact Finset.measurable_sum _ fun j _ ↦
+          ((measurable_pi_apply j).comp hInf_i.measurable).mul
+            ((measurable_pi_apply j).comp hX_i.measurable)
+    -- ρ_{k+1} as an m₀-measurable ENNReal function.
+    have hf_meas : Measurable (fun ω ↦ ENNReal.ofReal (r (T^[k + 1] ω))) :=
+      ENNReal.measurable_ofReal.comp (hr_meas.comp hTmeas)
+    -- Factorization `ofReal M_{k+1} = ofReal M_k · ofReal (r ∘ Tᵏ⁺¹)`.
+    have hfact : ∀ ω, ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T (k + 1) ω)
+        = ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T k ω)
+          * ENNReal.ofReal (r (T^[k + 1] ω)) := by
+      intro ω
+      have hMprod : wealthRatioProcess X bstar bstarInf T (k + 1) ω
+          = wealthRatioProcess X bstar bstarInf T k ω * r (T^[k + 1] ω) := by
+        simp only [wealthRatioProcess, hr_def, Finset.prod_range_succ]
+      rw [hMprod, ENNReal.ofReal_mul
+        (le_of_lt (wealthRatioProcess_pos hpos hbstar_simplex hInf_simplex k ω))]
+    -- Assemble: pull `M_k` out, bound the increment condLExp by `1`, apply the IH.
+    calc ∫⁻ ω, ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T (k + 1) ω) ∂μ
+        = ∫⁻ ω, ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T k ω)
+            * ENNReal.ofReal (r (T^[k + 1] ω)) ∂μ := by
+          exact lintegral_congr fun ω ↦ hfact ω
+      _ = ∫⁻ ω, ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T k ω)
+            * (μ⁻[fun ω ↦ ENNReal.ofReal (r (T^[k + 1] ω)) |
+                (⨆ j, ℱ j).comap (T^[k + 1])]) ω ∂μ :=
+          lintegral_mul_eq_lintegral_mul_condLExp hG_le μ
+            (ENNReal.measurable_ofReal.comp hMk_meas) hf_meas
+      _ ≤ ∫⁻ ω, ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T k ω) * 1 ∂μ := by
+          refine lintegral_mono_ae ?_
+          filter_upwards [hcondL_le] with ω hω
+          exact mul_le_mul' le_rfl hω
+      _ = ∫⁻ ω, ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T k ω) ∂μ := by
+          simp
+      _ ≤ 1 := ih
 
 -- The time-averaged log wealth ratio is eventually below any positive threshold a.e. (Markov +
 -- Borel–Cantelli on the integral bound `E[M_n] ≤ 1`, then `(1/n) log M_n ≤ 2 log(n+1)/(n+1) → 0`).
@@ -180,7 +429,11 @@ private theorem wealthRatio_logAvg_eventually_le [StandardBorelSpace Ω] [Nonemp
     (hint_coord : ∀ i, Integrable (fun ω ↦ X ω i / (∑ j, bstarInf ω j * X ω j)) μ)
     (hInf_dom : ∀ (c : Ω → Fin m → ℝ), StronglyMeasurable[⨆ j, ℱ j] c →
         (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
-        μ[causalLogReturn X c | ⨆ j, ℱ j] ≤ᵐ[μ] μ[causalLogReturn X bstarInf | ⨆ j, ℱ j]) :
+        μ[causalLogReturn X c | ⨆ j, ℱ j] ≤ᵐ[μ] μ[causalLogReturn X bstarInf | ⨆ j, ℱ j])
+    (hcoh : ∀ k, ∀ i, i ≤ k →
+        StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ X (T^[i] ω)) ∧
+          StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ bstar i (T^[i] ω)) ∧
+            StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ bstarInf (T^[i] ω))) :
     ∀ᵐ ω ∂μ, ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
       Real.log (wealthRatioProcess X bstar bstarInf T n ω) / (n + 1 : ℝ) ≤ ε := by
   classical
@@ -210,7 +463,7 @@ private theorem wealthRatio_logAvg_eventually_le [StandardBorelSpace Ω] [Nonemp
       ≤ ENNReal.ofReal ((((n:ℝ) + 1) ^ 2)⁻¹) := by
     intro n
     have hcrux := wealthRatioProcess_lintegral_le_one μ ℱ hX hT hpos hint hbstar_meas hbstar_simplex
-      hInf_meas hInf_simplex hint_coord hInf_dom n
+      hInf_meas hInf_simplex hint_coord hInf_dom hcoh n
     have ht_pos : (0 : ℝ) < ((n:ℝ) + 1) ^ 2 := by positivity
     have hmk := mul_meas_ge_le_lintegral₀ (μ := μ)
       (f := fun ω ↦ ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T n ω))
@@ -288,7 +541,9 @@ the lower half rules out). `bstar`/`bstarInf` and their conditional-dominance pr
 (`hbstar_dom`/`hInf_dom`) are received as the stagewise/infinite-past conditional log-optimal
 selections (constructed separately, e.g. via `exists_condLogOptimalSeq` /
 `exists_infPast_condLogOptimal`); the remaining hypotheses are market-regularity/ergodicity
-preconditions. -/
+preconditions. `hcoh` is the shift/past coherence (measurability only) letting the wealth-ratio
+supermartingale bound pull the growing history out of the epoch-`k+1` conditional expectation;
+it holds for the concrete past-filtration/shift instantiation. -/
 theorem growingMemory_eventually_le_condOptGrowthInfty [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
@@ -306,7 +561,11 @@ theorem growingMemory_eventually_le_condOptGrowthInfty [StandardBorelSpace Ω] [
     (hint_coord : ∀ i, Integrable (fun ω ↦ X ω i / (∑ j, bstarInf ω j * X ω j)) μ)
     (hInf_dom : ∀ (c : Ω → Fin m → ℝ), StronglyMeasurable[⨆ j, ℱ j] c →
         (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
-        μ[causalLogReturn X c | ⨆ j, ℱ j] ≤ᵐ[μ] μ[causalLogReturn X bstarInf | ⨆ j, ℱ j]) :
+        μ[causalLogReturn X c | ⨆ j, ℱ j] ≤ᵐ[μ] μ[causalLogReturn X bstarInf | ⨆ j, ℱ j])
+    (hcoh : ∀ k, ∀ i, i ≤ k →
+        StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ X (T^[i] ω)) ∧
+          StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ bstar i (T^[i] ω)) ∧
+            StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ bstarInf (T^[i] ω))) :
     ∀ᵐ ω ∂μ, ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
       growingMemoryLogAvg X bstar T n ω ≤ condOptGrowthInfty μ X bstar + ε := by
   have hbstarInf_measurable : Measurable bstarInf := (hInf_meas.mono (iSup_le ℱ.le)).measurable
@@ -315,7 +574,7 @@ theorem growingMemory_eventually_le_condOptGrowthInfty [StandardBorelSpace Ω] [
       hbstar_dom bstarInf hInf_meas hInf_simplex hInf_dom
   have hbirk := birkhoff_ergodic_ae hT hT_erg (hint bstarInf hbstarInf_measurable hInf_simplex)
   have hupper := wealthRatio_logAvg_eventually_le μ ℱ hX hT hpos hint hbstar_meas hbstar_simplex
-    hInf_meas hInf_simplex hint_coord hInf_dom
+    hInf_meas hInf_simplex hint_coord hInf_dom hcoh
   filter_upwards [hbirk, hupper] with ω hbirk_ω hupper_ω
   intro ε hε
   -- Decompose the growing-memory average into the log wealth ratio plus the `bstarInf` average.
