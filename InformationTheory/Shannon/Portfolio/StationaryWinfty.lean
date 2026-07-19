@@ -425,7 +425,7 @@ monotonicity from the conditional optimality of `bstar`, boundedness from the re
 
 This is a genuine reduction: its own body has no `sorry`. It is conditional only on the existence
 of the conditional log-optimal selection `exists_condLogOptimalSeq`, whose measurable-selection core
-is the sole open residual (`@residual(plan:portfolio-stationary-woo-plan)` there). -/
+carries the sole open residual of this development. -/
 theorem exists_condOptGrowth_tendsto_condOptGrowthInfty
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) [Nonempty (Fin m)]
