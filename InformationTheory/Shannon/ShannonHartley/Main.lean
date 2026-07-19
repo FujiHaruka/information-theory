@@ -57,6 +57,107 @@ section Achievability
 
 open MeasureTheory InformationTheory.Shannon.TimeBandLimiting InformationTheory.Shannon.LpPointwise
 
+private theorem linearIndependent_of_link (T W : ℝ) {c : ℝ} (hc : 0 < c)
+    (u : Fin (prolateCount T W c) → E)
+    (e : Fin (prolateCount T W c) → Lp ℝ 2 (volume : Measure ℝ))
+    (hu_on : Orthonormal ℂ u)
+    (hu_mem : ∀ i, u i ∈ prolateEigenspaceSup T W c)
+    (hlink : ∀ i, (fun t ↦ ((⇑(e i) t : ℝ) : ℂ)) =ᵐ[volume]
+      (⇑((timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ)) :
+    LinearIndependent ℝ e := by
+  rw [Fintype.linearIndependent_iff]
+  intro g hg
+  -- Transfer the vanishing combination to `E`: `∑ (g i) • Q_T (u i) = 0`.
+  have hE : (∑ i, (g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) = 0 := by
+    refine Lp.ext ?_
+    have hcsum := Lp.coeFn_finsetSum Finset.univ
+      (fun i ↦ (g i : ℂ) • (timeLimitSubspace T).starProjection (u i))
+    have hrsum := Lp.coeFn_finsetSum Finset.univ (fun i ↦ g i • e i)
+    have hg0 : ⇑(∑ i, g i • e i) =ᵐ[volume] (0 : ℝ → ℝ) := by
+      rw [hg]; exact Lp.coeFn_zero ℝ 2 volume
+    have hz : ⇑(0 : E) =ᵐ[volume] (0 : ℝ → ℂ) := Lp.coeFn_zero ℂ 2 volume
+    have hcsmul : ∀ i, ⇑((g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) =ᵐ[volume]
+        (g i : ℂ) • (⇑((timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ) :=
+      fun i ↦ Lp.coeFn_smul _ _
+    have hrsmul : ∀ i, ⇑(g i • e i) =ᵐ[volume] g i • (⇑(e i) : ℝ → ℝ) :=
+      fun i ↦ Lp.coeFn_smul _ _
+    filter_upwards [hcsum, hrsum, hg0, hz, ae_all_iff.mpr hlink, ae_all_iff.mpr hcsmul,
+      ae_all_iff.mpr hrsmul] with t hct hrt hg0t hzt hlinkt hcsmt hrsmt
+    rw [hct, hzt, Finset.sum_apply, Pi.zero_apply]
+    -- Rewrite each complex summand as `(g i) * (e i t : ℂ)`.
+    have step : ∀ i, (⇑((g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ) t
+        = (g i : ℂ) * ((⇑(e i) t : ℝ) : ℂ) := by
+      intro i
+      rw [hcsmt i, Pi.smul_apply, smul_eq_mul, ← hlinkt i]
+    rw [Finset.sum_congr rfl (fun i _ ↦ step i)]
+    -- The real combination vanishes pointwise.
+    have hrside : (∑ i, g i * (⇑(e i) t : ℝ)) = 0 := by
+      rw [Finset.sum_apply] at hrt
+      simp only [Pi.zero_apply] at hg0t
+      rw [hrt] at hg0t
+      rw [← hg0t]
+      exact Finset.sum_congr rfl (fun i _ ↦ by rw [hrsmt i, Pi.smul_apply, smul_eq_mul])
+    have hcast : (∑ i, (g i : ℂ) * ((⇑(e i) t : ℝ) : ℂ))
+        = ((∑ i, g i * (⇑(e i) t : ℝ) : ℝ) : ℂ) := by
+      rw [Complex.ofReal_sum]
+      exact Finset.sum_congr rfl (fun i _ ↦ by rw [Complex.ofReal_mul])
+    rw [hcast, hrside, Complex.ofReal_zero]
+  -- Pull `Q_T` out of the sum, then invert it on `V`.
+  have hQ0 : (timeLimitSubspace T).starProjection (∑ i, (g i : ℂ) • u i) = 0 := by
+    rw [map_sum]
+    simp_rw [map_smul]
+    exact hE
+  have hsum0 : (∑ i, (g i : ℂ) • u i) = 0 :=
+    eq_zero_of_timeLimitProj_eq_zero T W c hc
+      (Submodule.sum_mem _ (fun i _ ↦ Submodule.smul_mem _ _ (hu_mem i))) hQ0
+  -- `u` is `ℂ`-independent, so all coefficients vanish.
+  intro i
+  have hli := hu_on.linearIndependent
+  rw [Fintype.linearIndependent_iff] at hli
+  have := hli (fun i ↦ (g i : ℂ)) hsum0 i
+  exact_mod_cast this
+
+private theorem norm_sq_smul_sum_eq_timeLimitProj (T W : ℝ) {c : ℝ}
+    (u : Fin (prolateCount T W c) → E)
+    (e : Fin (prolateCount T W c) → Lp ℝ 2 (volume : Measure ℝ))
+    (hlink : ∀ i, (fun t ↦ ((⇑(e i) t : ℝ) : ℂ)) =ᵐ[volume]
+      (⇑((timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ))
+    (v : Fin (prolateCount T W c) → ℝ) :
+    ‖∑ j, v j • e j‖ ^ 2
+      = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ ^ 2 := by
+  set p : Lp ℝ 2 (volume : Measure ℝ) := ∑ j, v j • e j with hp
+  have hpc : (fun t ↦ ((⇑p t : ℝ) : ℂ)) =ᵐ[volume]
+      (⇑((timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)) : ℝ → ℂ) := by
+    have hQlin : (timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)
+        = ∑ j, (v j : ℂ) • (timeLimitSubspace T).starProjection (u j) := by
+      rw [map_sum]; simp_rw [map_smul]
+    rw [hQlin]
+    have hpr : (⇑p : ℝ → ℝ) =ᵐ[volume] (fun t ↦ ∑ j, v j * ⇑(e j) t) := by
+      have h1 := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ
+        (fun j ↦ v j • e j)
+      have h2 : ∀ j, ⇑(v j • e j) =ᵐ[volume] v j • (⇑(e j) : ℝ → ℝ) := fun j ↦ Lp.coeFn_smul _ _
+      rw [hp]
+      filter_upwards [h1, ae_all_iff.mpr h2] with t h1t h2t
+      rw [h1t]
+      exact Finset.sum_congr rfl (fun j _ ↦ by rw [h2t j, Pi.smul_apply, smul_eq_mul])
+    have hws := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ
+      (fun j ↦ (v j : ℂ) • (timeLimitSubspace T).starProjection (u j))
+    have hwsmul : ∀ j, ⇑((v j : ℂ) • (timeLimitSubspace T).starProjection (u j)) =ᵐ[volume]
+        (v j : ℂ) • (⇑((timeLimitSubspace T).starProjection (u j)) : ℝ → ℂ) :=
+      fun j ↦ Lp.coeFn_smul _ _
+    filter_upwards [hpr, hws, ae_all_iff.mpr hwsmul, ae_all_iff.mpr hlink]
+      with t hprt hwst hwsmt hlinkt
+    rw [hwst, hprt, Complex.ofReal_sum]
+    refine Finset.sum_congr rfl (fun j _ ↦ ?_)
+    rw [hwsmt j, Pi.smul_apply, smul_eq_mul, ← hlinkt j, Complex.ofReal_mul]
+  have hnorm : ‖p‖ = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ := by
+    rw [Lp.norm_def, Lp.norm_def]
+    congr 1
+    rw [show eLpNorm (⇑p) 2 volume = eLpNorm (fun t ↦ ((⇑p t : ℝ) : ℂ)) 2 volume from
+      eLpNorm_congr_norm_ae (by filter_upwards with t; rw [Complex.norm_real])]
+    exact eLpNorm_congr_ae hpc
+  rw [hnorm]
+
 /-- For `V = prolateEigenspaceSup T W c` (`0 < c`), there is a `ℂ`-orthonormal basis `u` of `V`
 together with a band-limited real encoder family `h` (real representatives of `u`) and a receiver
 test-function family `φ`, `[0, T]`-supported and pointwise-orthonormal, such that for every
@@ -120,58 +221,8 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     have h1 : (⇑(e i) : ℝ → ℝ) =ᵐ[volume] f i := (hf_memLp i).coeFn_toLp
     exact (h1.fun_comp (fun r : ℝ ↦ (r : ℂ))).trans (hf_ae i)
   -- Linear independence of `e` ⟹ `finrank ℝ S = prolateCount`.
-  have he_li : LinearIndependent ℝ e := by
-    rw [Fintype.linearIndependent_iff]
-    intro g hg
-    -- Transfer the vanishing combination to `E`: `∑ (g i) • Q_T (u i) = 0`.
-    have hE : (∑ i, (g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) = 0 := by
-      refine Lp.ext ?_
-      have hcsum := Lp.coeFn_finsetSum Finset.univ
-        (fun i ↦ (g i : ℂ) • (timeLimitSubspace T).starProjection (u i))
-      have hrsum := Lp.coeFn_finsetSum Finset.univ (fun i ↦ g i • e i)
-      have hg0 : ⇑(∑ i, g i • e i) =ᵐ[volume] (0 : ℝ → ℝ) := by
-        rw [hg]; exact Lp.coeFn_zero ℝ 2 volume
-      have hz : ⇑(0 : E) =ᵐ[volume] (0 : ℝ → ℂ) := Lp.coeFn_zero ℂ 2 volume
-      have hcsmul : ∀ i, ⇑((g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) =ᵐ[volume]
-          (g i : ℂ) • (⇑((timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ) :=
-        fun i ↦ Lp.coeFn_smul _ _
-      have hrsmul : ∀ i, ⇑(g i • e i) =ᵐ[volume] g i • (⇑(e i) : ℝ → ℝ) :=
-        fun i ↦ Lp.coeFn_smul _ _
-      filter_upwards [hcsum, hrsum, hg0, hz, ae_all_iff.mpr hlink, ae_all_iff.mpr hcsmul,
-        ae_all_iff.mpr hrsmul] with t hct hrt hg0t hzt hlinkt hcsmt hrsmt
-      rw [hct, hzt, Finset.sum_apply, Pi.zero_apply]
-      -- Rewrite each complex summand as `(g i) * (e i t : ℂ)`.
-      have step : ∀ i, (⇑((g i : ℂ) • (timeLimitSubspace T).starProjection (u i)) : ℝ → ℂ) t
-          = (g i : ℂ) * ((⇑(e i) t : ℝ) : ℂ) := by
-        intro i
-        rw [hcsmt i, Pi.smul_apply, smul_eq_mul, ← hlinkt i]
-      rw [Finset.sum_congr rfl (fun i _ ↦ step i)]
-      -- The real combination vanishes pointwise.
-      have hrside : (∑ i, g i * (⇑(e i) t : ℝ)) = 0 := by
-        rw [Finset.sum_apply] at hrt
-        simp only [Pi.zero_apply] at hg0t
-        rw [hrt] at hg0t
-        rw [← hg0t]
-        exact Finset.sum_congr rfl (fun i _ ↦ by rw [hrsmt i, Pi.smul_apply, smul_eq_mul])
-      have hcast : (∑ i, (g i : ℂ) * ((⇑(e i) t : ℝ) : ℂ))
-          = ((∑ i, g i * (⇑(e i) t : ℝ) : ℝ) : ℂ) := by
-        rw [Complex.ofReal_sum]
-        exact Finset.sum_congr rfl (fun i _ ↦ by rw [Complex.ofReal_mul])
-      rw [hcast, hrside, Complex.ofReal_zero]
-    -- Pull `Q_T` out of the sum, then invert it on `V`.
-    have hQ0 : (timeLimitSubspace T).starProjection (∑ i, (g i : ℂ) • u i) = 0 := by
-      rw [map_sum]
-      simp_rw [map_smul]
-      exact hE
-    have hsum0 : (∑ i, (g i : ℂ) • u i) = 0 :=
-      eq_zero_of_timeLimitProj_eq_zero T W c hc
-        (Submodule.sum_mem _ (fun i _ ↦ Submodule.smul_mem _ _ (hu_mem i))) hQ0
-    -- `u` is `ℂ`-independent, so all coefficients vanish.
-    intro i
-    have hli := hu_on.linearIndependent
-    rw [Fintype.linearIndependent_iff] at hli
-    have := hli (fun i ↦ (g i : ℂ)) hsum0 i
-    exact_mod_cast this
+  have he_li : LinearIndependent ℝ e :=
+    linearIndependent_of_link T W hc u e hu_on hu_mem hlink
   haveI hSfin : FiniteDimensional ℝ S := by
     rw [hS]; exact FiniteDimensional.span_of_finite ℝ (Set.finite_range e)
   have hdim : Module.finrank ℝ S = prolateCount T W c := by
@@ -244,37 +295,7 @@ theorem exists_testFn_family (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     ring
   -- (E-c) `‖p‖² = ‖Q_T (∑ⱼ vⱼ uⱼ)‖²` (`p` complexifies to the time-limited combination).
   have hEc : ‖p‖ ^ 2 = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ ^ 2 := by
-    have hpc : (fun t ↦ ((⇑p t : ℝ) : ℂ)) =ᵐ[volume]
-        (⇑((timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)) : ℝ → ℂ) := by
-      have hQlin : (timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)
-          = ∑ j, (v j : ℂ) • (timeLimitSubspace T).starProjection (u j) := by
-        rw [map_sum]; simp_rw [map_smul]
-      rw [hQlin]
-      have hpr : (⇑p : ℝ → ℝ) =ᵐ[volume] (fun t ↦ ∑ j, v j * ⇑(e j) t) := by
-        have h1 := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ
-          (fun j ↦ v j • e j)
-        have h2 : ∀ j, ⇑(v j • e j) =ᵐ[volume] v j • (⇑(e j) : ℝ → ℝ) := fun j ↦ Lp.coeFn_smul _ _
-        rw [hp]
-        filter_upwards [h1, ae_all_iff.mpr h2] with t h1t h2t
-        rw [h1t]
-        exact Finset.sum_congr rfl (fun j _ ↦ by rw [h2t j, Pi.smul_apply, smul_eq_mul])
-      have hws := Lp.coeFn_fun_finsetSum (μ := (volume : Measure ℝ)) Finset.univ
-        (fun j ↦ (v j : ℂ) • (timeLimitSubspace T).starProjection (u j))
-      have hwsmul : ∀ j, ⇑((v j : ℂ) • (timeLimitSubspace T).starProjection (u j)) =ᵐ[volume]
-          (v j : ℂ) • (⇑((timeLimitSubspace T).starProjection (u j)) : ℝ → ℂ) :=
-        fun j ↦ Lp.coeFn_smul _ _
-      filter_upwards [hpr, hws, ae_all_iff.mpr hwsmul, ae_all_iff.mpr hlink]
-        with t hprt hwst hwsmt hlinkt
-      rw [hwst, hprt, Complex.ofReal_sum]
-      refine Finset.sum_congr rfl (fun j _ ↦ ?_)
-      rw [hwsmt j, Pi.smul_apply, smul_eq_mul, ← hlinkt j, Complex.ofReal_mul]
-    have hnorm : ‖p‖ = ‖(timeLimitSubspace T).starProjection (∑ j, (v j : ℂ) • u j)‖ := by
-      rw [Lp.norm_def, Lp.norm_def]
-      congr 1
-      rw [show eLpNorm (⇑p) 2 volume = eLpNorm (fun t ↦ ((⇑p t : ℝ) : ℂ)) 2 volume from
-        eLpNorm_congr_norm_ae (by filter_upwards with t; rw [Complex.norm_real])]
-      exact eLpNorm_congr_ae hpc
-    rw [hnorm]
+    rw [hp]; exact norm_sq_smul_sum_eq_timeLimitProj T W u e hlink v
   -- On `[0,T]`, the encoder `h j` and its time-limited representative `f j` agree.
   have hj_fj_onT : ∀ j, (h j) =ᵐ[volume.restrict (Set.Icc (0:ℝ) T)] (f j) := by
     intro j
