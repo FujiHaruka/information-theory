@@ -13,7 +13,7 @@ import Mathlib.Data.Fin.Embedding
 
 Preliminaries for the operational lower bound on the Wyner–Ziv rate: the `n`-letter
 single-letterized converse, the non-degeneracy (data-processing lower bound) of the reshaped
-operational rate, the local finite pmf → measure realisation feeding the DPI gateway, and the
+operational rate, the local finite pmf → measure realization feeding the DPI gateway, and the
 append form of `IsMarkovChain` (target appended by a conditioner-only kernel).
 -/
 
@@ -34,10 +34,9 @@ variable {α β γ U : Type*}
 
 /-! ## `n`-letter single-letterized converse -/
 
-/-- Step 6 of the converse: for a `Fin M`-valued encoder output `Jn`, a finite
-source block `Xn`, and any side-information block `Yn`, the mutual-information
-difference is bounded by the log-cardinality rate:
-`(I(Jn; Xn) − I(Jn; Yn)).toReal ≤ log M`.
+/-- For a `Fin M`-valued encoder output `Jn`, a finite source block `Xn`, and any
+side-information block `Yn`, the mutual-information difference is bounded by the
+log-cardinality rate: `(I(Jn; Xn) − I(Jn; Yn)).toReal ≤ log M`.
 
 Since `I(Jn; Yn) ≥ 0`, the truncated difference is `≤ I(Jn; Xn)`, and
 `I(Jn; Xn).toReal = H(Jn) − H(Jn | Xn) ≤ H(Jn) ≤ log |Fin M| = log M`
@@ -71,13 +70,13 @@ lemma mutualInfo_diff_le_log_card
 
 The reshaped rate `wynerZivRate` (`FactorizableRate.lean` §10) is
 `sInf (wzRateValueSet …)`. Its honest non-degeneracy rests on the objective's
-data-processing non-negativity `I(X;U) − I(Y;U) ≥ 0` on the factorisable
+data-processing non-negativity `I(X;U) − I(Y;U) ≥ 0` on the factorizable
 manifold (Markov chain `U − X − Y`), which discharges the `BddBelow` guard that
 prevents a junk `sInf` collapse to `≤ 0`. -/
 
 /-- The source pmf `fun p ↦ P_XY.real {p}` of a probability measure lies in the
 standard simplex.
-@audit:ok (independent honesty audit 2026-07-05: genuine body, sorryAx-free) -/
+@audit:ok -/
 lemma measureReal_pmf_mem_stdSimplex
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] :
     (fun p ↦ P_XY.real {p}) ∈ stdSimplex ℝ (α × β) := by
@@ -87,18 +86,17 @@ lemma measureReal_pmf_mem_stdSimplex
   rw [h1, Finset.coe_univ]
   exact probReal_univ
 
-/-! ### Local finite pmf → measure realisation (for the DPI gateway)
+/-! ### Local finite pmf → measure realization (for the DPI gateway)
 
-`wzPmfMeasure p = ∑ t, ENNReal.ofReal (p t) • δ_t` realises a finite pmf vector as
+`wzPmfMeasure p = ∑ t, ENNReal.ofReal (p t) • δ_t` realizes a finite pmf vector as
 a measure; on `stdSimplex` members it is a probability measure with
 `.real {t} = p t`. Mirrors `ChannelCoding.pmfToMeasure` (kept local to avoid a heavy
 `ShannonTheorem` import). -/
 
-/-- Realise a finite pmf vector `p : T → ℝ` as `∑ t, ENNReal.ofReal (p t) • δ_t`.
-@audit:ok (independent honesty audit 2026-07-05: this realisation family —
-`wzPmfMeasure_apply_singleton` / `_isProbabilityMeasure` / `_real_singleton` — is
-genuine and sorryAx-free. Mass `1` comes from the `stdSimplex` sum `∑ p t = 1`, not
-assumed; `μ.real {t} = p t` via `ENNReal.toReal_ofReal` off the simplex nonnegativity.) -/
+/-- Realize a finite pmf vector `p : T → ℝ` as `∑ t, ENNReal.ofReal (p t) • δ_t`.
+Mass `1` comes from the `stdSimplex` sum `∑ p t = 1`, and `μ.real {t} = p t` via
+`ENNReal.toReal_ofReal` off the simplex nonnegativity.
+@audit:ok -/
 private noncomputable def wzPmfMeasure {T : Type*} [Fintype T] [MeasurableSpace T]
     (p : T → ℝ) : Measure T :=
   ∑ t : T, ENNReal.ofReal (p t) • Measure.dirac t
@@ -139,11 +137,9 @@ private lemma wzPmfMeasure_real_singleton {T : Type*} [Fintype T] [MeasurableSpa
 
 If the target `Bs` is generated from the conditioner `Zc` by a Markov kernel `Q`
 ignoring `As`, then `As → Zc → Bs`. General utilities re-derived locally (the
-`BroadcastChannel` originals are `private`).
-@audit:ok (independent honesty audit 2026-07-05: `wzKernel_compProd_prodMkRight_eq_prod`
-and `wzIsMarkovChain_of_append` are genuine measure-theoretic utilities, sorryAx-free —
-the append identity `h_app` genuinely reduces to `IsMarkovChain` via `condDistrib`
-uniqueness, not a vacuous shape.) -/
+`BroadcastChannel` originals are `private`). The append identity `h_app` reduces the
+Markov chain to `IsMarkovChain` via `condDistrib` uniqueness.
+@audit:ok -/
 
 private lemma wzKernel_compProd_prodMkRight_eq_prod
     {Z' A' B' : Type*} [MeasurableSpace Z'] [MeasurableSpace A'] [MeasurableSpace B']
@@ -197,25 +193,21 @@ lemma wzIsMarkovChain_of_append
   filter_upwards [hcd_B] with z hz
   rw [Kernel.prod_apply, Kernel.prod_apply, hz]
 
-/-- **Markov chain `Y − X − U` on the factorisable manifold.** For a factorisable
-joint `q(x,y,u) = κ(u|x)·P_XY(x,y)`, realised as the discrete measure
+/-- Markov chain `Y − X − U` on the factorizable manifold. For a factorizable
+joint `q(x,y,u) = κ(u|x)·P_XY(x,y)`, realized as the discrete measure
 `wzPmfMeasure q` on `α × β × V`, the coordinates satisfy the Markov chain
 `Y → X → U`: `U` is appended to `(X, Y)` by the conditioner-only kernel `κ`,
 so `U` is conditionally independent of `Y` given `X`. This is the measure-form
 content that the data-processing inequality `mutualInfo_le_of_markov` consumes.
 
-Route (genuine, sorryAx-free — not a Mathlib wall): the `U`-given-`X` kernel
-`Q x = κ(·|x)` is built discretely; `wzIsMarkovChain_of_append` reduces the Markov
-chain to the append identity `h_app`
+The `U`-given-`X` kernel `Q x = κ(·|x)` is built discretely; `wzIsMarkovChain_of_append`
+reduces the Markov chain to the append identity `h_app`
 `μ.map ((X,Y),U) = (μ.map (X,Y)) ⊗ₘ (prodMkRight β Q)`, discharged as a
 finite-support measure identity on singletons (`compProd_apply` + the dirac-sum
-lintegral + the auxiliary marginalisation `∑_u q(x,y,u) = P_XY(x,y)`).
-@audit:ok (independent honesty audit 2026-07-05: proves the CORRECT chain `Y − X − U`
-(`IsMarkovChain μ Y X U`, conditioner `X` in the middle) in the exact orientation
-`mutualInfo_le_of_markov` consumes to yield `I(Y;U) ≤ I(X;U)`. NOT vacuous — the append
-identity `h_app` genuinely consumes the factorisation `hκeq` (`q = κ(u|x)·P_XY`) and the
-`U`-given-`X` kernel `Q x = κ(·|x)` depends only on `x`; an arbitrary non-factorisable
-`q` would break `h_app`. sorryAx-free (`#print axioms`).) -/
+lintegral + the auxiliary marginalization `∑_u q(x,y,u) = P_XY(x,y)`).
+@audit:ok (the append identity `h_app` genuinely consumes the factorization `hκeq`
+`q = κ(u|x)·P_XY`; an arbitrary non-factorizable `q` would break it, so the chain is
+in the exact orientation `mutualInfo_le_of_markov` needs, not vacuous.) -/
 lemma wzFactorizable_isMarkovChain
     {V : Type*} [Fintype V] [MeasurableSpace V] [MeasurableSingletonClass V] [Nonempty V]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
@@ -224,7 +216,7 @@ lemma wzFactorizable_isMarkovChain
     IsMarkovChain μ
       (fun ω : α × β × V ↦ ω.2.1) (fun ω ↦ ω.1) (fun ω ↦ ω.2.2) := by
   obtain ⟨κ, hκnn, hκsum, hκeq⟩ := hq
-  -- The `U`-given-`X` Markov kernel `Q x = κ(·|x)`, realised discretely.
+  -- The `U`-given-`X` Markov kernel `Q x = κ(·|x)`, realized discretely.
   let Q : Kernel α V := ⟨fun x ↦ wzPmfMeasure (κ x), measurable_of_countable _⟩
   have hQ_apply : ∀ x : α, Q x = wzPmfMeasure (κ x) := fun x ↦ rfl
   haveI hQ_markov : IsMarkovKernel Q :=
@@ -232,7 +224,7 @@ lemma wzFactorizable_isMarkovChain
   -- `U` is appended to `(X, Y)` by the conditioner-only kernel `Q`.
   have hproj : Measurable (fun ω : α × β × V ↦ (ω.1, ω.2.1)) :=
     measurable_fst.prodMk (measurable_fst.comp measurable_snd)
-  -- Marginalisation over the auxiliary: `∑_u q(x,y,u) = P_XY(x,y)`.
+  -- Marginalization over the auxiliary: `∑_u q(x,y,u) = P_XY(x,y)`.
   have hmarg : ∀ (x : α) (y : β),
       (∑ c : V, ENNReal.ofReal (q (x, y, c))) = ENNReal.ofReal (P_XY (x, y)) := by
     intro x y
@@ -309,41 +301,29 @@ lemma wzFactorizable_isMarkovChain
     (measurable_fst.comp measurable_snd) measurable_fst (measurable_snd.comp measurable_snd)
     Q h_app
 
-/-- **Data-processing non-negativity of the Wyner–Ziv objective.** On the
-factorisable manifold the auxiliary `U` sits atop the Markov chain `U − X − Y`
+/-- Data-processing non-negativity of the Wyner–Ziv objective. On the
+factorizable manifold the auxiliary `U` sits atop the Markov chain `U − X − Y`
 (`IsWynerZivFactorizable_markov`), so the data-processing inequality gives
 `I(Y;U) ≤ I(X;U)`, i.e. the objective `I(X;U) − I(Y;U)` is non-negative. This is
 the uniform (in the auxiliary alphabet size) lower bound `0` that makes the
 reshaped rate `wynerZivRate` non-degenerate.
 
 `h_pmf` (the source is a genuine pmf) is a regularity precondition: it makes the
-factorisable joint `q` a pmf realisable as a probability measure. `Nonempty V`
+factorizable joint `q` a pmf realizable as a probability measure. `Nonempty V`
 holds automatically at every non-empty-constraint index (row-stochasticity of the
 kernel forces `V` non-empty).
 
-Genuine self-build (sorryAx-free, not a Mathlib wall): `q` is realised as the
-discrete measure `μ = wzPmfMeasure q` on `α × β × V` with coordinate projections;
-the objective is landed onto
+The proof realizes `q` as the discrete measure `μ = wzPmfMeasure q` on `α × β × V`
+with coordinate projections; the objective is landed onto
 `(mutualInfo μ X U).toReal − (mutualInfo μ Y U).toReal` via the pmf↔measure
 bridges `wzMutualInfoXU_eq_mutualInfo` / `wzMutualInfoYU_eq_mutualInfo`; the
 measure-form data-processing inequality `mutualInfo_le_of_markov` is applied with
 the Markov chain `Y − X − U` (`wzFactorizable_isMarkovChain`) read off the
-factorisation `q = κ(u|x)·P_XY`, and `ENNReal.toReal_mono` finishes.
-
-`hq` (factorisation) is the domain constraint defining the manifold; it supplies
-the Markov structure and does *not* bundle the conclusion. `h_pmf` / `Nonempty V`
-are regularity preconditions. Statement is TRUE-as-framed (factorisation ⟹ Markov
-`U − X − Y` ⟹ DPI `I(Y;U) ≤ I(X;U)`). Machine-checked sorryAx-free
-(`#print axioms` = propext/Classical.choice/Quot.sound).
-@audit:ok (independent honesty audit 2026-07-05: GENUINE closure of the former
-`sorry + @residual(plan:wyner-ziv-main-plan)` gateway. No circularity / no `:True` /
-no degenerate escape. `hq` (factorisation) is the DOMAIN constraint defining the
-factorisable manifold — it supplies the Markov structure, and the body does the real
-work (realise `q` as `wzPmfMeasure q`, derive `Y − X − U`, apply the measure-form DPI,
-`toReal_mono`); it does NOT bundle the conclusion. Sufficiency: dropping `hq` makes the
-claim false (a `q` with `U` depending on `Y` gives `I(Y;U) > I(X;U)`), so `hq` is
-necessary, not under-hypothesised. `h_pmf` / `Nonempty V` are regularity preconditions.
-`#print axioms` = [propext, Classical.choice, Quot.sound], machine-verified.) -/
+factorization `q = κ(u|x)·P_XY`, and `ENNReal.toReal_mono` finishes.
+@audit:ok (`hq` is the domain constraint defining the factorizable manifold — it
+supplies the Markov structure, not the conclusion. Sufficiency: dropping `hq` makes
+the claim false (a `q` with `U` depending on `Y` gives `I(Y;U) > I(X;U)`), so it is
+necessary, not under-hypothesized; `h_pmf` / `Nonempty V` are regularity preconditions.) -/
 theorem wzObjective_nonneg_of_factorizable
     {V : Type*} [Fintype V] [MeasurableSpace V] [MeasurableSingletonClass V] [Nonempty V]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
@@ -375,7 +355,7 @@ theorem wzObjective_nonneg_of_factorizable
       = (mutualInfo μ (fun ω : α × β × V ↦ ω.2.1) (fun ω ↦ ω.2.2)).toReal := by
     rw [← hpmf_eq]
     exact wzMutualInfoYU_eq_mutualInfo μ (fun ω ↦ ω.1) (fun ω ↦ ω.2.1) (fun ω ↦ ω.2.2) hX hY hU
-  -- Markov chain `Y − X − U` off the factorisation ⟹ data-processing `I(Y;U) ≤ I(X;U)`.
+  -- Markov chain `Y − X − U` off the factorization ⟹ data-processing `I(Y;U) ≤ I(X;U)`.
   have hmarkov : IsMarkovChain μ (fun ω : α × β × V ↦ ω.2.1) (fun ω ↦ ω.1) (fun ω ↦ ω.2.2) :=
     wzFactorizable_isMarkovChain h_pmf hq μ hμ
   have hdpi : mutualInfo μ (fun ω : α × β × V ↦ ω.2.1) (fun ω ↦ ω.2.2)
@@ -395,16 +375,9 @@ certifying non-degeneracy: every objective value is `≥ 0` by the data-processi
 non-negativity `wzObjective_nonneg_of_factorizable`, so the `sInf` cannot
 collapse to a junk `≤ 0`.
 
-Genuine body, no `sorry`; its data-processing input
-`wzObjective_nonneg_of_factorizable` is now itself sorryAx-free, so this lemma is
-fully unconditional (machine-checked `#print axioms` =
-propext/Classical.choice/Quot.sound). The `k = 0` handling (empty `Fin 0` kernel
-sum `0 ≠ 1`) is genuine, not a degenerate escape.
-@audit:ok (independent honesty audit 2026-07-05: sorryAx-free, `#print axioms` =
-[propext, Classical.choice, Quot.sound]. Its DPI input `wzObjective_nonneg_of_factorizable`
-is now genuine, so this `BddBelow` guard is unconditional. The `k = 0` `exfalso`
-(row-stochasticity `∑_{Fin 0} κ = 0 ≠ 1`) is a genuine impossibility argument, not a
-vacuous-truth shortcut.) -/
+@audit:ok (the `k = 0` `exfalso` (row-stochasticity `∑_{Fin 0} κ = 0 ≠ 1`) is a
+genuine impossibility argument, not a vacuous-truth shortcut; the `BddBelow` guard
+rests on the DPI input `wzObjective_nonneg_of_factorizable`.) -/
 theorem wzRateValueSet_bddBelow_of_pmf
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     (d : α → γ → ℝ) (D : ℝ) :
