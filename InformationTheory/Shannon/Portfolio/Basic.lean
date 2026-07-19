@@ -3,7 +3,11 @@ import Mathlib.Analysis.Convex.Function
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
 import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Analysis.Calculus.LocalExtr.Basic
+import Mathlib.Analysis.Calculus.FDeriv.Add
+import Mathlib.Analysis.Calculus.FDeriv.Linear
+import Mathlib.Analysis.Normed.Module.FiniteDimension
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
+import Mathlib.Algebra.BigOperators.Group.Finset.Piecewise
 import InformationTheory.Meta.EntryPoint
 
 /-!
@@ -175,14 +179,72 @@ theorem logOptimal_of_kuhnTucker (p : α → ℝ) (X : α → Fin m → ℝ) (bs
   linarith [hdecomp, hjensen, hlog_nonpos]
 
 /-- Theorem 16.2.1 (Cover–Thomas), forward direction: a log-optimal portfolio `bs`
-satisfies the Kuhn–Tucker condition `∀ i, ∑ a, p a · X a i / S_bs(a) ≤ 1`.
-@residual(plan:portfolio-forward-kt) -/
+satisfies the Kuhn–Tucker condition `∀ i, ∑ a, p a · X a i / S_bs(a) ≤ 1`. -/
 @[entry_point]
 theorem kuhnTucker_of_logOptimal (p : α → ℝ) (X : α → Fin m → ℝ) (bs : Fin m → ℝ)
     (hp : p ∈ stdSimplex ℝ α) (hbs : bs ∈ stdSimplex ℝ (Fin m))
-    (hpos : ∀ a, 0 < wealthRelative X bs a) (hXnn : ∀ a i, 0 ≤ X a i)
+    (hpos : ∀ a, 0 < wealthRelative X bs a)
     (hmax : IsMaxOn (growthRate p X) (stdSimplex ℝ (Fin m)) bs) :
     ∀ i, (∑ a, p a * X a i / wealthRelative X bs a) ≤ 1 := by
-  sorry
+  -- The wealth relative `b ↦ S_b(a)` as a continuous linear form on `Fin m → ℝ`.
+  set L : α → ((Fin m → ℝ) →L[ℝ] ℝ) := fun a =>
+    LinearMap.toContinuousLinearMap
+      { toFun := fun b => wealthRelative X b a
+        map_add' := fun b c => by
+          simp only [wealthRelative, Pi.add_apply, add_mul, Finset.sum_add_distrib]
+        map_smul' := fun c b => by
+          simp only [wealthRelative, Pi.smul_apply, smul_eq_mul, RingHom.id_apply,
+            Finset.mul_sum, mul_assoc] } with hL
+  have hLeval : ∀ a b, L a b = wealthRelative X b a := fun a b => rfl
+  -- The dual (Fréchet derivative) of the growth rate at `bs`.
+  set W' : (Fin m → ℝ) →L[ℝ] ℝ :=
+    ∑ a, (p a) • ((wealthRelative X bs a)⁻¹ • L a) with hW'
+  -- Step 2: the growth rate is Fréchet-differentiable at `bs` with derivative `W'`.
+  have hWfd : HasFDerivWithinAt (growthRate p X) W' (stdSimplex ℝ (Fin m)) bs := by
+    -- The linear form is its own Fréchet derivative.
+    have hLfd : ∀ a, HasFDerivWithinAt (fun b => wealthRelative X b a) (L a)
+        (stdSimplex ℝ (Fin m)) bs := fun a => (L a).hasFDerivWithinAt
+    -- Compose with `log` (valid since `S_bs(a) > 0`).
+    have hlogfd : ∀ a, HasFDerivWithinAt (fun b => Real.log (wealthRelative X b a))
+        ((wealthRelative X bs a)⁻¹ • L a) (stdSimplex ℝ (Fin m)) bs :=
+      fun a => (hLfd a).log (hpos a).ne'
+    -- Scale each summand by the weight `p a`.
+    have htermfd : ∀ a, HasFDerivWithinAt (fun b => p a * Real.log (wealthRelative X b a))
+        ((p a) • ((wealthRelative X bs a)⁻¹ • L a)) (stdSimplex ℝ (Fin m)) bs :=
+      fun a => (hlogfd a).const_smul (p a)
+    -- Fold over the finite outcome space.
+    have hsum := HasFDerivWithinAt.fun_sum (fun a (_ : a ∈ Finset.univ) => htermfd a)
+    rw [hW']
+    exact hsum
+  intro i
+  -- Step 1: the direction `e_i − bs` lies in the positive tangent cone at `bs`.
+  have hseg : segment ℝ bs (Pi.single i 1) ⊆ stdSimplex ℝ (Fin m) :=
+    (convex_stdSimplex ℝ (Fin m)).segment_subset hbs (single_mem_stdSimplex ℝ i)
+  have hy : (Pi.single i 1 - bs) ∈ posTangentConeAt (stdSimplex ℝ (Fin m)) bs :=
+    sub_mem_posTangentConeAt_of_segment_subset hseg
+  -- Step 3: the first-order maximality condition gives `W'(e_i − bs) ≤ 0`.
+  have hnonpos : W' (Pi.single i 1 - bs) ≤ 0 :=
+    hmax.localize.hasFDerivWithinAt_nonpos hWfd hy
+  -- Step 4: `L a (Pi.single i 1) = X a i`.
+  have hLsingle : ∀ a, L a (Pi.single i 1) = X a i := by
+    intro a
+    rw [hLeval a (Pi.single i 1)]
+    simp only [wealthRelative, Pi.single_apply, ite_mul, one_mul, zero_mul]
+    rw [Finset.sum_ite_eq' Finset.univ i (fun j => X a j)]
+    simp
+  -- Step 4: `W'(e_i − bs) = KT_i − 1`.
+  have hval : W' (Pi.single i 1 - bs)
+      = (∑ a, p a * X a i / wealthRelative X bs a) - 1 := by
+    rw [hW', sum_apply]
+    have hterm : ∀ a, ((p a) • ((wealthRelative X bs a)⁻¹ • L a)) (Pi.single i 1 - bs)
+        = p a * X a i / wealthRelative X bs a - p a := by
+      intro a
+      rw [smul_apply, smul_apply, smul_eq_mul,
+        smul_eq_mul, map_sub, hLsingle a, hLeval a bs]
+      have hc : wealthRelative X bs a ≠ 0 := (hpos a).ne'
+      rw [mul_sub, inv_mul_cancel₀ hc, mul_sub, mul_one, div_eq_mul_inv]
+      ring
+    rw [Finset.sum_congr rfl (fun a _ => hterm a), Finset.sum_sub_distrib, hp.2]
+  linarith [hnonpos, hval]
 
 end InformationTheory.Shannon.Portfolio
