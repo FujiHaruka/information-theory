@@ -59,7 +59,7 @@ theorem sideInfo_growthRate_increment_le_mutualInfo
 必須**であり、KT bundling で代替できない。独立 `honesty-auditor` が check 4 (増分不等式が仮説から semantic follow、
 coarse/fine ミスマッチ・向き逆転無し) を含め PASS で `@audit:ok`。
 
-## Leg B 完全形 (W_∞ AEP) — 🚧 R1 proof-done + R2 core proof-done (selection残)、R3/R4 残
+## Leg B 完全形 (W_∞ AEP) — 🚧 R1+R2 proof-done、R3/R4 残
 
 fixed-b core (固定 rebalance portfolio の成長率収束 + KT dominance) は proof-done。**CT 16.5.1 完全形** =
 log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | X_{-1..−k}) ↑ W_∞`) + AEP `(1/n) log S*_n → W_∞`
@@ -67,10 +67,10 @@ log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | 
 
 - **R1 gateway = 条件付き log-optimal portfolio の可測選択** (`exists_measurable_argmax_on_stdSimplex`) proof-done
   + `@audit:ok` sorryAx-free。
-- **R2 core = 条件付き成長率の単調収束** (`condOptGrowth_monotone` / `condOptGrowth_bddAbove`) proof-done
-  + `@audit:ok` sorryAx-free、headline `exists_condOptGrowth_tendsto_condOptGrowthInfty` は honest reduction。残る
-  residual 1 本 = 条件付き log-optimal 選択 `exists_condLogOptimalSeq` (= R1 gateway の条件付きリフト、Mathlib 壁
-  ではない解析 disintegration lift)。R2 は抽象 `Filtration ℕ m0` でパラメータ化 (R3/R4 が具体化を負う)。
+- **R2 = 条件付き成長率の単調収束** (`condOptGrowth_monotone` / `condOptGrowth_bddAbove` + 選択補題
+  `exists_condLogOptimalSeq` + headline `exists_condOptGrowth_tendsto_condOptGrowthInfty`) すべて proof-done
+  + `@audit:ok` sorryAx-free。選択補題は予告どおり Mathlib 壁ではなく `condExpKernel` (正則条件付き分布 /
+  disintegration) 経由で closure。R2 は抽象 `Filtration ℕ m0` でパラメータ化 (R3/R4 が具体化を負う)。
 - 残る **R3 (real-valued AEP) / R4 (組立)** は未着手。
 
 要件:

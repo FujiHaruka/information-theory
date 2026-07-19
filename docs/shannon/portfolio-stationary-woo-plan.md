@@ -7,14 +7,14 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **§16.5 "Investment in S
 **fixed-b core** (固定 rebalance portfolio の成長率収束 + KT dominance) を proof-done 済。本計画は残る
 **log-optimal `W_∞` AEP** = 因果 log-optimal 戦略の富の成長率が無限過去条件付き成長率 `W_∞` に収束する部分を負う。
 
-**現状 = R1 gateway proof-done、R2 core proof-done (選択補題残)、R3–R4 残** (`Portfolio/StationaryWinfty.lean` に
+**現状 = R1+R2 proof-done (sorryAx-free)、R3–R4 残** (`Portfolio/StationaryWinfty.lean` に
 対応コードあり、捏造 statement 無し)。本計画は scope 境界・要件・進捗・壁リスクの記録。
 
-## 進捗 — 🚧 R1 proof-done、R2 core proof-done (selection残)、R3–R4 残
+## 進捗 — 🚧 R1+R2 proof-done、R3–R4 残
 
 - [ ] M0 在庫 — real-valued 条件付き growth / 可測選択 / Algoet–Cover sandwich の Mathlib / in-project 資産確定 📋
 - [x] R1 — 条件付き log-optimal portfolio の可測選択 ✅ proof-done — `exists_measurable_argmax_on_stdSimplex` (`@audit:ok` sorryAx-free)
-- [ ] R2 — 条件付き成長率の単調収束 `W*_k ↑ W_∞` 🚧 **core proof-done、selection残** — `condOptGrowth_monotone` / `condOptGrowth_bddAbove` (`@audit:ok` sorryAx-free)、headline `exists_condOptGrowth_tendsto_condOptGrowthInfty` は honest reduction。**残 1 = `exists_condLogOptimalSeq`** (条件付き log-optimal 選択 = R1 の条件付きリフト) `@residual(plan:portfolio-stationary-woo-plan)`
+- [x] R2 — 条件付き成長率の単調収束 `W*_k ↑ W_∞` ✅ proof-done — `condOptGrowth_monotone` / `condOptGrowth_bddAbove` + 選択補題 `exists_condLogOptimalSeq` + headline `exists_condOptGrowth_tendsto_condOptGrowthInfty` すべて `@audit:ok` sorryAx-free。選択補題は `condExpKernel` (正則条件付き分布 / disintegration) 経由で closure — R1 gateway を ambient=`ℱ k` に instantiate + crux self-build `condExpKernel_ae_const` (ℱk-可測関数は κ_ω 下 a.e. 定数) + pull-out `condExp_causalLogReturn_eq`
 - [ ] R3 — real-valued SMB 級 AEP `(1/n) log S*_n → W_∞` 📋 **最リスク・別 gateway で早期壁判定**
 - [ ] R4 — 組立 (CT 16.5.1 headline) + 配線 + 独立監査 📋
 
@@ -80,7 +80,7 @@ simplex 上 argmax を可測選択する一般形。追加 regularity 仮説 `hF
 (F ω)` + `[Nonempty (Fin m)]` は genuine precondition (m=0 で simplex 空 ⟹ 選択不能、非 load-bearing)。ルート =
 Tikhonov 狭義凹正則化 (判断ログ 2 参照)。
 
-### R2 — 条件付き成長率の単調収束 🚧 core proof-done、selection残 (proof-log: yes)
+### R2 — 条件付き成長率の単調収束 ✅ proof-done (proof-log: yes)
 
 `W*(X_0 | X_{-1..−k})` を real-valued `condExp` で定義 → k 単調非減少 (条件付け増 ⟹ growth 増) + 上界
 (無条件 `W*(X_0)` 以下でなく、`E[log ‖X_0‖]` 級の可積分性上界) ⟹ 単調収束で `W_∞`。single-letter 上界の
@@ -96,11 +96,14 @@ Tikhonov 狭義凹正則化 (判断ログ 2 参照)。
   仮説は market-regularity のみ (`hX` / `hpos` / `hint` / `hUB`)。monotone + bddAbove から
   `Tendsto condOptGrowth atTop (𝓝 condOptGrowthInfty)` を導く。下記 selection 補題 1 本にのみ条件付き。
   honesty audit が **load-bearing bundling でない**旨 CONFIRMED。
-- **残 1 = `exists_condLogOptimalSeq`** (`@residual(plan:portfolio-stationary-woo-plan)`): 段階的な条件付き
+- **選択補題 `exists_condLogOptimalSeq` = closure 済** (`@audit:ok` sorryAx-free): 段階的な条件付き
   log-optimal 選択の存在 (可測・simplex 値・任意の ℱ_k-可測 simplex 競合に対する pointwise-a.e. 条件付き優越)。
-  = **R1 gateway の条件付きリフト**。honesty audit が **honestly TRUE (false-as-framed でない)** と確認
-  (degenerate: `ℱ=⊥`→無条件 R1、`m=1`、point-mass 市場いずれも充足可)。genuine な解析 gap = 正則条件付き分布 /
-  disintegration (単一 null set 下での b 一様凹性・連続性) + ℱ_k-可測 pull-out 恒等式。**Mathlib 壁ではない**。
+  R1 gateway `exists_measurable_argmax_on_stdSimplex` を ambient=`ℱ k` に instantiate し、目的関数
+  `condGrowthObjective ω b = ∫ log(∑ b_j X_j) d(condExpKernel μ (ℱ k) ω)` を good-set patch (κ_ω 可積分な co-null
+  集合外で `else 0`) で everywhere 凹/連続化。crux self-build = `condExpKernel_ae_const` (ℱk-可測関数は κ_ω 下
+  a.e. 定数、Mathlib kernel-properness 補題不在ゆえ countable-basis exhaustion で ~35 行自作) + pull-out
+  `condExp_causalLogReturn_eq`。追加型クラス `[StandardBorelSpace Ω] [Nonempty Ω]` は condExpKernel 用の
+  regularity (非 load-bearing、honesty-auditor 確認)。
 - **アーキテクチャ**: R2 は具体的な market-past filtration ではなく **抽象な増加フィルトレーション
   `ℱ : Filtration ℕ m0`** でパラメータ化 (判断ログ 3)。⟹ R3/R4 は `ℱ` の具体化を **新規 obligation** として負う。
 
@@ -125,10 +128,12 @@ R1–R3 を CT 16.5.1 headline に組み、root import 登録 / README / roadmap
 - **R1 可測選択**: **CLOSED (not-a-wall)**。Mathlib の一般 measurable-selection (KRN) は不在
   (`Mathlib/Probability/Decision/BayesEstimator.lean:46` の TODO が裏付け) だが、Tikhonov 正則化 self-build
   ~290 行で closure (当初見積 ~数十–150 行を上振れ、実測値)。撤退ライン不発。
-- **R2 単調収束**: **core CLOSED (not-a-wall)**。`condOptGrowth_monotone` / `condOptGrowth_bddAbove` + headline
-  reduction は proof-done sorryAx-free。残る residual = 条件付き選択リフト `exists_condLogOptimalSeq` (正則条件付き
-  分布 / disintegration の解析リフト、**Mathlib 壁ではない**; honesty-audit が honestly-TRUE = false-as-framed で
-  ないと確認)。R1 gateway の条件付き版。
+- **R2 単調収束**: **CLOSED (not-a-wall)、fully proof-done**。`condOptGrowth_monotone` /
+  `condOptGrowth_bddAbove` + headline reduction + 選択補題 `exists_condLogOptimalSeq` すべて proof-done
+  sorryAx-free (@audit:ok)。予告どおり Mathlib 壁ではなく、条件付き選択リフトは `condExpKernel` (正則条件付き分布 /
+  disintegration) で closure。crux (ℱk-可測 a.e.-定数 pull-out) のみ Mathlib 補題不在で ~35 行自作、他はすべて
+  既存資産 (`condExp_ae_eq_integral_condExpKernel` / `integral_concaveOn_of_integrand_ae` /
+  `continuousOn_of_dominated`)。
 - **R3 real-valued AEP**: **最リスク**。finite SMB decl は lift 不可 (機械確認済) ゆえ sandwich を real-valued で
   再構築。Algoet–Cover 骨格の alphabet 非依存部がどれだけ救えるかは M0 / gateway で確定するまで未知
   (`human-judgment`、low-trust)。genuine Mathlib gap を露呈したら新 wall slug を建てる。
