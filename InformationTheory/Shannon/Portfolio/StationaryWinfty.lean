@@ -799,7 +799,9 @@ patched to be everywhere simplex-valued they are legal stage-`k` competitors, so
 `bstarInf` and its `⨆ j, ℱ j`-conditional dominance are received as hypotheses (constructed
 separately, e.g. by instantiating `exists_condLogOptimalSeq` at the constant filtration
 `fun _ ↦ ⨆ j, ℱ j`); this proves only the identity, not the existence. The `hpos`/`hint`
-hypotheses are market-regularity preconditions. -/
+hypotheses are market-regularity preconditions.
+
+@audit:ok -/
 theorem condOptGrowthInfty_eq_integral_infPast [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) [Nonempty (Fin m)]
@@ -859,7 +861,8 @@ theorem condOptGrowthInfty_eq_integral_infPast [StandardBorelSpace Ω] [Nonempty
           (condExpPortfolio μ ℱ bstarInf k)).mpr fun j ↦ stronglyMeasurable_condExp.measurable
       exact hM.stronglyMeasurable
     -- It is a.e. simplex-valued (conditional expectation preserves nonnegativity and unit sum).
-    have hc_ae_simplex : ∀ k, ∀ᵐ ω ∂μ, condExpPortfolio μ ℱ bstarInf k ω ∈ stdSimplex ℝ (Fin m) := by
+    have hc_ae_simplex : ∀ k, ∀ᵐ ω ∂μ,
+        condExpPortfolio μ ℱ bstarInf k ω ∈ stdSimplex ℝ (Fin m) := by
       intro k
       have hnn : ∀ᵐ ω ∂μ, ∀ j, 0 ≤ condExpPortfolio μ ℱ bstarInf k ω j := by
         rw [ae_all_iff]
@@ -954,7 +957,9 @@ theorem condOptGrowthInfty_eq_integral_infPast [StandardBorelSpace Ω] [Nonempty
 
 /-- Existence of an infinite-past (`⨆ j, ℱ j`) conditional log-optimal portfolio `bstarInf`:
 instantiate `exists_condLogOptimalSeq` at the constant filtration `Filtration.const ℕ (⨆ j, ℱ j)`
-(every stage is the infinite past) and read off stage `0`. -/
+(every stage is the infinite past) and read off stage `0`.
+
+@audit:ok -/
 theorem exists_infPast_condLogOptimal [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ] (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ)
     [Nonempty (Fin m)] (hX : Measurable X)
@@ -971,13 +976,15 @@ theorem exists_infPast_condLogOptimal [StandardBorelSpace Ω] [Nonempty Ω]
 
 /-- A fixed infinite-past conditional log-optimal portfolio `bstarInf` achieves the optimal growth
 rate `W_∞ = condOptGrowthInfty` as the almost-sure Birkhoff time average of its per-epoch log
-return under a measure-preserving ergodic shift `T` (Cover–Thomas §16.5, Route T). The optimal
+return under a measure-preserving ergodic shift `T` (Cover–Thomas §16.5). The optimal
 sequence `bstar` and its infinite-past companion `bstarInf` are constructed internally
 (`exists_condOptGrowth_tendsto_condOptGrowthInfty` and `exists_infPast_condLogOptimal`) and their
-conditional-dominance properties are discharged, so the conclusion carries no optimization
+conditional-dominance properties are established, so the conclusion carries no optimization
 hypothesis; `hpos`/`hint`/`hUB`/`hT`/`hT_erg` are market-regularity/ergodicity preconditions.
 The specialization of `ℱ` to the market-past filtration and `T` to the shift (giving the verbatim
-CT 16.5.1 statement) is a downstream framing step. -/
+CT 16.5.1 statement) is a downstream framing step.
+
+@audit:ok -/
 theorem stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty
     [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
