@@ -20,16 +20,18 @@ variable {α β γ U : Type*}
   [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]
 
 open ChannelCoding in
-/-- **(Atom G — covering-failure ≤ encoder no-match.)** For any covering code `c`, the
+/-- For any covering code `c`, the
 `SRC`-mass of the strong-covering-success complement is bounded by the covering ambient's
 block-`X`-law mass of the encoder-failure event `(x, c.decoder (c.encoder x)) ∉
 jointStronglyTypicalSet` at the encoder radius `ε_enc`. Measure alignment
 (`wz_covering_SRC_map_Xproj_eq`) pushes `SRC` to the block-`X`-law along the `X`-projection,
 and the radius bridge `wz_jointStrongly_mem_coveringSuccessJoint` (given `ε_enc ≤ ε_cov` and
 the three `logSumAbs` bounds) makes strong-`ε_enc` typicality of the chosen word land in the
-covering-success event, so its complement is contained in the encoder-failure event.
-Independent honesty audit 2026-07-13: PASS — `@audit:ok` (genuine measure monotonicity through the
-alignment + radius bridge, sorry-free; hyps are regularity/radius preconditions). -/
+covering-success event, so its complement is contained in the encoder-failure event. Measure
+monotonicity through the alignment and radius bridge; the hypotheses are regularity/radius
+preconditions.
+
+@audit:ok -/
 private lemma wz_coveringSuccessStrong_compl_measureReal_le
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
@@ -395,7 +397,7 @@ private lemma wz_covering_joint_pigeonhole
 
 set_option maxHeartbeats 1600000 in
 open ChannelCoding in
-/-- **(Atom G — joint derandomize.)** On a single covering code good for BOTH the covering
+/-- On a single covering code good for BOTH the covering
 distortion (block distortion `≤ Dδ + ε'`) AND covering-success (`SRC`-mass of the
 strong-covering-success complement `≤ tol`). The two per-codebook failure functionals — the
 distortion-typicality failure (drives block distortion via
@@ -405,14 +407,14 @@ encoder radius `ε_join` (drives covering-success via
 the shared vanishing upper `(P_X n){Xⁿ ∉ T*_X} + exp(-Mₙ·exp(-n(I+slack)))`; the pigeonhole
 `exists_codebook_low_avg` on their sum extracts one codebook small for both. The encoder
 radius `ε_join` is chosen `≤ wzCoveringStrongRadius P_XY κ' ε` and small against the three
-`logSumAbs` widths, so the radius bridge applies. Proved sorry-free.
+`logSumAbs` widths, so the radius bridge applies. The good code is genuinely constructed, not
+received as a hypothesis: the two per-codebook failure functionals are codebook-averaged, summed,
+and `exists_codebook_low_avg` extracts a single `c₀` small for both. The hypotheses
+(`hI : mutualInfoPmf qStar < R₁`, `hfeas`, full support, simplex, `hqStar_eq`) are genuine
+preconditions on the pmf and proxy distortion, not a bundled `*Hypothesis` handing over the code's
+existence.
 
-Independent honesty audit 2026-07-13: PASS — `@audit:ok`. The good code is genuinely CONSTRUCTED, not
-received as a hypothesis: the two per-codebook failure functionals (distortion-typicality + strong-joint-
-typicality at `ε_join`) are codebook-averaged, summed (`h_avg`), and `exists_codebook_low_avg` extracts a
-single `c₀` small for both. The hypotheses (`hI : mutualInfoPmf qStar < R₁`, `hfeas`, full support, simplex,
-`hqStar_eq`) are genuine preconditions on the pmf/proxy distortion, NOT a bundled `*Hypothesis` handing over
-the code's existence. Sorry-free and sorryAx-free (via the headline `#print axioms`). -/
+@audit:ok -/
 private lemma wz_covering_lossyCode_joint_exists
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} [Nonempty (Fin k)] [Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}}]
@@ -445,7 +447,7 @@ private lemma wz_covering_lossyCode_joint_exists
   have hLj_nn : 0 ≤ Lj := logSumAbs_nonneg _ _
   set Sd : ℝ := ∑ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
     ((d' p.1 p.2 : NNReal) : ℝ) with hSd_def
-  have hSd_nn : 0 ≤ Sd := Finset.sum_nonneg fun p _ => NNReal.coe_nonneg _
+  have hSd_nn : 0 ≤ Sd := Finset.sum_nonneg fun p _ ↦ NNReal.coe_nonneg _
   set cA : ℝ := (Fintype.card {x : α // 0 < ∑ y, P_XY.real {(x, y)}} : ℝ) with hcA_def
   set cB : ℝ := (Fintype.card (Fin k) : ℝ) with hcB_def
   have hcA_pos : 0 < cA := by rw [hcA_def]; exact_mod_cast Fintype.card_pos
@@ -453,9 +455,10 @@ private lemma wz_covering_lossyCode_joint_exists
   -- Minimal singleton mass, positive by full support.
   set qZ_min : ℝ := Finset.univ.inf' Finset.univ_nonempty qStar with hqZ_def
   have hqZ_pos : 0 < qZ_min := by
-    rw [hqZ_def, Finset.lt_inf'_iff]; exact fun p _ => hpos p
+    rw [hqZ_def, Finset.lt_inf'_iff]; exact fun p _ ↦ hpos p
   have hqZ_le : ∀ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
-      qZ_min ≤ (pmfToMeasure (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) qStar).real {p} := by
+      qZ_min ≤ (pmfToMeasure
+          (α := {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k) qStar).real {p} := by
     intro p
     rw [pmfToMeasure_real_singleton hmem p, hqZ_def]
     exact Finset.inf'_le _ (Finset.mem_univ p)
@@ -504,10 +507,10 @@ private lemma wz_covering_lossyCode_joint_exists
         + (cA * ε_X * Ly + ε_X * Lx + ε_X * Lj + δ_kl))) with htarget_def
   have h_target_eq : ∀ n : ℕ, target n = Real.exp (-(n : ℝ) * I_plus_slack) := by
     intro n; simp only [htarget_def, hIslack_def, h_ent_bridge]
-  -- Step B: codebook-level no-match bound.
+  -- Codebook-level no-match bound.
   obtain ⟨N_B, hN_B⟩ := encoder_strong_failure_prob_le_rdAmbient qStar hmem hpos
     hej_pos hex_pos.le hex_lt_ej hdkl_pos qZ_min hqZ_pos hqZ_le h_dominates
-  -- Step 1: `P_X[X ∉ T*_X] → 0`.
+  -- The typical-set complement mass `P_X[X ∉ T*_X]` tends to 0.
   have h_aep := stronglyTypicalSet_prob_tendsto_one (rdAmbient qStar) ChannelCoding.iidXs
     ChannelCoding.measurable_iidXs hindepX_pair hidentX hex_pos
   have h_pi_compl_tendsto :
@@ -522,7 +525,7 @@ private lemma wz_covering_lossyCode_joint_exists
       (fun n ↦ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X)
       (fun _ ↦ (Set.toFinite _).measurableSet)
       P_X (fun n ↦ rdAmbient_block_law_iidXs qStar hmem n) h_aep
-  -- Step 2: `exp(-Mn·target) → 0`.
+  -- The codebook no-match bound `exp(-Mn·target)` tends to 0.
   have h_exp_neg_Mn_target_tendsto :
       Filter.Tendsto (fun n : ℕ ↦ Real.exp (-((Mn n : ℝ) * target n))) Filter.atTop (𝓝 0) :=
     exp_neg_ceilExp_mul_tendsto_zero_of_lt target R₁ I_plus_slack
@@ -551,7 +554,7 @@ private lemma wz_covering_lossyCode_joint_exists
     rw [Real.dist_eq, sub_zero, abs_of_nonneg (by positivity : (0:ℝ) ≤ 2 * upper n)] at this
     exact this
   haveI hPXprob : IsProbabilityMeasure (P_X n) := by rw [hP_X_def]; infer_instance
-  -- No-match codebook mass bound (Step B) reshaped for `weightedSum`.
+  -- No-match codebook mass bound reshaped for `weightedSum`.
   have h_typical : ∀ x ∈ {x : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} |
         x ∈ stronglyTypicalSet (rdAmbient qStar) ChannelCoding.iidXs n ε_X},
       (Measure.pi (fun _ : Fin (Mn n) ↦
@@ -622,73 +625,59 @@ private lemma wz_covering_lossyCode_joint_exists
     exact le_trans hbridge h_covfail
 
 open ChannelCoding in
-/-- **(Steps 1–2) Covering LossyCode family from a feasible test channel.**
-Perturbs the feasible factorisable test channel `qf` to a full-support kernel
-`κ'` (Step 1, `wz_fullKernelSupport_perturbation`), restricts the covering source
-to the support subtype `α' := {x // 0 < P_X x}`, and produces the rate-distortion
-covering LossyCode family (Step 2, `wz_covering_lossyCode_exists`) for the proxy
+/-- Builds the covering `LossyCode` family from a feasible test channel. Perturbs the feasible
+factorizable test channel `qf` to a full-support kernel `κ'` (`wz_fullKernelSupport_perturbation`),
+restricts the covering source to the support subtype `α' := {x // 0 < P_X x}`, and produces the
+rate-distortion covering `LossyCode` family (`wz_covering_lossyCode_exists`) for the proxy
 distortion `d'` (the `Y`-conditional expectation of `d ∘ qf.2`).
 
-The output packages, for downstream binning (Steps 3–7), the perturbed full-support
-factorisable joint `q'` (with kernel `κ'`), the restricted covering joint `qStar`,
-the covering proxy `d'`, the Wyner–Ziv objective margin `< R`, and — for every
-covering rate `R₁` strictly above the covering mutual information
-`mutualInfoPmf qStar` — the covering LossyCode family with block distortion within
-`(D + δ) + ε'`. The covering-distortion feasibility `expectedDistortionPmf d' qStar
-≤ D + δ` is the reconciliation identity (`wz_coveringDistortion_reconcile`) applied
-to the perturbation's distortion bound. All conclusions are genuinely constructed;
-the only preconditions are feasibility (`hqf`), the objective margin (`hobj`), and
-the slack `δ`. The output existential also exports, alongside `d'`, the reconciliation
-identity `hd'_eq` (`d'` = the `Y`-conditional expectation of `d ∘ qf.2`, discharged by
-`rfl` since the witness IS that expression) and the test channel's factorizability
-`hqf` (the original input membership), so downstream binning (D3) can honestly relate
-the covering proxy `d'` to the real distortion `d` via `qf.2`.
+The output packages, for downstream binning, the perturbed full-support factorizable joint `q'`
+(with kernel `κ'`), the restricted covering joint `qStar`, the covering proxy `d'`, the Wyner–Ziv
+objective margin `< R`, and — for every covering rate `R₁` strictly above the covering mutual
+information `mutualInfoPmf qStar` — the covering `LossyCode` family with block distortion within
+`(D + δ) + ε'`. The covering-distortion feasibility `expectedDistortionPmf d' qStar ≤ D + δ` is the
+reconciliation identity (`wz_coveringDistortion_reconcile`) applied to the perturbation's distortion
+bound. All conclusions are genuinely constructed; the only preconditions are feasibility (`hqf`),
+the objective margin (`hobj`), and the slack `δ`. The output existential also exports, alongside
+`d'`, the reconciliation identity `hd'_eq` (`d'` = the `Y`-conditional expectation of `d ∘ qf.2`,
+discharged by `rfl` since the witness is that expression) and the test channel's factorizability
+`hqf` (the original input membership), so downstream binning can honestly relate the covering proxy
+`d'` to the real distortion `d` via `qf.2`.
 
-Pinned-ε rework applied 2026-07-12 (Leg E): the covering `LossyCode` family conclusion
-also exports, for the returned code `c`, a covering-acceptance-failure mass bound at a
-radius `ε` that is now UNIVERSALLY quantified as an explicit binder (`∀ R₁ …, ∀ ε' …, ∀ ε,
-0 < ε → ∃ N …`), NOT existentially quantified inside the code existential. The product
-source–side measure of `wzCoveringAcceptFailSet P_XY κ' c ε` (the event that the true
-covering word is NOT jointly typical with the side information) is
-`≤ δ / (8 · (distortionMax d + 1))`, a fixed vanishing tolerance. Because `ε` is a family
-binder, the caller (D3) chooses the SAME `ε` it feeds the A3 bin-decoder radius (from the
-rate gap, with the huge-`ε` vacuity regime excluded by A3's `hε_conf`), so the union bound
-`C2 ⊆ E2` uses a MATCHING radius — the prior free-`∃ε` form (vacuous at huge `ε`) is
-removed. The covering-acceptance failure `C2` is the true-word joint-AEP failure and decays
-to 0 (so `≤` any fixed positive tolerance eventually); it is the covering half of the
-Wyner–Ziv `E2` error event (`C2 ⊆ E2`), a precondition-exposure of the covering code's own
-property (same kind as the covering-size cap `hM_ub` / Leg C.6), threaded to
-`wz_exists_binning_E2_bound` (A3) and discharged by construction — NOT the operational
-conclusion (the `distortionMax d` scaling only sizes the tolerance so `dMax · Pr[C2]` is
-absorbable; the E2b confusion crux stays in A3).
+The `LossyCode` family conclusion also exports, for the returned code `c`, a covering-acceptance
+failure mass bound at a radius `ε` that is a universal binder (`∀ R₁ …, ∀ ε' …, ∀ ε, 0 < ε →
+∃ N …`). The product source–side measure of `wzCoveringAcceptFailSet P_XY κ' c ε` (the event that
+the true covering word is not jointly typical with the side information) is
+`≤ δ / (8 · (distortionMax d + 1))`, a fixed vanishing tolerance. Because `ε` is a family binder,
+the caller chooses the same `ε` it feeds the bin-decoder radius, so the union bound `C2 ⊆ E2` uses
+a matching radius. The covering-acceptance failure `C2` is the true-word joint-AEP failure and
+decays to 0; it is the covering half of the Wyner–Ziv `E2` error event, threaded to
+`wz_exists_binning_E2_bound` and discharged by construction (the `distortionMax d` scaling only
+sizes the tolerance so `dMax · Pr[C2]` is absorbable).
 
-CLOSED sorry-free (Atom G, joint derandomize). The covering-acceptance conjunct is discharged by
-the joint derandomize `wz_covering_lossyCode_joint_exists`, which produces — for the SAME code — a
-low block distortion (`≤ (D+δ)+ε'`) AND a small strong-covering-failure mass
-(`SRC(wzCoveringSuccessStrong)ᶜ ≤ tol/2`). The strong-`Ecov` Markov-core leaf
-`wz_covering_chosenWord_sideInfo_typical` then turns that covering-success complement bound into the
-acceptance-failure bound `≤ tol = δ/(8·(distortionMax d + 1))`. The joint derandomize couples the
-distortion-typicality failure (drives block distortion via `source_avg_distortion_le_simpler_generic`)
-and the strong-joint-typicality failure at the encoder radius `ε_join` (drives covering-success via
-`wz_coveringSuccessStrong_compl_measureReal_le` + the measure alignment `wz_covering_SRC_map_Xproj_eq`
-and radius bridge `wz_jointStrongly_mem_coveringSuccessJoint`): both codebook-averaged failures are
-bounded by the shared vanishing upper `(P_X n){Xⁿ ∉ T*_X} + exp(-Mₙ·exp(-n(I+slack)))`, and
-`exists_codebook_low_avg` on their sum extracts one codebook good for both. The strong covering-success
-lower bound rests on the gateway `wz_covering_strongTypical_indep_mass_ge` (the WZ instance of
-`jointStronglyTypicalSet_indep_prob_ge`). The earlier weak-`Ecov` wiring concern is moot: the covering
-success event is now `wzCoveringSuccessStrong` (strong-at-`ε_cov` ∩ weak-at-`ε`), which makes the
-Markov-core chain true-as-framed.
+The covering-acceptance conjunct is discharged by the joint derandomize
+`wz_covering_lossyCode_joint_exists`, which produces — for the same code — a low block distortion
+(`≤ (D+δ)+ε'`) and a small strong-covering-failure mass (`SRC(wzCoveringSuccessStrong)ᶜ ≤ tol/2`).
+The strong-`Ecov` Markov-core leaf `wz_covering_chosenWord_sideInfo_typical` then turns that
+covering-success complement bound into the acceptance-failure bound
+`≤ tol = δ/(8·(distortionMax d + 1))`. The joint derandomize couples the distortion-typicality
+failure (drives block distortion via `source_avg_distortion_le_simpler_generic`) and the
+strong-joint-typicality failure at the encoder radius `ε_join` (drives covering-success via
+`wz_coveringSuccessStrong_compl_measureReal_le` + the measure alignment
+`wz_covering_SRC_map_Xproj_eq` and radius bridge `wz_jointStrongly_mem_coveringSuccessJoint`): both
+codebook-averaged failures are bounded by the shared vanishing upper
+`(P_X n){Xⁿ ∉ T*_X} + exp(-Mₙ·exp(-n(I+slack)))`, and `exists_codebook_low_avg` on their sum
+extracts one codebook good for both. The strong covering-success lower bound rests on the gateway
+`wz_covering_strongTypical_indep_mass_ge` (the WZ instance of
+`jointStronglyTypicalSet_indep_prob_ge`). The covering-success event is `wzCoveringSuccessStrong`
+(strong-at-`ε_cov` ∩ weak-at-`ε`), which makes the Markov-core chain true-as-framed.
 
-Independent honesty audit 2026-07-13 (Atom H closure gate): PASS — `@audit:ok`. The last-conjunct
-covering-acceptance residual is CLOSED sorry-free. The fill is a genuine construction (perturb to a
-full-support kernel → restricted `qStar` → codebook-average + `exists_codebook_low_avg` pigeonhole in
-`wz_covering_lossyCode_joint_exists`, then the strong-`Ecov` leaf), NOT a bundled `*Hypothesis`. The
-signature is byte-identical to the pre-session form (no full-support / acceptance / regularity
-hypothesis added — the #9 crux held); the headline `wyner_ziv_achievability` signature is likewise
-unchanged, and `#print axioms wyner_ziv_achievability` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free, re-derived first-hand). Sufficiency PASS at the CLASS level: the closure rests on STRONG
-typicality at the separated radius `ε_cov = ε/(2(1+C))` (`wzCoveringStrongRadius`, positive), with the
-weak-at-`ε` conjunct a strong⟹weak plumbing consequence — NOT a re-introduction of the weak false frame.
+The good code is genuinely constructed (perturb to a full-support kernel → restricted `qStar` →
+codebook-average + `exists_codebook_low_avg` pigeonhole in `wz_covering_lossyCode_joint_exists`,
+then the strong-`Ecov` leaf), not a bundled `*Hypothesis`. The closure rests on strong typicality at
+the separated radius `ε_cov = ε/(2(1+C))` (`wzCoveringStrongRadius`, positive), with the weak-at-`ε`
+conjunct a strong ⟹ weak plumbing consequence.
+
 @audit:ok -/
 lemma wz_coveringFamily_of_testChannel
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -729,7 +718,7 @@ lemma wz_coveringFamily_of_testChannel
                     (wzCoveringAcceptFailSet P_XY κ' c ε)
                     ≤ δ / (8 * (distortionMax d + 1))) := by
   classical
-  -- Step 1: perturb the feasible test channel to a full-support kernel `κ'`.
+  -- Perturb the feasible test channel to a full-support kernel `κ'`.
   -- Keep a pristine copy of the factorizability membership: `hqf` is mutated by the
   -- `rw` below, but the output existential re-exports the original membership (`hqf₀`).
   have hqf₀ := hqf
@@ -745,28 +734,28 @@ lemma wz_coveringFamily_of_testChannel
   haveI : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := hne
   -- The perturbed joint, packaged as a clean pointwise identity.
   have hq'clean : ∀ p : α × β × Fin k, q' p = κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)} :=
-    fun p => hq'eq p.1 p.2.1 p.2.2
+    fun p ↦ hq'eq p.1 p.2.1 p.2.2
   have hconv :
-      (fun p : α × β × Fin k => κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) = q' := by
+      (fun p : α × β × Fin k ↦ κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) = q' := by
     funext p; exact (hq'clean p).symm
-  -- Covering-distortion feasibility via the reconciliation identity (Step 1–2 core).
+  -- Covering-distortion feasibility via the reconciliation identity.
   have hfeas : expectedDistortionPmf
-      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) ↦
         Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
             * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ)))
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k ↦
         κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)}) ≤ D + δ := by
     rw [wz_coveringDistortion_reconcile P_XY d κ' qf.2, hconv]
     exact hdist'
-  -- Step 2: assemble the covering LossyCode family from the covering theorem (C).
+  -- Assemble the covering `LossyCode` family from the covering theorem.
   refine ⟨q', κ',
-    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+    (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k ↦
       κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)}),
-    (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+    (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) ↦
       Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
           * ((d x'.1 (qf.2 (u, y)) : NNReal) : ℝ))),
-    hq'eq, hκ'pos, hκ'sum, hobj', fun _ => rfl, hqStar_pos, hqStar_mem, hfeas,
-    (fun _ _ => rfl), hqf₀, ?_⟩
+    hq'eq, hκ'pos, hκ'sum, hobj', fun _ ↦ rfl, hqStar_pos, hqStar_mem, hfeas,
+    (fun _ _ ↦ rfl), hqf₀, ?_⟩
   -- The covering `LossyCode` family is good for BOTH the covering distortion AND the
   -- covering-acceptance failure C2, via the joint derandomize `wz_covering_lossyCode_joint_exists`
   -- (one code with low block distortion AND small strong-covering-failure mass) fed through the
@@ -778,9 +767,9 @@ lemma wz_coveringFamily_of_testChannel
     rw [htolAcc_def]
     exact div_pos hδ (by have := distortionMax_nonneg d; positivity)
   have hqStar_eq : ∀ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k,
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k ↦
         κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)}) p
-        = κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)} := fun _ => rfl
+        = κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)} := fun _ ↦ rfl
   obtain ⟨N_leaf, hleaf⟩ := wz_covering_chosenWord_sideInfo_typical P_XY κ' _ ε hε
     tolAcc htolAcc_pos hκ'pos hκ'sum hqStar_eq
   obtain ⟨N_der, hder⟩ := wz_covering_lossyCode_joint_exists P_XY κ' hκ'sum _ hqStar_pos
