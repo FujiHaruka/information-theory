@@ -18,27 +18,30 @@
 - **gate**: 新規 private 補助補題（decl 追加）につき `style-auditor` を触ったファイルへ。honesty gate は上記のとおり原則スキップ。
 - **粒度**: 1 ディスパッチ = 1 ファイル（同一ファイル複数対象はまとめる）。**同時 1 体**（orchestrator パターン）。
 
-## 対象バッチ（14 ファイル / 16 宣言、行数降順）
+## 計測補正（2026-07-19）
 
-| # | ファイル | 対象宣言（行数） | 状態 |
-|---|---|---|---|
-| 1 | `WynerZiv/Achievability/ChosenWord.lean` | `wz_covering_lossyCode_joint_exists` (431) | TODO |
-| 2 | `WynerZiv/Achievability/MassBound.lean` | `wz_exists_binning_E2_bound` (357), `wz_source_codeword_sideInfo_mass_le` (332) | TODO |
-| 3 | `WynerZiv/Converse/SingleLetter.lean` | `wz_singleletter_rate_le` (324) | TODO |
-| 4 | `ShannonHartley/Main.lean` | `exists_testFn_family` (278) | TODO |
-| 5 | `WynerZiv/Converse/Headline.lean` | `wz_support_reduce` (273) | TODO |
-| 6 | `BroadcastChannel/Converse.lean` | `bc_input_singleletterize` (259) | TODO |
-| 7 | `ConditionalMethodOfTypes/Mass.lean` | `conditional_KL_concentration_ge` (249), `conditionalStronglyTypicalSlice_mass_ge` (210) | TODO |
-| 8 | `AWGN/AchievabilityTypicalDecoder.lean` | `awgn_random_coding_union_bound` (245) | TODO |
-| 9 | `EPI/G2/ConvEntropyDensity.lean` | `negMulLog_convDensity_entropy_ge_density` (243), `convJointLlr_integrable` (230) | TODO |
-| 10 | `SMB/AlgoetCover/TwoSidedRatio.lean` | `integral_MRatioLowerZ_le_one` (240) | TODO |
-| 11 | `WynerZiv/Achievability/Concentration.lean` | `wz_covering_uyBand_condSlice_le` (230) | TODO |
-| 12 | `EPI/Case1/SmoothingLimit.lean` | `entropy_power_inequality_of_density_explicit` (230) | TODO |
-| 13 | `RateDistortion/AchievabilityStrongTypicality/FailureTendstoZero.lean` | `codebookAvgFailureStrong_tendsto_zero` (225) | TODO |
+初回の `scratchpad/decl_len.ts` は宣言スパン（宣言キーワード行 → 次宣言）を数えており、**次宣言に付く巨大な audit-history docstring を巻き込んで**過大化していた（357/332 等は docstring 込みの値）。`scratchpad/body_len.ts` で `:=` 以降の**実証明本体**を測り直した結果、本体 > 200 は **9 件**のみ。moot 6 件（本体 ≤200）は分割不要。
 
-境界（任意）: `entropyPower_smoothed_epi_perT` (SmoothingLimit.lean, 200 ちょうど) は目安と同値なので #12 のついでに対応可、単独では見送り。
+## 対象バッチ（実本体行数、降順）
+
+| ファイル | 対象宣言（本体行） | 状態 |
+|---|---|---|
+| `WynerZiv/Achievability/ChosenWord.lean` | `wz_covering_lossyCode_joint_exists` (431→188) | **DONE** |
+| `WynerZiv/Achievability/MassBound.lean` | `wz_exists_binning_E2_bound` (201→182); source_mass 189 は元々≤200 | **DONE** |
+| `ShannonHartley/Main.lean` | `exists_testFn_family` (254) | TODO |
+| `WynerZiv/Converse/SingleLetter.lean` | `wz_singleletter_rate_le` (250) | TODO |
+| `SMB/AlgoetCover/TwoSidedRatio.lean` | `integral_MRatioLowerZ_le_one` (238) | TODO |
+| `EPI/G2/ConvEntropyDensity.lean` | `negMulLog_convDensity_entropy_ge_density` (234); convJointLlr 199 は≤200 | TODO |
+| `WynerZiv/Converse/Headline.lean` | `wz_support_reduce` (233) | TODO |
+| `BroadcastChannel/Converse.lean` | `bc_input_singleletterize` (227) | TODO |
+| `AWGN/AchievabilityTypicalDecoder.lean` | `awgn_random_coding_union_bound` (210) | TODO |
+| `WynerZiv/Achievability/Concentration.lean` | `wz_covering_uyBand_condSlice_le` (207) | TODO |
+| `ConditionalMethodOfTypes/Mass.lean` | `conditional_KL_concentration_ge` (207); typicalSlice 177 は≤200 | TODO |
+
+**moot（実本体 ≤200、分割不要）**: source_mass(189), convJointLlr(199), codebookAvgFailureStrong(192), conditionalStronglyTypicalSlice_mass_ge(177), entropy_power_inequality_of_density_explicit(179), entropyPower_smoothed_epi_perT(188)。
 
 ## 注意
 
-- 対象は `private` のことが多い（headline ではなく中間補題）。分割で新規 private を増やすが、file-scoped private のままでよい（同一ファイル内）。
-- WynerZiv 系が多い（1,2,3,5,11）が、いずれも別ファイルなので順序自由。
+- 対象は `private` のことが多い（headline ではなく中間補題）。分割で新規 private を増やすが file-scoped private のままでよい（同一ファイル内）。
+- 各 agent には**実本体行数（body_len.ts 基準）**を渡し、body ≤200 を判定基準にする（span ではなく）。
+- flag-only follow-up（本タスク範囲外）: `fun … =>` → `↦` の全体債務 1314 箇所、audit-history docstring のプロセス語彙。証明分割とは独立の sweep。

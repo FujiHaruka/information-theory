@@ -422,6 +422,29 @@ lemma wz_source_codeword_sideInfo_mass_le
       map_measureReal_apply hjrv_meas (Set.toFinite _).measurableSet]
   exact hD2
 
+private lemma wz_E2_confusion_threshold (R R₁ IYU δ : ℝ) (hδ : 0 < δ) (d : DistortionFn α γ)
+    (hc : R₁ - IYU < R) :
+    ∃ N : ℕ, ∀ m : ℕ, N ≤ m →
+      2 * Real.exp ((m : ℝ) * (R₁ - IYU)) * ((codebookSize R m : ℝ))⁻¹
+        ≤ δ / 2 / (8 * (distortionMax d + 1)) := by
+  have hdd : (0 : ℝ) ≤ distortionMax d := distortionMax_nonneg d
+  have hL := wz_tendsto_exp_mul_codebookSize_inv hc
+  have h2 : Filter.Tendsto
+      (fun m : ℕ ↦ 2 * (Real.exp ((m : ℝ) * (R₁ - IYU)) * ((codebookSize R m : ℝ))⁻¹))
+      Filter.atTop (nhds 0) := by
+    have := hL.const_mul (2 : ℝ); simpa using this
+  have htol : 0 < δ / 2 / (8 * (distortionMax d + 1)) :=
+    div_pos (div_pos hδ (by norm_num)) (by positivity)
+  rw [Metric.tendsto_atTop] at h2
+  obtain ⟨N, hN⟩ := h2 (δ / 2 / (8 * (distortionMax d + 1))) htol
+  refine ⟨N, fun m hm ↦ ?_⟩
+  have hd := hN m hm
+  rw [Real.dist_eq, sub_zero,
+    abs_of_nonneg (by positivity : (0 : ℝ) ≤ 2 * (Real.exp ((m : ℝ) * (R₁ - IYU))
+      * ((codebookSize R m : ℝ))⁻¹))] at hd
+  rw [mul_assoc]
+  exact le_of_lt hd
+
 /-- **(Leg D, A3) Codebook-restricted confusion (E2) probability is squeezable.** For a
 covering codebook of size `M₁ ≲ exp(n·R₁)` and `n` beyond a threshold, at the shared
 conditional-typicality radius `ε` (an explicit input, pinned to the covering-acceptance mass
@@ -587,27 +610,8 @@ lemma wz_exists_binning_E2_bound
   -- Confusion decay (term A): `2·exp(m·(R₁−IYU))·(codebookSize R m)⁻¹ → 0`, since
   -- `R₁ − IYU = R₁ − I(Y;U) + 3ε < R` (`hε_conf`).  The degenerate `M₁ ≤ 1` covering (empty
   -- confusion) is handled separately in the body, so only this single-exponential term is needed.
-  obtain ⟨N_E2, hN_E2⟩ : ∃ N : ℕ, ∀ m : ℕ, N ≤ m →
-      2 * Real.exp ((m : ℝ) * (R₁ - IYU)) * ((codebookSize R m : ℝ))⁻¹
-        ≤ δ / 2 / (8 * (distortionMax d + 1)) := by
-    have hdd : (0 : ℝ) ≤ distortionMax d := distortionMax_nonneg d
-    have hc : R₁ - IYU < R := by rw [hIYU_def]; linarith [hε_conf]
-    have hL := wz_tendsto_exp_mul_codebookSize_inv hc
-    have h2 : Filter.Tendsto
-        (fun m : ℕ ↦ 2 * (Real.exp ((m : ℝ) * (R₁ - IYU)) * ((codebookSize R m : ℝ))⁻¹))
-        Filter.atTop (nhds 0) := by
-      have := hL.const_mul (2 : ℝ); simpa using this
-    have htol : 0 < δ / 2 / (8 * (distortionMax d + 1)) :=
-      div_pos (div_pos hδ (by norm_num)) (by positivity)
-    rw [Metric.tendsto_atTop] at h2
-    obtain ⟨N, hN⟩ := h2 (δ / 2 / (8 * (distortionMax d + 1))) htol
-    refine ⟨N, fun m hm ↦ ?_⟩
-    have hd := hN m hm
-    rw [Real.dist_eq, sub_zero,
-      abs_of_nonneg (by positivity : (0 : ℝ) ≤ 2 * (Real.exp ((m : ℝ) * (R₁ - IYU))
-        * ((codebookSize R m : ℝ))⁻¹))] at hd
-    rw [mul_assoc]
-    exact le_of_lt hd
+  obtain ⟨N_E2, hN_E2⟩ := wz_E2_confusion_threshold R R₁ IYU δ hδ d
+    (by rw [hIYU_def]; linarith [hε_conf])
   refine ⟨N_E2, fun n hn M₁ c₁ hM_ub hcov_accept ↦ ?_⟩
   -- Fixed-`n` abbreviations.
   haveI hQ_prob : IsProbabilityMeasure
