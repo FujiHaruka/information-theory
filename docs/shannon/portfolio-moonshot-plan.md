@@ -4,9 +4,9 @@
 
 Cover–Thomas *Elements of Information Theory* 2nd ed **Ch.16 "Information Theory and Investment"** の
 log-optimal portfolio を、有限アウトカム版で **proof-done** (0 sorry / 0 @residual / sorryAx-free /
-独立 `@audit:ok`) まで形式化する。`docs/textbook-roadmap.md` は Ch.16 を章単位 `✖ scope-out` としているが、
-本計画はその tractable な解析核 (concavity / Kuhn–Tucker / competitive optimality の 3 中核定理) を
-genuine closure する (operational な株式市場・連続時間投資は scope-out 継続)。
+独立 `@audit:ok`) まで形式化する。Ch.16 は当初 `docs/textbook-roadmap.md` で章単位 `✖ scope-out` だったが、
+本計画がその tractable な解析核 (concavity / Kuhn–Tucker / competitive optimality の 3 中核定理) を
+genuine closure し、roadmap Ch.16 は `✅` へ復帰済 (operational な株式市場・連続時間投資は scope-out 継続)。
 
 全 Mathlib API は在庫で verbatim 署名 + 型クラス前提込みで確定済み・**Mathlib 壁ゼロ**
 ([`portfolio-mathlib-inventory.md`](portfolio-mathlib-inventory.md) が SoT)。本 plan は在庫テーブルを

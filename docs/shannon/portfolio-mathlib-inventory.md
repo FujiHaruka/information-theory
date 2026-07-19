@@ -282,7 +282,8 @@ portfolio は上 A/B/E の Mathlib 補題を新規に組む。`stdSimplex` の `
 ## 撤退ラインとの距離
 
 parent [`gambling-moonshot-plan.md`](gambling-moonshot-plan.md) は Ch.6 DONE で portfolio 固有の撤退ラインを
-持たない。roadmap は Ch.16 を章単位 scope-out。したがって本探索の撤退判断は新規に設定する。
+持たず、Ch.16 は着手前 roadmap で章単位 scope-out だったため、本探索の撤退判断は新規に設定した
+(結果: 撤退不発、4 定理とも完遂)。
 
 - **撤退ライン (触れるか)**: forward KT (定理 2a) の FDeriv-at-max 構築が想定超過 (W の
   `HasFDerivWithinAt` が 100 行を超え詰まる) した場合。**発動リスクは低** (機構 E は完備、`.sum`/`.log`
