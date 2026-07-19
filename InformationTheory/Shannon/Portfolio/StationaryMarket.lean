@@ -53,10 +53,15 @@ of wealth when the price-relative vector is `X ω` and the portfolio is `b`. -/
 noncomputable def stationaryLogReturn (X : Ω → Fin m → ℝ) (b : Fin m → ℝ) : Ω → ℝ :=
   fun ω ↦ Real.log (∑ j, b j * X ω j)
 
-/-- **Stationary ergodic log-optimal portfolio theorem** (Cover–Thomas §16.5): for a
+/-- Stationary ergodic log-optimal portfolio theorem (Cover–Thomas §16.5): for a
 measure-preserving ergodic shift `T` on a probability space, a fixed rebalanced portfolio
 `b`, and an integrable per-epoch log return, the Birkhoff time average of the log-wealth
-growth converges almost surely to the expected log return `∫ ω, log (b · X ω) ∂μ`. -/
+growth converges almost surely to the expected log return `∫ ω, log (b · X ω) ∂μ`.
+@audit:ok — sorryAx-free (`[propext, Classical.choice, Quot.sound]`). Direct application of
+`birkhoff_ergodic_ae`; `hT`/`hT_erg`/`hint` are its ergodic-system and integrability
+preconditions, `∫ ω, stationaryLogReturn X b ω` is a genuine definitional binding (the
+spatial mean), and the spelled-out `range (n+1) / (n+1)` average matches `birkhoffAverageReal`.
+Non-circular, no load-bearing hypothesis. -/
 @[entry_point]
 theorem seqLogWealth_div_tendsto_stationary
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -70,13 +75,19 @@ theorem seqLogWealth_div_tendsto_stationary
   filter_upwards [birkhoff_ergodic_ae hT hT_erg hint] with ω hω
   exact hω
 
-/-- **Stationary asymptotic optimality** (Cover–Thomas §16.5): a log-optimal portfolio `bs`
+/-- Stationary asymptotic optimality (Cover–Thomas §16.5): a log-optimal portfolio `bs`
 satisfying the integral Kuhn–Tucker condition `∀ i, ∫ X_i / (bs · X) ∂μ ≤ 1` maximizes the
 expected log return: every simplex portfolio `b` has `∫ log (b · X) ≤ ∫ log (bs · X)`.
 
 Together with `seqLogWealth_div_tendsto_stationary` this gives the asymptotic dominance of
 `bs` over any fixed `b`: the almost-sure limits of the time-averaged log-wealth satisfy the
-same inequality. -/
+same inequality.
+@audit:ok — sorryAx-free (`[propext, Classical.choice, Quot.sound]`). `hKT` constrains only
+`bs` (per-coordinate integral stationarity, `b`-free), so it is the honest hypothesis of the
+Kuhn–Tucker sufficiency theorem, not the conclusion in disguise: the dominance is proved
+genuinely via the tangent bound `log t ≤ t − 1` integrated against the wealth ratio, then
+`∫ R = ∑ i, b i · ∫ X_i/(bs·X) ≤ 1`. Simplex/positivity/integrability hypotheses are
+regularity preconditions; non-circular, no load-bearing hypothesis. -/
 @[entry_point]
 theorem stationaryLogReturn_integral_le_of_kuhnTucker
     (μ : Measure Ω) [IsProbabilityMeasure μ]
