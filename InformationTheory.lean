@@ -124,6 +124,8 @@ import InformationTheory.Shannon.Sanov.TendstoSandwich
 import InformationTheory.Shannon.TypeClassLowerBound
 import InformationTheory.Shannon.StrongTypicality
 import InformationTheory.Shannon.ConditionalMethodOfTypes.Core
+import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass.Concentration
+import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass.SliceMass
 import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass
 import InformationTheory.Shannon.ConditionalMethodOfTypes
 import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality.SupportingBounds
