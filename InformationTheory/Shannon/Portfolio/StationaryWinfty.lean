@@ -952,6 +952,61 @@ theorem condOptGrowthInfty_eq_integral_infPast [StandardBorelSpace Ω] [Nonempty
     exact le_of_tendsto hdct (Filter.Eventually.of_forall hstage)
   exact le_antisymm hLower h1
 
+/-- Existence of an infinite-past (`⨆ j, ℱ j`) conditional log-optimal portfolio `bstarInf`:
+instantiate `exists_condLogOptimalSeq` at the constant filtration `Filtration.const ℕ (⨆ j, ℱ j)`
+(every stage is the infinite past) and read off stage `0`. -/
+theorem exists_infPast_condLogOptimal [StandardBorelSpace Ω] [Nonempty Ω]
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ)
+    [Nonempty (Fin m)] (hX : Measurable X)
+    (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
+    (hint : ∀ c : Ω → Fin m → ℝ, Measurable c → (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ) :
+    ∃ bstarInf : Ω → Fin m → ℝ, StronglyMeasurable[⨆ j, ℱ j] bstarInf ∧
+      (∀ ω, bstarInf ω ∈ stdSimplex ℝ (Fin m)) ∧
+      (∀ c : Ω → Fin m → ℝ, StronglyMeasurable[⨆ j, ℱ j] c → (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+        μ[causalLogReturn X c | ⨆ j, ℱ j] ≤ᵐ[μ] μ[causalLogReturn X bstarInf | ⨆ j, ℱ j]) := by
+  obtain ⟨b, hmeas, hsimplex, hdom⟩ :=
+    exists_condLogOptimalSeq μ (Filtration.const ℕ (⨆ j, ℱ j) (iSup_le ℱ.le)) X hX hpos hint
+  exact ⟨b 0, hmeas 0, fun ω ↦ hsimplex 0 ω, fun c hc hcs ↦ hdom 0 c hc hcs⟩
+
+/-- A fixed infinite-past conditional log-optimal portfolio `bstarInf` achieves the optimal growth
+rate `W_∞ = condOptGrowthInfty` as the almost-sure Birkhoff time average of its per-epoch log
+return under a measure-preserving ergodic shift `T` (Cover–Thomas §16.5, Route T). The optimal
+sequence `bstar` and its infinite-past companion `bstarInf` are constructed internally
+(`exists_condOptGrowth_tendsto_condOptGrowthInfty` and `exists_infPast_condLogOptimal`) and their
+conditional-dominance properties are discharged, so the conclusion carries no optimization
+hypothesis; `hpos`/`hint`/`hUB`/`hT`/`hT_erg` are market-regularity/ergodicity preconditions.
+The specialization of `ℱ` to the market-past filtration and `T` to the shift (giving the verbatim
+CT 16.5.1 statement) is a downstream framing step. -/
+theorem stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty
+    [StandardBorelSpace Ω] [Nonempty Ω]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    {T : Ω → Ω} (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
+    (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) [Nonempty (Fin m)] (hX : Measurable X)
+    (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
+    (hint : ∀ c : Ω → Fin m → ℝ, Measurable c → (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ)
+    (hUB : ∃ C : ℝ, ∀ c : Ω → Fin m → ℝ, (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ → ∫ ω, causalLogReturn X c ω ∂μ ≤ C) :
+    ∃ (bstar : ℕ → Ω → Fin m → ℝ) (bstarInf : Ω → Fin m → ℝ),
+      Measurable bstarInf ∧ (∀ ω, bstarInf ω ∈ stdSimplex ℝ (Fin m)) ∧
+      (∀ᵐ ω ∂μ, Tendsto (fun n ↦
+        (∑ i ∈ Finset.range (n + 1), causalLogReturn X bstarInf (T^[i] ω)) / (n + 1 : ℝ))
+        atTop (𝓝 (condOptGrowthInfty μ X bstar))) := by
+  obtain ⟨bstar, hb_meas, hb_simplex, hb_dom, _htends⟩ :=
+    exists_condOptGrowth_tendsto_condOptGrowthInfty μ ℱ X hX hpos hint hUB
+  obtain ⟨bstarInf, hInf_meas, hInf_simplex, hInf_dom⟩ :=
+    exists_infPast_condLogOptimal μ ℱ X hX hpos hint
+  have hbstarInf_measurable : Measurable bstarInf := (hInf_meas.mono (iSup_le ℱ.le)).measurable
+  have hid : ∫ ω, causalLogReturn X bstarInf ω ∂μ = condOptGrowthInfty μ X bstar :=
+    condOptGrowthInfty_eq_integral_infPast μ ℱ X hX hpos hint bstar hb_meas hb_simplex hb_dom
+      bstarInf hInf_meas hInf_simplex hInf_dom
+  have hbirk := birkhoff_ergodic_ae hT hT_erg (hint bstarInf hbstarInf_measurable hInf_simplex)
+  refine ⟨bstar, bstarInf, hbstarInf_measurable, hInf_simplex, ?_⟩
+  filter_upwards [hbirk] with ω hω
+  rw [← hid]
+  exact hω
+
 end CondOptimalGrowth
 
 end InformationTheory.Shannon.Portfolio
