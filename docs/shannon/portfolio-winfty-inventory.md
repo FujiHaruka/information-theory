@@ -135,9 +135,16 @@ theorem logOptimal_growth_tendsto_Winfty
 | 可算稠密列 | `denseSeq X : ℕ → X` / `denseRange_denseSeq X` (separable metric) | `Mathlib/Topology/MetricSpace/PiNat.lean:1110` | ✅ |
 | 可算稠密集合 | `exists_countable_dense X` | `Mathlib/Topology/Separation/...` (SeparableSpace) | ✅ |
 
-**推奨実装**: `M(ω) := ⨆ k, growthRate ρ_ω X (denseSeq k)` (可算稠密上の sup = max、連続性で一致) を `Measurable.iSup` で可測化 →
-「`growthRate ρ_ω X (denseSeq k) ≥ M(ω) − 1/n` を満たす最小 index」で可測選択列を組み `measurableSet_le` で可測性、極限 (compact) で `bstar ω` へ。
-**工数見積: ~80–200 行** (Carathéodory 版、full KRN 不要)。**genuine 解析壁ではなく plumbing。ただし本 family 初の新規機構。**
+**⚠️ 訂正 (R1 実装で判明)**: 上記「最小 index の可測選択列を組み、極限 (compact) で `bstar ω` へ」レシピは**収束しない** —
+`M(ω)` への near-max 列は**値**は収束するが**点**は収束せず (tie 下で argmax index が跳ねる)、compact で取れるのは収束**部分**列のみ
+で、その部分列と極限を ω について可測に取るのは full KRN が要る (Mathlib 不在、`BayesEstimator.lean` が selection 定理の
+不在を明記)。**採用した構成 = 凹性前提を足した strictly-concave (Tikhonov) 正則化**: 各 `ε>0` で `F ω · − ε‖·‖²` は
+**唯一**の最大点 `bEps ε ω` を持ち (`StrictConcaveOn.eq_of_isMaxOn`)、唯一性が「値-最大化列が唯一の argmax に収束」を保証する
+ので near-max 列 (`Nat.find` + `Measurable.find`) が `bEps ε ω` に収束 → `measurable_of_tendsto_metrizable` で可測。
+`ε→0` で argmax(F) 上の `‖·‖²`-最小点 (= 原点の射影) へ収束し、真の `F` 最大点かつ可測。**実装: `StationaryWinfty.lean`
+`exists_measurable_argmax_on_stdSimplex`、proof-done sorryAx-free (~296 行)、追加前提は `[Nonempty (Fin m)]` (m≥1、空 simplex 排除)
++ `ConcaveOn` (regularity、`growthRate` が満たす)。**gateway 判定: genuine 解析壁なし、部品は在庫どおり完備、ただし工数は
+~80–200 でなく ~290 行 (KRN 回避に凹性正則化の二重極限を要す)。**
 
 ---
 
