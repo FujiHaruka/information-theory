@@ -5,9 +5,13 @@
 > 既存 gambling `doublingRate` の一般化)。
 >
 > 最寄り parent: [`gambling-moonshot-plan.md`](gambling-moonshot-plan.md) (Ch.6、DONE)。
-> `docs/textbook-roadmap.md` は Ch.16 を章単位 `✖ scope-out` としているため、本ファイルは
-> 「tractable な解析核 (concavity / KT / competitive optimality) を genuine 化できるか」の探索調査。
-> 実装計画・plan 起草は含まない (本ファイルは在庫のみ)。
+> 本ファイルは「tractable な解析核 (concavity / KT / competitive optimality) を genuine 化できるか」の
+> 探索調査 (在庫のみ、実装計画は含まない)。
+>
+> **状態: ✅ Ch.16 は 2026-07-19 に完遂** — 在庫の壁ゼロ判定どおり 4 中核定理すべて proof-done
+> sorryAx-free + `@audit:ok` (`InformationTheory/Shannon/Portfolio/Basic.lean`)。roadmap Ch.16 は
+> `✖ scope-out` から `✅` へ復帰。子プラン [`portfolio-moonshot-plan.md`](portfolio-moonshot-plan.md) が SoT。
+> 以下の在庫テーブルは実装時の API 参照として保持 (歴史的記述中の「scope-out」は着手前の状態)。
 
 ## 一行サマリ
 
