@@ -1060,6 +1060,56 @@ private lemma wz_sum_eq_typeCount_mul {T : Type*} [Fintype T] [DecidableEq T] {n
   rw [Finset.sum_const, nsmul_eq_mul]
   rfl
 
+private lemma wz_covering_uyBand_key
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (ε : ℝ) (hε : 0 < ε) :
+    (∑ p, |wzCondMeanKernel P_XY κ' p|) * wzCoveringStrongRadius P_XY κ' ε < ε / 2 := by
+  classical
+  have hC_nonneg : 0 ≤ ∑ p, |wzCondMeanKernel P_XY κ' p| :=
+    Finset.sum_nonneg fun _ _ ↦ abs_nonneg _
+  unfold wzCoveringStrongRadius
+  set C := ∑ p, |wzCondMeanKernel P_XY κ' p| with hC
+  have hden : (0 : ℝ) < 2 * (1 + C) := by linarith [hC_nonneg]
+  rw [show C * (ε / (2 * (1 + C))) = C * ε / (2 * (1 + C)) from
+      (mul_div_assoc C ε (2 * (1 + C))).symm, div_lt_iff₀ hden]
+  nlinarith [hε, hC_nonneg, mul_nonneg hC_nonneg hε.le]
+
+private lemma wz_covering_uyBand_mean_pin
+    (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
+    {k : ℕ} (κ' : α → Fin k → ℝ)
+    (qStar : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k → ℝ)
+    (hmem_q : qStar ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k))
+    (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)})
+    (ε : ℝ) (hε : 0 < ε)
+    {n : ℕ} (xb : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}})
+    (U : Fin n → Fin k) (ψ : Fin n → β → ℝ)
+    (hint : ∀ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
+          (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))
+        = wzCondMeanKernel P_XY κ' (xb i, U i))
+    (hgood : (fun i ↦ (xb i, U i)) ∈ stronglyTypicalSet (rdAmbient qStar)
+        (ChannelCoding.jointSequence ChannelCoding.iidXs ChannelCoding.iidYs) n
+        (wzCoveringStrongRadius P_XY κ' ε))
+    (hkey : (∑ p, |wzCondMeanKernel P_XY κ' p|) * wzCoveringStrongRadius P_XY κ' ε < ε / 2) :
+    |(∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
+          (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))) / (n : ℝ)
+        - ∑ q, Real.negMulLog (wzSideInfoMarginal P_XY κ' q)| < ε / 2 := by
+  classical
+  have hMstat_eq : (∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
+        (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))) / (n : ℝ)
+      = ∑ p, ((typeCount (fun i ↦ (xb i, U i)) p : ℝ) / n) * wzCondMeanKernel P_XY κ' p := by
+    have hsum : (∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
+          (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')})))
+        = ∑ p, (typeCount (fun i ↦ (xb i, U i)) p : ℝ) * wzCondMeanKernel P_XY κ' p := by
+      rw [← wz_sum_eq_typeCount_mul (fun i ↦ (xb i, U i)) (wzCondMeanKernel P_XY κ')]
+      exact Finset.sum_congr rfl fun i _ => hint i
+    rw [hsum, Finset.sum_div]
+    exact Finset.sum_congr rfl fun p _ => by ring
+  rw [hMstat_eq]
+  refine lt_of_le_of_lt
+    (wz_wsm_negLog_mean_pin_of_stronglyTypical P_XY κ' qStar hmem_q hqStar
+      (wzCoveringStrongRadius_pos P_XY κ' hε).le (fun i ↦ (xb i, U i)) hgood) hkey
+
 open ChannelCoding in
 /-- **(Markov-core conditional-AEP concentration — the sole analytic residual.)** For a
 strong-covering `x`-block `xb` — one whose induced `(x, U)` block
@@ -1073,55 +1123,19 @@ mean-pin (`wz_wsm_negLog_mean_pin_of_stronglyTypical`) puts the conditional mean
 is the from-scratch conditional-AEP kernel; the surrounding Atom-A finite-Fubini split, good/bad
 `x`-block dichotomy and summation are discharged genuinely in `wz_covering_jointBand_markov_core`.
 
-INDEPENDENT AUDIT 2026-07-12 (Atom E-kernel isolation commits `b489d51f`+`4449e61f`,
-honesty-auditor) [HISTORICAL — this audit describes the pre-closure `sorry` state; the body is now
-genuine, see the BUILD note at the end]: PASS, HONEST tier-2. (1) Signature honest: body is a bare `sorry`, not `:= h`;
-no `:True`/degenerate slot. (2) NON-BUNDLED: the conclusion is a GENUINE conditional-concentration
-bound — the conditional side-info measure `condY(xb).real` of the `(U,Y)`-atypical slice `≤ tol/8` —
-which is exactly the mean-pin + Chebyshev body, NOT re-imported as a hypothesis. Every hypothesis is
-a precondition: `hκ'_pos`/`hκ'_sum` (full-support proper-pmf regularity), `hqStar` (qStar–κ'
-definitional consistency), `ε`/`tol` positivity, and the implication antecedent (strong typicality
-of the SPECIFIC `xb` = good-block selector, NOT a bundled `condY ≤ …`). No `*Hypothesis`/`*Reduction`
-predicate; the core-reconstruction test fails to hand over the concentration — it stays entirely in
-the `sorry`. (3) SUFFICIENCY: TRUE-as-framed at the CLASS level. The strong radius separation
-`ε_cov = ε/(2(1 + C))` makes the mean-pin gateway `wz_wsm_negLog_mean_pin_of_stronglyTypical`
-(verified sorry-free) give a UNIVERSAL bound `|M(t) − H(wsm)| ≤ C·ε_cov = (C/(1+C))·(ε/2) < ε/2`
-over the ENTIRE `ε_cov`-ball (via the type-level `wz_wsm_negLog_mean_pin_of_type`, not per-instance);
-composed with the conditional Chebyshev (`δ = ε/2`) via the strict triangle `< ε/2 + ε/2 = ε`, the
-`(U,Y)` empirical entropy lands strictly inside `typicalSet(wsm)`. The entropy-preserving
-label-swap / `O(ε)` partial-relabel counterexample CLASS that broke the weak-only version is closed
-because strong typicality pins the per-symbol `(x,u)`-type in TV, controlling the linear functional
-`M = ⟨type, g⟩` the conclusion needs — no finer structure required (coarser-than-needed repaired);
-degenerate `C = 0` is consistent (`H(wsm) = 0 = M`, non-vacuous). (4) Class `plan` CORRECT: from-scratch
-correlated conditional AEP, NOT a Mathlib wall — recipe ingredients all in-tree (Atom A split
-`wz_srcBlock_condMeasure_split`, engine `wz_pi_nonuniform_concentration_tendsto`, gateway above,
-template `wz_covering_yBand_aep`); parent plan `wz-markov-core-plan.md` §Atom E-kernel confirms
-"Mathlib gap なし". Name `_le` descriptive (no laundering); placement per convention. WRAPPER
-`wz_covering_jointBand_markov_core` verified genuinely sorry-free (build: sole new `sorry` warning at
-this decl, none at the wrapper) — the good/bad `x`-block dichotomy consumes this kernel honestly
-(good: `measureReal_mono` to `hN`; bad: strong-conjunct failure ⟹ empty slice), so the split is honest.
+Implementation notes. The hypothesis uses strong (not weak) typicality: strong typicality pins the
+per-symbol `(x, u)`-type in total variation, controlling the linear functional `M = ⟨type, g⟩`
+that the conclusion needs — no finer structure required — whereas weak entropy-only typicality
+fails on an entropy-preserving label-swap counterexample class. The assembly mirrors the in-tree
+template `wz_covering_yBand_aep`: a uniform sup-bound `B = ∑_q |log wsm(q)|` on the per-coordinate
+log-statistic, its conditional mean identified with `wzCondMeanKernel`, and the ambient entropy
+`∑_q negMulLog(wsm q)`, combined through the radius-separated mean-pin (`C·ε_cov < ε/2`) and the
+Chebyshev engine (`wz_pi_nonuniform_concentration_tendsto`, `δ = ε/2`) by a strict triangle
+inequality. The `hκ'_pos`/`hκ'_sum`/`hqStar` hypotheses are full-support / proper-pmf /
+`qStar`–`κ'` consistency preconditions (used to place `qStar ∈ stdSimplex` and identify the
+conditional mean), not the concentration conclusion — not load-bearing; the proof is sorryAx-free.
 
-BUILD 2026-07-12 (kernel closure): this body is now GENUINE (`sorry`-free, `#print axioms` =
-`[propext, Classical.choice, Quot.sound]`). The from-scratch correlated conditional AEP is assembled
-exactly as the audit recipe predicted, mirroring the in-tree template `wz_covering_yBand_aep`:
-(B1) the per-coordinate statistic `ψ i y = pmfLog (rdAmbient wsm) (jointSequence iidXs Yc) (U_i, y)`
-has the uniform sup-bound `|ψ i y| ≤ B = ∑_q |log wsm(q)|` (coerced-joint-law singleton via
-`wz_map_injective_real_singleton` on the relabel `Φ(u, y') = (u, ↑y')`, off-image mass `0`);
-(B2) its conditional mean `∫ ψ_i ∂ν_i = wzCondMeanKernel (xb_i, U_i)` (`integral_fintype` + the
-`β`-sum collapsing onto the positive-`Y`-marginal subtype); (B3) the ambient entropy
-`H = entropy (rdAmbient wsm) (jointSequence iidXs Yc 0) = ∑_q negMulLog(wsm q)` via
-`wz_entropy_map_injective`; the mean-pin `wz_wsm_negLog_mean_pin_of_stronglyTypical` plus the radius
-separation `C·ε_cov < ε/2` pin the conditional mean; and the Atom-B engine
-`wz_pi_nonuniform_concentration_tendsto` (δ = ε/2, tol/8) bounds the deviation set, into which the
-`(U,Y)`-atypical band injects by the strict triangle inequality. No `@residual` remains — proof done.
-
-Independent honesty audit 2026-07-13 (Atom H, Markov-core chain kernel): PASS — `@audit:ok`. Genuine
-conditional-AEP concentration (sup-bound B1 + conditional-mean B2 + radius-separated mean-pin `< ε/2`
-+ Atom-B Chebyshev engine + triangle inequality); body sorry-free, no `:= h`/`:True`/degenerate slot.
-The `hκ'_pos`/`hκ'_sum`/`hqStar` hyps are full-support / proper-pmf / qStar–κ' definitional-consistency
-preconditions (used to place `qStar ∈ stdSimplex` and identify the conditional mean), NOT the
-concentration conclusion — not load-bearing. `#print axioms` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free). -/
+@audit:ok -/
 lemma wz_covering_uyBand_condSlice_le
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -1231,15 +1245,7 @@ lemma wz_covering_uyBand_condSlice_le
     rw [rdAmbient_map_jointSequence _ hmem_wsm]
     exact Finset.sum_congr rfl fun q _ => by rw [pmfToMeasure_real_singleton hmem_wsm]
   -- `C · ε_cov < ε/2` (radius separation).
-  have hC_nonneg : 0 ≤ ∑ p, |wzCondMeanKernel P_XY κ' p| :=
-    Finset.sum_nonneg fun _ _ ↦ abs_nonneg _
-  have hkey : (∑ p, |wzCondMeanKernel P_XY κ' p|) * wzCoveringStrongRadius P_XY κ' ε < ε / 2 := by
-    unfold wzCoveringStrongRadius
-    set C := ∑ p, |wzCondMeanKernel P_XY κ' p| with hC
-    have hden : (0 : ℝ) < 2 * (1 + C) := by linarith [hC_nonneg]
-    rw [show C * (ε / (2 * (1 + C))) = C * ε / (2 * (1 + C)) from
-        (mul_div_assoc C ε (2 * (1 + C))).symm, div_lt_iff₀ hden]
-    nlinarith [hε, hC_nonneg, mul_nonneg hC_nonneg hε.le]
+  have hkey := wz_covering_uyBand_key P_XY κ' ε hε
   -- Uniform Chebyshev threshold from the Atom-B engine (δ = ε/2, tol = tol/8).
   obtain ⟨N, hN⟩ := wz_pi_nonuniform_concentration_tendsto (β := β)
     (B := B) (δ := ε / 2) (tol := tol / 8) (by linarith) (by linarith) hB_nonneg
@@ -1318,23 +1324,7 @@ lemma wz_covering_uyBand_condSlice_le
     refine Finset.sum_congr rfl fun ys _ => ?_
     rw [hψval ys]
   -- Mean identification and mean-pin `< ε/2`.
-  have hpin : |(∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
-        (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))) / (n : ℝ)
-      - ∑ q, Real.negMulLog (wzSideInfoMarginal P_XY κ' q)| < ε / 2 := by
-    have hMstat_eq : (∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
-          (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')}))) / (n : ℝ)
-        = ∑ p, ((typeCount (fun i ↦ (xb i, U i)) p : ℝ) / n) * wzCondMeanKernel P_XY κ' p := by
-      have hsum : (∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
-            (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')})))
-          = ∑ p, (typeCount (fun i ↦ (xb i, U i)) p : ℝ) * wzCondMeanKernel P_XY κ' p := by
-        rw [← wz_sum_eq_typeCount_mul (fun i ↦ (xb i, U i)) (wzCondMeanKernel P_XY κ')]
-        exact Finset.sum_congr rfl fun i _ => hint i
-      rw [hsum, Finset.sum_div]
-      exact Finset.sum_congr rfl fun p _ => by ring
-    rw [hMstat_eq]
-    refine lt_of_le_of_lt
-      (wz_wsm_negLog_mean_pin_of_stronglyTypical P_XY κ' qStar hmem_q hqStar
-        (wzCoveringStrongRadius_pos P_XY κ' hε).le (fun i ↦ (xb i, U i)) hgood) hkey
+  have hpin := wz_covering_uyBand_mean_pin P_XY κ' qStar hmem_q hqStar ε hε xb U ψ hint hgood hkey
   -- Atom B bounds the deviation set; the atypical band is included in it.
   refine le_trans (measureReal_mono ?_ (measure_ne_top _ _))
     (hN n hn
