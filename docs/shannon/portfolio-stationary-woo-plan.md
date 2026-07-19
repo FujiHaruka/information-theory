@@ -7,16 +7,17 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **§16.5 "Investment in S
 **fixed-b core** (固定 rebalance portfolio の成長率収束 + KT dominance) を proof-done 済。本計画は残る
 **log-optimal `W_∞` AEP** = 因果 log-optimal 戦略の富の成長率が無限過去条件付き成長率 `W_∞` に収束する部分を負う。
 
-**現状 = R1+R2 proof-done (sorryAx-free)、R3–R4 残** (`Portfolio/StationaryWinfty.lean` に
-対応コードあり、捏造 statement 無し)。本計画は scope 境界・要件・進捗・壁リスクの記録。
+**現状 = R1+R2+R3(Route T = fixed-stationary W_∞ AEP) proof-done (sorryAx-free)、framing fork pending +
+R4 配線残** (`Portfolio/StationaryWinfty.lean`、現 1019 行、捏造 statement 無し)。本計画は scope 境界・要件・
+進捗・壁リスク・framing fork の記録。
 
-## 進捗 — 🚧 R1+R2 proof-done、R3–R4 残
+## 進捗 — 🚧 R1+R2+R3(Route T) proof-done、framing 判断待ち + R4 残
 
 - [ ] M0 在庫 — real-valued 条件付き growth / 可測選択 / Algoet–Cover sandwich の Mathlib / in-project 資産確定 📋
 - [x] R1 — 条件付き log-optimal portfolio の可測選択 ✅ proof-done — `exists_measurable_argmax_on_stdSimplex` (`@audit:ok` sorryAx-free)
 - [x] R2 — 条件付き成長率の単調収束 `W*_k ↑ W_∞` ✅ proof-done — `condOptGrowth_monotone` / `condOptGrowth_bddAbove` + 選択補題 `exists_condLogOptimalSeq` + headline `exists_condOptGrowth_tendsto_condOptGrowthInfty` すべて `@audit:ok` sorryAx-free。選択補題は `condExpKernel` (正則条件付き分布 / disintegration) 経由で closure — R1 gateway を ambient=`ℱ k` に instantiate + crux self-build `condExpKernel_ae_const` (ℱk-可測関数は κ_ω 下 a.e. 定数) + pull-out `condExp_causalLogReturn_eq`
-- [ ] R3 — real-valued SMB 級 AEP `(1/n) log S*_n → W_∞` 📋 **最リスク・別 gateway で早期壁判定**
-- [ ] R4 — 組立 (CT 16.5.1 headline) + 配線 + 独立監査 📋
+- [x] R3 — real-valued SMB 級 AEP: ✅ **fixed-stationary W_∞ AEP (Route T) proof-done + 両 gate PASS** — 積分恒等式 `condOptGrowthInfty_eq_integral_infPast` (`:805`) + bstarInf 存在 `exists_infPast_condLogOptimal` (`:963`) + headline `stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty` (`:988`) すべて `@audit:ok` sorryAx-free。**Route T は固定無限過去最適戦略 `bstarInf` の AEP** = CT 16.5.1 の**漸近最適性 companion**であり、literal な growing-memory `S*_n` ではない。**framing fork (A) Route T 受容 / (B) Route M growing-memory 逐語 は pending user decision (判断ログ 4)**。R3-a (具体 pastFiltration instantiate = CT-faithful 化) + Route M は framing 判断待ち
+- [ ] R4 — 命名 (`@[entry_point]`) + 配線 (README/roadmap/facts) + 独立監査 📋 **framing 決定後**
 
 ## ゴール / Approach
 
@@ -107,31 +108,48 @@ Tikhonov 狭義凹正則化 (判断ログ 2 参照)。
 - **アーキテクチャ**: R2 は具体的な market-past filtration ではなく **抽象な増加フィルトレーション
   `ℱ : Filtration ℕ m0`** でパラメータ化 (判断ログ 3)。⟹ R3/R4 は `ℱ` の具体化を **新規 obligation** として負う。
 
-### R3 — real-valued SMB 級 AEP (proof-log: yes、独立 gateway)
+### R3 — real-valued SMB 級 AEP ✅ Route T proof-done (proof-log: yes、独立 gateway)
 
-`(1/n) log S*_n → W_∞` を Algoet–Cover sandwich で。下界 = `birkhoff_ergodic_ae` を k 次条件付き log-return に
-適用、上界 = 真の log-optimal 富 ≤ k 次近似富 + R2。sandwich close = Mathlib `tendsto_of_le_liminf_of_limsup_le`。
+`(1/n) log S*_n → W_∞`。当初は Algoet–Cover sandwich (下界 = Birkhoff / 上界 = pathwise wealth-ratio
+supermartingale) を想定していたが、**固定 bstarInf ルート (Route T) で sandwich を回避して closure**。
 
-**R3 在庫 (詳細 → `portfolio-winfty-inventory.md` "R3 inventory")、wall-risk = (b) 中程度 self-build、genuine gap なし**:
+**着地 (Route T = fixed-stationary W_∞ AEP、両 gate PASS、commit `3312d1fb` / `9a95fd95` / `da7370c1`)**:
 
-- **増加 filtration は in-project 既存** (判断ログ 3 の「新規・balloon」を覆す): `TwoSidedExtension/Backward.lean:84`
-  `pastFiltration : Filtration ℕ MeasurableSpace.pi` が増加 (`pastSigma_mono`、`Backward.lean:70`)、`⨆ k =
-  negPastSigma`。構造は **Fintype-free** ⟹ `α = Fin m → ℝ` に ~5 行で再述 or 直接再利用。R2 の `[StandardBorelSpace Ω]`
-  も具体空間 `∀ _ : ℤ, (Fin m → ℝ)` で `StandardBorelSpace.pi_countable` 発火。**deferral 分は real-alphabet の
-  ambient measure/shift のみ** = 親 Leg B 同様 `(μ, T, hT, hT_erg)` を regularity 仮説で受ける (theorem の核でない)。
-- **下界 = 親 Leg B `seqLogWealth_div_tendsto_stationary` (`StationaryMarket.lean:66`) が 2 行テンプレ**。fixed-b →
-  `bstar k` に一般化した新規 decl で `condOptGrowth k = W*_k` を得る。
-- **最大の未知 = pathwise 上界 (独立 gateway atom)**: R2 は stage-wise **条件付き (in-expectation) dominance** のみ提供
-  (`exists_condLogOptimalSeq` 3rd conjunct)。`limsup (1/n) log S*_n ≤ W*_k` へ変換するには **新規 wealth-ratio
-  supermartingale + Borel–Cantelli** (SMB `MRatioUp_le_sq_eventually` の portfolio 版、finite-alphabet 版は lift 不可)。
-  ~150–300 行見積。**gateway atom = `causalLogWealth_limsup_le_condOptGrowth` を solo `lean-implementer` に dispatch し
-  Ville/Doob + Borel–Cantelli で閉じるか壁判定** (loogle-0 単独で壁宣言しない、gateway-atom-first)。Barron/Breiman
-  一般 log-ratio AEP が要ると判明した場合のみ genuine wall (`@residual(wall:<slug>)` + audit-tags register)。
+- **gateway atom `condOptGrowthInfty_eq_integral_infPast` (`StationaryWinfty.lean:805`、@audit:ok sorryAx-free)**
+  = Route T の核。積分恒等式 `∫ causalLogReturn X bstarInf dμ = condOptGrowthInfty μ X bstar`。**Lévy upward
+  `Integrable.tendsto_ae_condExp` + DCT `tendsto_integral_of_dominated_convergence` で closure**。⟹ R3 在庫が
+  「解析の心臓・壁公算」とした **pathwise 上界 (wealth-ratio supermartingale) は固定 bstarInf ルートでは不要**と
+  実機判定 (壁でない、下記 壁リスク参照)。
+- **`exists_infPast_condLogOptimal` (`:963`、@audit:ok sorryAx-free)** = bstarInf 存在。R2 の
+  `exists_condLogOptimalSeq` を定数 filtration `Filtration.const ℕ (⨆ j, ℱ j)` に instantiate。
+- **headline `stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty` (`:988`、@audit:ok sorryAx-free)**
+  = 固定定常 AEP。Birkhoff + 上記恒等式 rewrite。dominance 仮説を内部で discharge した honest な
+  **無条件-modulo-regularity 形** (独立 honesty-auditor が load-bearing bundling 無し CONFIRMED、style PASS)。
+  **まだ `@[entry_point]` 無し** (framing 判断 pending のため、R4 で付与)。
 
-### R4 — 組立 + 配線 + 独立監査 (proof-log: no)
+#### framing fork — Route T vs Route M (**PENDING USER DECISION、pre-decide しない**)
 
-R1–R3 を CT 16.5.1 headline に組み、root import 登録 / README / roadmap / facts / 独立 `honesty-auditor` +
-`style-auditor`。headline を `@[entry_point]` + proof-done で `@audit:ok`。
+Route T が証明したのは **固定無限過去最適戦略 `bstarInf`** の AEP = CT 16.5.1 の**漸近最適性 companion**であり、
+literal な growing-memory `S*_n` (各時刻で i-past 最適 `bstar_i` を使う CT の定義) ではない。proof-pivot-advisor が
+「distinct wealth process / textbook-object strength diff」とフラグ。分岐:
+
+- **(A) Route T を CT 16.5.1 の形式化として受け入れ** (honest restate、blast radius ゼロ = R2 出力の外部 consumer
+  無し)。advisor 推奨 (proposal T+A)。**完成済** — R4 は命名 + 配線のみ。
+- **(B) Route M を追う = growing-memory `S*_n` 逐語**。**プロジェクト自身の SMB
+  `shannon_mcmillan_breiman_of_sandwich` (CT 16.8.1、`McMillanBreiman.lean:88`) が growing-block
+  `blockLogAvg = -(1/n) log P_n(X^n)` + Algoet–Cover sandwich で述べられている前例**と整合。ただし ~200–300 行の
+  delicate wealth-ratio supermartingale (`Submartingale.ae_tendsto_limitProcess` 経由、`MRatioUp_le_sq_eventually`
+  の SMB 版は block 尤度比で lift 不可 = 自作)、壁リスク残 (Barron/Breiman 一般形が要れば genuine wall)。
+
+これはユーザーの「完全形」ゴール解釈に依存する **方針分岐** ⟹ relay stop #2 で pause 中。判断ログ 4 が active entry。
+
+### R4 — 命名 + 配線 + 独立監査 (proof-log: no) **framing 決定後**
+
+**framing 決定後**に headline へ `@[entry_point]` 付与 + 配線。root import は既に登録済
+(`InformationTheory.lean:312`) ⟹ **import 追加は不要**。残る配線 = README (`docs/readme-theorems.txt` Ch.16) /
+roadmap (`docs/textbook-roadmap.md` Ch.16 行) / facts (`portfolio-facts.md` に 3 decl の sorryAx-free 再検証
+コマンド)。独立 `honesty-auditor` + `style-auditor` は Route T 3 decl で既に PASS (da7370c1)。
+(B) 採用時は Route M の supermartingale 実装が R4 前に追加着手対象となる。
 
 ## 壁リスク評価
 
@@ -144,23 +162,26 @@ R1–R3 を CT 16.5.1 headline に組み、root import 登録 / README / roadmap
   disintegration) で closure。crux (ℱk-可測 a.e.-定数 pull-out) のみ Mathlib 補題不在で ~35 行自作、他はすべて
   既存資産 (`condExp_ae_eq_integral_condExpKernel` / `integral_concaveOn_of_integrand_ae` /
   `continuousOn_of_dominated`)。
-- **R3 real-valued AEP**: **最リスク、但し在庫後 wall-risk = (b) 中程度 self-build (genuine gap なし)**。
-  finite SMB decl は lift 不可 (機械確認済) だが sandwich close (`tendsto_of_le_liminf_of_limsup_le`) + 下界
-  (Birkhoff テンプレ) + 増加 filtration (`TwoSidedExtension/Backward.lean:84` 既存) は wired。**残る唯一の
-  human-judgment 未知 = pathwise 上界** (`limsup ≤ W*_k`): wealth-ratio supermartingale + Borel–Cantelli の
-  ~150–300 行 self-build、gateway atom `causalLogWealth_limsup_le_condOptGrowth` で早期壁判定。Barron/Breiman
-  一般 log-ratio AEP が要ると判明した場合のみ新 wall slug。
-- **総評**: real-valued SMB 級 AEP が本計画の重心。fixed-b (親 Leg B) が Birkhoff だけで閉じたのに対し、
-  W_∞ は可測選択 + 単調収束 + sandwich の 3 段を要し格段に重い。
+- **R3 real-valued AEP (Route T)**: **CLOSED (not-a-wall)、fixed-stationary AEP proof-done**。R3 在庫が
+  「解析の心臓・壁公算」とした **pathwise 上界 (wealth-ratio supermartingale)** は、**固定 bstarInf ルートでは
+  condExp-martingale (`Integrable.tendsto_ae_condExp`) + DCT で閉じた (壁でない)** — sandwich の上界変換を
+  そもそも要さない (`condOptGrowthInfty_eq_integral_infPast` が積分恒等式で W_∞ を直接与える)。⟹ R3 在庫の
+  「唯一の human-judgment 未知」は Route T では解消。**残る supermartingale リスクは growing-memory 版 (Route M)
+  のみ** で、これは framing fork (B) 採用時に初めて発火する条件付き課題 (Barron/Breiman 一般形が要れば genuine
+  wall、`@residual(wall:<slug>)` + audit-tags register)。framing 判断待ちゆえ現時点で壁判定は保留。
+- **総評**: Route T により fixed-stationary AEP は 3 段 (可測選択 R1 + 単調収束 R2 + condExp 恒等式 R3) で完成。
+  growing-memory 逐語 (Route M) を追うか否かは framing fork = ユーザー判断依存 (判断ログ 4)。
 
 ## 撤退ライン
 
 - **R1/R2/R3 のいずれか**: 詰まった補題は signature を target 形のまま body を `sorry` +
   `@residual(plan:portfolio-stationary-woo-plan)` (slug = 本ファイル stem、整合)。**W_∞ / 可測選択 / 成長率極限を
   仮説で渡す load-bearing bundling は禁止** — retreat exit は `sorry` のみ。
-- **R3 が genuine Mathlib gap (real-valued SMB) と確定した場合**: analytic core を `sorry` +
-  新規 `@residual(wall:<name>)` で分離 (`docs/audit/audit-tags.md` register に追記)、組立骨格 (sandwich の
-  上下界を仮定した consumer) は救う。**積分核 / AEP 極限を `*Hypothesis` predicate に抱えさせる形は禁止**。
+- **Route M (growing-memory) を追い、supermartingale が genuine Mathlib gap (real-valued SMB / Barron–Breiman
+  一般 log-ratio AEP) と確定した場合**: analytic core を `sorry` + 新規 `@residual(wall:<name>)` で分離
+  (`docs/audit/audit-tags.md` register に追記)、組立骨格 (sandwich の上下界を仮定した consumer) は救う。
+  **積分核 / AEP 極限を `*Hypothesis` predicate に抱えさせる形は禁止**。Route T は本 gap を回避済ゆえ、この撤退は
+  framing fork (B) 採用時にのみ関係する。
 
 ## 正直性メモ (regularity precondition の性質)
 
@@ -183,9 +204,11 @@ R1–R3 を CT 16.5.1 headline に組み、root import 登録 / README / roadmap
 
 ## 完了時の配線
 
-- **root**: 新規 file (`Portfolio/StationaryWinfty.lean` 等、R4 で命名確定) の import を `InformationTheory.lean` に登録。
+- **root**: `Portfolio/StationaryWinfty.lean` の import は既に `InformationTheory.lean:312` に登録済 ⟹ **追加不要**。
 - **README / roadmap / facts**: `docs/readme-theorems.txt` Ch.16 節 / `docs/textbook-roadmap.md` Ch.16 行 /
-  `docs/shannon/portfolio-facts.md` に headline の sorryAx-free 再検証コマンドを追記。
+  `docs/shannon/portfolio-facts.md` に headline (framing 決定後の命名) + Route T 3 decl の sorryAx-free 再検証
+  コマンドを追記 (facts ledger 更新は R4 配線担当 / orchestrator の所掌、本 plan では machine fact を prose に
+  cache しない)。
 - **parent 同期**: 状態変化時は親 [`portfolio-operational-plan.md`](portfolio-operational-plan.md) の Leg B 完全形
   行を同期 (子が SoT、衝突時は親を子に合わせる)。
 
@@ -210,3 +233,14 @@ R1–R3 を CT 16.5.1 headline に組み、root import 登録 / README / roadmap
    balloon する」と見たが誤り — `TwoSidedExtension/Backward.lean:84` `pastFiltration : Filtration ℕ MeasurableSpace.pi`
    が既に増加 filtration を Fintype-free に提供 (`pastSigma_mono`)。instantiate は cheap (real-alphabet の ambient
    measure/shift のみ regularity 仮説で deferral、親 Leg B と同型)。R4 は from-scratch filtration build を再見積しないこと。
+4. **R3 framing fork — Route T 受容 (A) か growing-memory 逐語 (B) か = PENDING USER DECISION (active、pre-decide 禁止)**:
+   R3 は **Route T = 固定無限過去最適 `bstarInf` の fixed-stationary W_∞ AEP** を proof-done + 両 gate PASS で達成
+   (`stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty` @audit:ok sorryAx-free)。これは CT 16.5.1 の
+   **漸近最適性 companion** であり、literal な growing-memory `S*_n` (各時刻で i-past 最適 `bstar_i`) ではない —
+   proof-pivot-advisor が「distinct wealth process / textbook-object strength diff」とフラグ。**(A) Route T を
+   CT 16.5.1 の形式化として受容** (advisor 推奨、blast radius ゼロ = R2 出力に外部 consumer 無し、完成済で R4 は
+   命名 + 配線のみ) か、**(B) Route M = growing-memory `S*_n` 逐語を追う** (プロジェクト自身の SMB
+   `shannon_mcmillan_breiman_of_sandwich` (CT 16.8.1、`McMillanBreiman.lean:88`) が growing-block
+   `blockLogAvg = -(1/n) log P_n(X^n)` + Algoet–Cover sandwich で述べる前例と整合、ただし ~200–300 行の
+   wealth-ratio supermartingale 自作 + 壁リスク残) か。ユーザーの「完全形」ゴール解釈依存の方針分岐 ⟹ relay stop #2
+   で pause。**次アクションはユーザーの (A)/(B) 決定** — planner/implementer は pre-decide しない。
