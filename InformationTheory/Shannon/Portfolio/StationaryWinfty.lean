@@ -305,13 +305,13 @@ theorem exists_measurable_argmax_on_stdSimplex [Nonempty (Fin m)]
 end MeasurableArgmax
 
 /-!
-## Monotone convergence of the conditional-optimal growth rate (Cover–Thomas §16.5, R2)
+## Monotone convergence of the conditional-optimal growth rate (Cover–Thomas §16.5)
 
 For an increasing filtration `ℱ` of the market's past, the conditional log-optimal portfolio at
 stage `k` (past-`ℱ k`-measurable) has an expected growth `condOptGrowth k`. Conditioning on more
 past information increases the optimal growth, so `condOptGrowth` is monotone; bounded above by a
 market-regularity envelope, it converges to its supremum `condOptGrowthInfty = W_∞`. This sets up
-the definitions the Algoet–Cover sandwich (R3) consumes: `W_∞` is an increasing limit of
+the definitions the Algoet–Cover sandwich consumes: `W_∞` is an increasing limit of
 integrals `∫ log(bstar k · X) ∂μ`, each of which is a Birkhoff spatial mean.
 -/
 
@@ -342,16 +342,16 @@ noncomputable def condOptGrowthInfty (μ : Measure Ω) (X : Ω → Fin m → ℝ
 /-- Existence of a stagewise conditional log-optimal portfolio sequence: for each stage `k` there
 is a past-`ℱ k`-measurable simplex portfolio `bstar k` whose conditional growth dominates, in
 conditional expectation given `ℱ k`, that of every `ℱ k`-measurable simplex competitor `c`. This
-is the conditional (past-measurable) form of the R1 measurable-argmax gateway
+is the conditional (past-measurable) form of the measurable-argmax gateway
 `exists_measurable_argmax_on_stdSimplex`, applied to the conditional growth rate
 `b ↦ μ[log (b · X) | ℱ k]`. The `hpos`/`hint` hypotheses are market-regularity preconditions
 (positivity for the `log` domain, integrability of simplex log-returns).
 
-The remaining work is the conditional lift of the R1 gateway, with two analytic sub-blockers:
+The remaining work is the conditional lift of the gateway, with two analytic sub-blockers:
 (1) a version of the conditional growth rate `F_k ω b = (μ[log (b · X) | ℱ k]) ω` that is
 concave and continuous in `b` for a.e. `ω` under a single null set (the raw `condExp` gives only
 `b`-pointwise a.e. control; making it uniform in the continuum of `b` needs a regular conditional
-version / disintegration), so that R1 applies with ambient σ-algebra `ℱ k`; and
+version / disintegration), so that the gateway applies with ambient σ-algebra `ℱ k`; and
 (2) the pull-out identity `(μ[log (c · X) | ℱ k]) ω = F_k ω (c ω)` for `ℱ k`-measurable `c`, which
 turns the pointwise argmax of `bstar k` into the conditional dominance stated here.
 @residual(plan:portfolio-stationary-woo-plan) -/
@@ -373,7 +373,9 @@ theorem exists_condLogOptimalSeq (μ : Measure Ω) [IsProbabilityMeasure μ]
 information (larger `k`) can only increase the optimal expected growth. The `hdom` conditional
 optimality is a property of the constructed selection `bstar` (supplied by
 `exists_condLogOptimalSeq`), and monotonicity is derived from it via `integral_condExp` and
-`integral_mono_ae` — not assumed. -/
+`integral_mono_ae` — not assumed.
+
+@audit:ok -/
 theorem condOptGrowth_monotone (μ : Measure Ω) [IsProbabilityMeasure μ]
     (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) (bstar : ℕ → Ω → Fin m → ℝ)
     (hmeas : ∀ k, StronglyMeasurable[ℱ k] (bstar k))
@@ -401,7 +403,9 @@ theorem condOptGrowth_monotone (μ : Measure Ω) [IsProbabilityMeasure μ]
 
 /-- Boundedness above of the conditional-optimal expected growth, from a uniform expected-return
 bound `hUB` (a market-regularity/integrability precondition: expected simplex log-returns are
-bounded by a common constant). -/
+bounded by a common constant).
+
+@audit:ok -/
 theorem condOptGrowth_bddAbove (μ : Measure Ω) (X : Ω → Fin m → ℝ)
     (bstar : ℕ → Ω → Fin m → ℝ)
     (hsimplex : ∀ k ω, bstar k ω ∈ stdSimplex ℝ (Fin m))
@@ -414,14 +418,14 @@ theorem condOptGrowth_bddAbove (μ : Measure Ω) (X : Ω → Fin m → ℝ)
   rintro _ ⟨k, rfl⟩
   exact hC (bstar k) (hsimplex k) (hintb k)
 
-/-- **R2 (Cover–Thomas §16.5)**: the conditional-optimal expected growth converges monotonically to
-the infinite-past optimal growth `W_∞`. There is a stagewise conditional log-optimal portfolio
+/-- The conditional-optimal expected growth converges monotonically to the infinite-past optimal
+growth `W_∞` (Cover–Thomas §16.5). There is a stagewise conditional log-optimal portfolio
 sequence `bstar` (past-measurable, dominating all past-measurable competitors) whose expected
 growth `condOptGrowth` is monotone, bounded above, and converges to its supremum
 `condOptGrowthInfty = W_∞`. The monotone-convergence conclusion is proved, not assumed:
 monotonicity from the conditional optimality of `bstar`, boundedness from the regularity envelope
-`hUB`, convergence via `tendsto_atTop_ciSup`. R3 consumes
-`bstar`/`condOptGrowth`/`condOptGrowthInfty` for the Algoet–Cover sandwich `(1/n) log S*_n → W_∞`.
+`hUB`, convergence via `tendsto_atTop_ciSup`. The Algoet–Cover sandwich consumes
+`bstar`/`condOptGrowth`/`condOptGrowthInfty` for `(1/n) log S*_n → W_∞`.
 
 This is a genuine reduction: its own body has no `sorry`. It is conditional only on the existence
 of the conditional log-optimal selection `exists_condLogOptimalSeq`, whose measurable-selection core
