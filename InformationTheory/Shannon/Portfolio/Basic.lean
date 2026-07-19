@@ -82,13 +82,61 @@ theorem competitive_optimality (p : α → ℝ) (X : α → Fin m → ℝ) (bs b
         Finset.sum_le_sum (fun i _ ↦ mul_le_mul_of_nonneg_left (hKT i) (hb.1 i))
     _ = 1 := by simp only [mul_one]; exact hb.2
 
-/-- Theorem 16.2.2 (Cover–Thomas): the growth rate is concave in the portfolio.
-@residual(plan:portfolio-concavity) -/
+-- Concavity is preserved under finite sums; Mathlib lacks a `ConcaveOn.sum`, so we fold
+-- `ConcaveOn.add` over a `Finset` (base case = the constant `0` function).
+theorem concaveOn_finset_sum {E : Type*} [AddCommMonoid E] [Module ℝ E] {s : Set E}
+    (hs : Convex ℝ s) {ι : Type*} (f : ι → E → ℝ) :
+    ∀ (t : Finset ι), (∀ i ∈ t, ConcaveOn ℝ s (f i)) →
+      ConcaveOn ℝ s (fun x => ∑ i ∈ t, f i x) := by
+  intro t
+  induction t using Finset.cons_induction with
+  | empty => intro _; simpa using concaveOn_const (0 : ℝ) hs
+  | cons i t hit ih =>
+    intro hf
+    simp only [Finset.sum_cons]
+    exact (hf i (Finset.mem_cons_self i t)).add (ih fun j hj => hf j (Finset.mem_cons_of_mem hj))
+
+-- A single growth-rate summand `b ↦ p a · log (S_b(a))` is concave on the simplex: the wealth
+-- relative `S_·(a)` is a linear form, `log` is concave on `Ioi 0`, and `hpos` places the simplex
+-- inside the domain `{b | S_b(a) > 0}` where the composite is concave.
+omit [Fintype α] in
+theorem growthTerm_concaveOn (p : α → ℝ) (X : α → Fin m → ℝ) (a : α) (hpa : 0 ≤ p a)
+    (hpos : ∀ b ∈ stdSimplex ℝ (Fin m), 0 < wealthRelative X b a) :
+    ConcaveOn ℝ (stdSimplex ℝ (Fin m)) (fun b => p a * Real.log (wealthRelative X b a)) := by
+  -- The wealth relative `b ↦ S_b(a) = ∑ i, b i · X a i` is a linear form.
+  let g : (Fin m → ℝ) →ₗ[ℝ] ℝ :=
+    { toFun := fun b => wealthRelative X b a
+      map_add' := fun b c => by
+        simp only [wealthRelative, Pi.add_apply, add_mul, Finset.sum_add_distrib]
+      map_smul' := fun c b => by
+        simp only [wealthRelative, Pi.smul_apply, smul_eq_mul, RingHom.id_apply, Finset.mul_sum,
+          mul_assoc] }
+  have hgeval : ∀ b, g b = wealthRelative X b a := fun _ => rfl
+  -- `log` is concave on `Ioi 0`; compose with the linear form.
+  have hlog : ConcaveOn ℝ (Set.Ioi 0) Real.log := strictConcaveOn_log_Ioi.concaveOn
+  have hcomp : ConcaveOn ℝ (g ⁻¹' Set.Ioi 0) (Real.log ∘ g) := hlog.comp_linearMap g
+  -- The simplex sits inside the domain `{b | S_b(a) > 0}` by positivity.
+  have hsub : stdSimplex ℝ (Fin m) ⊆ g ⁻¹' Set.Ioi 0 := by
+    intro b hb
+    simp only [Set.mem_preimage, Set.mem_Ioi, hgeval]
+    exact hpos b hb
+  have hconc : ConcaveOn ℝ (stdSimplex ℝ (Fin m)) (Real.log ∘ g) :=
+    hcomp.subset hsub (convex_stdSimplex ℝ (Fin m))
+  -- Scale by the nonnegative weight `p a`.
+  have := hconc.smul hpa
+  simpa only [smul_eq_mul, Function.comp_apply, hgeval] using this
+
+/-- Theorem 16.2.2 (Cover–Thomas): the growth rate is concave in the portfolio. -/
 @[entry_point]
 theorem growthRate_concaveOn (p : α → ℝ) (X : α → Fin m → ℝ) (hp : p ∈ stdSimplex ℝ α)
     (hpos : ∀ a, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < wealthRelative X b a) :
     ConcaveOn ℝ (stdSimplex ℝ (Fin m)) (growthRate p X) := by
-  sorry
+  have key : ∀ a ∈ (Finset.univ : Finset α),
+      ConcaveOn ℝ (stdSimplex ℝ (Fin m)) (fun b => p a * Real.log (wealthRelative X b a)) :=
+    fun a _ => growthTerm_concaveOn p X a (hp.1 a) (fun b hb => hpos a b hb)
+  have h := concaveOn_finset_sum (convex_stdSimplex ℝ (Fin m))
+    (fun a b => p a * Real.log (wealthRelative X b a)) Finset.univ key
+  exact h
 
 /-- Theorem 16.2.1 (Cover–Thomas), reverse direction: a portfolio `bs` satisfying the
 Kuhn–Tucker condition is log-optimal (maximizes the growth rate on the simplex).
