@@ -23,7 +23,8 @@ and the sphere volume formula). This file imports the `Achievability*` discharge
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 9.1.1.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley,
+  2006. Theorem 9.1.1.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -35,17 +36,15 @@ open scoped ENNReal NNReal BigOperators Topology
 
 /-! ## Achievability -/
 
-/-- **AWGN achievability theorem**.
-
-For any rate `R < C = (1/2) log(1+P/N)` and target error probability `ε > 0`, there
-exists `N₀` such that for every block length `n ≥ N₀` there is an `AwgnCode` (output
-power ≤ `P`, measurable decoder) with `M ≥ ⌈exp(nR)⌉` messages whose per-message error
-probability is below `ε`.
+/-- The AWGN achievability theorem: for any rate `R < C = (1/2) log(1+P/N)` and target
+error probability `ε > 0`, there exists `N₀` such that for every block length `n ≥ N₀`
+there is an `AwgnCode` (output power ≤ `P`, measurable decoder) with `M ≥ ⌈exp(nR)⌉`
+messages whose per-message error probability is below `ε`.
 
 The body is a direct call to `isAwgnTypicalityHypothesis`, a 580-line genuine assembly
 (sphere packing, Gaussian random codebook, the three continuous-AEP bounds, and the
 union bound). Its only hypotheses are regularity preconditions (`0 < P`, `(N : ℝ) ≠ 0`,
-measurability); the name is a historical artefact, not a load-bearing `*Hypothesis`
+measurability); the name is a historical artifact, not a load-bearing `*Hypothesis`
 predicate.
 
 @audit:ok -/

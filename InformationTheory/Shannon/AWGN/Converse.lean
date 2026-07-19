@@ -31,14 +31,15 @@ The proof follows the standard route:
   `perLetterXLaw ⊗ₘ awgnChannel`. The bridge is then obtained from the generic
   continuous-channel mutual-information chain rule
   (`ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`) together with the
-  translation invariance of the AWGN fibre entropy.
+  translation invariance of the AWGN fiber entropy.
 * The mixture output law `perLetterYLaw` has a real density bounded above by the
   Gaussian peak and below by a single component, which gives the quadratic envelope
   used to prove integrability of its log-density.
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 9.1.2.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley,
+  2006. Theorem 9.1.2.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -208,7 +209,7 @@ private lemma integral_diffEntropy_awgnChannel_eq_noise
     (∫ x, InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
         ∂(perLetterXLaw h_meas c i))
       = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
-  -- integrand is the constant `h(𝒩(0,N))` (mean translation invariance of fibre entropy)
+  -- integrand is the constant `h(𝒩(0,N))` (mean translation invariance of fiber entropy)
   have h_const : ∀ x,
       InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
         = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
@@ -501,7 +502,7 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
 /-- The per-letter mutual information equals the output differential entropy minus the
 input-independent noise entropy: `I(Xᵢ; Yᵢ).toReal = h(Yᵢ) − h(𝒩(0, N))`, via the
 generic continuous-channel mutual-information chain rule and the AWGN
-translation invariance of the fibre entropy.
+translation invariance of the fiber entropy.
 @audit:ok -/
 theorem awgn_per_letter_mi_bridge_genuine
     {P : ℝ} {N : ℝ≥0} (hN : (N : ℝ) ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
@@ -522,7 +523,7 @@ theorem awgn_per_letter_mi_bridge_genuine
     intro x
     rw [hW_def, awgnChannel_apply]
     exact (gaussianReal_absolutelyContinuous x hN_NN).ae_le (rnDeriv_gaussianReal x N)
-  -- fibre / output / joint absolute continuities for the mixture input
+  -- fiber / output / joint absolute continuities for the mixture input
   have hW_ac : ∀ x, W x ≪ volume := by
     intro x; rw [hW_def, awgnChannel_apply]; exact gaussianReal_absolutelyContinuous x hN_NN
   have hWx_q : ∀ x, W x ≪ q := by
@@ -532,7 +533,7 @@ theorem awgn_per_letter_mi_bridge_genuine
     rw [show p.prod q = p ⊗ₘ (Kernel.const ℝ q) from (Measure.compProd_const).symm]
     exact Measure.absolutelyContinuous_compProd_right_iff.mpr
       (Filter.Eventually.of_forall (fun x ↦ by simpa only [Kernel.const_apply] using hWx_q x))
-  -- ★ fibre log-density integrability against the joint (proxy form, mixture input)
+  -- ★ fiber log-density integrability against the joint (proxy form, mixture input)
   have h_int_fibre :
       Integrable (fun z : ℝ × ℝ ↦ Real.log (g z).toReal) (p ⊗ₘ W) := by
     -- the joint integrand decomposes everywhere as `c₀ + c₁·(z.2 − z.1)²`
@@ -550,7 +551,7 @@ theorem awgn_per_letter_mi_bridge_genuine
         ((measurable_snd.sub measurable_fst).pow_const 2).aestronglyMeasurable
       rw [Measure.integrable_compProd_iff h_aesm]
       refine ⟨Filter.Eventually.of_forall (fun x ↦ ?_), ?_⟩
-      · -- per-fibre `Integrable (fun y => (y − x)²) (W x = gaussianReal x N)`
+      · -- per-fiber `Integrable (fun y => (y − x)²) (W x = gaussianReal x N)`
         have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal x N) := by
           exact (memLp_id_gaussianReal (μ := x) (v := N) 1).integrable (by norm_num)
         have h_sq2 : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal x N) :=
@@ -559,7 +560,7 @@ theorem awgn_per_letter_mi_bridge_genuine
           funext y; ring
         rw [hW_def, awgnChannel_apply, hrw]
         exact ((h_sq2.sub (h_id.const_mul (2 * x))).add (integrable_const (x ^ 2)))
-      · -- per-fibre L¹-norm integral is the constant `N` (nonneg integrand, second moment)
+      · -- per-fiber L¹-norm integral is the constant `N` (nonneg integrand, second moment)
         have h_norm : (fun x ↦ ∫ y, ‖(y - x) ^ 2‖ ∂(W x)) = fun _ ↦ (N : ℝ) := by
           funext x
           have hnn : (fun y ↦ ‖(y - x) ^ 2‖) = fun y ↦ (y - x) ^ 2 := by
@@ -594,7 +595,7 @@ theorem awgn_per_letter_mi_bridge_genuine
 
 /-! ## The converse rate bound -/
 
-/-- **AWGN converse theorem**. For every code with
+/-- The AWGN converse theorem: for every code with
 `M ≥ 2` messages, block length `n`, output-power constraint `P` and average error
 probability `Pe`, the rate satisfies
 
