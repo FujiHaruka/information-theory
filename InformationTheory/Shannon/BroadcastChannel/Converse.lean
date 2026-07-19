@@ -206,6 +206,103 @@ theorem bc_converse_message_level
 
 /-! ## Receiver-1 single-letterization (Csiszár-sum half, bound (b)) -/
 
+omit [Fintype β₂] [MeasurableSingletonClass β₂] in
+private lemma bc_input_singleletterize_lhs_noise_collapse
+    [NeZero M₂]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (W₂ : Ω → Fin M₂) (Xs : Fin n → Ω → α) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
+    (hW₂ : Measurable W₂) (hXs : ∀ i, Measurable (Xs i))
+    (hY₁s : ∀ i, Measurable (Y₁s i)) (hY₂s : ∀ i, Measurable (Y₂s i))
+    (h_memo : ∀ i : Fin n,
+      IsMarkovChain μ
+        (fun ω ↦ (W₂ ω,
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+           ((fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω),
+            (fun (j : {j : Fin n // j ≠ i}) ↦ Y₂s j.val ω)))))
+        (Xs i) (Y₁s i)) :
+    MeasureFano.condEntropy μ (fun ω j ↦ Y₁s j ω) (fun ω ↦ (W₂ ω, fun j ↦ Xs j ω))
+      = ∑ i : Fin n, MeasureFano.condEntropy μ (Y₁s i) (Xs i) := by
+  classical
+  set Xpi : Ω → (Fin n → α) := fun ω j ↦ Xs j ω with hXpi_def
+  have hXpi : Measurable Xpi := measurable_pi_iff.mpr hXs
+  have hY₁pre : ∀ i : Fin n, Measurable
+      (fun ω (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω) := fun i ↦
+    measurable_pi_iff.mpr fun j ↦ hY₁s _
+  rw [condEntropy_pi_chain_rule_aux μ (fun ω ↦ (W₂ ω, Xpi ω)) Y₁s (hW₂.prodMk hXpi) hY₁s]
+  refine Finset.sum_congr rfl fun i _ ↦ ?_
+  -- Goal: `H(Y₁ᵢ | ((W₂, Xⁿ), Y₁^{<i})) = H(Y₁ᵢ | Xᵢ)`.
+  -- Extract equiv splitting `Xⁿ ↔ (Xᵢ, X^{≠i})`.
+  let eX : (Fin n → α) ≃ᵐ α × ({j : Fin n // j ≠ i} → α) :=
+    ChannelCodingConverseGeneral.measurableEquivExtract (β := α) i
+  have hext : (fun ω ↦ eX.symm (Xs i ω,
+      fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω)) = Xpi := by
+    funext ω j
+    change eX.symm (Xs i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω) j = Xs j ω
+    by_cases hj : j = i
+    · subst hj
+      simp [eX, ChannelCodingConverseGeneral.measurableEquivExtract,
+        MeasurableEquiv.piEquivPiSubtypeProd, MeasurableEquiv.funUnique,
+        MeasurableEquiv.prodCongr]
+    · simp [eX, ChannelCodingConverseGeneral.measurableEquivExtract,
+        MeasurableEquiv.piEquivPiSubtypeProd, MeasurableEquiv.funUnique,
+        MeasurableEquiv.prodCongr, hj]
+  -- Markov `Y₁ᵢ ⫫ (X^{≠i}, (W₂, Y₁^{<i})) | Xᵢ`, projected from `h_memo i` and swapped.
+  have hblock : Measurable (fun ω ↦ (W₂ ω,
+      ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+       ((fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω),
+        (fun (j : {j : Fin n // j ≠ i}) ↦ Y₂s j.val ω))))) :=
+    hW₂.prodMk
+      ((measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hXs j.val).prodMk
+      ((measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hY₁s j.val).prodMk
+        (measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hY₂s j.val)))
+  have hRESTmeas : Measurable (fun ω ↦
+      ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+       (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω))) :=
+    (measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hXs j.val).prodMk
+      (hW₂.prodMk (hY₁pre i))
+  have hf2 : Measurable (fun (p : Fin M₂ × ((({j : Fin n // j ≠ i} → α)) ×
+        ((({j : Fin n // j ≠ i} → β₁)) × ({j : Fin n // j ≠ i} → β₂)))) ↦
+      (p.2.1,
+       (p.1, fun (k : Fin i.val) ↦ p.2.2.1 ⟨⟨k.val, k.isLt.trans i.isLt⟩,
+         by intro h; have hval : k.val = i.val := congrArg Fin.val h
+            have hk := k.isLt; omega⟩))) :=
+    (measurable_fst.comp measurable_snd).prodMk
+      (measurable_fst.prodMk (measurable_pi_iff.mpr fun k ↦
+        (measurable_pi_apply _).comp (measurable_fst.comp (measurable_snd.comp measurable_snd))))
+  have hml := isMarkovChain_map_left μ _ (Xs i) (Y₁s i) hblock (hXs i) (hY₁s i) hf2 (h_memo i)
+  have hml' : IsMarkovChain μ (fun ω ↦
+      ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+       (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω)))
+      (Xs i) (Y₁s i) := hml
+  have hmkv := isMarkovChain_swap μ _ (Xs i) (Y₁s i) hRESTmeas (hXs i) (hY₁s i) hml'
+  have hd := condEntropy_drop_irrelevant_of_markov μ (Y₁s i) (Xs i) _
+    (hY₁s i) (hXs i) hRESTmeas hmkv
+  -- Reshape the chain-rule conditioner to `(Xᵢ, (X^{≠i}, (W₂, Y₁^{<i})))`, then drop.
+  let Efull : α × ((({j : Fin n // j ≠ i} → α)) × (Fin M₂ × (Fin i.val → β₁)))
+        ≃ᵐ (Fin M₂ × (Fin n → α)) × (Fin i.val → β₁) :=
+    (MeasurableEquiv.prodAssoc.symm.trans
+      (eX.symm.prodCongr (MeasurableEquiv.refl (Fin M₂ × (Fin i.val → β₁))))).trans
+      (MeasurableEquiv.prodAssoc.symm.trans
+        (MeasurableEquiv.prodComm.prodCongr (MeasurableEquiv.refl (Fin i.val → β₁))))
+  have hreshape : (fun ω ↦ ((W₂ ω, Xpi ω),
+        fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
+      = fun ω ↦ Efull (Xs i ω,
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+           (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω))) := by
+    funext ω
+    have hx := congrFun hext ω
+    rw [show Efull (Xs i ω,
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+           (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω)))
+        = ((W₂ ω, eX.symm (Xs i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω)),
+           fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω) from rfl, hx]
+  rw [hreshape, condEntropy_measurableEquiv_comp μ (Y₁s i) (hY₁s i)
+    (fun ω ↦ (Xs i ω,
+      ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+       (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω))))
+    ((hXs i).prodMk hRESTmeas) Efull]
+  exact hd
+
 /-- **BC converse, receiver-1 input-level single-letterization** (Route B, term-by-term
 degradedness): under a memoryless broadcast channel with the conditioning message `W₂`
 upstream of the channel and physical degradedness `X → Y₁ → Y₂`, the conditional block
@@ -296,81 +393,8 @@ theorem bc_input_singleletterize
     condEntropy_pi_chain_rule_aux μ W₂ Y₁s hW₂ hY₁s
   -- LHS noise collapse `H(Y₁ⁿ | (W₂, Xⁿ)) = ∑ᵢ H(Y₁ᵢ | Xᵢ)`.
   have hLHSnoise : MeasureFano.condEntropy μ Y₁pi (fun ω ↦ (W₂ ω, Xpi ω))
-      = ∑ i : Fin n, MeasureFano.condEntropy μ (Y₁s i) (Xs i) := by
-    rw [condEntropy_pi_chain_rule_aux μ (fun ω ↦ (W₂ ω, Xpi ω)) Y₁s (hW₂.prodMk hXpi) hY₁s]
-    refine Finset.sum_congr rfl fun i _ ↦ ?_
-    -- Goal: `H(Y₁ᵢ | ((W₂, Xⁿ), Y₁^{<i})) = H(Y₁ᵢ | Xᵢ)`.
-    -- Extract equiv splitting `Xⁿ ↔ (Xᵢ, X^{≠i})`.
-    let eX : (Fin n → α) ≃ᵐ α × ({j : Fin n // j ≠ i} → α) :=
-      ChannelCodingConverseGeneral.measurableEquivExtract (β := α) i
-    have hext : (fun ω ↦ eX.symm (Xs i ω,
-        fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω)) = Xpi := by
-      funext ω j
-      change eX.symm (Xs i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω) j = Xs j ω
-      by_cases hj : j = i
-      · subst hj
-        simp [eX, ChannelCodingConverseGeneral.measurableEquivExtract,
-          MeasurableEquiv.piEquivPiSubtypeProd, MeasurableEquiv.funUnique,
-          MeasurableEquiv.prodCongr]
-      · simp [eX, ChannelCodingConverseGeneral.measurableEquivExtract,
-          MeasurableEquiv.piEquivPiSubtypeProd, MeasurableEquiv.funUnique,
-          MeasurableEquiv.prodCongr, hj]
-    -- Markov `Y₁ᵢ ⫫ (X^{≠i}, (W₂, Y₁^{<i})) | Xᵢ`, projected from `h_memo i` and swapped.
-    have hblock : Measurable (fun ω ↦ (W₂ ω,
-        ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
-         ((fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω),
-          (fun (j : {j : Fin n // j ≠ i}) ↦ Y₂s j.val ω))))) :=
-      hW₂.prodMk
-        ((measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hXs j.val).prodMk
-        ((measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hY₁s j.val).prodMk
-          (measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hY₂s j.val)))
-    have hRESTmeas : Measurable (fun ω ↦
-        ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
-         (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω))) :=
-      (measurable_pi_iff.mpr fun (j : {j : Fin n // j ≠ i}) ↦ hXs j.val).prodMk
-        (hW₂.prodMk (hY₁pre i))
-    have hf2 : Measurable (fun (p : Fin M₂ × ((({j : Fin n // j ≠ i} → α)) ×
-          ((({j : Fin n // j ≠ i} → β₁)) × ({j : Fin n // j ≠ i} → β₂)))) ↦
-        (p.2.1,
-         (p.1, fun (k : Fin i.val) ↦ p.2.2.1 ⟨⟨k.val, k.isLt.trans i.isLt⟩,
-           by intro h; have hval : k.val = i.val := congrArg Fin.val h
-              have hk := k.isLt; omega⟩))) :=
-      (measurable_fst.comp measurable_snd).prodMk
-        (measurable_fst.prodMk (measurable_pi_iff.mpr fun k ↦
-          (measurable_pi_apply _).comp (measurable_fst.comp (measurable_snd.comp measurable_snd))))
-    have hml := isMarkovChain_map_left μ _ (Xs i) (Y₁s i) hblock (hXs i) (hY₁s i) hf2 (h_memo i)
-    have hml' : IsMarkovChain μ (fun ω ↦
-        ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
-         (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω)))
-        (Xs i) (Y₁s i) := hml
-    have hmkv := isMarkovChain_swap μ _ (Xs i) (Y₁s i) hRESTmeas (hXs i) (hY₁s i) hml'
-    have hd := condEntropy_drop_irrelevant_of_markov μ (Y₁s i) (Xs i) _
-      (hY₁s i) (hXs i) hRESTmeas hmkv
-    -- Reshape the chain-rule conditioner to `(Xᵢ, (X^{≠i}, (W₂, Y₁^{<i})))`, then drop.
-    let Efull : α × ((({j : Fin n // j ≠ i} → α)) × (Fin M₂ × (Fin i.val → β₁)))
-          ≃ᵐ (Fin M₂ × (Fin n → α)) × (Fin i.val → β₁) :=
-      (MeasurableEquiv.prodAssoc.symm.trans
-        (eX.symm.prodCongr (MeasurableEquiv.refl (Fin M₂ × (Fin i.val → β₁))))).trans
-        (MeasurableEquiv.prodAssoc.symm.trans
-          (MeasurableEquiv.prodComm.prodCongr (MeasurableEquiv.refl (Fin i.val → β₁))))
-    have hreshape : (fun ω ↦ ((W₂ ω, Xpi ω),
-          fun (j : Fin i.val) ↦ Y₁s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
-        = fun ω ↦ Efull (Xs i ω,
-            ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
-             (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω))) := by
-      funext ω
-      have hx := congrFun hext ω
-      rw [show Efull (Xs i ω,
-            ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
-             (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω)))
-          = ((W₂ ω, eX.symm (Xs i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω)),
-             fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω) from rfl, hx]
-    rw [hreshape, condEntropy_measurableEquiv_comp μ (Y₁s i) (hY₁s i)
-      (fun ω ↦ (Xs i ω,
-        ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
-         (W₂ ω, fun (k : Fin i.val) ↦ Y₁s ⟨k.val, k.isLt.trans i.isLt⟩ ω))))
-      ((hXs i).prodMk hRESTmeas) Efull]
-    exact hd
+      = ∑ i : Fin n, MeasureFano.condEntropy μ (Y₁s i) (Xs i) :=
+    bc_input_singleletterize_lhs_noise_collapse μ W₂ Xs Y₁s Y₂s hW₂ hXs hY₁s hY₂s h_memo
   -- RHS per-term as a conditional-entropy difference (noise collapses to `H(Y₁ᵢ | Xᵢ)`).
   have hRHS : ∀ i : Fin n,
       (condMutualInfo μ (Xs i) (Y₁s i)
