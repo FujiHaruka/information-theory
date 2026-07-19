@@ -14,7 +14,7 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **Ch.16 "Information Theo
 - [x] Leg A — AO-iid (operational 漸近最適性、CT §16.3 Thm 16.3.1) — proof-done sorryAx-free + @audit:ok
 - [x] Leg C — side-info & growth rate (`ΔW ≤ I(X;Y)`、CT §16.4 Thm 16.4.1) — proof-done + @audit:ok（署名 honesty 修正）
 - [x] Leg B — stationary market fixed-b (定常エルゴード成長率収束 + dominance、CT §16.5) — proof-done + @audit:ok
-- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — **🚧 R1+R2 proof-done + R3 Route T (fixed-stationary AEP) proof-done + @audit:ok、framing fork pending (Route T 受容 / Route M 逐語) + R4 命名·配線残** → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
+- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — **🚧 (B) Route M (growing-memory `S*_n` 逐語) 採択。R1+R2+R3(Route T 踏み台) proof-done + Route M gateway `condKuhnTucker_infPast` 非壁確定 @audit:ok、R3-M 組立 (supermartingale + Birkhoff + sandwich) + R3-a + R4 残** → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
 - [x] Leg D — Cover universal portfolio (regret bound、CT §16.7) — proof-done sorryAx-free + @audit:ok（**not-a-wall 判明**）
 
 ## Closure summary
@@ -59,7 +59,7 @@ theorem sideInfo_growthRate_increment_le_mutualInfo
 必須**であり、KT bundling で代替できない。独立 `honesty-auditor` が check 4 (増分不等式が仮説から semantic follow、
 coarse/fine ミスマッチ・向き逆転無し) を含め PASS で `@audit:ok`。
 
-## Leg B 完全形 (W_∞ AEP) — 🚧 R1+R2+R3(Route T) proof-done、framing fork pending + R4 残
+## Leg B 完全形 (W_∞ AEP) — 🚧 (B) Route M 採択、R1+R2+R3(Route T 踏み台)+gateway proof-done、R3-M 組立 + R4 残
 
 fixed-b core (固定 rebalance portfolio の成長率収束 + KT dominance) は proof-done。**CT 16.5.1 完全形** =
 log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | X_{-1..−k}) ↑ W_∞`) + AEP `(1/n) log S*_n → W_∞`
@@ -74,12 +74,16 @@ log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | 
 - **R3 = real-valued SMB 級 AEP → Route T (fixed-stationary W_∞ AEP) proof-done + 両 gate PASS**
   (`condOptGrowthInfty_eq_integral_infPast` / `exists_infPast_condLogOptimal` / headline
   `stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty`、すべて `@audit:ok` sorryAx-free)。R3 在庫が
-  壁公算とした pathwise wealth-ratio supermartingale は **固定 bstarInf ルートでは condExp-martingale + DCT で
-  回避** (壁でない、子 plan 壁リスク参照)。**⚠ framing fork = PENDING USER DECISION**: Route T は CT 16.5.1 の
-  漸近最適性 companion であり literal な growing-memory `S*_n` ではない。**(A) Route T 受容** (advisor 推奨、完成済) /
-  **(B) Route M = growing-memory 逐語追加** (SMB `shannon_mcmillan_breiman_of_sandwich` 前例と整合、supermartingale
-  自作 + 壁リスク残) の分岐。子 plan 判断ログ 4 が SoT。
-- 残る **R4 (命名 `@[entry_point]` + README/roadmap/facts 配線)** は framing 決定後。root import は登録済。
+  壁公算とした pathwise wealth-ratio supermartingale は固定 bstarInf ルートでは condExp-martingale + DCT で回避
+  (壁でない)。**framing fork 解決 → (B) Route M (growing-memory `S*_n` 逐語) 採択** (ユーザー判断)。⟹ Route T は
+  **踏み台**として残置し Route M の下界/極限同定に再利用。
+- **Route M gateway `condKuhnTucker_infPast` 非壁確定** (proof-done sorryAx-free @audit:ok、
+  `StationaryWinfty.lean:1089`、commit `337ed270` → gates `1895ead4`) — R2 の**加法的** dominance を wealth-ratio
+  supermartingale が要する**乗法的** one-step 上界に変換する crux を凸摂動一次条件 + setIntegral DCT で closure
+  (κ_ω 還元不要)。残 = R3-M 組立 (supermartingale limsup 上界 / Birkhoff liminf 下界 / sandwich) + R3-a 具体化 + R4。
+  残リスクは supermartingale 組立の shift-past coherence 1 点。子 plan 判断ログ 4 / R3 節が SoT。
+- 残る **R4 (growing-memory headline 命名 `@[entry_point]` + README/roadmap/facts 配線)** は R3-M 組立後。root
+  import は登録済。
 
 要件:
 
