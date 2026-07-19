@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.WynerZiv.Achievability.Decomposition
 
 /-!
-# Wyner–Ziv achievability — source transport and distortion bridge (Legs A–D)
+# Wyner–Ziv achievability — source transport and distortion bridge
 -/
 
 namespace InformationTheory.Shannon
@@ -21,33 +21,33 @@ variable {α β γ U : Type*}
 
 /-! ### Two-ambient WZ-joint regularity construction
 
-The per-`n` binned code (D3) reduces the WZ error to closed error-event atoms that each
+The per-`n` binned code reduces the WZ error to closed error-event atoms that each
 consume an i.i.d. ambient plus a *regularity bundle* (measurability / `iIndepFun` /
 `IdentDistrib` / marginal positivity / marginal identities). This section supplies those
-bundles from D3's covering data (`qStar` / `κ'`), for the two ambients the error
+bundles from the covering data (`qStar` / `κ'`), for the two ambients the error
 decomposition runs on:
 
 * the covering ambient `rdAmbient qStar` on `ℕ → ({x // 0 < P_X x} × Fin k)`
   (`iidXs` = source, `iidYs` = covering codeword `U`) drives the covering-acceptance
-  gateway atom `wz_covering_sideInfo_mass_ge` (instantiated with the source in the
+  mass bound `wz_covering_sideInfo_mass_ge` (instantiated with the source in the
   strong-typicality role and `U` in the conditioning role) and the covering-failure
-  integral `wz_covering_failure_prob_le` (S5a);
+  integral `wz_covering_failure_prob_le`;
 * the side-information ambient `rdAmbient (wzSideInfoMarginal P_XY κ')` on
   `ℕ → (Fin k × {y // 0 < P_Y y})` (`iidXs` = covering codeword `U`, `iidYs` = side
   information `Y`) drives the per-codeword mass bound `wz_covering_codeword_sideInfo_mass_le`
-  (D2) and the codebook-confusion integral `wz_codebook_confusion_expectation_le` (S5b).
+  and the codebook-confusion integral `wz_codebook_confusion_expectation_le`.
 
 The first block gives a generic `rdAmbient`-level regularity API (reusable for either
 ambient); the second constructs the `(U, Y)`-marginal pmf `wzSideInfoMarginal` on the
 positive-`Y`-marginal subtype together with its simplex membership and full support (the
-covering side already receives `hqStar_mem` / `hqStar_pos` as D3 hypotheses). No
+covering side already receives `hqStar_mem` / `hqStar_pos` as hypotheses). No
 error-probability or decoder-correctness statement is produced here — the deliverable is
 pure regularity, consumed downstream by the distortion-decomposition bridge. -/
 
 
 /-! ### Source-measure change of variables `α' → α`
 
-The covering `LossyCode` (D3 hypothesis `hcov₁`) measures its block distortion under the
+The covering `LossyCode` (hypothesis `hcov₁`) measures its block distortion under the
 i.i.d. covering ambient `(rdAmbient qStar).map (iidXs 0)` on the source-support subtype
 `α' := {x // 0 < P_X x}`, whereas the Wyner–Ziv conclusion measures the lifted code under
 `Measure.pi P_XY` on `α × β`. This block reconciles the *source* side of that change of
@@ -57,7 +57,7 @@ support the covering `X`-marginal singleton is `∑_u qStar(⟨a,·⟩, u) = ∑
 `hqStar_eq` and `hκ'sum`); off the support both sides carry zero mass. This is pure
 source-measure transport — no decoder, error event, or distortion function enters — the
 source-measure companion of the null-set decoder transport
-`wz_expectedBlockDistortion_source_agree` (S2). -/
+`wz_expectedBlockDistortion_source_agree`. -/
 
 /-- The covering ambient's `X`-marginal, pushed to the full alphabet `α` by `Subtype.val`,
 agrees with the source `X`-marginal `P_XY.map Prod.fst` on every singleton. -/
@@ -111,7 +111,7 @@ private lemma wz_covering_source_marginal_real_singleton
 /-- Source-measure change of variables `α' → α`. The covering ambient's `X`-marginal, transported
 from the support subtype `α'` to the full alphabet `α` by `Subtype.val`, equals the source
 `X`-marginal `P_XY.map Prod.fst`. This is the source-side half of the lift `α' → α`; the decoder
-side is handled null-set-wise by `wz_expectedBlockDistortion_source_agree` (S2). No decoder /
+side is handled null-set-wise by `wz_expectedBlockDistortion_source_agree`. No decoder /
 error-probability content enters — pure source-measure transport. -/
 private lemma wz_covering_source_measure_map_val_eq
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -142,19 +142,19 @@ private lemma wz_covering_source_measure_map_val_eq
   simp only [Measure.real] at h
   exact (ENNReal.toReal_eq_toReal_iff' (measure_ne_top _ _) (measure_ne_top _ _)).mp h
 
-/-! ### Steps 3–7 — the distortion-decomposition bridge
+/-! ### The distortion-decomposition bridge
 
 The bridge that the derandomize + squeeze glue consumes: it decomposes the Wyner–Ziv code's
 actual expected block distortion into a good-event proxy plus `distortionMax · Pr[error]`,
 mirroring the rate-distortion `source_avg_distortion_le_simpler`
 (`AchievabilityAsymptoticFailureDecay.lean`) but for the bin conditional-typicality decoder
-(`wzBinTypicalDecoder`, S4) threaded through `wzCodeOfCoveringBinning` (S3).
+(`wzBinTypicalDecoder`) threaded through `wzCodeOfCoveringBinning`.
 
 * `wz_expectedBlockDistortion_le_of_badSet` — the generic, decoder-agnostic
   measure-theoretic decomposition (the reusable analytic core; sorry-free).
 * `wz_covering_binning_distortion_decomp` — the specialization to the covering+binning
   code, splitting `Pr[error]` into the covering-distortion-failure event `E1` and the
-  bin-decoder confusion event `E2` (the shape the squeeze glue bounds via S5a/S5b/D2).
+  bin-decoder confusion event `E2` (the shape the squeeze glue bounds).
 -/
 
 /-- Codebook-fixed distortion decomposition for a Wyner–Ziv code. The bin-decoder analogue of the
@@ -163,8 +163,8 @@ of source blocks, and any proxy value `P ≥ 0` such that outside `B` the empiri
 is at most `P`, the source-averaged block distortion decomposes as `P + distortionMax d · Pr[B]`.
 
 This is the reusable measure-theoretic core of the Wyner–Ziv distortion analysis. It is
-decoder-agnostic — it applies verbatim to the bin conditional-typicality decoder (S4) threaded
-through `wzCodeOfCoveringBinning` (S3) — so the bin-decoder specifics enter only when `B` and `P`
+decoder-agnostic — it applies verbatim to the bin conditional-typicality decoder threaded
+through `wzCodeOfCoveringBinning` — so the bin-decoder specifics enter only when `B` and `P`
 are instantiated (`wz_covering_binning_distortion_decomp`). Sorry-free. -/
 lemma wz_expectedBlockDistortion_le_of_badSet {M n : ℕ}
     (c : WynerZivCode M n α β γ) (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
@@ -232,8 +232,8 @@ lemma wz_expectedBlockDistortion_le_of_badSet {M n : ℕ}
   exact h_int_mono
 
 /-- Wyner–Ziv covering + binning distortion-decomposition bridge. For the covering+binning
-Wyner–Ziv code `wzCodeOfCoveringBinning c₁ f qf.2 (bin decoder)` (S3 assembled with the bin
-conditional-typicality decoder S4), the source-averaged actual block distortion decomposes as
+Wyner–Ziv code `wzCodeOfCoveringBinning c₁ f qf.2 (bin decoder)` (assembled with the bin
+conditional-typicality decoder), the source-averaged actual block distortion decomposes as
 
 ```
 𝔼[dⁿ]  ≤  P  +  distortionMax dα' · ( Pr[E1] + Pr[E2] )
@@ -250,15 +250,15 @@ where the two error events over the source blocks `Fin n → α' × β` are
 Outside `E1 ∪ E2` the decoder recovers the true covering codeword, so the actual
 reconstruction *equals* the ideal one and its block distortion is `≤ P`; the decomposition
 is then the generic `wz_expectedBlockDistortion_le_of_badSet` plus a union bound. This is
-the shape the derandomize + squeeze glue (Leg D) consumes: it bounds `Pr[E1]` by the
-covering-distortion typicality (`hfeas` + S5a `wz_covering_failure_prob_le`) and `Pr[E2]` by
-the codebook-restricted confusion exponent (S5b `wz_codebook_confusion_expectation_le`, fed
-D2 `wz_covering_codeword_sideInfo_mass_le` + (B) `wzIndexBinningMeasure_collision`), with the
-two-ambient source ↔ codebook identification of Leg A.
+the shape the derandomize + squeeze glue consumes: it bounds `Pr[E1]` by the
+covering-distortion typicality (`hfeas` + `wz_covering_failure_prob_le`) and `Pr[E2]` by
+the codebook-restricted confusion exponent (`wz_codebook_confusion_expectation_le`, fed
+`wz_covering_codeword_sideInfo_mass_le` + `wzIndexBinningMeasure_collision`), with the
+two-ambient source ↔ codebook identification.
 
 Non-bundled: the distortion-shape reconciliation (covering proxy `dα'` vs actual block
-distortion via `qf.2`) is carried by the concrete event `E1` whose probability Leg D bounds
-— it is not hypothesised. The bound on `Pr[E1] + Pr[E2]` (the real analytic work) is *not* a
+distortion via `qf.2`) is carried by the concrete event `E1` whose probability the outer glue bounds
+— it is not hypothesized. The bound on `Pr[E1] + Pr[E2]` (the real analytic work) is *not* a
 hypothesis here; only the proxy nonnegativity `hP` is required. Sorry-free. -/
 lemma wz_covering_binning_distortion_decomp
     {α' : Type*} [Fintype α'] [DecidableEq α'] [Nonempty α']
@@ -328,18 +328,18 @@ lemma wz_covering_binning_distortion_decomp
           (measureReal_union_le (μ := Measure.pi (fun _ : Fin n ↦ Q)) E1 E2) h_dMax_nn
         linarith
 
-/-! ### E2-only decomposition adapters (G2 / A1 / A2 / A3)
+/-! ### E2-only decomposition adapters
 
-The four adapters `wz_perN_covering_binning_code` (D3) consumes to close its inner body
+The four adapters `wz_perN_covering_binning_code` consumes to close its inner body
 via sorry-free glue. Each carries an honest signature (only definitional/regularity
 preconditions; no error-probability, decoder-correctness, or covering lower bound is a
 hypothesis); all four are closed sorry-free. Composition:
 
 ```
-A1  : lift identity      LHS(P_XY,d) = codeSupp.EBD Q_XY dα'
-G2  : E2-only decomp     codeSupp.EBD Q_XY dα' ≤ 𝔼_{Q_XY}[ideal via qf.2] + distortionMax·Pr[E2]
-A2  : ideal = covering   𝔼_{Q_XY}[ideal via qf.2] = c₁.EBD P_X' d'   (≤ (D+δ/2)+δ/4 by hcov₁)
-A3  : E2 squeeze         distortionMax·Pr[E2] ≤ δ/4                   (∃ good binning f, radius ε)
+lift identity    → LHS(P_XY,d) = codeSupp.EBD Q_XY dα'
+E2-only decomp   → codeSupp.EBD Q_XY dα' ≤ 𝔼_{Q_XY}[ideal via qf.2] + distortionMax·Pr[E2]
+ideal = covering → 𝔼_{Q_XY}[ideal via qf.2] = c₁.EBD P_X' d'   (≤ (D+δ/2)+δ/4 by hcov₁)
+E2 squeeze       → distortionMax·Pr[E2] ≤ δ/4                   (∃ good binning f, radius ε)
 ```
 
 Here `α' := {x // 0 < P_X x}`, `β' := {y // 0 < P_Y y}`, `dα' x' g := d x'.1 g`, and

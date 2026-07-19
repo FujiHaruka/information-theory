@@ -9,7 +9,7 @@ This file provides the converse leg of the Wyner–Ziv operational main theorem
 (Cover–Thomas Thm 15.9.1): every achievable rate `R` at distortion `D` for the
 i.i.d. source `P_XY` with decoder side information satisfies
 `R_WZ(D) ≤ R`, where `R_WZ` is the reshaped Wyner–Ziv rate function
-`wynerZivRate` — the infimum of the objective over feasible factorisable points
+`wynerZivRate` — the infimum of the objective over feasible factorizable points
 at *every* finite auxiliary alphabet (`FactorizableRate.lean` §10).
 
 ## Proof outline (steps 6–10 of the plan)
@@ -51,9 +51,9 @@ a `U` with `|α| + 1 ≤ |U|`) — a hard support lemma plus a shared-decoder `n
 Jensen on the converse's critical path.
 
 The **reshape** (proposal A) removes both: the converse concludes against
-`wynerZivRate`, the infimum of the objective over feasible factorisable points at
+`wynerZivRate`, the infimum of the objective over feasible factorizable points at
 *every* finite auxiliary alphabet `Fin k` at once (`FactorizableRate.lean` §10). A
-large single-letterisation auxiliary of any finite type (here `Uᵢ` of type
+large single-letterization auxiliary of any finite type (here `Uᵢ` of type
 `Fin M × ({j // j ≠ i} → β)`) then lands *directly* as a feasible point of the
 reshaped infimum via `wynerZivRate_le_of_feasible`, with no cardinality bound and no
 support lemma. The reshaped statement is `∀`-clean: it carries no auxiliary sizing
@@ -66,15 +66,15 @@ non-negativity `I(X;U) − I(Y;U) ≥ 0` (Markov chain `U − X − Y`) bounds t
 below by `0` uniformly in the auxiliary size (`wzRateValueSet_bddBelow_of_pmf`), so the
 `sInf` is a genuine non-negative rate, not a vacuous `≤ 0`.
 
-The single-letterisation sub-lemmas — per-letter factorisability
-`wz_perletter_factorizable` (with its empirical-factorisable crux
+The single-letterization sub-lemmas — per-letter factorizability
+`wz_perletter_factorizable` (with its empirical-factorizable crux
 `wz_perletter_empirical_factorizable`), the conditional-MI collapse / rate atoms, and
 the distortion average `wz_perletter_distortion_avg` — are now closed sorryAx-free; the
 data-processing non-negativity `wzObjective_nonneg_of_factorizable` is likewise
 discharged genuinely (sorryAx-free) via the measure-form DPI + the pmf↔measure bridges +
-a discrete Markov-chain realisation (`wzFactorizable_isMarkovChain`), so
+a discrete Markov-chain realization (`wzFactorizable_isMarkovChain`), so
 `wzRateValueSet_bddBelow_of_pmf` (the reshaped rate's non-degeneracy `BddBelow` guard) is
-likewise unconditional. The single-letterisation witness `wz_converse_feasible_point` is
+likewise unconditional. The single-letterization witness `wz_converse_feasible_point` is
 itself closed sorryAx-free (machine-checked `#print axioms`). The L1 Carathéodory fixed-`K`
 identification `wynerZivRate_eq_factorizable_finK` and its core `wz_support_reduce` (the
 support-cardinality reduction to `Fin (|α|+3)`) are now closed sorry-free, so the entire
@@ -85,8 +85,8 @@ converse headline `wyner_ziv_converse` is sorryAx-free.
 Umbrella of the `Shannon/WynerZiv/Converse/` family, re-exporting:
 
 * `Converse.Prelim` — the `n`-letter converse, the reshaped-rate non-degeneracy, the local
-  pmf → measure realisation, and the append form of `IsMarkovChain`.
-* `Converse.SingleLetter` — the per-letter Markov gateway atom, the single-letterisation
+  pmf → measure realization, and the append form of `IsMarkovChain`.
+* `Converse.SingleLetter` — the per-letter Markov gateway atom, the single-letterization
   sub-lemmas, and the single-letter rate bound `wynerZivRate_le_of_code`.
 * `Converse.Headline` — the endpoint right-continuity infrastructure and the operational
   converse headline `wyner_ziv_converse`.

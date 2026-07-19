@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.WynerZiv.Achievability.SourceTransport
 
 /-!
-# Wyner–Ziv achievability — source→ambient AEP mass transport and entropy helpers (Leg E-mass)
+# Wyner–Ziv achievability — source→ambient AEP mass transport and entropy helpers
 -/
 
 namespace InformationTheory.Shannon
@@ -19,11 +19,11 @@ variable {α β γ U : Type*}
   [Fintype γ] [DecidableEq γ] [Nonempty γ] [MeasurableSpace γ] [MeasurableSingletonClass γ]
   [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]
 
-/-! ### Leg E-mass helpers — source→ambient transport of the per-codeword AEP mass bound
+/-! ### Source→ambient transport of the per-codeword AEP mass bound
 
 The per-covering-codeword side-information typicality mass, taken under the Wyner–Ziv source
 product measure `Measure.pi (source per-coord)` on `α' × β`, is transported to the abstract
-per-codeword AEP bound `wz_covering_codeword_sideInfo_mass_le` (D2) on the side-information
+per-codeword AEP bound `wz_covering_codeword_sideInfo_mass_le` on the side-information
 ambient `rdAmbient (wzSideInfoMarginal P_XY κ')` over the positive-`Y`-marginal subtype `β'`.
 The transport combines (a) the `n`-fold side-information-law agreement (the source's `Y`-law is
 the `β`-image of the ambient's `β'`-`Y`-law), and (b) the entropy → `wzMutualInfoYU` exponent
@@ -172,7 +172,7 @@ product measure `Measure.pi` of `p ↦ P_XY{(p.1.1, p.2)}` on `α' × β` — th
 side-information block `fun i ↦ (p i).2` is at most `exp(−n · (I(Y;U) − 3ε))`, where
 `I(Y;U) = wzMutualInfoYU (Fin k) q'`.
 
-This transports `wz_covering_codeword_sideInfo_mass_le` (D2) from the side-information ambient onto
+This transports `wz_covering_codeword_sideInfo_mass_le` from the side-information ambient onto
 the source product measure. Two facts do the work. Side-information-law agreement: the source pair
 law's `β`-marginal is `y ↦ ∑_x P_XY{(x,y)}`, and the `β`-coerced `β'`-marginal of
 `wzSideInfoMarginal` summed over the covering codeword is
@@ -181,11 +181,11 @@ the `β`-image (`Subtype.val`) of the ambient's `β'`-`Y`-law (`Measure.pi_map_p
 law) and the fixed-`u` slice mass is preserved (the `β`-vs-`β'` alphabet gap is absorbed by the
 injective coercion, under which `entropy` and `pmfLog` are invariant). Exponent bridge:
 `wzMutualInfoYU (Fin k) q'` equals the ambient's `I(U;Y) = H(U)+H(Y)-H(U,Y)` (the `β`-values
-outside `β'` carry zero mass, `negMulLog 0 = 0`), which discharges D2's exponent hypothesis at
+outside `β'` carry zero mass, `negMulLog 0 = 0`), which discharges the exponent hypothesis at
 `I_YU := wzMutualInfoYU q' - 3ε`.
 
-Non-bundled: the conclusion is a per-codeword mass upper bound (`Measure.real {…} ≤ exp …`), the
-same shape as D2, not the operational error probability; `hκ'pos`/`hκ'sum`/`hfact_eq` are the
+Non-bundled: the conclusion is a per-codeword mass upper bound (`Measure.real {…} ≤ exp …`),
+not the operational error probability; `hκ'pos`/`hκ'sum`/`hfact_eq` are the
 covering-kernel regularity preconditions, and the exponent is pinned to the actual pmf by
 `hfact_eq` (no free-exponent gap).
 
@@ -337,7 +337,7 @@ lemma wz_source_codeword_sideInfo_mass_le
     show mutualInfoPmf (wzMarginalYU (Fin k) q') = _
     rw [wz_mutualInfoPmf_wzMarginalYU_eq P_XY κ' hκ'pos hκ'sum q' hfact_eq]
     rfl
-  -- Apply D2 on the side-information ambient over the subtype `β'`.
+  -- Apply the per-codeword AEP bound on the side-information ambient over the subtype `β'`.
   have hD2 := wz_covering_codeword_sideInfo_mass_le
       (rdAmbient (wzSideInfoMarginal P_XY κ')) ChannelCoding.iidXs
       (ChannelCoding.iidYs (α := Fin k)) ε hε_pos
@@ -427,7 +427,7 @@ private lemma wz_E2_confusion_threshold (R R₁ IYU δ : ℝ) (hδ : 0 < δ) (d 
 explicit input, pinned to the covering-acceptance mass precondition and used as the bin-decoder
 radius) there is a derandomized index binning `f` making the bin-decoder confusion probability so
 small that `distortionMax dα' · Pr[E2] ≤ δ/4`. Combines the binning-averaged confusion exponent
-(S5b `wz_codebook_confusion_expectation_le`, fed D2 `wz_covering_codeword_sideInfo_mass_le` +
+(`wz_codebook_confusion_expectation_le`, fed `wz_covering_codeword_sideInfo_mass_le` +
 collision `wzIndexBinningMeasure_collision`, instantiated over the positive-`Y`-marginal subtype
 `β'`), the binning derandomization, and the exponent squeeze (`hε_conf : R₁ − I(Y;U) + 3·ε < R`),
 with the source ↔ side-info-ambient identification.
@@ -438,7 +438,7 @@ covering-acceptance failure}`. Two hypotheses are therefore load-free preconditi
 analytic core: the covering codebook size upper bound `(M₁ : ℝ) ≤ exp(n·R₁) + 1` (the confusion
 count scales with the number of codewords, so the E2b squeeze needs `M₁` capped near
 `⌈exp(n·R₁)⌉`, the size the covering theorem actually produces), and the pinned covering-acceptance
-mass `hcov_accept` (a precondition-exposure of the covering code's own S5a/gateway-2 property,
+mass `hcov_accept` (a precondition-exposure of the covering code's own acceptance-mass property,
 discharged by the covering atom). The radius `ε` is pinned at a single explicit value; the huge-`ε`
 regime that makes `wzCoveringAcceptFailSet` vacuously empty is excluded by `hε_conf`
 (`wzCoveringAcceptFailSet`'s mass is monotone decreasing in `ε`), and `dα'` is tied to `d` by
@@ -446,7 +446,7 @@ regime that makes `wzCoveringAcceptFailSet` vacuously empty is excluded by `hε_
 
 The body is sorry-free: it proves `{decoder ≠ true word} ⊆ C2 ∪ E2b`
 (`wzBinTypicalDecoder_eq_of_unique` contrapositive), bounds C2 by the pinned `hcov_accept` premise,
-chooses `f` by one derandomization (`exists_le_integral` over `wzIndexBinningMeasure` fed the S5b
+chooses `f` by one derandomization (`exists_le_integral` over `wzIndexBinningMeasure` fed the
 confusion bound, whose per-codeword mass is `wz_source_codeword_sideInfo_mass_le`), and squeezes the
 confusion exponent to `0` (`wz_tendsto_exp_mul_codebookSize_inv`; the degenerate `M₁ ≤ 1` covering
 has an empty confusion event, handled by `Subsingleton (Fin M₁)`), then scales by
@@ -488,7 +488,7 @@ lemma wz_exists_binning_E2_bound
                     ≠ c₁.decoder (c₁.encoder (fun j ↦ (p j).1)) }
             ≤ δ / 4 := by
   classical
-  -- The per-codeword AEP exponent supplied by D2 (transported to the source measure).
+  -- The per-codeword AEP exponent (transported to the source measure).
   set IYU : ℝ := wzMutualInfoYU (Fin k) q' - 3 * ε with hIYU_def
   -- Confusion decay (term A): `2·exp(m·(R₁−IYU))·(codebookSize R m)⁻¹ → 0`, since
   -- `R₁ − IYU = R₁ − I(Y;U) + 3ε < R` (`hε_conf`).  The degenerate `M₁ ≤ 1` covering (empty
@@ -523,12 +523,12 @@ lemma wz_exists_binning_E2_bound
       jointRV Ys n p = fun i ↦ (p i).2 := by
     intro p; funext i
     simp only [jointRV, hYs_def, i.isLt, dif_pos]
-  -- STEP A (derandomize + S5b): a good binning `f` with confusion mass ≤ the count/bin ratio.
+  -- Derandomize: a good binning `f` with confusion mass ≤ the count/bin ratio.
   haveI hSRC_prob : IsProbabilityMeasure SRC := by rw [hSRC_def]; infer_instance
   haveI hcs_ne : NeZero (codebookSize R n) := ⟨(codebookSize_pos R n).ne'⟩
   have hYs_meas : ∀ i, Measurable (Ys i) := fun i ↦ measurable_of_finite _
   have htrueIdx_meas : Measurable trueIdx := measurable_of_finite _
-  -- Per-covering-codeword AEP mass (D2 transported to the source measure).
+  -- Per-covering-codeword AEP mass (transported to the source measure).
   have hmass : ∀ m' : Fin M₁,
       SRC.real {p | (c₁.decoder m', jointRV Ys n p) ∈ jts}
         ≤ Real.exp (-(n : ℝ) * IYU) := by
@@ -540,7 +540,7 @@ lemma wz_exists_binning_E2_bound
     rw [hset, hIYU_def]
     exact wz_source_codeword_sideInfo_mass_le P_XY κ' hκ'pos hκ'sum q' hfact_eq
       ε hε_pos n (c₁.decoder m')
-  -- STEP A (derandomize + S5b): a good binning `f` with confusion mass ≤ the count/bin ratio.
+  -- Derandomize: a good binning `f` with confusion mass ≤ the count/bin ratio.
   obtain ⟨f, hf⟩ : ∃ f : Fin M₁ → Fin (codebookSize R n),
       SRC.real {p | ∃ m' : Fin M₁, m' ≠ trueIdx p ∧ f m' = f (trueIdx p)
           ∧ (c₁.decoder m', jointRV Ys n p) ∈ jts}
@@ -559,7 +559,7 @@ lemma wz_exists_binning_E2_bound
     exact wz_codebook_confusion_expectation_le SRC Ys c₁ trueIdx
       hYs_meas htrueIdx_meas binMeas jts hjts_meas IYU hmass hcoll
   refine ⟨f, ?_⟩
-  -- STEP B (set inclusion): the decoder recovers the true word off `C2 ∪ E2b`.
+  -- Set inclusion: the decoder recovers the true word off `C2 ∪ E2b`.
   have hFAIL_incl :
       { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
           wzBinTypicalDecoder AMB ChannelCoding.iidXs iidYs' ε c₁ f
@@ -593,7 +593,7 @@ lemma wz_exists_binning_E2_bound
     · exact hrec
     · intro u hex htyp
       exact hunique u hex htyp
-  -- STEP C (measure subadditivity + hypotheses + threshold).
+  -- Measure subadditivity + hypotheses + threshold.
   have hmeas_le :
       SRC.real
         { p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β |
@@ -606,7 +606,7 @@ lemma wz_exists_binning_E2_bound
     refine le_trans (measureReal_mono hFAIL_incl (by
       exact measure_union_ne_top (measure_ne_top _ _) (measure_ne_top _ _))) ?_
     exact measureReal_union_le _ _
-  -- STEP D (arithmetic).  `distortionMax dα' ≤ distortionMax d`, and each half ≤ `δ/16`.
+  -- Arithmetic.  `distortionMax dα' ≤ distortionMax d`, and each half ≤ `δ/16`.
   have hdMax_le : distortionMax dα' ≤ distortionMax d := by
     unfold distortionMax
     refine Finset.sup'_le _ _ (fun q _ ↦ ?_)
@@ -670,18 +670,18 @@ lemma wz_exists_binning_E2_bound
         rw [hkey, div_le_iff₀ hden_pos]
         nlinarith [mul_nonneg hd_nn hδ.le, hδ.le]
 
-/-- Per-`n` Wyner–Ziv code family at a fixed covering rate (Steps 2–7). Given the Step 1–2 covering
+/-- Per-`n` Wyner–Ziv code family at a fixed covering rate. Given the covering
 data together with an already-chosen covering rate `R₁` (strictly above `I(X;U)`, so that `hcov₁` —
 the covering `LossyCode` family at rate `R₁` — is available) and the net-rate gap
 `hsplit : R₁ − I(Y;U) < R`, assemble the per-`n` Wyner–Ziv code family at the operational rate `R`:
 bin the covering index down to `codebookSize R n` messages (`wzIndexBinningMeasure`), decode by the
-bin conditional-typicality search (S3 `wzCodeOfCoveringBinning` / S4 `wzBinTypicalDecoder`), bound
-the covering-failure (S5a `wz_covering_failure_prob_le`, fed the mass lower bound via gateway 2
-`wz_covering_sideInfo_mass_ge`) and the codebook-restricted decoder-confusion (S5b
-`wz_codebook_confusion_expectation_le`, fed the per-codeword mass upper bound via D2
+bin conditional-typicality search (`wzCodeOfCoveringBinning` / `wzBinTypicalDecoder`), bound
+the covering-failure (`wz_covering_failure_prob_le`, fed the mass lower bound via
+`wz_covering_sideInfo_mass_ge`) and the codebook-restricted decoder-confusion (
+`wz_codebook_confusion_expectation_le`, fed the per-codeword mass upper bound via
 `wz_covering_codeword_sideInfo_mass_le` and the collision `wzIndexBinningMeasure_collision`) error
 events, extract a good deterministic codebook + binning by double derandomization, squeeze the
-residual distortion excess to `0`, and extend the covering code `α' → α` (S7 `wzLiftSupportCode`).
+residual distortion excess to `0`, and extend the covering code `α' → α` (`wzLiftSupportCode`).
 
 No error-probability or decoder-correctness claim is a hypothesis: `hcov₁` is the
 separately-established rate-distortion covering `LossyCode` family at covering rate `R₁`
@@ -691,7 +691,7 @@ confusion exponent are the residual body work. The distortion budget is split so
 target `D + δ/2`, reserving `δ/2` for the finite-`n` error terms (mirrors the rate-distortion sister
 `rate_distortion_achievability`): the WZ distortion decomposes as a good-event proxy +
 `distortionMax d · (P[E1]+P[E2])`, so the reserved slack is absorbed by the error exponents
-(S5a/S5b/D2 → 0). Three preconditions are definitional/regularity, not load-bearing on the
+(all → 0). Three preconditions are definitional/regularity, not load-bearing on the
 operational conclusion: `hd'_eq` pins the covering proxy `d'` to `𝔼_{Y|X}[d ∘ qf.2]` (killing the
 `d' := 0` counterexample, where the real WZ distortion under `d ∘ qf.2` would be unconstrained),
 `hqf` supplies the test channel's `WynerZivFactorizableConstraint` membership (the Markov `U-X-Y`
@@ -756,9 +756,9 @@ lemma wz_perN_covering_binning_code
                 decoder := fun _ _ ↦ Classical.arbitrary γ },
              fun hle ↦ absurd hle hn⟩
   -- ═══════════════════════════════════════════════════════════════════════════
-  -- Analytic core (Legs A–D). Six-step assembly; STEP 1 (covering-side derandomize) and
-  -- STEP 6 outer packaging (the `wzLiftSupportCode` factorization) are genuine glue below;
-  -- STEPS 1'–5 + inner Step 6 are genuine analytic work, all closed sorry-free.
+  -- Analytic core. Six-part assembly; the covering-side derandomize and the outer packaging
+  -- (the `wzLiftSupportCode` factorization) are genuine glue below;
+  -- the remaining analytic work is all closed sorry-free.
   -- ═══════════════════════════════════════════════════════════════════════════
   -- The source-support subtype `α'` is nonempty (its `stdSimplex` pmf `qStar` has total
   -- mass `1 ≠ 0`), so it has an inhabitant `x₀` for the `α' → α` support lift and the
@@ -769,7 +769,7 @@ lemma wz_perN_covering_binning_code
       (Finset.nonempty_of_sum_ne_zero (by rw [hqStar_mem.2]; exact one_ne_zero))
   haveI hneα' : Nonempty {x : α // 0 < ∑ y, P_XY.real {(x, y)}} :=
     hne_prod.map Prod.fst
-  -- STEP 1 (derandomize, covering side — genuine).  Feed `hcov₁` at slack `ε' := δ/4` to
+  -- Covering-side derandomize (genuine).  Feed `hcov₁` at slack `ε' := δ/4` to
   -- obtain the covering threshold `N_cov` and, for every `n ≥ N_cov`, the covering codebook
   -- `c₁ : LossyCode M n α' (Fin k)` whose covering distortion — over the i.i.d. covering
   -- ambient `(rdAmbient qStar).map (iidXs 0)`, w.r.t. the proxy `d'` — is `≤ (D+δ/2)+δ/4`,
@@ -782,7 +782,7 @@ lemma wz_perN_covering_binning_code
   have hε_pos : 0 < ε := by rw [hε_def]; linarith [hsplit]
   have hε_conf : R₁ - wzMutualInfoYU (Fin k) q' + 3 * ε < R := by rw [hε_def]; linarith [hsplit]
   obtain ⟨N_cov, hN_cov⟩ := hcov₁ (δ / 4) (div_pos hδ (by norm_num)) ε hε_pos
-  -- STEP 4 / 1' (binning-side derandomize + E2 squeeze, Leg D A3).  Obtain the confusion
+  -- Binning-side derandomize + E2 squeeze.  Obtain the confusion
   -- threshold `N_E2`: beyond it, for a covering codebook of size `M ≲ exp(n·R₁)`, a good
   -- binning `f` (radius `ε`) makes `distortionMax dα' · Pr[E2] ≤ δ/4`.
   obtain ⟨N_E2, hN_E2⟩ :=
@@ -792,10 +792,10 @@ lemma wz_perN_covering_binning_code
   obtain ⟨M, hM_ge, hM_ub, c₁, hc₁_dist, hAccept⟩ := hN_cov n (le_trans (le_max_left _ _) hn)
   have x₀ : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} := Classical.arbitrary _
   -- ═══════════════════════════════════════════════════════════════════════════
-  -- STEP 6 (outer packaging — genuine).  The Wyner–Ziv code is the `α' → α` support lift
+  -- Outer packaging (genuine).  The Wyner–Ziv code is the `α' → α` support lift
   -- (`wzLiftSupportCode`) of a support-restricted code `codeSupp` over the source-support
   -- subtype `α'`.  This factors the α-side conclusion through the α'-side construction; the
-  -- remaining source-measure transport / proxy reconciliation (the *inner* half of Step 6)
+  -- remaining source-measure transport / proxy reconciliation (the *inner* half)
   -- lives inside the `codeSupp` existential below.
   -- ═══════════════════════════════════════════════════════════════════════════
   suffices hsupp : ∃ codeSupp : WynerZivCode (codebookSize R n) n
@@ -804,17 +804,17 @@ lemma wz_perN_covering_binning_code
     obtain ⟨codeSupp, hcodeSupp⟩ := hsupp
     exact ⟨wzLiftSupportCode P_XY x₀ codeSupp, hcodeSupp⟩
   -- ═══════════════════════════════════════════════════════════════════════════
-  -- STEPS 1'–5 + inner Step 6 (E2-only assembly via the Leg D adapters G2/A1/A2/A3):
-  --   A3 (`hN_E2`) → binning `f` + radius `ε` with `distortionMax dα' · Pr[E2] ≤ δ/4`;
-  --   A1 (`wz_lift_expectedBlockDistortion_eq`)  : lift identity `P_XY,d ↦ Q_XY,dα'`;
-  --   G2 (`wz_expectedBlockDistortion_le_ideal_add_E2`) : actual ≤ ideal + dMax·Pr[E2];
-  --   A2 (`wz_ideal_expectation_eq_covering`) : ideal = covering distortion ≤ (D+δ/2)+δ/4.
+  -- E2-only assembly via the adapters:
+  --   `hN_E2` → binning `f` + radius `ε` with `distortionMax dα' · Pr[E2] ≤ δ/4`;
+  --   `wz_lift_expectedBlockDistortion_eq`  : lift identity `P_XY,d ↦ Q_XY,dα'`;
+  --   `wz_expectedBlockDistortion_le_ideal_add_E2` : actual ≤ ideal + dMax·Pr[E2];
+  --   `wz_ideal_expectation_eq_covering` : ideal = covering distortion ≤ (D+δ/2)+δ/4.
   -- Arithmetic: ((D+δ/2)+δ/4) + δ/4 = D+δ.
   -- ═══════════════════════════════════════════════════════════════════════════
   -- Covering codebook size cap (M-direction).  The confusion count scales with the number
-  -- of covering codewords, so A3 needs `M ≲ exp(n·R₁)`.  The matching upper bound
+  -- of covering codewords, so the E2 squeeze needs `M ≲ exp(n·R₁)`.  The matching upper bound
   -- `(M : ℝ) ≤ exp(n·R₁) + 1` is the size the covering theorem actually produces (`M =
-  -- ⌈exp(n·R₁)⌉`, `Nat.ceil_lt_add_one`); it is threaded through `hcov₁` (Leg C.6), so
+  -- ⌈exp(n·R₁)⌉`, `Nat.ceil_lt_add_one`); it is threaded through `hcov₁`, so
   -- `hM_ub` is now supplied by the covering family together with the codebook `c₁`.
   obtain ⟨f, hE2⟩ := hN_E2 n (le_trans (le_max_right _ _) hn) M c₁ hM_ub hAccept
   -- The co-restricted source measure `Q_XY` is a probability measure.

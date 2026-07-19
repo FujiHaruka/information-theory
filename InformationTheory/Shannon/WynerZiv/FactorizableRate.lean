@@ -52,7 +52,7 @@ open scoped ENNReal NNReal BigOperators Topology
 
 set_option linter.unusedSectionVars false
 
-/-! ## §1 Factorisation predicate -/
+/-! ## §1 Factorization predicate -/
 
 section FactorisationPredicate
 
@@ -61,8 +61,8 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- Affine factorisation predicate. The joint pmf `q : α × β × U → ℝ` is
-*Wyner–Ziv factorisable* over the source `P_XY : α × β → ℝ` if there exists
+/-- Affine factorization predicate. The joint pmf `q : α × β × U → ℝ` is
+*Wyner–Ziv factorizable* over the source `P_XY : α × β → ℝ` if there exists
 a transition kernel `κ : α → U → ℝ` (per-row non-negative and per-row sum
 `1`) such that
 
@@ -70,7 +70,7 @@ a transition kernel `κ : α → U → ℝ` (per-row non-negative and per-row su
 q(x, y, u) = κ(u | x) · P_XY(x, y).
 ```
 
-This is the *affine* re-parameterisation underlying Cover–Thomas §15.9; the
+This is the *affine* re-parameterization underlying Cover–Thomas §15.9; the
 quadratic Markov cross-product constraint is automatically satisfied (see
 `IsWynerZivFactorizable_markov` below). -/
 def IsWynerZivFactorizable
@@ -92,7 +92,7 @@ lemma IsWynerZivFactorizable_iff
 
 end FactorisationPredicate
 
-/-! ## §2 Structural consequences on factorisable joints -/
+/-! ## §2 Structural consequences on factorizable joints -/
 
 section FactorisableStructure
 
@@ -101,7 +101,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- Markov chain holds automatically on factorisable joints. The
+/-- Markov chain holds automatically on factorizable joints. The
 quadratic cross-product equation collapses to a kernel-level identity that
 is trivially symmetric in `u, u'`. -/
 lemma IsWynerZivFactorizable_markov
@@ -130,7 +130,7 @@ lemma IsWynerZivFactorizable_markov
     rw [this]; ring
   rw [h_lhs, h_rhs]; ring
 
-/-- `(X, Y)`-marginal of a factorisable joint recovers `P_XY` (when the
+/-- `(X, Y)`-marginal of a factorizable joint recovers `P_XY` (when the
 kernel `κ` is row-stochastic). -/
 lemma IsWynerZivFactorizable_marginalXY
     (P_XY : α × β → ℝ) {q : α × β × U → ℝ}
@@ -152,7 +152,7 @@ lemma IsWynerZivFactorizable_marginalXY
     _ = 1 * P_XY p := by rw [hκsum p.1]
     _ = P_XY p := by rw [one_mul]
 
-/-- Factorisable joints are non-negative pointwise (when `P_XY` is). -/
+/-- Factorizable joints are non-negative pointwise (when `P_XY` is). -/
 lemma IsWynerZivFactorizable_nonneg
     (P_XY : α × β → ℝ) (h_pmf_nn : ∀ p, 0 ≤ P_XY p)
     {q : α × β × U → ℝ}
@@ -165,7 +165,7 @@ lemma IsWynerZivFactorizable_nonneg
   rw [hκeq x y u]
   exact mul_nonneg (hκnn x u) (h_pmf_nn (x, y))
 
-/-- Total mass of a factorisable joint equals total mass of `P_XY`. When
+/-- Total mass of a factorizable joint equals total mass of `P_XY`. When
 `P_XY` is a pmf (total mass `1`), the joint is also total-mass `1`. -/
 lemma IsWynerZivFactorizable_sum
     (P_XY : α × β → ℝ) {q : α × β × U → ℝ}
@@ -194,8 +194,8 @@ lemma IsWynerZivFactorizable_sum
     _ = 1 * P_XY (x, y) := by rw [hκsum x]
     _ = P_XY (x, y) := by rw [one_mul]
 
-/-- `stdSimplex` membership for factorisable joints over a pmf source.
-If `P_XY ∈ stdSimplex` (a pmf), then every factorisable joint is also in
+/-- `stdSimplex` membership for factorizable joints over a pmf source.
+If `P_XY ∈ stdSimplex` (a pmf), then every factorizable joint is also in
 `stdSimplex ℝ (α × β × U)`. -/
 lemma IsWynerZivFactorizable_mem_stdSimplex
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
@@ -209,7 +209,7 @@ lemma IsWynerZivFactorizable_mem_stdSimplex
 
 end FactorisableStructure
 
-/-! ## §3 Convex combinations preserve factorisation -/
+/-! ## §3 Convex combinations preserve factorization -/
 
 section FactorisableConvex
 
@@ -218,10 +218,10 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- Convex combinations of factorisable joints are factorisable. This is
-the key affine property that re-parameterisation buys us: although the
+/-- Convex combinations of factorizable joints are factorizable. This is
+the key affine property that re-parameterization buys us: although the
 Markov cross-product constraint is non-affine on the *raw* joint pmf
-coordinate, on the *factorised* manifold the predicate is affine in `κ`,
+coordinate, on the *factorized* manifold the predicate is affine in `κ`,
 and the kernel-level convex combination
 
 `κ := a • κ₁ + b • κ₂`
@@ -257,7 +257,7 @@ lemma IsWynerZivFactorizable_convex_combination
 
 end FactorisableConvex
 
-/-! ## §4 Factorisable constraint set -/
+/-! ## §4 Factorizable constraint set -/
 
 section FactorisableConstraintSet
 
@@ -266,12 +266,12 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- Factorisable Wyner–Ziv constraint set. A `(q, f)` pair belongs iff:
-1. `q` is `IsWynerZivFactorizable U P_XY` — factorises as `κ(u|x)·P_XY(x,y)`,
+/-- Factorizable Wyner–Ziv constraint set. A `(q, f)` pair belongs iff:
+1. `q` is `IsWynerZivFactorizable U P_XY` — factorizes as `κ(u|x)·P_XY(x,y)`,
 2. `wzExpectedDistortion d q f ≤ D` — distortion budget.
 
 The simplex / marginal / Markov constraints (1-3 of `WynerZivConstraint`)
-are *consequences* of the factorisation predicate when `P_XY` is itself a
+are *consequences* of the factorization predicate when `P_XY` is itself a
 pmf; we record this as the `factorisable_subset_constraint` lemma below. -/
 def WynerZivFactorizableConstraint
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
@@ -288,8 +288,8 @@ lemma mem_WynerZivFactorizableConstraint_iff
       IsWynerZivFactorizable U P_XY qf.1
         ∧ wzExpectedDistortion U d qf.1 qf.2 ≤ D := Iff.rfl
 
-/-- Factorisable constraint ⊆ raw constraint. Every factorisable
-feasible point is also feasible in the original (un-re-parameterised)
+/-- Factorizable constraint ⊆ raw constraint. Every factorizable
+feasible point is also feasible in the original (un-re-parameterized)
 constraint set, provided `P_XY` is itself a pmf in the simplex. -/
 lemma factorisable_subset_constraint
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
@@ -304,7 +304,7 @@ lemma factorisable_subset_constraint
 
 end FactorisableConstraintSet
 
-/-! ## §5 D-monotonicity of factorisable constraint -/
+/-! ## §5 D-monotonicity of factorizable constraint -/
 
 section FactorisableMonotone
 
@@ -313,7 +313,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- Factorisable constraint set is monotone in `D`. Mirror of
+/-- Factorizable constraint set is monotone in `D`. Mirror of
 `WynerZivConstraint_mono_in_D`. -/
 @[entry_point]
 theorem WynerZivFactorizableConstraint_mono_in_D
@@ -334,13 +334,13 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **The key lemma: a convex combination of two factorisable feasible
+/-- **The key lemma: a convex combination of two factorizable feasible
 points at thresholds `D₁, D₂` is feasible at the mixed threshold
 `a D₁ + b D₂`** (with shared decoder `f`).
 
 This is the structural step that turns convexity into a one-liner on
-factorisable joints: feasibility survives convex combinations on the
-factorised manifold (unlike the raw constraint set where the Markov
+factorizable joints: feasibility survives convex combinations on the
+factorized manifold (unlike the raw constraint set where the Markov
 cross-product fails to be preserved). -/
 @[entry_point]
 theorem WynerZivFactorizableConstraint_convex_combination
@@ -365,7 +365,7 @@ theorem WynerZivFactorizableConstraint_convex_combination
 
 end FactorisableConvexCombination
 
-/-! ## §7 Factorisable rate function and its convexity -/
+/-! ## §7 Factorizable rate function and its convexity -/
 
 section FactorisableRate
 
@@ -374,10 +374,10 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- Wyner–Ziv rate function restricted to factorisable joints.
+/-- Wyner–Ziv rate function restricted to factorizable joints.
 `R_WZ_fact(D) := sInf { I(X;U) − I(Y;U) | (q, f) ∈ WynerZivFactorizableConstraint U P_XY d D }`.
 
-This is the form Cover–Thomas §15.9 directly addresses: the minimisation
+This is the form Cover–Thomas §15.9 directly addresses: the minimization
 over auxiliary kernels `κ(u|x)` with side-information decoders `f(u,y)`. -/
 noncomputable def wynerZivRateFactorizable
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) : ℝ :=
@@ -385,7 +385,7 @@ noncomputable def wynerZivRateFactorizable
               wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivFactorizableConstraint U P_XY d D)
 
-/-- Factorisable rate is antitone in `D` (mirror of the raw
+/-- Factorizable rate is antitone in `D` (mirror of the raw
 `wynerZivRatePmf_antitone`). -/
 @[entry_point]
 theorem wynerZivRateFactorizable_antitone
@@ -465,7 +465,7 @@ theorem wynerZivRateFactorizable_convex
 
 end FactorisableRate
 
-/-! ## §8 BddBelow on factorisable image (simplex projection route) -/
+/-! ## §8 BddBelow on factorizable image (simplex projection route) -/
 
 section FactorisableBddBelow
 
@@ -474,8 +474,8 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- The factorisable image is `BddBelow`. Same simplex-projection route
-as in `WynerZiv/RateMonotonicity.lean`: the factorisable image is contained in the
+/-- The factorizable image is `BddBelow`. Same simplex-projection route
+as in `WynerZiv/RateMonotonicity.lean`: the factorizable image is contained in the
 raw image (modulo the side conditions in `factorisable_subset_constraint`),
 which is contained in `objective '' stdSimplex`, which is compact and
 hence bounded below. -/
@@ -486,7 +486,7 @@ lemma wynerZivFactorizableObjective_image_bddBelow
       ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
         '' WynerZivFactorizableConstraint U P_XY d D) := by
-  -- Image of factorisable constraint is contained in image of raw constraint.
+  -- Image of factorizable constraint is contained in image of raw constraint.
   have h_subset :
       ((fun qf : (α × β × U → ℝ) × (U × β → γ) ↦
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
@@ -578,13 +578,13 @@ end RateLevelConvexity
 
 The headline operational rate `wynerZivRateFactorizable U` fixes the auxiliary
 alphabet type `U` up front. For the *operational converse* this forces a
-Carathéodory support argument (the single-letterisation auxiliary
+Carathéodory support argument (the single-letterization auxiliary
 `Uᵢ := (J, Y^{i-1})` has a cardinality that grows with the block length, so it
 does not embed into a fixed `U` without the `|U| ≤ |α| + 1` reduction).
 
 This section adds the reshaped rate `wynerZivRate` — the infimum of the
-objective over feasible factorisable points at *every* finite auxiliary
-alphabet `Fin k` simultaneously. A large single-letterisation auxiliary then
+objective over feasible factorizable points at *every* finite auxiliary
+alphabet `Fin k` simultaneously. A large single-letterization auxiliary then
 lands directly as a feasible point of the reshaped infimum, with no cardinality
 bound.
 
@@ -592,14 +592,14 @@ bound.
 
 `wynerZivRateFactorizable U = sInf (image)` and, in `ℝ`, `sInf ∅ = 0`. A naive
 `⨅ k, wynerZivRateFactorizable (Fin k) D` would inject a junk `0` at every index
-`k` whose factorisable constraint is empty (e.g. `k = 0`: `Fin 0` is empty, so
+`k` whose factorizable constraint is empty (e.g. `k = 0`: `Fin 0` is empty, so
 no row-stochastic kernel exists), collapsing the infimum to `≤ 0`. That would
 make the converse `wynerZivRate ≤ R` vacuously true — a degenerate-definition
 defect.
 
 The `⋃`-then-`sInf` form (`wzRateValueSet`) avoids this: empty-constraint
 indices contribute the *empty* image, so they inject no value. The remaining
-lower bound comes from the objective's non-negativity on the factorisable
+lower bound comes from the objective's non-negativity on the factorizable
 manifold (data-processing inequality `I(X;U) − I(Y;U) ≥ 0` for the Markov chain
 `U − X − Y`), established in `Converse.lean` and used to discharge `BddBelow`. -/
 
@@ -610,7 +610,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 
 /-- The set of Wyner–Ziv objective values `I(X;U) − I(Y;U)` attainable by a
-factorisable feasible point at *some* finite auxiliary alphabet `Fin k`, with
+factorizable feasible point at *some* finite auxiliary alphabet `Fin k`, with
 `k` ranging over all of `ℕ`. Feasibility-empty indices contribute the empty
 image (no value), so this set carries no junk `sInf ∅ = 0` term. -/
 def wzRateValueSet
@@ -621,11 +621,11 @@ def wzRateValueSet
       '' WynerZivFactorizableConstraint (Fin k) P_XY d D
 
 /-- Reshaped Wyner–Ziv operational rate: the infimum of the objective
-`I(X;U) − I(Y;U)` over feasible factorisable points at *every* finite auxiliary
+`I(X;U) − I(Y;U)` over feasible factorizable points at *every* finite auxiliary
 alphabet `Fin k` at once, rather than a single caller-fixed `U`.
 
 This is the `∀`-clean form needed by the operational converse: the
-single-letterisation auxiliary lands directly as a feasible point (see
+single-letterization auxiliary lands directly as a feasible point (see
 `wynerZivRate_le_of_feasible`), with no Carathéodory cardinality reduction.
 
 @audit:ok (independent honesty audit 2026-07-05, non-degeneracy check PASS): the
@@ -638,7 +638,7 @@ noncomputable def wynerZivRate
   sInf (wzRateValueSet P_XY d D)
 
 /-- Membership in `wzRateValueSet`: a real `v` is a value iff it is the objective
-of a feasible factorisable point at some finite auxiliary alphabet `Fin k`. -/
+of a feasible factorizable point at some finite auxiliary alphabet `Fin k`. -/
 lemma mem_wzRateValueSet_iff
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ} {v : ℝ} :
     v ∈ wzRateValueSet P_XY d D ↔
@@ -654,7 +654,7 @@ lemma mem_wzRateValueSet_iff
   · rintro ⟨k, qf, hqf, rfl⟩
     exact Set.mem_iUnion.mpr ⟨k, qf, hqf, rfl⟩
 
-/-- A feasible factorisable point at auxiliary alphabet `Fin k` produces a value
+/-- A feasible factorizable point at auxiliary alphabet `Fin k` produces a value
 in `wzRateValueSet` (witness for non-emptiness). -/
 lemma objective_mem_wzRateValueSet
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ}
@@ -664,9 +664,9 @@ lemma objective_mem_wzRateValueSet
       ∈ wzRateValueSet P_XY d D :=
   mem_wzRateValueSet_iff.mpr ⟨k, qf, hqf, rfl⟩
 
-/-- **Landing lemma (direct, `Fin k` form).** Any feasible factorisable point at
+/-- **Landing lemma (direct, `Fin k` form).** Any feasible factorizable point at
 auxiliary alphabet `Fin k` bounds the reshaped rate from above. This is what
-lets the single-letterisation auxiliary land *directly*, with no cardinality
+lets the single-letterization auxiliary land *directly*, with no cardinality
 reduction. The `BddBelow` side condition is discharged (via the objective's
 data-processing non-negativity) in `Converse.lean` by
 `wzRateValueSet_bddBelow_of_pmf`.
@@ -687,7 +687,7 @@ theorem wynerZivRate_le_of_feasible
 
 /-- The reshaped value set is monotone in `D`: enlarging the distortion budget
 enlarges the set of attainable objective values, since every feasible
-factorisable point at budget `D` remains feasible at `D' ≥ D`
+factorizable point at budget `D` remains feasible at `D' ≥ D`
 (`WynerZivFactorizableConstraint_mono_in_D`, applied at each auxiliary alphabet
 `Fin k`).
 
@@ -772,7 +772,7 @@ value-set closure and the operational converse feasible-point step).
 sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]). Signature
 honest: `h₁sum`/`h₂sum` are pmf total-mass-1 regularity, `hmix₁`/`hmix₂` merely
 *define* the disjoint-union mixture (not the conclusion), `hab` is the weight
-normalisation. `h_marg` (shared first marginal) is a genuine precondition ON THE
+normalization. `h_marg` (shared first marginal) is a genuine precondition ON THE
 INPUTS — verified load-bearing for TRUTH (dropping it makes the identity false,
 since `H(X)` is concave not affine) yet NOT bundling the conclusion (the affine
 identity is a claim about the mixture's `mutualInfoPmf`, proven in-body via the
@@ -866,9 +866,9 @@ lemma mutualInfoPmf_reindex_right
   simp only []
   rw [hFst, hSnd, hJoint]
 
-/-- The objective value of a feasible factorisable point at *any* finite
+/-- The objective value of a feasible factorizable point at *any* finite
 auxiliary alphabet `U` lands in `wzRateValueSet` — reindex `U` to
-`Fin (Fintype.card U)`, under which factorisability, distortion, and the
+`Fin (Fintype.card U)`, under which factorizability, distortion, and the
 objective are all preserved. -/
 lemma wzRateValueSet_reindex_mem
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ}
@@ -885,7 +885,7 @@ lemma wzRateValueSet_reindex_mem
     Equiv.prodCongr (Equiv.refl α) (Equiv.prodCongr (Equiv.refl β) e) with hE
   rw [mem_wzRateValueSet_iff]
   refine ⟨k, (q', f'), ⟨?_, ?_⟩, ?_⟩
-  · -- factorisability transports
+  · -- factorizability transports
     obtain ⟨κ, hκnn, hκsum, hκeq⟩ := hqf.1
     refine ⟨fun x i ↦ κ x (e.symm i), ?_, ?_, ?_⟩
     · intro x i; exact hκnn x (e.symm i)
@@ -937,7 +937,7 @@ sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]). All
 hypotheses are genuine convex-combination preconditions: `h_pmf` (P_XY a pmf,
 supplies total-mass-1 for the affine engine), `hv₁`/`hv₂` (the input value-set
 memberships of a closure statement), `ha`/`hb` (weight non-negativity, feeds
-kernel non-negativity + distortion bound), `hab` (weight normalisation, feeds
+kernel non-negativity + distortion bound), `hab` (weight normalization, feeds
 row-stochasticity). NONE bundles the conclusion — the mixture kernel, its
 feasibility (row-stochastic + distortion budget), and the affine objective are all
 CONSTRUCTED/PROVEN in-body (~150 lines). The combined point lands at a genuine
@@ -1063,7 +1063,7 @@ theorem wzRateValueSet_timeShare_mem
       simp only [hκmix, Sum.elim_inl, Sum.elim_inr]
       rw [← Finset.mul_sum, ← Finset.mul_sum, hκ₁sum, hκ₂sum, mul_one, mul_one]
       exact hab
-    · -- factorisation of the mixture joint
+    · -- factorization of the mixture joint
       intro x y c; rfl
     · -- distortion splits affinely, hence stays within the mixed budget
       have hdistsplit : wzExpectedDistortion (Fin k₁ ⊕ Fin k₂) d qmix fmix
@@ -1157,7 +1157,7 @@ theorem wynerZivRate_convex_in_D
 over the finite index set `s` of the binary closure `wzRateValueSet_timeShare_mem`:
 a convex combination `∑ i, p i · w i` of attainable objective values (each `w i`
 attainable at its own budget `Dv i`) is attainable at the mixed budget
-`∑ i, p i · Dv i`. The tail weights are renormalised so the binary lemma applies at
+`∑ i, p i · Dv i`. The tail weights are renormalized so the binary lemma applies at
 each induction step. -/
 lemma wzRateValueSet_weightedSum_mem
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
@@ -1178,7 +1178,7 @@ lemma wzRateValueSet_weightedSum_mem
     simp only [Finset.sum_singleton] at hq_sum ⊢
     rw [hq_sum, one_mul, one_mul]
     exact hq_mem i (Finset.mem_singleton_self i)
-  · -- cons `insert j t`: renormalise tail weights and apply the binary lemma
+  · -- cons `insert j t`: renormalize tail weights and apply the binary lemma
     intro j t hj ht IH q hq_nn hq_sum hq_mem
     rw [Finset.sum_cons] at hq_sum
     have haj : 0 ≤ q j := hq_nn j (Finset.mem_cons_self j t)
@@ -1197,7 +1197,7 @@ lemma wzRateValueSet_weightedSum_mem
       rw [Finset.sum_cons, Finset.sum_cons, hsum_w, hsum_Dv, add_zero, add_zero,
         hqj1, one_mul, one_mul]
       exact hq_mem j (Finset.mem_cons_self j t)
-    · -- `0 < b`: renormalise `p' i := q i / b`, apply IH then the binary lemma
+    · -- `0 < b`: renormalize `p' i := q i / b`, apply IH then the binary lemma
       have hb_ne : (∑ i ∈ t, q i) ≠ 0 := hbpos.ne'
       have hp'_nn : ∀ i ∈ t, 0 ≤ q i / (∑ k ∈ t, q k) := fun i hi =>
         div_nonneg (hq_nn i (Finset.mem_cons_of_mem hi)) hbpos.le
@@ -1225,7 +1225,7 @@ lemma wzRateValueSet_weightedSum_mem
 
 /-- **Uniform `Fin n` time-sharing corollary.** The average `(1/n)·∑ᵢ w i` of `n`
 attainable objective values is attainable at the averaged budget `(1/n)·∑ᵢ Dv i`.
-Specialisation of `wzRateValueSet_weightedSum_mem` to uniform weights `p ≡ 1/n`;
+Specialization of `wzRateValueSet_weightedSum_mem` to uniform weights `p ≡ 1/n`;
 this is the form the operational converse consumes. -/
 lemma wzRateValueSet_avg_mem
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))

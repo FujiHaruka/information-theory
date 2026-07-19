@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.WynerZiv.Achievability.Concentration
 
 /-!
-# Wyner–Ziv achievability — the Markov core and Gateway atom 3
+# Wyner–Ziv achievability — the Markov core
 -/
 
 namespace InformationTheory.Shannon
@@ -231,7 +231,7 @@ The measure is the *correlated* joint source
 `Measure.pi (pmfToMeasure (fun (x', y) ↦ P_XY{(x'.1, y)}))`; crucially the covering word
 `c.decoder (c.encoder x)` is a function of the source `x`, so the `u`–`y` correlation that makes
 acceptance likely is inherited from the `x`–`y` correlation and is destroyed by fixing `u`
-independently. Gateway-2 `wz_covering_sideInfo_mass_ge` (a *lower* bound on the *independent*
+independently. The lemma `wz_covering_sideInfo_mass_ge` (a *lower* bound on the *independent*
 product-`Y`-law slice mass) and the broadcast confusion bound `bc_conditional_slice_prob_le`
 (an *upper* bound on a *conditional-product* typical slice, the confusion/wrong-codeword direction)
 are on the wrong measure/direction and do not supply this. -/
@@ -365,7 +365,7 @@ lemma wz_covering_chosenWord_sideInfo_typical
     (hqStar : ∀ p, qStar p = κ' p.1.1 p.2 * ∑ y, P_XY.real {(p.1.1, y)}) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (M : ℕ)
         (c : LossyCode M n {x : α // 0 < ∑ y, P_XY.real {(x, y)}} (Fin k)),
-        -- covering-typicality success (S5a-supplied premise): off a set of mass `≤ tol/2`,
+        -- covering-typicality success (covering-supplied premise): off a set of mass `≤ tol/2`,
         -- the chosen covering word `c.decoder (c.encoder x)` is jointly typical with the source
         -- `x` in the covering ambient `rdAmbient qStar`. NOT the acceptance conclusion (different
         -- ambient: covering is the `x`–`u` slice, acceptance the `u`–`y` slice).
