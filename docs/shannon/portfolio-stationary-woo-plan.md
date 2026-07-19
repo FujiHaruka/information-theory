@@ -7,13 +7,13 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **§16.5 "Investment in S
 **fixed-b core** (固定 rebalance portfolio の成長率収束 + KT dominance) を proof-done 済。本計画は残る
 **log-optimal `W_∞` AEP** = 因果 log-optimal 戦略の富の成長率が無限過去条件付き成長率 `W_∞` に収束する部分を負う。
 
-**現状 = 未着手の honest deferral** (コード側に対応する `sorry` は無い = 捏造 statement 無し)。本計画は
-scope 境界・要件・gateway-atom 案・壁リスクの記録であり、着手はまだ。
+**現状 = R1 gateway proof-done、R2–R4 残** (`Portfolio/StationaryWinfty.lean` に対応コードあり、捏造 statement
+無し)。本計画は scope 境界・要件・進捗・壁リスクの記録。
 
-## 進捗 — 📋 未着手 (deferral)
+## 進捗 — 🚧 R1 proof-done、R2–R4 残
 
 - [ ] M0 在庫 — real-valued 条件付き growth / 可測選択 / Algoet–Cover sandwich の Mathlib / in-project 資産確定 📋
-- [ ] R1 — 条件付き log-optimal portfolio の可測選択 📋 **gateway atom 第一候補**
+- [x] R1 — 条件付き log-optimal portfolio の可測選択 ✅ proof-done — `exists_measurable_argmax_on_stdSimplex` (`@audit:ok` sorryAx-free)
 - [ ] R2 — 条件付き成長率の単調収束 `W*(X_0 | X_{-1..−k}) ↑ W_∞` 📋
 - [ ] R3 — real-valued SMB 級 AEP `(1/n) log S*_n → W_∞` 📋 **最リスク・別 gateway で早期壁判定**
 - [ ] R4 — 組立 (CT 16.5.1 headline) + 配線 + 独立監査 📋
@@ -68,11 +68,17 @@ alphabet 非依存な骨格がどれだけ救えるかを実機確認)。
       に切り出せる骨格を洗い出す (どの補題が `[Fintype α]` に本質依存かを機械確認)。
 - [ ] 親 Leg B `stationaryLogReturn` / fixed-b headline の再利用面を確定。
 
-### R1 — 条件付き log-optimal portfolio の可測選択 (proof-log: yes、gateway atom)
+### R1 — 条件付き log-optimal portfolio の可測選択 ✅ proof-done (proof-log: yes、gateway atom)
 
 **目標 (sketch、実装で確定)**: 無限過去で条件付けた法 `ρ_ω` について、`b* : Ω → (Fin m → ℝ)` を可測に選び
 `b* ω ∈ stdSimplex ℝ (Fin m)` かつ `growthRate ρ_ω X (b* ω)` を最大化する。凹性 + compact 最大点存在は在庫、
 核は **可測依存**。gateway 判定: 可測 argmax が Mathlib 資産 (measurable selection) で閉じるか、self-build 要か。
+
+**着地**: gateway atom `exists_measurable_argmax_on_stdSimplex` (`StationaryWinfty.lean:197`) が sorryAx-free +
+独立 `@audit:ok` + style PASS で closure。Carathéodory (可測 × 連続) + 凹の `F : Ω → (Fin m → ℝ) → ℝ` の
+simplex 上 argmax を可測選択する一般形。追加 regularity 仮説 `hF_conc : ∀ ω, ConcaveOn ℝ (stdSimplex ℝ (Fin m))
+(F ω)` + `[Nonempty (Fin m)]` は genuine precondition (m=0 で simplex 空 ⟹ 選択不能、非 load-bearing)。ルート =
+Tikhonov 狭義凹正則化 (判断ログ 2 参照)。
 
 ### R2 — 条件付き成長率の単調収束 (proof-log: yes)
 
@@ -93,9 +99,9 @@ R1–R3 を CT 16.5.1 headline に組み、root import 登録 / README / roadmap
 
 ## 壁リスク評価
 
-- **R1 可測選択**: 中。凹最大点存在は在庫、可測 argmax が Mathlib measurable-selection で閉じれば軽い。
-  閉じなければ self-build (Kuratowski–Ryll-Nardzewski 系の適用、~数十–150 行)。**loogle 0-hit だけで壁宣言せず**
-  conclusion-shape 検索 + template lemma 自作行数見積を経由 (CLAUDE.md「壁を宣言するとき」)。
+- **R1 可測選択**: **CLOSED (not-a-wall)**。Mathlib の一般 measurable-selection (KRN) は不在
+  (`Mathlib/Probability/Decision/BayesEstimator.lean:46` の TODO が裏付け) だが、Tikhonov 正則化 self-build
+  ~290 行で closure (当初見積 ~数十–150 行を上振れ、実測値)。撤退ライン不発。
 - **R2 単調収束**: 低〜中。`condExp` + 単調収束は Mathlib 在庫。条件付き KT / conditional Jensen の real-valued
   版が既存かで振れる。
 - **R3 real-valued AEP**: **最リスク**。finite SMB decl は lift 不可 (機械確認済) ゆえ sandwich を real-valued で
@@ -147,3 +153,10 @@ R1–R3 を CT 16.5.1 headline に組み、root import 登録 / README / roadmap
 1. **finite-alphabet SMB は lift 不可 (active)**: `shannon_mcmillan_breiman` / `shannon_mcmillan_breiman_of_sandwich`
    は `[Fintype α]` + pmf ベース `blockLogAvg` 依存を機械確認 (2026-07-19)。real-valued 市場では decl 再利用不可、
    Algoet–Cover sandwich の **論理骨格のみ**を再構築する方針。M0 で alphabet 非依存に救える補題を洗い出す。
+2. **R1 可測 argmax = concave-regularization (Tikhonov) ルート採用 (active、設計ピボット)**: 在庫の当初 2C
+   「least-index + compact-limit」可測 argmax レシピは closure しない — argmax タイ下で value-convergent だが
+   point-convergent でなく、一般 measurable selection (KRN) は Mathlib 不在
+   (`Mathlib/Probability/Decision/BayesEstimator.lean:46` の TODO が裏付け)。⟹ R1 は狭義凹正則化 (Tikhonov)
+   ルートを採用: `F ω` に `-ε·qReg` を足して一意最大点を可測に取り ε↓0 の極限で argmax へ。前提 `ConcaveOn (F ω)`
+   を要すが downstream で `growthRate_concaveOn` (親 Basic) が充足する regularity。
+   `exists_measurable_argmax_on_stdSimplex` proof-done で着地。
