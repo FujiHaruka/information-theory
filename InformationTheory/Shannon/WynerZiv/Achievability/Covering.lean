@@ -24,14 +24,14 @@ variable {α β γ U : Type*}
   [Fintype γ] [DecidableEq γ] [Nonempty γ] [MeasurableSpace γ] [MeasurableSingletonClass γ]
   [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]
 
-/-! ## Gateway atom 1 — side-information decoder confusion bound
+/-! ## Side-information decoder confusion bound
 
 Instantiation of the Slepian–Wolf alias bound `swError_EX_expectation_le` with the
 covering codeword `U` in the source (`α`) role and the side information `Y` in the
 `β` role. The bound is `exp(n · (H(U,Y) − H(Y) + 2ε)) / M = exp(n · (H(U|Y) + 2ε))
 / M`, the confusable-codeword count divided by the bin count. -/
 
-/-- **Wyner–Ziv side-information decoder confusion bound.** For a random binning
+/-- Wyner–Ziv side-information decoder confusion bound. For a random binning
 `f` of the covering-codeword space `Fin n → U` into `M` bins, the expected
 `μ`-probability (over the binning `f ∼ binningMeasure U n M`) that some codeword
 `u' ≠ U^n` that is jointly typical with the received side information `Y^n` hashes
@@ -65,7 +65,7 @@ theorem wz_sideInfo_decoder_confusion_expectation_le
   ChannelCoding.swError_EX_expectation_le μ Us Ys hUs hYs hindepY_full hidentY
     hindepZ_full hidentZ hposY hposZ hε
 
-/-! ## Gateway atom 2 — covering acceptance mass bound
+/-! ## Covering acceptance mass bound
 
 Instantiation of the strong conditional-slice mass bound
 `conditionalStronglyTypicalSlice_mass_ge` with the same alphabet assignment. For a
@@ -74,7 +74,7 @@ words jointly (strongly) typical with `u` is at least `exp(−n · (I(U;Y) + sla
 This ensures the true covering codeword is not rejected by the side-information
 decoder. -/
 
-/-- **Wyner–Ziv covering acceptance mass bound.** For a strongly-typical covering
+/-- Wyner–Ziv covering acceptance mass bound. For a strongly-typical covering
 codeword `u : Fin n → U`, the product `Y`-mass of the fiber of side words jointly
 strongly typical with `u` is bounded below by `exp(−n · (H(U) + H(Y) − H(U,Y) +
 slack))`, i.e. `exp(−n · (I(U;Y) + slack))`. This is the covering-acceptance half
@@ -119,22 +119,20 @@ theorem wz_covering_sideInfo_mass_ge
 
 /-! ## Rate non-negativity leaf (data-processing)
 
-The reshaped Wyner–Ziv rate is non-negative: every factorisable feasible objective
+The reshaped Wyner–Ziv rate is non-negative: every factorizable feasible objective
 `I(X;U) − I(Y;U)` is `≥ 0` by the data-processing inequality for the Markov chain
 `U − X − Y` (`wzObjective_nonneg_of_factorizable`), so its infimum over the
 non-degenerate value set is `≥ 0`. Combined with `h_rate`, this pins `0 < R`, which
 is exactly what the codebook-rate tendsto `codebookSize_log_div_tendsto` needs. -/
 
 /-- The reshaped Wyner–Ziv rate for a probability-measure source is `≥ 0`.
-@audit:ok (independent honesty audit 2026-07-06: sorryAx-free, `#print axioms` =
-[propext, Classical.choice, Quot.sound], machine-verified. Genuine closure: via
-`Real.sInf_nonneg`, every value is the objective of a feasible factorisable point,
-which is `≥ 0` by DPI `wzObjective_nonneg_of_factorizable`; the empty-`Fin 0`
-`Nonempty (Fin k)` step is a SOUND derivation, not a degenerate-definition abuse —
-a feasible factorisable point forces `k > 0` because a `Fin 0` kernel has row-sum
-`∑_{u:Fin 0} κ x u = 0 ≠ 1`. TRUE-as-framed even in the empty-feasible-set regime
-(`0 ≤ sInf ∅ = 0`), so unlike the codes lemma below this decl has NO under-hypothesis
-defect: `Real.sInf_nonneg`'s premise is vacuously satisfied when the set is empty.) -/
+Via `Real.sInf_nonneg`, every value of the rate set is the objective of a feasible
+factorizable point, which is `≥ 0` by the data-processing inequality
+`wzObjective_nonneg_of_factorizable`; a feasible factorizable point forces `k > 0`
+(a `Fin 0` kernel has row-sum `∑_{u:Fin 0} κ x u = 0 ≠ 1`). The bound holds even in the
+empty-feasible-set regime (`0 ≤ sInf ∅ = 0`), where `Real.sInf_nonneg`'s premise is
+vacuously satisfied.
+@audit:ok -/
 lemma wynerZivRate_nonneg
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (D : ℝ) :
@@ -165,33 +163,29 @@ lemma wynerZivRate_nonneg
     · exact ⟨⟨0, hk⟩⟩
   exact wzObjective_nonneg_of_factorizable h_pmf hfact
 
-/-! ## Covering + binning construction (hard leg)
+/-! ## Covering + binning construction
 
-The centrepiece of Wyner–Ziv achievability: from a feasible test channel below the
+The centerpiece of Wyner–Ziv achievability: from a feasible test channel below the
 rate `R`, build a sequence of Wyner–Ziv block codes with `codebookSize R n =
 ⌈exp(n R)⌉` messages whose expected block distortion is eventually within `D + ε`.
 
 The construction is the two-layer hybrid (rate-distortion covering on the `X → U`
 side, Slepian–Wolf binning on the side-information `Y` side) whose two error
-mechanisms are the gateway atoms `wz_sideInfo_decoder_confusion_expectation_le`
+mechanisms are the atoms `wz_sideInfo_decoder_confusion_expectation_le`
 and `wz_covering_sideInfo_mass_ge`, with a good codebook extracted by the
-pigeonhole averaging `exists_codebook_low_avg`. Deferred as the remaining plumbing
-body of this plan. -/
+pigeonhole averaging `exists_codebook_low_avg`. -/
 
-/-- **Witness extraction (Step 0).** From the feasibility guard `h_ne` and the
+/-- Witness extraction. From the feasibility guard `h_ne` and the
 rate strict inequality `h_rate`, extract a concrete finite auxiliary alphabet
-`Fin k`, a factorisable test channel `qf` feasible at distortion `D`, whose
+`Fin k`, a factorizable test channel `qf` feasible at distortion `D`, whose
 Wyner–Ziv objective `I(X;U) − I(Y;U)` is strictly below `R`.
 
 This is `exists_lt_of_csInf_lt` on the infimum-of-values definition of
 `wynerZivRate` (`= sInf (wzRateValueSet …)`), with the resulting value unpacked
-by `mem_wzRateValueSet_iff` into a feasible factorisable point.
-@audit:ok (independent honesty audit 2026-07-06: sorryAx-free, `#print axioms` =
-[propext, Classical.choice, Quot.sound], machine-verified. Genuine witness
-extraction, not degenerate: `exists_lt_of_csInf_lt` requires `h_ne` (value set
-nonempty) so the `sInf < R` is realised by an actual value, and
-`mem_wzRateValueSet_iff` unpacks it into a factorisable feasible point `(k, qf)`
-with objective `< R` — no vacuous/`sInf ∅` shortcut.) -/
+by `mem_wzRateValueSet_iff` into a feasible factorizable point. `exists_lt_of_csInf_lt`
+requires `h_ne` (value set nonempty), so `sInf < R` is realized by an actual value; no
+vacuous `sInf ∅` shortcut.
+@audit:ok -/
 lemma wz_testChannel_of_rate_lt
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (d : DistortionFn α γ) (R D : ℝ)
@@ -212,11 +206,11 @@ lemma wz_testChannel_of_rate_lt
 
 The following helper lemmas are the small, fully-proved atoms that the heavy
 covering+binning core (`wz_goodCode_exists_of_testChannel`) consumes: a
-`Nonempty (Fin k)` extractor from feasibility (P0), a full-support kernel
-perturbation (P1), and a public `exp(n c)/codebookSize R n → 0` decay adapter
-(P2, re-proved locally because the Slepian–Wolf original is `private`). -/
+`Nonempty (Fin k)` extractor from feasibility, a full-support kernel
+perturbation, and a public `exp(n c)/codebookSize R n → 0` decay adapter
+(re-proved locally because the Slepian–Wolf original is `private`). -/
 
-/-- **Nonempty auxiliary alphabet (Step 0 leaf).** A Wyner–Ziv factorisable
+/-- Nonempty auxiliary alphabet. A Wyner–Ziv factorizable
 joint over a source pmf on `α × β` forces a nonempty covering alphabet `Fin k`:
 the row-stochastic kernel condition `∑_{u : Fin k} κ x u = 1` is impossible for
 `k = 0` (the empty sum is `0 ≠ 1`), using `Nonempty α` to pick a row `x`. -/
@@ -234,22 +228,22 @@ lemma wz_nonempty_of_factorizable
     exact absurd hsum (by norm_num)
   · exact ⟨⟨0, hk⟩⟩
 
-/-- **Full-support kernel perturbation (Step 1 leaf).** From a feasible
-factorisable test channel `qf` (row-stochastic kernel, distortion `≤ D`) whose
+/-- Full-support kernel perturbation. From a feasible
+factorizable test channel `qf` (row-stochastic kernel, distortion `≤ D`) whose
 Wyner–Ziv objective is strictly below `R`, and any slack `δ > 0`, produce a
-perturbed factorisable channel `q'` with a *strictly positive kernel* `κ'`
+perturbed factorizable channel `q'` with a *strictly positive kernel* `κ'`
 (full support), whose objective is still `< R` and whose distortion is `≤ D + δ`.
 
 The perturbation is `q' := (1 - τ) • qf.1 + τ • q_unif` with `q_unif` the
-uniform-kernel factorisable joint and `τ ∈ (0, 1]` small: convex combination
-preserves factorisability (`IsWynerZivFactorizable_convex_combination`) and
+uniform-kernel factorizable joint and `τ ∈ (0, 1]` small: convex combination
+preserves factorizability (`IsWynerZivFactorizable_convex_combination`) and
 distortion feasibility (`WynerZivFactorizableConstraint_convex_combination`),
 the kernel `κ' = (1 - τ) κ + τ/k ≥ τ/k > 0` gains full support, and continuity
 of the objective (`continuous_wzObjective`) keeps it `< R` for small `τ`.
 
 Note this yields full support of the *kernel*, hence full support of the
-`(X, U)` joint marginal `wzMarginalXU q'` only on `{x | 0 < P_X x}` (see the
-construction lemma's stall note): `wzMarginalXU q' (x,u) = κ'(x,u)·P_X(x)`. -/
+`(X, U)` joint marginal `wzMarginalXU q'` only on `{x | 0 < P_X x}` (the construction
+lemma restricts the source alphabet to this support): `wzMarginalXU q' (x,u) = κ'(x,u)·P_X(x)`. -/
 lemma wz_fullKernelSupport_perturbation
     (P : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
     {k : ℕ} {qf : (α × β × Fin k → ℝ) × (Fin k × β → γ)}
@@ -270,7 +264,7 @@ lemma wz_fullKernelSupport_perturbation
   have hkR : (0 : ℝ) < (k : ℝ) := by exact_mod_cast hkpos
   -- Extract the row-stochastic kernel of `qf.1`.
   obtain ⟨κ, hκnn, hκsum, hκeq⟩ := hfact
-  -- Uniform kernel and its factorisable joint `qu (x,y,u) = (1/k) · P(x,y)`.
+  -- Uniform kernel and its factorizable joint `qu (x,y,u) = (1/k) · P(x,y)`.
   set qu : α × β × Fin k → ℝ := fun p ↦ (k : ℝ)⁻¹ * P (p.1, p.2.1) with hqu
   have huniform_sum : (∑ _u : Fin k, (k : ℝ)⁻¹) = 1 := by
     rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
@@ -338,7 +332,7 @@ lemma wz_fullKernelSupport_perturbation
       _ ≤ D + δ := by linarith
   -- Assemble the perturbed channel with its explicit full-support kernel.
   refine ⟨pert τ, fun x u ↦ (1 - τ) * κ x u + τ * (k : ℝ)⁻¹, ?_, ?_, ?_, ?_, hFpertτ, hdistτ⟩
-  · -- factorisation identity
+  · -- factorization identity
     intro x y u
     simp only [hpert, Pi.add_apply, Pi.smul_apply, smul_eq_mul, hqu, hκeq x y u]
     ring
@@ -365,7 +359,7 @@ lemma wz_fullKernelSupport_perturbation
     · simp only [hpert, Pi.add_apply, Pi.smul_apply, smul_eq_mul, hqu, hκeq x y u]
       ring
 
-/-- **Message-count decay adapter (Step 6 leaf).** For `c < R`, the ratio
+/-- Message-count decay adapter. For `c < R`, the ratio
 `exp(n c) / codebookSize R n → 0` as `n → ∞`. This is the E2 decoder-confusion
 decay term (collision mass over the bin count). Re-proved locally here because
 the Slepian–Wolf original `tendsto_exp_mul_codebookSize_inv` is `private` to
@@ -404,18 +398,18 @@ lemma wz_tendsto_exp_mul_codebookSize_inv {c R : ℝ} (hcR : c < R) :
           mul_le_mul_of_nonneg_left (h_inv_le n) (Real.exp_pos _).le
       _ = Real.exp ((n : ℝ) * (c - R)) := by rw [← Real.exp_add]; ring_nf
 
-/-! ### Covering + binning construction skeleton (S1/S2/C/BD/E)
+/-! ### Covering + binning construction skeleton
 
 The monolithic covering+binning body of `wz_goodCode_exists_of_testChannel` is
 decomposed into an ordered chain of sub-lemmas. The pure-regularity leaf
-`wz_restrictedCoveringJoint_pos` (S1) is proved here; the covering / source-support /
-diagonalization steps (`wz_covering_lossyCode_exists`, `wz_expectedBlockDistortion_source_agree`,
-`wz_diagonalize_slack`) and the per-`n` binning+covering assembly
-`wz_perN_covering_binning_code` (D3) are all closed sorry-free. Full support of the
+`wz_restrictedCoveringJoint_pos` is proved here; the covering / source-support /
+diagonalization steps (`wz_covering_lossyCode_exists`,
+`wz_expectedBlockDistortion_source_agree`, `wz_diagonalize_slack`) and the per-`n`
+binning+covering assembly `wz_perN_covering_binning_code` follow. Full support of the
 covering source stays proof-internal (restricted to the subtype `{x // 0 < P_X x}`),
 never a signature hypothesis. -/
 
-/-- **(S1) Restricted covering joint, full support (leaf).** From a strictly
+/-- Restricted covering joint, full support. From a strictly
 positive row-stochastic kernel `κ'` and the source marginal `P_X x = ∑_y P_XY(x,y)`,
 the `(X, U)` joint `κ'(x, u) · P_X(x)` restricted to the support subtype
 `α' := {x // 0 < P_X x}` is a strictly positive pmf on `α' × Fin k`:
@@ -427,10 +421,9 @@ the `(X, U)` joint `κ'(x, u) · P_X(x)` restricted to the support subtype
 
 This is the global-full-support source the rate-distortion covering theorem
 `rate_distortion_achievability` hard-requires (`hqStar_pos`), obtained on the
-restricted alphabet because factorisability forces `P_X`'s zero atoms into the
+restricted alphabet because factorizability forces `P_X`'s zero atoms into the
 joint regardless of `κ'`.
-@audit:ok (independent honesty audit 2026-07-06: genuine leaf, sorry-free with no
-hidden residual; `#print axioms` = `[propext, Classical.choice, Quot.sound]`) -/
+@audit:ok -/
 lemma wz_restrictedCoveringJoint_pos
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -479,7 +472,7 @@ lemma wz_restrictedCoveringJoint_pos
           (fun x _ hx ↦ le_antisymm (not_lt.mp (by simpa using hx)) (hPnn x))]
     exact htot
 
-/-- **(S2) Source-support block-distortion reconciliation.** Two Wyner–Ziv codes
+/-- Source-support block-distortion reconciliation. Two Wyner–Ziv codes
 that decode identically on every source sequence hitting only support atoms of
 `P_X` have equal expected block distortion, because `Measure.pi P_XY` assigns zero
 mass to sequences reaching a zero atom of `P_X`. This is the null-set transport that
@@ -517,13 +510,13 @@ lemma wz_expectedBlockDistortion_source_agree
       have hfin : ({q : α × β | ¬ 0 < ∑ y', P_XY.real {(q.1, y')}}).Finite :=
         Set.toFinite _
       rw [← hfin.coe_toFinset, ← sum_measureReal_singleton]
-      refine Finset.sum_eq_zero fun q hq => ?_
+      refine Finset.sum_eq_zero fun q hq ↦ ?_
       rw [hfin.mem_toFinset] at hq
       have hq' : ¬ 0 < ∑ y', P_XY.real {(q.1, y')} := hq
       have hsum_zero : ∑ y', P_XY.real {(q.1, y')} = 0 :=
-        le_antisymm (not_lt.mp hq') (Finset.sum_nonneg fun y' _ => measureReal_nonneg)
+        le_antisymm (not_lt.mp hq') (Finset.sum_nonneg fun y' _ ↦ measureReal_nonneg)
       exact (Finset.sum_eq_zero_iff_of_nonneg
-        (fun y' _ => measureReal_nonneg)).mp hsum_zero q.2 (Finset.mem_univ q.2)
+        (fun y' _ ↦ measureReal_nonneg)).mp hsum_zero q.2 (Finset.mem_univ q.2)
     exact (measureReal_eq_zero_iff (measure_ne_top P_XY _)).mp hreal
   -- On that full-support event the two codes decode identically, so the integrands agree a.e.
   unfold WynerZivCode.expectedBlockDistortion
@@ -635,7 +628,7 @@ lemma wz_jointStronglyTypical_mem_distortionTypical
 
 set_option maxHeartbeats 800000 in
 open ChannelCoding in
-/-- **(C) Rate-distortion covering layer.** For a strictly positive joint pmf
+/-- Rate-distortion covering layer. For a strictly positive joint pmf
 `qStar` on `α' × Fin k` with `mutualInfoPmf qStar < R₁` and a proxy distortion `d'`
 feasible at `D`, the rate-distortion achievability theorem yields, for all large
 block lengths `n`, a lossy code with `≥ ⌈exp(n R₁)⌉` codewords whose expected block
@@ -670,7 +663,7 @@ lemma wz_covering_lossyCode_exists
   have hLy_nn : 0 ≤ Ly := logSumAbs_nonneg _ _
   have hLj_nn : 0 ≤ Lj := logSumAbs_nonneg _ _
   set Sd : ℝ := ∑ p : α' × Fin k, ((d' p.1 p.2 : NNReal) : ℝ) with hSd_def
-  have hSd_nn : 0 ≤ Sd := Finset.sum_nonneg fun p _ => NNReal.coe_nonneg _
+  have hSd_nn : 0 ≤ Sd := Finset.sum_nonneg fun p _ ↦ NNReal.coe_nonneg _
   set cA : ℝ := (Fintype.card α' : ℝ) with hcA_def
   set cB : ℝ := (Fintype.card (Fin k) : ℝ) with hcB_def
   have hcA_pos : 0 < cA := by rw [hcA_def]; exact_mod_cast Fintype.card_pos
@@ -678,7 +671,7 @@ lemma wz_covering_lossyCode_exists
   -- Minimal singleton mass, positive by full support.
   set qZ_min : ℝ := Finset.univ.inf' Finset.univ_nonempty qStar with hqZ_def
   have hqZ_pos : 0 < qZ_min := by
-    rw [hqZ_def, Finset.lt_inf'_iff]; exact fun p _ => hpos p
+    rw [hqZ_def, Finset.lt_inf'_iff]; exact fun p _ ↦ hpos p
   have hqZ_le : ∀ p : α' × Fin k,
       qZ_min ≤ (pmfToMeasure (α := α' × Fin k) qStar).real {p} := by
     intro p
@@ -778,7 +771,7 @@ lemma wz_covering_lossyCode_exists
   have h_jts : ∀ {n : ℕ}, 0 < n → ∀ (x : Fin n → α') (y : Fin n → Fin k),
       (x, y) ∈ jointStronglyTypicalSet (rdAmbient qStar) iidXs iidYs n ε_join →
       (x, y) ∈ distortionTypicalSet (rdAmbient qStar) iidXs iidYs d' n ε_dist δ_typ :=
-    fun {n} hn x y hxy =>
+    fun {n} hn x y hxy ↦
       wz_jointStronglyTypical_mem_distortionTypical qStar hmem d' hej_pos.le
         hbX hbY hbJ h_distslack hn x y hxy
   -- Apply the rate-distortion covering theorem and repackage its conclusion.
@@ -786,19 +779,19 @@ lemma wz_covering_lossyCode_exists
   obtain ⟨N, hN⟩ := rate_distortion_achievability (marginalFst qStar) d'
     qStar hmemRD hpos hI hε' ε_X ε_join ε_dist δ_kl δ_typ
     hex_pos hej_pos hed_pos hdkl_pos hdtyp_nn hex_lt_ej h_rategap h_slack
-    h_distslack (fun {n} hn x y hxy => h_jts hn x y hxy) qZ_min hqZ_pos hqZ_le
+    h_distslack (fun {n} hn x y hxy ↦ h_jts hn x y hxy) qZ_min hqZ_pos hqZ_le
     h_dominates
-  refine ⟨N, fun n hn => ?_⟩
+  refine ⟨N, fun n hn ↦ ?_⟩
   obtain ⟨M, hM_lb, hM_ub, c, hc⟩ := hN n hn
   exact ⟨M, hM_lb, hM_ub, c, hc⟩
 
-/-- **Covering-distortion reconciliation identity (Step 1–2 core).** The covering
+/-- Covering-distortion reconciliation identity. The covering
 proxy distortion `d'` on the source-support subtype `α' := {x // 0 < P_X x}`,
 defined as the `Y`-conditional expectation
 `d'(⟨x, _⟩, u) := ∑_y (P_XY(x,y) / P_X x) · d(x, f(u, y))`, reconciles with the
 Wyner–Ziv distortion functional: for the restricted `(X, U)`-joint
 `qStar(⟨x, _⟩, u) := κ'(x, u) · P_X x`, the pmf-form expected distortion of `d'`
-equals the Wyner–Ziv expected distortion of the factorisable joint
+equals the Wyner–Ziv expected distortion of the factorizable joint
 `q'(x, y, u) := κ'(x, u) · P_XY(x, y)` under the reconstruction `f`.
 
 The identity is the load-bearing bridge that lets the rate-distortion covering
@@ -813,65 +806,65 @@ lemma wz_coveringDistortion_reconcile
     (d : DistortionFn α γ) {k : ℕ}
     (κ' : α → Fin k → ℝ) (f : Fin k × β → γ) :
     expectedDistortionPmf
-        (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+        (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) ↦
           Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
               * ((d x'.1 (f (u, y)) : NNReal) : ℝ)))
-        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+        (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k ↦
           κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)})
       = wzExpectedDistortion (Fin k) (fun a b ↦ (d a b : ℝ))
-          (fun p : α × β × Fin k => κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) f := by
+          (fun p : α × β × Fin k ↦ κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) f := by
   classical
   -- The full-alphabet per-source-symbol inner double sum.
-  set G : α → ℝ := fun x =>
+  set G : α → ℝ := fun x ↦
     ∑ y : β, ∑ u : Fin k, κ' x u * P_XY.real {(x, y)} * ((d x (f (u, y)) : NNReal) : ℝ)
     with hG
   have hPnn : ∀ x : α, 0 ≤ ∑ y, P_XY.real {(x, y)} :=
-    fun x => Finset.sum_nonneg fun y _ => measureReal_nonneg
+    fun x ↦ Finset.sum_nonneg fun y _ ↦ measureReal_nonneg
   -- RHS = ∑ x : α, G x.
   have hRHS : wzExpectedDistortion (Fin k) (fun a b ↦ (d a b : ℝ))
-      (fun p : α × β × Fin k => κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) f
+      (fun p : α × β × Fin k ↦ κ' p.1 p.2.2 * P_XY.real {(p.1, p.2.1)}) f
       = ∑ x : α, G x := by
     unfold wzExpectedDistortion
     rw [Fintype.sum_prod_type]
-    refine Finset.sum_congr rfl fun x _ => ?_
+    refine Finset.sum_congr rfl fun x _ ↦ ?_
     rw [Fintype.sum_prod_type]
   -- LHS = ∑ a : α', G a.1.
   have hLHS : expectedDistortionPmf
-      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) =>
+      (fun (x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}) (u : Fin k) ↦
         Real.toNNReal (∑ y : β, (P_XY.real {(x'.1, y)} / ∑ y' : β, P_XY.real {(x'.1, y')})
             * ((d x'.1 (f (u, y)) : NNReal) : ℝ)))
-      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k =>
+      (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × Fin k ↦
         κ' p.1.1 p.2 * ∑ y : β, P_XY.real {(p.1.1, y)})
       = ∑ a : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}, G a.1 := by
     unfold expectedDistortionPmf
-    refine Finset.sum_congr rfl fun a _ => ?_
+    refine Finset.sum_congr rfl fun a _ ↦ ?_
     have hPxpos : 0 < ∑ y : β, P_XY.real {(a.1, y)} := a.2
     have hPxne : (∑ y : β, P_XY.real {(a.1, y)}) ≠ 0 := ne_of_gt hPxpos
     simp only [hG]
     rw [Finset.sum_comm]
-    refine Finset.sum_congr rfl fun b _ => ?_
+    refine Finset.sum_congr rfl fun b _ ↦ ?_
     rw [Real.coe_toNNReal _
-      (Finset.sum_nonneg fun y _ =>
+      (Finset.sum_nonneg fun y _ ↦
         mul_nonneg (div_nonneg measureReal_nonneg hPxpos.le) (NNReal.coe_nonneg _))]
     rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun y _ => ?_
+    refine Finset.sum_congr rfl fun y _ ↦ ?_
     field_simp
   -- Extend the support-subtype sum back to the full alphabet (zero atoms of `P_X`
   -- contribute nothing: `q'` vanishes there).
   have hGzero : ∀ x : α, (∑ y, P_XY.real {(x, y)}) = 0 → G x = 0 := by
     intro x hx
     simp only [hG]
-    refine Finset.sum_eq_zero fun y _ => ?_
+    refine Finset.sum_eq_zero fun y _ ↦ ?_
     have hxy : P_XY.real {(x, y)} = 0 :=
-      (Finset.sum_eq_zero_iff_of_nonneg (fun y' _ => measureReal_nonneg)).mp hx y
+      (Finset.sum_eq_zero_iff_of_nonneg (fun y' _ ↦ measureReal_nonneg)).mp hx y
         (Finset.mem_univ y)
-    refine Finset.sum_eq_zero fun u _ => ?_
+    refine Finset.sum_eq_zero fun u _ ↦ ?_
     rw [hxy]; ring
   have hext : (∑ a : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}, G a.1) = ∑ x : α, G x := by
-    rw [← Finset.sum_subtype (Finset.univ.filter (fun x => 0 < ∑ y, P_XY.real {(x, y)}))
-          (fun x => by simp) G]
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun x ↦ 0 < ∑ y, P_XY.real {(x, y)}))
+          (fun x ↦ by simp) G]
     exact Finset.sum_subset (Finset.filter_subset _ _)
-      (fun x _ hx => hGzero x (le_antisymm (not_lt.mp (by simpa using hx)) (hPnn x)))
+      (fun x _ hx ↦ hGzero x (le_antisymm (not_lt.mp (by simpa using hx)) (hPnn x)))
   rw [hLHS, hext, hRHS]
 
 /-- The `(U, Y)`-marginal joint pmf feeding the side-information ambient, restricted to the
@@ -909,11 +902,11 @@ lemma wzSideInfoMarginal_sum_eq_one
       ∑ ys : {y : β // 0 < ∑ x', P_XY.real {(x', y)}}, P_XY.real {(x, ys.1)}
         = ∑ y : β, P_XY.real {(x, y)} := by
     intro x
-    letI : DecidablePred (fun y : β => 0 < ∑ x', P_XY.real {(x', y)}) :=
+    letI : DecidablePred (fun y : β ↦ 0 < ∑ x', P_XY.real {(x', y)}) :=
       Classical.decPred _
     rw [← Finset.sum_subtype
-        (Finset.univ.filter (fun y : β => 0 < ∑ x', P_XY.real {(x', y)}))
-        (fun y => by simp) (fun y => P_XY.real {(x, y)})]
+        (Finset.univ.filter (fun y : β ↦ 0 < ∑ x', P_XY.real {(x', y)}))
+        (fun y ↦ by simp) (fun y ↦ P_XY.real {(x, y)})]
     refine Finset.sum_subset (Finset.filter_subset _ _) ?_
     intro y _ hy
     rw [Finset.mem_filter] at hy
@@ -973,10 +966,10 @@ lemma wzSideInfoMarginal_subtype_nonempty
   refine ⟨⟨y₀, ?_⟩⟩
   calc (0 : ℝ) < P_XY.real {(x₀, y₀)} := hxy
     _ ≤ ∑ x, P_XY.real {(x, y₀)} :=
-        Finset.single_le_sum (f := fun x => P_XY.real {(x, y₀)})
+        Finset.single_le_sum (f := fun x ↦ P_XY.real {(x, y₀)})
           (fun x _ ↦ measureReal_nonneg) (Finset.mem_univ x₀)
 
-/-- **Covering-acceptance failure event (C2).** For a covering `LossyCode` `c` on the
+/-- Covering-acceptance failure event. For a covering `LossyCode` `c` on the
 source-support subtype `α' := {x // 0 < P_X x}`, the set of block source–side pairs
 `p : Fin n → α' × β` whose true covering codeword `c.decoder (c.encoder x)` is *not*
 jointly (strongly) typical, at radius `ε`, with the side information `y` in the
@@ -999,7 +992,8 @@ def wzCoveringAcceptFailSet (P_XY : Measure (α × β)) {k : ℕ}
 /-- The source–side covering pmf `(x', y) ↦ P_XY{(x'.1, y)}` (on the source-support subtype)
 is a probability vector: its values are nonnegative measures and they total `1` (the zero-`P_X`
 atoms carry no mass, so the subtype sum equals the full joint mass). Used to supply the
-`IsProbabilityMeasure` instance for the correlated-joint source measure `Measure.pi (pmfToMeasure …)`. -/
+`IsProbabilityMeasure` instance for the correlated-joint source measure
+`Measure.pi (pmfToMeasure …)`. -/
 lemma wz_QXY_mem_stdSimplex
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] :
     (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})
@@ -1023,10 +1017,10 @@ lemma wz_QXY_mem_stdSimplex
 
 
 
-/-! ### (Hoisted for Atom G) Markov-core chain + its regularity helpers.
-Relocated verbatim from after `wyner_ziv_achievability_codes` to here so the covering
-atom `wz_coveringFamily_of_testChannel` (below) can consume the leaf
-`wz_covering_chosenWord_sideInfo_typical`. Pure relocation — no signature or proof change. -/
+/-! ### Markov-core chain and its regularity helpers
+
+These lemmas are placed before the covering atom `wz_coveringFamily_of_testChannel`
+(below) so it can consume the leaf `wz_covering_chosenWord_sideInfo_typical`. -/
 
 section LegAAmbientRegularity
 
@@ -1241,9 +1235,9 @@ lemma wz_sourcePmf_mem_stdSimplex
   have hsub_total :
       (∑ x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}, ∑ y : β, P_XY.real {(x'.1, y)})
         = ∑ x : α, ∑ y : β, P_XY.real {(x, y)} := by
-    letI : DecidablePred (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}) := Classical.decPred _
-    rw [← Finset.sum_subtype (Finset.univ.filter (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}))
-        (fun x => by simp) (fun x => ∑ y : β, P_XY.real {(x, y)})]
+    letI : DecidablePred (fun x : α ↦ 0 < ∑ y, P_XY.real {(x, y)}) := Classical.decPred _
+    rw [← Finset.sum_subtype (Finset.univ.filter (fun x : α ↦ 0 < ∑ y, P_XY.real {(x, y)}))
+        (fun x ↦ by simp) (fun x ↦ ∑ y : β, P_XY.real {(x, y)})]
     refine Finset.sum_subset (Finset.filter_subset _ _) ?_
     intro x _ hx
     rw [Finset.mem_filter] at hx
@@ -1267,9 +1261,9 @@ private lemma wz_source_snd_marginal
   simp only [marginalSnd]
   show (∑ x' : {x : α // 0 < ∑ y, P_XY.real {(x, y)}}, P_XY.real {(x'.1, y)})
       = ∑ x : α, P_XY.real {(x, y)}
-  letI : DecidablePred (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}) := Classical.decPred _
-  rw [← Finset.sum_subtype (Finset.univ.filter (fun x : α => 0 < ∑ y, P_XY.real {(x, y)}))
-      (fun x => by simp) (fun x => P_XY.real {(x, y)})]
+  letI : DecidablePred (fun x : α ↦ 0 < ∑ y, P_XY.real {(x, y)}) := Classical.decPred _
+  rw [← Finset.sum_subtype (Finset.univ.filter (fun x : α ↦ 0 < ∑ y, P_XY.real {(x, y)}))
+      (fun x ↦ by simp) (fun x ↦ P_XY.real {(x, y)})]
   refine Finset.sum_subset (Finset.filter_subset _ _) ?_
   intro x _ hx
   rw [Finset.mem_filter] at hx
@@ -1277,7 +1271,8 @@ private lemma wz_source_snd_marginal
   have hle : ∑ y', P_XY.real {(x, y')} ≤ 0 := hx (Finset.mem_univ x)
   have hz : ∑ y', P_XY.real {(x, y')} = 0 :=
     le_antisymm hle (Finset.sum_nonneg fun _ _ ↦ measureReal_nonneg)
-  exact (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz y (Finset.mem_univ y)
+  exact (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz y
+    (Finset.mem_univ y)
 
 /-- The `β'`-`Y`-marginal of the side-information ambient equals the full `Y`-marginal of `P_XY`
 at the subtype value: `((rdAmbient wsm).map (iidYs 0)).real {y'} = ∑ x, P_XY{(x, y'.1)}`. -/
@@ -1349,7 +1344,7 @@ lemma wz_source_snd_eq_ambient_snd_map
   rw [← ENNReal.ofReal_toReal hL, ← ENNReal.ofReal_toReal hR]
   exact congrArg ENNReal.ofReal hreal
 
-/-- The `n`-fold side-information law of the ambient factorises as the product of its
+/-- The `n`-fold side-information law of the ambient factorizes as the product of its
 single-letter `β'`-`Y`-marginal. -/
 lemma wz_ambient_jointRV_iidYs_eq_pi
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
