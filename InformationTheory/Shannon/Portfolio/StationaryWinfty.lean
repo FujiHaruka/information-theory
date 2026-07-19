@@ -13,6 +13,8 @@ import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.Probability.Process.Filtration
 import Mathlib.Probability.Kernel.Condexp
 import Mathlib.Probability.Kernel.MeasurableLIntegral
+import Mathlib.Probability.Martingale.Convergence
+import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.Topology.Order.MonotoneConvergence
 import InformationTheory.Shannon.Portfolio.StationaryMarket
 
@@ -755,6 +757,200 @@ theorem exists_condOptGrowth_tendsto_condOptGrowthInfty [StandardBorelSpace Ω] 
   have h_mono := condOptGrowth_monotone μ ℱ X bstar hmeas hsimplex hdom
   have h_bdd := condOptGrowth_bddAbove μ X bstar hsimplex hintb hUB
   exact tendsto_atTop_ciSup h_mono h_bdd
+
+-- Each simplex coordinate is at most `1` (nonnegative and summing to `1`).
+private theorem stdSimplex_component_le_one {x : Fin m → ℝ}
+    (hx : x ∈ stdSimplex ℝ (Fin m)) (j : Fin m) : x j ≤ 1 :=
+  hx.2 ▸ Finset.single_le_sum (fun i _ ↦ hx.1 i) (Finset.mem_univ j)
+
+-- Stagewise conditional-expectation portfolio: the `ℱ k`-conditional expectation, taken
+-- coordinatewise, of the infinite-past optimal portfolio `g`.
+private noncomputable def condExpPortfolio (μ : Measure Ω) (ℱ : Filtration ℕ m0)
+    (g : Ω → Fin m → ℝ) (k : ℕ) (ω : Ω) : Fin m → ℝ :=
+  fun j ↦ (μ[fun ω' ↦ g ω' j | ℱ k]) ω
+
+open Classical in
+-- The stagewise conditional-expectation portfolio patched to be simplex-valued everywhere: it
+-- equals `condExpPortfolio` on the (co-null) good set where the latter lands in the simplex, and a
+-- fixed simplex vertex elsewhere. This makes it a legal `ℱ k`-measurable simplex competitor.
+private noncomputable def condExpPortfolioPatched [Nonempty (Fin m)] (μ : Measure Ω)
+    (ℱ : Filtration ℕ m0) (g : Ω → Fin m → ℝ) (k : ℕ) (ω : Ω) : Fin m → ℝ :=
+  if condExpPortfolio μ ℱ g k ω ∈ stdSimplex ℝ (Fin m) then condExpPortfolio μ ℱ g k ω
+  else Pi.single (Classical.arbitrary (Fin m)) 1
+
+/-- Gateway identity for the stationary-market `W_∞` AEP (Cover–Thomas §16.5): the growth-rate
+integral of the infinite-past (`⨆ k, ℱ k`) conditional log-optimal portfolio `bstarInf` equals the
+increasing limit `W_∞ = condOptGrowthInfty` of the stagewise conditional-optimal growths. This is
+the identity that lets the Algoet–Cover sandwich for `(1/n) log S*_n → W_∞` reduce to a direct
+Birkhoff application.
+
+Two inclusions bracket the value. The upper inclusion `condOptGrowthInfty ≤ ∫ log (bstarInf · X)`
+uses that each `bstar k` is `⨆ j, ℱ j`-measurable (the filtration is increasing) and hence a legal
+competitor against `bstarInf` at the infinite-past level; integrating the conditional dominance
+collapses both conditional expectations to their integrals. The lower inclusion
+`∫ log (bstarInf · X) ≤ condOptGrowthInfty` approximates `bstarInf` by its stagewise conditional
+expectations `c_k := μ[bstarInf | ℱ k]` (coordinatewise), which are `ℱ k`-measurable and a.e.
+simplex-valued (conditional expectation preserves nonnegativity and the unit coordinate sum);
+patched to be everywhere simplex-valued they are legal stage-`k` competitors, so
+`∫ log (c_k · X) ≤ condOptGrowth k ≤ condOptGrowthInfty`. Lévy's upward theorem
+(`Integrable.tendsto_ae_condExp`) gives `c_k → bstarInf` a.e., and dominated convergence (envelope
+`∑ⱼ |log Xⱼ|`) passes the bound to the limit.
+
+`bstarInf` and its `⨆ j, ℱ j`-conditional dominance are received as hypotheses (constructed
+separately, e.g. by instantiating `exists_condLogOptimalSeq` at the constant filtration
+`fun _ ↦ ⨆ j, ℱ j`); this proves only the identity, not the existence. The `hpos`/`hint`
+hypotheses are market-regularity preconditions. -/
+theorem condOptGrowthInfty_eq_integral_infPast [StandardBorelSpace Ω] [Nonempty Ω]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) [Nonempty (Fin m)]
+    (hX : Measurable X)
+    (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
+    (hint : ∀ c : Ω → Fin m → ℝ, Measurable c → (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ)
+    (bstar : ℕ → Ω → Fin m → ℝ)
+    (hbstar_meas : ∀ k, StronglyMeasurable[ℱ k] (bstar k))
+    (hbstar_simplex : ∀ k ω, bstar k ω ∈ stdSimplex ℝ (Fin m))
+    (hbstar_dom : ∀ (k : ℕ) (c : Ω → Fin m → ℝ), StronglyMeasurable[ℱ k] c →
+        (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+        μ[causalLogReturn X c | ℱ k] ≤ᵐ[μ] μ[causalLogReturn X (bstar k) | ℱ k])
+    (bstarInf : Ω → Fin m → ℝ)
+    (hInf_meas : StronglyMeasurable[⨆ j, ℱ j] bstarInf)
+    (hInf_simplex : ∀ ω, bstarInf ω ∈ stdSimplex ℝ (Fin m))
+    (hInf_dom : ∀ (c : Ω → Fin m → ℝ), StronglyMeasurable[⨆ j, ℱ j] c →
+        (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+        μ[causalLogReturn X c | ⨆ j, ℱ j] ≤ᵐ[μ] μ[causalLogReturn X bstarInf | ⨆ j, ℱ j]) :
+    ∫ ω, causalLogReturn X bstarInf ω ∂μ = condOptGrowthInfty μ X bstar := by
+  classical
+  have hsup_le : (⨆ j, ℱ j) ≤ m0 := iSup_le ℱ.le
+  -- Direction 1 (upper): `condOptGrowth k ≤ ∫ log (bstarInf · X)` for every `k`.
+  have hUpper : ∀ k, condOptGrowth μ X bstar k ≤ ∫ ω, causalLogReturn X bstarInf ω ∂μ := by
+    intro k
+    have hmeas_inf : StronglyMeasurable[⨆ j, ℱ j] (bstar k) :=
+      (hbstar_meas k).mono (le_iSup (fun j ↦ ℱ j) k)
+    calc condOptGrowth μ X bstar k
+        = ∫ ω, causalLogReturn X (bstar k) ω ∂μ := rfl
+      _ = ∫ ω, (μ[causalLogReturn X (bstar k) | ⨆ j, ℱ j]) ω ∂μ := (integral_condExp hsup_le).symm
+      _ ≤ ∫ ω, (μ[causalLogReturn X bstarInf | ⨆ j, ℱ j]) ω ∂μ :=
+          integral_mono_ae integrable_condExp integrable_condExp
+            (hInf_dom (bstar k) hmeas_inf (hbstar_simplex k))
+      _ = ∫ ω, causalLogReturn X bstarInf ω ∂μ := integral_condExp hsup_le
+  have hbdd : BddAbove (Set.range (condOptGrowth μ X bstar)) :=
+    ⟨∫ ω, causalLogReturn X bstarInf ω ∂μ, by rintro _ ⟨k, rfl⟩; exact hUpper k⟩
+  have h1 : condOptGrowthInfty μ X bstar ≤ ∫ ω, causalLogReturn X bstarInf ω ∂μ :=
+    ciSup_le hUpper
+  -- Direction 2 (lower): `∫ log (bstarInf · X) ≤ condOptGrowthInfty`.
+  have hLower : ∫ ω, causalLogReturn X bstarInf ω ∂μ ≤ condOptGrowthInfty μ X bstar := by
+    -- `bstarInf` regularity: measurable, integrable and `⨆ ℱ`-measurable coordinates.
+    have hInf_sm : StronglyMeasurable bstarInf := hInf_meas.mono hsup_le
+    have hInf_int : ∀ j, Integrable (fun ω ↦ bstarInf ω j) μ := by
+      intro j
+      refine Integrable.mono' (integrable_const (1:ℝ))
+        ((measurable_pi_apply j).comp hInf_sm.measurable).aestronglyMeasurable
+        (Filter.Eventually.of_forall fun ω ↦ ?_)
+      rw [Real.norm_eq_abs, abs_of_nonneg ((hInf_simplex ω).1 j)]
+      exact stdSimplex_component_le_one (hInf_simplex ω) j
+    have hInf_sm_sup : ∀ j, StronglyMeasurable[⨆ n, ℱ n] (fun ω ↦ bstarInf ω j) := fun j ↦
+      ((measurable_pi_apply j).comp hInf_meas.measurable).stronglyMeasurable
+    -- The stagewise conditional-expectation portfolio is `ℱ k`-measurable.
+    have hc_meas : ∀ k, StronglyMeasurable[ℱ k] (condExpPortfolio μ ℱ bstarInf k) := by
+      intro k
+      have hM : Measurable[ℱ k] (condExpPortfolio μ ℱ bstarInf k) :=
+        (@measurable_pi_iff Ω (Fin m) (fun _ : Fin m ↦ ℝ) (ℱ k) inferInstance
+          (condExpPortfolio μ ℱ bstarInf k)).mpr fun j ↦ stronglyMeasurable_condExp.measurable
+      exact hM.stronglyMeasurable
+    -- It is a.e. simplex-valued (conditional expectation preserves nonnegativity and unit sum).
+    have hc_ae_simplex : ∀ k, ∀ᵐ ω ∂μ, condExpPortfolio μ ℱ bstarInf k ω ∈ stdSimplex ℝ (Fin m) := by
+      intro k
+      have hnn : ∀ᵐ ω ∂μ, ∀ j, 0 ≤ condExpPortfolio μ ℱ bstarInf k ω j := by
+        rw [ae_all_iff]
+        intro j
+        exact condExp_nonneg (Filter.Eventually.of_forall fun ω ↦ (hInf_simplex ω).1 j)
+      have hfun_eq : (∑ j : Fin m, fun ω' : Ω ↦ bstarInf ω' j) = (fun _ : Ω ↦ (1:ℝ)) := by
+        funext ω'
+        simp only [Finset.sum_apply]
+        exact (hInf_simplex ω').2
+      have hcondsum := condExp_finsetSum (μ := μ) (m := ℱ k) (s := (Finset.univ : Finset (Fin m)))
+        (f := fun (j : Fin m) (ω' : Ω) ↦ bstarInf ω' j) (fun j _ ↦ hInf_int j)
+      rw [hfun_eq, condExp_const (ℱ.le k) (1:ℝ)] at hcondsum
+      filter_upwards [hnn, hcondsum] with ω hω_nn hω_sum
+      refine ⟨hω_nn, ?_⟩
+      show ∑ j, (μ[fun ω' ↦ bstarInf ω' j | ℱ k]) ω = 1
+      simp only [Finset.sum_apply] at hω_sum
+      exact hω_sum.symm
+    -- Lévy's upward theorem: `c_k → bstarInf` a.e., coordinatewise.
+    have hc_conv : ∀ᵐ ω ∂μ, ∀ j,
+        Tendsto (fun k ↦ condExpPortfolio μ ℱ bstarInf k ω j) atTop (𝓝 (bstarInf ω j)) := by
+      rw [ae_all_iff]
+      intro j
+      exact (hInf_int j).tendsto_ae_condExp (hInf_sm_sup j)
+    -- The patched portfolio is an everywhere-simplex `ℱ k`-measurable competitor.
+    have hcp_meas : ∀ k, StronglyMeasurable[ℱ k] (condExpPortfolioPatched μ ℱ bstarInf k) := by
+      intro k
+      unfold condExpPortfolioPatched
+      exact StronglyMeasurable.ite ((hc_meas k).measurable
+        (isClosed_stdSimplex (𝕜 := ℝ) (ι := Fin m)).measurableSet)
+        (hc_meas k) stronglyMeasurable_const
+    have hcp_simplex : ∀ k ω, condExpPortfolioPatched μ ℱ bstarInf k ω ∈ stdSimplex ℝ (Fin m) := by
+      intro k ω
+      unfold condExpPortfolioPatched
+      by_cases h : condExpPortfolio μ ℱ bstarInf k ω ∈ stdSimplex ℝ (Fin m)
+      · rw [if_pos h]; exact h
+      · rw [if_neg h]; exact single_mem_stdSimplex ℝ (Classical.arbitrary (Fin m))
+    have hcp_ae_eq : ∀ k, ∀ᵐ ω ∂μ,
+        condExpPortfolioPatched μ ℱ bstarInf k ω = condExpPortfolio μ ℱ bstarInf k ω := by
+      intro k
+      filter_upwards [hc_ae_simplex k] with ω hω
+      show condExpPortfolioPatched μ ℱ bstarInf k ω = condExpPortfolio μ ℱ bstarInf k ω
+      unfold condExpPortfolioPatched
+      exact if_pos hω
+    -- Stagewise bound: `∫ log (cp_k · X) ≤ condOptGrowth k ≤ condOptGrowthInfty`.
+    have hstage : ∀ k, ∫ ω, causalLogReturn X (condExpPortfolioPatched μ ℱ bstarInf k) ω ∂μ
+        ≤ condOptGrowthInfty μ X bstar := by
+      intro k
+      have hstage_k : ∫ ω, causalLogReturn X (condExpPortfolioPatched μ ℱ bstarInf k) ω ∂μ
+          ≤ condOptGrowth μ X bstar k := by
+        calc ∫ ω, causalLogReturn X (condExpPortfolioPatched μ ℱ bstarInf k) ω ∂μ
+            = ∫ ω, (μ[causalLogReturn X (condExpPortfolioPatched μ ℱ bstarInf k) | ℱ k]) ω ∂μ :=
+              (integral_condExp (ℱ.le k)).symm
+          _ ≤ ∫ ω, (μ[causalLogReturn X (bstar k) | ℱ k]) ω ∂μ :=
+              integral_mono_ae integrable_condExp integrable_condExp
+                (hbstar_dom k (condExpPortfolioPatched μ ℱ bstarInf k) (hcp_meas k) (hcp_simplex k))
+          _ = ∫ ω, causalLogReturn X (bstar k) ω ∂μ := integral_condExp (ℱ.le k)
+      exact le_trans hstage_k (le_ciSup hbdd k)
+    -- Dominated convergence passes the bound to the limit.
+    have hconv_ae : ∀ᵐ ω ∂μ, Tendsto
+        (fun k ↦ causalLogReturn X (condExpPortfolioPatched μ ℱ bstarInf k) ω) atTop
+        (𝓝 (causalLogReturn X bstarInf ω)) := by
+      have hcp_eq_all : ∀ᵐ ω ∂μ, ∀ k, condExpPortfolioPatched μ ℱ bstarInf k ω
+          = condExpPortfolio μ ℱ bstarInf k ω := ae_all_iff.mpr hcp_ae_eq
+      filter_upwards [hc_conv, hcp_eq_all] with ω hconv hcpeq
+      have hSumTo : Tendsto (fun k ↦ ∑ j, condExpPortfolio μ ℱ bstarInf k ω j * X ω j) atTop
+          (𝓝 (∑ j, bstarInf ω j * X ω j)) :=
+        tendsto_finsetSum _ fun j _ ↦ (hconv j).mul tendsto_const_nhds
+      have hpos_inf : 0 < ∑ j, bstarInf ω j * X ω j := hpos ω (bstarInf ω) (hInf_simplex ω)
+      have hLogTo : Tendsto
+          (fun k ↦ Real.log (∑ j, condExpPortfolio μ ℱ bstarInf k ω j * X ω j)) atTop
+          (𝓝 (Real.log (∑ j, bstarInf ω j * X ω j))) :=
+        (Real.continuousAt_log hpos_inf.ne').tendsto.comp hSumTo
+      have heq : (fun k ↦ causalLogReturn X (condExpPortfolioPatched μ ℱ bstarInf k) ω)
+          = (fun k ↦ Real.log (∑ j, condExpPortfolio μ ℱ bstarInf k ω j * X ω j)) := by
+        funext k
+        simp only [causalLogReturn, hcpeq k]
+      rw [heq]
+      exact hLogTo
+    have hdct : Tendsto
+        (fun k ↦ ∫ ω, causalLogReturn X (condExpPortfolioPatched μ ℱ bstarInf k) ω ∂μ) atTop
+        (𝓝 (∫ ω, causalLogReturn X bstarInf ω ∂μ)) := by
+      refine tendsto_integral_of_dominated_convergence (logEnvelope X)
+        (fun k ↦ ?_) (logEnvelope_integrable μ hint) (fun k ↦ ?_) hconv_ae
+      · exact (Real.measurable_log.comp (Finset.measurable_sum _ fun j _ ↦
+          ((measurable_pi_apply j).comp ((hcp_meas k).mono (ℱ.le k)).measurable).mul
+            ((measurable_pi_apply j).comp hX))).aestronglyMeasurable
+      · exact Filter.Eventually.of_forall fun ω ↦ by
+          rw [Real.norm_eq_abs]
+          exact logReturn_abs_le_envelope hpos ω (hcp_simplex k ω)
+    exact le_of_tendsto hdct (Filter.Eventually.of_forall hstage)
+  exact le_antisymm hLower h1
 
 end CondOptimalGrowth
 
