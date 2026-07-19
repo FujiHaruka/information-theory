@@ -15,7 +15,7 @@ Two standalone identities feeding the assembly of the EPI G2 bridge lemma
 (`EPIG2ConvEntropyMonotone.lean`). Both are independent of sub-gap (a) (the conditional
 KL integral form, the genuine `wall:cond-diff-entropy`).
 
-## sub-gap (b) — per-fibre density expansion
+## sub-gap (b) — per-fiber density expansion
 
 `klDiv_toReal_eq_neg_differentialEntropy_sub_cross` :
 `(klDiv P Q).toReal = − differentialEntropy P − ∫ x, (P-density x) · log (Q-density x) ∂volume`,
@@ -27,7 +27,7 @@ equal mass, and cross-term integrability. This is the density-level reading of
 
 `integral_condDistrib_marginal_eq` :
 `∫ z, (∫ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z) = ∫ x, g x ∂(μ.map X)`,
-i.e. averaging the `X`-fibre integral over `μ.map Z` returns the `μ.map X` integral.
+i.e. averaging the `X`-fiber integral over `μ.map Z` returns the `μ.map X` integral.
 The genuine core is the measure-level identity; a density-form wrapper
 `integral_condDistrib_density_marginal_eq` packages the assembly's
 `∫ x, (κ z -density x) · log (qX x) ∂volume` shape.
@@ -40,7 +40,7 @@ open scoped ENNReal NNReal Real
 
 set_option linter.unusedSectionVars false
 
-/-! ## sub-gap (b) — per-fibre density expansion -/
+/-! ## sub-gap (b) — per-fiber density expansion -/
 
 /-- When `P ≪ volume` and `Q ≪ volume`, the log-likelihood ratio `llr P Q`
 splits, `P`-a.e., into the difference of the two volume-densities' logarithms:
@@ -74,7 +74,7 @@ theorem llr_eq_log_density_sub_log_density
   rw [hxR, Real.log_mul (ne_of_gt (ENNReal.toReal_pos hPQx.ne' hPQtopx))
     (ne_of_gt (ENNReal.toReal_pos hQx.ne' hQtopx)), add_sub_cancel_right]
 
-/-- Per-fibre density expansion (sub-gap (b)). For `P Q : Measure ℝ` with
+/-- Per-fiber density expansion (sub-gap (b)). For `P Q : Measure ℝ` with
 `P ≪ volume`, `Q ≪ volume`, equal total mass `P univ = Q univ`, the real-valued
 Kullback-Leibler divergence expands into minus the differential entropy of `P`
 and a cross-entropy term:
@@ -86,7 +86,7 @@ and a cross-entropy term:
 `∫ p log p − ∫ p log q = ∫ p log (p/q) = ∫ llr P Q ∂P`.
 
 The cross-term integrability
-`Integrable (fun x => (P.rnDeriv volume x).toReal · log ((Q.rnDeriv volume x).toReal)) volume`
+`Integrable (fun x ↦ (P.rnDeriv volume x).toReal · log ((Q.rnDeriv volume x).toReal)) volume`
 is a regularity precondition (the term may otherwise be non-integrable).
 @audit:ok -/
 theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
@@ -123,7 +123,7 @@ theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
   rw [hent]
   ring
 
-/-- Per-fibre balance in `ℝ≥0∞`: the sum of the differential entropy positive part `A`,
+/-- Per-fiber balance in `ℝ≥0∞`: the sum of the differential entropy positive part `A`,
 KL divergence, and cross-entropy positive part `Cpos` equals the sum of the negative parts
 `B` and `Cneg`.
 A subtraction-free identity used by the assembler via `lintegral_add`.
@@ -197,14 +197,14 @@ theorem klDiv_negMulLog_cross_balance_ennreal
 
 /-- Fubini + `condDistrib` marginal identification (sub-gap (c), measure-level core).
 For `X : Ω → ℝ`, `Z : Ω → α` measurable and `g : ℝ → ℝ` integrable against `μ.map X`,
-averaging the `X`-fibre integral of `g` over the law `μ.map Z` of `Z` returns the
+averaging the `X`-fiber integral of `g` over the law `μ.map Z` of `Z` returns the
 `μ.map X` integral:
 
 `∫ z, (∫ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z) = ∫ x, g x ∂(μ.map X)`.
 
 Proof route: `compProd_map_condDistrib` identifies `(μ.map Z) ⊗ₘ condDistrib X Z μ`
-with `μ.map (fun ω => (Z ω, X ω))`; `Measure.integral_compProd` (Fubini, on
-`fun p => g p.2`) opens the joint integral into the iterated fibre integral; and
+with `μ.map (fun ω ↦ (Z ω, X ω))`; `Measure.integral_compProd` (Fubini, on
+`fun p ↦ g p.2`) opens the joint integral into the iterated fiber integral; and
 `integral_map` reduces the joint integral to `∫ x, g x ∂(μ.map X)` via the second
 projection.
 @audit:ok -/
@@ -232,23 +232,23 @@ theorem integral_condDistrib_marginal_eq
   have hgsnd_int : Integrable (fun p : α × ℝ ↦ g p.2) ((μ.map Z) ⊗ₘ condDistrib X Z μ) := by
     rw [hjoint, integrable_map_measure hgsnd_meas (hZ.prodMk hX).aemeasurable]
     exact hg_int.comp_measurable hX
-  -- Fubini: open the joint integral into the iterated fibre integral.
+  -- Fubini: open the joint integral into the iterated fiber integral.
   rw [← Measure.integral_compProd hgsnd_int]
   -- Identify the joint with `μ.map (Z, X)` and reduce via `integral_map` twice.
   rw [hjoint, integral_map (hZ.prodMk hX).aemeasurable hgsnd_meas]
   rw [← integral_map hX.aemeasurable hg_int.aestronglyMeasurable]
 
 /-- The density-form wrapper of sub-gap (c), packaging the cross-entropy shape the
-assembly consumes. With `g := fun x => Real.log ((μ.map X).rnDeriv volume x).toReal`
-and the per-fibre density rewrite `∫ x, g x ∂(κ z) = ∫ x, (κ z -density x) · g x ∂volume`
-(needs `κ z ≪ volume` a.e. `z`), the `μ.map Z`-average of the fibre cross-integral
+assembly consumes. With `g := fun x ↦ Real.log ((μ.map X).rnDeriv volume x).toReal`
+and the per-fiber density rewrite `∫ x, g x ∂(κ z) = ∫ x, (κ z -density x) · g x ∂volume`
+(needs `κ z ≪ volume` a.e. `z`), the `μ.map Z`-average of the fiber cross-integral
 equals the marginal cross-integral against `μ.map X`'s own density:
 
 `∫ z, (∫ x, (κ z -density x) · log (qX x) ∂volume) ∂(μ.map Z)`
 `= ∫ x, (qX x) · log (qX x) ∂volume`,
 where `qX x := ((μ.map X).rnDeriv volume x).toReal`.
 
-`hX_ac` (`μ.map X ≪ volume`), `hκ_ac` (each fibre `condDistrib X Z μ z ≪ volume`, a.e. `z`)
+`hX_ac` (`μ.map X ≪ volume`), `hκ_ac` (each fiber `condDistrib X Z μ z ≪ volume`, a.e. `z`)
 and `h_logq_int` (integrability of `log qX` against `μ.map X`) are regularity
 preconditions inherited from the disintegration / sub-gap (a) finiteness.
 @audit:ok -/
@@ -265,15 +265,15 @@ theorem integral_condDistrib_density_marginal_eq
       = ∫ x, ((μ.map X).rnDeriv volume x).toReal
             * Real.log (((μ.map X).rnDeriv volume x).toReal) ∂volume := by
   set g := fun x ↦ Real.log (((μ.map X).rnDeriv volume x).toReal) with hg
-  -- Per-fibre density rewrite: for a.e. `z`, the inner volume-integral against the
-  -- fibre density equals the fibre integral of `g`.
+  -- Per-fiber density rewrite: for a.e. `z`, the inner volume-integral against the
+  -- fiber density equals the fiber integral of `g`.
   have hinner : ∫ z, (∫ x, ((condDistrib X Z μ z).rnDeriv volume x).toReal * g x ∂volume) ∂(μ.map Z)
       = ∫ z, (∫ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z) := by
     refine integral_congr_ae ?_
     filter_upwards [hκ_ac] with z hz
     exact integral_toReal_rnDeriv_mul hz
   rw [hinner]
-  -- Sub-gap (c) core: average of the fibre integral over `μ.map Z` is the `μ.map X` integral.
+  -- Sub-gap (c) core: average of the fiber integral over `μ.map Z` is the `μ.map X` integral.
   rw [integral_condDistrib_marginal_eq X Z μ hX hZ h_logq_int]
   -- Rewrite the marginal `∫ g ∂(μ.map X)` back into the density form against `volume`.
   rw [← integral_toReal_rnDeriv_mul (μ := μ.map X) (ν := volume) hX_ac]
@@ -282,7 +282,7 @@ theorem integral_condDistrib_density_marginal_eq
 
 /-- ℝ≥0∞ Fubini + `condDistrib` marginal identification (crux ② core).
 ℝ≥0∞ mirror of `integral_condDistrib_marginal_eq`: for `X : Ω → ℝ`, `Z : Ω → α`
-measurable and `g : ℝ → ℝ≥0∞` measurable, averaging the `X`-fibre lintegral of `g`
+measurable and `g : ℝ → ℝ≥0∞` measurable, averaging the `X`-fiber lintegral of `g`
 over `μ.map Z` returns the `μ.map X` lintegral:
 
 `∫⁻ z, (∫⁻ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z) = ∫⁻ x, g x ∂(μ.map X)`.
@@ -291,8 +291,8 @@ over `μ.map Z` returns the `μ.map X` lintegral:
 sibling no integrability hypothesis is needed — just measurability `hg`.
 
 Proof route: `compProd_map_condDistrib` identifies `(μ.map Z) ⊗ₘ condDistrib X Z μ`
-with `μ.map (fun ω => (Z ω, X ω))`; `Measure.lintegral_compProd` (Tonelli on
-`fun p => g p.2`) opens the joint lintegral into the iterated fibre lintegral; and
+with `μ.map (fun ω ↦ (Z ω, X ω))`; `Measure.lintegral_compProd` (Tonelli on
+`fun p ↦ g p.2`) opens the joint lintegral into the iterated fiber lintegral; and
 `lintegral_map` reduces the joint lintegral to `∫⁻ x, g x ∂(μ.map X)` via the second
 projection.
 @audit:ok -/
@@ -318,7 +318,7 @@ theorem lintegral_condDistrib_marginal_eq
 
 /-- ℝ≥0∞ cross-term marginal collapse (crux ② core, sign-parametrized).
 ℝ≥0∞ mirror of `integral_condDistrib_density_marginal_eq`: the `μ.map Z`-average of the
-fibre cross-lintegral `∫⁻ x, ofReal (sign (pz_x · log qX_x)) ∂volume` (where
+fiber cross-lintegral `∫⁻ x, ofReal (sign (pz_x · log qX_x)) ∂volume` (where
 `pz_x := (condDistrib X Z μ z -density x)`, `qX_x := (μ.map X -density x)`,
 `log qX_x := Real.log qX_x`) collapses to the marginal cross-lintegral against the
 `μ.map X` density.
@@ -353,8 +353,8 @@ theorem lintegral_condDistrib_cross_eq
   have hg_meas : Measurable g := by
     refine ENNReal.measurable_ofReal.comp (hsign_meas.comp (Real.measurable_log.comp ?_))
     exact (Measure.measurable_rnDeriv (μ.map X) volume).ennreal_toReal
-  -- Step 1: per-fibre density rewrite. For a.e. `z` (with `κz ≪ volume`), the inner
-  -- volume-lintegral of the signed cross-term equals the fibre lintegral of `g`.
+  -- Step 1: per-fiber density rewrite. For a.e. `z` (with `κz ≪ volume`), the inner
+  -- volume-lintegral of the signed cross-term equals the fiber lintegral of `g`.
   have hfib : ∀ᵐ z ∂(μ.map Z),
       (∫⁻ x, ENNReal.ofReal (sign (((condDistrib X Z μ z).rnDeriv volume x).toReal
           * Real.log (((μ.map X).rnDeriv volume x).toReal))) ∂volume)
@@ -371,7 +371,7 @@ theorem lintegral_condDistrib_cross_eq
     rw [lintegral_congr_ae hrw,
       lintegral_rnDeriv_mul hz hg_meas.aemeasurable]
   rw [lintegral_congr_ae hfib]
-  -- Step 2: marginal core — average the fibre lintegral over `μ.map Z`.
+  -- Step 2: marginal core — average the fiber lintegral over `μ.map Z`.
   rw [lintegral_condDistrib_marginal_eq X Z μ hX hZ hg_meas]
   -- Step 3: reverse density rewrite — fold `∫⁻ g ∂(μ.map X)` back into the density form.
   rw [← lintegral_rnDeriv_mul hX_ac hg_meas.aemeasurable]

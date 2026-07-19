@@ -28,7 +28,7 @@ inequality, applied to `W := X + √t·Z` with `Z ⊥ X` a Gaussian:
 * The first `≥` is conditioning-reduces-entropy, `h(W|Z) ≤ h(W)`
   (`condDifferentialEntropy_le`), which is the differential analogue of
   `I(W;Z) = h(W) − h(W|Z) = KL(joint ‖ product) ≥ 0`.
-* The equality `h(X + √t·Z | Z) = h(X)` is the independent-sum fibre identification
+* The equality `h(X + √t·Z | Z) = h(X)` is the independent-sum fiber identification
   (`condDifferentialEntropy_indep_add_eq`): conditioned on `Z = z`, the variable
   `X + √t·Z` is the constant shift `X + √t·z`, whose entropy equals `h(X)` by
   translation invariance (`differentialEntropy_map_add_const`).
@@ -50,23 +50,23 @@ from three components:
 
 * (a) `InformationTheory.klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`)
   turns the joint KL `toReal` into
-  the `μ_Z`-average of fibrewise KL `∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`;
+  the `μ_Z`-average of fiberwise KL `∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`;
 * (b) `klDiv_toReal_eq_neg_differentialEntropy_sub_cross` (`EPIG2BridgeDensityHelpers.lean`)
-  expands each fibre into `−h(κ z) − ∫ p_z · log q_X`;
+  expands each fiber into `−h(κ z) − ∫ p_z · log q_X`;
 * (c) `integral_condDistrib_density_marginal_eq` (`EPIG2BridgeDensityHelpers.lean`)
   identifies the `μ_Z`-average of the cross term with `∫ q_X · log q_X = −h(μ_X)` (Fubini
   marginal).
 
 Assembling (a)+(b)+(c) gives `RHS = −h(X|Z) − (−h(X)) = h(X) − h(X|Z)`, the bridge.
 `condDifferentialEntropy_le` then follows by `ENNReal.toReal_nonneg`. The regularity /
-integrability preconditions (joint `≪`, per-fibre `≪`, the `μ_Z`-integrability of the
-fibre entropy and the cross term, the marginal log-density integrability) are threaded
+integrability preconditions (joint `≪`, per-fiber `≪`, the `μ_Z`-integrability of the
+fiber entropy and the cross term, the marginal log-density integrability) are threaded
 through as honest preconditions (absolute continuity / KL finiteness), not load-bearing
 bundles; the downstream device form `differentialEntropy_indep_gaussian_add_ge` and
 density form `negMulLog_convDensity_entropy_ge` thread them at the heat-flow path
 `W := X + √s·Z` with conclusions unchanged.
 
-`condDifferentialEntropy_indep_add_eq` (independent-sum fibre identification) is
+`condDifferentialEntropy_indep_add_eq` (independent-sum fiber identification) is
 obtained via the affine-shift kernel `affineShiftKernel`.
 -/
 
@@ -78,10 +78,10 @@ open scoped ENNReal NNReal Real
 
 /-- The continuous conditional differential entropy `h(X | Z)`. Defined directly on
 the Mathlib regular conditional distribution `condDistrib X Z μ` (the conditional law
-of `X` given `Z`, a `Kernel α ℝ`): the fibre differential entropy
+of `X` given `Z`, a `Kernel α ℝ`): the fiber differential entropy
 `differentialEntropy ((condDistrib X Z μ) z)` averaged over the law `μ.map Z` of `Z`.
 
-Mathlib-shape: the textbook `∫_z h(X | Z = z) dμ_Z(z)` is realised through the
+Mathlib-shape: the textbook `∫_z h(X | Z = z) dμ_Z(z)` is realized through the
 `condDistrib` disintegration so that `compProd_map_condDistrib` and
 `differentialEntropy_map_add_const` are usable verbatim. -/
 noncomputable def condDifferentialEntropy
@@ -103,9 +103,9 @@ as honest preconditions:
 
 * (a) `InformationTheory.klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`)
   turns the joint KL `toReal` into the
-  `μ_Z`-average of the fibrewise KL `∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`;
+  `μ_Z`-average of the fiberwise KL `∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`;
 * (b) `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`
-  (`EPIG2BridgeDensityHelpers.lean`) expands each fibre into
+  (`EPIG2BridgeDensityHelpers.lean`) expands each fiber into
   `−h(κ z) − ∫ p_z · log q_X`;
 * (c) `integral_condDistrib_density_marginal_eq` (`EPIG2BridgeDensityHelpers.lean`)
   identifies `∫_z ∫ p_z log q_X ∂μ_Z = ∫ q_X log q_X = −h(μ_X)` (Fubini marginal).
@@ -113,7 +113,7 @@ as honest preconditions:
 Assembling: `RHS = −h(X|Z) − (−h(X)) = h(X) − h(X|Z)`. The classical continuous
 `I(X;Z) = h(X) − h(X|Z) = D(P_{Z,X} ‖ P_Z ⊗ P_X)` identity.
 
-All added hypotheses are regularity preconditions (absolute continuity, per-fibre
+All added hypotheses are regularity preconditions (absolute continuity, per-fiber
 absolute continuity, equal mass via Markov, integrability = KL finiteness), not
 load-bearing bundles. The equal-mass condition `κ z univ = μ_X univ` is discharged
 internally (both probability measures). `@audit:ok` -/
@@ -126,7 +126,7 @@ theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
     (h_int : Integrable
       (llr ((μ.map Z) ⊗ₘ condDistrib X Z μ) ((μ.map Z) ⊗ₘ Kernel.const α (μ.map X)))
       ((μ.map Z) ⊗ₘ condDistrib X Z μ))
-    -- (b) per-fibre regularity (a.e. `z`)
+    -- (b) per-fiber regularity (a.e. `z`)
     (hκ_v : ∀ᵐ z ∂(μ.map Z), condDistrib X Z μ z ≪ volume)
     (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
       (fun x ↦ ((condDistrib X Z μ z).rnDeriv volume x).toReal
@@ -151,7 +151,7 @@ theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
   set μZ := μ.map Z with hμZ
   set κ := condDistrib X Z μ with hκ
   set ν := μ.map X with hν
-  -- a.e. fibrewise absolute continuity `κ z ≪ ν`, from the joint absolute continuity.
+  -- a.e. fiberwise absolute continuity `κ z ≪ ν`, from the joint absolute continuity.
   have hκν : ∀ᵐ z ∂μZ, κ z ≪ Kernel.const α ν z := by
     have := Measure.absolutelyContinuous_compProd_right_iff.mp h_ac
     simpa using this
@@ -161,7 +161,7 @@ theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
   have hstepA : (klDiv (μZ ⊗ₘ κ) (μZ ⊗ₘ Kernel.const α ν)).toReal
       = ∫ z, (klDiv (κ z) ν).toReal ∂μZ :=
     InformationTheory.klDiv_compProd_const_toReal_integral h_ac h_int
-  -- (b): per-fibre, `(klDiv (κ z) ν).toReal = −h(κ z) − cross_z`.
+  -- (b): per-fiber, `(klDiv (κ z) ν).toReal = −h(κ z) − cross_z`.
   have hstepB : ∀ᵐ z ∂μZ, (klDiv (κ z) ν).toReal
       = - differentialEntropy (κ z)
         - ∫ x, ((κ z).rnDeriv volume x).toReal
@@ -248,7 +248,7 @@ theorem condDifferentialEntropy_le
   linarith
 
 /-- The z-dependent affine-shift kernel `κ z := νX.map (· + c·z)`, built as a genuine
-`Kernel ℝ ℝ`. Construction: push the parametrised pairing `z ↦ νX.map (Prod.mk z)`
+`Kernel ℝ ℝ`. Construction: push the parametrized pairing `z ↦ νX.map (Prod.mk z)`
 (measurable by `Measurable.map_prodMk_left`) through the measurable affine map
 `(z, x) ↦ x + c·z`.
 
@@ -296,25 +296,25 @@ theorem prod_map_affine_eq_compProd
   rw [Measure.map_apply hshift (measurable_prodMk_left hs)]
   congr 1
 
-/-- Fibre identification for an independent sum: for `X ⊥ Z`,
+/-- Fiber identification for an independent sum: for `X ⊥ Z`,
 `h(X + c·Z | Z) = h(X)`.
 
-Conditioned on `Z = z`, the variable `fun ω => X ω + c · Z ω` is the constant shift
+Conditioned on `Z = z`, the variable `fun ω ↦ X ω + c · Z ω` is the constant shift
 `X + c·z`, whose differential entropy equals `h(X)` by translation invariance
 (`differentialEntropy_map_add_const`). Averaging the constant `h(X)` over the
 probability law `μ.map Z` reproduces `h(X)`.
 
-The fibre identification
+The fiber identification
 `condDistrib (X + c·Z) Z μ =ᵐ[μ.map Z] affineShiftKernel (μ.map X) c` is assembled
 via:
 
 1. `indepFun_iff_map_prod_eq_prod_map_map` gives
-   `μ.map (fun ω => (Z ω, X ω)) = (μ.map Z).prod (μ.map X)` (independence).
+   `μ.map (fun ω ↦ (Z ω, X ω)) = (μ.map Z).prod (μ.map X)` (independence).
 2. Push the product through the affine map `g (z, x) = (z, x + c·z)` and identify it
    with `(μ.map Z) ⊗ₘ (affineShiftKernel (μ.map X) c)` (`prod_map_affine_eq_compProd`,
    the z-dependent affine-shift kernel built genuinely above).
-3. `condDistrib_ae_eq_of_measure_eq_compProd` then gives the fibre identification, and
-   `differentialEntropy_map_add_const` discharges each fibre to `h(μ.map X)`.
+3. `condDistrib_ae_eq_of_measure_eq_compProd` then gives the fiber identification, and
+   `differentialEntropy_map_add_const` discharges each fiber to `h(μ.map X)`.
 
 The hypotheses are all preconditions: `IndepFun X Z μ` is a genuine independence
 precondition (not a load-bearing bundle), `hX_ac` is absolute continuity, measurability
@@ -350,7 +350,7 @@ theorem condDifferentialEntropy_indep_add_eq
   -- Step 2: uniqueness of the regular conditional distribution.
   have hae : condDistrib W Z μ =ᵐ[μ.map Z] affineShiftKernel (μ.map X) c :=
     condDistrib_ae_eq_of_measure_eq_compProd Z hW.aemeasurable hjoint_ZW
-  -- Step 3: rewrite the fibre integral, then apply translation invariance fibrewise.
+  -- Step 3: rewrite the fiber integral, then apply translation invariance fiberwise.
   unfold condDifferentialEntropy
   rw [integral_congr_ae (g := fun _ ↦ differentialEntropy (μ.map X)) ?_]
   · rw [integral_const, probReal_univ, one_smul]
@@ -405,7 +405,7 @@ theorem differentialEntropy_indep_gaussian_add_ge
       (μ.map (fun ω ↦ X ω + Real.sqrt s * Z ω))) :
     differentialEntropy (μ.map X)
       ≤ differentialEntropy (μ.map (fun ω ↦ X ω + Real.sqrt s * Z ω)) := by
-  -- `W := X + √s·Z`. Conditioning on `Z` reduces entropy, and the fibre is `h(X)`.
+  -- `W := X + √s·Z`. Conditioning on `Z` reduces entropy, and the fiber is `h(X)`.
   set W : Ω → ℝ := fun ω ↦ X ω + Real.sqrt s * Z ω with hW
   have hW_meas : Measurable W := hX.add ((measurable_const).mul hZ)
   have h_fibre : condDifferentialEntropy W Z μ = differentialEntropy (μ.map X) :=

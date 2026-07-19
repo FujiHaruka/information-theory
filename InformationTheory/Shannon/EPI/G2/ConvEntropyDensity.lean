@@ -33,11 +33,11 @@ discharged here.
 All 8 per-`n` preconditions of the Ω-level (β) lower bound are discharged genuinely here
 from the canonical construction:
 
-* per-fibre absolute continuity, `p log p` integrability, fibre-entropy integrability
-  (translation invariance: each fibre is a translate `pX(· − √s·z)` of `μ.map X`);
-* joint absolute continuity (per-fibre `≪ volume ≪ μ.map W`, the marginal having a
+* per-fiber absolute continuity, `p log p` integrability, fiber-entropy integrability
+  (translation invariance: each fiber is a translate `pX(· − √s·z)` of `μ.map X`);
+* joint absolute continuity (per-fiber `≪ volume ≪ μ.map W`, the marginal having a
   strictly positive density);
-* the two cross terms (per-fibre (5) + outer (7)): closed via the `s`-uniform
+* the two cross terms (per-fiber (5) + outer (7)): closed via the `s`-uniform
   polynomial majorant `|log p_t| ≤ A + B·x²`
   (`convDensityAdd_logFactor_poly_majorant`, made public in
   `FisherInfoDeBruijnAssembly`) integrated against `pX`'s translate moments
@@ -48,9 +48,9 @@ from the canonical construction:
 * joint llr integrability `h_int` (= KL finiteness `D(joint ‖ product) < ∞`): closed
   via `MeasureTheory.Measure.integrable_compProd_iff`.  The slice identity
   `rnDeriv_compProd_eq_kernel_rnDeriv` + `Kernel.rnDeriv_eq_rnDeriv_measure` identify the
-  joint `llr` a.e. with the per-fibre `llr (κ_z) (μ.map W)`, which the density split
-  `llr_eq_log_density_sub_log_density` rewrites as `log p_z − log p_t`.  The per-fibre
-  branch reuses the fibre-entropy + cross-term integrabilities (via
+  joint `llr` a.e. with the per-fiber `llr (κ_z) (μ.map W)`, which the density split
+  `llr_eq_log_density_sub_log_density` rewrites as `log p_z − log p_t`.  The per-fiber
+  branch reuses the fiber-entropy + cross-term integrabilities (via
   `integrable_toReal_rnDeriv_mul_iff`); the outer branch dominates
   `∫ ‖log p_z − log p_t‖ ∂κ_z` by `C0 + (A+1) + 2B·M2 + 2B·s·z²` (Gaussian-integrable),
   using `∫ pX·|log pX| < ∞` (from `Integrable f ↔ Integrable ‖f‖` on `hpX_ent`) plus the
@@ -66,9 +66,9 @@ open MeasureTheory Real ProbabilityTheory InformationTheory
 open InformationTheory.Shannon.EPIConvDensity
 open scoped ENNReal NNReal Real
 
-/-- Translation transport for fibre integrability: if `κ z = ν.map (· + c·z)` (with
-`ν ≪ volume`), then `Integrable (fun x => Φ ((κ z).rnDeriv volume x).toReal) volume`
-holds iff `Integrable (fun x => Φ (ν.rnDeriv volume x).toReal) volume`. -/
+/-- Translation transport for fiber integrability: if `κ z = ν.map (· + c·z)` (with
+`ν ≪ volume`), then `Integrable (fun x ↦ Φ ((κ z).rnDeriv volume x).toReal) volume`
+holds iff `Integrable (fun x ↦ Φ (ν.rnDeriv volume x).toReal) volume`. -/
 theorem fibre_rnDeriv_integrable_iff
     (ν : Measure ℝ) [SigmaFinite ν] (c : ℝ) (Φ : ℝ → ℝ) :
     Integrable
@@ -108,18 +108,18 @@ theorem fibre_rnDeriv_integrable_iff
 
 The 3 `have` blocks `hκ_cross_int` / `h_cross_int` / `h_int` inside
 `negMulLog_convDensity_entropy_ge_density` are extracted into standalone lemmas
-parametrized over an arbitrary fibre density `q` (with mass `1`, finite second
+parametrized over an arbitrary fiber density `q` (with mass `1`, finite second
 moment, finite absolute entropy) and a target convolution log-density
-`g := convDensityAdd pX (gaussianPDFReal 0 v)`.  Unlike the template (where fibre and
+`g := convDensityAdd pX (gaussianPDFReal 0 v)`.  Unlike the template (where fiber and
 target share the same `pX`), these admit *two distinct* densities, so they cover the
-EPI case-1 framing where the fibre is the Gaussian `q = gaussianPDFReal 0 v_B` (translated
+EPI case-1 framing where the fiber is the Gaussian `q = gaussianPDFReal 0 v_B` (translated
 by `z`) and the target is the input-convolution density `g`.
 
 The polynomial majorant `|log g| ≤ (A+1) + B·x²` (a.e.) comes from
-`convDensityAdd_logFactor_poly_majorant pX …`; the fibre `q` supplies the dominating
+`convDensityAdd_logFactor_poly_majorant pX …`; the fiber `q` supplies the dominating
 moments.  All genuine (no `sorry`), reusing the template's domination structure. -/
 
-/-- Second-moment integrability of the centred Gaussian density: `y²·g_v(y)` is
+/-- Second-moment integrability of the centered Gaussian density: `y²·g_v(y)` is
 `volume`-integrable.  Via `∫ y²·g_v = ∫ y² ∂(gaussianReal 0 v)` (finite by
 `memLp_id_gaussianReal 2`).
 @audit:ok -/
@@ -143,7 +143,7 @@ theorem integrable_sq_mul_gaussianPDFReal {v : ℝ≥0} (hv : v ≠ 0) :
   simp only [smul_eq_mul, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg 0 v y)]
   ring
 
-/-- Per-fibre cross-term integrability: the (shifted) fibre density `q(·−c)` times the
+/-- Per-fiber cross-term integrability: the (shifted) fiber density `q(·−c)` times the
 log of the convolution target `g = convDensityAdd pX g_v` is `volume`-integrable.
 Dominated by `q(x−c)·((A+1)+B·x²)` via the polynomial majorant of `log g`.
 @audit:ok -/
@@ -214,7 +214,7 @@ theorem convCrossEntropy_perFibre_integrable
     rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (hq_nn _)]
     exact mul_le_mul_of_nonneg_left hx (hq_nn _)
 
-/-- `z`-averaged cross-term integrability: averaging the per-fibre cross integral over a
+/-- `z`-averaged cross-term integrability: averaging the per-fiber cross integral over a
 measure `νZ` with finite second moment yields an integrable function of `z`.  The shift
 is `c(z) = √s·z`; bounded by `(A+1) + 2B·M2q + 2B·s·z²` (gaussian-style moment control).
 @audit:ok -/
@@ -354,8 +354,8 @@ theorem convCrossEntropy_zAvg_integrable
   exact le_trans hF_le hint_le
 
 /-- Joint llr (conditional-KL divergence integrand) integrability, extracted from the
-template `h_int` block.  Given a probability space `μ` with coordinates `Z W`, a fibre
-kernel `κ = condDistrib W Z μ` whose fibres a.e.-equal the (shifted) density `q(·−√s·z)`
+template `h_int` block.  Given a probability space `μ` with coordinates `Z W`, a fiber
+kernel `κ = condDistrib W Z μ` whose fibers a.e.-equal the (shifted) density `q(·−√s·z)`
 and whose marginal `μ.map W` has density `g`, with the polynomial majorant
 `|log g| ≤ (A+1)+B·x²`, the joint `llr` of the compProd vs. the product-with-const is
 `(μ.map Z) ⊗ₘ κ`-integrable.  All hypotheses are genuine regularity/integrability
@@ -392,11 +392,11 @@ theorem convJointLlr_integrable
         ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)))
       ((μ.map Z) ⊗ₘ condDistrib W Z μ) := by
   set κ : Kernel ℝ ℝ := condDistrib W Z μ with hκ_def
-  -- per-fibre absolute continuity `κ z ≪ μ.map W`.
+  -- per-fiber absolute continuity `κ z ≪ μ.map W`.
   have hκ_acW : ∀ᵐ z ∂(μ.map Z), κ z ≪ μ.map W := by
     filter_upwards [hκ_v] with z hz
     exact hz.trans vol_ac_W
-  -- per-fibre `llr (κ z) (μ.map W) =ᵐ[κ z] log p_z − log p_t`.
+  -- per-fiber `llr (κ z) (μ.map W) =ᵐ[κ z] log p_z − log p_t`.
   have hllr_split : ∀ᵐ z ∂(μ.map Z),
       llr (κ z) (μ.map W) =ᵐ[κ z] fun x ↦
         Real.log (((κ z).rnDeriv volume x).toReal)
@@ -406,7 +406,7 @@ theorem convJointLlr_integrable
       haveI : IsProbabilityMeasure (κ z) := by rw [hκ_def]; infer_instance
       infer_instance
     exact llr_eq_log_density_sub_log_density (κ z) (μ.map W) hz_v hW_ac hz_acW
-  -- per-fibre `Integrable (llr (κ z) (μ.map W)) (κ z)`.
+  -- per-fiber `Integrable (llr (κ z) (μ.map W)) (κ z)`.
   have hfib_llr_int : ∀ᵐ z ∂(μ.map Z), Integrable (llr (κ z) (μ.map W)) (κ z) := by
     filter_upwards [hκ_v, hllr_split, hκ_logp_int, hκ_cross_int] with
       z hz_v hz_split hz_logp hz_cross
@@ -421,7 +421,7 @@ theorem convJointLlr_integrable
       funext x; ring
     rw [hdist]
     exact hz_logp.sub hz_cross
-  -- The joint llr value identity, transferred to per-fibre a.e.
+  -- The joint llr value identity, transferred to per-fiber a.e.
   have h_llr_joint_eq : ∀ᵐ z ∂(μ.map Z), (fun y ↦
         llr ((μ.map Z) ⊗ₘ κ) ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)) (z, y))
       =ᵐ[κ z] llr (κ z) (μ.map W) := by
@@ -449,7 +449,7 @@ theorem convJointLlr_integrable
     exact (Measure.measurable_rnDeriv _ _).ennreal_toReal.log.aestronglyMeasurable
   rw [MeasureTheory.Measure.integrable_compProd_iff h_meas_llr]
   refine ⟨?_, ?_⟩
-  · -- branch (a): per-fibre integrability.
+  · -- branch (a): per-fiber integrability.
     filter_upwards [h_llr_joint_eq, hfib_llr_int] with z hz_eq hz_int
     exact (integrable_congr hz_eq).mpr hz_int
   · -- branch (b): outer integrability of `z ↦ ∫ ‖llr‖ ∂(κ z)`.
@@ -840,7 +840,7 @@ theorem negMulLog_convDensity_entropy_ge_density
   -- `μ.map X ≪ volume` (a `withDensity`).
   have hX_ac : (μ.map X) ≪ volume := by
     rw [hpX_law]; exact withDensity_absolutelyContinuous _ _
-  -- Fibre identification: `condDistrib W Z μ =ᵐ[μ.map Z] affineShiftKernel (μ.map X) (√s)`,
+  -- Fiber identification: `condDistrib W Z μ =ᵐ[μ.map Z] affineShiftKernel (μ.map X) (√s)`,
   -- where `affineShiftKernel ν c z = ν.map (· + c·z)`.  Mirrors the assembly inside
   -- `condDifferentialEntropy_indep_add_eq`.
   have hW_meas : Measurable W := hX.add ((measurable_const).mul hZ)
@@ -903,23 +903,23 @@ theorem negMulLog_convDensity_entropy_ge_density
       pX hpX_nn hpX_meas hpX_int hpX_mass (hu_pos n)
   have hLog : ∀ᵐ x ∂volume, |Real.log (p_t x)| ≤ (A + 1) + B * x ^ 2 :=
     abs_log_convDensityAdd_le_of_majorant (hu_pos n) hLog0
-  -- (B) fibre density a.e. equals the translate `pX(· − √s·z)`.
+  -- (B) fiber density a.e. equals the translate `pX(· − √s·z)`.
   have hfib_eq : ∀ᵐ z ∂(μ.map Z),
       (condDistrib W Z μ z).rnDeriv volume
         =ᵐ[volume] fun x ↦ ENNReal.ofReal (pX (x - Real.sqrt s * z)) :=
     condDistrib_fibre_rnDeriv_eq_translate hae hqX
   -- The 8 per-`n` preconditions of the Ω-level (β) lower bound.
-  -- (3) per-fibre absolute continuity: each fibre is a translate of `μ.map X ≪ volume`.
+  -- (3) per-fiber absolute continuity: each fiber is a translate of `μ.map X ≪ volume`.
   have hκ_v : ∀ᵐ z ∂(μ.map Z), condDistrib W Z μ z ≪ volume :=
     condDistrib_fibre_absolutelyContinuous hX_ac hae
-  -- (1) joint absolute continuity: `condDistrib z ≪ volume ≪ μ.map W` (per-fibre),
+  -- (1) joint absolute continuity: `condDistrib z ≪ volume ≪ μ.map W` (per-fiber),
   -- lifted to the compProd.
   have h_ac : (μ.map Z) ⊗ₘ condDistrib W Z μ
       ≪ (μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W) := by
     refine Measure.AbsolutelyContinuous.compProd_right ?_
     filter_upwards [hκ_v] with z hz
     simpa using hz.trans vol_ac_W
-  -- (4) per-fibre `p log p` integrability: transport along the translation, then
+  -- (4) per-fiber `p log p` integrability: transport along the translation, then
   -- identify with `∫ pX log pX = -∫ negMulLog pX` (`hpX_ent`).
   have h_pXlogpX : Integrable
       (fun x ↦ ((μ.map X).rnDeriv volume x).toReal
@@ -932,8 +932,8 @@ theorem negMulLog_convDensity_entropy_ge_density
       (fun x ↦ ((condDistrib W Z μ z).rnDeriv volume x).toReal
         * Real.log (((condDistrib W Z μ z).rnDeriv volume x).toReal)) volume :=
     condDistrib_fibre_pXlogpX_integrable hae h_pXlogpX
-  -- (5) per-fibre cross-term integrability.  The integrand couples the (translated)
-  -- fibre density `p_z(x) = pX(x − √s·z)` with `log p_t(x)` (the marginal log-density).
+  -- (5) per-fiber cross-term integrability.  The integrand couples the (translated)
+  -- fiber density `p_z(x) = pX(x − √s·z)` with `log p_t(x)` (the marginal log-density).
   -- Identify both factors a.e. (`hfib_eq` / `hqW`), then delegate to the standalone
   -- `convCrossEntropy_perFibre_integrable`.
   have hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
@@ -941,7 +941,7 @@ theorem negMulLog_convDensity_entropy_ge_density
         * Real.log (((μ.map W).rnDeriv volume x).toReal)) volume :=
     convCrossEntropy_perFibre_wiring μ Z W s pX hpX_nn hpX_meas hpX_int hpX_mom hpX_mass
       u hu_pos n hfib_eq hqW hp_t_nn
-  -- (6) outer fibre-entropy integrability: each fibre entropy equals the constant
+  -- (6) outer fiber-entropy integrability: each fiber entropy equals the constant
   -- `h(μ.map X)` (translation invariance), so the function is a.e. constant.
   haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
   have h_fibreEnt_int : Integrable
@@ -970,11 +970,11 @@ theorem negMulLog_convDensity_entropy_ge_density
     rw [hx, ENNReal.toReal_ofReal (hp_t_nn x)]
     simp only [Pi.neg_apply, Real.negMulLog, neg_neg, neg_mul]
   -- (2) joint llr integrability (= KL finiteness `D(joint ‖ product) < ∞`), genuinely
-  -- closed by the standalone `convJointLlr_integrable` (fibre `q := pX`, target `g := p_t`).
+  -- closed by the standalone `convJointLlr_integrable` (fiber `q := pX`, target `g := p_t`).
   haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
   have hsq_int : Integrable (fun z ↦ z ^ 2) (μ.map Z) := by
     rw [hZ_law]; exact integrable_sq_gaussianReal
-  -- `∫ pX·|log pX| < ∞` (the fibre-entropy in absolute value).
+  -- `∫ pX·|log pX| < ∞` (the fiber-entropy in absolute value).
   have hpX_abs_ent : Integrable (fun x ↦ pX x * |Real.log (pX x)|) volume := by
     have h := hpX_ent.norm
     refine h.congr (Filter.Eventually.of_forall (fun x ↦ ?_))
