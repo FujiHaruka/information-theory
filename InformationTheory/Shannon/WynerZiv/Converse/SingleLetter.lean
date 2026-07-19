@@ -622,6 +622,242 @@ private theorem wz_inputs_cond_indep
   rw [hzero] at hle
   exact le_antisymm hle zero_le
 
+private lemma wz_singleletter_rate_le_step1
+    {Ω : Type*} [MeasurableSpace Ω] {M n : ℕ} [NeZero M]
+    (c : WynerZivCode M n α β γ) (hencoder : Measurable c.encoder)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindep : iIndepFun (fun i ω ↦ (Xs i ω, Ys i ω)) μ) :
+    ∀ i : Fin n,
+        mutualInfo μ (Xs i)
+            (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+              fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+          - mutualInfo μ (Ys i)
+            (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+              fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+          = condMutualInfo μ (Xs i)
+            (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+              fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i) := by
+  have hU_meas : ∀ i : Fin n, Measurable
+      (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+        fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := fun i ↦
+    (hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)).prodMk
+      (measurable_pi_lambda _ fun j ↦ hYs ↑j)
+  have hfin_YU : ∀ i : Fin n,
+      mutualInfo μ (Ys i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) ≠ ∞ := fun i ↦
+    mutualInfo_ne_top μ (Ys i) _ (hYs i) (hU_meas i)
+  intro i
+  have hc1 := mutualInfo_chain_rule μ (Xs i)
+    (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+      fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i) (hXs i) (hU_meas i) (hYs i)
+  have hc2 := mutualInfo_chain_rule μ (Ys i)
+    (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+      fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Xs i) (hYs i) (hU_meas i) (hXs i)
+  have hswap : mutualInfo μ (fun ω ↦ (Ys i ω, Xs i ω))
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+      = mutualInfo μ (fun ω ↦ (Xs i ω, Ys i ω))
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := by
+    have h := mutualInfo_map_left_measurableEquiv μ (fun ω ↦ (Ys i ω, Xs i ω))
+      (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+        fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+      ((hYs i).prodMk (hXs i)) (hU_meas i) MeasurableEquiv.prodComm
+    rw [show (fun ω ↦ (MeasurableEquiv.prodComm (Ys i ω, Xs i ω) : α × β))
+          = fun ω ↦ (Xs i ω, Ys i ω) from rfl] at h
+    exact h.symm
+  have hmarkov := wz_perletter_markov i c μ Xs Ys hXs hYs hindep
+  have hzero : condMutualInfo μ (Ys i)
+      (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+        fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Xs i) = 0 := by
+    rw [condMutualInfo_comm μ (Ys i) _ (Xs i) (hYs i) (hU_meas i) (hXs i)]
+    exact condMutualInfo_eq_zero_of_markov μ _ (Xs i) (Ys i)
+      (hU_meas i) (hXs i) (hYs i) hmarkov
+  rw [hzero, add_zero] at hc2
+  have hkey : mutualInfo μ (Ys i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+      + condMutualInfo μ (Xs i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i)
+      = mutualInfo μ (Xs i)
+        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := by
+    rw [← hc1, hswap]; exact hc2
+  rw [← hkey, ENNReal.add_sub_cancel_left (hfin_YU i)]
+
+private lemma wz_singleletter_rate_le_step2
+    {Ω : Type*} [MeasurableSpace Ω] {M n : ℕ} [NeZero M]
+    (c : WynerZivCode M n α β γ) (hencoder : Measurable c.encoder)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindep : iIndepFun (fun i ω ↦ (Xs i ω, Ys i ω)) μ) :
+    ∀ i : Fin n,
+        condMutualInfo μ (Xs i)
+            (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+              fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i)
+          = condMutualInfo μ (Xs i) (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
+              (fun ω j ↦ Ys j ω) := by
+  set Jn : Ω → Fin M := fun ω ↦ c.encoder (fun j ↦ Xs j ω) with hJn_def
+  set Yn : Ω → (Fin n → β) := fun ω j ↦ Ys j ω with hYn_def
+  have hYn_meas : Measurable Yn := by rw [hYn_def]; exact measurable_pi_lambda _ fun j ↦ hYs j
+  intro i
+  have hJ_meas : Measurable (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) :=
+    hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)
+  have hYoth_meas : Measurable (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) :=
+    measurable_pi_lambda _ fun j ↦ hYs ↑j
+  -- Independence `(Yᵢ, Xᵢ) ⊥ Y_{\i}` (memorylessness).
+  have hindep_pair : IndepFun (fun ω ↦ (Ys i ω, Xs i ω))
+      (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) μ := by
+    have hf_meas : ∀ j, Measurable (fun ω ↦ (Xs j ω, Ys j ω)) := fun j ↦ (hXs j).prodMk (hYs j)
+    have hfin := hindep.indepFun_finset {i} (Finset.univ \ {i}) Finset.disjoint_sdiff hf_meas
+    exact hfin.comp
+      (φ := fun r : (({i} : Finset (Fin n)) → α × β) ↦
+        ((r ⟨i, Finset.mem_singleton_self i⟩).2, (r ⟨i, Finset.mem_singleton_self i⟩).1))
+      (ψ := fun r : ((Finset.univ \ {i} : Finset (Fin n)) → α × β) ↦
+        (fun j : {j : Fin n // j ≠ i} ↦ (r ⟨↑j, by simp [j.2]⟩).2))
+      Measurable.of_discrete Measurable.of_discrete
+  -- Reverse Markov chain `Y_{\i} − Yᵢ − Xᵢ`.
+  have hmarkov : IsMarkovChain μ (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (Ys i) (Xs i) :=
+    wz_isMarkovChain_of_indepFun_side μ (Ys i) (Xs i)
+      (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (fun _ w ↦ w)
+      (hYs i) (hXs i) hYoth_meas measurable_snd hindep_pair
+  -- First term vanishes: `I(Xᵢ; Y_{\i} | Yᵢ) = 0`.
+  have hzero1 : condMutualInfo μ (Xs i)
+      (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (Ys i) = 0 := by
+    rw [condMutualInfo_comm μ (Xs i) (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (Ys i)
+        (hXs i) hYoth_meas (hYs i)]
+    exact condMutualInfo_eq_zero_of_markov μ (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)
+      (Ys i) (Xs i) hYoth_meas (hYs i) (hXs i) hmarkov
+  -- Conditioner reshape `(Yᵢ, Y_{\i}) ≅ Yⁿ`.
+  have hreshape : condMutualInfo μ (Xs i) (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
+      (fun ω ↦ (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
+      = condMutualInfo μ (Xs i) Jn Yn := by
+    have h := condMutualInfo_map_cond_measurableEquiv μ (Xs i)
+      (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) Yn (hXs i) hJ_meas hYn_meas
+      (ChannelCodingConverseGeneral.measurableEquivExtract i)
+    rw [show (fun ω ↦ (ChannelCodingConverseGeneral.measurableEquivExtract i) (Yn ω))
+          = (fun ω ↦ (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) from ?_] at h
+    · exact h
+    · funext ω
+      have hsymm : (ChannelCodingConverseGeneral.measurableEquivExtract i).symm
+            (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) = fun j ↦ Ys j ω := by
+        funext j
+        by_cases hj : j = i
+        · subst hj
+          simp [ChannelCodingConverseGeneral.measurableEquivExtract,
+            MeasurableEquiv.piEquivPiSubtypeProd, MeasurableEquiv.funUnique,
+            MeasurableEquiv.trans, MeasurableEquiv.prodCongr]
+        · simp [ChannelCodingConverseGeneral.measurableEquivExtract,
+            MeasurableEquiv.piEquivPiSubtypeProd, MeasurableEquiv.funUnique,
+            MeasurableEquiv.trans, MeasurableEquiv.prodCongr, hj]
+      have hYnω : Yn ω = fun j ↦ Ys j ω := rfl
+      rw [hYnω, ← hsymm, MeasurableEquiv.apply_symm_apply]
+  -- Swap the middle `Uᵢ = (J, Y_{\i}) → (Y_{\i}, J)`, apply the 2-var chain rule, collapse.
+  calc condMutualInfo μ (Xs i)
+          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
+            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i)
+      = condMutualInfo μ (Xs i)
+          (fun ω ↦ ((fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω),
+            c.encoder (fun j ↦ Xs j ω))) (Ys i) :=
+        condMutualInfo_map_middle_measurableEquiv μ (Xs i)
+          (fun ω ↦ ((fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω),
+            c.encoder (fun j ↦ Xs j ω))) (Ys i) (hXs i) (hYoth_meas.prodMk hJ_meas) (hYs i)
+          MeasurableEquiv.prodComm
+    _ = condMutualInfo μ (Xs i) (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (Ys i)
+        + condMutualInfo μ (Xs i) (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
+            (fun ω ↦ (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) :=
+        ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var μ (Xs i)
+          (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)
+          (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (Ys i) (hXs i) hYoth_meas hJ_meas (hYs i)
+          (mutualInfo_ne_top μ (Ys i) (Xs i) (hYs i) (hXs i))
+    _ = condMutualInfo μ (Xs i) (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
+            (fun ω ↦ (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := by
+        rw [hzero1, zero_add]
+    _ = condMutualInfo μ (Xs i) Jn Yn := hreshape
+
+private lemma wz_singleletter_rate_le_step3
+    {Ω : Type*} [MeasurableSpace Ω] {M n : ℕ} [NeZero M]
+    (c : WynerZivCode M n α β γ) (hencoder : Measurable c.encoder)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindep : iIndepFun (fun i ω ↦ (Xs i ω, Ys i ω)) μ) :
+    ∑ i : Fin n, condMutualInfo μ (Xs i) (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
+          (fun ω j ↦ Ys j ω)
+      ≤ mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (fun ω j ↦ Xs j ω)
+          - mutualInfo μ (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (fun ω j ↦ Ys j ω) := by
+  set Jn : Ω → Fin M := fun ω ↦ c.encoder (fun j ↦ Xs j ω) with hJn_def
+  set Xn : Ω → (Fin n → α) := fun ω j ↦ Xs j ω with hXn_def
+  set Yn : Ω → (Fin n → β) := fun ω j ↦ Ys j ω with hYn_def
+  have hXn_meas : Measurable Xn := by rw [hXn_def]; exact measurable_pi_lambda _ fun j ↦ hXs j
+  have hYn_meas : Measurable Yn := by rw [hYn_def]; exact measurable_pi_lambda _ fun j ↦ hYs j
+  have hJn_meas : Measurable Jn := by
+    rw [hJn_def]; exact hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)
+  -- Deterministic-encoder identity `I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)`.
+  have h_enc : condMutualInfo μ Xn Jn Yn = mutualInfo μ Jn Xn - mutualInfo μ Jn Yn := by
+    have hmarkov : IsMarkovChain μ Yn Xn Jn :=
+      isMarkovChain_comp_conditioner_right μ Yn Xn hYn_meas hXn_meas hencoder
+    have hzero : condMutualInfo μ Yn Jn Xn = 0 :=
+      condMutualInfo_eq_zero_of_markov μ Yn Xn Jn hYn_meas hXn_meas hJn_meas hmarkov
+    have hc2 := mutualInfo_chain_rule μ Yn Jn Xn hYn_meas hJn_meas hXn_meas
+    rw [hzero, add_zero] at hc2
+    have hc1 := mutualInfo_chain_rule μ Xn Jn Yn hXn_meas hJn_meas hYn_meas
+    have hswap : mutualInfo μ (fun ω ↦ (Yn ω, Xn ω)) Jn
+        = mutualInfo μ (fun ω ↦ (Xn ω, Yn ω)) Jn :=
+      (mutualInfo_map_left_measurableEquiv μ (fun ω ↦ (Yn ω, Xn ω)) Jn
+        (hYn_meas.prodMk hXn_meas) hJn_meas MeasurableEquiv.prodComm).symm
+    rw [hswap, hc2] at hc1
+    -- hc1 : mutualInfo μ Xn Jn = mutualInfo μ Yn Jn + condMutualInfo μ Xn Jn Yn
+    rw [mutualInfo_comm μ Jn Xn hJn_meas hXn_meas, mutualInfo_comm μ Jn Yn hJn_meas hYn_meas, hc1,
+      ENNReal.add_sub_cancel_left (mutualInfo_ne_top μ Yn Jn hYn_meas hJn_meas)]
+  -- Prefix chain rule `I(Xⁿ; J | Yⁿ) = ∑ₖ I(Xₖ; J | (Yⁿ, X^{<k}))`.
+  have h_side : mutualInfo μ Yn Jn ≠ ∞ := mutualInfo_ne_top μ Yn Jn hYn_meas hJn_meas
+  have h_prefix : condMutualInfo μ Xn Jn Yn
+      = ∑ k : Fin n, condMutualInfo μ (Xs k) Jn
+          (fun ω ↦ (Yn ω, fun (j : Fin k.val) ↦ Xs ⟨j.val, j.isLt.trans k.isLt⟩ ω)) :=
+    condMutualInfo_prefix_chain_rule μ Xs Jn Yn hXs hJn_meas hYn_meas h_side
+  -- Per-letter monotonicity `I(Xᵢ; J | Yⁿ) ≤ I(Xᵢ; J | (Yⁿ, X^{<i}))`.
+  have h_mono : ∀ i : Fin n, condMutualInfo μ (Xs i) Jn Yn
+      ≤ condMutualInfo μ (Xs i) Jn
+          (fun ω ↦ (Yn ω, fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := by
+    intro i
+    have hXpre_meas : Measurable (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
+      measurable_pi_lambda _ fun j ↦ hXs _
+    have hside : mutualInfo μ Yn (Xs i) ≠ ∞ := mutualInfo_ne_top μ Yn (Xs i) hYn_meas (hXs i)
+    have hg1 := ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var μ (Xs i) Jn
+      (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) Yn (hXs i) hJn_meas hXpre_meas
+      hYn_meas hside
+    have hg2 := ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var μ (Xs i)
+      (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) Jn Yn (hXs i) hXpre_meas
+      hJn_meas hYn_meas hside
+    have hcrux : condMutualInfo μ (Xs i)
+        (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) Yn = 0 :=
+      wz_inputs_cond_indep i μ Xs Ys hXs hYs hindep
+    rw [hcrux, zero_add] at hg2
+    have hswap := condMutualInfo_map_middle_measurableEquiv μ (Xs i)
+      (fun ω ↦ ((fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω), Jn ω)) Yn
+      (hXs i) (hXpre_meas.prodMk hJn_meas) hYn_meas MeasurableEquiv.prodComm
+    calc condMutualInfo μ (Xs i) Jn Yn
+        ≤ condMutualInfo μ (Xs i)
+            (fun ω ↦ (Jn ω, fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)) Yn := by
+          rw [hg1]; exact self_le_add_right _ _
+      _ = condMutualInfo μ (Xs i)
+            (fun ω ↦ ((fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω), Jn ω)) Yn :=
+          hswap
+      _ = condMutualInfo μ (Xs i) Jn
+            (fun ω ↦ (Yn ω, fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := hg2
+  calc ∑ i : Fin n, condMutualInfo μ (Xs i) Jn Yn
+      ≤ ∑ i : Fin n, condMutualInfo μ (Xs i) Jn
+          (fun ω ↦ (Yn ω, fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)) :=
+        Finset.sum_le_sum fun i _ ↦ h_mono i
+    _ = condMutualInfo μ Xn Jn Yn := h_prefix.symm
+    _ = mutualInfo μ Jn Xn - mutualInfo μ Jn Yn := h_enc
+
 /-- **Sub-lemma 3 (single-letterised rate bound, conditional-MI chain).** The sum of the
 per-letter Wyner–Ziv objectives is bounded by the block mutual-information difference:
 ```
@@ -692,7 +928,6 @@ private theorem wz_singleletter_rate_le
   set Xn : Ω → (Fin n → α) := fun ω j ↦ Xs j ω with hXn_def
   set Yn : Ω → (Fin n → β) := fun ω j ↦ Ys j ω with hYn_def
   have hXn_meas : Measurable Xn := by rw [hXn_def]; exact measurable_pi_lambda _ fun j ↦ hXs j
-  have hYn_meas : Measurable Yn := by rw [hYn_def]; exact measurable_pi_lambda _ fun j ↦ hYs j
   have hJn_meas : Measurable Jn := by
     rw [hJn_def]; exact hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)
   -- Per-letter auxiliary `Uᵢ = (J, Y_{\i})` and its measurability.
@@ -707,210 +942,26 @@ private theorem wz_singleletter_rate_le
         (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
           fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) ≠ ∞ := fun i ↦
     mutualInfo_ne_top μ (Xs i) _ (hXs i) (hU_meas i)
-  have hfin_YU : ∀ i : Fin n,
-      mutualInfo μ (Ys i)
-        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) ≠ ∞ := fun i ↦
-    mutualInfo_ne_top μ (Ys i) _ (hYs i) (hU_meas i)
-  -- STEP 1 (closed): per-letter identity `I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ) = I(Xᵢ; Uᵢ | Yᵢ)`.
+  -- STEP 1: per-letter identity `I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ) = I(Xᵢ; Uᵢ | Yᵢ)`.
   -- Twofold chain rule `I((Xᵢ,Yᵢ); Uᵢ) = I(Yᵢ; Uᵢ) + I(Xᵢ; Uᵢ | Yᵢ) = I(Xᵢ; Uᵢ) + I(Yᵢ; Uᵢ | Xᵢ)`
   -- with `I(Yᵢ; Uᵢ | Xᵢ) = 0` (per-letter Markov chain `Uᵢ − Xᵢ − Yᵢ`, `wz_perletter_markov`).
-  have hstep1 : ∀ i : Fin n,
-      mutualInfo μ (Xs i)
-          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
-        - mutualInfo μ (Ys i)
-          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
-        = condMutualInfo μ (Xs i)
-          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i) := by
-    intro i
-    have hc1 := mutualInfo_chain_rule μ (Xs i)
-      (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-        fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i) (hXs i) (hU_meas i) (hYs i)
-    have hc2 := mutualInfo_chain_rule μ (Ys i)
-      (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-        fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Xs i) (hYs i) (hU_meas i) (hXs i)
-    have hswap : mutualInfo μ (fun ω ↦ (Ys i ω, Xs i ω))
-          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
-        = mutualInfo μ (fun ω ↦ (Xs i ω, Ys i ω))
-          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := by
-      have h := mutualInfo_map_left_measurableEquiv μ (fun ω ↦ (Ys i ω, Xs i ω))
-        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
-        ((hYs i).prodMk (hXs i)) (hU_meas i) MeasurableEquiv.prodComm
-      rw [show (fun ω ↦ (MeasurableEquiv.prodComm (Ys i ω, Xs i ω) : α × β))
-            = fun ω ↦ (Xs i ω, Ys i ω) from rfl] at h
-      exact h.symm
-    have hmarkov := wz_perletter_markov i c μ Xs Ys hXs hYs hindep
-    have hzero : condMutualInfo μ (Ys i)
-        (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-          fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Xs i) = 0 := by
-      rw [condMutualInfo_comm μ (Ys i) _ (Xs i) (hYs i) (hU_meas i) (hXs i)]
-      exact condMutualInfo_eq_zero_of_markov μ _ (Xs i) (Ys i)
-        (hU_meas i) (hXs i) (hYs i) hmarkov
-    rw [hzero, add_zero] at hc2
-    have hkey : mutualInfo μ (Ys i)
-          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
-        + condMutualInfo μ (Xs i)
-          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i)
-        = mutualInfo μ (Xs i)
-          (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-            fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := by
-      rw [← hc1, hswap]; exact hc2
-    rw [← hkey, ENNReal.add_sub_cancel_left (hfin_YU i)]
-  -- STEP 2 (residual): memoryless collapse `I(Xᵢ; Uᵢ | Yᵢ) = I(Xᵢ; J | Yⁿ)`. Needs the
+  have hstep1 := wz_singleletter_rate_le_step1 c hencoder μ Xs Ys hXs hYs hindep
+  -- STEP 2: memoryless collapse `I(Xᵢ; Uᵢ | Yᵢ) = I(Xᵢ; J | Yⁿ)`. Needs the
   -- conditional chain rule on the middle argument `Uᵢ = (J, Y_{\i})` plus the memoryless
   -- conditional independence `I(Xᵢ; Y_{\i} | Yᵢ) = 0` and the reshape `(Y_{\i}, Yᵢ) ≅ Yⁿ`.
   have hstep2 : ∀ i : Fin n,
       condMutualInfo μ (Xs i)
           (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
             fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i)
-        = condMutualInfo μ (Xs i) Jn Yn := by
-    intro i
-    have hJ_meas : Measurable (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) :=
-      hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)
-    have hYoth_meas : Measurable (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) :=
-      measurable_pi_lambda _ fun j ↦ hYs ↑j
-    -- Independence `(Yᵢ, Xᵢ) ⊥ Y_{\i}` (memorylessness).
-    have hindep_pair : IndepFun (fun ω ↦ (Ys i ω, Xs i ω))
-        (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) μ := by
-      have hf_meas : ∀ j, Measurable (fun ω ↦ (Xs j ω, Ys j ω)) := fun j ↦ (hXs j).prodMk (hYs j)
-      have hfin := hindep.indepFun_finset {i} (Finset.univ \ {i}) Finset.disjoint_sdiff hf_meas
-      exact hfin.comp
-        (φ := fun r : (({i} : Finset (Fin n)) → α × β) ↦
-          ((r ⟨i, Finset.mem_singleton_self i⟩).2, (r ⟨i, Finset.mem_singleton_self i⟩).1))
-        (ψ := fun r : ((Finset.univ \ {i} : Finset (Fin n)) → α × β) ↦
-          (fun j : {j : Fin n // j ≠ i} ↦ (r ⟨↑j, by simp [j.2]⟩).2))
-        Measurable.of_discrete Measurable.of_discrete
-    -- Reverse Markov chain `Y_{\i} − Yᵢ − Xᵢ`.
-    have hmarkov : IsMarkovChain μ (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (Ys i) (Xs i) :=
-      wz_isMarkovChain_of_indepFun_side μ (Ys i) (Xs i)
-        (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (fun _ w ↦ w)
-        (hYs i) (hXs i) hYoth_meas measurable_snd hindep_pair
-    -- First term vanishes: `I(Xᵢ; Y_{\i} | Yᵢ) = 0`.
-    have hzero1 : condMutualInfo μ (Xs i)
-        (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (Ys i) = 0 := by
-      rw [condMutualInfo_comm μ (Xs i) (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (Ys i)
-          (hXs i) hYoth_meas (hYs i)]
-      exact condMutualInfo_eq_zero_of_markov μ (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)
-        (Ys i) (Xs i) hYoth_meas (hYs i) (hXs i) hmarkov
-    -- Conditioner reshape `(Yᵢ, Y_{\i}) ≅ Yⁿ`.
-    have hreshape : condMutualInfo μ (Xs i) (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
-        (fun ω ↦ (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω))
-        = condMutualInfo μ (Xs i) Jn Yn := by
-      have h := condMutualInfo_map_cond_measurableEquiv μ (Xs i)
-        (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) Yn (hXs i) hJ_meas hYn_meas
-        (ChannelCodingConverseGeneral.measurableEquivExtract i)
-      rw [show (fun ω ↦ (ChannelCodingConverseGeneral.measurableEquivExtract i) (Yn ω))
-            = (fun ω ↦ (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) from ?_] at h
-      · exact h
-      · funext ω
-        have hsymm : (ChannelCodingConverseGeneral.measurableEquivExtract i).symm
-              (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) = fun j ↦ Ys j ω := by
-          funext j
-          by_cases hj : j = i
-          · subst hj
-            simp [ChannelCodingConverseGeneral.measurableEquivExtract,
-              MeasurableEquiv.piEquivPiSubtypeProd, MeasurableEquiv.funUnique,
-              MeasurableEquiv.trans, MeasurableEquiv.prodCongr]
-          · simp [ChannelCodingConverseGeneral.measurableEquivExtract,
-              MeasurableEquiv.piEquivPiSubtypeProd, MeasurableEquiv.funUnique,
-              MeasurableEquiv.trans, MeasurableEquiv.prodCongr, hj]
-        have hYnω : Yn ω = fun j ↦ Ys j ω := rfl
-        rw [hYnω, ← hsymm, MeasurableEquiv.apply_symm_apply]
-    -- Swap the middle `Uᵢ = (J, Y_{\i}) → (Y_{\i}, J)`, apply the 2-var chain rule, collapse.
-    calc condMutualInfo μ (Xs i)
-            (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
-              fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i)
-        = condMutualInfo μ (Xs i)
-            (fun ω ↦ ((fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω),
-              c.encoder (fun j ↦ Xs j ω))) (Ys i) :=
-          condMutualInfo_map_middle_measurableEquiv μ (Xs i)
-            (fun ω ↦ ((fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω),
-              c.encoder (fun j ↦ Xs j ω))) (Ys i) (hXs i) (hYoth_meas.prodMk hJ_meas) (hYs i)
-            MeasurableEquiv.prodComm
-      _ = condMutualInfo μ (Xs i) (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (Ys i)
-          + condMutualInfo μ (Xs i) (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
-              (fun ω ↦ (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) :=
-          ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var μ (Xs i)
-            (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)
-            (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) (Ys i) (hXs i) hYoth_meas hJ_meas (hYs i)
-            (mutualInfo_ne_top μ (Ys i) (Xs i) (hYs i) (hXs i))
-      _ = condMutualInfo μ (Xs i) (fun ω ↦ c.encoder (fun j ↦ Xs j ω))
-              (fun ω ↦ (Ys i ω, fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := by
-          rw [hzero1, zero_add]
-      _ = condMutualInfo μ (Xs i) Jn Yn := hreshape
-  -- STEP 3 (residual): sum bound `∑ᵢ I(Xᵢ; J | Yⁿ) ≤ I(J; Xⁿ) − I(J; Yⁿ)`. Needs the
+        = condMutualInfo μ (Xs i) Jn Yn :=
+    wz_singleletter_rate_le_step2 c hencoder μ Xs Ys hXs hYs hindep
+  -- STEP 3: sum bound `∑ᵢ I(Xᵢ; J | Yⁿ) ≤ I(J; Xⁿ) − I(J; Yⁿ)`. Needs the
   -- conditional chain rule `I(Xⁿ; J | Yⁿ) = ∑ᵢ I(Xᵢ; J | (Yⁿ, X^{<i}))`, memoryless
   -- monotonicity `I(Xᵢ; J | Yⁿ) ≤ I(Xᵢ; J | (Yⁿ, X^{<i}))`, and the deterministic-encoder
   -- Markov chain `J − Xⁿ − Yⁿ` giving `I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)`.
   have hsum : ∑ i : Fin n, condMutualInfo μ (Xs i) Jn Yn
-      ≤ mutualInfo μ Jn Xn - mutualInfo μ Jn Yn := by
-    -- Deterministic-encoder identity `I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)`.
-    have h_enc : condMutualInfo μ Xn Jn Yn = mutualInfo μ Jn Xn - mutualInfo μ Jn Yn := by
-      have hmarkov : IsMarkovChain μ Yn Xn Jn :=
-        isMarkovChain_comp_conditioner_right μ Yn Xn hYn_meas hXn_meas hencoder
-      have hzero : condMutualInfo μ Yn Jn Xn = 0 :=
-        condMutualInfo_eq_zero_of_markov μ Yn Xn Jn hYn_meas hXn_meas hJn_meas hmarkov
-      have hc2 := mutualInfo_chain_rule μ Yn Jn Xn hYn_meas hJn_meas hXn_meas
-      rw [hzero, add_zero] at hc2
-      have hc1 := mutualInfo_chain_rule μ Xn Jn Yn hXn_meas hJn_meas hYn_meas
-      have hswap : mutualInfo μ (fun ω ↦ (Yn ω, Xn ω)) Jn
-          = mutualInfo μ (fun ω ↦ (Xn ω, Yn ω)) Jn :=
-        (mutualInfo_map_left_measurableEquiv μ (fun ω ↦ (Yn ω, Xn ω)) Jn
-          (hYn_meas.prodMk hXn_meas) hJn_meas MeasurableEquiv.prodComm).symm
-      rw [hswap, hc2] at hc1
-      -- hc1 : mutualInfo μ Xn Jn = mutualInfo μ Yn Jn + condMutualInfo μ Xn Jn Yn
-      rw [mutualInfo_comm μ Jn Xn hJn_meas hXn_meas, mutualInfo_comm μ Jn Yn hJn_meas hYn_meas, hc1,
-        ENNReal.add_sub_cancel_left (mutualInfo_ne_top μ Yn Jn hYn_meas hJn_meas)]
-    -- Prefix chain rule `I(Xⁿ; J | Yⁿ) = ∑ₖ I(Xₖ; J | (Yⁿ, X^{<k}))`.
-    have h_side : mutualInfo μ Yn Jn ≠ ∞ := mutualInfo_ne_top μ Yn Jn hYn_meas hJn_meas
-    have h_prefix : condMutualInfo μ Xn Jn Yn
-        = ∑ k : Fin n, condMutualInfo μ (Xs k) Jn
-            (fun ω ↦ (Yn ω, fun (j : Fin k.val) ↦ Xs ⟨j.val, j.isLt.trans k.isLt⟩ ω)) :=
-      condMutualInfo_prefix_chain_rule μ Xs Jn Yn hXs hJn_meas hYn_meas h_side
-    -- Per-letter monotonicity `I(Xᵢ; J | Yⁿ) ≤ I(Xᵢ; J | (Yⁿ, X^{<i}))`.
-    have h_mono : ∀ i : Fin n, condMutualInfo μ (Xs i) Jn Yn
-        ≤ condMutualInfo μ (Xs i) Jn
-            (fun ω ↦ (Yn ω, fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := by
-      intro i
-      have hXpre_meas : Measurable (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
-        measurable_pi_lambda _ fun j ↦ hXs _
-      have hside : mutualInfo μ Yn (Xs i) ≠ ∞ := mutualInfo_ne_top μ Yn (Xs i) hYn_meas (hXs i)
-      have hg1 := ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var μ (Xs i) Jn
-        (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) Yn (hXs i) hJn_meas hXpre_meas
-        hYn_meas hside
-      have hg2 := ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var μ (Xs i)
-        (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) Jn Yn (hXs i) hXpre_meas
-        hJn_meas hYn_meas hside
-      have hcrux : condMutualInfo μ (Xs i)
-          (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) Yn = 0 :=
-        wz_inputs_cond_indep i μ Xs Ys hXs hYs hindep
-      rw [hcrux, zero_add] at hg2
-      have hswap := condMutualInfo_map_middle_measurableEquiv μ (Xs i)
-        (fun ω ↦ ((fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω), Jn ω)) Yn
-        (hXs i) (hXpre_meas.prodMk hJn_meas) hYn_meas MeasurableEquiv.prodComm
-      calc condMutualInfo μ (Xs i) Jn Yn
-          ≤ condMutualInfo μ (Xs i)
-              (fun ω ↦ (Jn ω, fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)) Yn := by
-            rw [hg1]; exact self_le_add_right _ _
-        _ = condMutualInfo μ (Xs i)
-              (fun ω ↦ ((fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω), Jn ω)) Yn :=
-            hswap
-        _ = condMutualInfo μ (Xs i) Jn
-              (fun ω ↦ (Yn ω, fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := hg2
-    calc ∑ i : Fin n, condMutualInfo μ (Xs i) Jn Yn
-        ≤ ∑ i : Fin n, condMutualInfo μ (Xs i) Jn
-            (fun ω ↦ (Yn ω, fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)) :=
-          Finset.sum_le_sum fun i _ ↦ h_mono i
-      _ = condMutualInfo μ Xn Jn Yn := h_prefix.symm
-      _ = mutualInfo μ Jn Xn - mutualInfo μ Jn Yn := h_enc
+      ≤ mutualInfo μ Jn Xn - mutualInfo μ Jn Yn :=
+    wz_singleletter_rate_le_step3 c hencoder μ Xs Ys hXs hYs hindep
   -- ASSEMBLY: `.toReal`-bookkeeping tying steps 1–3 together.
   have hsummand_ne : ∀ i : Fin n,
       mutualInfo μ (Xs i)
