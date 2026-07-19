@@ -93,7 +93,6 @@ noncomputable def bestConstantWealth (xs : ℕ → Fin (d + 1) → ℝ) (n : ℕ
 noncomputable def universalRegret (xs : ℕ → Fin (d + 1) → ℝ) (n : ℕ) : ℝ :=
   (Real.log (bestConstantWealth xs n) - Real.log (universalWealth xs n)) / (n : ℝ)
 
-/-- A point of the corner simplex lifts to a genuine portfolio on `Fin (d + 1)`. -/
 theorem simplexLift_mem_stdSimplex {y : Fin d → ℝ} (hy : y ∈ cornerSimplex d) :
     simplexLift y ∈ stdSimplex ℝ (Fin (d + 1)) := by
   refine ⟨fun j ↦ ?_, ?_⟩

@@ -30,7 +30,7 @@ This is the non-diagonal generalization of the horse-race doubling rate
 
 ## Main statements
 
-* `competitive_optimality` — Theorem 16.3.1: for a Kuhn–Tucker portfolio `bs`, every
+* `competitive_optimality` — Theorem 16.6.1: for a Kuhn–Tucker portfolio `bs`, every
   portfolio `b` satisfies `E[S_b / S_bs] ≤ 1`.
 * `growthRate_concaveOn` — Theorem 16.2.2: the growth rate is concave on the simplex.
 * `logOptimal_of_kuhnTucker` — Theorem 16.2.1 (reverse): the Kuhn–Tucker condition
@@ -59,7 +59,7 @@ noncomputable def wealthRelative (X : α → Fin m → ℝ) (b : Fin m → ℝ) 
 noncomputable def growthRate (p : α → ℝ) (X : α → Fin m → ℝ) (b : Fin m → ℝ) : ℝ :=
   ∑ a, p a * Real.log (wealthRelative X b a)
 
-/-- Theorem 16.3.1 (Cover–Thomas): competitive optimality of a Kuhn–Tucker portfolio
+/-- Theorem 16.6.1 (Cover–Thomas): competitive optimality of a Kuhn–Tucker portfolio
 `bs`. If `bs` satisfies the Kuhn–Tucker condition `∀ i, ∑ a, p a · X a i / S_bs(a) ≤ 1`,
 then every portfolio `b` on the simplex has expected wealth ratio at most one,
 `∑ a, p a · (S_b(a) / S_bs(a)) ≤ 1`.

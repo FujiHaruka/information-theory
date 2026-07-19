@@ -96,7 +96,7 @@ lemma indepFun_portfolioLogReturn (μ : Measure Ω) (X : α → Fin m → ℝ) (
   intro i j hij
   exact (hindep hij).comp (measurable_portfolioLogReturn X b) (measurable_portfolioLogReturn X b)
 
-/-- **Operational log-optimal portfolio theorem** (Cover–Thomas §16.3): for an i.i.d.
+/-- Operational log-optimal portfolio theorem (Cover–Thomas §16.3): for an i.i.d.
 market sequence `As`, a fixed rebalanced portfolio `b` under price relatives `X`, the
 time-averaged log-wealth growth `(1/n)·log S_n` converges almost surely to the growth rate
 `growthRate (lawPmf μ (As 0)) X b`, where `lawPmf μ (As 0)` is the law of a single
@@ -127,7 +127,7 @@ theorem seqLogWealth_div_tendsto_growthRate
   filter_upwards [h_lln] with ω hω
   simpa only [seqLogWealth, h_lim] using hω
 
-/-- **Operational asymptotic optimality** (Cover–Thomas §16.3): a log-optimal
+/-- Operational asymptotic optimality (Cover–Thomas §16.3): a log-optimal
 (Kuhn–Tucker) portfolio `bs` is asymptotically optimal. Almost surely both the arbitrary
 portfolio `b` and `bs` have a growth rate, and the arbitrary portfolio does not beat `bs`.
 @audit:ok — sorryAx-free (`[propext, Classical.choice,

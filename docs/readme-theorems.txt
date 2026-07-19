@@ -101,7 +101,11 @@ relay_cutset_outer_bound | relay-channel cut-set outer bound, min of broadcast-c
 growthRate_concaveOn | growth rate is concave in the portfolio (Cover–Thomas Thm 16.2.2)
 logOptimal_of_kuhnTucker | Kuhn–Tucker condition ⟹ log-optimal portfolio (Cover–Thomas Thm 16.2.1, reverse)
 kuhnTucker_of_logOptimal | log-optimal portfolio ⟹ Kuhn–Tucker condition (Cover–Thomas Thm 16.2.1, forward)
-competitive_optimality | competitive optimality of the log-optimal portfolio, E[S_b/S_b*] ≤ 1 (Cover–Thomas Thm 16.3.1)
+competitive_optimality | competitive optimality of the log-optimal portfolio, E[S_b/S_b*] ≤ 1 (Cover–Thomas Thm 16.6.1)
+seqLogWealth_div_tendsto_growthRate | operational asymptotic optimality over i.i.d. markets, (1/n)·log Sₙ → W(b) a.s. (Cover–Thomas Thm 16.3)
+sideInfo_growthRate_increment_le_mutualInfo | side information increases the growth rate by at most I(X;Y) (Cover–Thomas Thm 16.4.1)
+seqLogWealth_div_tendsto_stationary | growth rate over a stationary ergodic market, fixed-portfolio form (Cover–Thomas Thm 16.5)
+universal_portfolio_regret_tendsto_zero | Cover's universal portfolio: per-period regret vanishes without knowing the market law (Cover–Thomas Thm 16.7.1)
 
 @ 17 | Entropy inequalities
 han_inequality
