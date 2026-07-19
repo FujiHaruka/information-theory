@@ -10,7 +10,6 @@ import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Basic
 import Mathlib.MeasureTheory.Order.Group.Lattice
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
-import Mathlib.Analysis.Convex.SpecificFunctions.Basic
 import Mathlib.Probability.Process.Filtration
 import Mathlib.Probability.Kernel.Condexp
 import Mathlib.Probability.Kernel.MeasurableLIntegral
@@ -595,7 +594,9 @@ fed a good-set patch of the objective (the true objective where the envelope `�
 `condExpKernel`-integrable, `0` off that co-null set) so that continuity and concavity in `b` hold
 for every `ω`; the conditional dominance then follows from the pull-out identity
 `μ[log (c · X) | ℱ k] ω = ∫ y, log (c ω · X y) ∂(condExpKernel μ (ℱ k) ω)`, obtained because an
-`ℱ k`-measurable `c` is `condExpKernel`-a.e. constant. -/
+`ℱ k`-measurable `c` is `condExpKernel`-a.e. constant.
+
+@audit:ok -/
 theorem exists_condLogOptimalSeq [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) [Nonempty (Fin m)]
@@ -728,7 +729,9 @@ growth `condOptGrowth` is monotone, bounded above, and converges to its supremum
 monotonicity from the conditional optimality of `bstar`, boundedness from the regularity envelope
 `hUB`, convergence via `tendsto_atTop_ciSup`. The stagewise conditional log-optimal selection is
 supplied by `exists_condLogOptimalSeq`. The Algoet–Cover sandwich consumes
-`bstar`/`condOptGrowth`/`condOptGrowthInfty` for `(1/n) log S*_n → W_∞`. -/
+`bstar`/`condOptGrowth`/`condOptGrowthInfty` for `(1/n) log S*_n → W_∞`.
+
+@audit:ok -/
 theorem exists_condOptGrowth_tendsto_condOptGrowthInfty [StandardBorelSpace Ω] [Nonempty Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) [Nonempty (Fin m)]
