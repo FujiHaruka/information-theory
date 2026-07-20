@@ -150,7 +150,7 @@ Do **not** write a whole proof file in one shot. Instead:
 
 ## Parallel orchestration
 
-**Default — proof/implementation tasks run as orchestrator by default**: any `InformationTheory/` implementation (filling `sorry`, new decls) is dispatched to `lean-implementer` (solo, no worktree, 1 subagent) + honesty/style gates, without waiting for an explicit request. Edit directly only when the user says "do it yourself".
+**Default**: `InformationTheory/` implementation (filling `sorry`, new decls) runs as orchestrator — dispatch to `lean-implementer` (solo, no worktree) + honesty/style gates — without an explicit request.
 
 Trigger: the user explicitly requests parallel execution ("in parallel", "N seeds in parallel", "parallel run"). Launch independent seeds with `Agent` + `isolation: "worktree"`. **Every agent prompt must include the Standard boilerplate from `.claude/guides/agent-dispatch-guide.md`** (omitting it causes disk-full / branch drift). The post-merge cleanup procedure and the Brief content checklist are also owned (SoT) by that guide.
 
