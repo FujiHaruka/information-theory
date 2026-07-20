@@ -14,7 +14,7 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **Ch.16 "Information Theo
 - [x] Leg A — AO-iid (operational 漸近最適性、CT §16.3 Thm 16.3.1) — proof-done sorryAx-free + @audit:ok
 - [x] Leg C — side-info & growth rate (`ΔW ≤ I(X;Y)`、CT §16.4 Thm 16.4.1) — proof-done + @audit:ok（署名 honesty 修正）
 - [x] Leg B — stationary market fixed-b (定常エルゴード成長率収束 + dominance、CT §16.5) — proof-done + @audit:ok
-- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — **🚧 (B) Route M (growing-memory `S*_n` 逐語) 採択。R1+R2+R3(Route T 踏み台) proof-done + Route M gateway 非壁確定 @audit:ok + R3-M-upper 構造 landed (eventual-bound、honesty PASS)、crux `∫⁻ M_n≤1` closure / R3-M-lower / sandwich + R3-a + R4 残** → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
+- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — **🚧 (B) Route M 採択。R3-M 全段 (upper/lower/sandwich) proof-done — CT 16.5.1 本体 headline `growingMemory_logWealth_tendsto_condOptGrowthInfty` 着地 (sorryAx-free、両 gate PASS)。残る唯一の未完 = R3-a (coherence 仮説の具体 pastFiltration+shift discharge、壁でない plumbing) + R4 配線** → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
 - [x] Leg D — Cover universal portfolio (regret bound、CT §16.7) — proof-done sorryAx-free + @audit:ok（**not-a-wall 判明**）
 
 ## Closure summary
@@ -59,7 +59,7 @@ theorem sideInfo_growthRate_increment_le_mutualInfo
 必須**であり、KT bundling で代替できない。独立 `honesty-auditor` が check 4 (増分不等式が仮説から semantic follow、
 coarse/fine ミスマッチ・向き逆転無し) を含め PASS で `@audit:ok`。
 
-## Leg B 完全形 (W_∞ AEP) — 🚧 (B) Route M 採択、R1+R2+R3(Route T 踏み台)+gateway proof-done、R3-M 組立 + R4 残
+## Leg B 完全形 (W_∞ AEP) — 🚧 R3-M 全段 proof-done (CT 16.5.1 本体着地)、残 = R3-a coherence discharge + R4 配線
 
 fixed-b core (固定 rebalance portfolio の成長率収束 + KT dominance) は proof-done。**CT 16.5.1 完全形** =
 log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | X_{-1..−k}) ↑ W_∞`) + AEP `(1/n) log S*_n → W_∞`
@@ -71,21 +71,21 @@ log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | 
   `exists_condLogOptimalSeq` + headline `exists_condOptGrowth_tendsto_condOptGrowthInfty`) すべて proof-done
   + `@audit:ok` sorryAx-free。選択補題は予告どおり Mathlib 壁ではなく `condExpKernel` (正則条件付き分布 /
   disintegration) 経由で closure。R2 は抽象 `Filtration ℕ m0` でパラメータ化 (R3/R4 が具体化を負う)。
-- **R3 = real-valued SMB 級 AEP → Route T (fixed-stationary W_∞ AEP) proof-done + 両 gate PASS**
-  (`condOptGrowthInfty_eq_integral_infPast` / `exists_infPast_condLogOptimal` / headline
-  `stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty`、すべて `@audit:ok` sorryAx-free)。R3 在庫が
-  壁公算とした pathwise wealth-ratio supermartingale は固定 bstarInf ルートでは condExp-martingale + DCT で回避
-  (壁でない)。**framing fork 解決 → (B) Route M (growing-memory `S*_n` 逐語) 採択** (ユーザー判断)。⟹ Route T は
-  **踏み台**として残置し Route M の下界/極限同定に再利用。
-- **Route M gateway `condKuhnTucker_infPast` 非壁確定** (proof-done sorryAx-free @audit:ok、
-  `StationaryWinfty.lean:1089`、commit `337ed270` → gates `1895ead4`) — R2 の**加法的** dominance を wealth-ratio
-  supermartingale が要する**乗法的** one-step 上界に変換する crux を凸摂動一次条件 + setIntegral DCT で closure
-  (κ_ω 還元不要)。**R3-M-upper 構造 landed + honesty gate PASS** (`growingMemory_eventually_le_condOptGrowthInfty`、
-  eventual-bound 形、Markov+BC で isolate、shift-past coherence は `condExp_comp_measurePreserving` plumbing で非壁確定)、
-  crux `∫⁻ M_n ≤ 1` のみ honest sorry 残 (split 後 closure)。残 = crux closure / R3-M-lower (eventual 下界) / sandwich +
-  R3-a 具体化 + R4。子 plan 判断ログ 4-5 / R3 節が SoT。
-- 残る **R4 (growing-memory headline 命名 `@[entry_point]` + README/roadmap/facts 配線)** は R3-M 組立後。root
-  import は登録済。
+- **R3 = real-valued SMB 級 AEP → (B) Route M (growing-memory `S*_n` 逐語) 全段 proof-done** (`StationaryWinftyAEP.lean`、
+  1031 行 / 0 sorry)。Route T (固定 bstarInf の fixed-stationary AEP、3 decl `@audit:ok`) は **踏み台**として残置し
+  Route M の W_∞ 同定 (恒等式 `condOptGrowthInfty_eq_integral_infPast`) に再利用。
+- **R3-M 全段 proof-done + 両 gate PASS** (commit `8d282d2d`/`3f89c71a`/`9b5c1d3f`/`fac84779`):
+  - **upper** (`growingMemory_eventually_le_condOptGrowthInfty`、eventual-bound `∀ε>0 ∀ᶠ n, gMLA ≤ W_∞+ε`) = wealth-ratio
+    supermartingale + crux `∫⁻ M_n ≤ 1` (base=KT + tower) + Markov/BC。coherence `hcoh` は (b) hybrid で R3-a に deferral。
+  - **lower** (`growingMemory_eventually_ge_condOptGrowthInfty`) = **tail-from-K supermartingale**
+    `N_n^{(K)} = ∏_{i=K}^{n} (bstar_K·X_i)/(bstar_i·X_i)` (i<K は KT 不成立) + stagewise KT + crux `∫⁻ N ≤ 1` + sup_K。
+    lower coherence `hcoh_inf` は upper より **強い** (coarser σ)。
+  - **sandwich** (`growingMemory_logWealth_tendsto_condOptGrowthInfty`、`Metric.tendsto_atTop`) = upper+lower を組んで直接
+    `Tendsto` = **CT 16.5.1 本体**。3 headline sorryAx-free (再検証: `#print axioms
+    growingMemory_logWealth_tendsto_condOptGrowthInfty`)、honesty-auditor が load-bearing hyp なし CONFIRMED。子 plan R3 節 /
+    判断ログが SoT。
+- 残る **R3-a (両 coherence 仮説 `hcoh`/`hcoh_inf` の具体 pastFiltration+shift discharge、壁でない plumbing) + R4
+  (growing-memory headline `@[entry_point]` + README/roadmap/facts 配線)**。root import は登録済。
 
 要件:
 
