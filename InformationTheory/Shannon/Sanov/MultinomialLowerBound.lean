@@ -294,8 +294,9 @@ private lemma multinomial_pow_le_real {n : ℕ} (c k : α → ℕ)
   exact this
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- Card of `piAntidiag univ n` is bounded by `(n+1)^{|α|}`. -/
-private lemma piAntidiag_card_le (n : ℕ) :
+/-- The number of types (count vectors `c : α → ℕ` with `∑ a, c a = n`, equivalently the
+elements of `piAntidiag univ n`) is at most `(n+1)^{|α|}`. -/
+theorem numTypes_le (n : ℕ) :
     (Finset.piAntidiag (Finset.univ : Finset α) n).card
       ≤ (n + 1) ^ Fintype.card α := by
   classical
@@ -478,7 +479,7 @@ theorem typeClassByCount_card_ge
     -- Step 8: card ≤ (n+1)^|α|.
     have h_card_le : ((Finset.piAntidiag (Finset.univ : Finset α) n).card : ℝ)
         ≤ ((n : ℝ) + 1) ^ Fintype.card α := by
-      have := piAntidiag_card_le (α := α) n
+      have := numTypes_le (α := α) n
       have h_cast : (((n + 1) ^ Fintype.card α : ℕ) : ℝ)
           = ((n : ℝ) + 1) ^ Fintype.card α := by push_cast; ring
       have := (Nat.cast_le (α := ℝ)).mpr this
@@ -524,6 +525,162 @@ theorem typeClassByCount_card_ge
     -- from 1 ≤ (n+1)^|α| · (M · (P / n^n)) derive (n+1)^{-|α|} · (n^n / P) ≤ M.
     exact inv_mul_div_le_of_one_le_mul_mul_div
       (pow_pos hn_real_succ_pos _) h_prod_cc_pos (pow_pos hn_real_pos _) h_chain
+
+omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- Reverse bridge to the multinomial coefficient: `|T_c| ≤ multinomial univ c`. -/
+private lemma typeClass_card_le_multinomial {n : ℕ} (c : α → ℕ)
+    (hc_sum : (∑ a, c a) = n) :
+    (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card
+      ≤ Nat.multinomial Finset.univ c := by
+  classical
+  -- Strategy: build an injection Φ : T_c × (Π a, Perm (Fin (c a))) → Perm (Fin n).
+  -- Then |T_c| · ∏ (c a)! ≤ n!, and with multinomial_spec (∏ (c a)! · multinomial = n!)
+  -- we get |T_c| ≤ multinomial.
+  obtain ⟨x₀, hx₀⟩ := typeClassByCount_nonempty_of_sum c hc_sum
+  have hcard_typeCount : ∀ (x : Fin n → α) (a : α),
+      Fintype.card (Fin (typeCount x a)) = Fintype.card {i : Fin n // x i = a} := by
+    intro x a
+    rw [Fintype.card_fin, Fintype.card_subtype]
+    rfl
+  let ePos : (x : Fin n → α) → (a : α) → Fin (typeCount x a) ≃ {i : Fin n // x i = a} :=
+    fun x a ↦ Fintype.equivOfCardEq (hcard_typeCount x a)
+  let eFibOf : (x : Fin n → α) → (∀ a, typeCount x a = c a) →
+      (a : α) → Fin (c a) ≃ {i : Fin n // x i = a} :=
+    fun x h a ↦ (Equiv.cast (by rw [h a])).trans (ePos x a)
+  let eFib₀ : (a : α) → Fin (c a) ≃ {i : Fin n // x₀ i = a} := eFibOf x₀ hx₀
+  -- Shared opening `A : Fin n ≃ Σ a, Fin (c a)` (depends only on the reference `x₀`).
+  let A : Fin n ≃ (Σ a, Fin (c a)) :=
+    (Equiv.sigmaFiberEquiv x₀).symm.trans (Equiv.sigmaCongrRight (fun a ↦ (eFib₀ a).symm))
+  -- Closing `Cof x : Σ a, Fin (c a) ≃ Fin n`, depending on `x ∈ T_c`.
+  let Cof : (x : typeClassByCount (α := α) (n := n) c) → ((Σ a, Fin (c a)) ≃ Fin n) :=
+    fun x ↦ (Equiv.sigmaCongrRight (eFibOf x.val x.property)).trans
+      (Equiv.sigmaFiberEquiv (x.val : Fin n → α))
+  let Φ : (typeClassByCount (α := α) (n := n) c) × (∀ a, Equiv.Perm (Fin (c a)))
+      → Equiv.Perm (Fin n) :=
+    fun p ↦ A.trans ((Equiv.sigmaCongrRight p.2).trans (Cof p.1))
+  -- `Cof x` lands in the fiber tagged by the first coordinate.
+  have key : ∀ (x : typeClassByCount (α := α) (n := n) c) (s : Σ a, Fin (c a)),
+      x.val (Cof x s) = s.1 := fun x s ↦ (eFibOf x.val x.property s.1 s.2).2
+  -- Recovery of `x` from `σ = Φ p`: `x.val (Φ p j) = x₀ j`.
+  have hΦ_x : ∀ (p : (typeClassByCount (α := α) (n := n) c) × (∀ a, Equiv.Perm (Fin (c a))))
+      (j : Fin n), p.1.val (Φ p j) = x₀ j := by
+    intro p j
+    have e1 : Φ p j = Cof p.1 (Equiv.sigmaCongrRight p.2 (A j)) := rfl
+    rw [e1, key p.1 (Equiv.sigmaCongrRight p.2 (A j))]
+    rfl
+  -- Left cancellation of `A`.
+  have cancelA : ∀ (P Q : (Σ a, Fin (c a)) ≃ Fin n), A.trans P = A.trans Q → P = Q := by
+    intro P Q h
+    have := congrArg (fun e ↦ A.symm.trans e) h
+    simpa only [← Equiv.trans_assoc, Equiv.symm_trans_self, Equiv.refl_trans] using this
+  -- Injectivity of `Φ`.
+  have hΦ_inj : Function.Injective Φ := by
+    rintro ⟨x, τ⟩ ⟨x', τ'⟩ hΦ
+    have hxx : x = x' := by
+      apply Subtype.ext
+      funext i
+      have h1 : x.val i = x₀ ((Φ (x, τ)).symm i) := by
+        have h := hΦ_x (x, τ) ((Φ (x, τ)).symm i)
+        rwa [Equiv.apply_symm_apply] at h
+      have h2 : x'.val i = x₀ ((Φ (x', τ')).symm i) := by
+        have h := hΦ_x (x', τ') ((Φ (x', τ')).symm i)
+        rwa [Equiv.apply_symm_apply] at h
+      rw [h1, h2, hΦ]
+    have hΦ' : A.trans ((Equiv.sigmaCongrRight τ).trans (Cof x))
+        = A.trans ((Equiv.sigmaCongrRight τ').trans (Cof x')) := hΦ
+    rw [hxx] at hΦ'
+    have hP : (Equiv.sigmaCongrRight τ).trans (Cof x')
+        = (Equiv.sigmaCongrRight τ').trans (Cof x') := cancelA _ _ hΦ'
+    -- Right cancellation of `Cof x'`.
+    have hSCR : Equiv.sigmaCongrRight τ = Equiv.sigmaCongrRight τ' := by
+      have := congrArg (fun e ↦ e.trans (Cof x').symm) hP
+      simpa only [Equiv.trans_assoc, Equiv.self_trans_symm, Equiv.trans_refl] using this
+    have hτ : τ = τ' :=
+      Equiv.Perm.sigmaCongrRightHom_injective (β := fun a ↦ Fin (c a))
+        (by simpa only [Equiv.Perm.sigmaCongrRightHom_apply] using hSCR)
+    exact Prod.ext hxx hτ
+  -- Cardinality bookkeeping.
+  have h_card_le := Fintype.card_le_of_injective Φ hΦ_inj
+  have hL : Fintype.card (Equiv.Perm (Fin n)) = Nat.factorial n := by
+    rw [Fintype.card_perm, Fintype.card_fin]
+  have hR : Fintype.card ((typeClassByCount (α := α) (n := n) c)
+        × (∀ a, Equiv.Perm (Fin (c a))))
+      = (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card
+          * ∏ a, Nat.factorial (c a) := by
+    rw [Fintype.card_prod, Fintype.card_pi]
+    congr 1
+    · exact (Set.Finite.card_toFinset _).symm
+    · refine Finset.prod_congr rfl fun a _ ↦ ?_
+      rw [Fintype.card_perm, Fintype.card_fin]
+  rw [hR, hL] at h_card_le
+  -- h_card_le : |T_c| · ∏ (c a)! ≤ n!.
+  have h_spec : (∏ a, Nat.factorial (c a)) * Nat.multinomial Finset.univ c = Nat.factorial n := by
+    rw [Nat.multinomial_spec, hc_sum]
+  have h_prod_pos : 0 < ∏ a, Nat.factorial (c a) :=
+    Finset.prod_pos fun _ _ ↦ Nat.factorial_pos _
+  rw [← h_spec, mul_comm (∏ a, Nat.factorial (c a)) (Nat.multinomial Finset.univ c)] at h_card_le
+  exact Nat.le_of_mul_le_mul_right h_card_le h_prod_pos
+
+omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- Single-term multinomial bound: `multinomial univ c ≤ n^n / ∏ c(a)^{c(a)}`. -/
+private lemma multinomial_le_pow_div_prod {n : ℕ} (c : α → ℕ)
+    (hc_sum : (∑ a, c a) = n) :
+    (Nat.multinomial Finset.univ c : ℝ)
+      ≤ (n : ℝ) ^ n / ∏ a : α, ((c a : ℝ) ^ (c a)) := by
+  classical
+  have h_prod_cc_pos : (0 : ℝ) < ∏ a : α, (c a : ℝ) ^ (c a) := by
+    refine Finset.prod_pos fun a _ ↦ ?_
+    rcases Nat.eq_zero_or_pos (c a) with h0 | hp
+    · rw [h0]; simp
+    · exact pow_pos (by exact_mod_cast hp) _
+  have hN_pos : (0 : ℝ) < (n : ℝ) ^ n := by
+    rcases Nat.eq_zero_or_pos n with hn | hn
+    · rw [hn]; simp
+    · exact pow_pos (by exact_mod_cast hn) _
+  -- (∑ a, c a / n)^n = 1 for all n (n = 0 via `_ ^ 0 = 1`, n > 0 via ∑ = 1).
+  have h_base_one : (∑ a, (c a : ℝ) / n) ^ n = 1 := by
+    rcases Nat.eq_zero_or_pos n with hn | hn
+    · rw [hn]; simp
+    · have h_sum : (∑ a, (c a : ℝ) / n) = 1 := by
+        rw [← Finset.sum_div]
+        rw [show (∑ a, (c a : ℝ)) = (n : ℝ) from by exact_mod_cast hc_sum]
+        have hn_ne : (n : ℝ) ≠ 0 := by exact_mod_cast hn.ne'
+        field_simp
+      rw [h_sum, one_pow]
+  -- Multinomial theorem: 1 = ∑ k ∈ piAntidiag univ n, multinomial univ k · ∏ (c/n)^{k a}.
+  have h_mn := Finset.sum_pow_eq_sum_piAntidiag (R := ℝ)
+    (Finset.univ : Finset α) (fun a ↦ (c a : ℝ) / n) n
+  rw [h_base_one] at h_mn
+  -- c ∈ piAntidiag univ n.
+  have hc_mem : c ∈ Finset.piAntidiag (Finset.univ : Finset α) n := by
+    rw [Finset.mem_piAntidiag]
+    refine ⟨hc_sum, fun a _ ↦ Finset.mem_univ a⟩
+  -- Single term ≤ sum (all terms nonneg).
+  have h_single : (Nat.multinomial Finset.univ c : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (c a)
+      ≤ ∑ k ∈ Finset.piAntidiag (Finset.univ : Finset α) n,
+          (Nat.multinomial Finset.univ k : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (k a) :=
+    Finset.single_le_sum
+      (f := fun k ↦ (Nat.multinomial Finset.univ k : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (k a))
+      (fun k _ ↦ mul_nonneg (by positivity)
+        (Finset.prod_nonneg fun a _ ↦ by positivity))
+      hc_mem
+  have h_le_one : (Nat.multinomial Finset.univ c : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (c a) ≤ 1 :=
+    h_single.trans (le_of_eq h_mn.symm)
+  rw [prod_div_pow_eq_prod_pow_div_npow_of_sum c c hc_sum] at h_le_one
+  rw [← mul_div_assoc, div_le_one hN_pos] at h_le_one
+  rw [le_div_iff₀ h_prod_cc_pos]
+  exact h_le_one
+
+omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- Multinomial upper bound (method of types):
+`|T_c| ≤ n^n / ∏ c(a)^{c(a)}`. -/
+theorem typeClassByCount_card_le {n : ℕ} (c : α → ℕ) (hc_sum : (∑ a, c a) = n) :
+    ((typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card : ℝ)
+      ≤ (n : ℝ) ^ n / ∏ a : α, ((c a : ℝ) ^ (c a)) := by
+  have h1 : ((typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card : ℝ)
+      ≤ (Nat.multinomial Finset.univ c : ℝ) := by
+    exact_mod_cast typeClass_card_le_multinomial c hc_sum
+  exact h1.trans (multinomial_le_pow_div_prod c hc_sum)
 
 omit [Nonempty α] in
 /-- Lower bound on `Q^n(T_c)`: `Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`. -/
