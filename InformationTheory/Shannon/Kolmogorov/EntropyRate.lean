@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass.Concentration
 import InformationTheory.Shannon.Kolmogorov.Counting
 import InformationTheory.Shannon.StrongTypicality
-import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass.Concentration
 import Mathlib.Logic.Encodable.Pi
 import Mathlib.Logic.Equiv.List
 import Mathlib.Topology.Order.Basic
