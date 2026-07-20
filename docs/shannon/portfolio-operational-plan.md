@@ -5,8 +5,8 @@
 Cover–Thomas *Elements of Information Theory* 2nd ed **Ch.16 "Information Theory and Investment"** のうち、
 親計画で **operational / universal 定理として scope-out** されていた 4 群を形式化する。静的核
 (`growthRate` / `wealthRelative` / KT 4 定理、`Portfolio/Basic.lean`) を **consume のみ** (既存共有補題の署名変更
-ゼロ、ripple 無し) で組み立てる方針。**Leg A/C/D は proof-done、Leg B は fixed-b core を proof-done + W_∞ AEP
-完全形を後継計画へ deferral。**
+ゼロ、ripple 無し) で組み立てる方針。**Leg A/C/D proof-done、Leg B は fixed-b core + W_∞ AEP 完全形 (CT 16.5.1)
+をともに proof-done + @audit:ok (完全形は後継 `portfolio-stationary-woo-plan.md`)。**
 
 ## 進捗 — ✅ core DONE (2026-07-19)
 
@@ -14,7 +14,7 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **Ch.16 "Information Theo
 - [x] Leg A — AO-iid (operational 漸近最適性、CT §16.3 Thm 16.3.1) — proof-done sorryAx-free + @audit:ok
 - [x] Leg C — side-info & growth rate (`ΔW ≤ I(X;Y)`、CT §16.4 Thm 16.4.1) — proof-done + @audit:ok（署名 honesty 修正）
 - [x] Leg B — stationary market fixed-b (定常エルゴード成長率収束 + dominance、CT §16.5) — proof-done + @audit:ok
-- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — **🚧 (B) Route M 採択。R3-M 全段 (upper/lower/sandwich) proof-done — CT 16.5.1 本体 headline `growingMemory_logWealth_tendsto_condOptGrowthInfty` 着地 (sorryAx-free、両 gate PASS)。残る唯一の未完 = R3-a (coherence 仮説の具体 pastFiltration+shift discharge、壁でない plumbing) + R4 配線** → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
+- [x] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — ✅ **proof-done + @audit:ok** — (B) Route M 採択。R3-M 全段 (upper/lower/sandwich) + R3-a (coherence 具体 discharge) proof-done。concrete headline `growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete` (`Portfolio/StationaryWinftyConcrete.lean`、`@[entry_point]`、両 gate PASS) 着地 → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
 - [x] Leg D — Cover universal portfolio (regret bound、CT §16.7) — proof-done sorryAx-free + @audit:ok（**not-a-wall 判明**）
 
 ## Closure summary

@@ -105,6 +105,7 @@ competitive_optimality | competitive optimality of the log-optimal portfolio, E[
 seqLogWealth_div_tendsto_growthRate | operational asymptotic optimality over i.i.d. markets, (1/n)·log Sₙ → W(b) a.s. (Cover–Thomas Thm 16.3)
 sideInfo_growthRate_increment_le_mutualInfo | side information increases the growth rate by at most I(X;Y) (Cover–Thomas Thm 16.4.1)
 seqLogWealth_div_tendsto_stationary | growth rate over a stationary ergodic market, fixed-portfolio form (Cover–Thomas Thm 16.5)
+growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete | growing-memory log-optimal wealth AEP over a stationary ergodic market, (1/n)·log S*ₙ → W_∞ a.s. (Cover–Thomas Thm 16.5.1)
 universal_portfolio_regret_tendsto_zero | Cover's universal portfolio: per-period regret vanishes without knowing the market law (Cover–Thomas Thm 16.7.1)
 
 @ 17 | Entropy inequalities

@@ -10,12 +10,13 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **§16.5 "Investment in S
 **現状 = framing fork 解決 → (B) Route M (growing-memory `S*_n` 逐語) 採択。R3-M 全段 (upper / lower / sandwich)
 proof-done — CT 16.5.1 本体 headline `growingMemory_logWealth_tendsto_condOptGrowthInfty` が着地
 (再検証: `#print axioms growingMemory_logWealth_tendsto_condOptGrowthInfty` が sorryAx-free)。crux succ は (b)
-hybrid coherence 仮説で closure、両 gate PASS。残る唯一の未完 = R3-a (coherence 仮説の具体
-pastFiltration+shift discharge、壁でない plumbing) + R4 (配線)** (Route M 群は
-`Portfolio/StationaryWinftyAEP.lean` に分離、現 1031 行 / 0 sorry、fixed-b core は `StationaryWinfty.lean`)。
-本計画は scope 境界・要件・進捗・壁リスクの記録。
+hybrid coherence 仮説で closure、両 gate PASS。**R3-a で 2 coherence を具体 pastFiltration+shift で discharge
+→ concrete headline `growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete` 着地 (`@[entry_point]`、
+両 gate PASS で @audit:ok) ⟹ CT 16.5.1 完全形 proof-done。R4 配線 (README/roadmap/facts/親同期) 完了。全 R 段
+DONE。** (Route M 群は `Portfolio/StationaryWinftyAEP.lean`、concrete instantiate は `StationaryWinftyConcrete.lean`
+に分離、fixed-b core は `StationaryWinfty.lean`)。本計画は scope 境界・要件・進捗・壁リスクの記録。
 
-## 進捗 — 🚧 R3-M 全段 proof-done (CT 16.5.1 本体 headline 着地)。残 = R3-a coherence discharge + R4 配線
+## 進捗 — ✅ CT 16.5.1 完全形 proof-done (concrete headline 着地、@audit:ok、両 gate PASS、全 R 段完了)
 
 - [ ] M0 在庫 — real-valued 条件付き growth / 可測選択 / Algoet–Cover sandwich の Mathlib / in-project 資産確定 📋
 - [x] R1 — 条件付き log-optimal portfolio の可測選択 ✅ proof-done — `exists_measurable_argmax_on_stdSimplex` (`@audit:ok` sorryAx-free)
@@ -25,8 +26,8 @@ pastFiltration+shift discharge、壁でない plumbing) + R4 (配線)** (Route M
 - [x] R3-M-upper — growing-memory 上界 ✅ **proof-done** (`growingMemory_eventually_le_condOptGrowthInfty` `:796`、eventual-bound 形)。crux `wealthRatioProcess_lintegral_le_one` (`:244`、`∫⁻ M_n ≤ 1`) を **(b) hybrid ルート** (coherence 仮説 `hcoh` = measurability-only precondition、σ-代数 `(⨆ℱ).comap T^{k+1}` 固定) で succ closure。Markov+BC 骨格は一般補題 `logAvg_eventually_le_of_lintegral_le_one` (`:424`) に抽出 (lower も consume)。両 gate PASS (commit `8d282d2d`/`3f89c71a`)
 - [x] R3-M-lower — 固定K/growing wealth-ratio supermartingale 下界 ✅ **proof-done** (`growingMemory_eventually_ge_condOptGrowthInfty` `:867`、eventual-bound 形)。tail-from-K supermmartingale `N_n^{(K)} = ∏_{i=K}^{n} (bstar_K·X_i)/(bstar_i·X_i)` + stagewise KT (`stagewise_condKuhnTucker` `:599`) + crux `∫⁻ N ≤ 1` (`lowerRatioProcess_lintegral_le_one` `:635`) を tower で closure、sup_K は R2 `exists_condOptGrowth_tendsto_condOptGrowthInfty`。lower coherence `hcoh_inf` (`(ℱ(k+1)).comap T^{k+1}`、upper より強い・coarser) = measurability-only。両 gate PASS (commit `9b5c1d3f`/`fac84779`)
 - [x] R3-M-sandwich — upper+lower を組んで直接 `Tendsto gMLA (𝓝 W_∞)` ✅ **proof-done = CT 16.5.1 本体** (`growingMemory_logWealth_tendsto_condOptGrowthInfty` `:982`、`Metric.tendsto_atTop`)。3 headline すべて honesty-auditor 機械確認で load-bearing hyp なし (再検証: `#print axioms growingMemory_logWealth_tendsto_condOptGrowthInfty`)
-- [ ] R3-a — 抽象 ℱ を具体 `pastFiltration`+shift で instantiate 📋 **shared bottleneck** — upper `hcoh` (`(⨆ℱ).comap T^{k+1}`) と lower `hcoh_inf` (`(ℱ(k+1)).comap T^{k+1}`、coarser・より強い) の **両方**を discharge。lower の強い need に合わせて設計 (upper 専用に作って lower で再 open しない)。壁でない plumbing (pastFiltration/shiftZ 既存)
-- [ ] R4 — growing-memory headline 命名 (`@[entry_point]`) + 配線 (README/roadmap/facts) + 独立監査 📋
+- [x] R3-a — 抽象 ℱ を具体 `pastFiltration`+shift で instantiate ✅ **proof-done** — 2 coherence を discharge 補題 `coherence_lower`（lower、`pastSigma(k+1).comap(shiftZ^{k+1})` = coarser・強い）/ `coherence_upper`（upper、`negPastSigma.comap(shiftZ^{k+1})` = `shiftedPastSigma`）で埋め、concrete headline `growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete`（`StationaryWinftyConcrete.lean`、247 行 / 0 sorry）を landing。gateway verify で非壁確定（pastFiltration/shiftZ/coord0 が非有限 α=Fin m→ℝ で clean instantiate）、engine `measurable_shiftedPastSigma_of_eq_comp` 同型を局所複製。両 gate PASS（honesty: coherence genuine・非バンドル；style: show→change ×5）。commit `00780329`/`7c844c6b`
+- [x] R4 — growing-memory concrete headline `@[entry_point]` 付与 + 配線 (README/roadmap/facts/親同期) + 独立監査 ✅ **DONE** — honesty + style 両 gate PASS で @audit:ok
 
 ## ゴール / Approach
 

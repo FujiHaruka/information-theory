@@ -203,6 +203,7 @@ statement are discharged internally; all remaining hypotheses are market-regular
 preconditions (measure preservation, ergodicity, simplex membership, positivity, integrability,
 conditional dominance).
 @audit:ok -/
+@[entry_point]
 theorem growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete
     (μ : Measure (∀ _ : ℤ, Fin m → ℝ)) [IsProbabilityMeasure μ]
     (hT : MeasurePreserving (shiftZ (α := Fin m → ℝ)) μ μ)
