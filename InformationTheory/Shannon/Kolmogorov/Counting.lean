@@ -128,4 +128,64 @@ theorem exists_incompressible (k : ℕ) : ∃ x, k ≤ complexity x := by
   rw [huniv] at hfin
   exact Set.infinite_univ hfin
 
+/-! ## Conditional version
+
+The same counting bound holds relative to any condition `y`, needed for the
+entropy-rate lower bound where the condition is the block length. The `y = 0`
+declarations above are the unconditional specializations. -/
+
+/-- A shortest program for `x` under condition `y` (attained by `condComplexity_spec`). -/
+noncomputable def shortestProgCond (x y : ℕ) : List Bool := (condComplexity_spec x y).choose
+
+/-- The natural-number code of `x`'s shortest program under condition `y`. -/
+noncomputable def shortestNatCond (x y : ℕ) : ℕ := progNat (shortestProgCond x y)
+
+theorem shortestProgCond_length (x y : ℕ) :
+    (shortestProgCond x y).length = condComplexity x y :=
+  (condComplexity_spec x y).choose_spec.1
+
+theorem shortestProgCond_mem (x y : ℕ) : x ∈ universalEval (shortestProgCond x y) y :=
+  (condComplexity_spec x y).choose_spec.2
+
+theorem shortestNatCond_injective (y : ℕ) :
+    Function.Injective (fun x ↦ shortestNatCond x y) := by
+  intro x₁ x₂ h
+  have hp : shortestProgCond x₁ y = shortestProgCond x₂ y := progNat_injective h
+  have h1 : x₁ ∈ universalEval (shortestProgCond x₁ y) y := shortestProgCond_mem x₁ y
+  have h2 : x₂ ∈ universalEval (shortestProgCond x₂ y) y := shortestProgCond_mem x₂ y
+  rw [hp] at h1
+  exact Part.mem_unique h1 h2
+
+theorem shortestNatCond_lt_of_lt {x y k : ℕ} (hx : condComplexity x y < k) :
+    shortestNatCond x y < 2 ^ k := by
+  have hlen : (shortestProgCond x y).length < k := by rw [shortestProgCond_length]; exact hx
+  calc shortestNatCond x y = progNat (shortestProgCond x y) := rfl
+    _ < 2 ^ ((shortestProgCond x y).length + 1) := progNat_lt _
+    _ ≤ 2 ^ k := Nat.pow_le_pow_right (by decide) (by omega)
+
+theorem condComplexity_lt_finite (y k : ℕ) : {x : ℕ | condComplexity x y < k}.Finite := by
+  have himg : ((fun x ↦ shortestNatCond x y) '' {x : ℕ | condComplexity x y < k}).Finite := by
+    apply Set.Finite.subset (Set.finite_Iio (2 ^ k))
+    rintro _ ⟨x, hx, rfl⟩
+    exact shortestNatCond_lt_of_lt hx
+  exact himg.of_finite_image (shortestNatCond_injective y).injOn
+
+/-- Fewer than `2 ^ k` naturals have conditional complexity below `k`, for any
+condition `y`. -/
+theorem condIncompressible_count (y k : ℕ) :
+    {x : ℕ | condComplexity x y < k}.ncard < 2 ^ k := by
+  have hsub : (fun x ↦ shortestNatCond x y) '' {x : ℕ | condComplexity x y < k}
+      ⊆ ↑(Finset.Ico 1 (2 ^ k)) := by
+    rintro _ ⟨x, hx, rfl⟩
+    simp only [Finset.coe_Ico, Set.mem_Ico]
+    exact ⟨progNat_pos _, shortestNatCond_lt_of_lt hx⟩
+  calc {x : ℕ | condComplexity x y < k}.ncard
+      = ((fun x ↦ shortestNatCond x y) '' {x : ℕ | condComplexity x y < k}).ncard :=
+        (Set.ncard_image_of_injective _ (shortestNatCond_injective y)).symm
+    _ ≤ (↑(Finset.Ico 1 (2 ^ k)) : Set ℕ).ncard :=
+        Set.ncard_le_ncard hsub (Finset.Ico 1 (2 ^ k)).finite_toSet
+    _ = (Finset.Ico 1 (2 ^ k)).card := Set.ncard_coe_finset _
+    _ = 2 ^ k - 1 := Nat.card_Ico 1 (2 ^ k)
+    _ < 2 ^ k := by have : 0 < 2 ^ k := pow_pos (by decide) k; omega
+
 end InformationTheory.Kolmogorov
