@@ -311,6 +311,7 @@ import InformationTheory.Shannon.Portfolio.SideInformation
 import InformationTheory.Shannon.Portfolio.StationaryMarket
 import InformationTheory.Shannon.Portfolio.StationaryWinfty
 import InformationTheory.Shannon.Portfolio.StationaryWinftyAEP
+import InformationTheory.Shannon.Portfolio.StationaryWinftyConcrete
 import InformationTheory.Shannon.Portfolio.Universal
 import InformationTheory.Shannon.LZ78.ZivEntropyBridge
 import InformationTheory.Shannon.Stationary.Kernel
