@@ -5,10 +5,13 @@ import Mathlib.MeasureTheory.Function.ConditionalLExpectation
 /-!
 # Growing-memory `W_∞` AEP for stationary markets (Cover–Thomas §16.5)
 
-Upper half of Theorem 16.5.1: the growing-memory log-wealth average `growingMemoryLogAvg` is
-eventually below the infinite-past optimal growth rate `W_∞ = condOptGrowthInfty` up to any margin,
-almost surely. Split out of `StationaryWinfty.lean` (measurable selection, monotone convergence, and
-the conditional Kuhn–Tucker gateway) to keep each file under the size budget.
+Theorem 16.5.1: the growing-memory log-wealth average `growingMemoryLogAvg` converges almost surely
+to the infinite-past optimal growth rate `W_∞ = condOptGrowthInfty`
+(`growingMemory_logWealth_tendsto_condOptGrowthInfty`). The proof is the Algoet–Cover sandwich: the
+eventual upper bound `≤ W_∞ + ε` from the wealth-ratio supermartingale against the infinite-past
+optimal portfolio, and the eventual lower bound `≥ W_∞ − ε` from the finite-memory Birkhoff rates
+rising to `W_∞`. Split out of `StationaryWinfty.lean` (measurable selection, monotone convergence,
+and the conditional Kuhn–Tucker gateway) to keep each file under the size budget.
 -/
 
 namespace InformationTheory.Shannon.Portfolio
@@ -415,8 +418,9 @@ private theorem wealthRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [Non
 -- Generic Markov + Borel–Cantelli scaffold: a sequence of positive measurable functions whose
 -- `ENNReal.ofReal` integrals stay `≤ 1` has `(1/n) log Mₙ` eventually below any positive threshold
 -- a.e. Markov gives `μ {(n+1)² ≤ Mₙ} ≤ 1/(n+1)²`; summability of the majorant + Borel–Cantelli
--- yield `Mₙ < (n+1)²` eventually, whence `(1/n) log Mₙ ≤ 2 log(n+1)/(n+1) → 0`. Process-independent:
--- both the upper (`wealthRatioProcess`) and lower (`lowerRatioProcess`) wealth ratios consume it.
+-- yield `Mₙ < (n+1)²` eventually, whence `(1/n) log Mₙ ≤ 2 log(n+1)/(n+1) → 0`.
+-- Process-independent: both the upper (`wealthRatioProcess`) and lower (`lowerRatioProcess`)
+-- wealth ratios consume it.
 private theorem logAvg_eventually_le_of_lintegral_le_one (μ : Measure Ω) [IsProbabilityMeasure μ]
     (M : ℕ → Ω → ℝ) (hMpos : ∀ n ω, 0 < M n ω) (hMmeas : ∀ n, Measurable (M n))
     (hbound : ∀ n, ∫⁻ ω, ENNReal.ofReal (M n ω) ∂μ ≤ 1) :
@@ -650,7 +654,8 @@ private theorem lowerRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [None
   classical
   induction n with
   | zero =>
-    -- `N_0 = ∏_{Icc K 0}`: the empty product (`K > 0`) or the single self-ratio `ρ_K = 1` (`K = 0`).
+    -- `N_0 = ∏_{Icc K 0}`: the empty product (`K > 0`) or the single self-ratio `ρ_K = 1`
+    -- (`K = 0`).
     have hN0 : ∀ ω, lowerRatioProcess X bstar K T 0 ω = 1 := by
       intro ω
       unfold lowerRatioProcess
@@ -693,7 +698,8 @@ private theorem lowerRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [None
       have hr_int : Integrable r μ := by
         have hbound : Integrable (fun ω ↦ ∑ i, X ω i / (∑ j, bstar (k + 1) ω j * X ω j)) μ :=
           integrable_finsetSum Finset.univ fun i _ ↦ hint_coord (k + 1) i
-        refine Integrable.mono' hbound hr_meas.aestronglyMeasurable (Eventually.of_forall fun ω ↦ ?_)
+        refine Integrable.mono' hbound hr_meas.aestronglyMeasurable
+          (Eventually.of_forall fun ω ↦ ?_)
         rw [Real.norm_eq_abs, abs_of_nonneg (le_of_lt (hr_pos ω))]
         simp only [hr_def]
         rw [Finset.sum_div]
@@ -846,12 +852,13 @@ theorem growingMemory_eventually_le_condOptGrowthInfty [StandardBorelSpace Ω] [
 log-wealth average is eventually above `W_∞ = condOptGrowthInfty` down to any margin `ε`, almost
 surely. For a fixed finite memory `K`, the growing-memory returns dominate the fixed-`K` strategy up
 to the lower wealth ratio: `growingMemoryLogAvg n = (1/n) ∑ᵢ log(bstar K · Xᵢ) + (head)/n
-− (1/n) log Nₙ^{(K)}`, where the first term converges to `∫ log(bstar K · X) = condOptGrowth K = W*_K`
-by Birkhoff's ergodic theorem, the head (a finite `ω`-constant) vanishes, and `(1/n) log Nₙ^{(K)}` is
-eventually below any positive threshold (`logAvg_eventually_le_of_lintegral_le_one`, from the
-lower-ratio supermartingale bound `lowerRatioProcess_lintegral_le_one`). Since `W*_K ↑ W_∞`
-(`condOptGrowth_monotone` + `condOptGrowth_bddAbove`, the R2 monotone convergence for this `bstar`),
-choosing `K` with `W*_K > W_∞ − ε/2` yields `growingMemoryLogAvg n ≥ W_∞ − ε` eventually. `W_∞` is not
+− (1/n) log Nₙ^{(K)}`, where the first term converges to
+`∫ log(bstar K · X) = condOptGrowth K = W*_K` by Birkhoff's ergodic theorem, the head (a finite
+`ω`-constant) vanishes, and `(1/n) log Nₙ^{(K)}` is eventually below any positive threshold
+(`logAvg_eventually_le_of_lintegral_le_one`, from the lower-ratio supermartingale bound
+`lowerRatioProcess_lintegral_le_one`). Since `W*_K ↑ W_∞` (`condOptGrowth_monotone` +
+`condOptGrowth_bddAbove`, the monotone convergence for this `bstar`), choosing `K` with
+`W*_K > W_∞ − ε/2` yields `growingMemoryLogAvg n ≥ W_∞ − ε` eventually. `W_∞` is not
 received as a hypothesis: it is pinned constructively as the supremum of the `W*_K`, and the `K` for
 each `ε` is chosen deterministically (`ω`-independent) from the monotone limit, so the almost-sure
 set is the countable intersection over `K ∈ ℕ` of the Birkhoff and lower-ratio a.e. sets. `hcoh` is
@@ -880,7 +887,7 @@ theorem growingMemory_eventually_ge_condOptGrowthInfty [StandardBorelSpace Ω] [
       condOptGrowthInfty μ X bstar - ε ≤ growingMemoryLogAvg X bstar T n ω := by
   have hintb : ∀ k, Integrable (causalLogReturn X (bstar k)) μ := fun k ↦
     hint (bstar k) ((hbstar_meas k).mono (ℱ.le k)).measurable (hbstar_simplex k)
-  -- `W*_K ↑ W_∞`: monotone convergence for this `bstar` (R2 internal argument).
+  -- `W*_K ↑ W_∞`: monotone convergence for this `bstar`.
   have hmono := condOptGrowth_monotone μ ℱ X bstar hbstar_meas hbstar_simplex hbstar_dom
   have hbdd := condOptGrowth_bddAbove μ X bstar hbstar_simplex hintb hUB
   have hWconv : Tendsto (condOptGrowth μ X bstar) atTop (𝓝 (condOptGrowthInfty μ X bstar)) :=
