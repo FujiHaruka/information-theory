@@ -62,8 +62,10 @@ P6 非圧縮 SLLN   P5 非計算可能性 (halting_problem)         │
  (stretch)      (独立 iconic、P1/P3 のみ依存)              │
 ```
 
-- **gateway atom = P1 不変性定理**。これ 1 本を `lean-implementer` に投げ、`exists_code`+`smn`
-  で `C_U ≤ C_A + c` が通るかを着手前 probe。壁の実在確認 + 定義形(下記 §4)の妥当性検証を兼ねる。
+- **gateway atom = 長さ加法 U の構成 + P1 不変性 + P2 literal 上界**(3 点セット、§4 参照)。
+  これを 1 本 `lean-implementer` に投げ、(i) naive Gödel 数ルートが加法定数を出せないことを最初に確認、
+  (ii) literal/interpret 2 モードの U を建て、(iii) `C_U ≤ C_A + c_A`(P1)と `C(x) ≤ l(x)+O(1)`(P2)を通す。
+  **U 構成が make-or-break**——ここが通れば背骨の残り(P3-P5)は既存資産で直線的。詰まれば定義形を再設計。
 - **flagship = P4 (K↔H)**。この project が Ch.14 を持つ意味そのもの(計算量↔情報量)。
   headline `@[entry_point]`。上界・下界とも既存 entropy/typical-set 資産に接続する点が最大の勝ち筋。
 - **P5 非計算可能性**は P4 と独立に走れる(P1/P3 のみ依存)ので relay の並走レーン候補。
@@ -86,20 +88,38 @@ P6 非圧縮 SLLN   P5 非計算可能性 (halting_problem)         │
 
 **gap(この project で自作)**: Kolmogorov 複雑性の定義そのもの / prefix-free 機械 / program 上の Kraft。
 
-## 4. 定義形(Mathlib-shape-driven)
+## 4. 定義形(Mathlib-shape-driven)— ⚠️ naive 形は却下、長さ加法 U へ pivot
 
-`eval` が `ℕ →. ℕ`(`Part`)を返すので、文字列は ℕ に符号化して扱う。素直な形:
+### ❌ 却下された naive 形(2026-07-20 inventory + 実体照合で棄却)
 
-- プログラム = `ℕ`(`ofNat Code p` で解釈)。実行 = `eval (ofNat Code p) 0`(入力なし版)。
-- 長さ `l(p) := Nat.size p`(ビット長)。
-- `C(x) := sInf { Nat.size p | x ∈ eval (ofNat Code p) 0 }`。
-  - 非空性: `const x` が `eval (const x) 0 = x` を満たす ⟹ 集合非空 ⟹ `Nat.sInf` が **到達される最小値**。
-    これで `sorry` を定義本体に置かず、min の存在は Mathlib の `Nat` sInf で自動。
-- 条件版 `C(x | y) := sInf { Nat.size p | x ∈ eval (ofNat Code p) y }`。
+当初案 `C(x) := sInf { Nat.size p | x ∈ eval (ofNat Code p) 0 }`(プログラム = Gödel 数 `p`、
+長さ = `Nat.size(encodeCode c)`)は **P2 上界すら成立せず P4 flagship を破壊する**。理由(Mathlib
+`PartrecCode.lean` の def から機械確認、settled fact):
 
-**設計上の効用**: `eval`/`Code` の結論形をそのまま消費するので、Mathlib と自作の間に橋渡し
-補題を書かずに済む(「Mathlib-shape-driven Definitions」)。`Nat.size` を長さに採ることで
-数え上げ P3 が `Nat` の初等補題で閉じる。
+- `Code.const (n+1) = comp succ (Code.const n)`(:98、unary の反復合成)。
+- `encodeCode (comp cf cg) = 2*(2*Nat.pair(encodeCode cf)(encodeCode cg)+1)+4`(:14)、`Nat.pair` は二次。
+- ⟹ `e_n := encodeCode(const n)` は `e_{n+1} ≈ 4·e_n²`(**二重指数**)⟹ `Nat.size(encodeCode(const x)) ≈ 2^x`。
+- ⟹ `x` を出力する最短プログラムのコストが `≈ 2^x` bit。**`C(x) ≤ l(x)+c`(P2)が偽**、
+  `(1/n)E[C(X^n|n)]` は `H` でなく**定数倍**に化け **P4 が崩れる**。
+- AST ノード数を長さに採る逃げ道も封じられる: `const x` が unary ゆえノード数 O(x)(literal `x` の
+  bit 長 log x より指数的に大)。**Gödel 数でも AST でも加法定数は原理的に出ない。**
+
+これは **Mathlib 壁ではなく定義形の選択問題**(loogle 0-hit ではなく、間違った長さ尺度を選んだこと)。
+
+### ✅ 採る形 — bit 列を読む長さ加法な専用万能機械 U
+
+- **プログラム = bit 列**(`ℕ` を `Nat.size` bit で読むか `List Bool`)。長さ `l(p) := Nat.size p`。
+- **専用 U を自作**(gap #1、make-or-break、~100-300 行):
+  - **literal モード**: `U (0 ∷ x_bits) = x` を持たせる ⟹ `C(x) ≤ l(x) + O(1)`(P2 が回復)。
+  - **interpret モード**: `U (1 ∷ selfDelim(idx) ∷ input) = eval (ofNat Code idx) input`。
+    `selfDelim` は idx を自己限定符号化(この符号化は prefix-free 塔とは無関係、単に idx を可逆に埋める)。
+- `C(x) := sInf { Nat.size p | U p = x }`。非空性は literal モードから ⟹ `Nat.sInf` が到達最小値
+  (定義本体に `sorry` 不要)。条件版 `C(x|y) := sInf { Nat.size p | U (encode y ∷ p) = x }` を primary に。
+- **不変性 P1**: 別機械 A = 部分再帰 `ℕ →. ℕ` は `exists_code` で `eval c_A` に落ち、interpret モードの
+  固定 selector `1 ∷ selfDelim(c_A の idx)` を前置 ⟹ `C_U(x) ≤ C_A(x) + c_A`。加法定数 = selector 長。
+
+**設計上の効用**: literal モードが P2 を、interpret モードが P1 不変性を、両モード非空性が well-defined 性を
+それぞれ担保。`Nat.size` を長さに採ることで数え上げ P3 は `Nat` 初等補題で閉じる。**U の構成が本章の crux**。
 
 ## 5. 着手前に潰す modeling 論点
 
@@ -118,5 +138,6 @@ P6 非圧縮 SLLN   P5 非計算可能性 (halting_problem)         │
 **Out(第 2 波 = 別 moonshot)**: prefix-free 機械インフラ自作 → P7 普遍確率 → P8 符号化定理 → P9 Ω。
 ここが唯一の genuine 壁(未整備インフラ)で、切り分けておく。
 
-**次の一手**: (a) `mathlib-inventory` で背骨補題の per-lemma 台帳を作る、(b) `lean-planner` で
-`kolmogorov-moonshot-plan.md` を起こす、(c) gateway atom(P1 不変性)を 1 本 dispatch して壁の実在を確認。
+**次の一手**: (a) ✅ `mathlib-inventory` 完了(`kolmogorov-mathlib-inventory.md`、318 行)。
+(b) `lean-planner` で `kolmogorov-moonshot-plan.md` を起こす(crux = 長さ加法 U 構成、§4 の訂正形が SoT)。
+(c) gateway atom(U 構成 + P1 + P2 literal)を 1 本 dispatch して make-or-break を確認。
