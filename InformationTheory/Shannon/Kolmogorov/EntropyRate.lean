@@ -110,7 +110,8 @@ theorem kolmogorov_entropy_rate_upper
 /-! ### Lower-half building blocks -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- The block law of an i.i.d. source is the product measure of the marginal. -/
+/-- The block law of an i.i.d. source is the product measure of the marginal.
+@audit:ok -/
 theorem blockLaw_eq_pi (hXs : ∀ i, Measurable (Xs i))
     (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) (n : ℕ) :
@@ -130,7 +131,8 @@ theorem blockLaw_eq_pi (hXs : ∀ i, Measurable (Xs i))
   exact (hident i).map_eq
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- The probability of a single block factors over the coordinates. -/
+/-- The probability of a single block factors over the coordinates.
+@audit:ok -/
 theorem blockProb_eq_prod (hXs : ∀ i, Measurable (Xs i))
     (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) (n : ℕ) (b : Fin n → α) :
@@ -145,7 +147,8 @@ theorem blockProb_eq_prod (hXs : ∀ i, Measurable (Xs i))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [IsProbabilityMeasure μ] in
 /-- A typical block has product mass at most `exp (-n (H - ε))` (the mirror of the
-`typicalSet_card_le` lower bound). -/
+`typicalSet_card_le` lower bound).
+@audit:ok -/
 theorem typicalSet_blockProb_le
     (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a})
     (n : ℕ) {ε : ℝ} (b : Fin n → α) (hb : b ∈ typicalSet μ Xs n ε) :
@@ -177,7 +180,8 @@ theorem typicalSet_blockProb_le
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
 /-- Fewer than `2 ^ k` blocks have conditional complexity below `k`, via the
-injective block encoding and the counting bound `condIncompressible_count`. -/
+injective block encoding and the counting bound `condIncompressible_count`.
+@audit:ok -/
 theorem compressibleBlocks_card_lt (n k : ℕ) :
     (({b : Fin n → α | condComplexity (encodeBlock n b) n < k}.ncard : ℕ) : ℝ) < 2 ^ k := by
   have hinj : Function.Injective (encodeBlock (α := α) n) := encodeBlock_injective n
@@ -195,7 +199,8 @@ theorem compressibleBlocks_card_lt (n k : ℕ) :
 
 omit [DecidableEq α] [Nonempty α] in
 /-- The mass of the typical-and-compressible blocks is at most
-`2 ^ k · exp (-n (H - ε₁))` (product bound times a count below `2 ^ k`). -/
+`2 ^ k · exp (-n (H - ε₁))` (product bound times a count below `2 ^ k`).
+@audit:ok -/
 theorem compressible_prob_le (hXs : ∀ i, Measurable (Xs i))
     (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
@@ -254,7 +259,8 @@ theorem compressible_prob_le (hXs : ∀ i, Measurable (Xs i))
     _ ≤ (2 : ℝ) ^ k * Real.exp (-((n : ℝ) * (entropy μ (Xs 0) - ε₁))) :=
         mul_le_mul_of_nonneg_right hScard (Real.exp_nonneg _)
 
-/-- The floor `⌊n c⌋₊`, normalized by `n`, converges to `c` (for `c ≥ 0`). -/
+/-- The floor `⌊n c⌋₊`, normalized by `n`, converges to `c` (for `c ≥ 0`).
+@audit:ok -/
 theorem floor_mul_div_tendsto (c : ℝ) (hc : 0 ≤ c) :
     Tendsto (fun n : ℕ ↦ (⌊(n : ℝ) * c⌋₊ : ℝ) / n) atTop (𝓝 c) := by
   have hg : Tendsto (fun n : ℕ ↦ c - 1 / (n : ℝ)) atTop (𝓝 c) := by
@@ -277,7 +283,8 @@ omit [DecidableEq α] [Nonempty α] in
 /-- Lower half: eventually the normalized expected complexity is within `ε` below
 `H / log 2`. The counting bound `condIncompressible_count` caps how many blocks can
 be compressed below `k`, while the strong-typicality mass spreads over `≈ exp (nH)`
-blocks; a Markov step then pushes the average up to `H / log 2 - ε`. -/
+blocks; a Markov step then pushes the average up to `H / log 2 - ε`.
+@audit:ok -/
 theorem kolmogorov_entropy_rate_lower
     (hXs : ∀ i, Measurable (Xs i))
     (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
