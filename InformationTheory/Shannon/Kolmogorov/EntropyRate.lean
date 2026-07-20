@@ -20,9 +20,9 @@ to the bit-length complexity `condComplexity` (base `2`).
 The proof is a squeeze between an upper and a lower half. The upper half encodes
 a typical block by its index inside the typical set (bits `≈ n(H+ε)`) on top of
 the conditional literal bound; the lower half combines the counting bound
-`#{x ∣ C(x ∣ n) < k} < 2^k` with the strong-typicality size lower bound. Both
-halves are currently left as honest `sorry`s; this file establishes the flagship
-statement and the plumbing lemmas the two halves consume.
+`#{x ∣ C(x ∣ n) < k} < 2^k` with the strong-typicality size lower bound. This
+file establishes the flagship statement and the plumbing lemmas the two halves
+consume.
 
 ## Main results
 
@@ -74,7 +74,8 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 omit [DecidableEq α] [Nonempty α] in
 /-- The block-complexity integrand takes finitely many values (the block space is
-finite), so it is a bounded measurable function and hence integrable. -/
+finite), so it is a bounded measurable function and hence integrable.
+@audit:ok -/
 theorem integrable_condComplexity_jointRV (hXs : ∀ i, Measurable (Xs i)) (n : ℕ) :
     Integrable (fun ω ↦ (condComplexity (encodeBlock n (jointRV Xs n ω)) n : ℝ)) μ := by
   classical
@@ -93,7 +94,8 @@ theorem integrable_condComplexity_jointRV (hXs : ∀ i, Measurable (Xs i)) (n : 
     (Finset.mem_univ (jointRV Xs n ω))
 
 /-- Upper half: eventually the normalized expected complexity is within `ε` above
-`H / log 2`. -/
+`H / log 2`.
+@residual(plan:kolmogorov-p4-upper) -/
 theorem kolmogorov_entropy_rate_upper
     (hXs : ∀ i, Measurable (Xs i))
     (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
@@ -103,10 +105,11 @@ theorem kolmogorov_entropy_rate_upper
     ∀ ε : ℝ, 0 < ε → ∀ᶠ n : ℕ in atTop,
       (1 / (n : ℝ)) * ∫ ω, (condComplexity (encodeBlock n (jointRV Xs n ω)) n : ℝ) ∂μ
         ≤ entropy μ (Xs 0) / Real.log 2 + ε := by
-  sorry -- @residual(plan:kolmogorov-p4-upper)
+  sorry
 
 /-- Lower half: eventually the normalized expected complexity is within `ε` below
-`H / log 2`. -/
+`H / log 2`.
+@residual(plan:kolmogorov-p4-lower) -/
 theorem kolmogorov_entropy_rate_lower
     (hXs : ∀ i, Measurable (Xs i))
     (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
@@ -116,7 +119,7 @@ theorem kolmogorov_entropy_rate_lower
     ∀ ε : ℝ, 0 < ε → ∀ᶠ n : ℕ in atTop,
       entropy μ (Xs 0) / Real.log 2 - ε
         ≤ (1 / (n : ℝ)) * ∫ ω, (condComplexity (encodeBlock n (jointRV Xs n ω)) n : ℝ) ∂μ := by
-  sorry -- @residual(plan:kolmogorov-p4-lower)
+  sorry
 
 /-- Kolmogorov complexity converges to the entropy rate: for an i.i.d. source, the
 normalized expected conditional complexity of a length-`n` block tends to the
@@ -134,7 +137,7 @@ theorem kolmogorov_entropy_rate
       Filter.atTop (nhds (entropy μ (Xs 0) / Real.log 2)) := by
   -- Squeeze between the two halves.
   rw [tendsto_order]
-  refine ⟨fun b hb => ?_, fun b hb => ?_⟩
+  refine ⟨fun b hb ↦ ?_, fun b hb ↦ ?_⟩
   · filter_upwards [kolmogorov_entropy_rate_lower μ Xs hXs hindep_full hindep_pair hident hpos
       ((entropy μ (Xs 0) / Real.log 2 - b) / 2) (by linarith)] with n hn
     linarith

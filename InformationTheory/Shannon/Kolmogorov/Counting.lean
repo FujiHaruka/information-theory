@@ -171,7 +171,8 @@ theorem condComplexity_lt_finite (y k : ℕ) : {x : ℕ | condComplexity x y < k
   exact himg.of_finite_image (shortestNatCond_injective y).injOn
 
 /-- Fewer than `2 ^ k` naturals have conditional complexity below `k`, for any
-condition `y`. -/
+condition `y`.
+@audit:ok -/
 theorem condIncompressible_count (y k : ℕ) :
     {x : ℕ | condComplexity x y < k}.ncard < 2 ^ k := by
   have hsub : (fun x ↦ shortestNatCond x y) '' {x : ℕ | condComplexity x y < k}
