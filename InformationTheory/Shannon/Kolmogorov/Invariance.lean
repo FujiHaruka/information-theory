@@ -19,9 +19,10 @@ open Nat.Partrec Nat.Partrec.Code
 open Computability (encodeNat decodeNat)
 
 /-- Literal upper bound: the echo program `false :: encodeNat x` describes `x`,
-so `C(x) ≤ natLen x + 1`. -/
+so `C(x) ≤ natLen x + 1`.
+@audit:ok -/
 theorem complexity_le_natLen : ∃ c : ℕ, ∀ x, complexity x ≤ natLen x + c := by
-  refine ⟨1, fun x => ?_⟩
+  refine ⟨1, fun x ↦ ?_⟩
   have hmem : (literalProg x).length ∈
       { l | ∃ p : List Bool, p.length = l ∧ x ∈ universalEval p 0 } :=
     ⟨literalProg x, rfl, by rw [universalEval_literal]; exact Part.mem_some x⟩
@@ -30,11 +31,12 @@ theorem complexity_le_natLen : ∃ c : ℕ, ∀ x, complexity x ≤ natLen x + c
 
 /-- Invariance against a fixed code `c`: any bit-string description `q` with
 `x ∈ eval c (Nat.pair (decodeNat q) y)` yields `C(x | y) ≤ q.length + b`, with
-`b = encodeCode c + 2` independent of `x`, `y`, `q`. -/
+`b = encodeCode c + 2` independent of `x`, `y`, `q`.
+@audit:ok -/
 theorem invariance_code (c : Code) :
     ∃ b : ℕ, ∀ (x y : ℕ) (q : List Bool),
       x ∈ eval c (Nat.pair (decodeNat q) y) → condComplexity x y ≤ q.length + b := by
-  refine ⟨encodeCode c + 2, fun x y q hx => ?_⟩
+  refine ⟨encodeCode c + 2, fun x y q hx ↦ ?_⟩
   have hcode : Denumerable.ofNat Code (encodeCode c) = c := by
     rw [← encodeCode_eq]; exact Denumerable.ofNat_encode c
   have hrun : x ∈ universalEval (interpretProg (encodeCode c) q) y := by
@@ -46,13 +48,14 @@ theorem invariance_code (c : Code) :
   rwa [interpretProg_length] at hle
 
 /-- Invariance against an arbitrary partial recursive description method `A`:
-`C(x | y) ≤ (A-description length) + b` for a constant `b`. -/
+`C(x | y) ≤ (A-description length) + b` for a constant `b`.
+@audit:ok -/
 theorem invariance (A : ℕ → ℕ → Part ℕ) (hA : Partrec₂ A) :
     ∃ b : ℕ, ∀ (x y : ℕ) (q : List Bool),
       x ∈ A (decodeNat q) y → condComplexity x y ≤ q.length + b := by
   obtain ⟨c, hc⟩ := exists_code.1 (Partrec₂.unpaired'.2 hA)
   obtain ⟨b, hb⟩ := invariance_code c
-  refine ⟨b, fun x y q hx => ?_⟩
+  refine ⟨b, fun x y q hx ↦ ?_⟩
   apply hb x y q
   rw [hc]
   simpa [Nat.unpaired, Nat.unpair_pair] using hx

@@ -11,11 +11,11 @@ binary length `Nat.size` of a natural number, which loses leading zeros).
 
 The fixed universal machine `universalEval` parses a program in two modes:
 
-* **literal** `false :: bs` — outputs `decodeNat bs`, so the echo program
+* literal `false :: bs` — outputs `decodeNat bs`, so the echo program
   `false :: encodeNat x` describes `x` in `natLen x + 1` bits. This gives the
   `C(x) ≤ natLen x + O(1)` upper bound and, being total, makes the defining set
   of `condComplexity` nonempty (so the infimum is attained).
-* **interpret** `true :: unary(idx) ++ [false] ++ q` — runs
+* interpret `true :: unary(idx) ++ [false] ++ q` — runs
   `eval (ofNat Code idx) (Nat.pair (decodeNat q) y)`, delegating to Mathlib's
   universal interpreter `Nat.Partrec.Code.eval`. Prepending the fixed selector
   for a machine's code index costs a constant number of bits, which yields the
@@ -69,7 +69,6 @@ noncomputable def condComplexity (x y : ℕ) : ℕ :=
 /-- Plain Kolmogorov complexity `C(x) := C(x | 0)`. -/
 noncomputable def complexity (x : ℕ) : ℕ := condComplexity x 0
 
-/-- Unary round-trip: `parseUnary` recovers the count and the tail. -/
 theorem parseUnary_replicate (n : ℕ) (q : List Bool) :
     parseUnary (List.replicate n true ++ (false :: q)) = (n, q) := by
   induction n with
@@ -84,12 +83,10 @@ theorem interpretProg_length (idx : ℕ) (q : List Bool) :
   simp [interpretProg]
   omega
 
-/-- The literal mode echoes its payload, independent of the condition. -/
 theorem universalEval_literal (x y : ℕ) :
     universalEval (literalProg x) y = Part.some x := by
   simp [literalProg, universalEval, Computability.decode_encodeNat]
 
-/-- The interpret mode runs `eval` on the decoded code index and description. -/
 theorem universalEval_interpret (idx : ℕ) (q : List Bool) (y : ℕ) :
     universalEval (interpretProg idx q) y
       = eval (Denumerable.ofNat Code idx) (Nat.pair (decodeNat q) y) := by
@@ -100,7 +97,8 @@ theorem condComplexity_set_nonempty (x y : ℕ) :
   ⟨(literalProg x).length, literalProg x, rfl, by
     rw [universalEval_literal]; exact Part.mem_some x⟩
 
-/-- The infimum defining `condComplexity` is attained by an actual program. -/
+/-- The infimum defining `condComplexity` is attained by an actual program.
+@audit:ok -/
 theorem condComplexity_spec (x y : ℕ) :
     ∃ p : List Bool, p.length = condComplexity x y ∧ x ∈ universalEval p y :=
   Nat.sInf_mem (condComplexity_set_nonempty x y)
