@@ -412,6 +412,91 @@ private theorem wealthRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [Non
           simp
       _ ≤ 1 := ih
 
+-- Generic Markov + Borel–Cantelli scaffold: a sequence of positive measurable functions whose
+-- `ENNReal.ofReal` integrals stay `≤ 1` has `(1/n) log Mₙ` eventually below any positive threshold
+-- a.e. Markov gives `μ {(n+1)² ≤ Mₙ} ≤ 1/(n+1)²`; summability of the majorant + Borel–Cantelli
+-- yield `Mₙ < (n+1)²` eventually, whence `(1/n) log Mₙ ≤ 2 log(n+1)/(n+1) → 0`. Process-independent:
+-- both the upper (`wealthRatioProcess`) and lower (`lowerRatioProcess`) wealth ratios consume it.
+private theorem logAvg_eventually_le_of_lintegral_le_one (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (M : ℕ → Ω → ℝ) (hMpos : ∀ n ω, 0 < M n ω) (hMmeas : ∀ n, Measurable (M n))
+    (hbound : ∀ n, ∫⁻ ω, ENNReal.ofReal (M n ω) ∂μ ≤ 1) :
+    ∀ᵐ ω ∂μ, ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+      Real.log (M n ω) / (n + 1 : ℝ) ≤ ε := by
+  classical
+  -- Summable `p`-series majorant `∑ 1/(n+1)²`.
+  have hsummable : Summable (fun n : ℕ ↦ (((n:ℝ) + 1) ^ 2)⁻¹) := by
+    have h2 : Summable (fun n : ℕ ↦ (1 : ℝ) / (n : ℝ) ^ 2) :=
+      Real.summable_one_div_nat_pow.mpr one_lt_two
+    refine ((summable_nat_add_iff 1).mpr h2).congr fun n ↦ ?_
+    push_cast
+    rw [one_div]
+  -- Markov: `μ {(n+1)² ≤ Mₙ} ≤ ofReal (1/(n+1)²)`.
+  have hmarkov : ∀ n : ℕ, μ {ω | ((n:ℝ) + 1) ^ 2 ≤ M n ω}
+      ≤ ENNReal.ofReal ((((n:ℝ) + 1) ^ 2)⁻¹) := by
+    intro n
+    have hcrux := hbound n
+    have ht_pos : (0 : ℝ) < ((n:ℝ) + 1) ^ 2 := by positivity
+    have hmk := mul_meas_ge_le_lintegral₀ (μ := μ)
+      (f := fun ω ↦ ENNReal.ofReal (M n ω))
+      ((ENNReal.measurable_ofReal.comp (hMmeas n)).aemeasurable) (ENNReal.ofReal (((n:ℝ) + 1) ^ 2))
+    have hset : {ω | ENNReal.ofReal (((n:ℝ) + 1) ^ 2) ≤ ENNReal.ofReal (M n ω)}
+        = {ω | ((n:ℝ) + 1) ^ 2 ≤ M n ω} := by
+      ext ω
+      simp only [Set.mem_setOf_eq]
+      rw [ENNReal.ofReal_le_ofReal_iff (le_of_lt (hMpos n ω))]
+    rw [hset] at hmk
+    have hle1 : ENNReal.ofReal (((n:ℝ) + 1) ^ 2)
+        * μ {ω | ((n:ℝ) + 1) ^ 2 ≤ M n ω} ≤ 1 :=
+      le_trans hmk hcrux
+    have hofpos : ENNReal.ofReal (((n:ℝ) + 1) ^ 2) ≠ 0 := by
+      rw [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact ht_pos
+    rw [ENNReal.ofReal_inv_of_pos ht_pos, inv_eq_one_div,
+      ENNReal.le_div_iff_mul_le (Or.inl hofpos) (Or.inl ENNReal.ofReal_ne_top), mul_comm]
+    exact hle1
+  -- Borel–Cantelli: a.e. only finitely many `n` have `(n+1)² ≤ Mₙ`.
+  have hsum_ne : ∑' (n : ℕ), μ {ω | ((n:ℝ) + 1) ^ 2 ≤ M n ω} ≠ ∞ := by
+    have hb : ∑' (n : ℕ), μ {ω | ((n:ℝ) + 1) ^ 2 ≤ M n ω}
+        ≤ ENNReal.ofReal (∑' (n : ℕ), (((n:ℝ) + 1) ^ 2)⁻¹) :=
+      calc ∑' (n : ℕ), μ {ω | ((n:ℝ) + 1) ^ 2 ≤ M n ω}
+          ≤ ∑' (n : ℕ), ENNReal.ofReal ((((n:ℝ) + 1) ^ 2)⁻¹) := ENNReal.tsum_le_tsum hmarkov
+        _ = ENNReal.ofReal (∑' (n : ℕ), (((n:ℝ) + 1) ^ 2)⁻¹) :=
+            (ENNReal.ofReal_tsum_of_nonneg (fun n ↦ by positivity) hsummable).symm
+    exact ne_top_of_le_ne_top ENNReal.ofReal_ne_top hb
+  have hbc := ae_finite_setOf_mem (μ := μ)
+    (s := fun (n : ℕ) ↦ {ω | ((n:ℝ) + 1) ^ 2 ≤ M n ω}) hsum_ne
+  -- Majorant limit `2 log(n+1)/(n+1) → 0`.
+  have hbase : Tendsto (fun x : ℝ ↦ Real.log x / x) atTop (𝓝 0) := by
+    simpa using Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 one_ne_zero
+  have hnat : Tendsto (fun n : ℕ ↦ (n:ℝ) + 1) atTop atTop :=
+    tendsto_atTop_add_const_right atTop 1 tendsto_natCast_atTop_atTop
+  have hmaj : Tendsto (fun n : ℕ ↦ 2 * (Real.log ((n:ℝ) + 1) / ((n:ℝ) + 1))) atTop (𝓝 0) := by
+    have := (hbase.comp hnat).const_mul 2
+    simpa using this
+  filter_upwards [hbc] with ω hω_fin
+  intro ε hε
+  have hmaj_ev := hmaj.eventually (Iic_mem_nhds hε)
+  have hlt_ev : ∀ᶠ n in atTop, M n ω < ((n:ℝ) + 1) ^ 2 := by
+    obtain ⟨N, hN⟩ := hω_fin.bddAbove
+    rw [eventually_atTop]
+    refine ⟨N + 1, fun n hn ↦ ?_⟩
+    rw [← not_le]
+    intro hcon
+    have : n ≤ N := hN hcon
+    omega
+  filter_upwards [hlt_ev, hmaj_ev] with n hn_lt hn_maj
+  have hMpos' := hMpos n ω
+  have hlog : Real.log (M n ω) ≤ 2 * Real.log ((n:ℝ) + 1) := by
+    have h := Real.log_lt_log hMpos' hn_lt
+    rw [Real.log_pow, Nat.cast_ofNat] at h
+    exact le_of_lt h
+  have hn1pos : (0 : ℝ) < (n:ℝ) + 1 := by positivity
+  calc Real.log (M n ω) / ((n:ℝ) + 1)
+      ≤ 2 * Real.log ((n:ℝ) + 1) / ((n:ℝ) + 1) := by
+        rw [div_eq_mul_inv, div_eq_mul_inv]
+        exact mul_le_mul_of_nonneg_right hlog (le_of_lt (inv_pos.mpr hn1pos))
+    _ = 2 * (Real.log ((n:ℝ) + 1) / ((n:ℝ) + 1)) := by ring
+    _ ≤ ε := hn_maj
+
 -- The time-averaged log wealth ratio is eventually below any positive threshold a.e. (Markov +
 -- Borel–Cantelli on the integral bound `E[M_n] ≤ 1`, then `(1/n) log M_n ≤ 2 log(n+1)/(n+1) → 0`).
 -- This eventual-upper-bound form is the honest content of `limsup ≤ 0`, avoiding the `ℝ`-limsup
@@ -436,7 +521,6 @@ private theorem wealthRatio_logAvg_eventually_le [StandardBorelSpace Ω] [Nonemp
             StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ bstarInf (T^[i] ω))) :
     ∀ᵐ ω ∂μ, ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
       Real.log (wealthRatioProcess X bstar bstarInf T n ω) / (n + 1 : ℝ) ≤ ε := by
-  classical
   have hbInf_m : Measurable bstarInf := (hInf_meas.mono (iSup_le ℱ.le)).measurable
   have hbstar_m : ∀ i, Measurable (bstar i) := fun i ↦ ((hbstar_meas i).mono (ℱ.le i)).measurable
   have hTi : ∀ i, Measurable (T^[i] : Ω → Ω) := fun i ↦ hT.measurable.iterate i
@@ -451,82 +535,241 @@ private theorem wealthRatio_logAvg_eventually_le [StandardBorelSpace Ω] [Nonemp
           ((measurable_pi_apply j).comp (hX.comp (hTi i)))
   have hApos : ∀ n ω, 0 < wealthRatioProcess X bstar bstarInf T n ω :=
     fun n ω ↦ wealthRatioProcess_pos hpos hbstar_simplex hInf_simplex n ω
-  -- Summable `p`-series majorant `∑ 1/(n+1)²`.
-  have hsummable : Summable (fun n : ℕ ↦ (((n:ℝ) + 1) ^ 2)⁻¹) := by
-    have h2 : Summable (fun n : ℕ ↦ (1 : ℝ) / (n : ℝ) ^ 2) :=
-      Real.summable_one_div_nat_pow.mpr one_lt_two
-    refine ((summable_nat_add_iff 1).mpr h2).congr fun n ↦ ?_
-    push_cast
-    rw [one_div]
-  -- Markov: `μ {(n+1)² ≤ Mₙ} ≤ ofReal (1/(n+1)²)`.
-  have hmarkov : ∀ n : ℕ, μ {ω | ((n:ℝ) + 1) ^ 2 ≤ wealthRatioProcess X bstar bstarInf T n ω}
-      ≤ ENNReal.ofReal ((((n:ℝ) + 1) ^ 2)⁻¹) := by
-    intro n
-    have hcrux := wealthRatioProcess_lintegral_le_one μ ℱ hX hT hpos hint hbstar_meas hbstar_simplex
+  have hbound : ∀ n, ∫⁻ ω, ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T n ω) ∂μ ≤ 1 :=
+    fun n ↦ wealthRatioProcess_lintegral_le_one μ ℱ hX hT hpos hint hbstar_meas hbstar_simplex
       hInf_meas hInf_simplex hint_coord hInf_dom hcoh n
-    have ht_pos : (0 : ℝ) < ((n:ℝ) + 1) ^ 2 := by positivity
-    have hmk := mul_meas_ge_le_lintegral₀ (μ := μ)
-      (f := fun ω ↦ ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T n ω))
-      ((ENNReal.measurable_ofReal.comp (hM_meas n)).aemeasurable) (ENNReal.ofReal (((n:ℝ) + 1) ^ 2))
-    have hset : {ω | ENNReal.ofReal (((n:ℝ) + 1) ^ 2)
-          ≤ ENNReal.ofReal (wealthRatioProcess X bstar bstarInf T n ω)}
-        = {ω | ((n:ℝ) + 1) ^ 2 ≤ wealthRatioProcess X bstar bstarInf T n ω} := by
-      ext ω
-      simp only [Set.mem_setOf_eq]
-      rw [ENNReal.ofReal_le_ofReal_iff (le_of_lt (hApos n ω))]
-    rw [hset] at hmk
-    have hle1 : ENNReal.ofReal (((n:ℝ) + 1) ^ 2)
-        * μ {ω | ((n:ℝ) + 1) ^ 2 ≤ wealthRatioProcess X bstar bstarInf T n ω} ≤ 1 :=
-      le_trans hmk hcrux
-    have hofpos : ENNReal.ofReal (((n:ℝ) + 1) ^ 2) ≠ 0 := by
-      rw [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact ht_pos
-    rw [ENNReal.ofReal_inv_of_pos ht_pos, inv_eq_one_div,
-      ENNReal.le_div_iff_mul_le (Or.inl hofpos) (Or.inl ENNReal.ofReal_ne_top), mul_comm]
-    exact hle1
-  -- Borel–Cantelli: a.e. only finitely many `n` have `(n+1)² ≤ Mₙ`.
-  have hsum_ne : ∑' (n : ℕ), μ {ω | ((n:ℝ) + 1) ^ 2 ≤ wealthRatioProcess X bstar bstarInf T n ω}
-      ≠ ∞ := by
-    have hb : ∑' (n : ℕ), μ {ω | ((n:ℝ) + 1) ^ 2 ≤ wealthRatioProcess X bstar bstarInf T n ω}
-        ≤ ENNReal.ofReal (∑' (n : ℕ), (((n:ℝ) + 1) ^ 2)⁻¹) :=
-      calc ∑' (n : ℕ), μ {ω | ((n:ℝ) + 1) ^ 2 ≤ wealthRatioProcess X bstar bstarInf T n ω}
-          ≤ ∑' (n : ℕ), ENNReal.ofReal ((((n:ℝ) + 1) ^ 2)⁻¹) := ENNReal.tsum_le_tsum hmarkov
-        _ = ENNReal.ofReal (∑' (n : ℕ), (((n:ℝ) + 1) ^ 2)⁻¹) :=
-            (ENNReal.ofReal_tsum_of_nonneg (fun n ↦ by positivity) hsummable).symm
-    exact ne_top_of_le_ne_top ENNReal.ofReal_ne_top hb
-  have hbc := ae_finite_setOf_mem (μ := μ)
-    (s := fun (n : ℕ) ↦ {ω | ((n:ℝ) + 1) ^ 2 ≤ wealthRatioProcess X bstar bstarInf T n ω}) hsum_ne
-  -- Majorant limit `2 log(n+1)/(n+1) → 0`.
-  have hbase : Tendsto (fun x : ℝ ↦ Real.log x / x) atTop (𝓝 0) := by
-    simpa using Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 one_ne_zero
-  have hnat : Tendsto (fun n : ℕ ↦ (n:ℝ) + 1) atTop atTop :=
-    tendsto_atTop_add_const_right atTop 1 tendsto_natCast_atTop_atTop
-  have hmaj : Tendsto (fun n : ℕ ↦ 2 * (Real.log ((n:ℝ) + 1) / ((n:ℝ) + 1))) atTop (𝓝 0) := by
-    have := (hbase.comp hnat).const_mul 2
-    simpa using this
-  filter_upwards [hbc] with ω hω_fin
-  intro ε hε
-  have hmaj_ev := hmaj.eventually (Iic_mem_nhds hε)
-  have hlt_ev : ∀ᶠ n in atTop, wealthRatioProcess X bstar bstarInf T n ω < ((n:ℝ) + 1) ^ 2 := by
-    obtain ⟨N, hN⟩ := hω_fin.bddAbove
-    rw [eventually_atTop]
-    refine ⟨N + 1, fun n hn ↦ ?_⟩
-    rw [← not_le]
-    intro hcon
-    have : n ≤ N := hN hcon
-    omega
-  filter_upwards [hlt_ev, hmaj_ev] with n hn_lt hn_maj
-  have hMpos := hApos n ω
-  have hlog : Real.log (wealthRatioProcess X bstar bstarInf T n ω) ≤ 2 * Real.log ((n:ℝ) + 1) := by
-    have h := Real.log_lt_log hMpos hn_lt
-    rw [Real.log_pow, Nat.cast_ofNat] at h
-    exact le_of_lt h
-  have hn1pos : (0 : ℝ) < (n:ℝ) + 1 := by positivity
-  calc Real.log (wealthRatioProcess X bstar bstarInf T n ω) / ((n:ℝ) + 1)
-      ≤ 2 * Real.log ((n:ℝ) + 1) / ((n:ℝ) + 1) := by
-        rw [div_eq_mul_inv, div_eq_mul_inv]
-        exact mul_le_mul_of_nonneg_right hlog (le_of_lt (inv_pos.mpr hn1pos))
-    _ = 2 * (Real.log ((n:ℝ) + 1) / ((n:ℝ) + 1)) := by ring
-    _ ≤ ε := hn_maj
+  exact logAvg_eventually_le_of_lintegral_le_one μ (wealthRatioProcess X bstar bstarInf T)
+    hApos hM_meas hbound
+
+-- Lower wealth-ratio process `N_n^{(K)} ω = ∏_{i=K}^{n} (bstar K · Xᵢ)/(bstar i · Xᵢ)` along the
+-- shift orbit: the ratio of the fixed finite-memory wealth (strategy `bstar K` at every epoch) to
+-- the growing-memory wealth. Tail from epoch `K`; numerator fixed `bstar K`, denominator growing
+-- `bstar i`. A nonnegative supermartingale (`∫⁻ Nₙ ≤ 1`); `(1/n) log Nₙ → 0` bounds the shortfall
+-- of the growing memory below the fixed-`K` Birkhoff rate, driving the liminf lower bound.
+private noncomputable def lowerRatioProcess (X : Ω → Fin m → ℝ) (bstar : ℕ → Ω → Fin m → ℝ)
+    (K : ℕ) (T : Ω → Ω) (n : ℕ) (ω : Ω) : ℝ :=
+  ∏ i ∈ Finset.Icc K n,
+    (∑ j, bstar K (T^[i] ω) j * X (T^[i] ω) j) / (∑ j, bstar i (T^[i] ω) j * X (T^[i] ω) j)
+
+-- The lower wealth-ratio process is positive (a product of positive ratios).
+private theorem lowerRatioProcess_pos {X : Ω → Fin m → ℝ} {bstar : ℕ → Ω → Fin m → ℝ} {K : ℕ}
+    {T : Ω → Ω}
+    (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
+    (hbstar_simplex : ∀ k ω, bstar k ω ∈ stdSimplex ℝ (Fin m)) (n : ℕ) (ω : Ω) :
+    0 < lowerRatioProcess X bstar K T n ω := by
+  unfold lowerRatioProcess
+  refine Finset.prod_pos fun i _ ↦ div_pos ?_ ?_
+  · exact hpos (T^[i] ω) (bstar K (T^[i] ω)) (hbstar_simplex K (T^[i] ω))
+  · exact hpos (T^[i] ω) (bstar i (T^[i] ω)) (hbstar_simplex i (T^[i] ω))
+
+-- `log N_n^{(K)}` is the sum of the per-epoch log-return differences (fixed-`K` minus growing).
+private theorem lowerRatioProcess_log_eq {X : Ω → Fin m → ℝ} {bstar : ℕ → Ω → Fin m → ℝ} {K : ℕ}
+    {T : Ω → Ω}
+    (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
+    (hbstar_simplex : ∀ k ω, bstar k ω ∈ stdSimplex ℝ (Fin m)) (n : ℕ) (ω : Ω) :
+    Real.log (lowerRatioProcess X bstar K T n ω)
+      = ∑ i ∈ Finset.Icc K n,
+        (causalLogReturn X (bstar K) (T^[i] ω) - causalLogReturn X (bstar i) (T^[i] ω)) := by
+  unfold lowerRatioProcess
+  rw [Real.log_prod]
+  · refine Finset.sum_congr rfl fun i _ ↦ ?_
+    have hnum : (0:ℝ) < ∑ j, bstar K (T^[i] ω) j * X (T^[i] ω) j :=
+      hpos (T^[i] ω) (bstar K (T^[i] ω)) (hbstar_simplex K (T^[i] ω))
+    have hden : (0:ℝ) < ∑ j, bstar i (T^[i] ω) j * X (T^[i] ω) j :=
+      hpos (T^[i] ω) (bstar i (T^[i] ω)) (hbstar_simplex i (T^[i] ω))
+    rw [Real.log_div hnum.ne' hden.ne']
+    rfl
+  · intro i _
+    have hnum : (0:ℝ) < ∑ j, bstar K (T^[i] ω) j * X (T^[i] ω) j :=
+      hpos (T^[i] ω) (bstar K (T^[i] ω)) (hbstar_simplex K (T^[i] ω))
+    have hden : (0:ℝ) < ∑ j, bstar i (T^[i] ω) j * X (T^[i] ω) j :=
+      hpos (T^[i] ω) (bstar i (T^[i] ω)) (hbstar_simplex i (T^[i] ω))
+    exact div_ne_zero hnum.ne' hden.ne'
+
+-- Stagewise conditional Kuhn–Tucker (fixed-`K` competitor form): at epoch `i` the growing-memory
+-- portfolio `bstar i` is conditionally log-optimal over `ℱ i`, so it dominates the earlier
+-- `bstar K` (`K ≤ i`, hence `ℱ i`-measurable) and the one-step ratio `(bstar K · X)/(bstar i · X)`
+-- has `ℱ i`-conditional mean `≤ 1`. Obtained from `condKuhnTucker_infPast` instantiated at the
+-- constant filtration `Filtration.const ℕ (ℱ i)` (whose `⨆` collapses to `ℱ i`), with `bstar i`
+-- as the base optimal and `bstar K` as the competitor.
+private theorem stagewise_condKuhnTucker [StandardBorelSpace Ω] [Nonempty Ω]
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (ℱ : Filtration ℕ m0) {X : Ω → Fin m → ℝ}
+    [Nonempty (Fin m)] (hX : Measurable X)
+    (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
+    (hint : ∀ c : Ω → Fin m → ℝ, Measurable c → (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ)
+    {bstar : ℕ → Ω → Fin m → ℝ} (hbstar_meas : ∀ k, StronglyMeasurable[ℱ k] (bstar k))
+    (hbstar_simplex : ∀ k ω, bstar k ω ∈ stdSimplex ℝ (Fin m))
+    (hbstar_dom : ∀ (k : ℕ) (c : Ω → Fin m → ℝ), StronglyMeasurable[ℱ k] c →
+        (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+        μ[causalLogReturn X c | ℱ k] ≤ᵐ[μ] μ[causalLogReturn X (bstar k) | ℱ k])
+    (hint_coord : ∀ i coord, Integrable (fun ω ↦ X ω coord / (∑ j, bstar i ω j * X ω j)) μ)
+    {K i : ℕ} (hKi : K ≤ i) :
+    μ[fun ω ↦ (∑ j, bstar K ω j * X ω j) / (∑ j, bstar i ω j * X ω j) | ℱ i] ≤ᵐ[μ] 1 := by
+  set ℱ' : Filtration ℕ m0 := Filtration.const ℕ (ℱ i) (ℱ.le i) with hℱ'def
+  have hconst : (⨆ j, ℱ' j) = ℱ i := by
+    simp only [hℱ'def, Filtration.const_apply, iSup_const]
+  have hdom' : ∀ (c : Ω → Fin m → ℝ), StronglyMeasurable[⨆ j, ℱ' j] c →
+      (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      μ[causalLogReturn X c | ⨆ j, ℱ' j] ≤ᵐ[μ] μ[causalLogReturn X (bstar i) | ⨆ j, ℱ' j] := by
+    intro c hc hcs
+    rw [hconst]
+    exact hbstar_dom i c (hc.mono (le_of_eq hconst)) hcs
+  have hkt := condKuhnTucker_infPast μ ℱ' X hX hpos hint (bstar i)
+    ((hbstar_meas i).mono (le_of_eq hconst.symm)) (hbstar_simplex i)
+    (fun coord ↦ hint_coord i coord) hdom' (bstar K)
+    ((hbstar_meas K).mono (le_trans (ℱ.mono hKi) (le_of_eq hconst.symm))) (hbstar_simplex K)
+  rwa [hconst] at hkt
+
+-- Supermartingale integral bound for the lower wealth-ratio process (Cover–Thomas §16.5): the mean
+-- fixed-to-growing wealth ratio `E[Nₙ]` stays at most `1`. Mirrors the tower argument of
+-- `wealthRatioProcess_lintegral_le_one`, but the per-epoch conditioning σ-algebra is `ℱ i` (not
+-- `⨆ⱼℱⱼ`) and the increment bound is the stagewise Kuhn–Tucker `stagewise_condKuhnTucker`
+-- (`K ≤ i`), transported to epoch `k+1` via `condExp_comp_measurePreserving`. `hcoh` is the
+-- shift/past coherence (measurability only) letting the growing history `N_k` be pulled out of the
+-- epoch-`k+1` conditional Lebesgue expectation over `(ℱ (k+1)).comap Tᵏ⁺¹`.
+private theorem lowerRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [Nonempty Ω]
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (ℱ : Filtration ℕ m0) {X : Ω → Fin m → ℝ}
+    [Nonempty (Fin m)] (hX : Measurable X) {T : Ω → Ω} (hT : MeasurePreserving T μ μ)
+    (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
+    (hint : ∀ c : Ω → Fin m → ℝ, Measurable c → (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ)
+    {bstar : ℕ → Ω → Fin m → ℝ} (hbstar_meas : ∀ k, StronglyMeasurable[ℱ k] (bstar k))
+    (hbstar_simplex : ∀ k ω, bstar k ω ∈ stdSimplex ℝ (Fin m))
+    (hbstar_dom : ∀ (k : ℕ) (c : Ω → Fin m → ℝ), StronglyMeasurable[ℱ k] c →
+        (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+        μ[causalLogReturn X c | ℱ k] ≤ᵐ[μ] μ[causalLogReturn X (bstar k) | ℱ k])
+    (hint_coord : ∀ i coord, Integrable (fun ω ↦ X ω coord / (∑ j, bstar i ω j * X ω j)) μ)
+    (K : ℕ)
+    (hcoh : ∀ k, ∀ i, K ≤ i → i ≤ k →
+        StronglyMeasurable[(ℱ (k + 1)).comap (T^[k + 1])] (fun ω ↦ X (T^[i] ω)) ∧
+          StronglyMeasurable[(ℱ (k + 1)).comap (T^[k + 1])] (fun ω ↦ bstar i (T^[i] ω)) ∧
+            StronglyMeasurable[(ℱ (k + 1)).comap (T^[k + 1])] (fun ω ↦ bstar K (T^[i] ω)))
+    (n : ℕ) :
+    ∫⁻ ω, ENNReal.ofReal (lowerRatioProcess X bstar K T n ω) ∂μ ≤ 1 := by
+  classical
+  induction n with
+  | zero =>
+    -- `N_0 = ∏_{Icc K 0}`: the empty product (`K > 0`) or the single self-ratio `ρ_K = 1` (`K = 0`).
+    have hN0 : ∀ ω, lowerRatioProcess X bstar K T 0 ω = 1 := by
+      intro ω
+      unfold lowerRatioProcess
+      rcases Nat.eq_zero_or_pos K with hK0 | hKpos
+      · subst hK0
+        rw [Finset.Icc_self, Finset.prod_singleton]
+        exact div_self (ne_of_gt (hpos (T^[0] ω) (bstar 0 (T^[0] ω)) (hbstar_simplex 0 (T^[0] ω))))
+      · rw [Finset.Icc_eq_empty (by omega), Finset.prod_empty]
+    simp_rw [hN0]
+    simp
+  | succ k ih =>
+    by_cases hKk1 : K ≤ k + 1
+    · -- Peel the top factor `Finset.prod_Icc_succ_top`, then KT + pull-out + IH.
+      have hTmeas : Measurable (T^[k + 1] : Ω → Ω) := hT.measurable.iterate (k + 1)
+      have hℱk1_le : ℱ (k + 1) ≤ m0 := ℱ.le (k + 1)
+      have hG_le : (ℱ (k + 1)).comap (T^[k + 1]) ≤ m0 := by
+        intro s ⟨B, hB, hBs⟩
+        rw [← hBs]
+        exact hTmeas (hℱk1_le _ hB)
+      haveI hSF : SigmaFinite (μ.trim hG_le) := by
+        haveI : IsFiniteMeasure (μ.trim hG_le) := isFiniteMeasure_trim hG_le
+        infer_instance
+      -- The unshifted one-step ratio (numerator `bstar K`, denominator `bstar (k+1)`).
+      set r : Ω → ℝ := fun ω ↦ (∑ j, bstar K ω j * X ω j) / (∑ j, bstar (k + 1) ω j * X ω j)
+        with hr_def
+      have hSb : ∀ ω, (0 : ℝ) < ∑ j, bstar (k + 1) ω j * X ω j :=
+        fun ω ↦ hpos ω (bstar (k + 1) ω) (hbstar_simplex (k + 1) ω)
+      have hSc : ∀ ω, (0 : ℝ) < ∑ j, bstar K ω j * X ω j :=
+        fun ω ↦ hpos ω (bstar K ω) (hbstar_simplex K ω)
+      have hr_pos : ∀ ω, 0 < r ω := fun ω ↦ div_pos (hSc ω) (hSb ω)
+      have hbK_m : Measurable (bstar K) := ((hbstar_meas K).mono (ℱ.le K)).measurable
+      have hbk1_m : Measurable (bstar (k + 1)) :=
+        ((hbstar_meas (k + 1)).mono (ℱ.le (k + 1))).measurable
+      have hr_meas : Measurable r := by
+        rw [hr_def]
+        exact (Finset.measurable_sum _ fun j _ ↦
+            ((measurable_pi_apply j).comp hbK_m).mul ((measurable_pi_apply j).comp hX)).div
+          (Finset.measurable_sum _ fun j _ ↦
+            ((measurable_pi_apply j).comp hbk1_m).mul ((measurable_pi_apply j).comp hX))
+      have hr_int : Integrable r μ := by
+        have hbound : Integrable (fun ω ↦ ∑ i, X ω i / (∑ j, bstar (k + 1) ω j * X ω j)) μ :=
+          integrable_finsetSum Finset.univ fun i _ ↦ hint_coord (k + 1) i
+        refine Integrable.mono' hbound hr_meas.aestronglyMeasurable (Eventually.of_forall fun ω ↦ ?_)
+        rw [Real.norm_eq_abs, abs_of_nonneg (le_of_lt (hr_pos ω))]
+        simp only [hr_def]
+        rw [Finset.sum_div]
+        refine Finset.sum_le_sum fun i _ ↦ ?_
+        rw [mul_div_assoc]
+        refine mul_le_of_le_one_left (le_of_lt (div_pos (market_pos hpos ω i) (hSb ω))) ?_
+        exact stdSimplex_component_le_one (hbstar_simplex K ω) i
+      -- Stagewise KT one-step bound at the base point, transported to epoch `k+1`.
+      have hKT : μ[r | ℱ (k + 1)] ≤ᵐ[μ] 1 :=
+        stagewise_condKuhnTucker μ ℱ hX hpos hint hbstar_meas hbstar_simplex hbstar_dom
+          hint_coord hKk1
+      have hmp : MeasurePreserving (T^[k + 1]) μ μ := hT.iterate (k + 1)
+      have htrans : (fun x ↦ (μ[r | ℱ (k + 1)]) (T^[k + 1] x)) =ᵐ[μ]
+          μ[fun ω ↦ r (T^[k + 1] ω) | (ℱ (k + 1)).comap (T^[k + 1])] :=
+        InformationTheory.Shannon.TwoSided.condExp_comp_measurePreserving hmp hr_int
+          (ℱ (k + 1)) hℱk1_le
+      have htrans_le : ∀ᵐ x ∂μ, (μ[r | ℱ (k + 1)]) (T^[k + 1] x) ≤ 1 := by
+        filter_upwards [hmp.quasiMeasurePreserving.ae hKT] with x hx
+        simpa using hx
+      have hcond_le : μ[fun ω ↦ r (T^[k + 1] ω) | (ℱ (k + 1)).comap (T^[k + 1])] ≤ᵐ[μ] 1 := by
+        filter_upwards [htrans, htrans_le] with x hx_eq hx_le
+        rw [← hx_eq]; exact hx_le
+      have hrshift_int : Integrable (fun ω ↦ r (T^[k + 1] ω)) μ :=
+        hmp.integrable_comp_of_integrable hr_int
+      have hcondL_le : μ⁻[fun ω ↦ ENNReal.ofReal (r (T^[k + 1] ω)) |
+          (ℱ (k + 1)).comap (T^[k + 1])] ≤ᵐ[μ] 1 :=
+        condLExp_ofReal_le_one_of_condExp_le_one hG_le μ hrshift_int
+          (fun ω ↦ le_of_lt (hr_pos (T^[k + 1] ω))) hcond_le
+      -- Growing-history adaptedness of `N_k` from `hcoh`.
+      have hNk_meas : Measurable[(ℱ (k + 1)).comap (T^[k + 1])]
+          (lowerRatioProcess X bstar K T k) := by
+        refine Finset.measurable_prod _ fun i hi ↦ ?_
+        rw [Finset.mem_Icc] at hi
+        obtain ⟨hKi, hik⟩ := hi
+        obtain ⟨hX_i, hb_i, hbK_i⟩ := hcoh k i hKi hik
+        refine Measurable.div ?_ ?_
+        · exact Finset.measurable_sum _ fun j _ ↦
+            ((measurable_pi_apply j).comp hbK_i.measurable).mul
+              ((measurable_pi_apply j).comp hX_i.measurable)
+        · exact Finset.measurable_sum _ fun j _ ↦
+            ((measurable_pi_apply j).comp hb_i.measurable).mul
+              ((measurable_pi_apply j).comp hX_i.measurable)
+      have hf_meas : Measurable (fun ω ↦ ENNReal.ofReal (r (T^[k + 1] ω))) :=
+        ENNReal.measurable_ofReal.comp (hr_meas.comp hTmeas)
+      -- Factorization `ofReal N_{k+1} = ofReal N_k · ofReal (r ∘ Tᵏ⁺¹)`.
+      have hfact : ∀ ω, ENNReal.ofReal (lowerRatioProcess X bstar K T (k + 1) ω)
+          = ENNReal.ofReal (lowerRatioProcess X bstar K T k ω)
+            * ENNReal.ofReal (r (T^[k + 1] ω)) := by
+        intro ω
+        have hMprod : lowerRatioProcess X bstar K T (k + 1) ω
+            = lowerRatioProcess X bstar K T k ω * r (T^[k + 1] ω) := by
+          simp only [lowerRatioProcess, hr_def]
+          rw [Finset.prod_Icc_succ_top hKk1]
+        rw [hMprod, ENNReal.ofReal_mul
+          (le_of_lt (lowerRatioProcess_pos hpos hbstar_simplex k ω))]
+      calc ∫⁻ ω, ENNReal.ofReal (lowerRatioProcess X bstar K T (k + 1) ω) ∂μ
+          = ∫⁻ ω, ENNReal.ofReal (lowerRatioProcess X bstar K T k ω)
+              * ENNReal.ofReal (r (T^[k + 1] ω)) ∂μ := lintegral_congr fun ω ↦ hfact ω
+        _ = ∫⁻ ω, ENNReal.ofReal (lowerRatioProcess X bstar K T k ω)
+              * (μ⁻[fun ω ↦ ENNReal.ofReal (r (T^[k + 1] ω)) |
+                  (ℱ (k + 1)).comap (T^[k + 1])]) ω ∂μ :=
+            lintegral_mul_eq_lintegral_mul_condLExp hG_le μ
+              (ENNReal.measurable_ofReal.comp hNk_meas) hf_meas
+        _ ≤ ∫⁻ ω, ENNReal.ofReal (lowerRatioProcess X bstar K T k ω) * 1 ∂μ := by
+            refine lintegral_mono_ae ?_
+            filter_upwards [hcondL_le] with ω hω
+            exact mul_le_mul' le_rfl hω
+        _ = ∫⁻ ω, ENNReal.ofReal (lowerRatioProcess X bstar K T k ω) ∂μ := by simp
+        _ ≤ 1 := ih
+    · -- `K > k+1` ⟹ `Icc K (k+1) = ∅` ⟹ `N_{k+1} = 1`.
+      have hN : ∀ ω, lowerRatioProcess X bstar K T (k + 1) ω = 1 := by
+        intro ω
+        unfold lowerRatioProcess
+        rw [Finset.Icc_eq_empty (by omega), Finset.prod_empty]
+      simp_rw [hN]
+      simp
 
 /-- Upper half of the growing-memory `W_∞` AEP (Cover–Thomas Theorem 16.5.1): the growing-memory
 log-wealth average is eventually below `W_∞ = condOptGrowthInfty` up to any margin `ε`, almost
@@ -598,6 +841,183 @@ theorem growingMemory_eventually_le_condOptGrowthInfty [StandardBorelSpace Ω] [
   filter_upwards [hbirk_ev, hlog_ev] with n hb hl
   rw [hdecomp n]
   linarith
+
+/-- Lower half of the growing-memory `W_∞` AEP (Cover–Thomas Theorem 16.5.1): the growing-memory
+log-wealth average is eventually above `W_∞ = condOptGrowthInfty` down to any margin `ε`, almost
+surely. For a fixed finite memory `K`, the growing-memory returns dominate the fixed-`K` strategy up
+to the lower wealth ratio: `growingMemoryLogAvg n = (1/n) ∑ᵢ log(bstar K · Xᵢ) + (head)/n
+− (1/n) log Nₙ^{(K)}`, where the first term converges to `∫ log(bstar K · X) = condOptGrowth K = W*_K`
+by Birkhoff's ergodic theorem, the head (a finite `ω`-constant) vanishes, and `(1/n) log Nₙ^{(K)}` is
+eventually below any positive threshold (`logAvg_eventually_le_of_lintegral_le_one`, from the
+lower-ratio supermartingale bound `lowerRatioProcess_lintegral_le_one`). Since `W*_K ↑ W_∞`
+(`condOptGrowth_monotone` + `condOptGrowth_bddAbove`, the R2 monotone convergence for this `bstar`),
+choosing `K` with `W*_K > W_∞ − ε/2` yields `growingMemoryLogAvg n ≥ W_∞ − ε` eventually. `W_∞` is not
+received as a hypothesis: it is pinned constructively as the supremum of the `W*_K`, and the `K` for
+each `ε` is chosen deterministically (`ω`-independent) from the monotone limit, so the almost-sure
+set is the countable intersection over `K ∈ ℕ` of the Birkhoff and lower-ratio a.e. sets. `hcoh` is
+the shift/past coherence (measurability only). Combined with the upper half
+(`growingMemory_eventually_le_condOptGrowthInfty`) this gives almost-sure convergence to `W_∞`. -/
+theorem growingMemory_eventually_ge_condOptGrowthInfty [StandardBorelSpace Ω] [Nonempty Ω]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    {T : Ω → Ω} (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
+    (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) [Nonempty (Fin m)] (hX : Measurable X)
+    (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
+    (hint : ∀ c : Ω → Fin m → ℝ, Measurable c → (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ)
+    (bstar : ℕ → Ω → Fin m → ℝ) (hbstar_meas : ∀ k, StronglyMeasurable[ℱ k] (bstar k))
+    (hbstar_simplex : ∀ k ω, bstar k ω ∈ stdSimplex ℝ (Fin m))
+    (hbstar_dom : ∀ (k : ℕ) (c : Ω → Fin m → ℝ), StronglyMeasurable[ℱ k] c →
+        (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+        μ[causalLogReturn X c | ℱ k] ≤ᵐ[μ] μ[causalLogReturn X (bstar k) | ℱ k])
+    (hint_coord : ∀ i coord, Integrable (fun ω ↦ X ω coord / (∑ j, bstar i ω j * X ω j)) μ)
+    (hUB : ∃ C : ℝ, ∀ c : Ω → Fin m → ℝ, (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ → ∫ ω, causalLogReturn X c ω ∂μ ≤ C)
+    (hcoh : ∀ (K : ℕ), ∀ k, ∀ i, K ≤ i → i ≤ k →
+        StronglyMeasurable[(ℱ (k + 1)).comap (T^[k + 1])] (fun ω ↦ X (T^[i] ω)) ∧
+          StronglyMeasurable[(ℱ (k + 1)).comap (T^[k + 1])] (fun ω ↦ bstar i (T^[i] ω)) ∧
+            StronglyMeasurable[(ℱ (k + 1)).comap (T^[k + 1])] (fun ω ↦ bstar K (T^[i] ω))) :
+    ∀ᵐ ω ∂μ, ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+      condOptGrowthInfty μ X bstar - ε ≤ growingMemoryLogAvg X bstar T n ω := by
+  have hintb : ∀ k, Integrable (causalLogReturn X (bstar k)) μ := fun k ↦
+    hint (bstar k) ((hbstar_meas k).mono (ℱ.le k)).measurable (hbstar_simplex k)
+  -- `W*_K ↑ W_∞`: monotone convergence for this `bstar` (R2 internal argument).
+  have hmono := condOptGrowth_monotone μ ℱ X bstar hbstar_meas hbstar_simplex hbstar_dom
+  have hbdd := condOptGrowth_bddAbove μ X bstar hbstar_simplex hintb hUB
+  have hWconv : Tendsto (condOptGrowth μ X bstar) atTop (𝓝 (condOptGrowthInfty μ X bstar)) :=
+    tendsto_atTop_ciSup hmono hbdd
+  -- Countable a.e. intersection over `K`: Birkhoff convergence + lower-ratio eventual bound.
+  have hcombined : ∀ᵐ ω ∂μ, ∀ K : ℕ,
+      Tendsto (fun n ↦ (∑ i ∈ Finset.range (n + 1),
+          causalLogReturn X (bstar K) (T^[i] ω)) / (n + 1 : ℝ)) atTop
+        (𝓝 (condOptGrowth μ X bstar K))
+      ∧ (∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+          Real.log (lowerRatioProcess X bstar K T n ω) / (n + 1 : ℝ) ≤ ε) := by
+    rw [ae_all_iff]
+    intro K
+    have hbstar_m : ∀ a, Measurable (bstar a) := fun a ↦ ((hbstar_meas a).mono (ℱ.le a)).measurable
+    have hTi : ∀ i, Measurable (T^[i] : Ω → Ω) := fun i ↦ hT.measurable.iterate i
+    have hNmeas : ∀ n, Measurable (lowerRatioProcess X bstar K T n) := by
+      intro n
+      refine Finset.measurable_prod _ fun i _ ↦ Measurable.div ?_ ?_
+      · exact Finset.measurable_sum _ fun j _ ↦
+          ((measurable_pi_apply j).comp ((hbstar_m K).comp (hTi i))).mul
+            ((measurable_pi_apply j).comp (hX.comp (hTi i)))
+      · exact Finset.measurable_sum _ fun j _ ↦
+          ((measurable_pi_apply j).comp ((hbstar_m i).comp (hTi i))).mul
+            ((measurable_pi_apply j).comp (hX.comp (hTi i)))
+    have hbirk_K := birkhoff_ergodic_ae hT hT_erg (hintb K)
+    have hlow_K := logAvg_eventually_le_of_lintegral_le_one μ (lowerRatioProcess X bstar K T)
+      (fun n ω ↦ lowerRatioProcess_pos hpos hbstar_simplex n ω) hNmeas
+      (fun n ↦ lowerRatioProcess_lintegral_le_one μ ℱ hX hT hpos hint hbstar_meas
+        hbstar_simplex hbstar_dom hint_coord K (hcoh K) n)
+    filter_upwards [hbirk_K, hlow_K] with ω h1 h2
+    refine ⟨?_, h2⟩
+    have heq : condOptGrowth μ X bstar K = ∫ x, causalLogReturn X (bstar K) x ∂μ := rfl
+    rw [heq]
+    exact h1
+  filter_upwards [hcombined] with ω hω
+  intro ε hε
+  -- Choose `K` with `W*_K > W_∞ − ε/2` (deterministic, `ω`-independent).
+  obtain ⟨K, hK⟩ := (hWconv.eventually (Ioi_mem_nhds
+    (show condOptGrowthInfty μ X bstar - ε / 2 < condOptGrowthInfty μ X bstar by linarith))).exists
+  obtain ⟨hbirk_ω, hlow_ω⟩ := hω K
+  set head : ℝ := ∑ i ∈ Finset.range K,
+    (causalLogReturn X (bstar i) (T^[i] ω) - causalLogReturn X (bstar K) (T^[i] ω)) with hhead
+  have hhead_tendsto : Tendsto (fun n : ℕ ↦ head / (n + 1 : ℝ)) atTop (𝓝 0) := by
+    have hnat : Tendsto (fun n : ℕ ↦ (n : ℝ) + 1) atTop atTop :=
+      tendsto_atTop_add_const_right atTop 1 tendsto_natCast_atTop_atTop
+    exact tendsto_const_nhds.div_atTop hnat
+  have hA_ev := hbirk_ω.eventually (Ioi_mem_nhds
+    (show condOptGrowth μ X bstar K - ε / 6 < condOptGrowth μ X bstar K by linarith))
+  have hhead_ev := hhead_tendsto.eventually (Ioi_mem_nhds (show -(ε / 6) < (0 : ℝ) by linarith))
+  have hC_ev := hlow_ω (ε / 6) (by linarith)
+  have hKn_ev : ∀ᶠ n in atTop, K ≤ n := eventually_atTop.mpr ⟨K, fun n hn ↦ hn⟩
+  filter_upwards [hA_ev, hhead_ev, hC_ev, hKn_ev] with n hA hHead hC hKn
+  -- Decompose the growing-memory average into the fixed-`K` Birkhoff sum, head, and lower ratio.
+  have hpa : ∑ i ∈ Finset.range (n + 1), causalLogReturn X (bstar i) (T^[i] ω)
+      = ∑ i ∈ Finset.range K, causalLogReturn X (bstar i) (T^[i] ω)
+        + ∑ i ∈ Finset.Icc K n, causalLogReturn X (bstar i) (T^[i] ω) := by
+    rw [Finset.range_eq_Ico, Finset.range_eq_Ico, ← Finset.Ico_add_one_right_eq_Icc K n]
+    exact (Finset.sum_Ico_consecutive _ (Nat.zero_le K) (by omega)).symm
+  have hpf : ∑ i ∈ Finset.range (n + 1), causalLogReturn X (bstar K) (T^[i] ω)
+      = ∑ i ∈ Finset.range K, causalLogReturn X (bstar K) (T^[i] ω)
+        + ∑ i ∈ Finset.Icc K n, causalLogReturn X (bstar K) (T^[i] ω) := by
+    rw [Finset.range_eq_Ico, Finset.range_eq_Ico, ← Finset.Ico_add_one_right_eq_Icc K n]
+    exact (Finset.sum_Ico_consecutive _ (Nat.zero_le K) (by omega)).symm
+  have hnum : ∑ i ∈ Finset.range (n + 1), causalLogReturn X (bstar i) (T^[i] ω)
+      = (∑ i ∈ Finset.range (n + 1), causalLogReturn X (bstar K) (T^[i] ω)) + head
+        - Real.log (lowerRatioProcess X bstar K T n ω) := by
+    rw [lowerRatioProcess_log_eq hpos hbstar_simplex, hhead]
+    simp only [Finset.sum_sub_distrib]
+    rw [hpa, hpf]
+    ring
+  have hdecomp : growingMemoryLogAvg X bstar T n ω
+      = (∑ i ∈ Finset.range (n + 1), causalLogReturn X (bstar K) (T^[i] ω)) / (n + 1 : ℝ)
+        + head / (n + 1 : ℝ)
+        - Real.log (lowerRatioProcess X bstar K T n ω) / (n + 1 : ℝ) := by
+    unfold growingMemoryLogAvg
+    rw [hnum]
+    ring
+  rw [hdecomp]
+  linarith
+
+/-- Growing-memory `W_∞` AEP (Cover–Thomas Theorem 16.5.1): the growing-memory log-wealth average
+converges almost surely to the infinite-past optimal growth rate `W_∞ = condOptGrowthInfty`. This
+is the Algoet–Cover sandwich: the eventual upper bound `≤ W_∞ + ε`
+(`growingMemory_eventually_le_condOptGrowthInfty`, from the wealth-ratio supermartingale against the
+infinite-past optimal `bstarInf`) and the eventual lower bound `≥ W_∞ − ε`
+(`growingMemory_eventually_ge_condOptGrowthInfty`, from the fixed-memory Birkhoff rates rising to
+`W_∞`) pinch the average to `W_∞`. `bstar`/`bstarInf` are the stagewise/infinite-past conditional
+log-optimal selections (constructed separately via `exists_condLogOptimalSeq` /
+`exists_infPast_condLogOptimal`); the remaining hypotheses are market-regularity/ergodicity
+preconditions and the two measurability-only shift/past coherences (`hcoh_inf` at `⨆ⱼℱⱼ` for the
+upper half, `hcoh` at each `ℱ (k+1)` for the lower). -/
+theorem growingMemory_logWealth_tendsto_condOptGrowthInfty [StandardBorelSpace Ω] [Nonempty Ω]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    {T : Ω → Ω} (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
+    (ℱ : Filtration ℕ m0) (X : Ω → Fin m → ℝ) [Nonempty (Fin m)] (hX : Measurable X)
+    (hpos : ∀ ω, ∀ b ∈ stdSimplex ℝ (Fin m), 0 < ∑ j, b j * X ω j)
+    (hint : ∀ c : Ω → Fin m → ℝ, Measurable c → (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ)
+    (bstar : ℕ → Ω → Fin m → ℝ) (hbstar_meas : ∀ k, StronglyMeasurable[ℱ k] (bstar k))
+    (hbstar_simplex : ∀ k ω, bstar k ω ∈ stdSimplex ℝ (Fin m))
+    (hbstar_dom : ∀ (k : ℕ) (c : Ω → Fin m → ℝ), StronglyMeasurable[ℱ k] c →
+        (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+        μ[causalLogReturn X c | ℱ k] ≤ᵐ[μ] μ[causalLogReturn X (bstar k) | ℱ k])
+    (hint_coord : ∀ i coord, Integrable (fun ω ↦ X ω coord / (∑ j, bstar i ω j * X ω j)) μ)
+    (hUB : ∃ C : ℝ, ∀ c : Ω → Fin m → ℝ, (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+      Integrable (causalLogReturn X c) μ → ∫ ω, causalLogReturn X c ω ∂μ ≤ C)
+    (hcoh : ∀ (K : ℕ), ∀ k, ∀ i, K ≤ i → i ≤ k →
+        StronglyMeasurable[(ℱ (k + 1)).comap (T^[k + 1])] (fun ω ↦ X (T^[i] ω)) ∧
+          StronglyMeasurable[(ℱ (k + 1)).comap (T^[k + 1])] (fun ω ↦ bstar i (T^[i] ω)) ∧
+            StronglyMeasurable[(ℱ (k + 1)).comap (T^[k + 1])] (fun ω ↦ bstar K (T^[i] ω)))
+    (bstarInf : Ω → Fin m → ℝ) (hInf_meas : StronglyMeasurable[⨆ j, ℱ j] bstarInf)
+    (hInf_simplex : ∀ ω, bstarInf ω ∈ stdSimplex ℝ (Fin m))
+    (hint_coord_inf : ∀ i, Integrable (fun ω ↦ X ω i / (∑ j, bstarInf ω j * X ω j)) μ)
+    (hInf_dom : ∀ (c : Ω → Fin m → ℝ), StronglyMeasurable[⨆ j, ℱ j] c →
+        (∀ ω, c ω ∈ stdSimplex ℝ (Fin m)) →
+        μ[causalLogReturn X c | ⨆ j, ℱ j] ≤ᵐ[μ] μ[causalLogReturn X bstarInf | ⨆ j, ℱ j])
+    (hcoh_inf : ∀ k, ∀ i, i ≤ k →
+        StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ X (T^[i] ω)) ∧
+          StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ bstar i (T^[i] ω)) ∧
+            StronglyMeasurable[(⨆ j, ℱ j).comap (T^[k + 1])] (fun ω ↦ bstarInf (T^[i] ω))) :
+    ∀ᵐ ω ∂μ,
+      Tendsto (fun n ↦ growingMemoryLogAvg X bstar T n ω) atTop
+        (𝓝 (condOptGrowthInfty μ X bstar)) := by
+  have hup := growingMemory_eventually_le_condOptGrowthInfty μ hT hT_erg ℱ X hX hpos hint bstar
+    hbstar_meas hbstar_simplex hbstar_dom bstarInf hInf_meas hInf_simplex hint_coord_inf hInf_dom
+    hcoh_inf
+  have hlo := growingMemory_eventually_ge_condOptGrowthInfty μ hT hT_erg ℱ X hX hpos hint bstar
+    hbstar_meas hbstar_simplex hbstar_dom hint_coord hUB hcoh
+  filter_upwards [hup, hlo] with ω hup_ω hlo_ω
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  obtain ⟨N, hN⟩ := eventually_atTop.mp
+    (Filter.Eventually.and (hup_ω (ε / 2) (by linarith)) (hlo_ω (ε / 2) (by linarith)))
+  refine ⟨N, fun n hn ↦ ?_⟩
+  obtain ⟨hhi, hlo2⟩ := hN n hn
+  rw [Real.dist_eq, abs_lt]
+  constructor <;> linarith
 
 end CondOptimalGrowth
 
