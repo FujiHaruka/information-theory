@@ -62,16 +62,17 @@ theorem exists_condIncompressible (y k : ℕ) : ∃ x, k ≤ condComplexity x y 
 
 /-- Conditional Kolmogorov complexity is not computable, for any fixed condition `y`
 (Berry's paradox): a computable `C(· | y)` would let one search for the least string
-of complexity at least `k`, describing it in only `natLen k` bits. -/
+of complexity at least `k`, describing it in only `natLen k` bits.
+@audit:ok -/
 @[entry_point]
 theorem condComplexity_not_computable (y : ℕ) :
-    ¬ Computable (fun x => condComplexity x y) := by
+    ¬ Computable (fun x ↦ condComplexity x y) := by
   intro hcomp
   -- The search machine: on input `k`, find the least `x` with `k ≤ C(x | y)`.
   have hA : Partrec₂
-      (fun (k _ : ℕ) => Nat.rfind fun x => Part.some (decide (k ≤ condComplexity x y))) := by
-    have hg : Computable (fun t : (ℕ × ℕ) × ℕ => decide (t.1.1 ≤ condComplexity t.2 y)) :=
-      (Primrec.nat_le.decide.to_comp : Computable₂ (fun a b : ℕ => decide (a ≤ b))).comp
+      (fun (k _ : ℕ) ↦ Nat.rfind fun x ↦ Part.some (decide (k ≤ condComplexity x y))) := by
+    have hg : Computable (fun t : (ℕ × ℕ) × ℕ ↦ decide (t.1.1 ≤ condComplexity t.2 y)) :=
+      (Primrec.nat_le.decide.to_comp : Computable₂ (fun a b : ℕ ↦ decide (a ≤ b))).comp
         (Computable.fst.comp Computable.fst) (hcomp.comp Computable.snd)
     exact Partrec.rfind (Computable₂.partrec₂ hg)
   obtain ⟨b, hb⟩ := invariance _ hA
@@ -80,12 +81,12 @@ theorem condComplexity_not_computable (y : ℕ) :
     intro k
     obtain ⟨w, hw⟩ := exists_condIncompressible y k
     obtain ⟨fk, hfk_mem, -⟩ :=
-      Nat.rfind_min' (p := fun x => decide (k ≤ condComplexity x y)) (m := w) (by simpa using hw)
+      Nat.rfind_min' (p := fun x ↦ decide (k ≤ condComplexity x y)) (m := w) (by simpa using hw)
     have hspec := Nat.rfind_spec hfk_mem
     simp only [PFun.coe_val, Part.mem_some_iff] at hspec
     have hge : k ≤ condComplexity fk y := of_decide_eq_true hspec.symm
-    have hmemA : fk ∈ (fun (a _ : ℕ) =>
-        Nat.rfind fun x => Part.some (decide (a ≤ condComplexity x y)))
+    have hmemA : fk ∈ (fun (a _ : ℕ) ↦
+        Nat.rfind fun x ↦ Part.some (decide (a ≤ condComplexity x y)))
         (decodeNat (encodeNat k)) y := by
       simp only [Computability.decode_encodeNat]
       exact hfk_mem
@@ -104,7 +105,8 @@ theorem condComplexity_not_computable (y : ℕ) :
   have hpow : (2 : ℕ) ^ (b + 2) = 2 ^ b * 4 := by rw [pow_add, h4]
   omega
 
-/-- Kolmogorov complexity is not computable (Berry's paradox). -/
+/-- Kolmogorov complexity is not computable (Berry's paradox).
+@audit:ok -/
 @[entry_point]
 theorem complexity_not_computable : ¬ Computable complexity :=
   condComplexity_not_computable 0
