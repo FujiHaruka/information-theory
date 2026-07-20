@@ -119,6 +119,7 @@ import InformationTheory.Shannon.Sanov.LDP
 import InformationTheory.Shannon.KLDivContinuous
 import InformationTheory.Shannon.Kolmogorov.UniversalMachine
 import InformationTheory.Shannon.Kolmogorov.Invariance
+import InformationTheory.Shannon.Kolmogorov.Counting
 import InformationTheory.Shannon.Sanov.RoundedTypeSequence
 import InformationTheory.Shannon.Sanov.MultinomialLowerBound
 import InformationTheory.Shannon.Sanov.LiminfBound
