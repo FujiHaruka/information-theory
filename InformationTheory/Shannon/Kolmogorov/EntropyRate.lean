@@ -1,6 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Kolmogorov.Counting
 import InformationTheory.Shannon.StrongTypicality
+import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass.Concentration
 import Mathlib.Logic.Encodable.Pi
 import Mathlib.Logic.Equiv.List
 import Mathlib.Topology.Order.Basic
@@ -106,6 +107,26 @@ theorem kolmogorov_entropy_rate_upper
       (1 / (n : ℝ)) * ∫ ω, (condComplexity (encodeBlock n (jointRV Xs n ω)) n : ℝ) ∂μ
         ≤ entropy μ (Xs 0) / Real.log 2 + ε := by
   sorry
+
+/-- On the strongly-typical set, the empirical entropy of a block's type is bounded
+above by the true entropy plus the linear typicality slack `ε · L`. -/
+theorem entropyByCount_le_of_strongTypical
+    (hXs : ∀ i, Measurable (Xs i))
+    {n : ℕ} (hn : 0 < n) {ε : ℝ} (x : Fin n → α)
+    (hx : x ∈ stronglyTypicalSet μ Xs n ε)
+    (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a}) :
+    entropyByCount (typeCount x) n ≤ entropy μ (Xs 0) + ε * logSumAbs μ Xs := by
+  have hn_pos : (0 : ℝ) < n := by exact_mod_cast hn
+  have hn_ne : (n : ℝ) ≠ 0 := hn_pos.ne'
+  haveI : IsProbabilityMeasure (μ.map (Xs 0)) :=
+    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+  have hqX_sum_one : (∑ a : α, (μ.map (Xs 0)).real {a}) = 1 :=
+    sum_measureReal_singleton_eq_one (μ.map (Xs 0))
+  have hT_sum : (∑ a : α, typeCount x a) = n := sum_typeCount x
+  exact conditionalKL_HXemp_le μ Xs hXs hn_pos hn hn_ne x hx
+    (fun a ↦ (μ.map (Xs 0)).real {a}) (fun _ ↦ rfl) hpos hqX_sum_one
+    (typeCount x) (fun _ ↦ rfl) hT_sum
+    (entropy μ (Xs 0)) (logSumAbs μ Xs) (entropyByCount (typeCount x) n) rfl rfl rfl
 
 /-! ### Lower-half building blocks -/
 
