@@ -50,10 +50,11 @@ def PrefixFree (S : Set (List Bool)) : Prop :=
   ∀ a ∈ S, ∀ b ∈ S, a <+: b → a = b
 
 theorem PrefixFree.mono {S S' : Set (List Bool)} (h : PrefixFree S) (hsub : S' ⊆ S) :
-    PrefixFree S' := fun a ha b hb hab => h a (hsub ha) b (hsub hb) hab
+    PrefixFree S' := fun a ha b hb hab ↦ h a (hsub ha) b (hsub hb) hab
 
 /-- Prefix-free codes with no empty codeword are uniquely decodable. Not in
-Mathlib; bridges to `kraft_mcmillan_inequality`. -/
+Mathlib; bridges to `kraft_mcmillan_inequality`.
+@audit:ok -/
 theorem PrefixFree.uniquelyDecodable {S : Set (List Bool)} (h : PrefixFree S)
     (h0 : [] ∉ S) : UniquelyDecodable S := by
   intro L₁
@@ -87,13 +88,13 @@ theorem PrefixFree.uniquelyDecodable {S : Set (List Bool)} (h : PrefixFree S)
         · exact (h w₂ hw₂S w₁ hw₁S (List.prefix_of_prefix_length_le hp₂ hp₁ hle)).symm
       subst heq
       have hrest : L₁'.flatten = L₂'.flatten := List.append_cancel_left hflat
-      rw [ih L₂' (fun w hw => h1 w (List.mem_cons_of_mem _ hw))
-        (fun w hw => h2 w (List.mem_cons_of_mem _ hw)) hrest]
+      rw [ih L₂' (fun w hw ↦ h1 w (List.mem_cons_of_mem _ hw))
+        (fun w hw ↦ h2 w (List.mem_cons_of_mem _ hw)) hrest]
 
 theorem uniquelyDecodable_mono {S S' : Set (List Bool)} (h : UniquelyDecodable S)
     (hsub : S' ⊆ S) : UniquelyDecodable S' :=
-  fun L₁ L₂ h1 h2 hflat =>
-    h L₁ L₂ (fun w hw => hsub (h1 w hw)) (fun w hw => hsub (h2 w hw)) hflat
+  fun L₁ L₂ h1 h2 hflat ↦
+    h L₁ L₂ (fun w hw ↦ hsub (h1 w hw)) (fun w hw ↦ hsub (h2 w hw)) hflat
 
 /-- The unary length-prefix self-delimiting wrapper: `bs.length` in unary
 (a run of `true`s terminated by `false`) followed by the payload `bs`. Its image
@@ -108,7 +109,7 @@ theorem parseUnary_snd_eq_nil_of_not_mem {p : List Bool} (h : false ∉ p) :
   | cons a rest ih =>
     cases a with
     | false => exact absurd List.mem_cons_self h
-    | true => exact ih fun hm => h (List.mem_cons_of_mem _ hm)
+    | true => exact ih fun hm ↦ h (List.mem_cons_of_mem _ hm)
 
 theorem parseUnary_reconstruct {p : List Bool} (h : false ∈ p) :
     p = List.replicate (parseUnary p).1 true ++ false :: (parseUnary p).2 := by
@@ -190,7 +191,7 @@ theorem dom_imp_mem_range {p : List Bool} (h : (prefixUniversalEval p).Dom) :
 
 theorem prefixUniversalEval_dom_prefixFree :
     PrefixFree {p | (prefixUniversalEval p).Dom} :=
-  range_selfDelimit_prefixFree.mono fun _ hp => dom_imp_mem_range hp
+  range_selfDelimit_prefixFree.mono fun _ hp ↦ dom_imp_mem_range hp
 
 /-- The prefix echo program describing `x`: `x`'s binary payload wrapped by the
 literal mode flag and the self-delimiting length prefix. -/
@@ -202,12 +203,13 @@ theorem prefixUniversalEval_literal (x : ℕ) :
   simp [decodePayload, Computability.decode_encodeNat]
 
 /-- Every finite set of valid programs of the self-delimiting machine satisfies
-the Kraft-McMillan bound `∑ 2^{-|p|} ≤ 1`. -/
+the Kraft-McMillan bound `∑ 2^{-|p|} ≤ 1`.
+@audit:ok -/
 theorem prefixUniversalEval_kraft (u : Finset (List Bool))
     (hu : ∀ p ∈ u, (prefixUniversalEval p).Dom) :
     ∑ p ∈ u, (1 / 2 : ℝ) ^ p.length ≤ 1 := by
   have hsub : (↑u : Set (List Bool)) ⊆ {p | (prefixUniversalEval p).Dom} :=
-    fun p hp => hu p (Finset.mem_coe.mp hp)
+    fun p hp ↦ hu p (Finset.mem_coe.mp hp)
   have hUD_dom : UniquelyDecodable {p | (prefixUniversalEval p).Dom} :=
     prefixUniversalEval_dom_prefixFree.uniquelyDecodable prefixUniversalEval_nil_not_dom
   have hUD_u : UniquelyDecodable (↑u : Set (List Bool)) := uniquelyDecodable_mono hUD_dom hsub
