@@ -2,12 +2,11 @@
 
 > **Parent**: [`kolmogorov-moonshot-plan.md`](kolmogorov-moonshot-plan.md) §Phase P4 (上界節)
 
-**Status**: REOPENED (2026-07-24) — **decoder 設計がレート無効と判明、再アーキ必要**。`typeDecoder` +
-`typeDecoder_partrec : Partrec₂` は **proof-done sorryAx-free** (`EntropyRateUpper.lean`、`20bdeaa3`) だが、
-**`Partrec₂` 認証は「計算可能」であって「長さ効率的 = レート達成」ではない**。#5-#7 assembly leg (`334b2e4e`) が
-現 decoder + `encodeBlock` で上界が閉じないことを機械検証で発見 (下 §rate 欠陥)。**残 = decoder + `encodeBlock`
-の再設計** (下 §再アーキ)。#7 積分組立は encoding 非依存で banked 済 (`EntropyRate.lean:127`)、monolithic sorry は
-per-string 上界 #5 `condComplexity_block_typical_le` / #6 `condComplexity_block_uniform_le` に局所化済。
+**Status**: R1-R3 landed (2026-07-24) — **再アーキの下部構造 (base-card encoding + div/mod decoder +
+natLen utility) は proof-done sorryAx-free**。残 = **R4 = #5/#6 closure** (下 §再アーキ / §R4 recipe)。
+背景: 旧 decoder + `encodeBlock` はレート無効 (下 §rate 欠陥、`Partrec₂` 認証 = 計算可能 ≠ 長さ効率的)。
+#7 積分組立は encoding 非依存で banked 済 (`EntropyRate.lean:126`)、monolithic sorry は per-string 上界
+#5 `condComplexity_block_typical_le` (L131) / #6 `condComplexity_block_uniform_le` (L144) に局所化済。
 
 ### rate 欠陥 (assembly leg `334b2e4e` で機械検証、settled)
 
@@ -64,12 +63,59 @@ computable でも長さが 2 倍〜指数的に膨らむ。plan/inventory/proof-
 
 ## 進捗
 
-- [x] D0-D2 — candidate B 列挙器 `typeDecoder_partrec : Partrec₂` proof-done sorryAx-free (`20bdeaa3`)。
-  **ただし rate 無効** (上 §rate 欠陥)。`Partrec₂` 認証自体は正しく再利用可能な骨格 (列挙・filter・index の Primrec 合成)。
-- [ ] **R1 — `encodeBlock` 再設計** (base-card computable、injective 保存、下界不変を再確認) 📋
-- [ ] **R2 — decoder 再設計** (length-additive packing `index·K + typeCode` + base-card 出力、`Partrec₂` 再証明) 📋
-- [ ] **R3 — `natLen x ≤ Nat.log2 x + 1` utility self-build** (~30-50 行、#5/#6 の長さ会計に共用) 📋
-- [ ] **R4 — #5/#6 closure** (R1-R3 を消費し per-string 上界 2 本を proof-done 化 ⟹ #7 経由で flagship 完全 proof-done) 📋
+- [x] D0-D2 — 旧 candidate B 列挙器骨格 (列挙・filter・index の Primrec 合成)。rate 無効 (上 §rate 欠陥) だが骨格は R2 に流用。
+- [x] **R1 — `encodeBlock` 再設計** (`94b8b1f6`)。`encodeBlock m x = ↑(finFunctionFinEquiv fun i ↦ equivFin α (x i))`
+  (base-card mixed radix)。`encodeBlock_injective` 再証明 + 新規 `encodeBlock_lt : < card α^m` +
+  `encodeBlock_eq_ofDigits : = Nat.ofDigits (card α) (List.ofFn fun i ↦ (equivFin α (x i)).val)` (R2 matching 用橋)。
+  helper `ofDigits_ofFn`。下界/integrable 全再コンパイル。全 proof-done sorryAx-free。
+- [x] **R2 — decoder 再設計** (`7a529ce8`)。`typeDecoderOption m n`: `K = (n+1)^card α`、filter
+  `Nat.ofDigits (n+1) (typeSig w) = m % K` (base-(n+1) 署名再符号化で比較、decode 不要)、index `m / K`、出力
+  `Nat.ofDigits (card α) (w.map fun a ↦ (equivFin α a).val)`。`Nat.pair` 全廃。`typeDecoder_partrec : Partrec₂`
+  再証明 proof-done sorryAx-free。新規 Primrec helper `ofDigits_primrec` (via `Nat.ofDigits_eq_foldr` +
+  `Primrec.list_foldr`)、`nat_pow`。`(equivFin α a).val = Encodable.encode a` は `rfl`。
+- [x] **R3 — `natLen_le_of_lt_two_pow (x k) (h : x < 2^k) : natLen x ≤ k`** (`167a62f4`)。`posLen_le`/`numLen_le`/
+  `natLen_le` を `UniversalMachine.lean` (natLen の定義元 = DAG leaf) へ移動 ⟹ EntropyRate から追加 import なしで可視
+  (`Counting → UniversalMachine`)。全 proof-done sorryAx-free。
+- [ ] **R4 — #5/#6 closure** (R1-R3 を消費し per-string 上界 2 本を proof-done 化 ⟹ #7 経由で flagship 完全 proof-done)
+  📋 **← 次 (leg r7)、下 §R4 recipe**
+
+## §R4 recipe (次 leg = flagship closure)
+
+**目標**: `EntropyRate.lean` の #5 `condComplexity_block_typical_le` (L131) / #6 `condComplexity_block_uniform_le`
+(L144) の 2 sorry を消し、#7 `kolmogorov_entropy_rate_upper` 経由で flagship `kolmogorov_entropy_rate` を完全
+proof-done 化。**まず `import InformationTheory.Shannon.Kolmogorov.EntropyRateUpper` を EntropyRate に追加**
+(cycle なし: Upper は EntropyRate を参照しない)。これで `typeDecoder`/`typeDecoder_partrec`/`invariance` が可視。
+
+**invariance の使い方** (`Invariance.lean:53`): `invariance A hA : ∃ b, ∀ x y q, x ∈ A (decodeNat q) y →
+condComplexity x y ≤ q.length + b`。`A = typeDecoder`, `hA = typeDecoder_partrec`, `y = n`,
+`q = encodeNat m` ⟹ `decodeNat q = m` (decodeNat∘encodeNat = id)、`q.length = natLen m`。
+∴ `condComplexity (encodeBlock n b) n ≤ natLen m + b_const`、ただし **`encodeBlock n b ∈ typeDecoder m n`** が要る。
+
+**#6 (容易、先に)**: literal echo で全 y 一様。補題 `condComplexity_le_natLen_add_one : ∀ x y, condComplexity x y
+≤ natLen x + 1` を追加 (`universalEval_literal x y : universalEval (literalProg x) y = Part.some x` を使い
+`complexity_le_natLen` を y 一般化、~8 行)。⟹ `condComplexity (encodeBlock n b) n ≤ natLen (encodeBlock n b) + 1`。
+`encodeBlock_lt : encodeBlock n b < card α^n` + `card α^n ≤ 2^(n·k0)` (k0 = `natLen (card α)`, `card α ≤ 2^k0`
+は `natLen_le` の逆で、実際は `card α < 2^(natLen (card α)+1)` 系; k0 = `Nat.clog 2 (card α)` でも可) ⟹
+`natLen_le_of_lt_two_pow` で `natLen (encodeBlock n b) ≤ n·k0` ⟹ `≤ (k0+1)(n+1)`。**C = k0+1**。~30-40 行。
+
+**#5 (crux)**: 3 段。
+1. **matching 補題** `encodeBlock n b ∈ typeDecoder m n` at `m = index·K + typeCode`,
+   `typeCode = Nat.ofDigits (n+1) (typeSig (List.ofFn b))`, `index = (filtered list).indexOf (List.ofFn b)`,
+   `K = (n+1)^card α`。要: (a) `List.ofFn b ∈ enumWords n` (長さ n 語の全列挙)、(b) filter 通過
+   `Nat.ofDigits (n+1) (typeSig (List.ofFn b)) = m % K` (typeCode < K の round-trip; typeSig の各 count ≤ n < n+1)、
+   (c) index 位置で getElem = `List.ofFn b`、(d) 出力 = `Nat.ofDigits (card α) ((List.ofFn b).map …) = encodeBlock n b`
+   (R1 `encodeBlock_eq_ofDigits` + `List.map_ofFn`)。**最も繊細 = List 列挙/index 推論**。
+2. **index 上界** `index < |T_c|` かつ `|T_c| ≤ n^n / ∏ c^c` (#1 `typeClassByCount_card_le`
+   @ `Sanov/MultinomialLowerBound.lean:677`) ⟹ `m < (|T_c|+1)·K` ⟹ `natLen m ≤ natLen((|T_c|+1)·K)`。
+   `|T_c|` = filtered list 長 = `nByCount`/`typeClassByCount` 濃度 (型クラス def は MultinomialLowerBound)。
+3. **entropy 会計**: `n^n/∏c^c = exp(n·entropyByCount c n)` (#bridge
+   `pow_div_prod_pow_eq_exp_n_entropyByCount` @ `TypeClassLowerBound.lean:55`) + `entropyByCount ≤ H+εL`
+   (#3 `entropyByCount_le_of_strongTypical` @ `EntropyRate.lean:282`)。K + b_const + `|T_c|+1` の O(log n) overhead
+   を `n·δ` に吸収 (large n)。⟹ 目標 `≤ n·(H+εL)/log2 + n·δ`。~150-300 行、複数 dispatch 可 (R4a=#6, R4b=matching, R4c=#5 会計)。
+
+**gate**: R4 は 2 sorry (@residual) を消す = completion claim ⟹ **honesty-auditor 必須** + style-auditor。
+撤退口は `sorry + @residual(plan:kolmogorov-p4-upper)` (親の粗い bank)。matching が発散したら #5 のみ sorry 据置で
+#6 は独立に closure 可 (部分勝利)。
 
 ## ゴール / Approach
 
