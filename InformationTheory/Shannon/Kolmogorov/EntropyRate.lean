@@ -683,7 +683,7 @@ theorem blockLaw_eq_pi (hXs : ∀ i, Measurable (Xs i))
   rw [h_jointRV_eq, h_pi_form]
   congr 1
   funext i
-  show μ.map (Xs i) = μ.map (Xs 0)
+  change μ.map (Xs i) = μ.map (Xs 0)
   exact (hident i).map_eq
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
@@ -696,7 +696,7 @@ theorem blockProb_eq_prod (hXs : ∀ i, Measurable (Xs i))
   haveI : IsProbabilityMeasure (μ.map (Xs 0)) :=
     Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
   rw [blockLaw_eq_pi μ Xs hXs hindep_full hident n]
-  show ((Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0))) {b}).toReal
+  change ((Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0))) {b}).toReal
     = ∏ i : Fin n, (μ.map (Xs 0)).real {b i}
   rw [Measure.pi_singleton, ENNReal.toReal_prod]
   rfl
@@ -772,7 +772,7 @@ theorem compressible_prob_le (hXs : ∀ i, Measurable (Xs i))
   have hcoe : (↑hSfin.toFinset : Set (Fin n → α)) = S := hSfin.coe_toFinset
   have hpre : ∀ b : Fin n → α, MeasurableSet (jointRV Xs n ⁻¹' {b}) :=
     fun b ↦ (measurable_jointRV Xs hXs n) (measurableSet_singleton b)
-  show μ.real (jointRV Xs n ⁻¹' S)
+  change μ.real (jointRV Xs n ⁻¹' S)
     ≤ (2 : ℝ) ^ k * Real.exp (-((n : ℝ) * (entropy μ (Xs 0) - ε₁)))
   -- Decompose the measure of the preimage as a finite sum over singleton fibers.
   have hsum : μ (jointRV Xs n ⁻¹' S) = ∑ b ∈ hSfin.toFinset, μ (jointRV Xs n ⁻¹' {b}) := by
