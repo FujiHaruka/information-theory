@@ -422,7 +422,8 @@ theorem entropyByCount_le_of_strongTypical
 block is described by its type descriptor together with its index inside the type
 class, costing `n · (H + ε·L)/log 2 + o(n)` bits. The `o(n)` overhead (the type
 descriptor `|α|·log n` and the pairing/framing constant) is absorbed as an
-arbitrarily small linear slack `n · δ`, valid for all large `n`. -/
+arbitrarily small linear slack `n · δ`, valid for all large `n`.
+@audit:ok -/
 theorem condComplexity_block_typical_le
     (hXs : ∀ i, Measurable (Xs i))
     (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a})
@@ -505,7 +506,8 @@ theorem condComplexity_block_typical_le
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- Uniform per-string upper bound: every length-`n` block is describable by echoing
 its base-`card α` numeral, costing `natLen ≤ n · ⌈log₂ card α⌉` bits plus the literal
-flag, so `C(x | n) ≤ (⌈log₂ card α⌉ + 1) · (n + 1)`. -/
+flag, so `C(x | n) ≤ (⌈log₂ card α⌉ + 1) · (n + 1)`.
+@audit:ok -/
 theorem condComplexity_block_uniform_le :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ (n : ℕ) (b : Fin n → α),
       (condComplexity (encodeBlock n b) n : ℝ) ≤ C * ((n : ℝ) + 1) := by
@@ -1028,7 +1030,8 @@ theorem kolmogorov_entropy_rate_lower
 
 /-- Kolmogorov complexity converges to the entropy rate: for an i.i.d. source, the
 normalized expected conditional complexity of a length-`n` block tends to the
-bit-rebased entropy `H(X) / log 2` (CT 2nd ed. Thm 14.3.1). -/
+bit-rebased entropy `H(X) / log 2` (CT 2nd ed. Thm 14.3.1).
+@audit:ok -/
 @[entry_point]
 theorem kolmogorov_entropy_rate
     (hXs : ∀ i, Measurable (Xs i))
