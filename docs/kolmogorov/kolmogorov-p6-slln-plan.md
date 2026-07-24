@@ -5,19 +5,22 @@
 > **Goal**: CT 2nd ed **Thm 14.5.1** — 非圧縮な長さ `n` の二値列 (`n ≤ C(encodeBlock n b | n)`) の 1 の頻度
 > `typeCount b true / n` は `n → ∞` で `1/2` に収束する。新規ファイル `Incompressible.lean`。
 
-## 進捗
+## 進捗 — ✅ CLOSED (proof-done sorryAx-free、両ゲート PASS、commits `7cdd4ca2`+`3298ae88`)
 
 - [x] M0 API 在庫調査 ✅ → [`kolmogorov-p6-inventory.md`](kolmogorov-p6-inventory.md) (item B は Mathlib 不在だが in-project 資産で代替、genuine 壁なし)
-- [ ] skeleton (下 §Skeleton、全 sorry で type-check done 退避) 📋
-- [ ] L1 Bool 橋 `entropyByCount_bool_eq_binEntropy` 📋
-- [ ] L2 raw per-string 上界 `condComplexity_bool_block_le` (measure-free) 📋
-- [ ] L3 解析核 `binEntropy_gap_of_far_from_half` 📋 ← **唯一の retreat 対象**
-- [ ] L4 非圧縮列の存在 `exists_incompressible_bool_seq` 📋
-- [ ] L5 primary headline `incompressible_freq_near_half` (`@[entry_point]`) 📋
-- [ ] L6 Tendsto corollary `incompressible_seq_freq_tendsto_half` (`@[entry_point]`) 📋
+- [x] L1 Bool 橋 `entropyByCount_bool_eq_binEntropy` ✅ (`Fintype.sum_bool` + `sum_typeCount` + negMulLog 橋 + `ring`)
+- [x] L2 raw per-string 上界 `condComplexity_bool_block_le` (measure-free) ✅ (typicality step 除去 copy-refactor、固定定数 c で両分岐吸収)
+- [x] L3 解析核 `binEntropy_gap_of_far_from_half` ✅ (~11 行、`binEntropy_strictMonoOn.monotoneOn` + `binEntropy_one_sub`。**壁でなく tractable と的中**、park 未発動)
+- [x] L4 非圧縮列の存在 `exists_incompressible_bool_seq` ✅ (`condIncompressible_count` + `encodeBlock` 単射 pigeonhole)
+- [x] L5 primary headline `incompressible_freq_near_half` (`@[entry_point]`) ✅ (固定-gap contrapositive、δ>2⁻¹ 自明分岐)
+- [x] L6 Tendsto corollary `incompressible_seq_freq_tendsto_half` (`@[entry_point]`) ✅ (`Metric.tendsto_atTop` + `filter_upwards`)
 
-**親同期メモ**: 本子計画の着手で親 §進捗 (DAG) の P6 行を 📋→🚧、§Sub-plan 一覧に本ファイルの backlink 行を追加する
-(child が SoT、orchestrator が親を同期)。
+**結果**: `Incompressible.lean` 全 6 decl proof-done、両 headline sorryAx-free (`[propext, Classical.choice, Quot.sound]`)、
+park ゼロ。honesty gate = 6/6 OK (`@audit:ok`、incompressibility 前提は genuine antecedent の two-sided squeeze、
+L4 で non-vacuity 確認、log-base 整合確認)、style gate = PASS (編集不要)。`InformationTheory.lean:125` に import 登録済。
+実測 ~241 行 (見積 170-285 内)。
+
+**親同期**: 親 §進捗 (DAG) の P6 行 📋→✅、§Sub-plan 一覧に本ファイル backlink 行を追加、§Phase P6 節を CLOSED 反映済 (本 commit で co-stage)。
 
 ---
 

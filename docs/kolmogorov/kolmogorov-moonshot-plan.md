@@ -1,10 +1,10 @@
 # Ch.14 Kolmogorov 複雑性 (plain C 背骨) ムーンショット計画 🌙
 
-**Status**: 第 1 波達成 (2026-07-24) — **flagship `kolmogorov_entropy_rate` 完全 proof-done・sorryAx-free・
-無条件** (`EntropyRate.lean:1036`)。gateway atom (Phase U + P1 + P2) は 2026-07-20 に PASS、P3/P5 も proof-done、
-**P4 flagship の上界も R1–R4 再アーキで closure** ⟹ 第 1 波背骨 (P1–P5) が全 proof-done。roadmap scope-out は
-解除相当。残る P6 SLLN は stretch (第 1 波成否に無影響)。prefix 塔 (P7–P9) は第 2 波 = 別 moonshot に隔離し、
-本計画の scope 外。
+**Status**: 第 1 波 + stretch 完了 (P6 は 2026-07-25) — **flagship `kolmogorov_entropy_rate` 完全 proof-done・
+sorryAx-free・無条件** (`EntropyRate.lean:1036`)。gateway atom (Phase U + P1 + P2) は 2026-07-20 に PASS、P3/P5 も
+proof-done、**P4 flagship の上界も R1–R4 再アーキで closure** ⟹ 第 1 波背骨 (P1–P5) が全 proof-done。**stretch P6
+SLLN (CT 14.5.1) も proof-done・sorryAx-free・監査済** (`Incompressible.lean`)。⟹ 本 moonshot は P1–P6 全 closure、
+残 route ゼロ。prefix 塔 (P7–P9) は第 2 波 = 別 moonshot に隔離し、本計画の scope 外。
 
 > **SoT**: 山場マップ + 定義形は [`kolmogorov-scouting.md`](kolmogorov-scouting.md) §4 (**訂正済み定義形**)、
 > per-lemma 台帳は [`kolmogorov-mathlib-inventory.md`](kolmogorov-mathlib-inventory.md)。本計画は両者を
@@ -27,22 +27,26 @@
 - [x] Phase P5 — 非計算可能性 ✅ proof-done + `@audit:ok` (`Noncomputable.lean`、実 headline = 条件版
   `condComplexity_not_computable (y)` `¬ Computable (C(·|y))` [任意固定 y = strictly stronger] `@[entry_point]` +
   無条件系 `complexity_not_computable` [y=0]、Berry 論法、両ゲート PASS、commits `755f0024`/`39d07c2f`)
-- [ ] Phase P6 — 非圧縮列の SLLN (stretch) 📋
+- [x] Phase P6 — 非圧縮列の SLLN (stretch) ✅ proof-done sorryAx-free + `@audit:ok` (`Incompressible.lean` 241 行、
+  headline `incompressible_freq_near_half` [δ-近傍 eventually 形] + `incompressible_seq_freq_tendsto_half` [Tendsto 系] の
+  2 本 `@[entry_point]`、CT 14.5.1。measure-free 純組合せ、`condIncompressible_count` + method-of-types 上界の再利用、
+  L3 解析核は壁でなく `binEntropy_strictMonoOn` で ~11 行 closure、両ゲート PASS、commits `7cdd4ca2`+`3298ae88`)。
+  詳細 = 子 plan (§Sub-plan 一覧)。
 
 **第 1 波 完了 (cold-read 用)**: P1–P5 が全 proof-done ⟹ 第 1 波背骨に未完 leg は無い。flagship
 `kolmogorov_entropy_rate` は上界 (method-of-types 再アーキ R1–R4) / 下界 (数え上げ + AEP) の両半分 + squeeze で
 完全 proof-done sorryAx-free @audit:ok。残る P6 SLLN は stretch (第 1 波成否に無関係)。第 1 波背骨に壁 residual は無い
 (唯一の genuine 壁は第 2 波 prefix 塔、slug は §Out が保持)。
 
-**次 leg 戦略 (control state)**: 第 1 波は達成済み。flag-only cosmetic は 2026-07-24 に CLOSED (docstring bare 化 +
-`witness` rename 適用、`[DecidableEq α]` 除去は誤検出で load-bearing 確定 → 子 plan §follow-up)。残る作業は
-(a) P6 SLLN (stretch、余力次第)。第 2 波 prefix 塔 (P7–P9) は別 moonshot。
+**次 leg 戦略 (control state)**: 第 1 波 + stretch P6 いずれも達成済み。flag-only cosmetic は 2026-07-24 に CLOSED。
+本 moonshot の残 route はゼロ (P1–P6 全 proof-done + 監査済)。第 2 波 prefix 塔 (P7–P9) は別 moonshot として隔離。
 
 ## Sub-plan 一覧
 
 | 子 plan | scope | 状態 | backlink |
 |---|---|---|---|
 | [`kolmogorov-p4-upper-decoder-plan.md`](kolmogorov-p4-upper-decoder-plan.md) | P4 上界 decoder 再アーキ (R1 base-card `encodeBlock` / R2 div-mod decoder + `Partrec₂` / R3 natLen utility / R4 #5/#6 closure、method-of-types crux) | ✅ COMPLETE (R1–R4 landed、flagship 完全 proof-done) | 親 §Phase P4 上界分解 |
+| [`kolmogorov-p6-slln-plan.md`](kolmogorov-p6-slln-plan.md) | P6 非圧縮列 SLLN (CT 14.5.1、L1 Bool 橋 / L2 measure-free per-string 上界 / L3 解析核 / L4 存在 / L5–L6 headline) | ✅ COMPLETE (6 decl proof-done sorryAx-free、park ゼロ、両ゲート PASS) | 親 §Phase P6 |
 
 ## ゴール / Scope
 
@@ -284,14 +288,20 @@ index 2 倍化 + `encodeBlock` doubly-exp 長さ) を base-card encoding + div/m
 - **proof-log**: no。
 - **撤退ライン**: 未発動 (closure 済)。`kolmogorov-noncomputable` slug は不使用のまま。commits `755f0024`/`39d07c2f`。
 
-### Phase P6 — 非圧縮列の SLLN (stretch) 📋
+### Phase P6 — 非圧縮列の SLLN (stretch) ✅ CLOSED
 
-- **依存**: P3 数え上げ + 既存確率補題。余力があれば。
-- **成果物**: 非圧縮列 `C(x_1..x_n|n) ≥ n` なら 1 の頻度 → 1/2 (CT Thm 14.5.1)。
-- **見積行数**: 中量 (80–150 行想定)。ファイル `Incompressible.lean`。
+- **依存**: P3 数え上げ (`condIncompressible_count`) + P4 method-of-types 上界機構。**measure-free 純組合せ**
+  (P4 の μ/Xs/i.i.d. は継承しない = inventory 中核所見)。
+- **成果物 (実装済)**: `Incompressible.lean` (241 行)。headline 2 本 `@[entry_point]` = `incompressible_freq_near_half`
+  (δ-近傍 eventually 形、その n の全非圧縮列で一様) + `incompressible_seq_freq_tendsto_half` (Tendsto 系、SLLN 風)。
+  CT 14.5.1。手法 = per-string 上界 `C(encodeBlock n b|n) ≤ 2·logb₂(n+1) + n·binEntropy(p)/log2 + c` (L2、
+  `condComplexity_block_typical_le` の typicality 除去 copy-refactor) と非圧縮性の two-sided squeeze で
+  `binEntropy(p) → log2`、`binEntropy_strictMonoOn` の固定-gap contrapositive (L3) で `p → 1/2`。
+- **見積 vs 実測**: 予測 80–150 行は下振れ (子 plan/inventory は 170–285 と再見積、実測 241 行 = L3 解析核 + L5 filter 組立分)。
 - **proof-log**: no。
-- **撤退ライン**: stretch につき未達なら park のみ (`sorry + @residual(plan:kolmogorov-slln)`)、第 1 波の
-  成否には影響しない。
+- **撤退ライン**: 未発動。L3 (唯一の park 候補) は壁でなく tractable と的中し ~11 行で closure。park slug
+  `kolmogorov-slln` は不使用のまま。両 headline sorryAx-free (`[propext, Classical.choice, Quot.sound]`)、両ゲート PASS、
+  commits `7cdd4ca2`+`3298ae88`。詳細 = 子 plan [`kolmogorov-p6-slln-plan.md`](kolmogorov-p6-slln-plan.md)。
 
 ---
 
