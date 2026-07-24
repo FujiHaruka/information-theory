@@ -88,6 +88,7 @@ arithmeticCode_expected_length_bounds
 @ 14 | Kolmogorov complexity
 kolmogorov_entropy_rate | Kolmogorov complexity converges to the entropy rate, (1/n)·E[C(Xⁿ|n)] → H(X)/log 2 for an i.i.d. source (Cover–Thomas Thm 14.3.1)
 condComplexity_not_computable | Kolmogorov complexity is not a computable function, for any fixed side information (Cover–Thomas Thm 14.6)
+incompressible_seq_freq_tendsto_half | Incompressible binary sequences obey a law of large numbers: the frequency of ones converges to 1/2 (Cover–Thomas Thm 14.5.1)
 
 @ 15 | Distributed source coding
 slepian_wolf_full_rate_region_achievability
