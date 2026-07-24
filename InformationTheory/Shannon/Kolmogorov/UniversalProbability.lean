@@ -29,7 +29,8 @@ open scoped ENNReal
 namespace InformationTheory.Kolmogorov
 
 /-- The universal probability dominates the weight of a shortest program:
-`2^{-K(x)} ≤ P_U(x)`. -/
+`2^{-K(x)} ≤ P_U(x)`.
+@audit:ok -/
 @[entry_point]
 theorem universalProb_ge_two_pow_neg_prefixComplexity (x : ℕ) :
     (2 : ℝ≥0∞)⁻¹ ^ prefixComplexity x ≤ universalProb x := by
@@ -44,7 +45,8 @@ private theorem inv_two_pow_eq_ofReal (n : ℕ) :
   norm_num
 
 /-- The universal probability is a subprobability: `P_U(x) ≤ 1`, because every
-finite subsum is a Kraft sum of valid self-delimiting programs. -/
+finite subsum is a Kraft sum of valid self-delimiting programs.
+@audit:ok -/
 theorem universalProb_le_one (x : ℕ) : universalProb x ≤ 1 := by
   classical
   rw [universalProb, ENNReal.tsum_eq_iSup_sum]
@@ -68,7 +70,10 @@ theorem universalProb_le_one (x : ℕ) : universalProb x ≤ 1 := by
     _ ≤ 1 := ENNReal.ofReal_le_one.mpr (prefixUniversalEval_kraft _ hdom)
 
 /-- The logarithmic form of the lower bound: `-log₂ P_U(x) ≤ K(x)`, one half of
-Levin's coding theorem. -/
+Levin's coding theorem. The bound is not the degenerate `logb 2 0 = 0` reading:
+`universalProb_ge_two_pow_neg_prefixComplexity` and `universalProb_le_one` pin
+`P_U(x)` to `(0, 1]`.
+@audit:ok -/
 theorem neg_logb_universalProb_le_prefixComplexity (x : ℕ) :
     -Real.logb 2 (universalProb x).toReal ≤ (prefixComplexity x : ℝ) := by
   have hne : universalProb x ≠ ⊤ := ((universalProb_le_one x).trans_lt ENNReal.one_lt_top).ne
