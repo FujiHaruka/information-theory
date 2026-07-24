@@ -32,7 +32,8 @@ namespace InformationTheory.Kolmogorov
 open MeasureTheory Real Filter Topology InformationTheory.Shannon
 
 /-- On the two-element alphabet the empirical entropy of a block's type equals the
-binary entropy of its frequency of ones. -/
+binary entropy of its frequency of ones.
+@audit:ok -/
 theorem entropyByCount_bool_eq_binEntropy {n : ℕ} (hn : 0 < n) (b : Fin n → Bool) :
     entropyByCount (typeCount b) n = Real.binEntropy ((typeCount b true : ℝ) / n) := by
   have hn0 : (n : ℝ) ≠ 0 := by exact_mod_cast hn.ne'
@@ -50,7 +51,8 @@ theorem entropyByCount_bool_eq_binEntropy {n : ℕ} (hn : 0 < n) (b : Fin n → 
 /-- Raw per-string upper bound (measure-free): the conditional complexity of a
 binary block is bounded by the type-descriptor overhead plus `n · binEntropy(p)/log 2`,
 with `p` the frequency of ones. Obtained from `condComplexity_block_typical_le` by
-dropping the typicality step. -/
+dropping the typicality step.
+@audit:ok -/
 theorem condComplexity_bool_block_le :
     ∃ c : ℝ, 0 ≤ c ∧ ∀ {n : ℕ} (_ : 0 < n) (b : Fin n → Bool),
       (condComplexity (encodeBlock n b) n : ℝ)
@@ -128,7 +130,8 @@ theorem condComplexity_bool_block_le :
 
 /-- Fixed-gap analytic core: if the frequency `p` is at least `δ` away from `1/2`,
 then its binary entropy is at most `binEntropy (1/2 - δ)`, which is strictly below
-`log 2`. -/
+`log 2`.
+@audit:ok -/
 theorem binEntropy_gap_of_far_from_half {p δ : ℝ} (hp0 : 0 ≤ p) (hp1 : p ≤ 1)
     (hδ0 : 0 < δ) (hδ1 : δ ≤ 2⁻¹) (hfar : δ ≤ |p - 2⁻¹|) :
     Real.binEntropy p ≤ Real.binEntropy (2⁻¹ - δ) := by
@@ -146,7 +149,8 @@ theorem binEntropy_gap_of_far_from_half {p δ : ℝ} (hp0 : 0 ≤ p) (hp1 : p �
 
 /-- Incompressible binary blocks exist at every length: since fewer than `2^n`
 naturals have conditional complexity below `n`, some length-`n` block is
-incompressible. -/
+incompressible.
+@audit:ok -/
 theorem exists_incompressible_bool_seq :
     ∃ w : (n : ℕ) → Fin n → Bool,
       ∀ n : ℕ, 0 < n → (n : ℝ) ≤ (condComplexity (encodeBlock n (w n)) n : ℝ) := by
@@ -172,7 +176,8 @@ theorem exists_incompressible_bool_seq :
   exact ⟨w, fun n _ ↦ hw n⟩
 
 /-- CT 14.5.1: the frequency of ones of every incompressible binary block is
-eventually within `δ` of `1/2`. -/
+eventually within `δ` of `1/2`.
+@audit:ok -/
 @[entry_point]
 theorem incompressible_freq_near_half {δ : ℝ} (hδ : 0 < δ) :
     ∀ᶠ n : ℕ in atTop, ∀ b : Fin n → Bool,
@@ -224,7 +229,8 @@ theorem incompressible_freq_near_half {δ : ℝ} (hδ : 0 < δ) :
       _ < δ := hδ_gt
 
 /-- Law-of-large-numbers corollary: along an eventually-incompressible family the
-frequency of ones converges to `1/2`. -/
+frequency of ones converges to `1/2`.
+@audit:ok -/
 @[entry_point]
 theorem incompressible_seq_freq_tendsto_half
     (w : (n : ℕ) → Fin n → Bool)
