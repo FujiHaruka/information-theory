@@ -1,8 +1,10 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass.Concentration
 import InformationTheory.Shannon.Kolmogorov.Counting
+import InformationTheory.Shannon.Kolmogorov.EntropyRateUpper
 import InformationTheory.Shannon.StrongTypicality
 import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Data.Fintype.EquivFin
 import Mathlib.Data.Nat.Digits.Defs
 import Mathlib.Topology.Order.Basic
@@ -93,6 +95,40 @@ theorem exp_le_two_pow_iff (t : ℝ) (k : ℕ) :
     Real.exp t ≤ (2 : ℝ) ^ k ↔ t ≤ (k : ℝ) * Real.log 2 := by
   rw [two_pow_eq_exp, Real.exp_le_exp]
 
+/-! ### Type-class decoder matching (upper-bound crux)
+
+The upper half feeds the type-class decoder `typeDecoder` (`EntropyRateUpper.lean`)
+to `invariance`. The matching lemmas below connect the block encoder `encodeBlock`
+to `typeDecoder`, and bound the index range by the type-class cardinality. -/
+
+/-- Base-`b` numerals of equal length with all digits below `b` are determined by
+their value: `Nat.ofDigits` is injective on such digit lists. -/
+theorem ofDigits_inj {b : ℕ} (hb : 0 < b) (L1 L2 : List ℕ)
+    (hlen : L1.length = L2.length)
+    (h1 : ∀ d ∈ L1, d < b) (h2 : ∀ d ∈ L2, d < b)
+    (heq : Nat.ofDigits b L1 = Nat.ofDigits b L2) : L1 = L2 := by
+  induction L1 generalizing L2 with
+  | nil => cases L2 with
+    | nil => rfl
+    | cons d2 t2 => simp at hlen
+  | cons d1 t1 ih =>
+    cases L2 with
+    | nil => simp at hlen
+    | cons d2 t2 =>
+      rw [Nat.ofDigits_cons, Nat.ofDigits_cons] at heq
+      have hd1 : d1 < b := h1 d1 (List.mem_cons_self ..)
+      have hd2 : d2 < b := h2 d2 (List.mem_cons_self ..)
+      have hdeq : d1 = d2 := by
+        have hmod := congrArg (· % b) heq
+        simpa [Nat.add_mul_mod_self_left, Nat.mod_eq_of_lt hd1, Nat.mod_eq_of_lt hd2] using hmod
+      subst hdeq
+      have hXeq : Nat.ofDigits b t1 = Nat.ofDigits b t2 :=
+        Nat.eq_of_mul_eq_mul_left hb (by omega)
+      have hteq := ih t2 (by simpa using hlen)
+        (fun d hd ↦ h1 d (List.mem_cons_of_mem _ hd))
+        (fun d hd ↦ h2 d (List.mem_cons_of_mem _ hd)) hXeq
+      rw [hteq]
+
 /-! ### The entropy-rate theorem -/
 
 section Rate
@@ -122,12 +158,271 @@ theorem integrable_condComplexity_jointRV (hXs : ∀ i, Measurable (Xs i)) (n : 
   exact_mod_cast Finset.le_sup (f := fun b : Fin n → α ↦ condComplexity (encodeBlock n b) n)
     (Finset.mem_univ (jointRV Xs n ω))
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- Every letter of the finite alphabet occurs in the decoder alphabet. -/
+theorem mem_decoderAlphabet (a : α) : a ∈ decoderAlphabet (α := α) :=
+  (Finset.mem_toList).mpr (Finset.mem_univ a)
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- The decoder alphabet lists exactly `card α` letters. -/
+theorem length_decoderAlphabet : (decoderAlphabet (α := α)).length = Fintype.card α := by
+  rw [decoderAlphabet, Finset.length_toList, Finset.card_univ]
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+theorem enumWords_succ (n : ℕ) :
+    enumWords (α := α) (n + 1)
+      = (enumWords n).flatMap fun w ↦ (decoderAlphabet : List α).map fun a ↦ a :: w := rfl
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- A word belongs to the length-`n` enumeration iff it has length `n`. -/
+theorem mem_enumWords_iff (n : ℕ) (w : List α) : w ∈ enumWords n ↔ w.length = n := by
+  induction n generalizing w with
+  | zero =>
+    change w ∈ [([] : List α)] ↔ w.length = 0
+    rw [List.mem_singleton, List.length_eq_zero_iff]
+  | succ n ih =>
+    rw [enumWords_succ, List.mem_flatMap]
+    constructor
+    · rintro ⟨w', hw', hmem⟩
+      rw [List.mem_map] at hmem
+      obtain ⟨a, -, rfl⟩ := hmem
+      rw [List.length_cons, ih w' |>.mp hw']
+    · intro hlen
+      obtain ⟨a, w', rfl⟩ : ∃ a w', w = a :: w' := by
+        cases w with
+        | nil => simp at hlen
+        | cons a w' => exact ⟨a, w', rfl⟩
+      refine ⟨w', ih w' |>.mpr (by simpa using hlen), ?_⟩
+      rw [List.mem_map]
+      exact ⟨a, mem_decoderAlphabet a, rfl⟩
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- The length-`n` enumeration has no repeats. -/
+theorem enumWords_nodup (n : ℕ) : (enumWords (α := α) n).Nodup := by
+  induction n with
+  | zero => change ([([] : List α)]).Nodup; simp
+  | succ n ih =>
+    rw [enumWords_succ, List.nodup_flatMap]
+    refine ⟨fun w _ ↦ ?_, ?_⟩
+    · refine (Finset.nodup_toList _).map ?_
+      intro a a' h
+      exact (List.cons.injEq .. |>.mp h).1
+    · refine ih.imp ?_
+      intro w w' hne x hx hx'
+      rw [List.mem_map] at hx hx'
+      obtain ⟨a, -, rfl⟩ := hx
+      obtain ⟨a', -, ha'⟩ := hx'
+      exact hne (by injection ha' with _ hww; exact hww.symm)
+
+omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- The occurrence signature of a word has one entry per letter. -/
+theorem length_typeSig (w : List α) : (typeSig w).length = Fintype.card α := by
+  rw [typeSig, List.length_map, length_decoderAlphabet]
+
+omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- Every occurrence count of a length-`n` word is below `n + 1`. -/
+theorem typeSig_lt {n : ℕ} {w : List α} (hw : w.length = n) : ∀ d ∈ typeSig w, d < n + 1 := by
+  intro d hd
+  rw [typeSig, List.mem_map] at hd
+  obtain ⟨a, -, rfl⟩ := hd
+  have := List.length_filter_le (fun b ↦ b = a) w
+  omega
+
+omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- The base-`(n+1)` numeral of a length-`n` signature is below `K = (n+1) ^ card α`. -/
+theorem typeCode_lt {n : ℕ} (hn : 0 < n) {w : List α} (hw : w.length = n) :
+    Nat.ofDigits (n + 1) (typeSig w) < (n + 1) ^ Fintype.card α := by
+  have h := Nat.ofDigits_lt_base_pow_length (b := n + 1) (by omega) (typeSig_lt hw)
+  rwa [length_typeSig] at h
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- The `a`-occurrence count of `List.ofFn x` equals `typeCount x a`. -/
+theorem typeCount_filter_ofFn {n : ℕ} (x : Fin n → α) (a : α) :
+    ((List.ofFn x).filter (fun c ↦ c = a)).length = typeCount x a := by
+  rw [typeCount, List.ofFn_eq_map, ← List.countP_eq_length_filter, List.countP_map,
+    List.countP_eq_length_filter,
+    ← List.toFinset_card_of_nodup ((List.nodup_finRange n).filter _),
+    List.toFinset_filter, List.toFinset_finRange]
+  congr 1
+  ext i
+  simp [Function.comp, decide_eq_true_eq]
+
+omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- The signature of `List.ofFn x` reads off the letter counts of `x`. -/
+theorem typeSig_ofFn {n : ℕ} (x : Fin n → α) :
+    typeSig (List.ofFn x) = decoderAlphabet.map (fun a ↦ typeCount x a) := by
+  rw [typeSig]
+  refine List.map_congr_left ?_
+  intro a _
+  exact typeCount_filter_ofFn x a
+
+/-- A partial inverse of `List.ofFn`: reconstruct a block from a length-`n` word. -/
+noncomputable def toBlock (n : ℕ) (w : List α) : Fin n → α :=
+  fun i ↦ w.getD (i : ℕ) (Classical.arbitrary α)
+
+omit [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- On length-`n` words, `toBlock` inverts `List.ofFn`. -/
+theorem ofFn_toBlock {n : ℕ} {w : List α} (hw : w.length = n) :
+    List.ofFn (toBlock n w) = w := by
+  apply List.ext_getElem
+  · rw [List.length_ofFn, hw]
+  · intro i h1 h2
+    rw [List.getElem_ofFn]
+    simp only [toBlock]
+    rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h2]
+    rfl
+
+omit [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- The words sharing a block's signature are no more numerous than its type class. -/
+theorem filter_typeSig_length_le {n : ℕ} (hn : 0 < n) (b : Fin n → α) :
+    ((enumWords (α := α) n).filter fun w ↦
+        Nat.ofDigits (n + 1) (typeSig w) = Nat.ofDigits (n + 1) (typeSig (List.ofFn b))).length
+      ≤ (typeClassByCount (n := n) (typeCount b)).toFinite.toFinset.card := by
+  classical
+  set F := (enumWords (α := α) n).filter (fun w ↦
+      Nat.ofDigits (n + 1) (typeSig w) = Nat.ofDigits (n + 1) (typeSig (List.ofFn b))) with hF
+  have hFlen : ∀ w ∈ F, w.length = n := by
+    intro w hw
+    rw [hF, List.mem_filter] at hw
+    exact (mem_enumWords_iff n w).mp hw.1
+  have hFmem : ∀ w ∈ F, toBlock n w ∈ typeClassByCount (n := n) (typeCount b) := by
+    intro w hw
+    have hwlen := hFlen w hw
+    rw [hF, List.mem_filter] at hw
+    have hsig : typeSig w = typeSig (List.ofFn b) :=
+      ofDigits_inj (b := n + 1) (by omega) (typeSig w) (typeSig (List.ofFn b))
+        (by rw [length_typeSig, length_typeSig]) (typeSig_lt hwlen)
+        (typeSig_lt (List.length_ofFn)) (of_decide_eq_true hw.2)
+    rw [← ofFn_toBlock hwlen, typeSig_ofFn, typeSig_ofFn] at hsig
+    simp only [typeClassByCount, Set.mem_setOf_eq]
+    intro a
+    exact (List.map_eq_map_iff.mp hsig) a (mem_decoderAlphabet a)
+  have hFnodup : F.Nodup := (enumWords_nodup n).filter _
+  have hmapnodup : (F.map (toBlock n)).Nodup := by
+    refine hFnodup.map_on ?_
+    intro x hx y hy hxy
+    have hof := congrArg List.ofFn hxy
+    rwa [ofFn_toBlock (hFlen x hx), ofFn_toBlock (hFlen y hy)] at hof
+  calc F.length = (F.map (toBlock n)).length := (List.length_map _).symm
+    _ = (F.map (toBlock n)).toFinset.card := (List.toFinset_card_of_nodup hmapnodup).symm
+    _ ≤ (typeClassByCount (n := n) (typeCount b)).toFinite.toFinset.card := by
+        apply Finset.card_le_card
+        intro y hy
+        rw [List.mem_toFinset, List.mem_map] at hy
+        obtain ⟨w, hw, rfl⟩ := hy
+        rw [Set.Finite.mem_toFinset]
+        exact hFmem w hw
+
+omit [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- The block encoder is matched by the type-class decoder at an index below the packed
+bound `K · |T_c|`: there is a program number `m` decoding to `encodeBlock n b` whose value
+is below `(n+1) ^ card α` times the type-class cardinality. -/
+theorem exists_typeDecoder_witness {n : ℕ} (hn : 0 < n) (b : Fin n → α) :
+    ∃ m : ℕ, encodeBlock n b ∈ typeDecoder (α := α) m n ∧
+      m < (n + 1) ^ Fintype.card α
+        * (typeClassByCount (n := n) (typeCount b)).toFinite.toFinset.card := by
+  classical
+  set K : ℕ := (n + 1) ^ Fintype.card α with hK
+  have hKpos : 0 < K := by rw [hK]; positivity
+  set wb : List α := List.ofFn b with hwb
+  have hwblen : wb.length = n := by rw [hwb, List.length_ofFn]
+  set typeCode : ℕ := Nat.ofDigits (n + 1) (typeSig wb) with htc
+  have htclt : typeCode < K := by rw [htc, hK]; exact typeCode_lt hn hwblen
+  set F : List (List α) :=
+    (enumWords n).filter (fun w ↦ Nat.ofDigits (n + 1) (typeSig w) = typeCode) with hFdef
+  have hwbF : wb ∈ F := by
+    rw [hFdef, List.mem_filter]
+    exact ⟨(mem_enumWords_iff n wb).mpr hwblen, decide_eq_true rfl⟩
+  obtain ⟨index, hidx⟩ := List.mem_iff_getElem?.mp hwbF
+  obtain ⟨hidxlt, -⟩ := List.getElem?_eq_some_iff.mp hidx
+  have hFle : F.length ≤ (typeClassByCount (n := n) (typeCount b)).toFinite.toFinset.card := by
+    rw [hFdef, htc, hwb]
+    exact filter_typeSig_length_le hn b
+  refine ⟨typeCode + K * index, ?_, ?_⟩
+  · have hmod : (typeCode + K * index) % K = typeCode := by
+      rw [Nat.add_mul_mod_self_left, Nat.mod_eq_of_lt htclt]
+    have hdiv : (typeCode + K * index) / K = index := by
+      rw [Nat.add_mul_div_left _ _ hKpos, Nat.div_eq_of_lt htclt, Nat.zero_add]
+    have hdec : typeDecoderOption (α := α) (typeCode + K * index) n = some (encodeBlock n b) := by
+      simp only [typeDecoderOption]
+      rw [← hK, hmod, hdiv, ← hFdef, hidx]
+      simp only [Option.map_some]
+      rw [encodeBlock_eq_ofDigits, hwb, List.map_ofFn]
+      rfl
+    rw [typeDecoder, hdec]
+    exact Part.mem_some _
+  · have hi : index < (typeClassByCount (n := n) (typeCount b)).toFinite.toFinset.card :=
+      lt_of_lt_of_le hidxlt hFle
+    calc typeCode + K * index < K * (index + 1) := by rw [Nat.mul_succ]; omega
+      _ ≤ K * (typeClassByCount (n := n) (typeCount b)).toFinite.toFinset.card :=
+          Nat.mul_le_mul le_rfl hi
+
+/-- The `O(log n)` framing overhead is eventually dominated by any positive linear
+slack `n · δ`, since `logb 2 (n + 1) = o(n)`. -/
+theorem framing_overhead_eventually (c₀ D : ℝ) {δ : ℝ} (hδ : 0 < δ) :
+    ∀ᶠ n : ℕ in atTop, c₀ + D * Real.logb 2 ((n : ℝ) + 1) ≤ (n : ℝ) * δ := by
+  have hshift : Tendsto (fun n : ℕ ↦ (n : ℝ) + 1) atTop atTop :=
+    tendsto_natCast_atTop_atTop.atTop_add tendsto_const_nhds
+  have hlog : Tendsto (fun n : ℕ ↦ Real.log ((n : ℝ) + 1) / n) atTop (𝓝 0) := by
+    have hbase : Tendsto (fun x : ℝ ↦ Real.log x / x) atTop (𝓝 0) :=
+      Real.isLittleO_log_id_atTop.tendsto_div_nhds_zero
+    have hcomp : Tendsto (fun n : ℕ ↦ Real.log ((n : ℝ) + 1) / ((n : ℝ) + 1)) atTop (𝓝 0) :=
+      hbase.comp hshift
+    have hratio : Tendsto (fun n : ℕ ↦ ((n : ℝ) + 1) / n) atTop (𝓝 1) := by
+      have h1 : Tendsto (fun n : ℕ ↦ (1 : ℝ) + 1 / (n : ℝ)) atTop (𝓝 1) := by
+        simpa using (tendsto_const_nhds (x := (1 : ℝ))).add tendsto_one_div_atTop_nhds_zero_nat
+      refine h1.congr' ?_
+      filter_upwards [eventually_gt_atTop 0] with n hn
+      have hn0 : (n : ℝ) ≠ 0 := by exact_mod_cast hn.ne'
+      field_simp
+    have hmul := hcomp.mul hratio
+    rw [mul_one] at hmul
+    refine hmul.congr' ?_
+    filter_upwards [eventually_gt_atTop 0] with n hn
+    have hn0 : (n : ℝ) ≠ 0 := by exact_mod_cast hn.ne'
+    have hn1 : (n : ℝ) + 1 ≠ 0 := by positivity
+    field_simp
+  have hlogb : Tendsto (fun n : ℕ ↦ D * Real.logb 2 ((n : ℝ) + 1) / n) atTop (𝓝 0) := by
+    have h := (tendsto_const_nhds (x := D / Real.log 2)).mul hlog
+    rw [mul_zero] at h
+    refine h.congr fun n ↦ ?_
+    rw [Real.logb]; ring
+  have hz : Tendsto (fun n : ℕ ↦ (c₀ + D * Real.logb 2 ((n : ℝ) + 1)) / n) atTop (𝓝 0) := by
+    have h := (tendsto_const_div_atTop_nhds_zero_nat c₀).add hlogb
+    rw [add_zero] at h
+    refine h.congr fun n ↦ ?_
+    rw [add_div]
+  have hev := hz.eventually (eventually_lt_nhds hδ)
+  filter_upwards [hev, eventually_gt_atTop 0] with n hlt hn
+  have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
+  rw [div_lt_iff₀ hnpos] at hlt
+  linarith [hlt, mul_comm δ (n : ℝ)]
+
+/-- On the strongly-typical set, the empirical entropy of a block's type is bounded
+above by the true entropy plus the linear typicality slack `ε · L`. -/
+theorem entropyByCount_le_of_strongTypical
+    (hXs : ∀ i, Measurable (Xs i))
+    {n : ℕ} (hn : 0 < n) {ε : ℝ} (x : Fin n → α)
+    (hx : x ∈ stronglyTypicalSet μ Xs n ε)
+    (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a}) :
+    entropyByCount (typeCount x) n ≤ entropy μ (Xs 0) + ε * logSumAbs μ Xs := by
+  have hn_pos : (0 : ℝ) < n := by exact_mod_cast hn
+  have hn_ne : (n : ℝ) ≠ 0 := hn_pos.ne'
+  haveI : IsProbabilityMeasure (μ.map (Xs 0)) :=
+    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+  have hqX_sum_one : (∑ a : α, (μ.map (Xs 0)).real {a}) = 1 :=
+    sum_measureReal_singleton_eq_one (μ.map (Xs 0))
+  have hT_sum : (∑ a : α, typeCount x a) = n := sum_typeCount x
+  exact conditionalKL_HXemp_le μ Xs hXs hn_pos hn hn_ne x hx
+    (fun a ↦ (μ.map (Xs 0)).real {a}) (fun _ ↦ rfl) hpos hqX_sum_one
+    (typeCount x) (fun _ ↦ rfl) hT_sum
+    (entropy μ (Xs 0)) (logSumAbs μ Xs) (entropyByCount (typeCount x) n) rfl rfl rfl
+
 /-- Per-string upper bound on the strongly typical set (method of types): a typical
 block is described by its type descriptor together with its index inside the type
 class, costing `n · (H + ε·L)/log 2 + o(n)` bits. The `o(n)` overhead (the type
 descriptor `|α|·log n` and the pairing/framing constant) is absorbed as an
-arbitrarily small linear slack `n · δ`, valid for all large `n`.
-@residual(plan:kolmogorov-p4-upper) -/
+arbitrarily small linear slack `n · δ`, valid for all large `n`. -/
 theorem condComplexity_block_typical_le
     (hXs : ∀ i, Measurable (Xs i))
     (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a})
@@ -135,7 +430,77 @@ theorem condComplexity_block_typical_le
     ∀ᶠ n : ℕ in atTop, ∀ b : Fin n → α, b ∈ stronglyTypicalSet μ Xs n ε →
       (condComplexity (encodeBlock n b) n : ℝ)
         ≤ (n : ℝ) * ((entropy μ (Xs 0) + ε * logSumAbs μ Xs) / Real.log 2) + (n : ℝ) * δ := by
-  sorry
+  obtain ⟨b_c, hb_c⟩ := invariance (typeDecoder (α := α)) typeDecoder_partrec
+  have hlog2 : (0 : ℝ) < Real.log 2 := log_two_pos
+  have hL_nn : 0 ≤ logSumAbs μ Xs := logSumAbs_nonneg μ Xs
+  have hH_nn : 0 ≤ entropy μ (Xs 0) := entropy_nonneg μ (Xs 0) (hXs 0)
+  set Hε : ℝ := entropy μ (Xs 0) + ε * logSumAbs μ Xs with hHε
+  have hHε_nn : 0 ≤ Hε := by rw [hHε]; positivity
+  filter_upwards [framing_overhead_eventually ((b_c : ℝ) + 1) (Fintype.card α) hδ,
+    eventually_gt_atTop 0] with n hover hn
+  intro b hb_typ
+  have hn_pos : (0 : ℝ) < n := by exact_mod_cast hn
+  -- The decoder witness: a program number `m` decoding `encodeBlock n b`, below `K · |T_c|`.
+  obtain ⟨m, hmem, hmlt⟩ := exists_typeDecoder_witness hn b
+  -- Complexity is bounded by the description length `natLen m` plus the invariance constant.
+  have hcc : (condComplexity (encodeBlock n b) n : ℝ) ≤ (natLen m : ℝ) + b_c := by
+    have hb := hb_c (encodeBlock n b) n (Computability.encodeNat m)
+    rw [Computability.decode_encodeNat] at hb
+    have := hb hmem
+    rw [show (Computability.encodeNat m).length = natLen m from rfl] at this
+    exact_mod_cast this
+  -- The type-class cardinality is bounded by `exp (n · Hε)`.
+  have hTc_exp : ((typeClassByCount (n := n) (typeCount b)).toFinite.toFinset.card : ℝ)
+      ≤ Real.exp ((n : ℝ) * Hε) := by
+    have hsum := sum_typeCount b
+    have hcard := typeClassByCount_card_le (typeCount b) hsum
+    rw [pow_div_prod_pow_eq_exp_n_entropyByCount (typeCount b) hsum] at hcard
+    refine hcard.trans (Real.exp_le_exp.mpr ?_)
+    exact mul_le_mul_of_nonneg_left
+      (entropyByCount_le_of_strongTypical μ Xs hXs hn b hb_typ hpos) hn_pos.le
+  -- The framing overhead and the nonnegative entropy term close the two branches.
+  have hlogb_nn : 0 ≤ Real.logb 2 ((n : ℝ) + 1) :=
+    Real.logb_nonneg (by norm_num) (by linarith)
+  have hnHε_nn : 0 ≤ (n : ℝ) * (Hε / Real.log 2) := by positivity
+  rcases Nat.eq_zero_or_pos m with hm0 | hmpos
+  · -- `m = 0`: `natLen 0 = 0`, absorbed entirely into the overhead.
+    have hnatm0 : natLen m = 0 := by
+      rw [hm0]; exact Nat.le_zero.mp (natLen_le_of_lt_two_pow 0 0 (by norm_num))
+    have hnat0 : (natLen m : ℝ) = 0 := by rw [hnatm0]; norm_num
+    have hcardα_nn : (0 : ℝ) ≤ (Fintype.card α : ℝ) * Real.logb 2 ((n : ℝ) + 1) := by positivity
+    rw [hnat0] at hcc
+    linarith [hover, hcc, hnHε_nn, hcardα_nn]
+  · -- `m ≥ 1`: bound `natLen m ≤ 1 + logb 2 m` and `logb 2 m ≤ card α · logb 2 (n+1) + n·Hε/log 2`.
+    have hm1 : (1 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hmpos
+    have hmpR : (0 : ℝ) < (m : ℝ) := by linarith
+    -- `natLen m ≤ 1 + logb 2 m` via `2 ^ natLen m ≤ 2 m`.
+    have hnatle : (natLen m : ℝ) ≤ 1 + Real.logb 2 m := by
+      have hpow2 : ((2 : ℝ) ^ natLen m) ≤ 2 * m := by exact_mod_cast natLen_le m hmpos
+      have hlog := Real.log_le_log (by positivity) hpow2
+      rw [Real.log_pow, Real.log_mul (by norm_num) (by positivity)] at hlog
+      have key : (natLen m : ℝ) * Real.log 2 ≤ (1 + Real.log m / Real.log 2) * Real.log 2 := by
+        rw [add_mul, one_mul, div_mul_cancel₀ _ hlog2.ne']
+        linarith [hlog]
+      rw [Real.logb]
+      exact le_of_mul_le_mul_right key hlog2
+    -- `logb 2 m ≤ card α · logb 2 (n+1) + n·Hε/log 2` via `m < K · |T_c| ≤ K · exp (n Hε)`.
+    have hmltR : (m : ℝ)
+        < ((n : ℝ) + 1) ^ Fintype.card α
+          * ((typeClassByCount (n := n) (typeCount b)).toFinite.toFinset.card : ℝ) := by
+      exact_mod_cast hmlt
+    have hKr_nn : (0 : ℝ) ≤ ((n : ℝ) + 1) ^ Fintype.card α := by positivity
+    have hmexp : (m : ℝ) < ((n : ℝ) + 1) ^ Fintype.card α * Real.exp ((n : ℝ) * Hε) :=
+      lt_of_lt_of_le hmltR (mul_le_mul_of_nonneg_left hTc_exp hKr_nn)
+    have hlogbm : Real.logb 2 m
+        ≤ (Fintype.card α : ℝ) * Real.logb 2 ((n : ℝ) + 1) + (n : ℝ) * Hε / Real.log 2 := by
+      have h1 := Real.logb_le_logb_of_le (by norm_num : (1 : ℝ) < 2) hmpR hmexp.le
+      rw [Real.logb_mul (by positivity) (Real.exp_ne_zero _), Real.logb_pow] at h1
+      have hexp : Real.logb 2 (Real.exp ((n : ℝ) * Hε)) = (n : ℝ) * Hε / Real.log 2 := by
+        rw [Real.logb, Real.log_exp]
+      rw [hexp] at h1
+      exact h1
+    have hassoc : (n : ℝ) * Hε / Real.log 2 = (n : ℝ) * (Hε / Real.log 2) := mul_div_assoc _ _ _
+    linarith [hcc, hnatle, hlogbm, hover, hassoc]
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- Uniform per-string upper bound: every length-`n` block is describable by echoing
@@ -295,26 +660,6 @@ theorem kolmogorov_entropy_rate_upper
     _ = entropy μ (Xs 0) / Real.log 2 + ε₁ * logSumAbs μ Xs / Real.log 2 + δ
         + C * ((n : ℝ) + 1) / n * μ.real Sᶜ := by rw [add_div]
     _ ≤ entropy μ (Xs 0) / Real.log 2 + ε := by rw [hδ_def]; linarith [hε₁L, hCsmall']
-
-/-- On the strongly-typical set, the empirical entropy of a block's type is bounded
-above by the true entropy plus the linear typicality slack `ε · L`. -/
-theorem entropyByCount_le_of_strongTypical
-    (hXs : ∀ i, Measurable (Xs i))
-    {n : ℕ} (hn : 0 < n) {ε : ℝ} (x : Fin n → α)
-    (hx : x ∈ stronglyTypicalSet μ Xs n ε)
-    (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a}) :
-    entropyByCount (typeCount x) n ≤ entropy μ (Xs 0) + ε * logSumAbs μ Xs := by
-  have hn_pos : (0 : ℝ) < n := by exact_mod_cast hn
-  have hn_ne : (n : ℝ) ≠ 0 := hn_pos.ne'
-  haveI : IsProbabilityMeasure (μ.map (Xs 0)) :=
-    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
-  have hqX_sum_one : (∑ a : α, (μ.map (Xs 0)).real {a}) = 1 :=
-    sum_measureReal_singleton_eq_one (μ.map (Xs 0))
-  have hT_sum : (∑ a : α, typeCount x a) = n := sum_typeCount x
-  exact conditionalKL_HXemp_le μ Xs hXs hn_pos hn hn_ne x hx
-    (fun a ↦ (μ.map (Xs 0)).real {a}) (fun _ ↦ rfl) hpos hqX_sum_one
-    (typeCount x) (fun _ ↦ rfl) hT_sum
-    (entropy μ (Xs 0)) (logSumAbs μ Xs) (entropyByCount (typeCount x) n) rfl rfl rfl
 
 /-! ### Lower-half building blocks -/
 
