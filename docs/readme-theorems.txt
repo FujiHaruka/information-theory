@@ -85,6 +85,10 @@ expFamily_maximizes_entropy_of_KKT
 lz78_asymptotic_optimality_with_greedy
 arithmeticCode_expected_length_bounds
 
+@ 14 | Kolmogorov complexity
+kolmogorov_entropy_rate | Kolmogorov complexity converges to the entropy rate, (1/n)·E[C(Xⁿ|n)] → H(X)/log 2 for an i.i.d. source (Cover–Thomas Thm 14.3.1)
+condComplexity_not_computable | Kolmogorov complexity is not a computable function, for any fixed side information (Cover–Thomas Thm 14.6)
+
 @ 15 | Distributed source coding
 slepian_wolf_full_rate_region_achievability
 wyner_ziv_achievability | Wyner–Ziv lossy source coding with decoder side information, achievability (Cover–Thomas Thm 15.9.1)
