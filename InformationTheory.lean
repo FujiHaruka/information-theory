@@ -122,6 +122,7 @@ import InformationTheory.Shannon.Kolmogorov.Invariance
 import InformationTheory.Shannon.Kolmogorov.Counting
 import InformationTheory.Shannon.Kolmogorov.EntropyRate
 import InformationTheory.Shannon.Kolmogorov.EntropyRateUpper
+import InformationTheory.Shannon.Kolmogorov.Incompressible
 import InformationTheory.Shannon.Kolmogorov.Noncomputable
 import InformationTheory.Shannon.Sanov.RoundedTypeSequence
 import InformationTheory.Shannon.Sanov.MultinomialLowerBound
