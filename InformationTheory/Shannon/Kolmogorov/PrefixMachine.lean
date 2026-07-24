@@ -34,6 +34,8 @@ Kraft-McMillan inequality applies to each of its finite subsets.
   uniquely decodable, bridging to `kraft_mcmillan_inequality`.
 * `prefixUniversalEval_kraft` — every finite set of valid programs satisfies the
   Kraft bound `∑ 2^{-|p|} ≤ 1`.
+* `tsum_inv_two_pow_length_le_one` — the infinite form of the Kraft bound, for
+  any set of valid programs.
 -/
 
 open scoped ENNReal
@@ -215,6 +217,36 @@ theorem prefixUniversalEval_kraft (u : Finset (List Bool))
   have hUD_u : UniquelyDecodable (↑u : Set (List Bool)) := uniquelyDecodable_mono hUD_dom hsub
   have hk := kraft_mcmillan_inequality (α := Bool) (S := u) hUD_u
   simpa [Fintype.card_bool] using hk
+
+private theorem inv_two_pow_eq_ofReal (n : ℕ) :
+    (2 : ℝ≥0∞)⁻¹ ^ n = ENNReal.ofReal ((1 / 2 : ℝ) ^ n) := by
+  rw [ENNReal.ofReal_pow (by norm_num), one_div, ENNReal.ofReal_inv_of_pos (by norm_num)]
+  norm_num
+
+/-- The infinite Kraft bound: any set of valid programs of the self-delimiting
+machine, cut out by a predicate `P`, has total weight `∑ 2^{-|p|} ≤ 1`. Every
+finite subsum is a Kraft sum, and `ℝ≥0∞`-valued sums are suprema of those. -/
+theorem tsum_inv_two_pow_length_le_one {P : List Bool → Prop}
+    (hP : ∀ p, P p → (prefixUniversalEval p).Dom) :
+    ∑' p : { p : List Bool // P p }, (2 : ℝ≥0∞)⁻¹ ^ (p : List Bool).length ≤ 1 := by
+  classical
+  rw [ENNReal.tsum_eq_iSup_sum]
+  refine iSup_le fun s ↦ ?_
+  have hinj : Set.InjOn (Subtype.val : { p : List Bool // P p } → List Bool) ↑s :=
+    fun a _ b _ hab ↦ Subtype.ext hab
+  have hdom : ∀ q ∈ s.image (Subtype.val : { p : List Bool // P p } → List Bool),
+      (prefixUniversalEval q).Dom := by
+    intro q hq
+    obtain ⟨r, _, rfl⟩ := Finset.mem_image.mp hq
+    exact hP _ r.2
+  calc ∑ p ∈ s, (2 : ℝ≥0∞)⁻¹ ^ (p : List Bool).length
+      = ∑ q ∈ s.image Subtype.val, (2 : ℝ≥0∞)⁻¹ ^ q.length :=
+        (Finset.sum_image (f := fun q : List Bool ↦ (2 : ℝ≥0∞)⁻¹ ^ q.length) hinj).symm
+    _ = ∑ q ∈ s.image Subtype.val, ENNReal.ofReal ((1 / 2 : ℝ) ^ q.length) :=
+        Finset.sum_congr rfl fun q _ ↦ inv_two_pow_eq_ofReal q.length
+    _ = ENNReal.ofReal (∑ q ∈ s.image Subtype.val, (1 / 2 : ℝ) ^ q.length) :=
+        (ENNReal.ofReal_sum_of_nonneg fun q _ ↦ by positivity).symm
+    _ ≤ 1 := ENNReal.ofReal_le_one.mpr (prefixUniversalEval_kraft _ hdom)
 
 /-- Prefix Kolmogorov complexity `K(x)`: the length of the shortest
 self-delimiting program producing `x`. The literal echo makes the set nonempty,
