@@ -23,34 +23,7 @@ two facts collide: the searched string has complexity at least `k` but at most
 namespace InformationTheory.Kolmogorov
 
 open Nat.Partrec Nat.Partrec.Code
-open Computability (encodeNat decodeNat encodeNum encodePosNum)
-
-/-- Binary length is logarithmic: a positive binary numeral of bit length `ℓ` has
-value at least `2 ^ ℓ / 2`. -/
-theorem posLen_le (p : PosNum) : 2 ^ (encodePosNum p).length ≤ 2 * (p : ℕ) := by
-  induction p with
-  | one => decide
-  | bit0 q ih =>
-    have hq : 0 < (q : ℕ) := q.to_nat_pos
-    simp only [encodePosNum, List.length_cons, PosNum.cast_bit0, pow_succ]
-    omega
-  | bit1 q ih =>
-    have hq : 0 < (q : ℕ) := q.to_nat_pos
-    simp only [encodePosNum, List.length_cons, PosNum.cast_bit1, pow_succ]
-    omega
-
-theorem numLen_le (m : Num) (hm : 1 ≤ (m : ℕ)) :
-    2 ^ (encodeNum m).length ≤ 2 * (m : ℕ) := by
-  cases m with
-  | zero => simp at hm
-  | pos p =>
-    rw [Num.cast_pos]
-    exact posLen_le p
-
-theorem natLen_le (n : ℕ) (hn : 1 ≤ n) : 2 ^ natLen n ≤ 2 * n := by
-  have h := numLen_le (n : Num) (by rw [Num.to_of_nat]; exact hn)
-  rw [Num.to_of_nat] at h
-  simpa [natLen, encodeNat] using h
+open Computability (encodeNat decodeNat)
 
 theorem exists_condIncompressible (y k : ℕ) : ∃ x, k ≤ condComplexity x y := by
   by_contra h

@@ -1,6 +1,7 @@
 import Mathlib.Computability.PartrecCode
 import Mathlib.Computability.Encoding
 import Mathlib.Order.Lattice.Nat
+import Mathlib.Data.Num.Lemmas
 
 /-!
 # A length-additive universal machine for plain Kolmogorov complexity
@@ -30,7 +31,7 @@ The fixed universal machine `universalEval` parses a program in two modes:
 namespace InformationTheory.Kolmogorov
 
 open Nat.Partrec Nat.Partrec.Code
-open Computability (encodeNat decodeNat)
+open Computability (encodeNat decodeNat encodeNum encodePosNum)
 
 /-- Read a leading run of `true`s (a unary natural number) terminated by the
 first `false`, returning the count together with the remaining bits. -/
@@ -59,6 +60,41 @@ noncomputable def universalEval : List Bool → ℕ → Part ℕ
 
 /-- Bit length of `x`, the length of the echo program payload. -/
 def natLen (x : ℕ) : ℕ := (encodeNat x).length
+
+theorem posLen_le (p : PosNum) : 2 ^ (encodePosNum p).length ≤ 2 * (p : ℕ) := by
+  induction p with
+  | one => decide
+  | bit0 q ih =>
+    have hq : 0 < (q : ℕ) := q.to_nat_pos
+    simp only [encodePosNum, List.length_cons, PosNum.cast_bit0, pow_succ]
+    omega
+  | bit1 q ih =>
+    have hq : 0 < (q : ℕ) := q.to_nat_pos
+    simp only [encodePosNum, List.length_cons, PosNum.cast_bit1, pow_succ]
+    omega
+
+theorem numLen_le (m : Num) (hm : 1 ≤ (m : ℕ)) :
+    2 ^ (encodeNum m).length ≤ 2 * (m : ℕ) := by
+  cases m with
+  | zero => simp at hm
+  | pos p =>
+    rw [Num.cast_pos]
+    exact posLen_le p
+
+theorem natLen_le (n : ℕ) (hn : 1 ≤ n) : 2 ^ natLen n ≤ 2 * n := by
+  have h := numLen_le (n : Num) (by rw [Num.to_of_nat]; exact hn)
+  rw [Num.to_of_nat] at h
+  simpa [natLen, encodeNat] using h
+
+theorem natLen_le_of_lt_two_pow (x k : ℕ) (h : x < 2 ^ k) : natLen x ≤ k := by
+  rcases Nat.eq_zero_or_pos x with hx | hx
+  · subst hx; simp [natLen, encodeNat, encodeNum]
+  · have h1 := natLen_le x hx
+    have hlt : 2 ^ natLen x < 2 ^ (k + 1) := by
+      have : 2 * x < 2 ^ (k + 1) := by rw [pow_succ]; omega
+      omega
+    have := (Nat.pow_lt_pow_iff_right (by decide : (1 : ℕ) < 2)).1 hlt
+    omega
 
 /-- Conditional Kolmogorov complexity `C(x | y)`: the length of the shortest
 program that, run under condition `y`, outputs `x`. The literal mode makes the
