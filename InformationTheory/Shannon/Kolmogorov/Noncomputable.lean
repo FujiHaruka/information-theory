@@ -2,7 +2,6 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Kolmogorov.Invariance
 import InformationTheory.Shannon.Kolmogorov.Counting
 import Mathlib.Computability.Partrec
-import Mathlib.Data.Num.Lemmas
 
 /-!
 # Kolmogorov complexity is not computable
