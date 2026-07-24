@@ -94,19 +94,161 @@ theorem integrable_condComplexity_jointRV (hXs : ∀ i, Measurable (Xs i)) (n : 
   exact_mod_cast Finset.le_sup (f := fun b : Fin n → α ↦ condComplexity (encodeBlock n b) n)
     (Finset.mem_univ (jointRV Xs n ω))
 
-/-- Upper half: eventually the normalized expected complexity is within `ε` above
-`H / log 2`.
+/-- Per-string upper bound on the strongly typical set (method of types): a typical
+block is described by its type descriptor together with its index inside the type
+class, costing `n · (H + ε·L)/log 2 + o(n)` bits. The `o(n)` overhead (the type
+descriptor `|α|·log n` and the pairing/framing constant) is absorbed as an
+arbitrarily small linear slack `n · δ`, valid for all large `n`.
 @residual(plan:kolmogorov-p4-upper) -/
+theorem condComplexity_block_typical_le
+    (hXs : ∀ i, Measurable (Xs i))
+    (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a})
+    {ε : ℝ} (hε : 0 < ε) {δ : ℝ} (hδ : 0 < δ) :
+    ∀ᶠ n : ℕ in atTop, ∀ b : Fin n → α, b ∈ stronglyTypicalSet μ Xs n ε →
+      (condComplexity (encodeBlock n b) n : ℝ)
+        ≤ (n : ℝ) * ((entropy μ (Xs 0) + ε * logSumAbs μ Xs) / Real.log 2) + (n : ℝ) * δ := by
+  sorry
+
+/-- Uniform per-string upper bound: every length-`n` block is describable by its type
+and its index inside the full type class, costing `O(n)` bits regardless of
+typicality (the constant absorbs the crude `log₂|α|` per-symbol rate).
+@residual(plan:kolmogorov-p4-upper) -/
+theorem condComplexity_block_uniform_le :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ (n : ℕ) (b : Fin n → α),
+      (condComplexity (encodeBlock n b) n : ℝ) ≤ C * ((n : ℝ) + 1) := by
+  sorry
+
+/-- Upper half: eventually the normalized expected complexity is within `ε` above
+`H / log 2`. Method-of-types assembly: split the integral at the strongly typical
+set, bound the typical part by `condComplexity_block_typical_le` and the atypical
+part by `condComplexity_block_uniform_le`, then let the atypical mass vanish. The
+body is unconditional; the two per-string bounds it consumes carry the remaining
+`plan:kolmogorov-p4-upper` sorries. -/
 theorem kolmogorov_entropy_rate_upper
     (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i ↦ Xs i) μ)
+    (_hindep_full : iIndepFun (fun i ↦ Xs i) μ)
     (hindep_pair : Pairwise fun i j ↦ Xs i ⟂ᵢ[μ] Xs j)
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a}) :
     ∀ ε : ℝ, 0 < ε → ∀ᶠ n : ℕ in atTop,
       (1 / (n : ℝ)) * ∫ ω, (condComplexity (encodeBlock n (jointRV Xs n ω)) n : ℝ) ∂μ
         ≤ entropy μ (Xs 0) / Real.log 2 + ε := by
-  sorry
+  intro ε hε
+  have hlog2 : (0 : ℝ) < Real.log 2 := log_two_pos
+  have hL_nn : 0 ≤ logSumAbs μ Xs := logSumAbs_nonneg μ Xs
+  have hH_nn : 0 ≤ entropy μ (Xs 0) := entropy_nonneg μ (Xs 0) (hXs 0)
+  -- Typicality slack `ε₁` and linear-overhead slack `δ`, each contributing `≤ ε/3`.
+  set ε₁ : ℝ := ε * Real.log 2 / (3 * (logSumAbs μ Xs + 1)) with hε₁_def
+  have hε₁_pos : 0 < ε₁ := by rw [hε₁_def]; positivity
+  set δ : ℝ := ε / 3 with hδ_def
+  have hδ_pos : 0 < δ := by positivity
+  have hε₁L : ε₁ * logSumAbs μ Xs / Real.log 2 ≤ ε / 3 := by
+    have hcancel : ε₁ * logSumAbs μ Xs / Real.log 2
+        = ε * logSumAbs μ Xs / (3 * (logSumAbs μ Xs + 1)) := by
+      rw [hε₁_def]; field_simp
+    rw [hcancel, div_le_div_iff₀ (by positivity) (by norm_num)]
+    nlinarith [mul_nonneg hε.le hL_nn, hε.le]
+  -- Uniform per-string bound.
+  obtain ⟨C, hC_nn, hCbound⟩ := condComplexity_block_uniform_le (α := α)
+  -- Typical per-string bound (eventually in `n`).
+  have h5 := condComplexity_block_typical_le μ Xs hXs hpos hε₁_pos hδ_pos
+  -- Atypical mass tends to `0`.
+  have hmass_real : Tendsto
+      (fun n : ℕ ↦ μ.real {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε₁}) atTop (𝓝 1) := by
+    have h1 := stronglyTypicalSet_prob_tendsto_one μ Xs hXs hindep_pair hident hε₁_pos
+    have h2 := (ENNReal.tendsto_toReal (by simp : (1 : ENNReal) ≠ ⊤)).comp h1
+    simpa [Function.comp_def, measureReal_def] using h2
+  have hatyp : Tendsto
+      (fun n : ℕ ↦ μ.real {ω | jointRV Xs n ω ∉ stronglyTypicalSet μ Xs n ε₁}) atTop (𝓝 0) := by
+    have hcompl : ∀ n : ℕ, μ.real {ω | jointRV Xs n ω ∉ stronglyTypicalSet μ Xs n ε₁}
+        = 1 - μ.real {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε₁} := by
+      intro n
+      have hmeasT : MeasurableSet {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε₁} :=
+        (measurable_jointRV Xs hXs n) (measurableSet_stronglyTypicalSet μ Xs n ε₁)
+      have hc : {ω | jointRV Xs n ω ∉ stronglyTypicalSet μ Xs n ε₁}
+          = {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε₁}ᶜ := by
+        ext ω; simp only [Set.mem_setOf_eq, Set.mem_compl_iff]
+      rw [hc, measureReal_compl hmeasT, probReal_univ]
+    have h2 := (tendsto_const_nhds (x := (1 : ℝ))).sub hmass_real
+    simp only [sub_self] at h2
+    exact h2.congr fun n ↦ (hcompl n).symm
+  -- The atypical contribution to the normalized integral vanishes.
+  have hCoef : Tendsto (fun n : ℕ ↦ C * ((n : ℝ) + 1) / n) atTop (𝓝 C) := by
+    have h1 : Tendsto (fun n : ℕ ↦ (1 : ℝ) + 1 / (n : ℝ)) atTop (𝓝 1) := by
+      simpa using (tendsto_const_nhds (x := (1 : ℝ))).add tendsto_one_div_atTop_nhds_zero_nat
+    have h2 : Tendsto (fun n : ℕ ↦ C * (1 + 1 / (n : ℝ))) atTop (𝓝 (C * 1)) :=
+      tendsto_const_nhds.mul h1
+    rw [mul_one] at h2
+    refine h2.congr' ?_
+    filter_upwards [eventually_gt_atTop 0] with n hn
+    have hn0 : (n : ℝ) ≠ 0 := by exact_mod_cast hn.ne'
+    field_simp
+  have hCterm : Tendsto
+      (fun n : ℕ ↦ C * ((n : ℝ) + 1) / n *
+        μ.real {ω | jointRV Xs n ω ∉ stronglyTypicalSet μ Xs n ε₁}) atTop (𝓝 0) := by
+    have := hCoef.mul hatyp
+    simpa using this
+  -- Assemble the eventual bound.
+  filter_upwards [h5, eventually_gt_atTop 0,
+    hCterm.eventually (eventually_lt_nhds (show (0 : ℝ) < ε / 3 by positivity))]
+    with n hn5 hn hCsmall
+  have hnR : (0 : ℝ) < n := by exact_mod_cast hn
+  have hn0 : (n : ℝ) ≠ 0 := hnR.ne'
+  set S : Set Ω := {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε₁} with hS_def
+  have hS_meas : MeasurableSet S :=
+    (measurable_jointRV Xs hXs n) (measurableSet_stronglyTypicalSet μ Xs n ε₁)
+  have hScompl : Sᶜ = {ω | jointRV Xs n ω ∉ stronglyTypicalSet μ Xs n ε₁} := by
+    rw [hS_def]; ext ω; simp only [Set.mem_compl_iff, Set.mem_setOf_eq]
+  set f : Ω → ℝ := fun ω ↦ (condComplexity (encodeBlock n (jointRV Xs n ω)) n : ℝ) with hf_def
+  have hf_int : Integrable f μ := integrable_condComplexity_jointRV μ Xs hXs n
+  set Bt : ℝ := (n : ℝ) * ((entropy μ (Xs 0) + ε₁ * logSumAbs μ Xs) / Real.log 2)
+    + (n : ℝ) * δ with hBt_def
+  have hBt_nn : 0 ≤ Bt := by
+    rw [hBt_def]
+    refine add_nonneg (mul_nonneg (by positivity) (div_nonneg (add_nonneg hH_nn ?_) hlog2.le))
+      (by positivity)
+    exact mul_nonneg hε₁_pos.le hL_nn
+  set Bu : ℝ := C * ((n : ℝ) + 1) with hBu_def
+  -- Split the integral at the typical set.
+  have hsplit : ∫ ω, f ω ∂μ = ∫ ω in S, f ω ∂μ + ∫ ω in Sᶜ, f ω ∂μ :=
+    (integral_add_compl hS_meas hf_int).symm
+  have hSle1 : μ.real S ≤ 1 := by
+    calc μ.real S ≤ μ.real Set.univ := measureReal_mono (Set.subset_univ S) (measure_ne_top μ _)
+      _ = 1 := probReal_univ
+  -- Typical part `≤ Bt`.
+  have htyp_int : ∫ ω in S, f ω ∂μ ≤ Bt := by
+    calc ∫ ω in S, f ω ∂μ ≤ ∫ _ω in S, Bt ∂μ := by
+          refine setIntegral_mono_on hf_int.integrableOn
+            (integrableOn_const (measure_ne_top μ S)) hS_meas ?_
+          intro ω hω; exact hn5 (jointRV Xs n ω) hω
+      _ = μ.real S • Bt := by rw [setIntegral_const, measureReal_def]
+      _ = μ.real S * Bt := by rw [smul_eq_mul]
+      _ ≤ 1 * Bt := mul_le_mul_of_nonneg_right hSle1 hBt_nn
+      _ = Bt := one_mul Bt
+  -- Atypical part `≤ Bu · (atypical mass)`.
+  have hatyp_int : ∫ ω in Sᶜ, f ω ∂μ ≤ Bu * μ.real Sᶜ := by
+    calc ∫ ω in Sᶜ, f ω ∂μ ≤ ∫ _ω in Sᶜ, Bu ∂μ := by
+          refine setIntegral_mono_on hf_int.integrableOn
+            (integrableOn_const (measure_ne_top μ Sᶜ)) hS_meas.compl ?_
+          intro ω _; exact hCbound n (jointRV Xs n ω)
+      _ = μ.real Sᶜ • Bu := by rw [setIntegral_const, measureReal_def]
+      _ = Bu * μ.real Sᶜ := by rw [smul_eq_mul, mul_comm]
+  have hInt_le : ∫ ω, f ω ∂μ ≤ Bt + Bu * μ.real Sᶜ := by
+    rw [hsplit]; exact add_le_add htyp_int hatyp_int
+  -- Normalize and bound each slack by `ε/3`.
+  have hval : (1 / (n : ℝ)) * (Bt + Bu * μ.real Sᶜ)
+      = (entropy μ (Xs 0) + ε₁ * logSumAbs μ Xs) / Real.log 2 + δ
+        + C * ((n : ℝ) + 1) / n * μ.real Sᶜ := by
+    rw [hBt_def, hBu_def]; field_simp
+  have hCsmall' : C * ((n : ℝ) + 1) / n * μ.real Sᶜ < ε / 3 := by rw [hScompl]; exact hCsmall
+  calc (1 / (n : ℝ)) * ∫ ω, f ω ∂μ
+      ≤ (1 / (n : ℝ)) * (Bt + Bu * μ.real Sᶜ) :=
+        mul_le_mul_of_nonneg_left hInt_le (by positivity)
+    _ = (entropy μ (Xs 0) + ε₁ * logSumAbs μ Xs) / Real.log 2 + δ
+        + C * ((n : ℝ) + 1) / n * μ.real Sᶜ := hval
+    _ = entropy μ (Xs 0) / Real.log 2 + ε₁ * logSumAbs μ Xs / Real.log 2 + δ
+        + C * ((n : ℝ) + 1) / n * μ.real Sᶜ := by rw [add_div]
+    _ ≤ entropy μ (Xs 0) / Real.log 2 + ε := by rw [hδ_def]; linarith [hε₁L, hCsmall']
 
 /-- On the strongly-typical set, the empirical entropy of a block's type is bounded
 above by the true entropy plus the linear typicality slack `ε · L`. -/
