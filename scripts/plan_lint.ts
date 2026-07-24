@@ -183,7 +183,9 @@ async function lintPlan(
   // (a) file:line 照合 + 行ドリフト
   const refFiles = new Set<string>();
   const seen = new Set<string>();
-  for (const m of text.matchAll(/InformationTheory\/[\w/]+\.lean:(\d+)/g)) {
+  // negative lookbehind excludes Mathlib's own InformationTheory subtree
+  // (Mathlib/InformationTheory/…) from the project code-root check — the names collide.
+  for (const m of text.matchAll(/(?<!Mathlib\/)InformationTheory\/[\w/]+\.lean:(\d+)/g)) {
     const full = m[0];
     const file = full.split(":")[0];
     refFiles.add(file);
