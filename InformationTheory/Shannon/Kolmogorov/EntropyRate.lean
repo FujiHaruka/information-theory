@@ -2,8 +2,9 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass.Concentration
 import InformationTheory.Shannon.Kolmogorov.Counting
 import InformationTheory.Shannon.StrongTypicality
-import Mathlib.Logic.Encodable.Pi
-import Mathlib.Logic.Equiv.List
+import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Data.Fintype.EquivFin
+import Mathlib.Data.Nat.Digits.Defs
 import Mathlib.Topology.Order.Basic
 
 /-!
@@ -38,19 +39,46 @@ open InformationTheory.Shannon
 open MeasureTheory ProbabilityTheory Filter
 open scoped Topology
 
-attribute [local instance] Fintype.toEncodable
+theorem ofDigits_ofFn (b : ℕ) {m : ℕ} (f : Fin m → ℕ) :
+    Nat.ofDigits b (List.ofFn f) = ∑ i : Fin m, f i * b ^ (i : ℕ) := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+    rw [List.ofFn_succ, Nat.ofDigits_cons, ih (fun i ↦ f i.succ), Fin.sum_univ_succ]
+    simp only [Fin.val_zero, pow_zero, mul_one, Fin.val_succ, pow_succ]
+    congr 1
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun i _ ↦ by ring
 
 section Block
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-- Injective encoding of a length-`m` block `Fin m → α` into a natural number,
-using the `Encodable` structure a finite type carries. -/
-noncomputable def encodeBlock (m : ℕ) (x : Fin m → α) : ℕ := Encodable.encode x
+/-- Injective, length-efficient encoding of a length-`m` block `Fin m → α` into a
+natural number: the little-endian base-`Fintype.card α` numeral whose `i`-th digit
+is the index of `x i` under `Fintype.equivFin`. Its value is below `card α ^ m`, so
+its bit length is `m · log₂ (card α) + O(1)`. -/
+noncomputable def encodeBlock (m : ℕ) (x : Fin m → α) : ℕ :=
+  (finFunctionFinEquiv fun i ↦ Fintype.equivFin α (x i)).val
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-theorem encodeBlock_injective (m : ℕ) : Function.Injective (encodeBlock (α := α) m) :=
-  fun _ _ h ↦ Encodable.encode_injective h
+theorem encodeBlock_injective (m : ℕ) : Function.Injective (encodeBlock (α := α) m) := by
+  intro x y h
+  simp only [encodeBlock] at h
+  have h2 := finFunctionFinEquiv.injective (Fin.val_injective h)
+  funext i
+  exact (Fintype.equivFin α).injective (congrFun h2 i)
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+theorem encodeBlock_lt (m : ℕ) (x : Fin m → α) :
+    encodeBlock (α := α) m x < Fintype.card α ^ m :=
+  (finFunctionFinEquiv fun i ↦ Fintype.equivFin α (x i)).isLt
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+theorem encodeBlock_eq_ofDigits (m : ℕ) (x : Fin m → α) :
+    encodeBlock (α := α) m x
+      = Nat.ofDigits (Fintype.card α) (List.ofFn fun i ↦ (Fintype.equivFin α (x i)).val) := by
+  rw [ofDigits_ofFn, encodeBlock, finFunctionFinEquiv_apply]
 
 end Block
 
