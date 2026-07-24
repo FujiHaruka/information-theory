@@ -159,12 +159,10 @@ theorem integrable_condComplexity_jointRV (hXs : ∀ i, Measurable (Xs i)) (n : 
     (Finset.mem_univ (jointRV Xs n ω))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- Every letter of the finite alphabet occurs in the decoder alphabet. -/
 theorem mem_decoderAlphabet (a : α) : a ∈ decoderAlphabet (α := α) :=
   (Finset.mem_toList).mpr (Finset.mem_univ a)
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- The decoder alphabet lists exactly `card α` letters. -/
 theorem length_decoderAlphabet : (decoderAlphabet (α := α)).length = Fintype.card α := by
   rw [decoderAlphabet, Finset.length_toList, Finset.card_univ]
 
@@ -174,7 +172,6 @@ theorem enumWords_succ (n : ℕ) :
       = (enumWords n).flatMap fun w ↦ (decoderAlphabet : List α).map fun a ↦ a :: w := rfl
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- A word belongs to the length-`n` enumeration iff it has length `n`. -/
 theorem mem_enumWords_iff (n : ℕ) (w : List α) : w ∈ enumWords n ↔ w.length = n := by
   induction n generalizing w with
   | zero =>
@@ -197,7 +194,6 @@ theorem mem_enumWords_iff (n : ℕ) (w : List α) : w ∈ enumWords n ↔ w.leng
       exact ⟨a, mem_decoderAlphabet a, rfl⟩
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- The length-`n` enumeration has no repeats. -/
 theorem enumWords_nodup (n : ℕ) : (enumWords (α := α) n).Nodup := by
   induction n with
   | zero => change ([([] : List α)]).Nodup; simp
@@ -215,12 +211,10 @@ theorem enumWords_nodup (n : ℕ) : (enumWords (α := α) n).Nodup := by
       exact hne (by injection ha' with _ hww; exact hww.symm)
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- The occurrence signature of a word has one entry per letter. -/
 theorem length_typeSig (w : List α) : (typeSig w).length = Fintype.card α := by
   rw [typeSig, List.length_map, length_decoderAlphabet]
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- Every occurrence count of a length-`n` word is below `n + 1`. -/
 theorem typeSig_lt {n : ℕ} {w : List α} (hw : w.length = n) : ∀ d ∈ typeSig w, d < n + 1 := by
   intro d hd
   rw [typeSig, List.mem_map] at hd
@@ -236,7 +230,6 @@ theorem typeCode_lt {n : ℕ} (hn : 0 < n) {w : List α} (hw : w.length = n) :
   rwa [length_typeSig] at h
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- The `a`-occurrence count of `List.ofFn x` equals `typeCount x a`. -/
 theorem typeCount_filter_ofFn {n : ℕ} (x : Fin n → α) (a : α) :
     ((List.ofFn x).filter (fun c ↦ c = a)).length = typeCount x a := by
   rw [typeCount, List.ofFn_eq_map, ← List.countP_eq_length_filter, List.countP_map,
@@ -248,7 +241,6 @@ theorem typeCount_filter_ofFn {n : ℕ} (x : Fin n → α) (a : α) :
   simp [Function.comp, decide_eq_true_eq]
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- The signature of `List.ofFn x` reads off the letter counts of `x`. -/
 theorem typeSig_ofFn {n : ℕ} (x : Fin n → α) :
     typeSig (List.ofFn x) = decoderAlphabet.map (fun a ↦ typeCount x a) := by
   rw [typeSig]
@@ -261,7 +253,6 @@ noncomputable def toBlock (n : ℕ) (w : List α) : Fin n → α :=
   fun i ↦ w.getD (i : ℕ) (Classical.arbitrary α)
 
 omit [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- On length-`n` words, `toBlock` inverts `List.ofFn`. -/
 theorem ofFn_toBlock {n : ℕ} {w : List α} (hw : w.length = n) :
     List.ofFn (toBlock n w) = w := by
   apply List.ext_getElem
@@ -317,7 +308,7 @@ omit [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- The block encoder is matched by the type-class decoder at an index below the packed
 bound `K · |T_c|`: there is a program number `m` decoding to `encodeBlock n b` whose value
 is below `(n+1) ^ card α` times the type-class cardinality. -/
-theorem exists_typeDecoder_witness {n : ℕ} (hn : 0 < n) (b : Fin n → α) :
+theorem exists_mem_typeDecoder_lt {n : ℕ} (hn : 0 < n) (b : Fin n → α) :
     ∃ m : ℕ, encodeBlock n b ∈ typeDecoder (α := α) m n ∧
       m < (n + 1) ^ Fintype.card α
         * (typeClassByCount (n := n) (typeCount b)).toFinite.toFinset.card := by
@@ -442,7 +433,7 @@ theorem condComplexity_block_typical_le
   intro b hb_typ
   have hn_pos : (0 : ℝ) < n := by exact_mod_cast hn
   -- The decoder witness: a program number `m` decoding `encodeBlock n b`, below `K · |T_c|`.
-  obtain ⟨m, hmem, hmlt⟩ := exists_typeDecoder_witness hn b
+  obtain ⟨m, hmem, hmlt⟩ := exists_mem_typeDecoder_lt hn b
   -- Complexity is bounded by the description length `natLen m` plus the invariance constant.
   have hcc : (condComplexity (encodeBlock n b) n : ℝ) ≤ (natLen m : ℝ) + b_c := by
     have hb := hb_c (encodeBlock n b) n (Computability.encodeNat m)

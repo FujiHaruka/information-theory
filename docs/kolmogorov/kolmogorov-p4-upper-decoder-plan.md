@@ -21,7 +21,7 @@ load-bearing hyp なし)。上界 crux (method-of-types decoder) の再アーキ
   sorryAx-free `2e0d7138`)。honesty-auditor all-OK (proof-done 独立検証、`@audit:ok` 付与) + style-auditor PASS。
 
 **建てた helper 群** (再導出可、すべて `EntropyRate.lean` 在、詳細は git が持つ): `ofDigits_inj` /
-`exists_typeDecoder_witness` (matching) / `filter_typeSig_length_le` (型クラス card 上界) /
+`exists_mem_typeDecoder_lt` (matching) / `filter_typeSig_length_le` (型クラス card 上界) /
 `framing_overhead_eventually` (K + b_const + `|T_c|+1` の O(log n) overhead を n·δ に吸収) 等。
 
 ## ゴール / Approach (達成済)
@@ -41,11 +41,14 @@ Kolmogorov decoder を「usable asset」と認める前に **rate/length-budget 
 div/mod packing に再設計)。plan/inventory/proof-pivot-advisor が旧 #4 を「proof-done」と祝ったのは `Partrec₂`
 としては正しいが、その認証は target rate 達成を保証しない。
 
-## follow-up (flag-only、任意、proof-done 非阻害)
+## follow-up (flag-only cosmetic — CLOSED)
 
-- flagship の未使用 `[DecidableEq α]` 除去 (blast radius 未確認)。
-- 内部補助補題 ~10 件の docstring 除去 (bare 化、`docs/rules/docstrings.md`)。
-- `exists_typeDecoder_witness` の "witness" naming 見直し。
+3 項目すべて決着 (2026-07-24):
+- flagship `[DecidableEq α]` 除去 = **誤検出**。`omit` 実機テストで method-of-types 上界経由の
+  load-bearing 依存が確定 (synthInstance 失敗) → 変更なし。
+- 内部補助補題 9 件を docstring bare 化 (name-adequacy gate、style-auditor 適用)。`@audit:ok` 持ち /
+  def / `@[entry_point]` / 名前不十分な補題は保持。
+- rename `exists_typeDecoder_witness` → `exists_mem_typeDecoder_lt` (`Witness` = staging 語彙, naming.md L10)。
 
 ## 撤退ライン (frozen slug `kolmogorov-p4-upper-decoder`、未発動)
 

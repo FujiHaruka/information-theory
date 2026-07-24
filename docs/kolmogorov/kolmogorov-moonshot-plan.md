@@ -34,9 +34,9 @@
 完全 proof-done sorryAx-free @audit:ok。残る P6 SLLN は stretch (第 1 波成否に無関係)。第 1 波背骨に壁 residual は無い
 (唯一の genuine 壁は第 2 波 prefix 塔、slug は §Out が保持)。
 
-**次 leg 戦略 (control state)**: 第 1 波は達成済み。残る作業は (a) P6 SLLN (stretch、余力次第) と
-(b) flag-only cosmetic (flagship の未使用 `[DecidableEq α]` 除去 / 内部補助補題の docstring 除去 / `witness`
-naming、子 plan §follow-up、いずれも proof-done 非阻害)。第 2 波 prefix 塔 (P7–P9) は別 moonshot。
+**次 leg 戦略 (control state)**: 第 1 波は達成済み。flag-only cosmetic は 2026-07-24 に CLOSED (docstring bare 化 +
+`witness` rename 適用、`[DecidableEq α]` 除去は誤検出で load-bearing 確定 → 子 plan §follow-up)。残る作業は
+(a) P6 SLLN (stretch、余力次第)。第 2 波 prefix 塔 (P7–P9) は別 moonshot。
 
 ## Sub-plan 一覧
 
