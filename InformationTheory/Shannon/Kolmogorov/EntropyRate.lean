@@ -137,14 +137,33 @@ theorem condComplexity_block_typical_le
         ≤ (n : ℝ) * ((entropy μ (Xs 0) + ε * logSumAbs μ Xs) / Real.log 2) + (n : ℝ) * δ := by
   sorry
 
-/-- Uniform per-string upper bound: every length-`n` block is describable by its type
-and its index inside the full type class, costing `O(n)` bits regardless of
-typicality (the constant absorbs the crude `log₂|α|` per-symbol rate).
-@residual(plan:kolmogorov-p4-upper) -/
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- Uniform per-string upper bound: every length-`n` block is describable by echoing
+its base-`card α` numeral, costing `natLen ≤ n · ⌈log₂ card α⌉` bits plus the literal
+flag, so `C(x | n) ≤ (⌈log₂ card α⌉ + 1) · (n + 1)`. -/
 theorem condComplexity_block_uniform_le :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ (n : ℕ) (b : Fin n → α),
       (condComplexity (encodeBlock n b) n : ℝ) ≤ C * ((n : ℝ) + 1) := by
-  sorry
+  classical
+  refine ⟨(Nat.clog 2 (Fintype.card α) : ℝ) + 1, by positivity, fun n b ↦ ?_⟩
+  set k0 : ℕ := Nat.clog 2 (Fintype.card α) with hk0
+  -- `card α ≤ 2 ^ k0`, so each of the `n` base-`card α` digits fits in `k0` bits.
+  have hcard : Fintype.card α ≤ 2 ^ k0 := by rw [hk0]; exact Nat.le_pow_clog (by norm_num) _
+  have hpow : Fintype.card α ^ n ≤ 2 ^ (k0 * n) := by
+    calc Fintype.card α ^ n ≤ (2 ^ k0) ^ n := Nat.pow_le_pow_left hcard n
+      _ = 2 ^ (k0 * n) := by rw [← pow_mul]
+  have hlt : encodeBlock n b < 2 ^ (k0 * n) := lt_of_lt_of_le (encodeBlock_lt n b) hpow
+  have hnat : natLen (encodeBlock n b) ≤ k0 * n := natLen_le_of_lt_two_pow _ _ hlt
+  -- Literal echo: `C(x | n) ≤ natLen x + 1 ≤ k0 · n + 1`.
+  have hcc : condComplexity (encodeBlock n b) n ≤ k0 * n + 1 :=
+    (condComplexity_le_natLen_add_one _ _).trans (by omega)
+  have hccR : (condComplexity (encodeBlock n b) n : ℝ) ≤ (k0 : ℝ) * n + 1 := by
+    calc (condComplexity (encodeBlock n b) n : ℝ)
+        ≤ ((k0 * n + 1 : ℕ) : ℝ) := by exact_mod_cast hcc
+      _ = (k0 : ℝ) * n + 1 := by push_cast; ring
+  -- `k0 · n + 1 ≤ (k0 + 1)(n + 1)` since the difference is `k0 + n ≥ 0`.
+  refine hccR.trans ?_
+  nlinarith [Nat.cast_nonneg (α := ℝ) n, Nat.cast_nonneg (α := ℝ) k0]
 
 /-- Upper half: eventually the normalized expected complexity is within `ε` above
 `H / log 2`. Method-of-types assembly: split the integral at the strongly typical

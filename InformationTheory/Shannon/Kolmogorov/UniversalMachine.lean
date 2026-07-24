@@ -139,4 +139,12 @@ theorem condComplexity_spec (x y : ℕ) :
     ∃ p : List Bool, p.length = condComplexity x y ∧ x ∈ universalEval p y :=
   Nat.sInf_mem (condComplexity_set_nonempty x y)
 
+theorem condComplexity_le_natLen_add_one (x y : ℕ) :
+    condComplexity x y ≤ natLen x + 1 := by
+  have hmem : (literalProg x).length ∈
+      { l | ∃ p : List Bool, p.length = l ∧ x ∈ universalEval p y } :=
+    ⟨literalProg x, rfl, by rw [universalEval_literal]; exact Part.mem_some x⟩
+  have hle : condComplexity x y ≤ (literalProg x).length := Nat.sInf_le hmem
+  rwa [literalProg_length] at hle
+
 end InformationTheory.Kolmogorov
