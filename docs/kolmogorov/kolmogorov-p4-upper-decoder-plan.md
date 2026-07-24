@@ -2,10 +2,43 @@
 
 > **Parent**: [`kolmogorov-moonshot-plan.md`](kolmogorov-moonshot-plan.md) §Phase P4 (上界節)
 
-**Status**: OPEN (2026-07-20) — 未着手。flagship `kolmogorov_entropy_rate` の残り最後の 1 本
-`kolmogorov_entropy_rate_upper` (`EntropyRate.lean:99`、`@residual(plan:kolmogorov-p4-upper)`) を閉じる
-method-of-types 分解のうち、唯一の Phase-U 級 crux = **helper #4 `typeDecoderPartrec`** (decoder 構成 +
-`Partrec₂` 認証) の closure plan。#1-#3/#5-#7 は親 §Phase P4 上界節が持つ (Proposal-B tier)。
+**Status**: REOPENED (2026-07-24) — **decoder 設計がレート無効と判明、再アーキ必要**。`typeDecoder` +
+`typeDecoder_partrec : Partrec₂` は **proof-done sorryAx-free** (`EntropyRateUpper.lean`、`20bdeaa3`) だが、
+**`Partrec₂` 認証は「計算可能」であって「長さ効率的 = レート達成」ではない**。#5-#7 assembly leg (`334b2e4e`) が
+現 decoder + `encodeBlock` で上界が閉じないことを機械検証で発見 (下 §rate 欠陥)。**残 = decoder + `encodeBlock`
+の再設計** (下 §再アーキ)。#7 積分組立は encoding 非依存で banked 済 (`EntropyRate.lean:127`)、monolithic sorry は
+per-string 上界 #5 `condComplexity_block_typical_le` / #6 `condComplexity_block_uniform_le` に局所化済。
+
+### rate 欠陥 (assembly leg `334b2e4e` で機械検証、settled)
+
+現 `typeDecoder`(`20bdeaa3`) + `encodeBlock`(`EntropyRate.lean:49`) は上界レート `H/log2` を達成できない:
+
+1. **`Nat.pair` が index を 2 倍化 (致命的)**: decoder は `m.unpair` で `(typeSig, index)` を復元 ⟹ `m = Nat.pair sig index`。
+   `Nat.pair a b ≈ max(a,b)²` ゆえ index `≈ exp(nH)` に対し `natLen(m) ≈ 2·natLen(index) ≈ 2nH/log2`。達成レート
+   = **2H/log2** (H>0 で破綻)。#5 の想定 `q.length ≲ n·entropyByCount + o(n)` は packing コストを無視していた。
+2. **encoding 齟齬**: `encodeBlock` = `Encodable.encode` via `Fintype.toEncodable` (choice `Trunc.out`)、decoder 出力
+   = `Encodable.encode (List α)` via `primcodableOfFintype` = **別 instance・別 combinator** ⟹ `encodeBlock n b ∈
+   typeDecoder m n` が成立不能。橋渡し補題も無い (choice vs equivFin)。
+3. **`encodeBlock` 長さ非効率**: `encodeList` = nested `Nat.pair` ⟹ `natLen(encodeBlock n b) ≈ 2^n` (doubly-exp)。
+   #6 の想定 tool `complexity_le_natLen` (literal echo) が `~2^n` 上界を返し無用。
+
+**教訓 (facts 台帳候補)**: Kolmogorov decoder を「usable asset」と認める前に **rate/length-budget チェック**を
+課すべき。`Partrec₂`/`Computable` 認証は length-efficiency と直交し、`Nat.pair` packing / nested-pair encoding は
+computable でも長さが 2 倍〜指数的に膨らむ。plan/inventory/proof-pivot-advisor が #4 を「proof-done」と祝ったのは
+`Partrec₂` としては正しいが、その認証は target rate 達成を保証しない。
+
+### 再アーキ (assembly leg 推奨、次 leg = D-redesign)
+
+上界は真。closure には以下 (owner = 本子 plan):
+- **`encodeBlock` → 長さ効率的 computable base-`card α` encoding**。例 `∑ i, (equivFin (b i)).val · (card α)^i`
+  (`< card α^n`、injective ⟹ 下界不変 — 下界は injectivity のみ使用、`encodeBlock` に外部 consumer 無しを機械確認済)。
+  ⟹ #6 は conditional literal 上界 `condComplexity x n ≤ natLen x + 1` (`universalEval_literal` は y 無視ゆえ成立) で
+  自明に閉じる。
+- **decoder #4 → (a)** base-card 数を出力、**(b)** `(type, index)` を length-additive div/mod で pack
+  (`m = index·K + typeCode`、`K = (n+1)^|α| ≥ numTypes`) — **`Nat.pair` を使わない** ⟹ 2 倍化解消
+  (`natLen(m) ≈ natLen(index) + |α|log(n+1)`) かつ `encodeBlock` と一致。`Partrec₂` 再証明 (div/mod は Primrec)。
+- **共用 utility**: `natLen x ≤ Nat.log2 x + 1` (or `x < 2^k → natLen x ≤ k`) — Mathlib 不在、~30-50 行 self-build
+  (`encodeNat` の `Num`/`PosNum` 構造上)。
 
 ## Context
 
@@ -31,10 +64,12 @@ method-of-types 分解のうち、唯一の Phase-U 級 crux = **helper #4 `type
 
 ## 進捗
 
-- [ ] D0 — decoder 専用 Mathlib 在庫確認 (Primrec list API + 表現形の選択) 📋
-- [ ] D1 — gateway atom: `typeDecoder` def + `Partrec₂` probe (make-or-break) 📋
-- [ ] D2 — 列挙器 total-computability の build-out (filter/nth chain 全認証) 📋
-- [ ] D3 — 出力整形: `A` を `invariance` 署名に噛み合わせる (`encodeBlock` 合成) 📋
+- [x] D0-D2 — candidate B 列挙器 `typeDecoder_partrec : Partrec₂` proof-done sorryAx-free (`20bdeaa3`)。
+  **ただし rate 無効** (上 §rate 欠陥)。`Partrec₂` 認証自体は正しく再利用可能な骨格 (列挙・filter・index の Primrec 合成)。
+- [ ] **R1 — `encodeBlock` 再設計** (base-card computable、injective 保存、下界不変を再確認) 📋
+- [ ] **R2 — decoder 再設計** (length-additive packing `index·K + typeCode` + base-card 出力、`Partrec₂` 再証明) 📋
+- [ ] **R3 — `natLen x ≤ Nat.log2 x + 1` utility self-build** (~30-50 行、#5/#6 の長さ会計に共用) 📋
+- [ ] **R4 — #5/#6 closure** (R1-R3 を消費し per-string 上界 2 本を proof-done 化 ⟹ #7 経由で flagship 完全 proof-done) 📋
 
 ## ゴール / Approach
 

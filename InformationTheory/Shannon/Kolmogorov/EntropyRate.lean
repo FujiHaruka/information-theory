@@ -122,8 +122,7 @@ theorem condComplexity_block_uniform_le :
 `H / log 2`. Method-of-types assembly: split the integral at the strongly typical
 set, bound the typical part by `condComplexity_block_typical_le` and the atypical
 part by `condComplexity_block_uniform_le`, then let the atypical mass vanish. The
-body is unconditional; the two per-string bounds it consumes carry the remaining
-`plan:kolmogorov-p4-upper` sorries. -/
+assembly itself is unconditional, resting only on the two per-string bounds above. -/
 theorem kolmogorov_entropy_rate_upper
     (hXs : ∀ i, Measurable (Xs i))
     (_hindep_full : iIndepFun (fun i ↦ Xs i) μ)
