@@ -125,6 +125,7 @@ import InformationTheory.Shannon.Kolmogorov.EntropyRateUpper
 import InformationTheory.Shannon.Kolmogorov.Incompressible
 import InformationTheory.Shannon.Kolmogorov.Noncomputable
 import InformationTheory.Shannon.Kolmogorov.PrefixMachine
+import InformationTheory.Shannon.Kolmogorov.UniversalProbability
 import InformationTheory.Shannon.Sanov.RoundedTypeSequence
 import InformationTheory.Shannon.Sanov.MultinomialLowerBound
 import InformationTheory.Shannon.Sanov.LiminfBound
