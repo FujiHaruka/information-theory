@@ -225,7 +225,8 @@ private theorem inv_two_pow_eq_ofReal (n : ℕ) :
 
 /-- The infinite Kraft bound: any set of valid programs of the self-delimiting
 machine, cut out by a predicate `P`, has total weight `∑ 2^{-|p|} ≤ 1`. Every
-finite subsum is a Kraft sum, and `ℝ≥0∞`-valued sums are suprema of those. -/
+finite subsum is a Kraft sum, and `ℝ≥0∞`-valued sums are suprema of those.
+@audit:ok -/
 theorem tsum_inv_two_pow_length_le_one {P : List Bool → Prop}
     (hP : ∀ p, P p → (prefixUniversalEval p).Dom) :
     ∑' p : { p : List Bool // P p }, (2 : ℝ≥0∞)⁻¹ ^ (p : List Bool).length ≤ 1 := by

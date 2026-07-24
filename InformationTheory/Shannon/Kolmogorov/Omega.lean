@@ -35,17 +35,23 @@ open Nat.Partrec Nat.Partrec.Code
 open Computability (encodeNat decodeNat)
 
 /-- Chaitin's halting probability `Ω = ∑_{p halts} 2^{-|p|}` in `ℝ≥0∞`, the
-weight of the halting programs of the self-delimiting machine. -/
+weight of the halting programs of the self-delimiting machine.
+@audit:ok -/
 noncomputable def chaitinOmega : ℝ≥0∞ :=
   ∑' p : { p : List Bool // (prefixUniversalEval p).Dom }, (2 : ℝ≥0∞)⁻¹ ^ (p : List Bool).length
 
 /-- The halting probability is a subprobability: `Ω ≤ 1`, because the halting
-programs form a prefix-free set and every finite subsum is a Kraft sum. -/
+programs form a prefix-free set and every finite subsum is a Kraft sum. The bound
+is not the degenerate empty-sum reading: the halting set is nonempty (the literal
+echo program halts), and `chaitinOmega_pos` pins `Ω` to `(0, 1]`.
+@audit:ok -/
 @[entry_point]
 theorem chaitinOmega_le_one : chaitinOmega ≤ 1 := by
   rw [chaitinOmega]
   exact tsum_inv_two_pow_length_le_one fun _ hp ↦ hp
 
+/-- The halting probability is positive: the literal echo program `prefixLiteralProg 0`
+halts, so its weight is a strictly positive term of the sum. -/
 theorem chaitinOmega_pos : 0 < chaitinOmega := by
   have hdom : (prefixUniversalEval (prefixLiteralProg 0)).Dom := by
     rw [prefixUniversalEval_literal]; trivial
@@ -106,7 +112,8 @@ theorem exists_prefixIncompressible (k : ℕ) : ∃ x, k ≤ prefixComplexity x 
 
 /-- The self-delimited interpretation program for code index `idx` running on
 the description `q`: the interpret flag, then `idx` in unary terminated by
-`false`, then `q`, all wrapped by the self-delimiting length prefix. -/
+`false`, then `q`, all wrapped by the self-delimiting length prefix.
+@audit:ok -/
 def prefixInterpretProg (idx : ℕ) (q : List Bool) : List Bool :=
   selfDelimit (true :: (List.replicate idx true ++ (false :: q)))
 
@@ -149,7 +156,8 @@ theorem prefix_invariance (A : ℕ → ℕ → Part ℕ) (hA : Partrec₂ A) :
 /-- Prefix Kolmogorov complexity is not computable (Berry's paradox): a
 computable `K` would let one search for the least string of prefix complexity at
 least `k`, which the self-delimiting interpreter then describes in
-`2 · natLen k + O(1)` bits. -/
+`2 · natLen k + O(1)` bits.
+@audit:ok -/
 @[entry_point]
 theorem prefixComplexity_not_computable : ¬ Computable prefixComplexity := by
   intro hcomp
