@@ -263,8 +263,9 @@ theorem PrefixFree.tsum_inv_two_pow_length_le_one {S : Set (List Bool)} (hS : Pr
     _ ≤ 1 := ENNReal.ofReal_le_one.mpr (hS.kraft h0 _ hsub)
 
 /-- The infinite Kraft bound: any set of valid programs of the self-delimiting
-machine, cut out by a predicate `P`, has total weight `∑ 2^{-|p|} ≤ 1`. Every
-finite subsum is a Kraft sum, and `ℝ≥0∞`-valued sums are suprema of those.
+machine, cut out by a predicate `P`, has total weight `∑ 2^{-|p|} ≤ 1`. This is
+`PrefixFree.tsum_inv_two_pow_length_le_one` specialized to the machine's domain,
+which is prefix-free and contains no empty codeword.
 @audit:ok -/
 theorem tsum_inv_two_pow_length_le_one {P : List Bool → Prop}
     (hP : ∀ p, P p → (prefixUniversalEval p).Dom) :
