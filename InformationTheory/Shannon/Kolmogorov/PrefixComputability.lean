@@ -43,6 +43,9 @@ theorem primrec_prefixInterpretProg_nil :
     (Primrec.list_cons.comp (Primrec.const false) hbs)).of_eq fun idx ↦ ?_
   simp [prefixInterpretProg, selfDelimit]
 
+/-- The self-delimiting machine is partial recursive: its length guard is
+primitive recursive through `parseUnary`, and the payload it hands on is decoded
+by the partial recursive `decodePayload`. -/
 theorem prefixUniversalEval_partrec : Partrec prefixUniversalEval := by
   have hguard : Computable fun p : List Bool ↦
       (if (parseUnary p).1 = (parseUnary p).2.length then some (parseUnary p).2
