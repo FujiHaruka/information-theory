@@ -1,3 +1,4 @@
+import InformationTheory.Shannon.ConditionalAEP
 import InformationTheory.Shannon.WynerZiv.Achievability.Covering
 
 /-!
@@ -777,155 +778,6 @@ lemma wz_srcBlock_condMeasure_split
   · have hmem' : yb ∉ {yb | (fun i ↦ (xb i, yb i)) ∈ S} := hmem
     rw [Set.indicator_of_notMem hmem, Set.indicator_of_notMem hmem', mul_zero]
 
-/-- On a finite product measure
-`Measure.pi ν` (each `ν i` a probability measure on the finite alphabet `β`), the empirical mean
-`(∑ᵢ ψᵢ(yᵢ))/n` of a *per-coordinate* (non-identically distributed) family of statistics
-`ψ : Fin n → β → ℝ` deviates from its mean `(∑ᵢ (νᵢ)[ψᵢ])/n` by at least `δ` on a set of mass at
-most `(∑ᵢ Var[ψᵢ; νᵢ])/(n²δ²)`. Finite-`n` Chebyshev via `variance_sum_pi` (pairwise independence
-of coordinate evaluations under `Measure.pi`, `IdentDistrib`-free) — the conditional-AEP engine for
-the Wyner–Ziv Markov core: each summand `ψᵢ = -log wsm(uᵢ, ·)` is a function of the single
-coordinate `yᵢ`, so the `νᵢ = P(·|xᵢ)` product structure makes them
-independent-but-not-identical. -/
-private lemma wz_pi_nonuniform_mean_concentration
-    {n : ℕ} (hn : 0 < n)
-    (ν : Fin n → Measure β) [∀ i, IsProbabilityMeasure (ν i)]
-    (ψ : Fin n → β → ℝ) {δ : ℝ} (hδ : 0 < δ) :
-    (Measure.pi ν).real
-        { yb : Fin n → β | δ ≤ |(∑ i, ψ i (yb i)) / (n : ℝ)
-            - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)| }
-      ≤ (∑ i, variance (ψ i) (ν i)) / ((n : ℝ) ^ 2 * δ ^ 2) := by
-  classical
-  set μpi : Measure (Fin n → β) := Measure.pi ν with hμpi
-  haveI : IsProbabilityMeasure μpi := by rw [hμpi]; infer_instance
-  have hnR : (0 : ℝ) < n := by exact_mod_cast hn
-  -- Each `ψ i` is MemLp 2 (finite alphabet + probability measure).
-  have hmemν : ∀ i, MemLp (ψ i) 2 (ν i) := fun i ↦ MemLp.of_discrete
-  -- Coordinate evaluations are MemLp 2 under `μpi`.
-  have hmemcoord : ∀ i : Fin n, MemLp (fun yb : Fin n → β ↦ ψ i (yb i)) 2 μpi :=
-    fun i ↦ (hmemν i).comp_measurePreserving (measurePreserving_eval ν i)
-  set S : (Fin n → β) → ℝ := fun yb ↦ ∑ i, ψ i (yb i) with hS
-  have hSmem : MemLp S 2 μpi := by
-    have := memLp_finsetSum (μ := μpi) (p := (2 : ℝ≥0∞)) Finset.univ
-      (f := fun (i : Fin n) (yb : Fin n → β) ↦ ψ i (yb i)) (fun i _ ↦ hmemcoord i)
-    simpa [hS] using this
-  -- Variance of `S` = ∑ per-coordinate variance (`variance_sum_pi`).
-  have hVarS : variance S μpi = ∑ i, variance (ψ i) (ν i) := by
-    have hpi := variance_sum_pi (ι := Fin n) (Ω := fun _ : Fin n ↦ β)
-      (μ := ν) (X := ψ) hmemν
-    rw [hS, show (fun yb : Fin n → β ↦ ∑ i, ψ i (yb i))
-        = (∑ i, fun ω : Fin n → β ↦ ψ i (ω i)) by
-      funext yb; simp [Finset.sum_apply]]
-    rw [hpi]
-  -- Mean of `S` = ∑ per-coordinate mean.
-  have hmeanS : μpi[S] = ∑ i, ∫ y, ψ i y ∂(ν i) := by
-    have hint : ∀ i : Fin n, μpi[fun yb : Fin n → β ↦ ψ i (yb i)] = ∫ y, ψ i y ∂(ν i) := by
-      intro i
-      have hmp : MeasurePreserving (Function.eval i) μpi (ν i) := measurePreserving_eval ν i
-      calc μpi[fun yb : Fin n → β ↦ ψ i (yb i)]
-          = ∫ yb, ψ i (Function.eval i yb) ∂μpi := rfl
-        _ = ∫ y, ψ i y ∂(Measure.map (Function.eval i) μpi) := by
-              rw [integral_map hmp.measurable.aemeasurable]
-              exact (hmemν i).aestronglyMeasurable.aemeasurable.aestronglyMeasurable.mono_ac
-                (by rw [hmp.map_eq])
-        _ = ∫ y, ψ i y ∂(ν i) := by rw [hmp.map_eq]
-    rw [hS, integral_finsetSum]
-    · exact Finset.sum_congr rfl (fun i _ ↦ hint i)
-    · exact fun i _ ↦ (hmemcoord i).integrable (by norm_num)
-  -- Absolute-value identity linking empirical-mean deviation and centered-sum deviation.
-  have habs : ∀ yb : Fin n → β,
-      |S yb - μpi[S]| = (n : ℝ) * |(∑ i, ψ i (yb i)) / (n : ℝ)
-          - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)| := by
-    intro yb
-    rw [hmeanS]
-    rw [show (n : ℝ) * |(∑ i, ψ i (yb i)) / (n : ℝ) - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)|
-          = |(n : ℝ) * ((∑ i, ψ i (yb i)) / (n : ℝ)
-              - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ))| by
-        rw [abs_mul, abs_of_pos hnR]]
-    congr 1
-    simp only [hS]
-    field_simp
-  have hset : { yb : Fin n → β | δ ≤ |(∑ i, ψ i (yb i)) / (n : ℝ)
-          - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)| }
-      = { yb : Fin n → β | (n : ℝ) * δ ≤ |S yb - μpi[S]| } := by
-    ext yb
-    simp only [Set.mem_setOf_eq, habs yb]
-    constructor
-    · intro h; exact mul_le_mul_of_nonneg_left h hnR.le
-    · intro h; exact le_of_mul_le_mul_left h hnR
-  rw [measureReal_def, hset]
-  have hcheb := meas_ge_le_variance_div_sq (μ := μpi) hSmem (c := (n : ℝ) * δ) (by positivity)
-  calc (μpi { yb : Fin n → β | (n : ℝ) * δ ≤ |S yb - μpi[S]| }).toReal
-      ≤ (ENNReal.ofReal (variance S μpi / ((n : ℝ) * δ) ^ 2)).toReal :=
-        ENNReal.toReal_mono ENNReal.ofReal_ne_top hcheb
-    _ = variance S μpi / ((n : ℝ) * δ) ^ 2 :=
-        ENNReal.toReal_ofReal (div_nonneg (variance_nonneg S μpi) (by positivity))
-    _ = (∑ i, variance (ψ i) (ν i)) / ((n : ℝ) ^ 2 * δ ^ 2) := by rw [hVarS, mul_pow]
-
-/-- Uniform-in-`(ν, ψ, w)` version of
-`wz_pi_nonuniform_mean_concentration`: given a common sup-bound `B` on every per-coordinate
-statistic `|ψᵢ| ≤ B`, the deviation of the empirical mean from *its own (conditional) mean* by
-`≥ δ` has `Measure.pi ν`-mass `≤ tol` for all `n ≥ N` (an explicit `N` depending only on
-`B, δ, tol`). This is the "concentration around the conditional mean" half of the Wyner–Ziv Markov
-core — the part that is a genuine theorem for *every* codeword block `w` and source block `xb`
-(the variance bound `Var[ψᵢ] ≤ B²` is uniform, so no typicality of `xb` is needed here). What is
-NOT supplied here — and is the residual Markov content — is that the conditional mean
-`(∑ᵢ (νᵢ)[ψᵢ])/n` is close to the ambient entropy `H(wsm)`; see the note on the core. -/
-private lemma wz_pi_nonuniform_concentration_tendsto
-    {B δ tol : ℝ} (hδ : 0 < δ) (htol : 0 < tol) (hB : 0 ≤ B) :
-    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (ν : Fin n → Measure β),
-        (∀ i, IsProbabilityMeasure (ν i)) → ∀ (ψ : Fin n → β → ℝ),
-        (∀ i y, |ψ i y| ≤ B) →
-        (Measure.pi ν).real
-            { yb : Fin n → β | δ ≤ |(∑ i, ψ i (yb i)) / (n : ℝ)
-                - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)| }
-          ≤ tol := by
-  classical
-  obtain ⟨N₀, hN₀⟩ := exists_nat_gt (B ^ 2 / (tol * δ ^ 2))
-  refine ⟨N₀ + 1, fun n hn ν hν ψ hψ ↦ ?_⟩
-  have hn_pos : 0 < n := lt_of_lt_of_le (Nat.succ_pos N₀) hn
-  have hnR : (0 : ℝ) < n := by exact_mod_cast hn_pos
-  haveI : ∀ i, IsProbabilityMeasure (ν i) := hν
-  -- Chebyshev deviation bound from the engine.
-  have hcheb := wz_pi_nonuniform_mean_concentration hn_pos ν ψ (δ := δ) hδ
-  -- Uniform variance bound: each `variance (ψ i) (ν i) ≤ B²`.
-  have hvar_le : ∀ i, variance (ψ i) (ν i) ≤ B ^ 2 := by
-    intro i
-    have hIcc : ∀ᵐ y ∂(ν i), ψ i y ∈ Set.Icc (-B) B :=
-      Filter.Eventually.of_forall (fun y ↦ abs_le.mp (hψ i y))
-    have := variance_le_sq_of_bounded hIcc (measurable_of_finite (ψ i)).aemeasurable
-    calc variance (ψ i) (ν i) ≤ ((B - (-B)) / 2) ^ 2 := this
-      _ = B ^ 2 := by ring
-  have hsum_var : (∑ i, variance (ψ i) (ν i)) ≤ (n : ℝ) * B ^ 2 := by
-    calc (∑ i, variance (ψ i) (ν i)) ≤ ∑ _i : Fin n, B ^ 2 :=
-          Finset.sum_le_sum (fun i _ ↦ hvar_le i)
-      _ = (n : ℝ) * B ^ 2 := by
-        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
-  -- Chain: mass ≤ (∑ var)/(n²δ²) ≤ nB²/(n²δ²) = B²/(nδ²) ≤ tol.
-  have hden : (0 : ℝ) < (n : ℝ) ^ 2 * δ ^ 2 := by positivity
-  have hstep1 : (∑ i, variance (ψ i) (ν i)) / ((n : ℝ) ^ 2 * δ ^ 2)
-      ≤ ((n : ℝ) * B ^ 2) / ((n : ℝ) ^ 2 * δ ^ 2) := by
-    gcongr
-  have hstep2 : ((n : ℝ) * B ^ 2) / ((n : ℝ) ^ 2 * δ ^ 2) = B ^ 2 / ((n : ℝ) * δ ^ 2) := by
-    have hn0 : (n : ℝ) ≠ 0 := ne_of_gt hnR
-    field_simp
-  have hstep3 : B ^ 2 / ((n : ℝ) * δ ^ 2) ≤ tol := by
-    have hnδ : (0 : ℝ) < (n : ℝ) * δ ^ 2 := by positivity
-    rw [div_le_iff₀ hnδ]
-    have htolδ : (0 : ℝ) < tol * δ ^ 2 := by positivity
-    have hn_gt : B ^ 2 / (tol * δ ^ 2) < (n : ℝ) := by
-      have : (N₀ : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn.trans' (Nat.le_succ N₀)
-      linarith [hN₀]
-    have : B ^ 2 < (n : ℝ) * (tol * δ ^ 2) := by
-      rw [div_lt_iff₀ htolδ] at hn_gt; linarith [hn_gt]
-    nlinarith [this]
-  calc (Measure.pi ν).real
-          { yb : Fin n → β | δ ≤ |(∑ i, ψ i (yb i)) / (n : ℝ)
-              - (∑ i, ∫ y, ψ i y ∂(ν i)) / (n : ℝ)| }
-        ≤ (∑ i, variance (ψ i) (ν i)) / ((n : ℝ) ^ 2 * δ ^ 2) := hcheb
-      _ ≤ ((n : ℝ) * B ^ 2) / ((n : ℝ) ^ 2 * δ ^ 2) := hstep1
-      _ = B ^ 2 / ((n : ℝ) * δ ^ 2) := hstep2
-      _ ≤ tol := hstep3
-
 open ChannelCoding in
 /-- The independent-product mass of the strong joint-typical set under the covering ambient
 `rdAmbient qStar` — the probability that an independently drawn covering word `U^n` is strongly
@@ -1051,20 +903,6 @@ lemma wzCoveringSuccessStrong_subset_weak
                 ChannelCoding.iidXs ChannelCoding.iidYs n ε } :=
   fun _ hp ↦ hp.2
 
-/-- For a block `z : Fin n → T` on a finite alphabet `T`, summing a
-per-symbol statistic `f` over the coordinates equals summing over the alphabet weighted by the
-empirical counts: `∑ i, f (z i) = ∑ p, (typeCount z p) · f p`. This is the standard method-of-types
-regrouping (`Finset.sum_fiberwise_of_maps_to'` over the fibers `{i | z i = p}`). -/
-private lemma wz_sum_eq_typeCount_mul {T : Type*} [Fintype T] [DecidableEq T] {n : ℕ}
-    (z : Fin n → T) (f : T → ℝ) :
-    ∑ i, f (z i) = ∑ p : T, (typeCount z p : ℝ) * f p := by
-  classical
-  rw [← Finset.sum_fiberwise_of_maps_to' (s := (Finset.univ : Finset (Fin n)))
-        (t := (Finset.univ : Finset T)) (g := z) (fun i _ ↦ Finset.mem_univ _) f]
-  refine Finset.sum_congr rfl fun a _ ↦ ?_
-  rw [Finset.sum_const, nsmul_eq_mul]
-  rfl
-
 private lemma wz_covering_uyBand_key
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     {k : ℕ} (κ' : α → Fin k → ℝ)
@@ -1106,7 +944,7 @@ private lemma wz_covering_uyBand_mean_pin
     have hsum : (∑ i, ∫ y, ψ i y ∂(ChannelCoding.pmfToMeasure
           (fun y : β ↦ P_XY.real {((xb i).1, y)} / ∑ y', P_XY.real {((xb i).1, y')})))
         = ∑ p, (typeCount (fun i ↦ (xb i, U i)) p : ℝ) * wzCondMeanKernel P_XY κ' p := by
-      rw [← wz_sum_eq_typeCount_mul (fun i ↦ (xb i, U i)) (wzCondMeanKernel P_XY κ')]
+      rw [← sum_eq_typeCount_mul (fun i ↦ (xb i, U i)) (wzCondMeanKernel P_XY κ')]
       exact Finset.sum_congr rfl fun i _ ↦ hint i
     rw [hsum, Finset.sum_div]
     exact Finset.sum_congr rfl fun p _ ↦ by ring
@@ -1123,7 +961,7 @@ radius `ε_cov = wzCoveringStrongRadius P_XY κ' ε` — the conditional side-in
 `(U, Y)`-atypical slice is `≤ tol/8` for `n ≥ N`. This is the conditional AEP `U — X — Y`: the
 mean-pin (`wz_wsm_negLog_mean_pin_of_stronglyTypical`) puts the conditional mean of
 `-log wsm(U_i, ·)` within `C·ε_cov < ε/2` of `H(wsm)`, and the conditional Chebyshev
-(`wz_pi_nonuniform_concentration_tendsto`, deviation `ε/2`) concentrates the empirical
+(`pi_nonuniform_concentration_tendsto`, deviation `ε/2`) concentrates the empirical
 `(U, Y)`-entropy there, so `(U, Y)`-atypicality (radius `ε`) has vanishing conditional mass. This
 is the from-scratch conditional-AEP kernel; the surrounding finite-Fubini split, good/bad
 `x`-block dichotomy and summation are discharged in `wz_covering_jointBand_markov_core`.
@@ -1135,7 +973,7 @@ fails on an entropy-preserving label-swap counterexample class. The assembly mir
 template `wz_covering_yBand_aep`: a uniform sup-bound `B = ∑_q |log wsm(q)|` on the per-coordinate
 log-statistic, its conditional mean identified with `wzCondMeanKernel`, and the ambient entropy
 `∑_q negMulLog(wsm q)`, combined through the radius-separated mean-pin (`C·ε_cov < ε/2`) and the
-Chebyshev engine (`wz_pi_nonuniform_concentration_tendsto`, `δ = ε/2`) by a strict triangle
+Chebyshev engine (`pi_nonuniform_concentration_tendsto`, `δ = ε/2`) by a strict triangle
 inequality. The `hκ'_pos`/`hκ'_sum`/`hqStar` hypotheses are full-support / proper-pmf /
 `qStar`–`κ'` consistency preconditions (used to place `qStar ∈ stdSimplex` and identify the
 conditional mean), not the concentration conclusion — not load-bearing; the proof is sorryAx-free.
@@ -1252,8 +1090,8 @@ lemma wz_covering_uyBand_condSlice_le
   -- `C · ε_cov < ε/2` (radius separation).
   have hkey := wz_covering_uyBand_key P_XY κ' ε hε
   -- Uniform Chebyshev threshold from the concentration engine (δ = ε/2, tol = tol/8).
-  obtain ⟨N, hN⟩ := wz_pi_nonuniform_concentration_tendsto (β := β)
-    (B := B) (δ := ε / 2) (tol := tol / 8) (by linarith) (by linarith) hB_nonneg
+  obtain ⟨N, hN⟩ := pi_nonuniform_concentration_tendsto (β := β)
+    (B := B) (δ := ε / 2) (tol := tol / 8) (by linarith) (by linarith)
   refine ⟨N, fun n hn M c xb hgood ↦ ?_⟩
   set U := c.decoder (c.encoder xb) with hU_def
   set ψ : Fin n → β → ℝ :=

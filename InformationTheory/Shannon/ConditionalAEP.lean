@@ -29,8 +29,9 @@ that needs the ambient deviation below `ε` must supply a block whose type radiu
 
 ## Implementation notes
 
-The Wyner–Ziv achievability chain carries file-private copies of these statements specialized to
-its own alphabets; this module is their type-generic home.
+The Chebyshev half takes the per-coordinate laws as a bare family `ν : Fin n → Measure β`, whereas
+the combined statement takes them as a kernel `ν : T → Measure β` read along a block; a caller that
+holds only a family, with no block to read it along, uses the former directly.
 -/
 
 namespace InformationTheory.Shannon
