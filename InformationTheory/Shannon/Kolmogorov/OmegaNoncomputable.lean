@@ -1,28 +1,30 @@
+import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Kolmogorov.PrefixComputability
 
 /-!
-# A step-bounded evaluator for the self-delimiting machine
+# Chaitin's constant is not computably approximable
 
 Cover–Thomas (2nd ed.) §14.9. Running the self-delimiting machine
 `prefixUniversalEval` with a finite budget yields a total function
 `prefixEvaln`, primitive recursive in the budget and the program, which is sound
-and complete for the unbounded machine. It is the computable skeleton behind the
-approximation of the halting probability `Ω` from below.
+and complete for the unbounded machine. Summing `2 ^ (-|p|)` over the programs
+that have already halted gives the stage approximations `omegaApprox`, which
+increase to the halting probability `Ω`: each is a subsum of the halting weight,
+and every finite subsum is already reached at some stage.
 
-The section also fixes the notion of a computable nonnegative extended real used
-to state that `Ω` is not one: a computable sequence of dyadic numerators whose
-values approximate the target within `2 ^ (-n)`.
-
-The stage approximations increase to `Ω` — each is a subsum of the halting
-weight, and every finite subsum is already reached at some stage. So a
-computable approximation of `Ω` from above lets one search for a stage whose
-weight is within `2 ^ (-n)` of `Ω`, and that search is itself computable because
-every comparison involved is between natural numbers over a common power of two.
+A computable approximation of `Ω` from above therefore lets one search for a
+stage whose weight is within `2 ^ (-n)` of `Ω`, and that search is itself
+computable because every comparison involved is between natural numbers over a
+common power of two. Past that stage no program of length at most `n` can halt
+any more, since its weight would push the halting weight above `Ω`. So the
+halting set of the machine would be decidable, which it is not.
 
 ## Main definitions
 
 * `IsComputableENNReal` — computability of an extended nonnegative real by a
   computable sequence of dyadic rationals with error `2 ^ (-n)`.
+* `IsFloorComputableENNReal` — the strictly stronger floor variant of the same
+  notion.
 * `prefixEvaln` — the step-bounded evaluator of the self-delimiting machine.
 * `omegaApprox` — the stage-`t` approximation to `Ω` from below, with numerator
   `omegaApproxNum` over the denominator `2 ^ t`.
@@ -30,6 +32,7 @@ every comparison involved is between natural numbers over a common power of two.
 
 ## Main results
 
+* `chaitinOmega_not_computable` — `Ω` is not computably approximable.
 * `prefixEvaln_primrec` — the bounded evaluator is primitive recursive.
 * `prefixEvaln_complete` — a value is output by the machine exactly when some
   finite budget already produces it.
@@ -39,6 +42,18 @@ every comparison involved is between natural numbers over a common power of two.
   `exists_omegaApprox_gt` brings them within any positive margin of `Ω`.
 * `searchTime_computable` — the stage located by the search is a computable
   function of the requested precision.
+
+## Implementation notes
+
+`IsComputableENNReal` states its two bounds additively, so truncated subtraction
+of extended reals never occurs. The standard notion of a computable real — a
+computable sequence of rationals converging to `x` with error `2 ^ (-n)` —
+implies it, by rounding a sufficiently accurate rational approximation to a
+multiple of `2 ^ (-n)`; that comparison stays informal, since `Primrec`
+arithmetic on `ℚ` is unavailable and the standard notion cannot be phrased. The
+comparison that is formalized is `isComputableENNReal_of_floor`, the implication
+from the strict floor form: the additive form is the weaker predicate of the two,
+so its negation is the stronger statement.
 -/
 
 open scoped ENNReal
@@ -54,13 +69,28 @@ bounds are stated additively, so no truncated subtraction occurs.
 The standard notion — a computable sequence of rationals converging to `x` with
 error `2 ^ (-n)` — implies this one: rounding a sufficiently accurate rational
 approximation to a multiple of `2 ^ (-n)` produces such a numerator sequence. The
-converse-facing strict form `a n * 2 ^ (-n) ≤ x ≤ (a n + 1) * 2 ^ (-n)` is
-deliberately avoided: deciding which side of a dyadic grid point `x` falls on is
-not computable, so that form is a strictly stronger predicate. -/
+strict floor form `IsFloorComputableENNReal` is deliberately avoided: deciding
+which side of a dyadic grid point `x` falls on is not computable, so that form is
+a strictly stronger predicate. -/
 def IsComputableENNReal (x : ℝ≥0∞) : Prop :=
   ∃ a : ℕ → ℕ, Computable a ∧ ∀ n : ℕ,
     x ≤ (a n : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n + (2 : ℝ≥0∞)⁻¹ ^ n ∧
       (a n : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n ≤ x + (2 : ℝ≥0∞)⁻¹ ^ n
+
+/-- The strict dyadic floor form of computability: `a n * 2 ^ (-n)` sits in the
+cell of width `2 ^ (-n)` below `x`. Deciding which side of a dyadic grid point
+`x` lies on is not computable, so this is a strictly stronger requirement than
+`IsComputableENNReal`; `isComputableENNReal_of_floor` records the implication. -/
+def IsFloorComputableENNReal (x : ℝ≥0∞) : Prop :=
+  ∃ a : ℕ → ℕ, Computable a ∧ ∀ n : ℕ,
+    (a n : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n ≤ x ∧ x ≤ ((a n + 1 : ℕ) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n
+
+theorem isComputableENNReal_of_floor {x : ℝ≥0∞} (h : IsFloorComputableENNReal x) :
+    IsComputableENNReal x := by
+  obtain ⟨a, ha, hb⟩ := h
+  refine ⟨a, ha, fun n ↦ ⟨?_, (hb n).1.trans le_self_add⟩⟩
+  have hx := (hb n).2
+  rwa [Nat.cast_add, Nat.cast_one, add_mul, one_mul] at hx
 
 /-- The step-bounded evaluator: the self-delimiting machine run with budget `k`,
 following `decodePayload_eq_dispatch` with `eval` replaced by `evaln k`. -/
@@ -485,5 +515,65 @@ theorem chaitinOmega_lt_omegaApprox_find {a : ℕ → ℕ}
         add_le_add hP le_rfl
     _ = omegaApprox (Nat.find (hex n))
           + ((2 : ℝ≥0∞)⁻¹ ^ (n + 1) + (2 : ℝ≥0∞)⁻¹ ^ (n + 2)) := add_assoc _ _ _
+
+/-! ### The halting probability is not computably approximable -/
+
+theorem isComputableENNReal_one : IsComputableENNReal 1 := by
+  refine ⟨fun n ↦ 2 ^ n, primrec_two_pow.to_comp, fun n ↦ ?_⟩
+  have h : ((2 ^ n : ℕ) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n = 1 := by
+    simpa using natCast_two_pow_sub_mul_inv_pow (ℓ := 0) (t := n) (Nat.zero_le n)
+  rw [h]
+  exact ⟨le_self_add, le_self_add⟩
+
+theorem omegaApprox_add_le_chaitinOmega {t : ℕ} {p : List Bool}
+    (hp : ¬ (prefixEvaln t p).isSome) (hdom : (prefixUniversalEval p).Dom) :
+    omegaApprox t + (2 : ℝ≥0∞)⁻¹ ^ p.length ≤ chaitinOmega := by
+  classical
+  have hnot : p ∉ (haltingList t).toFinset := by
+    rw [List.mem_toFinset, mem_haltingList]
+    exact fun h ↦ hp h.2
+  have hsum : ∑ q ∈ insert p (haltingList t).toFinset, (2 : ℝ≥0∞)⁻¹ ^ q.length
+      = (2 : ℝ≥0∞)⁻¹ ^ p.length + omegaApprox t := by
+    rw [Finset.sum_insert hnot, omegaApprox]
+  rw [add_comm, ← hsum]
+  refine sum_le_chaitinOmega fun q hq ↦ ?_
+  rcases Finset.mem_insert.mp hq with rfl | hq
+  · exact hdom
+  · rw [List.mem_toFinset, mem_haltingList] at hq
+    exact prefixEvaln_dom_iff.mpr ⟨t, hq.2⟩
+
+theorem dom_iff_prefixEvaln_find_isSome {a : ℕ → ℕ}
+    (ha : ∀ n : ℕ, chaitinOmega ≤ (a n : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n + (2 : ℝ≥0∞)⁻¹ ^ n)
+    (hex : ∀ n, ∃ t, searchPred a n t) (p : List Bool) :
+    (prefixUniversalEval p).Dom ↔ (prefixEvaln (Nat.find (hex p.length)) p).isSome := by
+  refine ⟨fun hdom ↦ ?_, fun h ↦ prefixEvaln_dom_iff.mpr ⟨_, h⟩⟩
+  by_contra hp
+  exact absurd (omegaApprox_add_le_chaitinOmega hp hdom)
+    (not_le.mpr (chaitinOmega_lt_omegaApprox_find ha hex p.length))
+
+/-- Chaitin's constant is not computably approximable: no computable sequence of
+dyadic numerators `a` satisfies `|Ω - a n * 2 ^ (-n)| ≤ 2 ^ (-n)` for every `n`.
+
+A computable approximation from above, combined with the computable
+approximation `omegaApprox` from below, locates a stage past which no program of
+length at most `n` can still halt, and hence decides the halting set of the
+self-delimiting machine, contradicting
+`prefixUniversalEval_dom_not_computablePred`.
+
+The textbook statement speaks of a computable real in the sense of a computable
+sequence of rationals; that notion cannot be phrased here, and what is proved is
+the negation of `IsComputableENNReal`, a predicate the standard notion implies. -/
+@[entry_point]
+theorem chaitinOmega_not_computable : ¬ IsComputableENNReal chaitinOmega := by
+  rintro ⟨a, ha, hb⟩
+  have hex : ∀ n, ∃ t, searchPred a n t := exists_searchPred fun n ↦ (hb n).2
+  have hdecide : Computable fun p : List Bool ↦
+      (prefixEvaln (Nat.find (hex p.length)) p).isSome :=
+    Primrec.option_isSome.to_comp.comp
+      (prefixEvaln_primrec.to_comp.comp
+        (((searchTime_computable ha hex).comp Computable.list_length).pair Computable.id))
+  refine prefixUniversalEval_dom_not_computablePred
+    (ComputablePred.computable_iff.mpr ⟨_, hdecide, funext fun p ↦ propext ?_⟩)
+  exact dom_iff_prefixEvaln_find_isSome (fun n ↦ (hb n).1) hex p
 
 end InformationTheory.Kolmogorov
