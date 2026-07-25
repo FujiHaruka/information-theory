@@ -5,7 +5,7 @@
 **Status**: 🚧 進行中 — degraded 仮定を外した一般 (non-degraded) two-receiver broadcast channel に対する
 **Marton inner bound (El Gamal–Kim *Network Information Theory* Thm 8.3、private message のみ)** の形式化。
 親 plan の撤退ライン **L-BC5** (一般 BC + Marton は完全 scope-out) を**ユーザー指示で解除**して追う。
-Phase 1 (mutual covering の second moment 中核) + Phase 4 (共分散の鋭化) 完了、Phase 2/3/5-8 未着手。
+Phase 1/2/4 完了 (mutual covering の second moment 中核 + 鋭化 + region 述語、root 登録済)、Phase 3/5-8 未着手。
 **SoT**: 在庫 [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md) + 本 plan。詳細履歴は git。
 **再検証** (prose にキャッシュしない):
 `scripts/sig_view.ts --sorry InformationTheory/Shannon/BroadcastChannel/Marton/*.lean` /
@@ -16,7 +16,7 @@ Phase 1 (mutual covering の second moment 中核) + Phase 4 (共分散の鋭化
 
 - [x] Phase 0 — Mathlib / in-project 在庫調査 ✅ → [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md)
 - [x] Phase 1 — mutual covering の second moment 中核 (抽象 `S` 版) ✅ `Marton/MutualCovering.lean` (cd5c379a)
-- [ ] Phase 2 — region 述語 + レート分割の消去補題 + root 登録 📋
+- [x] Phase 2 — region 述語 + レート分割の消去補題 + root 登録 ✅ `Marton/Basic.lean` (fa43fcb6)
 - [ ] Phase 3 — 5-tuple ambient plumbing + `martonInfo₁/₂/V₁V₂` 📋
 - [x] Phase 4 — 共分散の鋭化 (conditional slice 版) ✅ `MutualCovering.lean` 追記 (6183832d) ★ sum-rate 制約の要
 - [ ] Phase 5 — typicality 具体化 = `marton_mutual_covering` 📋
@@ -180,8 +180,11 @@ Mathlib 壁 0 件 / 既存率 89% / 自前構築 8 種。**proof-log: no**。
     (`InBCCapacityRegion` は改修しない → D2)。
   - `InMartonRegion.mono` — `I₁ ≤ I₁'`, `I₂ ≤ I₂'`, **`I₁₂' ≤ I₁₂`** (第 3 引数だけ向きが逆) で単調。
   - `exists_martonRateSplit` — Fourier–Motzkin。厳密 3 本 `R₁ < I₁`, `R₂ < I₂`,
-    `R₁+R₂ < I₁+I₂−I₁₂` から `∃ R̃₁ R̃₂, 0 ≤ R̃ᵢ ∧ R̃₁+R̃₂ > I₁₂ ∧ R₁+R̃₁ < I₁ ∧ R₂+R̃₂ < I₂` を作る。
-    構成は `R̃ᵢ := (Iᵢ−Rᵢ)·θ`、`θ := (I₁₂/D + 1)/2`、`D := (I₁−R₁)+(I₂−R₂)`。`I₁₂ ≥ 0` は不要。
+    `R₁+R₂ < I₁+I₂−I₁₂` から
+    `∃ R₁' R₂', 0 ≤ R₁' ∧ 0 ≤ R₂' ∧ I₁₂ < R₁'+R₂' ∧ R₁+R₁' < I₁ ∧ R₂+R₂' < I₂` を作る。
+    構成は `Rᵢ' := (Iᵢ−Rᵢ)·θ`、**`θ := max ((I₁₂/D + 1)/2) (1/2)`**、`D := (I₁−R₁)+(I₂−R₂)`。
+    `I₁₂ ≥ 0` が不要なのは正しいが、**クランプなしの素の `θ` は `I₁₂ < −D` で負になり `0 ≤ Rᵢ'` を破る**
+    (機械確認済)。`R̃` の合成チルダ (U+0303) は Lean の識別子として不正なのでプライム記法を使う。
   - `InformationTheory.lean` に `Marton.MutualCovering` と `Marton.Basic` の import を追加
     (BC ブロックは現状 `InformationTheory.lean:95-101`、その直後に足す)。
     まだ誰にも消費されていない段階で登録するのは、`scripts/dep_*.sh` と CI に見えるようにするため。
