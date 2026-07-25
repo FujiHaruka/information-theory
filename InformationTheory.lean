@@ -101,6 +101,7 @@ import InformationTheory.Shannon.BroadcastChannel.Achievability.Assembly
 import InformationTheory.Shannon.BroadcastChannel.Achievability
 import InformationTheory.Shannon.BroadcastChannel.Marton.Basic
 import InformationTheory.Shannon.BroadcastChannel.Marton.MutualCovering
+import InformationTheory.Shannon.BroadcastChannel.Marton.Setup
 import InformationTheory.Shannon.RelayCutset
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity
