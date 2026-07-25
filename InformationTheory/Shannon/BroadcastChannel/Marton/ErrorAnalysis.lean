@@ -39,8 +39,8 @@ of `Marton.MarkovCore` to apply to it.
 
 ## Main statements
 
-* `marton_jointlyTypicalFiber₁_le` and `marton_alias_slice_avg_le₁`, together with
-  `marton_jointlyTypicalFiber₂_le` and `marton_alias_slice_avg_le₂` — the alias estimate against
+* `marton_jointlyTypicalFiber₁_le` and `marton_alias₁_slice_avg_le`, together with
+  `marton_jointlyTypicalFiber₂_le` and `marton_alias₂_slice_avg_le` — the alias estimate against
   an arbitrary law of the received word.
 * `marton_errorProbAt₁_le_bonferroni` and `marton_averageErrorProb₁_toReal_le`, together with
   `marton_errorProbAt₂_le_bonferroni` and `marton_averageErrorProb₂_toReal_le` — the per-receiver
@@ -200,7 +200,7 @@ lemma marton_jointlyTypicalFiber₁_le
 /-- Averaged alias bound at receiver 1.  For an arbitrary output law `ν`, drawing the alias
 codeword independently of `ν` from the `V₁`-block law makes the probability that it is jointly
 typical with the received word at most `exp(−n (I(V₁; Y₁) − 3ε))`. -/
-theorem marton_alias_slice_avg_le₁
+theorem marton_alias₁_slice_avg_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
@@ -323,7 +323,7 @@ codeword independently of `ν` from the `V₂`-block law makes the probability t
 typical with the received word at most `exp(−n (I(V₂; Y₂) − 3ε))`.
 
 @audit:ok -/
-theorem marton_alias_slice_avg_le₂
+theorem marton_alias₂_slice_avg_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
@@ -632,7 +632,7 @@ private lemma sum_codebook_alias_le
 a *different message row* than the transmitted one is jointly typical with the received word with
 probability at most `exp(−n (I(V₁; Y₁) − 3ε))`.  The covering choice reads only the transmitted
 rows, so the alias row stays independent of the transmission even though the choice depends on
-the codebook; and because the fiber bound behind `marton_alias_slice_avg_le₁` is uniform over
+the codebook; and because the fiber bound behind `marton_alias₁_slice_avg_le` is uniform over
 received words, the law of the received word never has to be identified.  The estimate reads the
 selection only through the fact that it yields a probability law on input words, so it is
 insensitive to the radius and to the typicality notion the selection tests.
@@ -731,7 +731,7 @@ theorem marton_random_codebook_alias₁_le
           (Measure.pi fun _ : Fin n ↦ pV.map (Prod.fst : V₁ × V₂ → V₁)).real {v} * G v x)
           ≤ Real.exp (-(n : ℝ) * (martonInfo₁ pV K W - 3 * ε)) := by
       intro x
-      exact marton_alias_slice_avg_le₁ pV K W hpV hK hW (Measure.pi fun i ↦ W (x i))
+      exact marton_alias₁_slice_avg_le pV K W hpV hK hW (Measure.pi fun i ↦ W (x i))
     calc ∑ c₂ : MartonSubcodebook M₂ M₂' n V₂,
             (martonSubcodebookMeasure (pV.map Prod.snd) M₂ M₂' n).real {c₂}
               * ∑ x : Fin n → α, (L r (c₂ m.2)).real {x}
@@ -979,7 +979,7 @@ theorem marton_random_codebook_alias₂_le
             (Measure.pi fun _ : Fin n ↦ pV.map (Prod.snd : V₁ × V₂ → V₂)).real {v} * G v x)
             ≤ Real.exp (-(n : ℝ) * (martonInfo₂ pV K W - 3 * ε)) := by
         intro x
-        exact marton_alias_slice_avg_le₂ pV K W hpV hK hW (Measure.pi fun i ↦ W (x i))
+        exact marton_alias₂_slice_avg_le pV K W hpV hK hW (Measure.pi fun i ↦ W (x i))
       have hswap : (∑ v : Fin n → V₂,
             (Measure.pi fun _ : Fin n ↦ pV.map (Prod.snd : V₁ × V₂ → V₂)).real {v}
               * ∑ x : Fin n → α, (L (c₁ m.1) r).real {x} * G v x)
