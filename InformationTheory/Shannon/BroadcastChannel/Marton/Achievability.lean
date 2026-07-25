@@ -774,7 +774,8 @@ rate region is the same either way.
 
 The hypotheses `hpV`, `hK` and `hW` are full-support regularity preconditions, shared with
 `marton_strong_mutual_covering` and with `bc_achievability`, and carry no part of the coding
-argument.
+argument.  The positivity hypotheses `_hR₁` and `_hR₂` are not used in the proof either; they are
+kept so that the signature lines up with `bc_achievability`.
 
 No typicality radius appears in the statement, and the construction uses three nested ones rather
 than a single shared one: the two decoders test weak joint typicality at a radius `ε`, the
