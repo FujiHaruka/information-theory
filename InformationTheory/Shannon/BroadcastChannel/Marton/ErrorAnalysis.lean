@@ -19,6 +19,12 @@ bound of the covering file, which is uniform over received words; that uniformit
 the alias estimate proceed without identifying the law of the received word, which the selection
 distorts.
 
+Two typicality radii run through the file and are independent parameters: the encoder selects a
+*strongly* typical auxiliary pair at radius `ε_cov`, while both decoders test *weak* joint
+typicality at radius `ε`.  The asymmetry is forced: the alias estimate only needs the weak fiber
+bound, whereas the transmitted pair has to have its empirical type pinned for the conditional AEP
+of `Marton.MarkovCore` to apply to it.
+
 ## Main definitions
 
 * `MartonSubcodebook` and `martonSubcodebookMeasure` — one receiver's auxiliary subcodebook and
@@ -236,36 +242,41 @@ instance martonSubcodebookMeasure.instIsProbabilityMeasure
 end Codebooks
 
 /-- The encoder's covering choice for one message pair: an index pair whose two auxiliary
-codewords are jointly typical, falling back to `(0, 0)` when the two subcodebook rows contain no
-such pair.  It reads only the two rows addressed by the message pair, which is what keeps the
-codewords of every other row independent of the transmission. -/
+codewords are jointly *strongly* typical, falling back to `(0, 0)` when the two subcodebook rows
+contain no such pair.  It reads only the two rows addressed by the message pair, which is what
+keeps the codewords of every other row independent of the transmission.
+
+Strong typicality — rather than the weak typicality the decoders use — is what pins the empirical
+type of the selected pair, and hence, through the input kernel, the empirical type of the
+transmitted `(V₁, X)` block that the receiver-1 conditional AEP consumes.  The selection radius
+`ε_cov` is therefore a parameter of its own, independent of the decoding radius. -/
 noncomputable def martonSelectRow
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂)
-    {M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε : ℝ)
+    {M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε_cov : ℝ)
     (r₁ : Fin M₁' → (Fin n → V₁)) (r₂ : Fin M₂' → (Fin n → V₂)) : Fin M₁' × Fin M₂' :=
   haveI : Decidable (∃ l : Fin M₁' × Fin M₂', (r₁ l.1, r₂ l.2) ∈
-      jointlyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonV₂s n ε) :=
+      jointStronglyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonV₂s n ε_cov) :=
     Classical.propDecidable _
   if h : ∃ l : Fin M₁' × Fin M₂', (r₁ l.1, r₂ l.2) ∈
-      jointlyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonV₂s n ε
+      jointStronglyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonV₂s n ε_cov
     then Classical.choose h
     else (⟨0, hM₁'⟩, ⟨0, hM₂'⟩)
 
 /-- The first auxiliary codeword actually transmitted for the message pair `m`. -/
 noncomputable def martonAux₁
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂)
-    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε : ℝ)
+    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε_cov : ℝ)
     (c₁ : MartonSubcodebook M₁ M₁' n V₁) (c₂ : MartonSubcodebook M₂ M₂' n V₂)
     (m : Fin M₁ × Fin M₂) : Fin n → V₁ :=
-  c₁ m.1 (martonSelectRow pV K W hM₁' hM₂' ε (c₁ m.1) (c₂ m.2)).1
+  c₁ m.1 (martonSelectRow pV K W hM₁' hM₂' ε_cov (c₁ m.1) (c₂ m.2)).1
 
 /-- The second auxiliary codeword actually transmitted for the message pair `m`. -/
 noncomputable def martonAux₂
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂)
-    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε : ℝ)
+    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε_cov : ℝ)
     (c₁ : MartonSubcodebook M₁ M₁' n V₁) (c₂ : MartonSubcodebook M₂ M₂' n V₂)
     (m : Fin M₁ × Fin M₂) : Fin n → V₂ :=
-  c₂ m.2 (martonSelectRow pV K W hM₁' hM₂' ε (c₁ m.1) (c₂ m.2)).2
+  c₂ m.2 (martonSelectRow pV K W hM₁' hM₂' ε_cov (c₁ m.1) (c₂ m.2)).2
 
 /-- The input codebook law *conditional on* the two subcodebooks: the input word of the message
 pair `m` is drawn letterwise from `K` applied to the selected auxiliary pair, independently
@@ -273,19 +284,20 @@ across message pairs.  This is where the input randomization of a general kernel
 the deterministic `BroadcastCode.encoder` being fixed only after a pigeonhole step. -/
 noncomputable def martonInputCodebookMeasure
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂)
-    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε : ℝ)
+    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε_cov : ℝ)
     (c₁ : MartonSubcodebook M₁ M₁' n V₁) (c₂ : MartonSubcodebook M₂ M₂' n V₂) :
     Measure (Fin M₁ × Fin M₂ → (Fin n → α)) :=
   Measure.pi fun m : Fin M₁ × Fin M₂ ↦
     Measure.pi fun l : Fin n ↦
-      K (martonAux₁ pV K W hM₁' hM₂' ε c₁ c₂ m l, martonAux₂ pV K W hM₁' hM₂' ε c₁ c₂ m l)
+      K (martonAux₁ pV K W hM₁' hM₂' ε_cov c₁ c₂ m l,
+        martonAux₂ pV K W hM₁' hM₂' ε_cov c₁ c₂ m l)
 
 instance martonInputCodebookMeasure.instIsProbabilityMeasure
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂)
-    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε : ℝ)
+    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε_cov : ℝ)
     (c₁ : MartonSubcodebook M₁ M₁' n V₁) (c₂ : MartonSubcodebook M₂ M₂' n V₂) :
-    IsProbabilityMeasure (martonInputCodebookMeasure pV K W hM₁' hM₂' ε c₁ c₂) := by
+    IsProbabilityMeasure (martonInputCodebookMeasure pV K W hM₁' hM₂' ε_cov c₁ c₂) := by
   unfold martonInputCodebookMeasure
   infer_instance
 
@@ -348,13 +360,13 @@ private lemma martonMessageDecoder₁_eq_of_unique
 theorem marton_errorProbAt₁_le_bonferroni
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ M₁' M₂' n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) (hM₁' : 0 < M₁') (hM₂' : 0 < M₂')
-    {ε : ℝ}
+    {ε ε_cov : ℝ}
     (c₁ : MartonSubcodebook M₁ M₁' n V₁) (c₂ : MartonSubcodebook M₂ M₂' n V₂)
     (cX : Fin M₁ × Fin M₂ → (Fin n → α)) (m : Fin M₁ × Fin M₂) :
     ((martonCodebookToCode pV K W hM₁ hM₂ ε c₁ c₂ cX).errorProbAt₁ W m).toReal
       ≤ (Measure.pi fun i ↦ W (cX m i)).real
           { y : Fin n → β₁ × β₂ |
-            (martonAux₁ pV K W hM₁' hM₂' ε c₁ c₂ m, fun i ↦ (y i).1) ∉
+            (martonAux₁ pV K W hM₁' hM₂' ε_cov c₁ c₂ m, fun i ↦ (y i).1) ∉
               jointlyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonY₁s n ε }
         + ∑ q ∈ ((Finset.univ : Finset (Fin M₁)).erase m.1) ×ˢ (Finset.univ : Finset (Fin M₁')),
             (Measure.pi fun i ↦ W (cX m i)).real
@@ -371,14 +383,14 @@ theorem marton_errorProbAt₁_le_bonferroni
   set S : Finset (Fin M₁ × Fin M₁') :=
     ((Finset.univ : Finset (Fin M₁)).erase m.1) ×ˢ (Finset.univ : Finset (Fin M₁')) with hS_def
   set E1 : Set (Fin n → β₁ × β₂) :=
-    { y | (martonAux₁ pV K W hM₁' hM₂' ε c₁ c₂ m, fun i ↦ (y i).1) ∉ J } with hE1_def
+    { y | (martonAux₁ pV K W hM₁' hM₂' ε_cov c₁ c₂ m, fun i ↦ (y i).1) ∉ J } with hE1_def
   set Ea : Fin M₁ × Fin M₁' → Set (Fin n → β₁ × β₂) :=
     fun q ↦ { y | (c₁ q.1 q.2, fun i ↦ (y i).1) ∈ J } with hEa_def
   have h_sub : c.errorEvent₁ m ⊆ E1 ∪ ⋃ q ∈ S, Ea q := by
     intro y hy
     rw [BroadcastCode.errorEvent₁, Set.mem_setOf_eq] at hy
     set y₁ : Fin n → β₁ := fun i ↦ (y i).1 with hy₁_def
-    by_cases htrue : (martonAux₁ pV K W hM₁' hM₂' ε c₁ c₂ m, y₁) ∈ J
+    by_cases htrue : (martonAux₁ pV K W hM₁' hM₂' ε_cov c₁ c₂ m, y₁) ∈ J
     · by_cases halias : ∃ q : Fin M₁ × Fin M₁', q.1 ≠ m.1 ∧ (c₁ q.1 q.2, y₁) ∈ J
       · obtain ⟨q, hq_ne, hq_mem⟩ := halias
         refine Or.inr (Set.mem_iUnion.mpr ⟨q, Set.mem_iUnion.mpr ⟨?_, hq_mem⟩⟩)
@@ -387,7 +399,7 @@ theorem marton_errorProbAt₁_le_bonferroni
       · exfalso
         apply hy
         have hex : ∃ l : Fin M₁', (c₁ m.1 l, y₁) ∈ J :=
-          ⟨(martonSelectRow pV K W hM₁' hM₂' ε (c₁ m.1) (c₂ m.2)).1, htrue⟩
+          ⟨(martonSelectRow pV K W hM₁' hM₂' ε_cov (c₁ m.1) (c₂ m.2)).1, htrue⟩
         have huniq : ∃! w : Fin M₁, ∃ l : Fin M₁', (c₁ w l, y₁) ∈ J := by
           refine ⟨m.1, hex, ?_⟩
           intro w hw
@@ -414,7 +426,7 @@ theorem marton_averageErrorProb₁_toReal_le
       ≤ ((M₁ * M₂ : ℕ) : ℝ)⁻¹ * ∑ m : Fin M₁ × Fin M₂,
           ((Measure.pi fun i ↦ W (cX m i)).real
               { y : Fin n → β₁ × β₂ |
-                (martonAux₁ pV K W hM₁' hM₂' ε c₁ c₂ m, fun i ↦ (y i).1) ∉
+                (martonAux₁ pV K W hM₁' hM₂' ε_cov c₁ c₂ m, fun i ↦ (y i).1) ∉
                   jointlyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonY₁s n ε }
             + ∑ q ∈ ((Finset.univ : Finset (Fin M₁)).erase m.1) ×ˢ
                       (Finset.univ : Finset (Fin M₁')),
@@ -491,7 +503,7 @@ theorem marton_random_codebook_alias₁_le
           * ∑ c₂ : MartonSubcodebook M₂ M₂' n V₂,
               (martonSubcodebookMeasure (pV.map Prod.snd) M₂ M₂' n).real {c₂}
                 * ∑ cX : Fin M₁ × Fin M₂ → (Fin n → α),
-                    (martonInputCodebookMeasure pV K W hM₁' hM₂' ε c₁ c₂).real {cX}
+                    (martonInputCodebookMeasure pV K W hM₁' hM₂' ε_cov c₁ c₂).real {cX}
                       * (Measure.pi fun i ↦ W (cX m i)).real
                           { y : Fin n → β₁ × β₂ |
                             (c₁ q.1 q.2, fun i ↦ (y i).1) ∈
@@ -506,8 +518,8 @@ theorem marton_random_codebook_alias₁_le
   -- The transmitted input law, as a function of the two transmitted subcodebook rows.
   set L : (Fin M₁' → (Fin n → V₁)) → (Fin M₂' → (Fin n → V₂)) → Measure (Fin n → α) :=
     fun r s ↦ Measure.pi fun l : Fin n ↦
-      K (r (martonSelectRow pV K W hM₁' hM₂' ε r s).1 l,
-        s (martonSelectRow pV K W hM₁' hM₂' ε r s).2 l) with hL_def
+      K (r (martonSelectRow pV K W hM₁' hM₂' ε_cov r s).1 l,
+        s (martonSelectRow pV K W hM₁' hM₂' ε_cov r s).2 l) with hL_def
   have hLprob : ∀ r s, IsProbabilityMeasure (L r s) := by
     intro r s
     rw [hL_def]
@@ -520,16 +532,16 @@ theorem marton_random_codebook_alias₁_le
   -- Step 1: marginalize the input codebook to the transmitted row.
   have step1 : ∀ (c₁ : MartonSubcodebook M₁ M₁' n V₁) (c₂ : MartonSubcodebook M₂ M₂' n V₂),
       (∑ cX : Fin M₁ × Fin M₂ → (Fin n → α),
-          (martonInputCodebookMeasure pV K W hM₁' hM₂' ε c₁ c₂).real {cX} * G (c₁ q.1 q.2) (cX m))
+          (martonInputCodebookMeasure pV K W hM₁' hM₂' ε_cov c₁ c₂).real {cX} * G (c₁ q.1 q.2) (cX m))
         = ∑ x : Fin n → α, (L (c₁ m.1) (c₂ m.2)).real {x} * G (c₁ q.1 q.2) x := by
     intro c₁ c₂
-    have hmp : (martonInputCodebookMeasure pV K W hM₁' hM₂' ε c₁ c₂).map (Function.eval m)
+    have hmp : (martonInputCodebookMeasure pV K W hM₁' hM₂' ε_cov c₁ c₂).map (Function.eval m)
         = L (c₁ m.1) (c₂ m.2) :=
       (measurePreserving_eval (fun m' : Fin M₁ × Fin M₂ ↦
         Measure.pi fun l : Fin n ↦
-          K (martonAux₁ pV K W hM₁' hM₂' ε c₁ c₂ m' l,
-            martonAux₂ pV K W hM₁' hM₂' ε c₁ c₂ m' l)) m).map_eq
-    have h1 := sum_weighted_map (martonInputCodebookMeasure pV K W hM₁' hM₂' ε c₁ c₂)
+          K (martonAux₁ pV K W hM₁' hM₂' ε_cov c₁ c₂ m' l,
+            martonAux₂ pV K W hM₁' hM₂' ε_cov c₁ c₂ m' l)) m).map_eq
+    have h1 := sum_weighted_map (martonInputCodebookMeasure pV K W hM₁' hM₂' ε_cov c₁ c₂)
       (Function.eval m) (measurable_pi_apply m) (G (c₁ q.1 q.2))
     rw [hmp] at h1
     exact h1
@@ -539,7 +551,7 @@ theorem marton_random_codebook_alias₁_le
           * ∑ c₂ : MartonSubcodebook M₂ M₂' n V₂,
               (martonSubcodebookMeasure (pV.map Prod.snd) M₂ M₂' n).real {c₂}
                 * ∑ cX : Fin M₁ × Fin M₂ → (Fin n → α),
-                    (martonInputCodebookMeasure pV K W hM₁' hM₂' ε c₁ c₂).real {cX}
+                    (martonInputCodebookMeasure pV K W hM₁' hM₂' ε_cov c₁ c₂).real {cX}
                       * G (c₁ q.1 q.2) (cX m))
       = ∑ c₁ : MartonSubcodebook M₁ M₁' n V₁,
           (martonSubcodebookMeasure (pV.map Prod.fst) M₁ M₁' n).real {c₁}
