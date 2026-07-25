@@ -1,0 +1,280 @@
+{
+  "problem": "Marton inner bound (一般 non-degraded broadcast channel の achievability, El Gamal-Kim Thm 8.3 の U = ∅ 版) の形式化。Phase 0-7 = 在庫 → mutual covering 抽象核 → 領域述語 / Fourier-Motzkin → ambient 測度 → 分散上界の鋭化 → covering の typicality 具体化 → 誤り解析 (受信機 1 → strong 化 → 受信機 2 鏡像) → headline marton_achievability の組み立て。",
+  "proof_log": "docs/proof-logs/proof-log-marton-inner-bound.md",
+  "generated_at": "2026-07-25T15:42:58.032Z",
+  "filters": {
+    "file_prefix": "InformationTheory/Shannon"
+  },
+  "idle_gap_minutes": 5,
+  "sessions": [
+    {
+      "id": "28fee7e9-30a3-4b84-ae0b-1c44385ed89e",
+      "note": "relay leg 1。/relay 起票 → Phase 0 在庫 → Phase 1 MutualCovering.lean 抽象核 (cd5c379a, 6183832d, cba5726e) → Phase 2 Basic.lean + Fourier-Motzkin (fa43fcb6) → Phase 3 Setup.lean ambient (5800094e) → Phase 4 分散上界の鋭化 → Phase 5 Covering.lean weak 版 (0d3412ec) → Phase 6a ErrorAnalysis.lean 受信機 1 (49a7191f)。冒頭 2 ターン (9f00e6e8 / ef990974 = scope 確認の Q&A) は解答ターンではないので除外。",
+      "start": "2026-07-25T06:45:39.973Z",
+      "end": "2026-07-25T10:37:46.198Z",
+      "wall_time_seconds": 13926,
+      "active_time_seconds": 6419,
+      "turns": 90,
+      "tool_calls": {
+        "Skill": 1,
+        "Bash": 43,
+        "ToolSearch": 2,
+        "TaskCreate": 10,
+        "TaskUpdate": 8,
+        "Agent": 10,
+        "Read": 5,
+        "Edit": 18,
+        "SendMessage": 2,
+        "Write": 2
+      },
+      "bash_breakdown": {
+        "cat": 1,
+        "rg": 3,
+        "ls": 3,
+        "other": 8,
+        "echo": 7,
+        "lake_env_lean": 7,
+        "git": 12,
+        "wc": 2
+      },
+      "bash_total": 43,
+      "edits_by_file": {
+        "docs/shannon/marton-inner-bound-plan.md": 18
+      },
+      "writes_by_file": {
+        ".claude/handoff.md": 2
+      },
+      "reads_by_file": {
+        "docs/shannon/marton-inner-bound-plan.md": 4,
+        ".claude/handoff.md": 1
+      },
+      "matched_edits": 0,
+      "matched_writes": 0,
+      "tool_errors": 1,
+      "tokens": {
+        "input": 418,
+        "output": 308243,
+        "cache_read": 32490310,
+        "cache_creation": 464900
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "sidechain_entries": 0
+    },
+    {
+      "id": "d36fc4e7-e6ce-46b9-be2a-8c1aebbd78c3",
+      "note": "relay leg 2。方針 B への切替 (weak → covering 集合のみ strong 化) を実施。Shannon/ConditionalAEP.lean 新規 + Marton/MarkovCore.lean 新規 (e4e73e87 → d87ada71) → Phase 6a' strong 版 4 本並置 + 選択規則の strong 化 + 条件付き strong 典型橋 (e4fa6af2 → c776a03f) → Phase 6b-1 受信機 2 鏡像の MarkovCore 側 (0e9f21d5)。",
+      "start": "2026-07-25T10:36:58.540Z",
+      "end": "2026-07-25T13:01:17.667Z",
+      "wall_time_seconds": 8659,
+      "active_time_seconds": 3672,
+      "turns": 76,
+      "tool_calls": {
+        "Bash": 51,
+        "Skill": 1,
+        "Read": 4,
+        "ToolSearch": 1,
+        "TaskCreate": 2,
+        "TaskUpdate": 2,
+        "Agent": 7,
+        "Write": 2
+      },
+      "bash_breakdown": {
+        "cat": 1,
+        "tail": 1,
+        "git": 16,
+        "deno": 1,
+        "rg": 8,
+        "sed": 8,
+        "other": 9,
+        "lake_env_lean": 4,
+        "mkdir": 1,
+        "lake_build": 1,
+        "echo": 1
+      },
+      "bash_total": 51,
+      "edits_by_file": {},
+      "writes_by_file": {
+        ".claude/handoff.md": 2
+      },
+      "reads_by_file": {
+        "docs/shannon/marton-inner-bound-plan.md": 2,
+        "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1,
+        ".claude/handoff.md": 1
+      },
+      "matched_edits": 0,
+      "matched_writes": 0,
+      "tool_errors": 3,
+      "tokens": {
+        "input": 302,
+        "output": 138040,
+        "cache_read": 18944790,
+        "cache_creation": 393638
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "sidechain_entries": 0
+    },
+    {
+      "id": "c397fe51-394d-41a0-9a84-b7b8fc751ad2",
+      "note": "relay leg 3。Phase 6b-2 ErrorAnalysis の受信機 2 鏡像 (4d05f51f) → 2 ゲート (c237ab1f honesty / 43d7ea76 style) → plan 同期。",
+      "start": "2026-07-25T13:00:49.827Z",
+      "end": "2026-07-25T13:57:06.225Z",
+      "wall_time_seconds": 3376,
+      "active_time_seconds": 1973,
+      "turns": 56,
+      "tool_calls": {
+        "Bash": 27,
+        "Skill": 1,
+        "ToolSearch": 2,
+        "TaskCreate": 7,
+        "Read": 4,
+        "TaskUpdate": 2,
+        "Agent": 4,
+        "TaskList": 1,
+        "Write": 2
+      },
+      "bash_breakdown": {
+        "cat": 1,
+        "tail": 1,
+        "git": 9,
+        "other": 9,
+        "rg": 7
+      },
+      "bash_total": 27,
+      "edits_by_file": {},
+      "writes_by_file": {
+        ".claude/handoff.md": 2
+      },
+      "reads_by_file": {
+        "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1,
+        "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 2,
+        ".claude/handoff.md": 1
+      },
+      "matched_edits": 0,
+      "matched_writes": 0,
+      "tool_errors": 3,
+      "tokens": {
+        "input": 200,
+        "output": 83004,
+        "cache_read": 10376470,
+        "cache_creation": 301221
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "sidechain_entries": 0
+    },
+    {
+      "id": "ca20f7f5-4ebb-4f34-8592-fdd834499c3d",
+      "note": "relay leg 4。MarkovCore.lean を Prelim/Receiver1/Receiver2 + umbrella へ分割 (e83c1533) → Phase 7 headline marton_achievability を Achievability.lean で closure (8f6f2f07) → 2 ゲート (63d37b8f honesty / 0f30e5d1 style)。注意: このターンは Phase 8 bookkeeping (README 定理表 + 本 proof-log の起票) を末尾に含む不可分ターンであり、その分だけツールコールが上振れしている。また計測時点でセッション進行中のため打ち切り値。",
+      "start": "2026-07-25T13:56:44.621Z",
+      "end": "2026-07-25T15:35:49.817Z",
+      "wall_time_seconds": 5945,
+      "active_time_seconds": 2860,
+      "turns": 35,
+      "tool_calls": {
+        "Bash": 22,
+        "Skill": 1,
+        "ToolSearch": 1,
+        "TaskList": 1,
+        "TaskCreate": 5,
+        "Agent": 8,
+        "TaskUpdate": 4,
+        "Write": 1
+      },
+      "bash_breakdown": {
+        "ls": 1,
+        "git": 9,
+        "other": 4,
+        "rg": 5,
+        "sed": 1,
+        "lake_env_lean": 1,
+        "lake_build": 1
+      },
+      "bash_total": 22,
+      "edits_by_file": {},
+      "writes_by_file": {
+        "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/ca20f7f5-4ebb-4f34-8592-fdd834499c3d/scratchpad/AxCheck.lean": 1
+      },
+      "reads_by_file": {},
+      "matched_edits": 0,
+      "matched_writes": 0,
+      "tool_errors": 0,
+      "tokens": {
+        "input": 160,
+        "output": 106258,
+        "cache_read": 7287183,
+        "cache_creation": 340464
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "sidechain_entries": 0
+    }
+  ],
+  "totals": {
+    "start": "2026-07-25T06:45:39.973Z",
+    "end": "2026-07-25T15:35:49.817Z",
+    "wall_time_seconds": 31906,
+    "active_time_seconds": 14924,
+    "turns": 257,
+    "tool_calls": {
+      "Skill": 4,
+      "Bash": 143,
+      "ToolSearch": 6,
+      "TaskCreate": 24,
+      "TaskUpdate": 16,
+      "Agent": 29,
+      "Read": 13,
+      "Edit": 18,
+      "SendMessage": 2,
+      "Write": 7,
+      "TaskList": 2
+    },
+    "bash_breakdown": {
+      "cat": 3,
+      "rg": 23,
+      "ls": 4,
+      "other": 30,
+      "echo": 8,
+      "lake_env_lean": 12,
+      "git": 46,
+      "wc": 2,
+      "tail": 2,
+      "deno": 1,
+      "sed": 9,
+      "mkdir": 1,
+      "lake_build": 2
+    },
+    "bash_total": 143,
+    "edits_by_file": {
+      "docs/shannon/marton-inner-bound-plan.md": 18
+    },
+    "writes_by_file": {
+      ".claude/handoff.md": 6,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/ca20f7f5-4ebb-4f34-8592-fdd834499c3d/scratchpad/AxCheck.lean": 1
+    },
+    "reads_by_file": {
+      "docs/shannon/marton-inner-bound-plan.md": 6,
+      ".claude/handoff.md": 3,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 2
+    },
+    "matched_edits": 0,
+    "matched_writes": 0,
+    "tool_errors": 7,
+    "tokens": {
+      "input": 1080,
+      "output": 635545,
+      "cache_read": 69098753,
+      "cache_creation": 1500223
+    },
+    "models": [
+      "claude-opus-5"
+    ],
+    "sidechain_entries": 0
+  }
+}

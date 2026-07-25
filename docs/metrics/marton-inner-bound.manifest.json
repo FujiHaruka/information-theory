@@ -1,0 +1,28 @@
+{
+  "problem": "Marton inner bound (一般 non-degraded broadcast channel の achievability, El Gamal-Kim Thm 8.3 の U = ∅ 版) の形式化。Phase 0-7 = 在庫 → mutual covering 抽象核 → 領域述語 / Fourier-Motzkin → ambient 測度 → 分散上界の鋭化 → covering の typicality 具体化 → 誤り解析 (受信機 1 → strong 化 → 受信機 2 鏡像) → headline marton_achievability の組み立て。",
+  "proof_log": "docs/proof-logs/proof-log-marton-inner-bound.md",
+  "sessions": [
+    {
+      "id": "28fee7e9-30a3-4b84-ae0b-1c44385ed89e",
+      "prompt_ids": ["c994e8d1", "45da3d6f", "1727bda1", "f6908556"],
+      "note": "relay leg 1。/relay 起票 → Phase 0 在庫 → Phase 1 MutualCovering.lean 抽象核 (cd5c379a, 6183832d, cba5726e) → Phase 2 Basic.lean + Fourier-Motzkin (fa43fcb6) → Phase 3 Setup.lean ambient (5800094e) → Phase 4 分散上界の鋭化 → Phase 5 Covering.lean weak 版 (0d3412ec) → Phase 6a ErrorAnalysis.lean 受信機 1 (49a7191f)。冒頭 2 ターン (9f00e6e8 / ef990974 = scope 確認の Q&A) は解答ターンではないので除外。"
+    },
+    {
+      "id": "d36fc4e7-e6ce-46b9-be2a-8c1aebbd78c3",
+      "prompt_ids": ["7576dcc1"],
+      "note": "relay leg 2。方針 B への切替 (weak → covering 集合のみ strong 化) を実施。Shannon/ConditionalAEP.lean 新規 + Marton/MarkovCore.lean 新規 (e4e73e87 → d87ada71) → Phase 6a' strong 版 4 本並置 + 選択規則の strong 化 + 条件付き strong 典型橋 (e4fa6af2 → c776a03f) → Phase 6b-1 受信機 2 鏡像の MarkovCore 側 (0e9f21d5)。"
+    },
+    {
+      "id": "c397fe51-394d-41a0-9a84-b7b8fc751ad2",
+      "prompt_ids": ["d83d85b7", "5de51783"],
+      "note": "relay leg 3。Phase 6b-2 ErrorAnalysis の受信機 2 鏡像 (4d05f51f) → 2 ゲート (c237ab1f honesty / 43d7ea76 style) → plan 同期。"
+    },
+    {
+      "id": "ca20f7f5-4ebb-4f34-8592-fdd834499c3d",
+      "prompt_ids": ["ec510508"],
+      "note": "relay leg 4。MarkovCore.lean を Prelim/Receiver1/Receiver2 + umbrella へ分割 (e83c1533) → Phase 7 headline marton_achievability を Achievability.lean で closure (8f6f2f07) → 2 ゲート (63d37b8f honesty / 0f30e5d1 style)。注意: このターンは Phase 8 bookkeeping (README 定理表 + 本 proof-log の起票) を末尾に含む不可分ターンであり、その分だけツールコールが上振れしている。また計測時点でセッション進行中のため打ち切り値。"
+    }
+  ],
+  "filters": { "file_prefix": "InformationTheory/Shannon" },
+  "idle_gap_minutes": 5
+}

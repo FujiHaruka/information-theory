@@ -108,6 +108,7 @@ mac_capacity_region_reconciliation | MAC reconciliation: achievability corner in
 mac_timesharing_capacity_region | MAC time-sharing capacity region = closed convex hull of per-input pentagons (Cover–Thomas Thm 15.3.1, convex-hull form)
 bc_converse | degraded broadcast-channel converse, single-letter auxiliary-variable capacity-region outer bound (Cover–Thomas Thm 15.6.2)
 bc_achievability | degraded broadcast-channel achievability, superposition-coding inner bound (Cover–Thomas Thm 15.6.2)
+marton_achievability | general broadcast-channel achievability, Marton inner bound at U = ∅ (El Gamal–Kim Thm 8.3)
 relay_cutset_outer_bound | relay-channel cut-set outer bound, min of broadcast-cut and MAC-cut per-letter sums (Cover–Thomas Thm 15.10.1)
 
 @ 16 | Log-optimal portfolio
