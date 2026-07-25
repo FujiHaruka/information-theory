@@ -62,10 +62,6 @@ For "does Mathlib have lemma X?" questions, **try `loogle` before `rg`/`grep`**.
   - **Conclusion pattern**: `|- _ ≤ _` finds inequalities.
 - **Fall back to `rg`** for text-level searches: comments, docstrings, file-structure exploration, or pattern matches not tied to a specific identifier.
 
-### ⚠️ `rg -rn` フットガン（既定フラグが道具を静かに壊す原型 → `§SELF-REPORT-DRIFT`）
-
-`rg` の `-r` は `--replace`（値を取る）。grep の `-r`=recursive の手癖で `-rn` / `-ril` と束ねると後続フラグが置換文字列に食われ、**エラーなく**出力が壊れる（`rg` は再帰が既定なので `-r` は不要）。今は PreToolUse フック（`.claude/hooks/block-rg-replace.sh`）が実行前に block する。行番号=`-n` / 大小無視=`-i` / ファイル名のみ=`-l` を個別指定し、置換したい時だけ長形式 `--replace` を使う。**メタ教訓**: 症状を環境のせいにする前にフラグを疑え（フックは parser でなく heuristic なので踏み切れない隙は残る）。
-
 ## Dependency / consumer reverse-lookup tools (`scripts/dep_*.sh`)
 
 Mechanically look up dependency relations among in-project declarations. The implementation is `scripts/DepGraph.lean` (`import InformationTheory`). Unlike `rg`'s text matching, it picks up **true term-level references** (mentions in docstrings / comments don't count). Three modes:

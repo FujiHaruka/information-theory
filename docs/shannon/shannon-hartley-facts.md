@@ -324,8 +324,7 @@ operational↔capacity ギャップ / ℂ-ℝ 境界 / Gauss 回転は**何に�
 （Lean core `Declaration.lean:482-486`、逐語確認済）⟹ walk が型シグネチャだけを辿り、**証明本体に literally
 書かれている補題を「未消費」と確信をもって報告する**。エラーは出ない。tell = 異なる root が
 **byte-identical な closure サイズ**（5862/5862）を返すこと。`allowOpaque := true` で closure は ~56k に増え、
-**verdict が反転する**。`rg -rn` フットガン（CLAUDE.md）と**同型**: 既定フラグが道具を静かに
-「確信ある偽陰性」へ劣化させる。
+**verdict が反転する**（既定フラグが道具を静かに「確信ある偽陰性」へ劣化させる）。
 ⟹ **0-hit を根拠にする前に positive control を通せ**（消費しているのが分かっている root/補題の対で
 CONSUMED が出ることを確認）。監査を救ったのは答えへの疑いではなく **positive control** だった。
 本 family は既に 3 つの結論をこの種の probe の上に建てている。
