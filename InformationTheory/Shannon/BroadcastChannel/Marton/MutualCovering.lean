@@ -12,7 +12,11 @@ is a second moment argument, and its analytic core does not mention typicality a
 it only needs a measurable set `S` in the product alphabet and the fact that indicator
 variables attached to two pairs sharing no index are independent.
 
-This file develops that core for an abstract `S`.
+This file develops that core for an abstract `S`, in two strengths.  The crude estimate uses
+no information about `S` beyond `p`, and its conclusion needs both `M₁ p` and `M₂ p` to be
+large.  The sharpened estimate additionally assumes that every conditional slice of `S` has
+mass at most `qbar`, and its conclusion splits into a term needing only the product `M₁ M₂ p`
+to be large plus two terms carrying the ratio `qbar / p`.
 
 ## Main definitions
 
@@ -22,6 +26,8 @@ This file develops that core for an abstract `S`.
 * `pairIndicator X Y S p` — indicator of "the codeword pair indexed by `p` lands in `S`".
 * `pairCount X Y S` — number of codeword pairs landing in `S`.
 * `pairProb μX μY S` — probability that one independently drawn pair lands in `S`.
+* `sharedFstSet S` / `sharedSndSet S` — the triples of codewords realizing two pairs that
+  share one index.
 
 ## Main results
 
@@ -30,6 +36,11 @@ This file develops that core for an abstract `S`.
 * `variance_pairCount_le` — the resulting variance bound `Var[A] ≤ M₁ M₂ (M₁ + M₂) p`.
 * `meas_pairCount_eq_zero_le` — Chebyshev's inequality applied to the above:
   `P(A = 0) ≤ (M₁ + M₂) / (M₁ M₂ p)`.
+* `covariance_pairIndicator_shared_le` — under a uniform slice bound `qbar`, the covariance of
+  two pairs sharing one index is at most `qbar * p`.
+* `variance_pairCount_le'` and `meas_pairCount_eq_zero_le'` — the sharpened variance bound
+  `Var[A] ≤ M₁ M₂ p + M₁ M₂ (M₁ + M₂) qbar p` and the estimate it yields,
+  `P(A = 0) ≤ 1 / (M₁ M₂ p) + qbar / (M₁ p) + qbar / (M₂ p)`.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -188,6 +199,22 @@ lemma integral_pairCount [IsProbabilityMeasure μ] :
 
 end Moments
 
+omit [MeasurableSpace Ω] [MeasurableSpace α] [MeasurableSpace β] [Nonempty α] [Nonempty β] in
+private lemma sum_ite_fst_eq (c : ℝ) (a : Fin M₁) :
+    ∑ q : Fin M₁ × Fin M₂, (if q.1 = a then c else 0) = M₂ * c := by
+  rw [Fintype.sum_prod_type]
+  have hinner : ∀ x : Fin M₁, (∑ _y : Fin M₂, (if x = a then c else 0))
+      = (M₂ : ℝ) * (if x = a then c else 0) := by
+    intro x; simp [Finset.card_univ]
+  rw [Finset.sum_congr rfl fun x _ ↦ hinner x, ← Finset.mul_sum]
+  simp
+
+omit [MeasurableSpace Ω] [MeasurableSpace α] [MeasurableSpace β] [Nonempty α] [Nonempty β] in
+private lemma sum_ite_snd_eq (c : ℝ) (b : Fin M₂) :
+    ∑ q : Fin M₁ × Fin M₂, (if q.2 = b then c else 0) = M₁ * c := by
+  rw [Fintype.sum_prod_type]
+  simp [Finset.sum_ite_eq', mul_comm]
+
 section Variance
 
 variable (hX : ∀ i, Measurable (X i)) (hY : ∀ j, Measurable (Y j)) (hS : MeasurableSet S)
@@ -218,20 +245,6 @@ lemma variance_pairCount_le [IsProbabilityMeasure μ] :
       = ∑ p : Fin M₁ × Fin M₂, ∑ q : Fin M₁ × Fin M₂,
           cov[pairIndicator X Y S p, pairIndicator X Y S q; μ] :=
     variance_fun_sum fun p ↦ memLp_pairIndicator hX hY hS p
-  have hfst : ∀ (c : ℝ) (a : Fin M₁),
-      ∑ q : Fin M₁ × Fin M₂, (if q.1 = a then c else 0) = M₂ * c := by
-    intro c a
-    rw [Fintype.sum_prod_type]
-    have hinner : ∀ x : Fin M₁, (∑ _y : Fin M₂, (if x = a then c else 0))
-        = (M₂ : ℝ) * (if x = a then c else 0) := by
-      intro x; simp [Finset.card_univ]
-    rw [Finset.sum_congr rfl fun x _ ↦ hinner x, ← Finset.mul_sum]
-    simp
-  have hsnd : ∀ (c : ℝ) (b : Fin M₂),
-      ∑ q : Fin M₁ × Fin M₂, (if q.2 = b then c else 0) = M₁ * c := by
-    intro c b
-    rw [Fintype.sum_prod_type]
-    simp [Finset.sum_ite_eq', mul_comm]
   have key : ∀ p : Fin M₁ × Fin M₂,
       ∑ q : Fin M₁ × Fin M₂, cov[pairIndicator X Y S p, pairIndicator X Y S q; μ]
         ≤ (M₁ + M₂) * pairProb μX μY S := by
@@ -250,7 +263,7 @@ lemma variance_pairCount_le [IsProbabilityMeasure μ] :
             + (if q.2 = p.2 then pairProb μX μY S else 0)) :=
           Finset.sum_le_sum fun q _ ↦ hbound q
       _ = M₂ * pairProb μX μY S + M₁ * pairProb μX μY S := by
-          rw [Finset.sum_add_distrib, hfst, hsnd]
+          rw [Finset.sum_add_distrib, sum_ite_fst_eq, sum_ite_snd_eq]
       _ = (M₁ + M₂) * pairProb μX μY S := by ring
   calc Var[pairCount X Y S; μ]
       = ∑ p : Fin M₁ × Fin M₂, ∑ q : Fin M₁ × Fin M₂,
@@ -292,6 +305,315 @@ theorem meas_pairCount_eq_zero_le [IsProbabilityMeasure μ]
   nlinarith [hvar, hc0]
 
 end Variance
+
+section SharpVariance
+
+/-! ### Sharpened variance bound under a uniform slice bound
+
+`variance_pairCount_le` bounds the covariance of two pairs sharing one index by the crude
+`pairProb μX μY S`.  If instead every conditional slice of `S` has mass at most `qbar`, that
+covariance is bounded by `qbar * pairProb μX μY S`, and the resulting Chebyshev estimate
+splits into a diagonal term `1 / (M₁ M₂ p)` plus shared-index terms carrying a factor `qbar`.
+
+Two slice bounds are needed, one in each coordinate: the `α`-slices control the pairs sharing
+their second index and the `β`-slices control the pairs sharing their first index.  Neither
+bound implies the other. -/
+
+/-- Triples `(x, y, y')` whose two pairs `(x, y)` and `(x, y')` both lie in `S`. -/
+def sharedFstSet (S : Set (α × β)) : Set (α × β × β) :=
+  {r | (r.1, r.2.1) ∈ S ∧ (r.1, r.2.2) ∈ S}
+
+/-- Triples `(y, x, x')` whose two pairs `(x, y)` and `(x', y)` both lie in `S`. -/
+def sharedSndSet (S : Set (α × β)) : Set (β × α × α) :=
+  {r | (r.2.1, r.1) ∈ S ∧ (r.2.2, r.1) ∈ S}
+
+variable {qbar : ℝ}
+
+omit [Nonempty α] [Nonempty β] in
+lemma measurableSet_sharedFstSet (hS : MeasurableSet S) :
+    MeasurableSet (sharedFstSet S) := by
+  have h1 : Measurable fun r : α × β × β ↦ (r.1, r.2.1) :=
+    measurable_fst.prodMk (measurable_fst.comp measurable_snd)
+  have h2 : Measurable fun r : α × β × β ↦ (r.1, r.2.2) :=
+    measurable_fst.prodMk (measurable_snd.comp measurable_snd)
+  exact (h1 hS).inter (h2 hS)
+
+omit [Nonempty α] [Nonempty β] in
+lemma measurableSet_sharedSndSet (hS : MeasurableSet S) :
+    MeasurableSet (sharedSndSet S) := by
+  have h1 : Measurable fun r : β × α × α ↦ (r.2.1, r.1) :=
+    (measurable_fst.comp measurable_snd).prodMk measurable_fst
+  have h2 : Measurable fun r : β × α × α ↦ (r.2.2, r.1) :=
+    (measurable_snd.comp measurable_snd).prodMk measurable_fst
+  exact (h1 hS).inter (h2 hS)
+
+omit [Nonempty β] in
+lemma prod_sharedFstSet_le [SFinite μX] [IsFiniteMeasure μY] (hS : MeasurableSet S)
+    (hsliceY : ∀ x, (μY (Prod.mk x ⁻¹' S)).toReal ≤ qbar) :
+    (μX.prod (μY.prod μY)) (sharedFstSet S) ≤ ENNReal.ofReal qbar * (μX.prod μY) S := by
+  have hq0 : 0 ≤ qbar := le_trans ENNReal.toReal_nonneg (hsliceY (Classical.arbitrary α))
+  have hle : ∀ x, μY (Prod.mk x ⁻¹' S) ≤ ENNReal.ofReal qbar := fun x ↦
+    (ENNReal.le_ofReal_iff_toReal_le (measure_ne_top μY _) hq0).2 (hsliceY x)
+  have hslice : ∀ x : α, (μY.prod μY) (Prod.mk x ⁻¹' sharedFstSet S)
+      = μY (Prod.mk x ⁻¹' S) * μY (Prod.mk x ⁻¹' S) := by
+    intro x
+    have hset : Prod.mk x ⁻¹' sharedFstSet S = (Prod.mk x ⁻¹' S) ×ˢ (Prod.mk x ⁻¹' S) := by
+      ext u; simp [sharedFstSet, Set.mem_prod]
+    rw [hset, Measure.prod_prod]
+  rw [Measure.prod_apply (measurableSet_sharedFstSet hS)]
+  simp_rw [hslice]
+  calc ∫⁻ x, μY (Prod.mk x ⁻¹' S) * μY (Prod.mk x ⁻¹' S) ∂μX
+      ≤ ∫⁻ x, ENNReal.ofReal qbar * μY (Prod.mk x ⁻¹' S) ∂μX :=
+        lintegral_mono fun x ↦ mul_le_mul' (hle x) le_rfl
+    _ = ENNReal.ofReal qbar * ∫⁻ x, μY (Prod.mk x ⁻¹' S) ∂μX :=
+        lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+    _ = ENNReal.ofReal qbar * (μX.prod μY) S := by rw [Measure.prod_apply hS]
+
+omit [Nonempty α] in
+lemma prod_sharedSndSet_le [IsFiniteMeasure μX] [SFinite μY] (hS : MeasurableSet S)
+    (hsliceX : ∀ y, (μX ((fun x ↦ (x, y)) ⁻¹' S)).toReal ≤ qbar) :
+    (μY.prod (μX.prod μX)) (sharedSndSet S) ≤ ENNReal.ofReal qbar * (μX.prod μY) S := by
+  have hq0 : 0 ≤ qbar := le_trans ENNReal.toReal_nonneg (hsliceX (Classical.arbitrary β))
+  have hle : ∀ y, μX ((fun x ↦ (x, y)) ⁻¹' S) ≤ ENNReal.ofReal qbar := fun y ↦
+    (ENNReal.le_ofReal_iff_toReal_le (measure_ne_top μX _) hq0).2 (hsliceX y)
+  have hslice : ∀ y : β, (μX.prod μX) (Prod.mk y ⁻¹' sharedSndSet S)
+      = μX ((fun x ↦ (x, y)) ⁻¹' S) * μX ((fun x ↦ (x, y)) ⁻¹' S) := by
+    intro y
+    have hset : Prod.mk y ⁻¹' sharedSndSet S
+        = ((fun x ↦ (x, y)) ⁻¹' S) ×ˢ ((fun x ↦ (x, y)) ⁻¹' S) := by
+      ext u; simp [sharedSndSet, Set.mem_prod]
+    rw [hset, Measure.prod_prod]
+  rw [Measure.prod_apply (measurableSet_sharedSndSet hS)]
+  simp_rw [hslice]
+  calc ∫⁻ y, μX ((fun x ↦ (x, y)) ⁻¹' S) * μX ((fun x ↦ (x, y)) ⁻¹' S) ∂μY
+      ≤ ∫⁻ y, ENNReal.ofReal qbar * μX ((fun x ↦ (x, y)) ⁻¹' S) ∂μY :=
+        lintegral_mono fun y ↦ mul_le_mul' (hle y) le_rfl
+    _ = ENNReal.ofReal qbar * ∫⁻ y, μX ((fun x ↦ (x, y)) ⁻¹' S) ∂μY :=
+        lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+    _ = ENNReal.ofReal qbar * (μX.prod μY) S := by rw [Measure.prod_apply_symm hS]
+
+variable (hX : ∀ i, Measurable (X i)) (hY : ∀ j, Measurable (Y j)) (hS : MeasurableSet S)
+  (hIndep : iIndepFun (codebookFamily X Y) μ)
+  (hXlaw : ∀ i, μ.map (X i) = μX) (hYlaw : ∀ j, μ.map (Y j) = μY)
+
+include hX hY hIndep hXlaw hYlaw in
+lemma map_codewordTripleFst [IsProbabilityMeasure μ] (i : Fin M₁) {j j' : Fin M₂} (hj : j ≠ j') :
+    μ.map (fun ω ↦ (X i ω, Y j ω, Y j' ω)) = μX.prod (μY.prod μY) := by
+  have hmeas := measurable_codebookFamily hX hY
+  have hpair : IndepFun (fun ω ↦ (codebookFamily X Y (Sum.inr j) ω,
+      codebookFamily X Y (Sum.inr j') ω)) (codebookFamily X Y (Sum.inl i)) μ :=
+    hIndep.indepFun_prodMk hmeas (Sum.inr j) (Sum.inr j') (Sum.inl i) (by simp) (by simp)
+  have h1 : IndepFun (X i) (fun ω ↦ (Y j ω, Y j' ω)) μ :=
+    hpair.symm.comp (φ := fun r : α × β ↦ r.1)
+      (ψ := fun r : (α × β) × (α × β) ↦ (r.1.2, r.2.2)) measurable_fst
+      ((measurable_snd.comp measurable_fst).prodMk (measurable_snd.comp measurable_snd))
+  have h2 : μ.map (fun ω ↦ (Y j ω, Y j' ω)) = μY.prod μY := by
+    have hind : IndepFun (Y j) (Y j') μ :=
+      (hIndep.indepFun (i := Sum.inr j) (j := Sum.inr j') (by simpa using hj)).comp
+        measurable_snd measurable_snd
+    rw [hind.map_prod_eq_prod_map_map (hY j).aemeasurable (hY j').aemeasurable, hYlaw j, hYlaw j']
+  rw [h1.map_prod_eq_prod_map_map (hX i).aemeasurable ((hY j).prodMk (hY j')).aemeasurable,
+    hXlaw i, h2]
+
+include hX hY hIndep hXlaw hYlaw in
+lemma map_codewordTripleSnd [IsProbabilityMeasure μ] {i i' : Fin M₁} (hi : i ≠ i')
+    (j : Fin M₂) :
+    μ.map (fun ω ↦ (Y j ω, X i ω, X i' ω)) = μY.prod (μX.prod μX) := by
+  have hmeas := measurable_codebookFamily hX hY
+  have hpair : IndepFun (fun ω ↦ (codebookFamily X Y (Sum.inl i) ω,
+      codebookFamily X Y (Sum.inl i') ω)) (codebookFamily X Y (Sum.inr j)) μ :=
+    hIndep.indepFun_prodMk hmeas (Sum.inl i) (Sum.inl i') (Sum.inr j) (by simp) (by simp)
+  have h1 : IndepFun (Y j) (fun ω ↦ (X i ω, X i' ω)) μ :=
+    hpair.symm.comp (φ := fun r : α × β ↦ r.2)
+      (ψ := fun r : (α × β) × (α × β) ↦ (r.1.1, r.2.1)) measurable_snd
+      ((measurable_fst.comp measurable_fst).prodMk (measurable_fst.comp measurable_snd))
+  have h2 : μ.map (fun ω ↦ (X i ω, X i' ω)) = μX.prod μX := by
+    have hind : IndepFun (X i) (X i') μ :=
+      (hIndep.indepFun (i := Sum.inl i) (j := Sum.inl i') (by simpa using hi)).comp
+        measurable_fst measurable_fst
+    rw [hind.map_prod_eq_prod_map_map (hX i).aemeasurable (hX i').aemeasurable, hXlaw i, hXlaw i']
+  rw [h1.map_prod_eq_prod_map_map (hY j).aemeasurable ((hX i).prodMk (hX i')).aemeasurable,
+    hYlaw j, h2]
+
+include hX hY hS hIndep hXlaw hYlaw in
+lemma integral_pairIndicator_mul_sharedFst_le [IsProbabilityMeasure μ]
+    (hsliceY : ∀ x, (μY (Prod.mk x ⁻¹' S)).toReal ≤ qbar)
+    (i : Fin M₁) {j j' : Fin M₂} (hj : j ≠ j') :
+    μ[pairIndicator X Y S (i, j) * pairIndicator X Y S (i, j')] ≤ qbar * pairProb μX μY S := by
+  have hμX : IsProbabilityMeasure μX := by
+    rw [← hXlaw i]; exact Measure.isProbabilityMeasure_map (hX i).aemeasurable
+  have hμY : IsProbabilityMeasure μY := by
+    rw [← hYlaw j]; exact Measure.isProbabilityMeasure_map (hY j).aemeasurable
+  have hq0 : 0 ≤ qbar := le_trans ENNReal.toReal_nonneg (hsliceY (Classical.arbitrary α))
+  have hTmeas : Measurable fun ω ↦ (X i ω, Y j ω, Y j' ω) := (hX i).prodMk ((hY j).prodMk (hY j'))
+  have hG : MeasurableSet (sharedFstSet S) := measurableSet_sharedFstSet hS
+  have hprod : pairIndicator X Y S (i, j) * pairIndicator X Y S (i, j')
+      = ((fun ω ↦ (X i ω, Y j ω, Y j' ω)) ⁻¹' sharedFstSet S).indicator (1 : Ω → ℝ) := by
+    funext ω
+    by_cases h1 : (X i ω, Y j ω) ∈ S <;> by_cases h2 : (X i ω, Y j' ω) ∈ S <;>
+      simp [pairIndicator, sharedFstSet, h1, h2]
+  rw [hprod, integral_indicator_one (hTmeas hG), measureReal_def,
+    ← Measure.map_apply hTmeas hG, map_codewordTripleFst hX hY hIndep hXlaw hYlaw i hj]
+  calc ((μX.prod (μY.prod μY)) (sharedFstSet S)).toReal
+      ≤ (ENNReal.ofReal qbar * (μX.prod μY) S).toReal :=
+        ENNReal.toReal_mono (ENNReal.mul_ne_top ENNReal.ofReal_ne_top (measure_ne_top _ _))
+          (prod_sharedFstSet_le hS hsliceY)
+    _ = qbar * pairProb μX μY S := by
+        rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal hq0, pairProb]
+
+include hX hY hS hIndep hXlaw hYlaw in
+lemma integral_pairIndicator_mul_sharedSnd_le [IsProbabilityMeasure μ]
+    (hsliceX : ∀ y, (μX ((fun x ↦ (x, y)) ⁻¹' S)).toReal ≤ qbar)
+    {i i' : Fin M₁} (hi : i ≠ i') (j : Fin M₂) :
+    μ[pairIndicator X Y S (i, j) * pairIndicator X Y S (i', j)] ≤ qbar * pairProb μX μY S := by
+  have hμX : IsProbabilityMeasure μX := by
+    rw [← hXlaw i]; exact Measure.isProbabilityMeasure_map (hX i).aemeasurable
+  have hμY : IsProbabilityMeasure μY := by
+    rw [← hYlaw j]; exact Measure.isProbabilityMeasure_map (hY j).aemeasurable
+  have hq0 : 0 ≤ qbar := le_trans ENNReal.toReal_nonneg (hsliceX (Classical.arbitrary β))
+  have hTmeas : Measurable fun ω ↦ (Y j ω, X i ω, X i' ω) := (hY j).prodMk ((hX i).prodMk (hX i'))
+  have hG : MeasurableSet (sharedSndSet S) := measurableSet_sharedSndSet hS
+  have hprod : pairIndicator X Y S (i, j) * pairIndicator X Y S (i', j)
+      = ((fun ω ↦ (Y j ω, X i ω, X i' ω)) ⁻¹' sharedSndSet S).indicator (1 : Ω → ℝ) := by
+    funext ω
+    by_cases h1 : (X i ω, Y j ω) ∈ S <;> by_cases h2 : (X i' ω, Y j ω) ∈ S <;>
+      simp [pairIndicator, sharedSndSet, h1, h2]
+  rw [hprod, integral_indicator_one (hTmeas hG), measureReal_def,
+    ← Measure.map_apply hTmeas hG, map_codewordTripleSnd hX hY hIndep hXlaw hYlaw hi j]
+  calc ((μY.prod (μX.prod μX)) (sharedSndSet S)).toReal
+      ≤ (ENNReal.ofReal qbar * (μX.prod μY) S).toReal :=
+        ENNReal.toReal_mono (ENNReal.mul_ne_top ENNReal.ofReal_ne_top (measure_ne_top _ _))
+          (prod_sharedSndSet_le hS hsliceX)
+    _ = qbar * pairProb μX μY S := by
+        rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal hq0, pairProb]
+
+include hX hY hS hIndep hXlaw hYlaw in
+theorem covariance_pairIndicator_shared_le [IsProbabilityMeasure μ]
+    (hsliceY : ∀ x, (μY (Prod.mk x ⁻¹' S)).toReal ≤ qbar)
+    (hsliceX : ∀ y, (μX ((fun x ↦ (x, y)) ⁻¹' S)).toReal ≤ qbar)
+    {p q : Fin M₁ × Fin M₂}
+    (hpq : (p.1 = q.1 ∧ p.2 ≠ q.2) ∨ (p.1 ≠ q.1 ∧ p.2 = q.2)) :
+    cov[pairIndicator X Y S p, pairIndicator X Y S q; μ] ≤ qbar * pairProb μX μY S := by
+  obtain ⟨i, j⟩ := p
+  obtain ⟨i', j'⟩ := q
+  have hp2 : MemLp (pairIndicator X Y S (i, j)) 2 μ := memLp_pairIndicator hX hY hS _
+  have hq2 : MemLp (pairIndicator X Y S (i', j')) 2 μ := memLp_pairIndicator hX hY hS _
+  have hmul : μ[pairIndicator X Y S (i, j) * pairIndicator X Y S (i', j')]
+      ≤ qbar * pairProb μX μY S := by
+    rcases hpq with ⟨hfst, hsnd⟩ | ⟨hfst, hsnd⟩
+    · replace hfst : i = i' := hfst
+      replace hsnd : j ≠ j' := hsnd
+      subst hfst
+      exact integral_pairIndicator_mul_sharedFst_le hX hY hS hIndep hXlaw hYlaw hsliceY i hsnd
+    · replace hfst : i ≠ i' := hfst
+      replace hsnd : j = j' := hsnd
+      subst hsnd
+      exact integral_pairIndicator_mul_sharedSnd_le hX hY hS hIndep hXlaw hYlaw hsliceX hfst j
+  have hnn : 0 ≤ μ[pairIndicator X Y S (i, j)] * μ[pairIndicator X Y S (i', j')] :=
+    mul_nonneg (integral_nonneg fun ω ↦ pairIndicator_nonneg _ ω)
+      (integral_nonneg fun ω ↦ pairIndicator_nonneg _ ω)
+  rw [covariance_eq_sub hp2 hq2]
+  linarith
+
+include hX hY hS hIndep hXlaw hYlaw in
+theorem variance_pairCount_le' [IsProbabilityMeasure μ]
+    (hsliceY : ∀ x, (μY (Prod.mk x ⁻¹' S)).toReal ≤ qbar)
+    (hsliceX : ∀ y, (μX ((fun x ↦ (x, y)) ⁻¹' S)).toReal ≤ qbar) :
+    Var[pairCount X Y S; μ]
+      ≤ M₁ * M₂ * pairProb μX μY S
+        + M₁ * M₂ * (M₁ + M₂) * (qbar * pairProb μX μY S) := by
+  have hpnn : 0 ≤ pairProb μX μY S := ENNReal.toReal_nonneg
+  have hq0 : 0 ≤ qbar := le_trans ENNReal.toReal_nonneg (hsliceY (Classical.arbitrary α))
+  have hqp : 0 ≤ qbar * pairProb μX μY S := mul_nonneg hq0 hpnn
+  have hvar : Var[pairCount X Y S; μ]
+      = ∑ p : Fin M₁ × Fin M₂, ∑ q : Fin M₁ × Fin M₂,
+          cov[pairIndicator X Y S p, pairIndicator X Y S q; μ] :=
+    variance_fun_sum fun p ↦ memLp_pairIndicator hX hY hS p
+  have key : ∀ p : Fin M₁ × Fin M₂,
+      ∑ q : Fin M₁ × Fin M₂, cov[pairIndicator X Y S p, pairIndicator X Y S q; μ]
+        ≤ pairProb μX μY S + (M₁ + M₂) * (qbar * pairProb μX μY S) := by
+    intro p
+    have hbound : ∀ q : Fin M₁ × Fin M₂,
+        cov[pairIndicator X Y S p, pairIndicator X Y S q; μ]
+          ≤ (if q = p then pairProb μX μY S else 0)
+            + ((if q.1 = p.1 then qbar * pairProb μX μY S else 0)
+              + (if q.2 = p.2 then qbar * pairProb μX μY S else 0)) := by
+      intro q
+      by_cases h1 : q.1 = p.1 <;> by_cases h2 : q.2 = p.2
+      · rw [if_pos (Prod.ext h1 h2 : q = p), if_pos h1, if_pos h2]
+        have hle := covariance_pairIndicator_le hX hY hS hIndep hXlaw hYlaw p q
+        linarith
+      · have hne : q ≠ p := fun h ↦ h2 (by rw [h])
+        rw [if_neg hne, if_pos h1, if_neg h2]
+        have hle := covariance_pairIndicator_shared_le hX hY hS hIndep hXlaw hYlaw hsliceY hsliceX
+          (Or.inl ⟨h1.symm, Ne.symm h2⟩)
+        linarith
+      · have hne : q ≠ p := fun h ↦ h1 (by rw [h])
+        rw [if_neg hne, if_neg h1, if_pos h2]
+        have hle := covariance_pairIndicator_shared_le hX hY hS hIndep hXlaw hYlaw hsliceY hsliceX
+          (Or.inr ⟨Ne.symm h1, h2.symm⟩)
+        linarith
+      · have hne : q ≠ p := fun h ↦ h1 (by rw [h])
+        rw [if_neg hne, if_neg h1, if_neg h2]
+        have hzero := covariance_pairIndicator_eq_zero hX hY hS hIndep (Ne.symm h1) (Ne.symm h2)
+        linarith
+    calc ∑ q : Fin M₁ × Fin M₂, cov[pairIndicator X Y S p, pairIndicator X Y S q; μ]
+        ≤ ∑ q : Fin M₁ × Fin M₂, ((if q = p then pairProb μX μY S else 0)
+            + ((if q.1 = p.1 then qbar * pairProb μX μY S else 0)
+              + (if q.2 = p.2 then qbar * pairProb μX μY S else 0))) :=
+          Finset.sum_le_sum fun q _ ↦ hbound q
+      _ = pairProb μX μY S
+            + (M₂ * (qbar * pairProb μX μY S) + M₁ * (qbar * pairProb μX μY S)) := by
+          rw [Finset.sum_add_distrib, Finset.sum_add_distrib, sum_ite_fst_eq, sum_ite_snd_eq]
+          simp
+      _ = pairProb μX μY S + (M₁ + M₂) * (qbar * pairProb μX μY S) := by ring
+  calc Var[pairCount X Y S; μ]
+      = ∑ p : Fin M₁ × Fin M₂, ∑ q : Fin M₁ × Fin M₂,
+          cov[pairIndicator X Y S p, pairIndicator X Y S q; μ] := hvar
+    _ ≤ ∑ _p : Fin M₁ × Fin M₂,
+          (pairProb μX μY S + (M₁ + M₂) * (qbar * pairProb μX μY S)) :=
+        Finset.sum_le_sum fun p _ ↦ key p
+    _ = M₁ * M₂ * pairProb μX μY S
+          + M₁ * M₂ * (M₁ + M₂) * (qbar * pairProb μX μY S) := by
+        simp [Finset.card_univ]
+        ring
+
+include hX hY hS hIndep hXlaw hYlaw in
+/-- Sharpened second-moment estimate behind Marton's mutual covering lemma.  When every
+conditional slice of `S` has mass at most `qbar`, the probability that no codeword pair lands
+in `S` splits into a term governed by the product `M₁ M₂` and two terms carrying `qbar`. -/
+theorem meas_pairCount_eq_zero_le' [IsProbabilityMeasure μ]
+    (hsliceY : ∀ x, (μY (Prod.mk x ⁻¹' S)).toReal ≤ qbar)
+    (hsliceX : ∀ y, (μX ((fun x ↦ (x, y)) ⁻¹' S)).toReal ≤ qbar)
+    (hM₁ : M₁ ≠ 0) (hM₂ : M₂ ≠ 0) (hp : 0 < pairProb μX μY S) :
+    μ {ω | pairCount X Y S ω = 0}
+      ≤ ENNReal.ofReal (1 / (M₁ * M₂ * pairProb μX μY S)
+          + qbar / (M₁ * pairProb μX μY S) + qbar / (M₂ * pairProb μX μY S)) := by
+  have hM₁' : (0 : ℝ) < M₁ := by exact_mod_cast Nat.pos_of_ne_zero hM₁
+  have hM₂' : (0 : ℝ) < M₂ := by exact_mod_cast Nat.pos_of_ne_zero hM₂
+  have hc0 : 0 < (M₁ : ℝ) * M₂ * pairProb μX μY S := by positivity
+  have hE : μ[pairCount X Y S] = (M₁ : ℝ) * M₂ * pairProb μX μY S :=
+    integral_pairCount hX hY hS hIndep hXlaw hYlaw
+  have hsub : {ω | pairCount X Y S ω = 0}
+      ⊆ {ω | (M₁ : ℝ) * M₂ * pairProb μX μY S ≤ |pairCount X Y S ω - μ[pairCount X Y S]|} := by
+    intro ω hω
+    simp only [Set.mem_setOf_eq] at hω ⊢
+    rw [hω, hE, zero_sub, abs_neg, abs_of_pos hc0]
+  refine (measure_mono hsub).trans ?_
+  refine (meas_ge_le_variance_div_sq (memLp_pairCount hX hY hS) hc0).trans ?_
+  refine ENNReal.ofReal_le_ofReal ?_
+  have hRHS : 1 / ((M₁ : ℝ) * M₂ * pairProb μX μY S)
+        + qbar / ((M₁ : ℝ) * pairProb μX μY S) + qbar / ((M₂ : ℝ) * pairProb μX μY S)
+      = ((M₁ : ℝ) * M₂ * pairProb μX μY S
+          + (M₁ : ℝ) * M₂ * ((M₁ : ℝ) + M₂) * (qbar * pairProb μX μY S))
+        / ((M₁ : ℝ) * M₂ * pairProb μX μY S) ^ 2 := by
+    field_simp
+    ring
+  rw [hRHS]
+  gcongr
+  exact variance_pairCount_le' hX hY hS hIndep hXlaw hYlaw hsliceY hsliceX
+
+end SharpVariance
 
 section CanonicalAmbient
 
