@@ -39,7 +39,8 @@ pair pins the empirical type of the transmitted words.
   mutual covering for a pair of i.i.d. codebook ensembles, stated over abstract alphabets, at the
   weakly and at the strongly typical set.
 * `marton_mutual_covering` and `marton_strong_mutual_covering` — the same statements for the
-  auxiliary variables of Marton's inner bound, with the covering threshold read as `I(V₁; V₂)`.
+  auxiliary variables of Marton's inner bound, with the covering threshold read as `I(V₁; V₂)`
+  and the typicality radius produced below any prescribed bound.
 * `meas_marton_codebook_no_jointlyTypicalPair_lt` and
   `meas_marton_codebook_no_jointStronglyTypicalPair_lt` — the same two bounds with the typicality
   parameter left as a hypothesis, so that a consumer may choose one radius meeting the covering
@@ -859,8 +860,13 @@ theorem meas_marton_codebook_no_jointlyTypicalPair_lt
 /-- Marton's mutual covering lemma.  Two subcodebooks are drawn independently, the first from
 the `V₁`-marginal of the auxiliary law and the second from its `V₂`-marginal, at positive rates
 `R₁'` and `R₂'` whose sum exceeds the dependence `I(V₁; V₂)` between the auxiliary variables.
-Then there is a typicality parameter for which, at every large enough blocklength, the
-probability that no pair of codewords is jointly typical is below any prescribed `η`.
+Then below any prescribed bound `ε₀` there is a typicality parameter for which, at every large
+enough blocklength, the probability that no pair of codewords is jointly typical is below any
+prescribed `η`.
+
+The upper bound `ε < ε₀` is what gives the conclusion content.  A typicality radius wide enough
+to swallow the whole space empties the failure event, so a statement asserting only `0 < ε`
+would be satisfied by a vacuous witness independently of the rates.
 
 The hypotheses `hpV`, `hK`, `hW` are the full-support regularity preconditions shared by every
 typicality bound in this development; they are what rules out a deterministic input map
@@ -874,32 +880,31 @@ theorem marton_mutual_covering
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hpV : ∀ v : V₁ × V₂, 0 < pV.real {v}) (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {R₁' R₂' η : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂')
-    (hcov : martonInfoV₁V₂ pV K W < R₁' + R₂') (hη : 0 < η) :
-    ∃ ε > 0, ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+    {R₁' R₂' η ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂')
+    (hcov : martonInfoV₁V₂ pV K W < R₁' + R₂') (hη : 0 < η) (hε₀ : 0 < ε₀) :
+    ∃ ε > 0, ε < ε₀ ∧ ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       ((codebookMeasure (pV.map Prod.fst) ⌈Real.exp ((n : ℝ) * R₁')⌉₊ n).prod
           (codebookMeasure (pV.map Prod.snd) ⌈Real.exp ((n : ℝ) * R₂')⌉₊ n)).real
         {c | ∀ i j, (c.1 i, c.2 j) ∉
           jointlyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonV₂s n ε} < η := by
-  obtain ⟨ε, hε, hεcov, hε₁, hε₂⟩ : ∃ ε : ℝ, 0 < ε
-      ∧ martonInfoV₁V₂ pV K W + 3 * ε < R₁' + R₂' ∧ 6 * ε < R₁' ∧ 6 * ε < R₂' := by
-    have hA : min (min ((R₁' + R₂' - martonInfoV₁V₂ pV K W) / 6) (R₁' / 12)) (R₂' / 12)
-        ≤ (R₁' + R₂' - martonInfoV₁V₂ pV K W) / 6 :=
-      (min_le_left _ _).trans (min_le_left _ _)
-    have hB : min (min ((R₁' + R₂' - martonInfoV₁V₂ pV K W) / 6) (R₁' / 12)) (R₂' / 12)
-        ≤ R₁' / 12 := (min_le_left _ _).trans (min_le_right _ _)
-    have hC : min (min ((R₁' + R₂' - martonInfoV₁V₂ pV K W) / 6) (R₁' / 12)) (R₂' / 12)
-        ≤ R₂' / 12 := min_le_right _ _
-    exact ⟨min (min ((R₁' + R₂' - martonInfoV₁V₂ pV K W) / 6) (R₁' / 12)) (R₂' / 12),
-      lt_min (lt_min (by linarith) (by linarith)) (by linarith), by linarith, by linarith,
-      by linarith⟩
-  exact ⟨ε, hε, meas_marton_codebook_no_jointlyTypicalPair_lt pV K W hpV hK hW hε hη
-    hεcov hε₁ hε₂⟩
+  set ε : ℝ := min (min (min ((R₁' + R₂' - martonInfoV₁V₂ pV K W) / 6) (R₁' / 12)) (R₂' / 12))
+    (ε₀ / 2) with hεdef
+  have hεA : ε ≤ (R₁' + R₂' - martonInfoV₁V₂ pV K W) / 6 :=
+    ((min_le_left _ _).trans (min_le_left _ _)).trans (min_le_left _ _)
+  have hεB : ε ≤ R₁' / 12 := ((min_le_left _ _).trans (min_le_left _ _)).trans (min_le_right _ _)
+  have hεC : ε ≤ R₂' / 12 := (min_le_left _ _).trans (min_le_right _ _)
+  have hεD : ε ≤ ε₀ / 2 := min_le_right _ _
+  have hε : 0 < ε := by
+    rw [hεdef]
+    exact lt_min (lt_min (lt_min (by linarith) (by linarith)) (by linarith)) (by linarith)
+  exact ⟨ε, hε, by linarith, meas_marton_codebook_no_jointlyTypicalPair_lt pV K W hpV hK hW hε hη
+    (by linarith) (by linarith) (by linarith)⟩
 
 /-- Mutual covering with independent auxiliary variables, where the covering threshold
-`I(V₁; V₂)` vanishes and every pair of positive rates therefore qualifies.  This is the
-degenerate regime of Marton's inner bound, and it certifies that the hypotheses of
-`marton_mutual_covering` are jointly satisfiable.
+`I(V₁; V₂)` vanishes and every pair of positive rates therefore qualifies.  The typicality
+parameter is again produced below any prescribed bound `ε₀`.  This is the degenerate regime of
+Marton's inner bound, and it certifies that the hypotheses of `marton_mutual_covering` are
+jointly satisfiable.
 
 @audit:ok -/
 theorem marton_mutual_covering_of_indepAux
@@ -909,8 +914,8 @@ theorem marton_mutual_covering_of_indepAux
     (hp₁ : ∀ v : V₁, 0 < p₁.real {v}) (hp₂ : ∀ v : V₂, 0 < p₂.real {v})
     (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {R₁' R₂' η : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂') (hη : 0 < η) :
-    ∃ ε > 0, ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+    {R₁' R₂' η ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂') (hη : 0 < η) (hε₀ : 0 < ε₀) :
+    ∃ ε > 0, ε < ε₀ ∧ ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       ((codebookMeasure ((p₁.prod p₂).map Prod.fst) ⌈Real.exp ((n : ℝ) * R₁')⌉₊ n).prod
           (codebookMeasure ((p₁.prod p₂).map Prod.snd) ⌈Real.exp ((n : ℝ) * R₂')⌉₊ n)).real
         {c | ∀ i j, (c.1 i, c.2 j) ∉
@@ -923,7 +928,7 @@ theorem marton_mutual_covering_of_indepAux
       simp [Prod.ext_iff]
     rw [hsingleton, measureReal_prod_prod]
     exact mul_pos (hp₁ v.1) (hp₂ v.2)
-  refine marton_mutual_covering (p₁.prod p₂) K W hpV hK hW hR₁' hR₂' ?_ hη
+  refine marton_mutual_covering (p₁.prod p₂) K W hpV hK hW hR₁' hR₂' ?_ hη hε₀
   rw [martonInfoV₁V₂_eq_zero_of_prod]
   linarith
 
@@ -983,13 +988,17 @@ theorem meas_marton_codebook_no_jointStronglyTypicalPair_lt
 /-- Marton's mutual covering lemma at the strongly typical set.  Two subcodebooks are drawn
 independently, the first from the `V₁`-marginal of the auxiliary law and the second from its
 `V₂`-marginal, at positive rates `R₁'` and `R₂'` whose sum exceeds the dependence `I(V₁; V₂)`
-between the auxiliary variables.  Then there is a typicality parameter for which, at every large
-enough blocklength, the probability that no pair of codewords is jointly strongly typical is
-below any prescribed `η`.
+between the auxiliary variables.  Then below any prescribed bound `ε₀` there is a typicality
+parameter for which, at every large enough blocklength, the probability that no pair of codewords
+is jointly strongly typical is below any prescribed `η`.
 
 This is strictly stronger than `marton_mutual_covering`: the strongly typical set is contained in
 the weakly typical one of the radius widened by `martonCoveringBandConst`, so the event bounded
 here contains the weak one.
+
+The upper bound `ε < ε₀` is what gives the conclusion content.  A typicality radius wide enough
+to swallow the whole space empties the failure event, so a statement asserting only `0 < ε`
+would be satisfied by a vacuous witness independently of the rates.
 
 The hypotheses `hpV`, `hK`, `hW` are the full-support regularity preconditions shared by every
 typicality bound in this development; they are what rules out a deterministic input map
@@ -1003,9 +1012,9 @@ theorem marton_strong_mutual_covering
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hpV : ∀ v : V₁ × V₂, 0 < pV.real {v}) (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {R₁' R₂' η : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂')
-    (hcov : martonInfoV₁V₂ pV K W < R₁' + R₂') (hη : 0 < η) :
-    ∃ ε > 0, ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+    {R₁' R₂' η ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂')
+    (hcov : martonInfoV₁V₂ pV K W < R₁' + R₂') (hη : 0 < η) (hε₀ : 0 < ε₀) :
+    ∃ ε > 0, ε < ε₀ ∧ ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       ((codebookMeasure (pV.map Prod.fst) ⌈Real.exp ((n : ℝ) * R₁')⌉₊ n).prod
           (codebookMeasure (pV.map Prod.snd) ⌈Real.exp ((n : ℝ) * R₂')⌉₊ n)).real
         {c | ∀ i j, (c.1 i, c.2 j) ∉
@@ -1015,18 +1024,20 @@ theorem marton_strong_mutual_covering
   set E : ℝ := 4 * martonCoveringBandConst pV K W + 6 with hE
   have hDpos : 0 < D := by rw [hD]; linarith
   have hEpos : 0 < E := by rw [hE]; linarith
-  set ε : ℝ := min (min ((R₁' + R₂' - martonInfoV₁V₂ pV K W) / (2 * D)) (R₁' / (2 * E)))
-    (R₂' / (2 * E)) with hεdef
+  set ε : ℝ := min (min (min ((R₁' + R₂' - martonInfoV₁V₂ pV K W) / (2 * D)) (R₁' / (2 * E)))
+    (R₂' / (2 * E))) (ε₀ / 2) with hεdef
   have hεA : ε ≤ (R₁' + R₂' - martonInfoV₁V₂ pV K W) / (2 * D) :=
-    (min_le_left _ _).trans (min_le_left _ _)
-  have hεB : ε ≤ R₁' / (2 * E) := (min_le_left _ _).trans (min_le_right _ _)
-  have hεC : ε ≤ R₂' / (2 * E) := min_le_right _ _
+    ((min_le_left _ _).trans (min_le_left _ _)).trans (min_le_left _ _)
+  have hεB : ε ≤ R₁' / (2 * E) :=
+    ((min_le_left _ _).trans (min_le_left _ _)).trans (min_le_right _ _)
+  have hεC : ε ≤ R₂' / (2 * E) := (min_le_left _ _).trans (min_le_right _ _)
+  have hεD : ε ≤ ε₀ / 2 := min_le_right _ _
   have hε : 0 < ε := by
     rw [hεdef]
-    exact lt_min (lt_min (div_pos (by linarith) (by linarith)) (div_pos hR₁' (by linarith)))
-      (div_pos hR₂' (by linarith))
-  refine ⟨ε, hε, meas_marton_codebook_no_jointStronglyTypicalPair_lt pV K W hpV hK hW hε hη
-    ?_ ?_ ?_⟩
+    exact lt_min (lt_min (lt_min (div_pos (by linarith) (by linarith))
+      (div_pos hR₁' (by linarith))) (div_pos hR₂' (by linarith))) (by linarith)
+  refine ⟨ε, hε, by linarith,
+    meas_marton_codebook_no_jointStronglyTypicalPair_lt pV K W hpV hK hW hε hη ?_ ?_ ?_⟩
   · have h := mul_le_mul_of_nonneg_left hεA hDpos.le
     rw [show D * ((R₁' + R₂' - martonInfoV₁V₂ pV K W) / (2 * D))
         = (R₁' + R₂' - martonInfoV₁V₂ pV K W) / 2 by field_simp] at h
@@ -1039,8 +1050,9 @@ theorem marton_strong_mutual_covering
     linarith
 
 /-- Strongly typical mutual covering with independent auxiliary variables, where the covering
-threshold `I(V₁; V₂)` vanishes and every pair of positive rates therefore qualifies.  This is the
-degenerate regime of Marton's inner bound, and it certifies that the hypotheses of
+threshold `I(V₁; V₂)` vanishes and every pair of positive rates therefore qualifies.  The
+typicality parameter is again produced below any prescribed bound `ε₀`.  This is the degenerate
+regime of Marton's inner bound, and it certifies that the hypotheses of
 `marton_strong_mutual_covering` are jointly satisfiable.
 
 @audit:ok -/
@@ -1051,8 +1063,8 @@ theorem marton_strong_mutual_covering_of_indepAux
     (hp₁ : ∀ v : V₁, 0 < p₁.real {v}) (hp₂ : ∀ v : V₂, 0 < p₂.real {v})
     (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {R₁' R₂' η : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂') (hη : 0 < η) :
-    ∃ ε > 0, ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+    {R₁' R₂' η ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂') (hη : 0 < η) (hε₀ : 0 < ε₀) :
+    ∃ ε > 0, ε < ε₀ ∧ ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       ((codebookMeasure ((p₁.prod p₂).map Prod.fst) ⌈Real.exp ((n : ℝ) * R₁')⌉₊ n).prod
           (codebookMeasure ((p₁.prod p₂).map Prod.snd) ⌈Real.exp ((n : ℝ) * R₂')⌉₊ n)).real
         {c | ∀ i j, (c.1 i, c.2 j) ∉
@@ -1065,7 +1077,7 @@ theorem marton_strong_mutual_covering_of_indepAux
       simp [Prod.ext_iff]
     rw [hsingleton, measureReal_prod_prod]
     exact mul_pos (hp₁ v.1) (hp₂ v.2)
-  refine marton_strong_mutual_covering (p₁.prod p₂) K W hpV hK hW hR₁' hR₂' ?_ hη
+  refine marton_strong_mutual_covering (p₁.prod p₂) K W hpV hK hW hR₁' hR₂' ?_ hη hε₀
   rw [martonInfoV₁V₂_eq_zero_of_prod]
   linarith
 
