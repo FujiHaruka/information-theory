@@ -114,6 +114,11 @@ lemma pi_nonuniform_mean_concentration
         ENNReal.toReal_ofReal (div_nonneg (variance_nonneg S μpi) (by positivity))
     _ = (∑ i, variance (ψ i) (ν i)) / ((n : ℝ) ^ 2 * δ ^ 2) := by rw [hVarS, mul_pow]
 
+/-- The uniform form of the Chebyshev bound: past a threshold determined by the sup-bound `B`, the
+deviation `δ` and the tolerance `tol` alone, every independent non-identically distributed product
+of statistics bounded by `B` puts mass at most `tol` on the `δ`-deviation set of the empirical mean.
+
+@audit:ok -/
 lemma pi_nonuniform_concentration_tendsto
     {B δ tol : ℝ} (hδ : 0 < δ) (htol : 0 < tol) (_hB : 0 ≤ B) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (ν : Fin n → Measure β),
@@ -206,7 +211,11 @@ apply it uniformly over a code ensemble.
 The hypothesis `hpin` is the radius separation: the type radius `r` must beat `ε/2` after
 amplification by `∑ p, |(ν p)[ψ p]|`.  At `r = ε` the conclusion is false in general — the
 amplification constant is unrelated to `ε` — so a caller must shrink the type radius by that
-factor before invoking this. -/
+factor before invoking this.  The reference vector `q` is arbitrary: the conclusion measures the
+deviation from `q`'s own mean, so no consistency or full-support precondition on `q` arises here;
+a caller that wants the deviation read against an entropy supplies that identification itself.
+
+@audit:ok -/
 theorem pi_empiricalMean_deviation_le_of_type_close
     {B ε tol : ℝ} (hε : 0 < ε) (htol : 0 < tol) (hB : 0 ≤ B) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (ν : T → Measure β),

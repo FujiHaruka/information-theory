@@ -235,7 +235,10 @@ private lemma marton_condMean_sum_eq_entropy_joint
 /-! ### The radius separation -/
 
 /-- The Lipschitz factor relating the type radius of the transmitted `(V₁, X)`-block to the width
-of the three entropy bands it has to pin. -/
+of the three entropy bands it has to pin.  The sum runs over the whole alphabet, so letters carrying
+no ambient mass are budgeted for as well.
+
+@audit:ok -/
 noncomputable def martonBandConst
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) : ℝ :=
   (Fintype.card α : ℝ) * logSumAbs (martonAmbientMeasure pV K W) martonV₁s
@@ -247,7 +250,10 @@ noncomputable def martonBandConst
 
 /-- The type radius at which the transmitted `(V₁, X)`-block has to be pinned for the output bands
 to hold at radius `ε`.  It is a computed term of `ε` rather than a further parameter, so the
-signatures downstream carry one radius only. -/
+signatures downstream carry one radius only.  It is strictly smaller than `ε`, and its
+amplification by `martonBandConst` stays strictly inside `ε/2`, for every ensemble.
+
+@audit:ok -/
 noncomputable def martonStrongRadius
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) (ε : ℝ) : ℝ :=
   ε / (2 * (1 + martonBandConst pV K W))
@@ -469,7 +475,13 @@ output leaves the pair `(v₁, y₁)` outside the weakly jointly typical set wit
 The threshold is uniform in `v₁`, `x` and hence in the code, which is what lets the receiver-1
 error decomposition consume it after the encoder's selection has already distorted the law of the
 transmitted words.  The hypotheses on `pV`, `K`, `W` are the Markov-kernel regularity of the
-ensemble; no full-support assumption is needed. -/
+ensemble; no full-support assumption is needed.  Both properties a free reference law would have to
+assume are structural here: it is a probability law because the ensemble is built from a probability
+measure and two Markov kernels, and its `(V₁, X)`- and `(V₁, Y₁)`-marginals are consistent because
+both are marginals of the same compProd chain.  A letter of zero ambient mass therefore needs no
+separate treatment — it enters the type radius and the band constant like any other.
+
+@audit:ok -/
 theorem marton_condAEP_jointlyTypical
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -516,7 +528,9 @@ theorem marton_condAEP_jointlyTypical
 /-- The hypothesis of `marton_condAEP_jointlyTypical` is met by the ambient ensemble itself with
 probability tending to one: an i.i.d. `(V₁, X)`-block is type-pinned at the strong radius.  This
 certifies that the conditional AEP is not vacuous — it is the ambient counterpart of the pinning
-the encoder's selection has to preserve. -/
+the encoder's selection has to preserve.
+
+@audit:ok -/
 theorem marton_strongRadius_prob_tendsto_one
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -537,7 +551,9 @@ theorem marton_strongRadius_prob_tendsto_one
     (fun i ↦ martonAmbient_identDistrib_coord pV K W _ hg i)
     (martonStrongRadius_pos pV K W hε)
 
-/-- The complement reading of `marton_condAEP_jointlyTypical`. -/
+/-- The complement reading of `marton_condAEP_jointlyTypical`.
+
+@audit:ok -/
 theorem marton_condAEP_jointlyTypical_ge
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
