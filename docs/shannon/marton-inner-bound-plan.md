@@ -5,7 +5,8 @@
 **Status**: 🚧 進行中 — degraded 仮定を外した一般 (non-degraded) two-receiver broadcast channel に対する
 **Marton inner bound (El Gamal–Kim *Network Information Theory* Thm 8.3、private message のみ)** の形式化。
 親 plan の撤退ライン **L-BC5** (一般 BC + Marton は完全 scope-out) を**ユーザー指示で解除**して追う。
-Phase 1/2/3/4 完了 (second moment 中核 + 鋭化 + region 述語 + 5-tuple ambient、root 登録済)、Phase 5-8 未着手。
+Phase 1-5 完了 (**mutual covering lemma 本体 `marton_mutual_covering` が proof-done**、root 登録済)、
+残るは誤り解析 (6a/6b) + 組み立て (7) + ゲート (8)。撤退ライン L-MT1〜6 は**全て不発動**。
 **SoT**: 在庫 [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md) + 本 plan。詳細履歴は git。
 **再検証** (prose にキャッシュしない):
 `scripts/sig_view.ts --sorry InformationTheory/Shannon/BroadcastChannel/Marton/*.lean` /
@@ -19,7 +20,7 @@ Phase 1/2/3/4 完了 (second moment 中核 + 鋭化 + region 述語 + 5-tuple am
 - [x] Phase 2 — region 述語 + レート分割の消去補題 + root 登録 ✅ `Marton/Basic.lean` (fa43fcb6)
 - [x] Phase 3 — 5-tuple ambient plumbing + `martonInfo₁/₂/V₁V₂` ✅ `Marton/Setup.lean` (5800094e)
 - [x] Phase 4 — 共分散の鋭化 (conditional slice 版) ✅ `MutualCovering.lean` 追記 (6183832d) ★ sum-rate 制約の要
-- [ ] Phase 5 — typicality 具体化 = `marton_mutual_covering` 📋
+- [x] Phase 5 — typicality 具体化 = `marton_mutual_covering` ✅ `Marton/Covering.lean` (0d3412ec)
 - [ ] Phase 6a — 受信機 1 の誤り解析 (選択索引の独立性) 📋
 - [ ] Phase 6b — 受信機 2 の誤り解析 + averaged swap 📋
 - [ ] Phase 7 — 組み立て = headline `marton_achievability` 📋
@@ -245,12 +246,22 @@ Mathlib 壁 0 件 / 既存率 89% / 自前構築 8 種。**proof-log: no**。
   - 指数評価: `p ≥ (1−η)·exp(−n(I₁₂+3ε))` / `q̄ ≤ exp(−n(I₁₂−3ε))` を合成し
     `q̄/p ≤ exp(6nε)/(1−η)`。`η` は自由パラメータなので `η ≤ 1/2` 等で固定する
     (在庫 §6 の注意点)。`v₁` が非 typical な場合はスライスが空
-    (`conditionalTypicalSlice_empty_of_y_not_typical`) — 場合分けを落とすと `typicalSet_prob_le` の
-    `hx` が立たない。
-  - headline: `marton_mutual_covering` — `R̃₁ + R̃₂ > I₁₂` かつ `R̃ᵢ > 0` のとき
-    `∃ N, ∀ n ≥ N, (符号帳測度).real {joint typical な組が 1 つも無い} < η'`。
-- 見積り: **300–480 行** (swap 橋 40–80 行を含む)。先行: Phase 3, 4。**proof-log: yes**。
-- 撤退: L-MT1。
+    (`conditionalTypicalSlice_empty_of_y_not_typical`) — **この場合分けは実際には不要だった**
+    (当初の警告は過大見積り)。ファイバー所属が定義上そのまま第 1 連言を与えるので `hx` は無条件に立ち、
+    `conditionalTypicalSlice_card_le` は非 typical な y の場合分けを内部で済ませて全 y で成立する。
+  - headline: `marton_mutual_covering` (`@[entry_point]`)。
+- **実績** (669 行 / 16 decl / commit `0d3412ec`、見積 300–480 に対し上振れ):
+  - swap 橋は**配線で済んだ** (45 行、逆像の集合等式 + `Fintype.sum_equiv (Equiv.prodComm)`)。
+  - ambient 配線は plan 指定 (Phase 1 の独立性証明を写経) ではなく、**Phase 1 の正準 ambient へ
+    `MeasurePreserving` で結論ごと輸送**する形にした (31 行)。`sumPiEquivProdPi` を symm 方向 +
+    定数型族で使うと依存 Pi の instance 問題が消える。
+  - **plan に無かった橋 1 本**: 符号帳測度を `codebookMeasure` 形で述べるのに
+    `map_jointRV_eq_pi` が要る (6 行、`iIndepFun_iff_map_fun_eq_pi_map` 経由)。
+- **Phase 6-7 への申し送り**: headline は `ε` を結論側 (`∃`) に出している。復号解析と `ε` を協調させる必要が
+  あるので、**Phase 6-7 は `ε` を仮説に取る版 `meas_marton_codebook_no_jointlyTypicalPair_lt` を消費すること**
+  (条件 `I₁₂ + 3ε < R₁'+R₂'`, `6ε < R₁'`, `6ε < R₂'`)。
+- 充足可能性証明書 `marton_mutual_covering_of_indepAux` 付き (補助変数独立の場合、L-MT4 の退避先でもある)。
+- 撤退 L-MT1 は**不発動**。**proof-log: yes**。
 
 ### Phase 6a — 受信機 1 の誤り解析 📋
 
