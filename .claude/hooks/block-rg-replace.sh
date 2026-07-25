@@ -15,7 +15,12 @@ cmd="$(jq -r '.tool_input.command // empty' 2>/dev/null)"
 
 hit="$(printf '%s\n' "$cmd" | awk '
 {
-  n = split($0, seg, /[|;&]/)
+  # Mask quoted strings first so a search PATTERN (which may itself contain
+  # `|` alternations or the text "rg -rn") never participates in detection.
+  line = $0
+  gsub(/"[^"]*"/, " ", line)
+  gsub(/\047[^\047]*\047/, " ", line)
+  n = split(line, seg, /[|;&]/)
   for (i = 1; i <= n; i++) {
     m = split(seg[i], t, /[ \t]+/)
     seen = 0
