@@ -10,7 +10,7 @@ import Mathlib.MeasureTheory.Integral.Marginal
 The convex-geometry gateway `mac_avgPentagon_mem_convexHull` (an achievable pair bounded
 coordinate-wise by time averages of per-letter pentagons lies in the convex hull of their union),
 together with the measure-theoretic bridge feeding it: pentagon well-formedness for the product
-input, the code → ambient reduction (Gap 0), rate extraction, and the per-letter information
+input, the code → ambient reduction, rate extraction, and the per-letter information
 transport under coordinate maps.
 -/
 
@@ -278,7 +278,7 @@ theorem mac_macInfo₂_le_macInfoBoth
 
 end PentagonWellFormedness
 
-/-! ### Code → ambient bridge (Gap 0)
+/-! ### Code → ambient bridge
 
 `mac_converse` is a *floating* message-level statement: it takes the ambient probability space
 `μ`, the message/output projections, and all the memoryless / Markov / independence / uniformity
@@ -598,9 +598,9 @@ private lemma lintegral_pi_eval {γ : Type*} [MeasurableSpace γ]
   simp only [Function.update_self]
   rw [lintegral_const, measure_univ, mul_one]
 
-/-- **Memoryless-channel property from a product-channel ambient.**  If the message-to-output
-kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)` of a channel `W` applied to a
-deterministic codeword `x m`, the ambient `ν ⊗ₘ κ` is a memoryless channel with per-letter
+/-- A product-channel ambient is a memoryless channel: if the message-to-output kernel
+factors as the per-letter product `κ m = ∏ⱼ W (x m j)` of a channel `W` applied to a
+deterministic codeword `x m`, then `ν ⊗ₘ κ` is a memoryless channel with per-letter
 inputs `x ω.1 i` and per-letter outputs `ω.2 i`.
 @audit:ok -/
 private lemma isMemorylessChannel_of_compProd_pi
@@ -768,11 +768,11 @@ lemma macConverse_isMarkovChain
     (macConverseKernel c W) (macConverseCodeKernel W) (fun m ↦ rfl)
   exact h
 
-/-- **MAC converse, from a bare code** (Gap 0 bridge).  For any two-user MAC block code `c` and
+/-- The MAC converse instantiated at a bare code: for any two-user MAC block code `c` and
 Markov channel `W`, the canonical ambient measure `macConverseAmbient c W` discharges every
-hypothesis of the floating message-level converse `mac_converse`, so the rate pair
-`(log M₁, log M₂)` lies in the corner-point region determined by the per-letter conditional and
-joint mutual informations (still carrying the Fano slack, removed later in Gap A).
+hypothesis of the floating converse `mac_converse`, so the rate pair `(log M₁, log M₂)` lies
+in the corner-point region determined by the per-letter conditional and joint mutual
+informations.  The Fano slack is still carried here; it vanishes only in the `n → ∞` limit.
 @audit:ok -/
 theorem mac_converse_from_code
     [NeZero M₁] [NeZero M₂]
@@ -835,8 +835,8 @@ variable {α₁ α₂ β : Type*}
     [MeasurableSingletonClass β] [StandardBorelSpace β]
 variable {M₁ M₂ n : ℕ}
 
-/-- If `⌈exp x⌉₊ ≤ M` then `x ≤ log M`: the block-length-to-rate atom.  `exp x ≤ ⌈exp x⌉₊ ≤ M`,
-so taking logs (both sides positive) gives `x = log (exp x) ≤ log M`. -/
+/-- If `⌈exp x⌉₊ ≤ M` then `x ≤ log M`, the step from a message count to a rate.  From
+`exp x ≤ ⌈exp x⌉₊ ≤ M`, taking logs (both sides positive) gives `x = log (exp x) ≤ log M`. -/
 lemma le_log_of_ceil_exp_le {x : ℝ} {M : ℕ}
     (hM : Nat.ceil (Real.exp x) ≤ M) : x ≤ Real.log (M : ℝ) := by
   have h1 : Real.exp x ≤ (Nat.ceil (Real.exp x) : ℝ) := Nat.le_ceil _
@@ -845,11 +845,12 @@ lemma le_log_of_ceil_exp_le {x : ℝ} {M : ℕ}
   calc x = Real.log (Real.exp x) := (Real.log_exp x).symm
     _ ≤ Real.log (M : ℝ) := Real.log_le_log (Real.exp_pos x) h3
 
-/-- **Weak-converse finite-`n` rate extraction** (Gap A core).  For a fixed two-user block code
-whose message counts satisfy `⌈exp (n R₁)⌉ ≤ M₁`, `⌈exp (n R₂)⌉ ≤ M₂`, chaining the code→ambient
+/-- Finite-`n` rate extraction for the weak converse: for a fixed two-user block code whose
+message counts satisfy `⌈exp (n R₁)⌉ ≤ M₁`, `⌈exp (n R₂)⌉ ≤ M₂`, chaining the code→ambient
 converse `mac_converse_from_code` with `n Rⱼ ≤ log Mⱼ` moves the rate scaled by `n` inside the
 corner-point region determined by the per-letter conditional/joint mutual informations plus the
-Fano slack (still symbolic; the Fano→0 limit is the later CV step). -/
+Fano slack.  The slack is still symbolic here; the Fano → 0 limit is taken in
+`mac_timesharing_converse`. -/
 lemma mac_converse_rate_extract [NeZero M₁] [NeZero M₂]
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {R₁ R₂ : ℝ}
@@ -895,10 +896,10 @@ lemma mac_converse_rate_extract [NeZero M₁] [NeZero M₂]
   exact ⟨hlog₁.trans h.bound₁, hlog₂.trans h.bound₂,
     (add_le_add hlog₁ hlog₂).trans h.boundSum⟩
 
-/-- **Joint error-probability reconciliation** (Gap A error bridge).  The ambient *joint* decode
-error under `macConverseAmbient c W` equals the code's average error probability: the ambient was
-built as `uniform(messages) ⊗ per-letter product channel` precisely to model uniform-message
-transmission, so its joint error event has probability `averageErrorProb`. -/
+/-- The ambient *joint* decode error under `macConverseAmbient c W` equals the code's average
+error probability: the ambient was built as `uniform(messages) ⊗ per-letter product channel`
+precisely to model uniform-message transmission, so its joint error event has probability
+`averageErrorProb`. -/
 lemma mac_converse_ambient_errorProb_joint_eq
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] :
@@ -913,7 +914,7 @@ lemma mac_converse_ambient_errorProb_joint_eq
   have h_err : MeasureFano.errorProb (macConverseAmbient c W)
       (fun ω ↦ (macConverseMsg₁ ω, macConverseMsg₂ ω)) (fun ω i ↦ macConverseYs i ω) c.decoder
       = (macConverseAmbient c W).real S := rfl
-  -- each kernel fibre measures exactly the pointwise error probability
+  -- each kernel fiber measures exactly the pointwise error probability
   have h_ker : ∀ m : Fin M₁ × Fin M₂,
       (macConverseKernel c W) m (Prod.mk m ⁻¹' S) = c.errorProbAt W m := by
     intro m
@@ -982,12 +983,12 @@ variable {α₁ α₂ β : Type*}
     [MeasurableSingletonClass β] [StandardBorelSpace β]
 variable {M₁ M₂ n : ℕ}
 
-/-- **Per-letter joint pushforward of a product-channel compProd.**  For an ambient
-`ν ⊗ₘ κ` whose message-to-output kernel factors as the per-letter product
-`κ m = ∏ⱼ W (x m j)`, the joint law of the `i`-th input-output pair `(x ω.1 i, ω.2 i)` is the
-channel joint `(ν.map (· i ∘ x)) ⊗ₘ W`.  This is the `h_pair_eq` core of
-`isMemorylessChannel_of_compProd_pi`, isolated as the single genuinely-new measure identity
-behind Gap B′. -/
+/-- Per-letter joint pushforward of a product-channel `compProd`: for an ambient `ν ⊗ₘ κ`
+whose message-to-output kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)`, the
+joint law of the `i`-th input-output pair `(x ω.1 i, ω.2 i)` is the channel joint
+`(ν.map (· i ∘ x)) ⊗ₘ W`.  This is the `h_pair_eq` core of
+`isMemorylessChannel_of_compProd_pi`, isolated as the measure identity underlying the
+per-letter identifications below. -/
 private lemma compProd_pi_map_pair_eq
     {M A B : Type*} [MeasurableSpace M] [MeasurableSpace A] [MeasurableSpace B]
     {k : ℕ} (ν : Measure M) [IsProbabilityMeasure ν]
@@ -1099,7 +1100,7 @@ private lemma condMutualInfo_map_comp'
   subst hρ
   exact condMutualInfo_map_comp μ T hT f hf g hg h hh
 
-/-- **Step 1 (Gap B′): per-letter joint law identification.**  Under the converse ambient
+/-- Per-letter joint law identification: under the converse ambient
 `macConverseAmbient c W`, the joint law of the `i`-th per-letter triple
 `(X₁ᵢ, X₂ᵢ, Yᵢ)` equals the achievability per-coordinate joint `macJointDistribution p₁ᵢ p₂ᵢ W`
 of the product of the per-letter input marginals `p₁ᵢ = μ.map X₁ᵢ`, `p₂ᵢ = μ.map X₂ᵢ`.  The two
@@ -1154,7 +1155,7 @@ lemma macConverse_map_triple_eq
     ← Measure.map_map MeasurableEquiv.prodAssoc.measurable hpairmeas, hpair, hmarg]
   rfl
 
-/-- **Per-letter identification, user 1** (Gap B′ deliverable).  The ambient per-letter
+/-- Per-letter identification of the user-1 corner information: the ambient per-letter
 conditional mutual information `I(X₁ᵢ; Yᵢ | X₂ᵢ)` equals the achievability corner information
 `macInfo₁` of the per-letter product input.  This rewrites the user-1 sum term of
 `mac_converse_rate_extract` into `∑ᵢ macInfo₁ p₁ᵢ p₂ᵢ W`. -/
@@ -1181,7 +1182,7 @@ lemma mac_condMI_eq_macInfo₁_at
     Prod.fst measurable_fst (fun q ↦ q.2.2) measurable_snd.snd
     (fun q ↦ q.2.1) measurable_snd.fst).symm
 
-/-- **Per-letter identification, user 2** (Gap B′ deliverable).  The ambient per-letter
+/-- Per-letter identification of the user-2 corner information: the ambient per-letter
 conditional mutual information `I(X₂ᵢ; Yᵢ | X₁ᵢ)` equals `macInfo₂` of the per-letter product
 input. -/
 lemma mac_condMI_eq_macInfo₂_at
@@ -1207,8 +1208,8 @@ lemma mac_condMI_eq_macInfo₂_at
     (fun q ↦ q.2.1) measurable_snd.fst (fun q ↦ q.2.2) measurable_snd.snd
     Prod.fst measurable_fst).symm
 
-/-- **Per-letter identification, sum corner** (Gap B′ deliverable).  The ambient per-letter
-joint mutual information `I((X₁ᵢ, X₂ᵢ); Yᵢ)` equals `macInfoBoth` of the per-letter product
+/-- Per-letter identification of the sum-corner information: the ambient per-letter joint
+mutual information `I((X₁ᵢ, X₂ᵢ); Yᵢ)` equals `macInfoBoth` of the per-letter product
 input. -/
 lemma mac_mutualInfo_eq_macInfoBoth_at
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]

@@ -36,9 +36,9 @@ variable {α₁ α₂ β : Type*}
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- **E1 — user-1 conditional independent-pair bound.**  When user 1's codeword `X̃₁` is
-drawn independently of the jointly distributed pair `(X₂, Y)`, the probability that the
-triple lands in the three-way jointly typical set is at most
+/-- Conditional independent-pair bound for user 1, controlling the `E1` alias event: when
+user 1's codeword `X̃₁` is drawn independently of the jointly distributed pair `(X₂, Y)`,
+the probability that the triple lands in the three-way jointly typical set is at most
 `exp(n·(H(X₁,X₂,Y) − H(X₁) − H(X₂,Y) + 3ε))`.
 
 The measure is the product of user 1's block law and the joint block law of `(X₂, Y)`.
@@ -168,10 +168,10 @@ private lemma typicalSet_relabel
   exact hz
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- **E3 — both-users conditional independent-pair bound.**  When the pair of codewords
-`(X̃₁, X̃₂)` is drawn independently of the output block `Y`, the probability that the
-(reshuffled) triple lands in the three-way jointly typical set is at most
-`exp(n·(H(X₁,X₂,Y) − H(X₁,X₂) − H(Y) + 3ε))`.
+/-- Conditional independent-pair bound for both users, controlling the `E3` alias event:
+when the pair of codewords `(X̃₁, X̃₂)` is drawn independently of the output block `Y`, the
+probability that the (reshuffled) triple lands in the three-way jointly typical set is at
+most `exp(n·(H(X₁,X₂,Y) − H(X₁,X₂) − H(Y) + 3ε))`.
 
 This is the direct three-axis analogue of the single-user independent-pair bound, with the
 `(X₁,X₂)` axes grouped as the "input" and `Y` as the "output".  Combined with input
@@ -257,10 +257,10 @@ theorem macJTS_indep_prob_le_both
   exact le_trans (measureReal_mono h_incl) key
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- **E2 — user-2 conditional independent-pair bound.**  When user 2's codeword `X̃₂` is
-drawn independently of the jointly distributed pair `(X₁, Y)`, the probability that the
-(reshuffled) triple lands in the three-way jointly typical set is at most
-`exp(n·(H(X₁,X₂,Y) − H(X₂) − H(X₁,Y) + 3ε))`.
+/-- Conditional independent-pair bound for user 2, controlling the `E2` alias event: when
+user 2's codeword `X̃₂` is drawn independently of the jointly distributed pair `(X₁, Y)`, the
+probability that the (reshuffled) triple lands in the three-way jointly typical set is at
+most `exp(n·(H(X₁,X₂,Y) − H(X₂) − H(X₁,Y) + 3ε))`.
 
 This is the user-1/user-2 mirror image of `macJTS_indep_prob_le_X1`, with `(X₁, Y)` as the
 jointly distributed "output" axis.  Combined with input independence (downstream) the

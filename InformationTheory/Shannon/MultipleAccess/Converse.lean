@@ -22,14 +22,16 @@ conditioning message in the *output* slot:
 * sum:    `log |M₁| + log |M₂| ≤ I((M₁, M₂); Yⁿ) + h(Pe) + Pe log(|M₁·M₂| − 1)`
 
 Here `I(M₁; (M₂, Yⁿ)) = I(M₁; Yⁿ | M₂)` under message independence, the standard converse
-intermediate. The single-letterization to the channel quantities `I(X₁; Y | X₂)` etc. is a
-separate refinement, tracked in `mac-moonshot-plan.md` (Phase A2).
+intermediate. Single-letterizing these bounds to the per-letter channel quantities
+`I(X₁; Y | X₂)` etc. is carried out in the second half of the file.
 
 ## Main statements
 
 * `mac_converse_bound₁` / `mac_converse_bound₂` / `mac_converse_bound_sum` — the three
   corner-point inequalities.
 * `mac_converse_message_level` — the packaged `InMACCapacityRegion` outer bound.
+* `mac_converse` — the single-letterized outer bound, whose information slots are the
+  per-letter channel sums `∑ᵢ I(X₁ᵢ; Yᵢ | X₂ᵢ)` etc.
 -/
 
 namespace InformationTheory.Shannon.MAC
@@ -43,7 +45,7 @@ variable {α₁ α₂ β : Type*}
   [Fintype β] [MeasurableSpace β] [MeasurableSingletonClass β]
 variable {M₁ M₂ n : ℕ}
 
-/-- **MAC converse, user-1 corner bound** (message level): under a uniform message `Msg₁`,
+/-- Message-level user-1 corner bound of the MAC converse: under a uniform message `Msg₁`,
 `log |M₁| ≤ I(M₁; (M₂, Yⁿ)) + h(Pe₁) + Pe₁ · log(|M₁| − 1)`, where the user-1 error
 probability `Pe₁` is measured against the joint decoder's first component. -/
 theorem mac_converse_bound₁
@@ -73,7 +75,7 @@ theorem mac_converse_bound₁
   rw [Fintype.card_fin] at h
   exact h
 
-/-- **MAC converse, user-2 corner bound** (message level): symmetric to
+/-- Message-level user-2 corner bound of the MAC converse, symmetric to
 `mac_converse_bound₁`. -/
 theorem mac_converse_bound₂
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -102,7 +104,7 @@ theorem mac_converse_bound₂
   rw [Fintype.card_fin] at h
   exact h
 
-/-- **MAC converse, sum-rate bound** (message level): treating the pair `(M₁, M₂)` as a
+/-- Message-level sum-rate bound of the MAC converse: treating the pair `(M₁, M₂)` as a
 single uniform message decoded jointly,
 `log |M₁| + log |M₂| ≤ I((M₁, M₂); Yⁿ) + h(Pe) + Pe · log(|M₁·M₂| − 1)`. -/
 theorem mac_converse_bound_sum
@@ -141,15 +143,13 @@ theorem mac_converse_bound_sum
   rw [hlog] at h
   exact h
 
-/-- **MAC converse — message-level Fano outer bound**: for uniform messages decoded by a
-joint decoder, the rate pair `(log |M₁|, log |M₂|)` satisfies the three message-level Fano
+/-- Message-level Fano outer bound for the MAC: for uniform messages decoded by a joint
+decoder, the rate pair `(log |M₁|, log |M₂|)` satisfies the three message-level Fano
 information bounds, packaged as `InMACCapacityRegion`.
 
-This is the **message-level step only**: the information slots are the n-letter
-message–output mutual informations, not the single-letter channel quantities
-`I(X₁; Y | X₂)` etc. The single-letterization that turns this into the textbook MAC
-converse (Cover–Thomas Thm 15.3.1) is not yet done; it is tracked in
-`mac-moonshot-plan.md` (Phase A2). -/
+The information slots are the `n`-letter message–output mutual informations, not the
+single-letter channel quantities `I(X₁; Y | X₂)` etc.; the single-letterized form of the
+converse (Cover–Thomas Theorem 15.3.1) is `mac_converse`. -/
 @[entry_point]
 theorem mac_converse_message_level
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -185,14 +185,14 @@ theorem mac_converse_message_level
    mac_converse_bound₂ μ Msg₁ Msg₂ Ys c hMsg₁ hMsg₂ hYs hMsg₂_uniform hcard₂,
    mac_converse_bound_sum μ Msg₁ Msg₂ Ys c hMsg₁ hMsg₂ hYs hMsg₁₂_uniform hcard₁ hcard₂⟩
 
-/-! ## Phase A2 — single-letterization (genuine frontier)
+/-! ## Single-letterization
 
-The genuine MAC converse bridges the message-level mutual informations of
+The single-letterized MAC converse bridges the message-level mutual informations of
 `mac_converse_message_level` down to the single-letter channel quantities
-`I(X₁ᵢ; Yᵢ | X₂ᵢ)` etc.  The decisive analytic atom is the **conditional
-single-letterization** of the block input–output mutual information; the operational
-link from the message-level MI to the block input MI uses the standard data-processing
-and conditioning identities under a memoryless channel.
+`I(X₁ᵢ; Yᵢ | X₂ᵢ)` etc.  The analytic core is the conditional single-letterization of the
+block input–output mutual information; the link from the message-level mutual information
+to the block input mutual information uses the standard data-processing and conditioning
+identities under a memoryless channel.
 
 This mirrors the single-user `mutualInfo_le_sum_per_letter_of_memoryless_strong`
 (`CondEntropyMemoryless.lean`) lifted to a conditional form with the other user's input
@@ -209,10 +209,10 @@ variable [Fintype α₂] [DecidableEq α₂] [Nonempty α₂]
 variable [DecidableEq β] [Nonempty β] [StandardBorelSpace β]
 
 omit [DecidableEq β] [StandardBorelSpace β] in
-/-- **Conditional subadditivity** of conditional entropy across a memoryless block:
-`H(Yⁿ | Zⁿ) ≤ ∑ᵢ H(Yᵢ | Zᵢ)`.  Holds for any inputs `Zs` (no memoryless assumption
-needed); the per-letter conditioner `Zᵢ` is a coarsening of the block conditioner
-`(Zⁿ, Y^{<i})`, so conditioning-reduces-entropy gives each summand bound. -/
+/-- Conditional entropy is subadditive across a block: `H(Yⁿ | Zⁿ) ≤ ∑ᵢ H(Yᵢ | Zᵢ)`.
+Holds for any inputs `Zs` (no memoryless assumption needed); the per-letter conditioner
+`Zᵢ` is a coarsening of the block conditioner `(Zⁿ, Y^{<i})`, so conditioning-reduces-entropy
+gives each summand bound. -/
 lemma condEntropy_pi_le_sum_condEntropy
     {γ : Type*} [Fintype γ] [DecidableEq γ] [Nonempty γ]
       [MeasurableSpace γ] [MeasurableSingletonClass γ]
@@ -262,7 +262,7 @@ lemma condEntropy_pi_le_sum_condEntropy
   exact h1.trans h2
 
 omit [DecidableEq α₁] [DecidableEq β] in
-/-- **Conditional single-letterization** (the decisive atom): under a strong memoryless
+/-- Single-letterization of the conditional mutual information: under a strong memoryless
 channel on the joint input `(X₁ᵢ, X₂ᵢ)`,
 `I(X₁ⁿ; Yⁿ | X₂ⁿ) ≤ ∑ᵢ I(X₁ᵢ; Yᵢ | X₂ᵢ)` (as reals). -/
 lemma condMutualInfo_singleletter_le_of_memoryless
@@ -363,16 +363,16 @@ lemma condMutualInfo_singleletter_le_of_memoryless
   linarith [hSub]
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- **Operational link** (steps 1–2): under message independence and the block channel
-Markov chain `(M₁, M₂) → (X₁ⁿ, X₂ⁿ) → Yⁿ`, the message-level mutual information is bounded
-by the block input–output conditional mutual information,
+/-- Link from the message level to the channel level: under message independence and the
+block channel Markov chain `(M₁, M₂) → (X₁ⁿ, X₂ⁿ) → Yⁿ`, the message-level mutual
+information is bounded by the block input–output conditional mutual information,
 `I(M₁; (M₂, Yⁿ)) ≤ I(X₁ⁿ; Yⁿ | X₂ⁿ)`.
 
-Step 1 (`I(M₁; (M₂, Yⁿ)) = I(M₁; Yⁿ | M₂)` via the Y-axis chain rule and message
-independence) is the first half.  Step 2 (the data-processing reduction
-`I(M₁; Yⁿ | M₂) ≤ I(X₁ⁿ; Yⁿ | X₂ⁿ)`) lowers both the data variable `M₁ → X₁ⁿ` and the
+The first half is the identity `I(M₁; (M₂, Yⁿ)) = I(M₁; Yⁿ | M₂)`, from the `Y`-axis chain
+rule and message independence.  The second half is the data-processing reduction
+`I(M₁; Yⁿ | M₂) ≤ I(X₁ⁿ; Yⁿ | X₂ⁿ)`, which lowers both the data variable `M₁ → X₁ⁿ` and the
 conditioner `M₂ → X₂ⁿ` (each a deterministic function of the message) under the block channel
-Markov chain.  It is carried out on the entropy difference: `I(·;·|·) = H(Yⁿ|·) − H(Yⁿ|·,·)`,
+Markov chain.  It is carried out on the entropy difference `I(·;·|·) = H(Yⁿ|·) − H(Yⁿ|·,·)`,
 with `H(Yⁿ | (M₂, M₁)) = H(Yⁿ | (X₂ⁿ, X₁ⁿ))` (deterministic encoders plus the block Markov
 chain) and `H(Yⁿ | M₂) ≤ H(Yⁿ | X₂ⁿ)` (conditioning on the finer message reduces entropy). -/
 lemma mac_message_le_condMI
@@ -539,10 +539,10 @@ lemma mac_message_le_condMI
     rw [hreshapeA, hcore, hreshapeB]
   linarith [hOL1, hOL2]
 
-/-- **MAC converse, user-1 single-letterized corner bound** (gateway atom): under a
-memoryless joint channel, independent messages, and the block channel Markov chain,
-the message–output mutual information `I(M₁; (M₂, Yⁿ))` is bounded by the per-letter
-single-letter channel sum `∑ᵢ I(X₁ᵢ; Yᵢ | X₂ᵢ)`. -/
+/-- Single-letterized user-1 corner bound of the MAC converse: under a memoryless joint
+channel, independent messages, and the block channel Markov chain, the message–output
+mutual information `I(M₁; (M₂, Yⁿ))` is bounded by the per-letter single-letter channel
+sum `∑ᵢ I(X₁ᵢ; Yᵢ | X₂ᵢ)`. -/
 theorem mac_singleletterize_bound₁
     [NeZero M₁] [NeZero M₂]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -595,7 +595,7 @@ theorem mac_singleletterize_bound₁
     ENNReal.toReal_sum (fun i _ ↦ hRHS_fin i)]
   exact h_link.trans h_single
 
-/-- **MAC converse, user-2 single-letterized corner bound**: symmetric to
+/-- Single-letterized user-2 corner bound of the MAC converse, symmetric to
 `mac_singleletterize_bound₁` with the two users swapped. -/
 theorem mac_singleletterize_bound₂
     [NeZero M₁] [NeZero M₂]
@@ -718,7 +718,7 @@ theorem mac_singleletterize_bound₂
     ENNReal.toReal_sum (fun i _ ↦ hRHS_fin i)]
   exact h_link.trans h_single
 
-/-- **MAC converse, sum-rate single-letterized bound**: treating `(M₁, M₂)` as one joint
+/-- Single-letterized sum-rate bound of the MAC converse: treating `(M₁, M₂)` as one joint
 message and `(X₁ᵢ, X₂ᵢ)` as one joint input, the joint message–output mutual information
 `I((M₁, M₂); Yⁿ)` is bounded by the unconditional per-letter sum `∑ᵢ I((X₁ᵢ, X₂ᵢ); Yᵢ)`. -/
 theorem mac_singleletterize_bound_sum
@@ -806,25 +806,25 @@ theorem mac_singleletterize_bound_sum
           (fun ω j ↦ Ys j ω) := hReshape.symm
     _ ≤ _ := h_single_lift
 
-/-- **MAC converse — genuine per-letter-sum outer bound** (Cover–Thomas Thm 15.3.1): for
-uniform, independent messages sent over a memoryless joint channel and decoded jointly, the
-rate pair `(log |M₁|, log |M₂|)` lies in the capacity region whose information bounds are the
-per-letter single-letter channel sums (plus the Fano error slack).
+/-- Per-letter-sum outer bound for the MAC (Cover–Thomas Theorem 15.3.1): for uniform,
+independent messages sent over a memoryless joint channel and decoded jointly, the rate pair
+`(log |M₁|, log |M₂|)` lies in the capacity region whose information bounds are the per-letter
+single-letter channel sums (plus the Fano error slack).
 
-This is the genuine single-letterized MAC converse, distinct from the message-level
+This is the single-letterized MAC converse, distinct from the message-level
 `mac_converse_message_level`: the information slots are the per-time-step channel quantities
 `∑ᵢ I(X₁ᵢ; Yᵢ | X₂ᵢ)`, `∑ᵢ I(X₂ᵢ; Yᵢ | X₁ᵢ)`, `∑ᵢ I((X₁ᵢ, X₂ᵢ); Yᵢ)`, obtained from the
 message-level bound via the single-letterization lemmas and `InMACCapacityRegion.mono`.
 
-The target is the **per-letter sum** (each time step's marginal input distribution); the
-single-distribution / time-sharing convex-hull form is a separate refinement.
+The information bounds are per-letter sums, one marginal input distribution per time step;
+the single-distribution convex-hull form is `mac_timesharing_converse`.
 
 The Fano slack is stated in terms of the joint-decoder error probability
 `MeasureFano.errorProb`, with the memoryless channel structure and block Markov chain taken
-as preconditions (parity with the single-user `channel_coding_converse_general_memoryless_pure`).
-The operational instantiation — building `μ` from uniform messages through the encoders and
-the memoryless channel `W`, and identifying the error with `MACCode.averageErrorProb W` — is a
-separate wrapper, not part of this statement.
+as preconditions (parity with the single-user
+`channel_coding_converse_general_memoryless_pure`).  The operational instantiation — building
+`μ` from uniform messages through the encoders and the memoryless channel `W`, and identifying
+the error with `MACCode.averageErrorProb W` — is the wrapper `mac_converse_from_code`.
 @audit:ok -/
 @[entry_point]
 theorem mac_converse

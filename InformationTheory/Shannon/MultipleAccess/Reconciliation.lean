@@ -213,10 +213,10 @@ lemma macJoint_mutualInfo_eq_condMutualInfo₂
     Prod.fst hY hX2 hX1
 
 omit [StandardBorelSpace α₂] in
-/-- **MAC reconciliation, user-1 corner.**  Under the independent product input
-`p₁ ⊗ p₂`, the achievability corner information `macInfo₁` equals the textbook conditional
-mutual information `I(X₁; Y | X₂)` of the converse, taken on the per-coordinate joint law
-`macJointDistribution p₁ p₂ W`.
+/-- The user-1 corner informations of the two MAC descriptions agree: under the independent
+product input `p₁ ⊗ p₂`, the achievability corner information `macInfo₁` equals the textbook
+conditional mutual information `I(X₁; Y | X₂)` of the converse, taken on the per-coordinate
+joint law `macJointDistribution p₁ p₂ W`.
 @audit:ok -/
 @[entry_point]
 theorem macInfo₁_eq_condMutualInfo_toReal
@@ -229,9 +229,9 @@ theorem macInfo₁_eq_condMutualInfo_toReal
   rw [macInfo₁_eq_mutualInfo_toReal p₁ p₂ W, macJoint_mutualInfo_eq_condMutualInfo₁ p₁ p₂ W]
 
 omit [StandardBorelSpace α₁] in
-/-- **MAC reconciliation, user-2 corner.**  Under the independent product input
-`p₁ ⊗ p₂`, the achievability corner information `macInfo₂` equals the textbook conditional
-mutual information `I(X₂; Y | X₁)` of the converse.
+/-- The user-2 corner informations of the two MAC descriptions agree: under the independent
+product input `p₁ ⊗ p₂`, the achievability corner information `macInfo₂` equals the textbook
+conditional mutual information `I(X₂; Y | X₁)` of the converse.
 @audit:ok -/
 @[entry_point]
 theorem macInfo₂_eq_condMutualInfo_toReal
@@ -244,9 +244,9 @@ theorem macInfo₂_eq_condMutualInfo_toReal
   rw [macInfo₂_eq_mutualInfo_toReal p₁ p₂ W, macJoint_mutualInfo_eq_condMutualInfo₂ p₁ p₂ W]
 
 omit [StandardBorelSpace α₁] [StandardBorelSpace α₂] [StandardBorelSpace β] in
-/-- **MAC reconciliation, sum corner.**  The achievability sum-corner information
-`macInfoBoth` equals the joint mutual information `I((X₁, X₂); Y)` of the converse, taken
-on the per-coordinate joint law `macJointDistribution p₁ p₂ W`.
+/-- The sum-corner informations of the two MAC descriptions agree: the achievability
+sum-corner information `macInfoBoth` equals the joint mutual information `I((X₁, X₂); Y)` of
+the converse, taken on the per-coordinate joint law `macJointDistribution p₁ p₂ W`.
 @audit:ok -/
 @[entry_point]
 theorem macInfoBoth_eq_mutualInfo_toReal
@@ -277,16 +277,16 @@ theorem macInfoBoth_eq_mutualInfo_toReal
           funext q; rfl] at h
   rw [hreshape]
 
-/-- **MAC capacity-region reconciliation.**  Under the independent product input
-`p₁ ⊗ p₂`, a rate pair lies in the achievability region (with corner informations
-`macInfo₁` / `macInfo₂` / `macInfoBoth`) iff it lies in the converse region (with the
-textbook conditional/joint informations `I(X₁; Y | X₂)` / `I(X₂; Y | X₁)` /
+/-- The achievability and converse descriptions of the MAC capacity region coincide: under
+the independent product input `p₁ ⊗ p₂`, a rate pair lies in the achievability region (with
+corner informations `macInfo₁` / `macInfo₂` / `macInfoBoth`) iff it lies in the converse
+region (with the textbook conditional/joint informations `I(X₁; Y | X₂)` / `I(X₂; Y | X₁)` /
 `I((X₁, X₂); Y)` on `macJointDistribution p₁ p₂ W`).
 
-Substantive (non-vacuous) iff: the LHS `macInfo₁/₂/Both` (entropy-difference `ℝ`
-values) and the RHS `condMutualInfo`/`mutualInfo .toReal` (`klDiv`-based) are
-syntactically distinct quantities — the iff is closed only via the three genuine
-corner-information equivalences, not by a definitional `P ↔ P`.
+The equivalence is not vacuous: the left-hand `macInfo₁/₂/Both` (entropy-difference `ℝ`
+values) and the right-hand `condMutualInfo`/`mutualInfo .toReal` (`klDiv`-based) are
+syntactically distinct quantities, so the iff is closed only through the three
+corner-information equivalences above, not by a definitional `P ↔ P`.
 @audit:ok -/
 @[entry_point]
 theorem mac_capacity_region_reconciliation

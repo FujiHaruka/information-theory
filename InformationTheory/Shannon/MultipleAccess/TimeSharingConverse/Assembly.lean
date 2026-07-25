@@ -13,7 +13,7 @@ namespace InformationTheory.Shannon.MAC
 
 open scoped BigOperators
 
-/-! ### CV assembly (Dispatch B): Fano→0 limit + point construction + axis casework
+/-! ### Converse assembly: Fano → 0 limit, point construction, axis casework
 
 The converse-half headline `mac_timesharing_converse`.  An achievable rate pair `(R₁, R₂)` in the
 first quadrant lies in the closed convex hull of the union of all per-input pentagons.  The core is
@@ -38,7 +38,7 @@ variable {α₁ α₂ β : Type*}
     [MeasurableSingletonClass β] [StandardBorelSpace β]
 variable {M₁ M₂ n : ℕ}
 
-/-- Per-letter mutual-information superadditivity under input independence (Dispatch A deliverable).
+/-- Per-letter mutual-information superadditivity under input independence:
 `I((X₁, X₂); Y) ≤ I(X₁; Y | X₂) + I(X₂; Y | X₁)`.  This is the `hsub` well-formedness hypothesis of
 `mac_avgPentagon_mem_convexHull`; it is a universal geometric fact about the product input, threaded
 here exactly like the existing `hac`/`hbc` corners `mac_macInfo₁/₂_le_macInfoBoth`.
@@ -126,12 +126,12 @@ lemma mac_perletter_superadd (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
 -- `InformationTheory.Shannon.MultipleAccess.TimeSharing` (needed there for the all-probability
 -- achievability upgrade) and are inherited via the import.
 
-/-- **Per-code shrunk-point membership** (Dispatch B analytic core).  For a length-`n` two-user code
-with `2 ≤ M₁`, `2 ≤ M₂` and `⌈exp (n Rⱼ)⌉ ≤ Mⱼ`, if the uniformly-shrunk rate point
-`(R₁(1−Pe) − log2/n, R₂(1−Pe) − log2/n)` (with `Pe` the average error probability) is in the first
-quadrant, then it lies in the closed convex hull of all per-input pentagons.  Combines the finite-`n`
-Fano bounds with the geometric gateway `mac_avgPentagon_mem_convexHull` and the per-letter
-identification of Gap B′. -/
+/-- Membership of the shrunk rate point of a single code: for a length-`n` two-user code with
+`2 ≤ M₁`, `2 ≤ M₂` and `⌈exp (n Rⱼ)⌉ ≤ Mⱼ`, if the uniformly-shrunk rate point
+`(R₁(1−Pe) − log2/n, R₂(1−Pe) − log2/n)` (with `Pe` the average error probability) is in the
+first quadrant, then it lies in the closed convex hull of all per-input pentagons.  Combines
+the finite-`n` Fano bounds with the geometric gateway `mac_avgPentagon_mem_convexHull` and the
+per-letter identifications `mac_condMI_eq_macInfo₁_at` and friends. -/
 lemma mac_converse_shrunk_point_mem
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂)
@@ -258,7 +258,7 @@ lemma mac_converse_shrunk_point_mem
     rw [sub_le_iff_le_add, ← add_div, le_div_iff₀ hn',
       show (R₁ + R₂) * (1 - Pe) * (n : ℝ) = (n : ℝ) * (R₁ + R₂) * (1 - Pe) from by ring]
     exact keyS
-  -- identify the symbolic sums with the per-letter `macInfo` sums (Gap B′): distribute `.toReal`
+  -- identify the symbolic sums with the per-letter `macInfo` sums: distribute `.toReal`
   -- over the finite sum (each term finite on the finite alphabets) and apply the per-letter values
   have hSm1 : S₁ = ∑ i : Fin n, macInfo₁ (p₁ i) (p₂ i) W := by
     rw [hS₁def, ENNReal.toReal_sum (fun i _ => condMutualInfo_ne_top _ _ _ _
@@ -315,7 +315,7 @@ lemma mac_converse_shrunk_point_mem
     exact ⟨p₁ i, p₂ i, hp₁prob i, hp₂prob i, hi⟩
   exact convexHull_subset_closedConvexHull (convexHull_mono hsubset hmem)
 
-/-- **Interior case** of the converse: for strictly positive rates, an achievable pair lies in the
+/-- Interior case of the converse: for strictly positive rates, an achievable pair lies in the
 closed convex hull of the per-input pentagons. -/
 lemma mac_timesharing_converse_interior (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     {R₁ R₂ : ℝ} (hR₁ : 0 < R₁) (hR₂ : 0 < R₂) (hach : MACAchievable W R₁ R₂) :
@@ -388,11 +388,12 @@ lemma mac_timesharing_converse_interior (W : MACChannel α₁ α₂ β) [IsMarko
       (hM₁ k) (hM₂ k) hk1 hk2
   exact isClosed_closedConvexHull.mem_of_tendsto htend hev
 
-/-- **User-1 finite-`n` Fano corner bound** (axis extract).  Extracts the single user-1 corner
-inequality `log |M₁| ≤ ∑ᵢ I(X₁ᵢ; Yᵢ | X₂ᵢ) + h(Pe₁) + Pe₁ log(|M₁| − 1)` directly from
-`mac_converse_bound₁` and `mac_singleletterize_bound₁` on the canonical ambient measure, *without*
-routing through the two-user `mac_converse_from_code`.  Requires only `2 ≤ M₁`; user 2 enters only
-through `NeZero M₂`, so this survives the `M₂ = 1` axis degeneracy that blocks the joint converse. -/
+/-- Finite-`n` Fano corner bound for user 1: the single user-1 corner inequality
+`log |M₁| ≤ ∑ᵢ I(X₁ᵢ; Yᵢ | X₂ᵢ) + h(Pe₁) + Pe₁ log(|M₁| − 1)`, obtained directly from
+`mac_converse_bound₁` and `mac_singleletterize_bound₁` on the canonical ambient measure,
+*without* routing through the two-user `mac_converse_from_code`.  Requires only `2 ≤ M₁`; user 2
+enters only through `NeZero M₂`, so this survives the `M₂ = 1` axis degeneracy that blocks the
+joint converse. -/
 lemma mac_converse_from_code_bound₁
     [NeZero M₁] [NeZero M₂]
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
@@ -426,8 +427,8 @@ lemma mac_converse_from_code_bound₁
   have hle := ENNReal.toReal_mono hfin hsingle
   linarith [hbound, hle]
 
-/-- **User-2 finite-`n` Fano corner bound** (axis extract).  Symmetric to
-`mac_converse_from_code_bound₁`: requires only `2 ≤ M₂`, surviving the `M₁ = 1` axis degeneracy. -/
+/-- Finite-`n` Fano corner bound for user 2, symmetric to `mac_converse_from_code_bound₁`:
+requires only `2 ≤ M₂`, surviving the `M₁ = 1` axis degeneracy. -/
 lemma mac_converse_from_code_bound₂
     [NeZero M₁] [NeZero M₂]
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
@@ -461,10 +462,10 @@ lemma mac_converse_from_code_bound₂
   have hle := ENNReal.toReal_mono hfin hsingle
   linarith [hbound, hle]
 
-/-- **Per-code shrunk-point membership, axis user 1** (`R₂ = 0`).  Trimmed copy of
-`mac_converse_shrunk_point_mem` for the axis point `(R₁(1−Pe) − log2/n, 0)`: uses only the user-1
-Fano bound (`mac_converse_from_code_bound₁`, needing just `2 ≤ M₁`) plus per-letter nonnegativity, so
-it survives the `M₂ = 1` degeneracy. -/
+/-- Membership of the shrunk rate point on the user-1 axis (`R₂ = 0`): the analogue of
+`mac_converse_shrunk_point_mem` for the axis point `(R₁(1−Pe) − log2/n, 0)`, which uses only the
+user-1 Fano bound (`mac_converse_from_code_bound₁`, needing just `2 ≤ M₁`) plus per-letter
+nonnegativity, so it survives the `M₂ = 1` degeneracy. -/
 lemma mac_converse_shrunk_point_mem_axis1 [NeZero M₂]
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₁ : 2 ≤ M₁)
@@ -524,7 +525,7 @@ lemma mac_converse_shrunk_point_mem_axis1 [NeZero M₂]
     rw [sub_le_iff_le_add, ← add_div, le_div_iff₀ hn',
       show R₁ * (1 - Pe) * (n : ℝ) = (n : ℝ) * R₁ * (1 - Pe) from by ring]
     exact key1
-  -- identify the user-1 sum with the per-letter `macInfo₁` sum (Gap B′)
+  -- identify the user-1 sum with the per-letter `macInfo₁` sum
   have hSm1 : S₁ = ∑ i : Fin n, macInfo₁ (p₁ i) (p₂ i) W := by
     rw [hS₁def, ENNReal.toReal_sum (fun i _ => condMutualInfo_ne_top _ _ _ _
       (measurable_of_countable _) (measurable_of_countable _) (measurable_of_countable _))]
@@ -573,7 +574,7 @@ lemma mac_converse_shrunk_point_mem_axis1 [NeZero M₂]
     exact ⟨p₁ i, p₂ i, hp₁prob i, hp₂prob i, hi⟩
   exact convexHull_subset_closedConvexHull (convexHull_mono hsubset hmem)
 
-/-- **Per-code shrunk-point membership, axis user 2** (`R₁ = 0`).  Symmetric to
+/-- Membership of the shrunk rate point on the user-2 axis (`R₁ = 0`), symmetric to
 `mac_converse_shrunk_point_mem_axis1`. -/
 lemma mac_converse_shrunk_point_mem_axis2 [NeZero M₁]
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
@@ -675,10 +676,11 @@ lemma mac_converse_shrunk_point_mem_axis2 [NeZero M₁]
     exact ⟨p₁ i, p₂ i, hp₁prob i, hp₂prob i, hi⟩
   exact convexHull_subset_closedConvexHull (convexHull_mono hsubset hmem)
 
-/-- **Axis case, user 1** (`R₂ = 0`).  For a strictly positive rate `R₁` achievable with `R₂ = 0`,
-the pair `(R₁, 0)` lies in the closed convex hull of the per-input pentagons.  Uses the user-1-only
-finite-`n` Fano bound `mac_converse_from_code_bound₁` (which needs only `2 ≤ M₁`, and thus survives
-the `M₂ = 1` degeneracy of the axis), then takes the Fano→0 limit as in the interior case. -/
+/-- Axis case of the converse for user 1 (`R₂ = 0`): for a strictly positive rate `R₁`
+achievable with `R₂ = 0`, the pair `(R₁, 0)` lies in the closed convex hull of the per-input
+pentagons.  Uses the user-1-only finite-`n` Fano bound `mac_converse_from_code_bound₁` (which
+needs only `2 ≤ M₁`, and thus survives the `M₂ = 1` degeneracy of the axis), then takes the
+Fano → 0 limit as in the interior case. -/
 lemma mac_timesharing_converse_axis1 (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     {R₁ : ℝ} (hR₁ : 0 < R₁) (hach : MACAchievable W R₁ 0) :
     (R₁, (0 : ℝ)) ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
@@ -742,9 +744,10 @@ lemma mac_timesharing_converse_axis1 (W : MACChannel α₁ α₂ β) [IsMarkovKe
     exact mac_converse_shrunk_point_mem_axis1 (c k) W (hnpos k) (hcard₁ k) hR₁.le (hM₁ k) hk1
   exact isClosed_closedConvexHull.mem_of_tendsto htend hev
 
-/-- **Axis case, user 2** (`R₁ = 0`).  Symmetric to `mac_timesharing_converse_axis1`: uses the
-user-2-only finite-`n` Fano bound `mac_converse_from_code_bound₂` (needing only `2 ≤ M₂`, surviving
-the `M₁ = 1` degeneracy), then takes the Fano→0 limit. -/
+/-- Axis case of the converse for user 2 (`R₁ = 0`), symmetric to
+`mac_timesharing_converse_axis1`: uses the user-2-only finite-`n` Fano bound
+`mac_converse_from_code_bound₂` (needing only `2 ≤ M₂`, surviving the `M₁ = 1` degeneracy),
+then takes the Fano → 0 limit. -/
 lemma mac_timesharing_converse_axis2 (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     {R₂ : ℝ} (hR₂ : 0 < R₂) (hach : MACAchievable W 0 R₂) :
     ((0 : ℝ), R₂) ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
@@ -805,11 +808,11 @@ lemma mac_timesharing_converse_axis2 (W : MACChannel α₁ α₂ β) [IsMarkovKe
     exact mac_converse_shrunk_point_mem_axis2 (c k) W (hnpos k) (hcard₂ k) hR₂.le (hM₂ k) hk2
   exact isClosed_closedConvexHull.mem_of_tendsto htend hev
 
-/-- **MAC time-sharing converse (CV headline).**  Every achievable first-quadrant rate pair lies in
-the closed convex hull of the union of all per-input pentagons `macPentagon p₁ p₂ W` over
+/-- Time-sharing converse for the MAC: every achievable first-quadrant rate pair lies in the
+closed convex hull of the union of all per-input pentagons `macPentagon p₁ p₂ W` over
 probability inputs `p₁`, `p₂`.  Assembled by casework on whether each rate is zero or positive:
-the interior case uses the Fano→0 limit `mac_timesharing_converse_interior`, the origin `(0,0)` lies
-in any pentagon, and the two axis cases reduce to the single-user Fano corner via
+the interior case uses the Fano → 0 limit `mac_timesharing_converse_interior`, the origin
+`(0,0)` lies in any pentagon, and the two axis cases reduce to the single-user Fano corner via
 `mac_timesharing_converse_axis1/2`. -/
 theorem mac_timesharing_converse (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
     {p | MACAchievable W p.1 p.2 ∧ 0 ≤ p.1 ∧ 0 ≤ p.2}
@@ -894,12 +897,13 @@ theorem mac_achievable_clamp_iff (W : MACChannel α₁ α₂ β) (R₁ R₂ : �
     · rw [← key R₁ n]; exact hM₁
     · rw [← key R₂ n]; exact hM₂
 
-/-- **MAC time-sharing capacity region (full first-quadrant characterization).**  The operational
-capacity region, intersected with the first quadrant, equals the closed convex hull of the union of
-all per-input pentagons `macPentagon p₁ p₂ W` over probability inputs `p₁`, `p₂` (Cover–Thomas
-Theorem 15.3.1).  The `⊆` half is the converse (`mac_timesharing_converse`, with negative rates
-clamped back to the axis via `mac_achievable_clamp_iff`); the `⊇` half is achievability
-(`mac_achievability_region_allprob`, whose pentagons already lie in the first quadrant). -/
+/-- Full first-quadrant characterization of the MAC capacity region (Cover–Thomas Theorem
+15.3.1): the operational capacity region, intersected with the first quadrant, equals the
+closed convex hull of the union of all per-input pentagons `macPentagon p₁ p₂ W` over
+probability inputs `p₁`, `p₂`.  The `⊆` half is the converse (`mac_timesharing_converse`, with
+negative rates clamped back to the axis via `mac_achievable_clamp_iff`); the `⊇` half is
+achievability (`mac_achievability_region_allprob`, whose pentagons already lie in the first
+quadrant). -/
 @[entry_point]
 theorem mac_timesharing_capacity_region (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b}) :

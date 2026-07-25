@@ -22,7 +22,9 @@ variable {α₁ α₂ β : Type*}
 
 /-! ### Two-codebook averaging: per-event swaps -/
 
-/-- **E0 swap (correct-pair atypicality).** -/
+/-- Codebook-average swap for the correct-pair atypicality event `E0`: the two-codebook
+average of the probability that the transmitted triple `(c₁ m₁, c₂ m₂, y)` fails to be
+jointly typical is bounded by the ambient atypicality mass, which the AEP sends to `0`. -/
 lemma mac_random_codebook_E0_swap
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -90,8 +92,9 @@ lemma mac_random_codebook_E0_swap
     simp only [Set.mem_setOf_eq]
   exact le_of_eq (h_marg.trans h_rhs.symm)
 
-/-- **E1 swap (user-1 alias).**  The two-codebook average of the user-1 alias event
-(`m₁' ≠ m₁`, user 2 correct) is bounded by `exp(n·(−I(X₁;(X₂,Y)) + 3ε))`. -/
+/-- Codebook-average swap for the user-1 alias event `E1`: the two-codebook average of the
+event that a wrong user-1 codeword (`m₁' ≠ m₁`, user 2 correct) is jointly typical with the
+output is bounded by `exp(n·(−I(X₁;(X₂,Y)) + 3ε))`. -/
 lemma mac_random_codebook_E1_swap
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -221,7 +224,9 @@ lemma mac_random_codebook_E1_swap
           - entropy (macAmbientMeasure p₁ p₂ W) (jointSequence macX2s macYs 0)) + 3 * ε)) := h_gw
     _ = Real.exp ((n : ℝ) * (-(macInfo₁ p₁ p₂ W) + 3 * ε)) := by rw [h_exp]
 
-/-- **E2 swap (user-2 alias).** -/
+/-- Codebook-average swap for the user-2 alias event `E2`: the two-codebook average of the
+event that a wrong user-2 codeword (`m₂' ≠ m₂`, user 1 correct) is jointly typical with the
+output is bounded by `exp(n·(−I(X₂;(X₁,Y)) + 3ε))`. -/
 lemma mac_random_codebook_E2_swap
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -345,7 +350,9 @@ lemma mac_random_codebook_E2_swap
           - entropy (macAmbientMeasure p₁ p₂ W) (jointSequence macX1s macYs 0)) + 3 * ε)) := h_gw
     _ = Real.exp ((n : ℝ) * (-(macInfo₂ p₁ p₂ W) + 3 * ε)) := by rw [h_exp]
 
-/-- **E3 swap (both aliases).** -/
+/-- Codebook-average swap for the both-wrong alias event `E3`: the two-codebook average of
+the event that a pair of wrong codewords (`m₁' ≠ m₁` and `m₂' ≠ m₂`) is jointly typical with
+the output is bounded by `exp(n·(−I((X₁,X₂);Y) + 3ε))`. -/
 lemma mac_random_codebook_E3_swap
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -700,14 +707,14 @@ lemma mac_quad_aggregate
 /-! ### Two-codebook averaging -/
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- **Two-codebook random-coding average bound.**  For the i.i.d. MAC ambient measure
+/-- Two-codebook random-coding average bound: for the i.i.d. MAC ambient measure
 `macAmbientMeasure p₁ p₂ W`, averaging the per-pair error probability of the
 joint-typical pair decoder over the product of the two codebook laws is bounded by the
 four-event sum: the correct-pair atypicality probability `E0`, plus the three
-exponential alias terms `E1`/`E2`/`E3` controlled by the gateway atoms
+exponential alias terms `E1`/`E2`/`E3` controlled by the independent-pair bounds
 `macJTS_indep_prob_le_X1`/`_X2`/`_both`.
 
-This is the two-codebook generalisation of the single-user
+This is the two-codebook generalization of the single-user
 `random_codebook_average_le`, assembled from the four per-event swaps
 (`mac_random_codebook_E0_swap`/`_E1_swap`/`_E2_swap`/`_E3_swap`), the four-event linearity
 decomposition (`mac_sum_weighted_quad_decomp`), and the per-pair aggregation
@@ -941,7 +948,7 @@ theorem mac_E3_lt_of_rate {Iboth R₁ R₂ ε ε' : ℝ}
 /-! ### Headline -/
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- **MAC achievability** (Cover–Thomas Theorem 15.3.1, corner-point form).  For an
+/-- Achievability of the MAC corner-point region (Cover–Thomas Theorem 15.3.1): for an
 independent product input `p₁ ⊗ p₂` with full-support marginals and a full-support MAC
 channel `W`, any rate pair `(R₁, R₂)` strictly inside the corner-point region
 `R₁ < I(X₁; (X₂, Y))`, `R₂ < I(X₂; (X₁, Y))`, `R₁ + R₂ < I((X₁, X₂); Y)` is

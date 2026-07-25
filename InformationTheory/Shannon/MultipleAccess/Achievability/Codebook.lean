@@ -61,8 +61,8 @@ noncomputable def macCodebookToCode
 omit [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonClass α₁]
   [DecidableEq α₂] [Nonempty α₂] [MeasurableSingletonClass α₂]
   [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- **Four-event Bonferroni bound.**  When the pair `(m₁, m₂)` is sent, the per-pair error
-probability of the joint-typical pair decoder is bounded by the four error events:
+/-- Four-event Bonferroni bound for the joint-typical pair decoder: when the pair
+`(m₁, m₂)` is sent, the per-pair error probability is bounded by the four error events:
 
 * `E0` — the correct codeword triple `(c₁ m₁, c₂ m₂, y)` is not jointly typical;
 * `E1` — some user-1 alias `m₁' ≠ m₁` (with user 2 correct) is jointly typical;
@@ -70,7 +70,7 @@ probability of the joint-typical pair decoder is bounded by the four error event
 * `E3` — some pair `(m₁', m₂')` with both indices wrong is jointly typical.
 
 The block output law is `ν = Measure.pi (i ↦ W (c₁ m₁ i, c₂ m₂ i))`.  This is the
-two-codebook / four-event generalisation of the single-user
+two-codebook / four-event generalization of the single-user
 `errorProbAt_le_E1_plus_E2`; the two-codebook averaging consumes the four terms term by
 term. -/
 theorem mac_errorProbAt_le_bonferroni4
@@ -144,7 +144,7 @@ theorem mac_errorProbAt_le_bonferroni4
             ⟨Finset.mem_product.mpr ⟨Finset.mem_erase.mpr ⟨ha, Finset.mem_univ _⟩,
               Finset.mem_erase.mpr ⟨hb, Finset.mem_univ _⟩⟩, ?_⟩
           exact hp_mem
-    -- Case analyse on whether the correct pair is typical.
+    -- Case analysis on whether the correct pair is typical.
     by_cases hc_typ : (c₁ m₁, c₂ m₂, y) ∈ J
     · -- Correct pair typical: either some alias is also typical (E1/E2/E3), or the correct
       -- pair is the unique typical pair, so the decoder outputs `(m₁, m₂)`, contradicting `hy`.
@@ -192,7 +192,7 @@ theorem mac_errorProbAt_le_bonferroni4
 /-! ### Corner-point information quantities
 
 The three rate corners returned in the entropy-exponent form handed back by the
-gateway atoms `macJTS_indep_prob_le_X1`/`_X2`/`_both`: `macInfo₁ = I(X₁; (X₂, Y))`,
+independent-pair bounds `macJTS_indep_prob_le_X1`/`_X2`/`_both`: `macInfo₁ = I(X₁; (X₂, Y))`,
 `macInfo₂ = I(X₂; (X₁, Y))`, `macInfoBoth = I((X₁, X₂); Y)`, each expressed as a
 difference of entropies of marginals of the per-coordinate joint law
 `macJointDistribution p₁ p₂ W`.  Under the independent product input `p₁ ⊗ p₂` these
@@ -437,10 +437,10 @@ lemma mac_block_law_X2Y_singleton
     _ = (Measure.pi (fun _ : Fin n ↦ νXY)).real {fun i ↦ (x₂ i, y i)} := by rw [hρ_eq]
     _ = ∏ i, νXY.real {(x₂ i, y i)} := measureReal_pi_singleton_eq_prod _ _
 
-/-- **Pair-channel conditional-output fold-in (singleton form).**  The `(X₂, Y)`-joint
+/-- Pair-channel conditional-output fold-in, in singleton form: the `(X₂, Y)`-joint
 block-law mass at `(x₂, y)` equals the average over the true user-1 codeword `x₁ ~ p₁ⁿ`
 of the paired-channel output mass at `y`, weighted by the user-2 codeword mass.  This is
-the genuine novelty of the two-codebook averaging: the true user-1 input is marginalized
+where the two-codebook averaging does its work: the true user-1 input is marginalized
 out of the pair channel `W(·, x₂ i)` to recover the conditional `(X₂, Y)` output law. -/
 lemma mac_chan_fold_one
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
@@ -662,7 +662,7 @@ lemma mac_block_law_triple_singleton
     _ = ∏ i, (macJointDistribution p₁ p₂ W).real {(x₁ i, x₂ i, y i)} :=
         measureReal_pi_singleton_eq_prod _ _
 
-/-- **Master pair-channel fold (full triple).**  The full-triple split block law of a finite
+/-- Master pair-channel fold on the full triple: the full-triple split block law of a finite
 set `T` equals the average over the true codeword pair `(x₁, x₂) ~ p₁ⁿ ⊗ p₂ⁿ` of the
 paired-channel mass of the corresponding slice of `T`. -/
 lemma mac_chan_fold_triple_set
@@ -857,9 +857,9 @@ lemma mac_block_law_X1X2_singleton
         rw [measureReal_pi_singleton_eq_prod (fun _ : Fin n ↦ p₁) xa,
           measureReal_pi_singleton_eq_prod (fun _ : Fin n ↦ p₂) xb]
 
-/-- **Split-form restatement of the user-2 gateway atom.**  The reshaped-product /
-preimage-set conclusion of `macJTS_indep_prob_le_X2` recast over the split product
-`X₂-block ⊗ (X₁, Y)-joint-block`. -/
+/-- The user-2 independent-pair bound `macJTS_indep_prob_le_X2`, restated over the split
+product `X₂-block ⊗ (X₁, Y)-joint-block`: the jointly typical set is described as a preimage
+under the reshaping `(x₂, (x₁, y)) ↦ (x₁, x₂, y)` instead of a reshaped product. -/
 lemma macJTS_indep_prob_le_X2_split
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -894,7 +894,7 @@ lemma macJTS_indep_prob_le_X2_split
   haveI : IsProbabilityMeasure νsplit :=
     Measure.isProbabilityMeasure_map ((measurable_jointRV macX1s measurable_macX1s n).prodMk
       (measurable_jointRV macYs measurable_macYs n)).aemeasurable
-  -- The gateway atom (reshaped form).
+  -- The independent-pair bound (reshaped form).
   have h_gw := macJTS_indep_prob_le_X2 (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs
     measurable_macX1s measurable_macX2s measurable_macYs
     (macAmbient_iIndepFun_coord p₁ p₂ W (fun q ↦ q.2.1) (measurable_fst.comp measurable_snd))
@@ -951,9 +951,9 @@ lemma macJTS_indep_prob_le_X2_split
         rw [h_prodpush]
     _ ≤ _ := h_gw
 
-/-- **Split-form restatement of the both-users gateway atom.**  The reshaped-product /
-preimage-set conclusion of `macJTS_indep_prob_le_both` recast over the split product
-`(X₁, X₂)-joint-block ⊗ Y-block`. -/
+/-- The both-users independent-pair bound `macJTS_indep_prob_le_both`, restated over the
+split product `(X₁, X₂)-joint-block ⊗ Y-block`: the jointly typical set is described as a
+preimage under the reshaping `((x₁, x₂), y) ↦ (x₁, x₂, y)` instead of a reshaped product. -/
 lemma macJTS_indep_prob_le_both_split
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
@@ -988,7 +988,7 @@ lemma macJTS_indep_prob_le_both_split
       (measurable_jointRV macX2s measurable_macX2s n)).aemeasurable
   haveI : IsProbabilityMeasure μY :=
     Measure.isProbabilityMeasure_map (measurable_jointRV macYs measurable_macYs n).aemeasurable
-  -- The gateway atom (reshaped form).
+  -- The independent-pair bound (reshaped form).
   have h_gw := macJTS_indep_prob_le_both (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs
     measurable_macX1s measurable_macX2s measurable_macYs
     (macAmbient_iIndepFun_coord p₁ p₂ W (fun q ↦ (q.1, q.2.1))

@@ -351,14 +351,13 @@ theorem macConcatCode_averageErrorProb_le (W : MACChannel α₁ α₂ β) [IsMar
 omit [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonClass α₁]
   [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSingletonClass α₂]
   [DecidableEq β] [Nonempty β] in
-/-- **Time-sharing achievability of the convex hull (gateway, strict-rate form).** Any rate
-pair *strictly below* a convex combination of two achievable rate pairs is itself
-achievable, realised operationally by concatenating a length-`n₁` code (rate `(a₁, a₂)`) and
-a length-`n₂` code (rate `(b₁, b₂)`) with `n₁ = ⌊lam·n⌋`.  The strict gap
-`R₁ < lam·a₁ + (1-lam)·b₁` absorbs the `O(1)/n` rounding of the block split, so the
-conclusion follows honestly from the hypotheses (unlike the exact-rate form, which is
-false-as-framed at boundary points).  This suffices to make `macCapacityRegion` convex via
-`closure` of the strict-interior achievable set. -/
+/-- Time-sharing achievability of the convex hull, in strict-rate form: any rate pair
+*strictly below* a convex combination of two achievable rate pairs is itself achievable,
+realized operationally by concatenating a length-`n₁` code (rate `(a₁, a₂)`) and a
+length-`n₂` code (rate `(b₁, b₂)`) with `n₁ = ⌊lam·n⌋`.  The strict gap
+`R₁ < lam·a₁ + (1-lam)·b₁` absorbs the `O(1)/n` rounding of the block split; the exact-rate
+form, by contrast, is false at boundary points.  This suffices to make `macCapacityRegion`
+convex via `closure` of the strict-interior achievable set. -/
 theorem mac_timesharing_strict (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     {a₁ a₂ b₁ b₂ R₁ R₂ lam : ℝ}
     (ha : MACAchievable W a₁ a₂) (hb : MACAchievable W b₁ b₂)
@@ -582,13 +581,14 @@ theorem mac_capacityRegion_convex (W : MACChannel α₁ α₂ β) [IsMarkovKerne
     (hu_tend.const_smul a).add (hv_tend.const_smul b)
   exact (mac_capacityRegion_isClosed W).mem_of_tendsto hw_tend (Eventually.of_forall hw_mem)
 
-/-! ## Single-user axes: M₁ = 1 (resp. M₂ = 1) specialisation of the achievability engine -/
+/-! ## Single-user axes: M₁ = 1 (resp. M₂ = 1) specialization of the achievability engine -/
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- **Single-user axis (user 1 silent).**  The rate pair `(0, R₂)` with `R₂ < macInfo₂` is
-achievable.  This is the `R₁ = 0` specialisation of the achievability engine: `R₁ = 0`
-forces `M₁ = ⌈exp (n·0)⌉ = 1`, so the two alias terms carrying the `(M₁ - 1)` factor (`E1`,
-`E3`) collapse to `0` and only the correct-pair atypicality `E0` (AEP) and the user-2 alias
+/-- Achievability on the single-user axis with user 1 silent: the rate pair `(0, R₂)` with
+`R₂ < macInfo₂` is achievable.  This is the `R₁ = 0` specialization of the achievability
+engine: `R₁ = 0` forces `M₁ = ⌈exp (n·0)⌉ = 1`, so the two alias terms carrying the
+`(M₁ - 1)` factor (`E1`, `E3`) collapse to `0` and only the correct-pair atypicality `E0`
+(AEP) and the user-2 alias
 `E2` (controlled by `R₂ < macInfo₂`) remain.  The corner conditions `R₁ < macInfo₁` and
 `R₁ + R₂ < macInfoBoth` of `mac_achievability` — vacuous when `macInfo₁ ≤ 0` — are therefore
 not needed.
@@ -686,10 +686,10 @@ theorem mac_axis1_achievable
   · exact lt_of_le_of_lt hcb hRHS_lt
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- **Single-user axis (user 2 silent).**  The rate pair `(R₁, 0)` with `R₁ < macInfo₁` is
-achievable.  Symmetric to `mac_axis1_achievable`: `R₂ = 0` forces `M₂ = 1`, collapsing the
-`(M₂ - 1)`-carrying alias terms (`E2`, `E3`) and leaving only `E0` (AEP) and the user-1 alias
-`E1` (controlled by `R₁ < macInfo₁`).
+/-- Achievability on the single-user axis with user 2 silent: the rate pair `(R₁, 0)` with
+`R₁ < macInfo₁` is achievable.  Symmetric to `mac_axis1_achievable`: `R₂ = 0` forces
+`M₂ = 1`, collapsing the `(M₂ - 1)`-carrying alias terms (`E2`, `E3`) and leaving only `E0`
+(AEP) and the user-1 alias `E1` (controlled by `R₁ < macInfo₁`).
 @audit:ok -/
 theorem mac_axis2_achievable
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
@@ -854,7 +854,7 @@ theorem mac_pentagon_subset_capacityRegion
     rcases hcases with h1 | h2 | hb
     · -- `macInfo₁ ≤ 0` ⇒ `R.1 = 0`: user 1 is silent and user 2 achieves any rate below
       -- `macInfo₂`.  Although the `R₁ < macInfo₁` corner of `mac_achievability` as-stated is
-      -- empty here, the point is achievable via its `M₁ = 1` internal specialisation
+      -- empty here, the point is achievable via its `M₁ = 1` internal specialization
       -- (`mac_axis1_achievable`): every strictly-smaller perturbation `(−ε, R.2 − ε)` reduces
       -- to `MACAchievable W 0 (R.2 − ε)` (with `R.2 − ε < macInfo₂`) by monotonicity, so `R`
       -- is a limit of achievable points.
@@ -864,7 +864,7 @@ theorem mac_pentagon_subset_capacityRegion
         mac_axis1_achievable p₁ p₂ W hp₁ hp₂ hW (by linarith [hR2le])
       exact mac_achievable_mono hax (by rw [hR1zero]; linarith) le_rfl
     · -- `macInfo₂ ≤ 0` ⇒ `R.2 = 0`: symmetric single-user achievability with user 2 silent,
-      -- via the `M₂ = 1` internal specialisation `mac_axis2_achievable`.
+      -- via the `M₂ = 1` internal specialization `mac_axis2_achievable`.
       have hR2zero : R.2 = 0 := le_antisymm (hR2le.trans h2) hR2nn
       refine mac_mem_closure_of_strictly_below W R (fun ε hε => ?_)
       have hax : MACAchievable W (R.1 - ε) 0 :=
@@ -881,9 +881,9 @@ theorem mac_pentagon_subset_capacityRegion
 /-! ## Achievability headline: the closed convex hull of the pentagons -/
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- **MAC time-sharing achievability (convex-hull form, Cover–Thomas Theorem 15.3.1).**  The
-closed convex hull of the per-input pentagons of full-support product inputs is contained in
-the operational capacity region.
+/-- Time-sharing achievability for the MAC in convex-hull form (Cover–Thomas Theorem
+15.3.1): the closed convex hull of the per-input pentagons of full-support product inputs is
+contained in the operational capacity region.
 @audit:ok -/
 @[entry_point]
 theorem mac_achievability_region (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
@@ -987,7 +987,7 @@ lemma macMix_real_continuous (p μ₀ : Measure X) [IsProbabilityMeasure p] [IsP
 end Perturbation
 
 omit [DecidableEq α₁] [Nonempty α₁] [DecidableEq α₂] [Nonempty α₂] [DecidableEq β] [Nonempty β] in
-/-- Singleton mass of a pushforward as a finite fibre sum. -/
+/-- Singleton mass of a pushforward as a finite fiber sum. -/
 lemma map_real_singleton_fiber_sum {γ : Type*} [MeasurableSpace γ] [MeasurableSingletonClass γ]
     [DecidableEq γ] (μ : Measure (α₁ × α₂ × β)) [SigmaFinite μ]
     (f : α₁ × α₂ × β → γ) (hf : Measurable f) (x : γ) :
@@ -1206,9 +1206,10 @@ theorem mac_pentagon_subset_capacityRegion_allprob
   exact (mac_capacityRegion_isClosed W).mem_of_tendsto hQ_tendsto (Eventually.of_forall hQmem)
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- **MAC time-sharing achievability (convex-hull form, all-probability inputs).**  The closed
-convex hull of the per-input pentagons of *all* probability product inputs is contained in the
-operational capacity region.  Upgrades `mac_achievability_region` from full-support inputs. -/
+/-- Time-sharing achievability for the MAC in convex-hull form, over all probability inputs:
+the closed convex hull of the per-input pentagons of *all* probability product inputs is
+contained in the operational capacity region.  Upgrades `mac_achievability_region` from
+full-support inputs. -/
 @[entry_point]
 theorem mac_achievability_region_allprob (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b}) :
