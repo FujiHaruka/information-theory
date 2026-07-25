@@ -73,7 +73,8 @@ rounding step is not formalized here, for want of computable arithmetic on `ℚ`
 The additive form is preferred over the dyadic floor form
 `IsFloorComputableENNReal` because no uniform transformation turns an
 approximation sequence into a floor sequence: that would mean deciding, from the
-approximations alone, which side of a dyadic grid point `x` falls on. -/
+approximations alone, which side of a dyadic grid point `x` falls on.
+@audit:ok -/
 def IsComputableENNReal (x : ℝ≥0∞) : Prop :=
   ∃ a : ℕ → ℕ, Computable a ∧ ∀ n : ℕ,
     x ≤ (a n : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n + (2 : ℝ≥0∞)⁻¹ ^ n ∧
@@ -83,7 +84,8 @@ def IsComputableENNReal (x : ℝ≥0∞) : Prop :=
 width `2 ^ (-n)` below `x`. It implies `IsComputableENNReal`, as
 `isComputableENNReal_of_floor` records; there is no uniform converse, since
 producing a floor sequence from an approximation sequence would mean deciding
-which side of a dyadic grid point `x` lies on. -/
+which side of a dyadic grid point `x` lies on.
+@audit:ok -/
 def IsFloorComputableENNReal (x : ℝ≥0∞) : Prop :=
   ∃ a : ℕ → ℕ, Computable a ∧ ∀ n : ℕ,
     (a n : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n ≤ x ∧ x ≤ ((a n + 1 : ℕ) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n
@@ -581,7 +583,8 @@ sequence of rationals. That notion can be phrased in Lean, `ℚ` being
 `Primcodable`, but deriving `IsComputableENNReal` from it takes a rounding step
 and hence computable division on `ℚ`, for which Mathlib has no `Primrec`
 arithmetic; the two are therefore not linked here, and the negation is proved for
-`IsComputableENNReal` itself. -/
+`IsComputableENNReal` itself.
+@audit:ok -/
 @[entry_point]
 theorem chaitinOmega_not_computable : ¬ IsComputableENNReal chaitinOmega := by
   rintro ⟨a, ha, hb⟩
