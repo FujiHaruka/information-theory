@@ -1,7 +1,7 @@
 {
   "problem": "Marton inner bound (一般 non-degraded broadcast channel の achievability, El Gamal-Kim Thm 8.3 の U = ∅ 版) の形式化。Phase 0-7 = 在庫 → mutual covering 抽象核 → 領域述語 / Fourier-Motzkin → ambient 測度 → 分散上界の鋭化 → covering の typicality 具体化 → 誤り解析 (受信機 1 → strong 化 → 受信機 2 鏡像) → headline marton_achievability の組み立て。",
   "proof_log": "docs/proof-logs/proof-log-marton-inner-bound.md",
-  "generated_at": "2026-07-25T15:42:58.032Z",
+  "generated_at": "2026-07-25T22:07:11.804Z",
   "filters": {
     "file_prefix": "InformationTheory/Shannon"
   },
@@ -60,7 +60,639 @@
       "models": [
         "claude-opus-5"
       ],
-      "sidechain_entries": 0
+      "sidechain_entries": 0,
+      "subagents": [
+        {
+          "id": "agent-amarton-inventory-7f0db27055a347ad",
+          "start": "2026-07-25T06:49:29.442Z",
+          "end": "2026-07-25T07:10:10.060Z",
+          "wall_time_seconds": 1241,
+          "active_time_seconds": 1241,
+          "turns": 71,
+          "tool_calls": {
+            "Read": 27,
+            "Bash": 53,
+            "Write": 1,
+            "Edit": 1,
+            "TaskUpdate": 1,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "ls": 3,
+            "other": 13,
+            "rg": 22,
+            "cat": 5,
+            "find": 2,
+            "sed": 7,
+            "tail": 1
+          },
+          "bash_total": 53,
+          "edits_by_file": {
+            "docs/shannon/marton-inner-bound-inventory.md": 1
+          },
+          "writes_by_file": {
+            "docs/shannon/marton-inner-bound-inventory.md": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/fano/fano-mathlib-inventory.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Basic.lean": 1,
+            "InformationTheory/Shannon/WynerZiv/Achievability/Covering.lean": 2,
+            ".lake/packages/mathlib/Mathlib/Probability/Moments/Variance.lean": 3,
+            "InformationTheory/Shannon/ChannelCoding/Achievability/Core.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/5fdb5421-5012-444a-83fc-e3ebb250d0c4/tasks/blwiyj5h3.output": 1,
+            "InformationTheory/Shannon/ChannelCoding/Basic.lean": 2,
+            "InformationTheory/Shannon/StrongTypicality.lean": 1,
+            "InformationTheory/Shannon/RateDistortion/AchievabilityJointTypicalEncoder.lean": 1,
+            "InformationTheory/Shannon/ConditionalMethodOfTypes/Mass/SliceMass.lean": 1,
+            "InformationTheory/Shannon/MultipleAccess/AchievabilityCore.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Setup.lean": 2,
+            "InformationTheory/Shannon/SlepianWolf/ConditionalTypicalSlice.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/5fdb5421-5012-444a-83fc-e3ebb250d0c4/tasks/bbdkv83u2.output": 1,
+            ".lake/packages/mathlib/Mathlib/Probability/Moments/Covariance.lean": 2,
+            ".lake/packages/mathlib/Mathlib/MeasureTheory/Function/LpSeminorm/Basic.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 1,
+            ".lake/packages/mathlib/Mathlib/Probability/Kernel/Basic.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/5fdb5421-5012-444a-83fc-e3ebb250d0c4/tasks/b0pwfjbsj.output": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 2,
+          "tokens": {
+            "input": 290,
+            "output": 55940,
+            "cache_read": 22132477,
+            "cache_creation": 865122
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 231,
+          "subagents": [],
+          "agent_name": "marton-inventory",
+          "agent_type": "marton-inventory",
+          "custom_agent_type": "mathlib-inventory",
+          "description": "Marton inner bound 在庫調査"
+        },
+        {
+          "id": "agent-amarton-gateway-e45c632427bd72a4",
+          "start": "2026-07-25T07:11:48.746Z",
+          "end": "2026-07-25T07:37:43.117Z",
+          "wall_time_seconds": 1554,
+          "active_time_seconds": 1554,
+          "turns": 93,
+          "tool_calls": {
+            "Read": 17,
+            "Bash": 49,
+            "Write": 1,
+            "Edit": 34,
+            "TaskGet": 1,
+            "TaskUpdate": 1,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "rg": 15,
+            "ls": 2,
+            "find": 1,
+            "lake_env_lean": 22,
+            "other": 3,
+            "sed": 1,
+            "awk": 1,
+            "python3": 1,
+            "git": 3
+          },
+          "bash_total": 49,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 34
+          },
+          "writes_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 2,
+            "InformationTheory/Shannon/WynerZiv/Achievability/Covering.lean": 1,
+            ".lake/packages/mathlib/Mathlib/Probability/Moments/Variance.lean": 2,
+            ".lake/packages/mathlib/Mathlib/Probability/Moments/Covariance.lean": 2,
+            ".lake/packages/mathlib/Mathlib/Probability/Independence/Basic.lean": 5,
+            "InformationTheory/Shannon/BroadcastChannel/Basic.lean": 1,
+            ".lake/packages/mathlib/Mathlib/MeasureTheory/Constructions/Pi.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 1
+          },
+          "matched_edits": 34,
+          "matched_writes": 1,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 294,
+            "output": 84644,
+            "cache_read": 20838724,
+            "cache_creation": 452228
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 254,
+          "subagents": [],
+          "agent_name": "marton-gateway",
+          "agent_type": "marton-gateway",
+          "custom_agent_type": "lean-implementer",
+          "description": "gateway atom: 二重添字指標和の分散評価"
+        },
+        {
+          "id": "agent-amarton-planner-82d31321b61051e4",
+          "start": "2026-07-25T07:41:05.836Z",
+          "end": "2026-07-25T07:52:31.088Z",
+          "wall_time_seconds": 685,
+          "active_time_seconds": 685,
+          "turns": 15,
+          "tool_calls": {
+            "Read": 11,
+            "Bash": 6,
+            "Write": 1,
+            "TaskUpdate": 1
+          },
+          "bash_breakdown": {
+            "other": 4,
+            "ls": 1,
+            "wc": 1
+          },
+          "bash_total": 6,
+          "edits_by_file": {},
+          "writes_by_file": {
+            "docs/shannon/marton-inner-bound-plan.md": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/subplan-template.md": 1,
+            "docs/moonshot-plan-template.md": 1,
+            "docs/shannon/marton-inner-bound-inventory.md": 1,
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 1,
+            "docs/shannon/bc-achievability-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 68,
+            "output": 35977,
+            "cache_read": 2624044,
+            "cache_creation": 321960
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 56,
+          "subagents": [],
+          "agent_name": "marton-planner",
+          "agent_type": "marton-planner",
+          "custom_agent_type": "lean-planner",
+          "description": "Marton 子 plan 起票"
+        },
+        {
+          "id": "agent-amarton-sharp-bcdba5e5ee5aee1e",
+          "start": "2026-07-25T07:54:41.403Z",
+          "end": "2026-07-25T08:13:04.916Z",
+          "wall_time_seconds": 1104,
+          "active_time_seconds": 1104,
+          "turns": 62,
+          "tool_calls": {
+            "Read": 13,
+            "Bash": 33,
+            "Edit": 19,
+            "Write": 1,
+            "TaskUpdate": 1,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "rg": 12,
+            "lake_env_lean": 14,
+            "cp": 2,
+            "lake_build": 1,
+            "python3": 1,
+            "git": 3
+          },
+          "bash_total": 33,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 19
+          },
+          "writes_by_file": {
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/28fee7e9-30a3-4b84-ae0b-1c44385ed89e/scratchpad/DegenCheck.lean": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 2,
+            ".lake/packages/mathlib/Mathlib/Probability/Independence/Basic.lean": 2,
+            ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/Prod.lean": 1,
+            ".lake/packages/mathlib/Mathlib/Data/ENNReal/Real.lean": 1,
+            "InformationTheory/Shannon/SlepianWolf/ConditionalTypicalSlice.lean": 2,
+            "InformationTheory/Shannon/ChannelCoding/Basic.lean": 1
+          },
+          "matched_edits": 19,
+          "matched_writes": 0,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 216,
+            "output": 71365,
+            "cache_read": 15323703,
+            "cache_creation": 418684
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 179,
+          "subagents": [],
+          "agent_name": "marton-sharp",
+          "agent_type": "marton-sharp",
+          "custom_agent_type": "lean-implementer",
+          "description": "Phase 4 共分散の鋭化"
+        },
+        {
+          "id": "agent-amarton-honesty-5b1d3eaa1ee40bc8",
+          "start": "2026-07-25T08:17:21.193Z",
+          "end": "2026-07-25T08:23:57.623Z",
+          "wall_time_seconds": 396,
+          "active_time_seconds": 396,
+          "turns": 15,
+          "tool_calls": {
+            "Read": 6,
+            "Bash": 9,
+            "Edit": 3
+          },
+          "bash_breakdown": {
+            "rg": 4,
+            "git": 3,
+            "cp": 1,
+            "other": 1
+          },
+          "bash_total": 9,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 3
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 2,
+            "docs/audit/honesty-auditor-core.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 1,
+            "docs/shannon/marton-inner-bound-plan.md": 1
+          },
+          "matched_edits": 3,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 64,
+            "output": 24320,
+            "cache_read": 2359730,
+            "cache_creation": 336595
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 53,
+          "subagents": [],
+          "agent_name": "marton-honesty",
+          "agent_type": "marton-honesty",
+          "custom_agent_type": "honesty-auditor",
+          "description": "Phase 4 honesty 監査"
+        },
+        {
+          "id": "agent-amarton-region-4b5b8d9bbe9b3c6f",
+          "start": "2026-07-25T08:25:32.647Z",
+          "end": "2026-07-25T08:34:11.456Z",
+          "wall_time_seconds": 519,
+          "active_time_seconds": 519,
+          "turns": 36,
+          "tool_calls": {
+            "Read": 8,
+            "Bash": 22,
+            "Write": 1,
+            "Edit": 6,
+            "TaskGet": 1,
+            "TaskUpdate": 1,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "rg": 3,
+            "lake_env_lean": 7,
+            "grep": 2,
+            "other": 2,
+            "cat": 2,
+            "python3": 2,
+            "cp": 1,
+            "lake_build": 1,
+            "git": 2
+          },
+          "bash_total": 22,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 5,
+            "InformationTheory.lean": 1
+          },
+          "writes_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Basic.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 1,
+            "docs/rules/docstrings.md": 1,
+            "InformationTheory.lean": 1
+          },
+          "matched_edits": 5,
+          "matched_writes": 1,
+          "tool_errors": 3,
+          "tokens": {
+            "input": 136,
+            "output": 28277,
+            "cache_read": 6883503,
+            "cache_creation": 367099
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 111,
+          "subagents": [],
+          "agent_name": "marton-region",
+          "agent_type": "marton-region",
+          "custom_agent_type": "lean-implementer",
+          "description": "Phase 2 region 述語 + root 登録"
+        },
+        {
+          "id": "agent-amarton-setup-1d001afe28d8e87e",
+          "start": "2026-07-25T08:35:22.337Z",
+          "end": "2026-07-25T08:48:45.083Z",
+          "wall_time_seconds": 803,
+          "active_time_seconds": 803,
+          "turns": 59,
+          "tool_calls": {
+            "Read": 9,
+            "Bash": 40,
+            "Write": 1,
+            "Edit": 13,
+            "TaskUpdate": 1,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "ls": 1,
+            "rg": 13,
+            "grep": 1,
+            "sed": 5,
+            "lake_env_lean": 15,
+            "mkdir": 1,
+            "lake_build": 1,
+            "wc": 1,
+            "python3": 1,
+            "git": 1
+          },
+          "bash_total": 40,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 12,
+            "InformationTheory.lean": 1
+          },
+          "writes_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Setup.lean": 1,
+            "docs/rules/docstrings.md": 1,
+            "InformationTheory/Shannon/Bridge.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Basic.lean": 1,
+            "InformationTheory/Shannon/IIDProductInput/Basic.lean": 1
+          },
+          "matched_edits": 12,
+          "matched_writes": 1,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 198,
+            "output": 46183,
+            "cache_read": 12600768,
+            "cache_creation": 395020
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 167,
+          "subagents": [],
+          "agent_name": "marton-setup",
+          "agent_type": "marton-setup",
+          "custom_agent_type": "lean-implementer",
+          "description": "Phase 3 ambient plumbing + 情報量"
+        },
+        {
+          "id": "agent-amarton-covering-31a5ae171db30258",
+          "start": "2026-07-25T08:50:06.949Z",
+          "end": "2026-07-25T09:29:03.306Z",
+          "wall_time_seconds": 2336,
+          "active_time_seconds": 2336,
+          "turns": 93,
+          "tool_calls": {
+            "Read": 21,
+            "Bash": 53,
+            "Write": 1,
+            "Edit": 27,
+            "TaskUpdate": 1,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "rg": 14,
+            "ls": 1,
+            "other": 6,
+            "head": 1,
+            "lake_env_lean": 23,
+            "mkdir": 1,
+            "lake_build": 2,
+            "awk": 1,
+            "cat": 1,
+            "git": 3
+          },
+          "bash_total": 53,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 26,
+            "InformationTheory.lean": 1
+          },
+          "writes_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 3,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 1,
+            "InformationTheory/Shannon/ChannelCoding/Basic.lean": 1,
+            "InformationTheory/Shannon/SlepianWolf/ConditionalTypicalSlice.lean": 1,
+            "InformationTheory/Shannon/RateDistortion/AchievabilityJointTypicalEncoder.lean": 1,
+            "InformationTheory/Shannon/ChannelCoding/Achievability/Core.lean": 1,
+            "InformationTheory/Shannon/AEP/Basic/Core.lean": 2,
+            "InformationTheory/Shannon/AEP/Basic/Achievability.lean": 1,
+            "InformationTheory/Shannon/AEP/Rate.lean": 1,
+            "InformationTheory/Shannon/Bridge.lean": 1,
+            ".lake/packages/mathlib/Mathlib/MeasureTheory/Constructions/Pi.lean": 1,
+            "InformationTheory.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 1
+          },
+          "matched_edits": 26,
+          "matched_writes": 1,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 314,
+            "output": 117406,
+            "cache_read": 36957713,
+            "cache_creation": 664398
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 264,
+          "subagents": [],
+          "agent_name": "marton-covering",
+          "agent_type": "marton-covering",
+          "custom_agent_type": "lean-implementer",
+          "description": "Phase 5 typicality 具体化"
+        },
+        {
+          "id": "agent-amarton-error1-71fa8d9e334bf43d",
+          "start": "2026-07-25T09:31:20.580Z",
+          "end": "2026-07-25T10:16:55.054Z",
+          "wall_time_seconds": 2734,
+          "active_time_seconds": 2734,
+          "turns": 81,
+          "tool_calls": {
+            "Read": 19,
+            "Bash": 53,
+            "TaskUpdate": 2,
+            "Write": 2,
+            "Edit": 15,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "ls": 2,
+            "grep": 1,
+            "other": 14,
+            "rg": 11,
+            "sed": 2,
+            "lake_env_lean": 12,
+            "head": 1,
+            "cat": 2,
+            "python3": 3,
+            "mkdir": 1,
+            "awk": 1,
+            "git": 2,
+            "lake_build": 1
+          },
+          "bash_total": 53,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 15
+          },
+          "writes_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 2
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 2,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Setup.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Basic.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/ErrorAnalysis.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 2,
+            "InformationTheory/Shannon/ChannelCoding/Achievability/RandomCodebook.lean": 2,
+            "InformationTheory/Shannon/ChannelCoding/Achievability/Core.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 1
+          },
+          "matched_edits": 15,
+          "matched_writes": 2,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 294,
+            "output": 149811,
+            "cache_read": 30765068,
+            "cache_creation": 1869746
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 243,
+          "subagents": [],
+          "agent_name": "marton-error1",
+          "agent_type": "marton-error1",
+          "custom_agent_type": "lean-implementer",
+          "description": "Phase 6a 受信機 1 の誤り解析"
+        },
+        {
+          "id": "agent-amarton-pivot-d665ae346255b285",
+          "start": "2026-07-25T10:18:10.295Z",
+          "end": "2026-07-25T10:32:56.008Z",
+          "wall_time_seconds": 886,
+          "active_time_seconds": 886,
+          "turns": 27,
+          "tool_calls": {
+            "Read": 18,
+            "Bash": 18,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "rg": 8,
+            "ls": 3,
+            "other": 6,
+            "python3": 1
+          },
+          "bash_total": 18,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "InformationTheory/Shannon/ChannelCoding/Basic.lean": 1,
+            "InformationTheory/Shannon/StrongTypicality.lean": 1,
+            "InformationTheory/Shannon/AEP/Basic/Core.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 1,
+            "InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.lean": 3,
+            "InformationTheory/Shannon/ConditionalMethodOfTypes/Mass/SliceMass.lean": 1,
+            "InformationTheory/Shannon/RateDistortion/AchievabilityUnconditional.lean": 1,
+            "InformationTheory/Shannon/WynerZiv/Achievability/Concentration.lean": 2
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 126,
+            "output": 46394,
+            "cache_read": 6950387,
+            "cache_creation": 799043
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 103,
+          "subagents": [],
+          "agent_name": "marton-pivot",
+          "agent_type": "marton-pivot",
+          "custom_agent_type": "proof-pivot-advisor",
+          "description": "E1 weak/strong typicality 判定の独立検証"
+        }
+      ]
     },
     {
       "id": "d36fc4e7-e6ce-46b9-be2a-8c1aebbd78c3",
@@ -115,7 +747,438 @@
       "models": [
         "claude-opus-5"
       ],
-      "sidechain_entries": 0
+      "sidechain_entries": 0,
+      "subagents": [
+        {
+          "id": "agent-amarton-e1-gateway-4904e253a471769e",
+          "start": "2026-07-25T10:41:23.594Z",
+          "end": "2026-07-25T11:11:39.271Z",
+          "wall_time_seconds": 1816,
+          "active_time_seconds": 1816,
+          "turns": 103,
+          "tool_calls": {
+            "Read": 19,
+            "Bash": 54,
+            "Write": 2,
+            "Edit": 34,
+            "TaskUpdate": 1
+          },
+          "bash_breakdown": {
+            "rg": 12,
+            "wc": 1,
+            "other": 5,
+            "lake_env_lean": 27,
+            "head": 2,
+            "lake_build": 1,
+            "mkdir": 1,
+            "awk": 1,
+            "python3": 1,
+            "cat": 1,
+            "git": 2
+          },
+          "bash_total": 54,
+          "edits_by_file": {
+            "InformationTheory/Shannon/ConditionalAEP.lean": 8,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 25,
+            "InformationTheory.lean": 1
+          },
+          "writes_by_file": {
+            "InformationTheory/Shannon/ConditionalAEP.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 2,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "InformationTheory/Shannon/WynerZiv/Achievability/Concentration.lean": 4,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 2,
+            "InformationTheory/Shannon/StrongTypicality.lean": 1,
+            "InformationTheory/Shannon/RateDistortion/AchievabilityUnconditional.lean": 1,
+            ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Bochner/SumMeasure.lean": 1,
+            "InformationTheory/Shannon/IIDProductInput/Basic.lean": 2,
+            ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/Real.lean": 1,
+            "InformationTheory/Shannon/ChannelCoding/Basic.lean": 1
+          },
+          "matched_edits": 33,
+          "matched_writes": 2,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 328,
+            "output": 101491,
+            "cache_read": 34993420,
+            "cache_creation": 669205
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 276,
+          "subagents": [],
+          "agent_name": "marton-e1-gateway",
+          "agent_type": "marton-e1-gateway",
+          "custom_agent_type": "lean-implementer",
+          "description": "Marton E1 gateway atom"
+        },
+        {
+          "id": "agent-amarton-e1-honesty-eae78147d2495dc9",
+          "start": "2026-07-25T11:14:34.933Z",
+          "end": "2026-07-25T11:30:16.299Z",
+          "wall_time_seconds": 941,
+          "active_time_seconds": 941,
+          "turns": 43,
+          "tool_calls": {
+            "Read": 14,
+            "Bash": 30,
+            "Edit": 7
+          },
+          "bash_breakdown": {
+            "rg": 12,
+            "wc": 1,
+            "sed": 4,
+            "git": 1,
+            "ls": 1,
+            "cat": 1,
+            "python3": 5,
+            "other": 4,
+            "awk": 1
+          },
+          "bash_total": 30,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 5,
+            "InformationTheory/Shannon/ConditionalAEP.lean": 2
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 2,
+            "docs/audit/honesty-auditor-core.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1,
+            "InformationTheory/Shannon/ConditionalAEP.lean": 1,
+            "InformationTheory/Shannon/StrongTypicality.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1,
+            "InformationTheory/Shannon/AEP/Basic/Core.lean": 2,
+            "InformationTheory/Shannon/ChannelCoding/Basic.lean": 1,
+            "InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.lean": 1
+          },
+          "matched_edits": 7,
+          "matched_writes": 0,
+          "tool_errors": 3,
+          "tokens": {
+            "input": 174,
+            "output": 61495,
+            "cache_read": 12095640,
+            "cache_creation": 490743
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 141,
+          "subagents": [],
+          "agent_name": "marton-e1-honesty",
+          "agent_type": "marton-e1-honesty",
+          "custom_agent_type": "honesty-auditor",
+          "description": "Honesty audit: Marton E1 atom"
+        },
+        {
+          "id": "agent-amarton-e1-style-a50b6df66e82391c",
+          "start": "2026-07-25T11:31:36.378Z",
+          "end": "2026-07-25T11:39:29.558Z",
+          "wall_time_seconds": 473,
+          "active_time_seconds": 473,
+          "turns": 34,
+          "tool_calls": {
+            "Read": 9,
+            "Bash": 15,
+            "Edit": 12
+          },
+          "bash_breakdown": {
+            "echo": 6,
+            "rg": 2,
+            "other": 1,
+            "head": 1,
+            "lake_build": 3,
+            "mkdir": 1,
+            "lake_env_lean": 1
+          },
+          "bash_total": 15,
+          "edits_by_file": {
+            "InformationTheory/Shannon/ConditionalAEP.lean": 8,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 4
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/rules/README.md": 1,
+            "docs/rules/docstrings.md": 1,
+            "docs/rules/lean-style.md": 1,
+            "docs/rules/naming.md": 1,
+            "docs/rules/module-structure.md": 1,
+            "InformationTheory/Shannon/ConditionalAEP.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1
+          },
+          "matched_edits": 12,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 118,
+            "output": 28575,
+            "cache_read": 5412578,
+            "cache_creation": 250782
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 97,
+          "subagents": [],
+          "agent_name": "marton-e1-style",
+          "agent_type": "marton-e1-style",
+          "custom_agent_type": "style-auditor",
+          "description": "Style gate: Marton MarkovCore"
+        },
+        {
+          "id": "agent-amarton-6a-body-32492d338d1de870",
+          "start": "2026-07-25T11:48:13.544Z",
+          "end": "2026-07-25T12:24:15.459Z",
+          "wall_time_seconds": 2162,
+          "active_time_seconds": 2162,
+          "turns": 101,
+          "tool_calls": {
+            "Read": 21,
+            "Bash": 63,
+            "Edit": 26,
+            "TaskUpdate": 1,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "rg": 18,
+            "ls": 1,
+            "other": 9,
+            "head": 1,
+            "sed": 3,
+            "lake_env_lean": 24,
+            "git": 2,
+            "lake_build": 2,
+            "python3": 2,
+            "mkdir": 1
+          },
+          "bash_total": 63,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 13,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 6,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 7
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 2,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 4,
+            "InformationTheory/Shannon/RateDistortion/AchievabilityUnconditional.lean": 1,
+            "InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 2,
+            "InformationTheory/Shannon/WynerZiv/Achievability/Covering.lean": 1,
+            "InformationTheory/Shannon/WynerZiv/Achievability/Concentration.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1,
+            "InformationTheory/Shannon/ConditionalAEP.lean": 2
+          },
+          "matched_edits": 26,
+          "matched_writes": 0,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 346,
+            "output": 141712,
+            "cache_read": 43100751,
+            "cache_creation": 836091
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 288,
+          "subagents": [],
+          "agent_name": "marton-6a-body",
+          "agent_type": "marton-6a-body",
+          "custom_agent_type": "lean-implementer",
+          "description": "Marton Phase 6a' body"
+        },
+        {
+          "id": "agent-amarton-6a-honesty-0630d69fa358296c",
+          "start": "2026-07-25T12:25:37.362Z",
+          "end": "2026-07-25T12:40:05.010Z",
+          "wall_time_seconds": 868,
+          "active_time_seconds": 868,
+          "turns": 50,
+          "tool_calls": {
+            "Read": 13,
+            "Bash": 28,
+            "Edit": 12
+          },
+          "bash_breakdown": {
+            "rg": 9,
+            "git": 4,
+            "other": 6,
+            "ls": 1,
+            "cat": 4,
+            "python3": 3,
+            "sed": 1
+          },
+          "bash_total": 28,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 7,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 2
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 2,
+            "docs/audit/honesty-auditor-core.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 3,
+            "InformationTheory/Shannon/StrongTypicality.lean": 1,
+            "InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 1
+          },
+          "matched_edits": 12,
+          "matched_writes": 0,
+          "tool_errors": 2,
+          "tokens": {
+            "input": 180,
+            "output": 53256,
+            "cache_read": 12008709,
+            "cache_creation": 492709
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 146,
+          "subagents": [],
+          "agent_name": "marton-6a-honesty",
+          "agent_type": "marton-6a-honesty",
+          "custom_agent_type": "honesty-auditor",
+          "description": "Honesty audit: Phase 6a' body"
+        },
+        {
+          "id": "agent-amarton-6a-style-b5afb3afff513ee5",
+          "start": "2026-07-25T12:41:29.598Z",
+          "end": "2026-07-25T12:50:46.963Z",
+          "wall_time_seconds": 557,
+          "active_time_seconds": 557,
+          "turns": 58,
+          "tool_calls": {
+            "Read": 13,
+            "Bash": 29,
+            "Edit": 17,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "wc": 1,
+            "echo": 4,
+            "rg": 11,
+            "other": 8,
+            "lake_env_lean": 3,
+            "python3": 1,
+            "git": 1
+          },
+          "bash_total": 29,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 13,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/rules/README.md": 1,
+            "docs/rules/docstrings.md": 1,
+            "docs/rules/naming.md": 1,
+            "docs/rules/module-structure.md": 1,
+            "docs/rules/lean-style.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 4,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 2
+          },
+          "matched_edits": 17,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 198,
+            "output": 30169,
+            "cache_read": 8923960,
+            "cache_creation": 270046
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 161,
+          "subagents": [],
+          "agent_name": "marton-6a-style",
+          "agent_type": "marton-6a-style",
+          "custom_agent_type": "style-auditor",
+          "description": "Style gate: Phase 6a' body"
+        },
+        {
+          "id": "agent-amarton-plan-sync-1d29f113692464bc",
+          "start": "2026-07-25T12:51:50.075Z",
+          "end": "2026-07-25T12:58:05.903Z",
+          "wall_time_seconds": 376,
+          "active_time_seconds": 376,
+          "turns": 25,
+          "tool_calls": {
+            "Read": 11,
+            "Bash": 12,
+            "Write": 1,
+            "Edit": 4
+          },
+          "bash_breakdown": {
+            "echo": 5,
+            "git": 1,
+            "sed": 1,
+            "rg": 2,
+            "wc": 1,
+            "deno": 1,
+            "ls": 1
+          },
+          "bash_total": 12,
+          "edits_by_file": {
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 4
+          },
+          "writes_by_file": {
+            "docs/shannon/marton-inner-bound-plan.md": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/subplan-template.md": 1,
+            "docs/moonshot-plan-template.md": 1,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 1,
+            "scripts/plan_lint.ts": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 100,
+            "output": 23431,
+            "cache_read": 4029977,
+            "cache_creation": 280624
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 81,
+          "subagents": [],
+          "agent_name": "marton-plan-sync",
+          "agent_type": "marton-plan-sync",
+          "custom_agent_type": "lean-planner",
+          "description": "Marton plan sync"
+        }
+      ]
     },
     {
       "id": "c397fe51-394d-41a0-9a84-b7b8fc751ad2",
@@ -165,74 +1228,769 @@
       "models": [
         "claude-opus-5"
       ],
-      "sidechain_entries": 0
+      "sidechain_entries": 0,
+      "subagents": [
+        {
+          "id": "agent-amarton-6b1-afb223c578dea6aa",
+          "start": "2026-07-25T13:04:20.773Z",
+          "end": "2026-07-25T13:20:08.059Z",
+          "wall_time_seconds": 947,
+          "active_time_seconds": 947,
+          "turns": 76,
+          "tool_calls": {
+            "Read": 9,
+            "Bash": 44,
+            "Edit": 25,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "ls": 2,
+            "rg": 7,
+            "lake_env_lean": 25,
+            "other": 6,
+            "lake_build": 1,
+            "git": 3
+          },
+          "bash_total": 44,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 25
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "InformationTheory/Shannon/StrongTypicality.lean": 1,
+            "InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.lean": 1
+          },
+          "matched_edits": 25,
+          "matched_writes": 0,
+          "tool_errors": 2,
+          "tokens": {
+            "input": 228,
+            "output": 48310,
+            "cache_read": 17023364,
+            "cache_creation": 423144
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 196,
+          "subagents": [],
+          "agent_name": "marton-6b1",
+          "agent_type": "marton-6b1",
+          "custom_agent_type": "lean-implementer",
+          "description": "Phase 6b-1 MarkovCore V2/Y2 mirror"
+        },
+        {
+          "id": "agent-amarton-6b2-300d1db18847c914",
+          "start": "2026-07-25T13:21:32.601Z",
+          "end": "2026-07-25T13:32:18.473Z",
+          "wall_time_seconds": 646,
+          "active_time_seconds": 646,
+          "turns": 41,
+          "tool_calls": {
+            "Read": 8,
+            "Bash": 24,
+            "Edit": 11,
+            "TaskGet": 1,
+            "TaskUpdate": 1,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "rg": 6,
+            "wc": 1,
+            "cat": 2,
+            "other": 1,
+            "lake_env_lean": 7,
+            "python3": 1,
+            "lake_build": 3,
+            "git": 3
+          },
+          "bash_total": 24,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 11
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Basic.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 1
+          },
+          "matched_edits": 11,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 146,
+            "output": 41767,
+            "cache_read": 8328897,
+            "cache_creation": 378785
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 122,
+          "subagents": [],
+          "agent_name": "marton-6b2",
+          "agent_type": "marton-6b2",
+          "custom_agent_type": "lean-implementer",
+          "description": "Phase 6b-2 ErrorAnalysis receiver-2 mirror"
+        },
+        {
+          "id": "agent-amarton-6b-honesty-9d808663ad9653ea",
+          "start": "2026-07-25T13:33:10.446Z",
+          "end": "2026-07-25T13:43:58.938Z",
+          "wall_time_seconds": 648,
+          "active_time_seconds": 648,
+          "turns": 57,
+          "tool_calls": {
+            "Read": 18,
+            "Bash": 31,
+            "Edit": 15
+          },
+          "bash_breakdown": {
+            "rg": 20,
+            "git": 5,
+            "wc": 1,
+            "cat": 1,
+            "other": 4
+          },
+          "bash_total": 31,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 8,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 7
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/audit/honesty-auditor-core.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 7,
+            "InformationTheory/Shannon/WynerZiv/Achievability/MarkovCore.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 5,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 2
+          },
+          "matched_edits": 15,
+          "matched_writes": 0,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 206,
+            "output": 38825,
+            "cache_read": 14104760,
+            "cache_creation": 513679
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 170,
+          "subagents": [],
+          "agent_name": "marton-6b-honesty",
+          "agent_type": "marton-6b-honesty",
+          "custom_agent_type": "honesty-auditor",
+          "description": "Honesty audit Phase 6b"
+        },
+        {
+          "id": "agent-amarton-6b-style-6b5215e54cd7e60e",
+          "start": "2026-07-25T13:44:58.227Z",
+          "end": "2026-07-25T13:54:01.784Z",
+          "wall_time_seconds": 544,
+          "active_time_seconds": 544,
+          "turns": 30,
+          "tool_calls": {
+            "Read": 11,
+            "Bash": 19,
+            "Edit": 8,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "wc": 1,
+            "echo": 5,
+            "other": 3,
+            "python3": 3,
+            "git": 3,
+            "rg": 3,
+            "ls": 1
+          },
+          "bash_total": 19,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 5
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/rules/README.md": 1,
+            "docs/rules/docstrings.md": 1,
+            "docs/rules/naming.md": 1,
+            "docs/rules/module-structure.md": 1,
+            "docs/rules/lean-style.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 3
+          },
+          "matched_edits": 8,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 136,
+            "output": 22765,
+            "cache_read": 5424687,
+            "cache_creation": 334040
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 109,
+          "subagents": [],
+          "agent_name": "marton-6b-style",
+          "agent_type": "marton-6b-style",
+          "custom_agent_type": "style-auditor",
+          "description": "Style gate Phase 6b"
+        }
+      ]
     },
     {
       "id": "ca20f7f5-4ebb-4f34-8592-fdd834499c3d",
-      "note": "relay leg 4。MarkovCore.lean を Prelim/Receiver1/Receiver2 + umbrella へ分割 (e83c1533) → Phase 7 headline marton_achievability を Achievability.lean で closure (8f6f2f07) → 2 ゲート (63d37b8f honesty / 0f30e5d1 style)。注意: このターンは Phase 8 bookkeeping (README 定理表 + 本 proof-log の起票) を末尾に含む不可分ターンであり、その分だけツールコールが上振れしている。また計測時点でセッション進行中のため打ち切り値。",
+      "note": "relay leg 4。MarkovCore.lean を Prelim/Receiver1/Receiver2 + umbrella へ分割 (e83c1533) → Phase 7 headline marton_achievability を Achievability.lean で closure (8f6f2f07) → 2 ゲート (63d37b8f honesty / 0f30e5d1 style)。注意: このターンは Phase 8 bookkeeping (README 定理表 + 本 proof-log の起票) を末尾に含む不可分ターンであり、その分だけツールコールが上振れしている。wall time は末尾に長い idle を含むので active time で読むこと。",
       "start": "2026-07-25T13:56:44.621Z",
-      "end": "2026-07-25T15:35:49.817Z",
-      "wall_time_seconds": 5945,
-      "active_time_seconds": 2860,
-      "turns": 35,
+      "end": "2026-07-25T19:01:45.670Z",
+      "wall_time_seconds": 18301,
+      "active_time_seconds": 3645,
+      "turns": 42,
       "tool_calls": {
-        "Bash": 22,
+        "Bash": 24,
         "Skill": 1,
         "ToolSearch": 1,
         "TaskList": 1,
         "TaskCreate": 5,
         "Agent": 8,
-        "TaskUpdate": 4,
-        "Write": 1
+        "TaskUpdate": 5,
+        "Write": 3,
+        "Read": 1,
+        "PushNotification": 1
       },
       "bash_breakdown": {
         "ls": 1,
-        "git": 9,
+        "git": 11,
         "other": 4,
         "rg": 5,
         "sed": 1,
         "lake_env_lean": 1,
         "lake_build": 1
       },
-      "bash_total": 22,
+      "bash_total": 24,
       "edits_by_file": {},
       "writes_by_file": {
-        "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/ca20f7f5-4ebb-4f34-8592-fdd834499c3d/scratchpad/AxCheck.lean": 1
+        "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/ca20f7f5-4ebb-4f34-8592-fdd834499c3d/scratchpad/AxCheck.lean": 1,
+        ".claude/handoff.md": 2
       },
-      "reads_by_file": {},
+      "reads_by_file": {
+        ".claude/handoff.md": 1
+      },
       "matched_edits": 0,
       "matched_writes": 0,
-      "tool_errors": 0,
+      "tool_errors": 1,
       "tokens": {
-        "input": 160,
-        "output": 106258,
-        "cache_read": 7287183,
-        "cache_creation": 340464
+        "input": 184,
+        "output": 126089,
+        "cache_read": 9155058,
+        "cache_creation": 370656
       },
       "models": [
         "claude-opus-5"
       ],
-      "sidechain_entries": 0
+      "sidechain_entries": 0,
+      "subagents": [
+        {
+          "id": "agent-ad88119027a44e51c",
+          "start": "2026-07-25T13:58:44.771Z",
+          "end": "2026-07-25T14:11:47.299Z",
+          "wall_time_seconds": 783,
+          "active_time_seconds": 783,
+          "turns": 51,
+          "tool_calls": {
+            "Read": 25,
+            "Bash": 25,
+            "Edit": 16
+          },
+          "bash_breakdown": {
+            "ls": 1,
+            "rg": 14,
+            "other": 6,
+            "git": 1,
+            "wc": 1,
+            "deno": 2
+          },
+          "bash_total": 25,
+          "edits_by_file": {
+            "docs/shannon/marton-inner-bound-plan.md": 14,
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 2
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/subplan-template.md": 1,
+            "docs/moonshot-plan-template.md": 1,
+            "docs/shannon/marton-inner-bound-plan.md": 5,
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 7,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 5,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 206,
+            "output": 37003,
+            "cache_read": 11031826,
+            "cache_creation": 371918
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 171,
+          "subagents": [],
+          "agent_name": "lean-planner#44e51c",
+          "agent_type": "lean-planner",
+          "description": "Marton plan Phase 6b 同期"
+        },
+        {
+          "id": "agent-ac3249e3e4a701b21",
+          "start": "2026-07-25T14:13:38.322Z",
+          "end": "2026-07-25T14:27:41.262Z",
+          "wall_time_seconds": 843,
+          "active_time_seconds": 843,
+          "turns": 51,
+          "tool_calls": {
+            "Read": 12,
+            "Bash": 40,
+            "Edit": 1
+          },
+          "bash_breakdown": {
+            "ls": 2,
+            "other": 17,
+            "rg": 7,
+            "cat": 4,
+            "find": 1,
+            "lake_env_lean": 4,
+            "lake_build": 5
+          },
+          "bash_total": 40,
+          "edits_by_file": {
+            "InformationTheory.lean": 1
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/rules/module-structure.md": 1,
+            "docs/rules/naming.md": 1,
+            "docs/rules/docstrings.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean": 1,
+            "InformationTheory.lean": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 3,
+          "tokens": {
+            "input": 188,
+            "output": 36465,
+            "cache_read": 10212279,
+            "cache_creation": 333444
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 149,
+          "subagents": [],
+          "agent_name": "lean-implementer#701b21",
+          "agent_type": "lean-implementer",
+          "description": "MarkovCore 分割 + alias 補題 rename"
+        },
+        {
+          "id": "agent-ac0dfd1c561428f63",
+          "start": "2026-07-25T14:28:58.744Z",
+          "end": "2026-07-25T14:34:39.805Z",
+          "wall_time_seconds": 341,
+          "active_time_seconds": 341,
+          "turns": 23,
+          "tool_calls": {
+            "Read": 10,
+            "Bash": 16
+          },
+          "bash_breakdown": {
+            "other": 7,
+            "git": 3,
+            "echo": 4,
+            "rg": 1,
+            "sed": 1
+          },
+          "bash_total": 16,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/rules/README.md": 1,
+            "docs/rules/docstrings.md": 1,
+            "docs/rules/module-structure.md": 1,
+            "docs/rules/naming.md": 1,
+            "docs/rules/lean-style.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Receiver1.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Receiver2.lean": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 100,
+            "output": 17823,
+            "cache_read": 4656983,
+            "cache_creation": 345343
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 77,
+          "subagents": [],
+          "agent_name": "style-auditor#428f63",
+          "agent_type": "style-auditor",
+          "description": "style ゲート (MarkovCore 分割)"
+        },
+        {
+          "id": "agent-a56b9c196cf32946f",
+          "start": "2026-07-25T14:36:31.222Z",
+          "end": "2026-07-25T15:08:23.810Z",
+          "wall_time_seconds": 1913,
+          "active_time_seconds": 1913,
+          "turns": 96,
+          "tool_calls": {
+            "Read": 26,
+            "Bash": 47,
+            "Write": 2,
+            "Edit": 29
+          },
+          "bash_breakdown": {
+            "ls": 1,
+            "rg": 11,
+            "other": 7,
+            "cat": 2,
+            "lake_env_lean": 20,
+            "lake_build": 4,
+            "python3": 1,
+            "sed": 1
+          },
+          "bash_total": 47,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 28,
+            "InformationTheory.lean": 1
+          },
+          "writes_by_file": {
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/ca20f7f5-4ebb-4f34-8592-fdd834499c3d/scratchpad/Chk.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 2,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 6,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Receiver2.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Receiver1.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 1,
+            "InformationTheory/Shannon/ChannelCoding/Achievability/Core.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 3,
+            "InformationTheory/Shannon/MultipleAccess/Achievability/Codebook.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 4,
+            "InformationTheory.lean": 1
+          },
+          "matched_edits": 28,
+          "matched_writes": 1,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 310,
+            "output": 138618,
+            "cache_read": 33632926,
+            "cache_creation": 627678
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 261,
+          "subagents": [],
+          "agent_name": "lean-implementer#32946f",
+          "agent_type": "lean-implementer",
+          "description": "Marton Phase 7 組み立て"
+        },
+        {
+          "id": "agent-a40a18bcccb29f986",
+          "start": "2026-07-25T15:10:41.388Z",
+          "end": "2026-07-25T15:20:00.584Z",
+          "wall_time_seconds": 559,
+          "active_time_seconds": 559,
+          "turns": 43,
+          "tool_calls": {
+            "Read": 18,
+            "Bash": 29,
+            "Edit": 5
+          },
+          "bash_breakdown": {
+            "rg": 14,
+            "other": 5,
+            "git": 5,
+            "cp": 3,
+            "python3": 1,
+            "echo": 1
+          },
+          "bash_total": 29,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 4
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 2,
+            "docs/audit/honesty-auditor-core.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 5,
+            "InformationTheory/Shannon/BroadcastChannel/Basic.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Receiver1.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 1
+          },
+          "matched_edits": 5,
+          "matched_writes": 0,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 170,
+            "output": 26933,
+            "cache_read": 10239795,
+            "cache_creation": 457878
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 139,
+          "subagents": [],
+          "agent_name": "honesty-auditor#29f986",
+          "agent_type": "honesty-auditor",
+          "description": "Marton headline 誠実性監査"
+        },
+        {
+          "id": "agent-aba4f5c49b7f11773",
+          "start": "2026-07-25T15:20:53.488Z",
+          "end": "2026-07-25T15:26:00.675Z",
+          "wall_time_seconds": 307,
+          "active_time_seconds": 307,
+          "turns": 23,
+          "tool_calls": {
+            "Read": 10,
+            "Bash": 19,
+            "Edit": 1
+          },
+          "bash_breakdown": {
+            "other": 10,
+            "echo": 1,
+            "rg": 3,
+            "sed": 1,
+            "python3": 2,
+            "lake_env_lean": 1,
+            "git": 1
+          },
+          "bash_total": 19,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 1
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/rules/README.md": 1,
+            "docs/rules/docstrings.md": 1,
+            "docs/rules/naming.md": 1,
+            "docs/rules/module-structure.md": 1,
+            "docs/rules/lean-style.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1
+          },
+          "matched_edits": 1,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 108,
+            "output": 20115,
+            "cache_read": 4470518,
+            "cache_creation": 276878
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 86,
+          "subagents": [],
+          "agent_name": "style-auditor#f11773",
+          "agent_type": "style-auditor",
+          "description": "style ゲート (Phase 7 Achievability)"
+        },
+        {
+          "id": "agent-a1cacfe8ec860fbe1",
+          "start": "2026-07-25T15:27:25.300Z",
+          "end": "2026-07-25T15:34:44.433Z",
+          "wall_time_seconds": 439,
+          "active_time_seconds": 439,
+          "turns": 39,
+          "tool_calls": {
+            "Read": 17,
+            "Bash": 30,
+            "Write": 1,
+            "Edit": 4
+          },
+          "bash_breakdown": {
+            "find": 2,
+            "git": 1,
+            "echo": 1,
+            "rg": 20,
+            "other": 2,
+            "deno": 2,
+            "ls": 1,
+            "wc": 1
+          },
+          "bash_total": 30,
+          "edits_by_file": {
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 4
+          },
+          "writes_by_file": {
+            "docs/shannon/marton-inner-bound-plan.md": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/subplan-template.md": 1,
+            "docs/moonshot-plan-template.md": 1,
+            "docs/shannon/marton-inner-bound-plan.md": 1,
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 4,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 3,
+            "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 164,
+            "output": 26633,
+            "cache_read": 7429659,
+            "cache_creation": 297724
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 136,
+          "subagents": [],
+          "agent_name": "lean-planner#60fbe1",
+          "agent_type": "lean-planner",
+          "description": "Marton plan Phase 7 完了同期"
+        },
+        {
+          "id": "agent-ad7311eb7b6f12b98",
+          "start": "2026-07-25T15:35:49.833Z",
+          "end": "2026-07-25T15:49:51.755Z",
+          "wall_time_seconds": 842,
+          "active_time_seconds": 842,
+          "turns": 62,
+          "tool_calls": {
+            "Bash": 74,
+            "Read": 6,
+            "Edit": 1,
+            "Write": 2
+          },
+          "bash_breakdown": {
+            "git": 7,
+            "ls": 4,
+            "cat": 3,
+            "rg": 18,
+            "deno": 12,
+            "other": 13,
+            "echo": 8,
+            "wc": 2,
+            "sed": 2,
+            "head": 1,
+            "python3": 1,
+            "grep": 3
+          },
+          "bash_total": 74,
+          "edits_by_file": {
+            "docs/readme-theorems.txt": 1
+          },
+          "writes_by_file": {
+            "docs/metrics/marton-inner-bound.manifest.json": 1,
+            "docs/proof-logs/proof-log-marton-inner-bound.md": 1
+          },
+          "reads_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 1,
+            "docs/shannon/marton-inner-bound-plan.md": 2,
+            "docs/metrics/marton-inner-bound.metrics.md": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 3,
+          "tokens": {
+            "input": 280,
+            "output": 47359,
+            "cache_read": 13612279,
+            "cache_creation": 429489
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 226,
+          "subagents": [],
+          "agent_name": "general-purpose#f12b98",
+          "agent_type": "general-purpose",
+          "description": "README 定理表 + Marton proof-log"
+        }
+      ]
     }
   ],
   "totals": {
     "start": "2026-07-25T06:45:39.973Z",
-    "end": "2026-07-25T15:35:49.817Z",
-    "wall_time_seconds": 31906,
-    "active_time_seconds": 14924,
-    "turns": 257,
+    "end": "2026-07-25T19:01:45.670Z",
+    "wall_time_seconds": 44262,
+    "active_time_seconds": 15709,
+    "turns": 264,
     "tool_calls": {
       "Skill": 4,
-      "Bash": 143,
+      "Bash": 145,
       "ToolSearch": 6,
       "TaskCreate": 24,
-      "TaskUpdate": 16,
+      "TaskUpdate": 17,
       "Agent": 29,
-      "Read": 13,
+      "Read": 14,
       "Edit": 18,
       "SendMessage": 2,
-      "Write": 7,
-      "TaskList": 2
+      "Write": 9,
+      "TaskList": 2,
+      "PushNotification": 1
     },
     "bash_breakdown": {
       "cat": 3,
@@ -241,7 +1999,7 @@
       "other": 30,
       "echo": 8,
       "lake_env_lean": 12,
-      "git": 46,
+      "git": 48,
       "wc": 2,
       "tail": 2,
       "deno": 1,
@@ -249,32 +2007,342 @@
       "mkdir": 1,
       "lake_build": 2
     },
-    "bash_total": 143,
+    "bash_total": 145,
     "edits_by_file": {
       "docs/shannon/marton-inner-bound-plan.md": 18
     },
     "writes_by_file": {
-      ".claude/handoff.md": 6,
+      ".claude/handoff.md": 8,
       "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/ca20f7f5-4ebb-4f34-8592-fdd834499c3d/scratchpad/AxCheck.lean": 1
     },
     "reads_by_file": {
       "docs/shannon/marton-inner-bound-plan.md": 6,
-      ".claude/handoff.md": 3,
+      ".claude/handoff.md": 4,
       "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 2,
       "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 2
     },
     "matched_edits": 0,
     "matched_writes": 0,
-    "tool_errors": 7,
+    "tool_errors": 8,
     "tokens": {
-      "input": 1080,
-      "output": 635545,
-      "cache_read": 69098753,
-      "cache_creation": 1500223
+      "input": 1104,
+      "output": 655376,
+      "cache_read": 70966628,
+      "cache_creation": 1530415
     },
     "models": [
       "claude-opus-5"
     ],
     "sidechain_entries": 0
-  }
+  },
+  "subagent_totals": {
+    "start": "2026-07-25T06:49:29.442Z",
+    "end": "2026-07-25T15:49:51.755Z",
+    "wall_time_seconds": 28263,
+    "active_time_seconds": 28263,
+    "turns": 1558,
+    "tool_calls": {
+      "Read": 419,
+      "Bash": 965,
+      "Write": 17,
+      "Edit": 346,
+      "TaskUpdate": 12,
+      "SendMessage": 13,
+      "TaskGet": 3
+    },
+    "bash_breakdown": {
+      "ls": 29,
+      "other": 163,
+      "rg": 292,
+      "cat": 28,
+      "find": 6,
+      "sed": 29,
+      "tail": 1,
+      "lake_env_lean": 205,
+      "awk": 5,
+      "python3": 30,
+      "git": 60,
+      "wc": 13,
+      "cp": 7,
+      "lake_build": 25,
+      "grep": 7,
+      "mkdir": 6,
+      "head": 7,
+      "echo": 35,
+      "deno": 17
+    },
+    "bash_total": 965,
+    "edits_by_file": {
+      "docs/shannon/marton-inner-bound-inventory.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 56,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 5,
+      "InformationTheory.lean": 6,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 12,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 59,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 51,
+      "InformationTheory/Shannon/ConditionalAEP.lean": 18,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 83,
+      "docs/shannon/broadcast-channel-moonshot-plan.md": 10,
+      "docs/shannon/marton-inner-bound-plan.md": 14,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 30,
+      "docs/readme-theorems.txt": 1
+    },
+    "writes_by_file": {
+      "docs/shannon/marton-inner-bound-inventory.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 1,
+      "docs/shannon/marton-inner-bound-plan.md": 3,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/28fee7e9-30a3-4b84-ae0b-1c44385ed89e/scratchpad/DegenCheck.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 2,
+      "InformationTheory/Shannon/ConditionalAEP.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/ca20f7f5-4ebb-4f34-8592-fdd834499c3d/scratchpad/Chk.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 1,
+      "docs/metrics/marton-inner-bound.manifest.json": 1,
+      "docs/proof-logs/proof-log-marton-inner-bound.md": 1
+    },
+    "reads_by_file": {
+      "/Users/haruka/.claude/CLAUDE.md": 28,
+      "CLAUDE.md": 16,
+      "docs/fano/fano-mathlib-inventory.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Basic.lean": 7,
+      "InformationTheory/Shannon/WynerZiv/Achievability/Covering.lean": 4,
+      ".lake/packages/mathlib/Mathlib/Probability/Moments/Variance.lean": 5,
+      "InformationTheory/Shannon/ChannelCoding/Achievability/Core.lean": 6,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/5fdb5421-5012-444a-83fc-e3ebb250d0c4/tasks/blwiyj5h3.output": 1,
+      "InformationTheory/Shannon/ChannelCoding/Basic.lean": 7,
+      "InformationTheory/Shannon/StrongTypicality.lean": 8,
+      "InformationTheory/Shannon/RateDistortion/AchievabilityJointTypicalEncoder.lean": 2,
+      "InformationTheory/Shannon/ConditionalMethodOfTypes/Mass/SliceMass.lean": 2,
+      "InformationTheory/Shannon/MultipleAccess/AchievabilityCore.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Achievability/Setup.lean": 4,
+      "InformationTheory/Shannon/SlepianWolf/ConditionalTypicalSlice.lean": 4,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/5fdb5421-5012-444a-83fc-e3ebb250d0c4/tasks/bbdkv83u2.output": 1,
+      ".lake/packages/mathlib/Mathlib/Probability/Moments/Covariance.lean": 4,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Function/LpSeminorm/Basic.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 15,
+      ".lake/packages/mathlib/Mathlib/Probability/Kernel/Basic.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/5fdb5421-5012-444a-83fc-e3ebb250d0c4/tasks/b0pwfjbsj.output": 1,
+      "docs/audit/audit-tags.md": 32,
+      ".lake/packages/mathlib/Mathlib/Probability/Independence/Basic.lean": 7,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Constructions/Pi.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 9,
+      "docs/subplan-template.md": 4,
+      "docs/moonshot-plan-template.md": 4,
+      "docs/shannon/marton-inner-bound-inventory.md": 1,
+      "docs/shannon/broadcast-channel-moonshot-plan.md": 4,
+      "docs/shannon/bc-achievability-plan.md": 1,
+      "docs/shannon/marton-inner-bound-plan.md": 20,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/Prod.lean": 1,
+      ".lake/packages/mathlib/Mathlib/Data/ENNReal/Real.lean": 1,
+      "docs/audit/honesty-auditor-core.md": 5,
+      "docs/rules/docstrings.md": 8,
+      "InformationTheory.lean": 4,
+      "InformationTheory/Shannon/Bridge.lean": 2,
+      "InformationTheory/Shannon/IIDProductInput/Basic.lean": 3,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 11,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 4,
+      "InformationTheory/Shannon/AEP/Basic/Core.lean": 5,
+      "InformationTheory/Shannon/AEP/Basic/Achievability.lean": 1,
+      "InformationTheory/Shannon/AEP/Rate.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 22,
+      "InformationTheory/Shannon/BroadcastChannel/Achievability/ErrorAnalysis.lean": 2,
+      "InformationTheory/Shannon/ChannelCoding/Achievability/RandomCodebook.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 34,
+      "InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.lean": 7,
+      "InformationTheory/Shannon/RateDistortion/AchievabilityUnconditional.lean": 3,
+      "InformationTheory/Shannon/WynerZiv/Achievability/Concentration.lean": 7,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Bochner/SumMeasure.lean": 1,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/Real.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 36,
+      "InformationTheory/Shannon/ConditionalAEP.lean": 5,
+      "docs/rules/README.md": 5,
+      "docs/rules/lean-style.md": 5,
+      "docs/rules/naming.md": 6,
+      "docs/rules/module-structure.md": 6,
+      "scripts/plan_lint.ts": 1,
+      "InformationTheory/Shannon/WynerZiv/Achievability/MarkovCore.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Receiver1.lean": 3,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Receiver2.lean": 2,
+      "InformationTheory/Shannon/MultipleAccess/Achievability/Codebook.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 17,
+      "docs/metrics/marton-inner-bound.metrics.md": 1
+    },
+    "matched_edits": 314,
+    "matched_writes": 9,
+    "tool_errors": 27,
+    "tokens": {
+      "input": 5686,
+      "output": 1603062,
+      "cache_read": 418169125,
+      "cache_creation": 14570095
+    },
+    "models": [
+      "claude-opus-5"
+    ],
+    "sidechain_entries": 4693
+  },
+  "combined_totals": {
+    "start": "2026-07-25T06:45:39.973Z",
+    "end": "2026-07-25T19:01:45.670Z",
+    "wall_time_seconds": 44262,
+    "active_time_seconds": 33233,
+    "turns": 1822,
+    "tool_calls": {
+      "Skill": 4,
+      "Bash": 1110,
+      "ToolSearch": 6,
+      "TaskCreate": 24,
+      "TaskUpdate": 29,
+      "Agent": 29,
+      "Read": 433,
+      "Edit": 364,
+      "SendMessage": 15,
+      "Write": 26,
+      "TaskGet": 3,
+      "TaskList": 2,
+      "PushNotification": 1
+    },
+    "bash_breakdown": {
+      "cat": 31,
+      "rg": 315,
+      "ls": 33,
+      "other": 193,
+      "echo": 43,
+      "lake_env_lean": 217,
+      "git": 108,
+      "wc": 15,
+      "find": 6,
+      "sed": 38,
+      "tail": 3,
+      "awk": 5,
+      "python3": 30,
+      "cp": 7,
+      "lake_build": 27,
+      "grep": 7,
+      "mkdir": 7,
+      "head": 7,
+      "deno": 18
+    },
+    "bash_total": 1110,
+    "edits_by_file": {
+      "docs/shannon/marton-inner-bound-plan.md": 32,
+      "docs/shannon/marton-inner-bound-inventory.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 56,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 5,
+      "InformationTheory.lean": 6,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 12,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 59,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 51,
+      "InformationTheory/Shannon/ConditionalAEP.lean": 18,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 83,
+      "docs/shannon/broadcast-channel-moonshot-plan.md": 10,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 30,
+      "docs/readme-theorems.txt": 1
+    },
+    "writes_by_file": {
+      ".claude/handoff.md": 8,
+      "docs/shannon/marton-inner-bound-inventory.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 1,
+      "docs/shannon/marton-inner-bound-plan.md": 3,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/28fee7e9-30a3-4b84-ae0b-1c44385ed89e/scratchpad/DegenCheck.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 2,
+      "InformationTheory/Shannon/ConditionalAEP.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/ca20f7f5-4ebb-4f34-8592-fdd834499c3d/scratchpad/AxCheck.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/ca20f7f5-4ebb-4f34-8592-fdd834499c3d/scratchpad/Chk.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 1,
+      "docs/metrics/marton-inner-bound.manifest.json": 1,
+      "docs/proof-logs/proof-log-marton-inner-bound.md": 1
+    },
+    "reads_by_file": {
+      "docs/shannon/marton-inner-bound-plan.md": 26,
+      ".claude/handoff.md": 4,
+      "/Users/haruka/.claude/CLAUDE.md": 28,
+      "CLAUDE.md": 16,
+      "docs/fano/fano-mathlib-inventory.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Basic.lean": 7,
+      "InformationTheory/Shannon/WynerZiv/Achievability/Covering.lean": 4,
+      ".lake/packages/mathlib/Mathlib/Probability/Moments/Variance.lean": 5,
+      "InformationTheory/Shannon/ChannelCoding/Achievability/Core.lean": 6,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/5fdb5421-5012-444a-83fc-e3ebb250d0c4/tasks/blwiyj5h3.output": 1,
+      "InformationTheory/Shannon/ChannelCoding/Basic.lean": 7,
+      "InformationTheory/Shannon/StrongTypicality.lean": 8,
+      "InformationTheory/Shannon/RateDistortion/AchievabilityJointTypicalEncoder.lean": 2,
+      "InformationTheory/Shannon/ConditionalMethodOfTypes/Mass/SliceMass.lean": 2,
+      "InformationTheory/Shannon/MultipleAccess/AchievabilityCore.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Achievability/Setup.lean": 4,
+      "InformationTheory/Shannon/SlepianWolf/ConditionalTypicalSlice.lean": 4,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/5fdb5421-5012-444a-83fc-e3ebb250d0c4/tasks/bbdkv83u2.output": 1,
+      ".lake/packages/mathlib/Mathlib/Probability/Moments/Covariance.lean": 4,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Function/LpSeminorm/Basic.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 15,
+      ".lake/packages/mathlib/Mathlib/Probability/Kernel/Basic.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/5fdb5421-5012-444a-83fc-e3ebb250d0c4/tasks/b0pwfjbsj.output": 1,
+      "docs/audit/audit-tags.md": 32,
+      ".lake/packages/mathlib/Mathlib/Probability/Independence/Basic.lean": 7,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Constructions/Pi.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean": 9,
+      "docs/subplan-template.md": 4,
+      "docs/moonshot-plan-template.md": 4,
+      "docs/shannon/marton-inner-bound-inventory.md": 1,
+      "docs/shannon/broadcast-channel-moonshot-plan.md": 4,
+      "docs/shannon/bc-achievability-plan.md": 1,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/Prod.lean": 1,
+      ".lake/packages/mathlib/Mathlib/Data/ENNReal/Real.lean": 1,
+      "docs/audit/honesty-auditor-core.md": 5,
+      "docs/rules/docstrings.md": 8,
+      "InformationTheory.lean": 4,
+      "InformationTheory/Shannon/Bridge.lean": 2,
+      "InformationTheory/Shannon/IIDProductInput/Basic.lean": 3,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean": 11,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean": 4,
+      "InformationTheory/Shannon/AEP/Basic/Core.lean": 5,
+      "InformationTheory/Shannon/AEP/Basic/Achievability.lean": 1,
+      "InformationTheory/Shannon/AEP/Rate.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Covering.lean": 22,
+      "InformationTheory/Shannon/BroadcastChannel/Achievability/ErrorAnalysis.lean": 2,
+      "InformationTheory/Shannon/ChannelCoding/Achievability/RandomCodebook.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/ErrorAnalysis.lean": 36,
+      "InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.lean": 7,
+      "InformationTheory/Shannon/RateDistortion/AchievabilityUnconditional.lean": 3,
+      "InformationTheory/Shannon/WynerZiv/Achievability/Concentration.lean": 7,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean": 38,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Bochner/SumMeasure.lean": 1,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/Real.lean": 1,
+      "InformationTheory/Shannon/ConditionalAEP.lean": 5,
+      "docs/rules/README.md": 5,
+      "docs/rules/lean-style.md": 5,
+      "docs/rules/naming.md": 6,
+      "docs/rules/module-structure.md": 6,
+      "scripts/plan_lint.ts": 1,
+      "InformationTheory/Shannon/WynerZiv/Achievability/MarkovCore.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Receiver1.lean": 3,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Receiver2.lean": 2,
+      "InformationTheory/Shannon/MultipleAccess/Achievability/Codebook.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Marton/Achievability.lean": 17,
+      "docs/metrics/marton-inner-bound.metrics.md": 1
+    },
+    "matched_edits": 314,
+    "matched_writes": 9,
+    "tool_errors": 35,
+    "tokens": {
+      "input": 6790,
+      "output": 2258438,
+      "cache_read": 489135753,
+      "cache_creation": 16100510
+    },
+    "models": [
+      "claude-opus-5"
+    ],
+    "sidechain_entries": 4693
+  },
+  "subagent_count": 29
 }

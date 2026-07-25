@@ -175,7 +175,7 @@ $ diff <(sig_view.ts --names …/Receiver1.lean | sed 's/₁//g') \
 宣言リストが添字を除いて完全一致し、差分がこの 2 本ちょうどになる。
 **「鏡像の網羅性」は機械判定できる** — これは 4.1 の対称性主張と違い、ツール化が容易な側。
 
-### 4.2 in-project 資産の見落とし: 同一命題が repo に 4 本
+### 4.2 in-project 資産の見落とし: 同一命題が repo に 7 本
 
 **症状**: `∑ z : γ, μ.real {z} = 1` (probability measure の singleton 質量の総和) を
 「公開形が無い」と判断して `Achievability.lean:46` に `private` で再宣言した。
@@ -189,7 +189,15 @@ $ diff <(sig_view.ts --names …/Receiver1.lean | sed 's/₁//g') \
 
 `import` 行を BFS した閉包は 135 モジュールで、上記 2 本はどちらもその中にある
 (= import 追加すら不要だった)。Marton 家系自身も `ErrorAnalysis.lean:70` に
-同じ private 版を持っているので、**repo 内に同一命題が 4 本**ある状態になった。
+同じ private 版を持っている。
+
+**当初「4 本」と数えたが、実物は 7 本だった** (`71965d3f` で
+`Probability/SingletonMass.lean` へ統合)。名前検索を積み増しても 4 本より先に進めず、
+**結論形での検索** (`rg -B4 '\.real \{.*\} = 1\s*(:=|$)'` を `lemma|theorem` 行で絞る) で
+初めて残り 3 本が出た。うち `sum_prob_real_singleton_eq_one`
+(`WynerZiv/Achievability/FailureTendstoZero.lean`) は**名前に `measureReal` を含まない**ため、
+どんな名前ベースの検索でも原理的に出ない。**数え落とし自体が、最初の見落としと同じ機構
+(名前で引いている) で起きた**。
 
 **原因** (2 段階):
 
@@ -203,10 +211,11 @@ $ diff <(sig_view.ts --names …/Receiver1.lean | sed 's/₁//g') \
    `sum_measureReal_singleton_eq_one` / `sum_measureReal_singleton_univ_eq_one` は
    **1 回も出現しない**。
 
-**抜け方**: 抜けていない。Phase 7 は private 再宣言のまま closure した
-(honesty 上の欠陥ではないので closure は妨げないが、重複は残っている)。
+**抜け方**: Phase 7 は private 再宣言のまま closure し (honesty 上の欠陥ではないので closure は
+妨げない)、Phase 8 の follow-up で 7 本を `Probability/SingletonMass.lean` の 1 本へ統合した
+(`71965d3f`)。宣言レベルの重複は解消したが、証明内 `have` での再導出は ~20 箇所残っている。
 
-**教訓**: 3 つ、いずれもツール仕様に落とせる。
+**教訓**: 4 つ、いずれもツール仕様に落とせる。
 
 - **`\b` は in-project 検索では有害**。Mathlib 名を探すときの癖がそのまま出ると、
   自分たちのラッパ (必ず接尾辞つき) だけが落ちる。「定義を探す」検索は
@@ -214,9 +223,12 @@ $ diff <(sig_view.ts --names …/Receiver1.lean | sed 's/₁//g') \
 - **`| head -N` は「無い」の証拠にならない**。件数が N を超えた時点で
   「上位 N 件に無かった」しか言えないのに、判断は「無い」に流れる。
   ヒット数が N を超えたときに警告を出すだけで防げる。
+- **名前ベースの検索は改良しても天井がある**。接頭辞を変えても `\b` を外しても、
+  命名規則を共有しない 3 本目以降は出ない。**結論形で引く**のが唯一の網羅手段。
 - **命題単位の重複検出**が本命。名前ではなく**型 (`∑ z : γ, μ.real {z} = 1`) で
-  in-project を引く**手段があれば、この 4 重複はすべて 1 クエリで見える。
+  in-project を引く**手段があれば、この 7 重複はすべて 1 クエリで見える。
   loogle は Mathlib しか見ないのでここを埋めない。
+  この教訓は `CLAUDE.md`「In-repo asset search」に規則として落とした。
 
 ### 4.3 再利用の境界が予測とずれた
 
@@ -329,27 +341,32 @@ Unicode の密なこのファミリでは**偽陽性が大量に出る**。
 Lean の数式行はバイト長が code point 長の 2〜3 倍になる。
 **行長ゲートを回す者は `awk` を使ってはいけない**。
 
-### 6.2 `session_metrics.ts` はサブエージェントの作業を 1 件も見ていない
+### 6.2 最初に出した metrics はサブエージェントの作業を 1 件も見ていなかった (修正済)
 
-生成された metrics で `対象ファイル Edit 回数 = 0` / `サブエージェント側 entries = 0` になる。
-実装は全部オーケストレーターが `Agent` で dispatch したので、
+**症状**: 生成された metrics が `対象ファイル Edit 回数 = 0` / `サブエージェント側 entries = 0` を
+出した。実装は全部オーケストレーターが `Agent` で dispatch したので、
 親セッションの JSONL には `.lean` の Edit が 1 件も無い。
 
-スクリプトは親 JSONL の `d.isSidechain` だけを見ている
-(`scripts/session_metrics.ts:206`) が、現行のハーネスは
-サブエージェントの transcript を `<session-id>/subagents/*.jsonl` という
-**別ディレクトリ**に置く。実測:
+**原因**: スクリプトが親 JSONL の `d.isSidechain` だけを見ていたが、現行のハーネスは
+サブエージェントの transcript を `<session-id>/subagents/*.jsonl` という**別ディレクトリ**に置く。
 
-| セッション | subagent transcript ファイル数 | その中の `Edit` tool_use 数 |
+**修正** (`ec955da1`): `subagents/*.jsonl` を走査対象に追加し、
+`オーケストレーター / サブエージェント / 合計` の 3 列で出すようにした。
+`--no-subagents` で旧挙動 (親のみ) も再現できる。同一セッション群の再計測値:
+
+| 項目 | オーケストレーターのみ (`--no-subagents`) | 合計 |
 |---|---|---|
-| `28fee7e9` | 20 | 118 |
-| `d36fc4e7` | 14 | 112 |
-| `c397fe51` | 8 | 59 |
-| `ca20f7f5` | 16 | 57 |
+| 対象ファイル Edit 回数 | 0 | **314** |
+| `Edit` ツールコール | 18 | **364** (うちサブエージェント 346) |
+| Active time | 4h 21m | **9h 13m** |
+| LLM ターン数 | 264 | **1822** |
 
-**メトリクスに現れる工数は、オーケストレーター役の監視コストだけ**であり、
-実装コストではない。オーケストレーター前提の作業では現行の metrics を
-「実装の重さ」として読んではいけない。`subagents/` を走査対象に加えるのが修正。
+**残る教訓**: 数値そのものではなく、**オーケストレーター型の leg では計測手段が実装コストを
+構造的に過少報告する**という性質のほう。親 transcript にはツールコールの内訳として
+`Agent` しか残らないので、「何をどれだけ書いたか」は原理的に親からは見えない。
+新しいツールで工数を測るときは、まず**測定対象が実際の作業者と一致しているか**を確認する。
+最新の実測値は [`../metrics/marton-inner-bound.metrics.md`](../metrics/marton-inner-bound.metrics.md)
+（本文にキャッシュしない）。
 
 ---
 
@@ -357,8 +374,8 @@ Lean の数式行はバイト長が code point 長の 2〜3 倍になる。
 
 | 優先度 | 機能 | このセッションで節約できたであろうコスト |
 |---|---|---|
-| 高 | **in-project の命題単位重複検出** (名前ではなく型で引く)。loogle の in-project 版 | 4.2 の 4 重複。「無い」の誤判定 1 件と、それが生んだ private 再宣言 |
-| 高 | **`session_metrics.ts` の `subagents/` 対応** | 6.2。現状はオーケストレーター作業の計測が実装コストと誤読される |
+| 高 | **in-project の命題単位重複検出** (名前ではなく型で引く)。loogle の in-project 版 | 4.2 の 7 重複。「無い」の誤判定 1 件と、それが生んだ private 再宣言。**未実装** — 暫定の運用規則は `CLAUDE.md`「In-repo asset search」 |
+| ✅ | ~~**`session_metrics.ts` の `subagents/` 対応**~~ → `ec955da1` で実装 (6.2) | オーケストレーター作業の計測が実装コストと誤読される問題は解消 |
 | 中 | **検索の「無い」判定の健全性チェック** — `\b` 付き検索の警告 / `\| head -N` でヒット数が N を超えたときの警告 | 4.2 の 2 段階の失敗はどちらもこれで止まる |
 | 中 | **plan の対称性主張の実物 diff** — plan が「共通」「流用可能」と書いた宣言の定義本体を突き合わせる | 4.1 の 2 件 + §2(2) の 1 件 |
 | 中 | **鏡像網羅性の機械判定** — 添字を除去した宣言リストの diff (4.1b の手法をスクリプト化) | 鏡像 leg のレビューが目視から機械確認になる |
@@ -381,14 +398,16 @@ Phase 6a' で `MarkovCore` (と `Shannon/ConditionalAEP.lean`) を建てたコ�
 **1 行あたりの思考コストは下がったが、総量は下がっていない**。
 抽象化の効果を「行数」で見積もると外す。
 
-### 残った重複 (follow-up)
+### 重複の後始末 (Phase 8 で消化)
 
-- `Shannon/ConditionalAEP.lean` は Wyner–Ziv の
-  `WynerZiv/Achievability/Concentration.lean` の `private` 3 本
-  (`wz_pi_nonuniform_mean_concentration` / `wz_pi_nonuniform_concentration_tendsto` /
-  `wz_sum_eq_typeCount_mul`) と同一命題。WZ 側を本モジュールへ再配線すべき。
-- 4.2 の `sum_measureReal_singleton_*` 4 重複。
+- Wyner–Ziv `WynerZiv/Achievability/Concentration.lean` の `private` 3 本を
+  `Shannon/ConditionalAEP.lean` の public 版へ再配線 (`34c2aaf0`、−170 行)。
+  比較の決め手は `#check` の**展開後の署名**だった: `variable` ブロックから流れ込む
+  `[Fintype T] [DecidableEq T]` は宣言行に現れないので、`rg` で行を並べても
+  どちらが強い形か判定できない。
+- 4.2 の質量和 7 重複を `Probability/SingletonMass.lean` へ統合 (`71965d3f`)。
+  証明内 `have` での再導出 ~20 箇所は未処理。
 - `stronglyTypicalSet_mono_radius` / `jointStronglyTypicalSet_mono_radius` は
-  完全に generic で Marton 固有要素が無く、本来 `Shannon/StrongTypicality.lean` に属する。
+  完全に generic で Marton 固有要素が無く、本来 `Shannon/StrongTypicality.lean` に属する (未移動)。
 
 いずれも headline には影響しない。

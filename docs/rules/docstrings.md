@@ -38,7 +38,18 @@ Mathlib のドキュメント規約（<https://leanprover-community.github.io/co
 
 ## module docstring (`/-! … -/`) の目標形
 
-ファイル先頭の import 群の直後（本プロジェクトは copyright header を置かない → [`lean-style.md`](lean-style.md)）。**継続行は 2 スペース字下げ**（markdown 要件。宣言 docstring と逆なので注意）。atx 見出し（`#`、下線式ダッシュ不可）。
+ファイル先頭の import 群の直後（本プロジェクトは copyright header を置かない → [`lean-style.md`](lean-style.md)）。**地の文は flush-left**（宣言 docstring と同じ）。2 スペース字下げするのは**箇条書き項目の継続行だけ**で、これは markdown が bullet の文脈を保つために要求するもの — docstring 本体の性質ではない。atx 見出し（`#`、下線式ダッシュ不可）。
+
+```
+## Main definitions
+
+* `Foo.bar (f : α → β)`:
+  kernel `a ↦ Measure.dirac (f a)`.   ← bullet 継続行なので 2 スペース
+
+This file contains basic results about kernels in general.  ← 地の文は flush-left
+```
+
+Mathlib 実物: `Mathlib/Probability/Kernel/Basic.lean:13-14`（地の文 flush-left）と同 `:18-19`（bullet 継続行 2 スペース）。本リポジトリも module doc を持つ 390 ファイル中 388 ファイルが flush-left 行を含む。
 
 セクションはこの順:
 
@@ -63,14 +74,14 @@ honesty タグ（`@residual` / `@audit:*`）はプロセス語彙ではなく**�
 
 | 乖離点（独自進化） | Mathlib のあるべき形 | 対応 |
 |---|---|---|
-| **宣言 docstring の継続行を 2 スペース字下げ** | 宣言 `/--` の継続行は開始 `/--` のカラムに揃える（トップレベルは字下げしない、フィールドはフィールド列に揃う）。2 スペース字下げは module `/-!` だけ | ✅ トップレベル分は一括除去済（11 ファイル）。フィールド docstring は既に `/--` 列に揃っており対象外。新規も字下げしない |
-| **ほぼ全 docstring を `**ラベル**:` で太字始まり** | 太字は **named theorem に限る**。通常の topic ラベルは太字にしない（地の文で書く） | ✅ 完全文の地の文へ書き換え済（2026-06-22、tidyup-plan Phase 4）。残る太字は inline named-theorem 言及 4 件のみ |
+| **宣言 docstring の継続行を 2 スペース字下げ** | 宣言 `/--` の継続行は開始 `/--` のカラムに揃える（トップレベルは字下げしない、フィールドはフィールド列に揃う）。module `/-!` も地の文は flush-left で、2 スペース字下げは箇条書き項目の継続行に限る | ✅ トップレベル分は一括除去済（11 ファイル）。フィールド docstring は既に `/--` 列に揃っており対象外。新規も字下げしない |
+| **ほぼ全 docstring を `**ラベル**:` で太字始まり** | 太字は **named theorem に限る**。通常の topic ラベルは太字にしない（地の文で書く） | 🔧 2026-06-22 に一括移行したが**再発している**。移行後に書かれた宣言が太字始まりに戻っており、2026-07-26 実測で **275 箇所 / 111 ファイル**。規則は不変（太字は named theorem に限る）で、完了していないのは移行のほう。再計測: `rg -U -o '/--\s*\n?\s*\*\*' InformationTheory -g '*.lean' \| wc -l` |
 | **補助補題までほぼ全部 docstring（~94%）** | 補助補題は裸（Mathlib ~17–20%）。文書化は API 表面（def + headline）のみ | 🔧 [`../docstring-tidyup-plan.md`](../docstring-tidyup-plan.md) で内部補助補題の散文を選別削除中。新規は付けない（name-adequacy gate） |
 | **docstring / module doc にプロセス語彙**（Phase/Wall/判断/Retraction/撤退） | 永続記録は数学のみ。プロセスは plan / handoff へ | 🔧 同 plan で除去/移設。数学的・構造的な設計判断のみ *Implementation notes* に残す |
 | **末尾ピリオド無し** | 完全文なら末尾ピリオド | ✅ bold-label pass と同時に付与済（2026-06-22、Phase 4）。formula 末尾は不要 |
 | **散文が日本語** | Mathlib は英語のみ | 🔧 **英語へ全面移行**（コード表面の docstring / コメント）。[`../docstring-tidyup-plan.md`](../docstring-tidyup-plan.md) で移行中。新規は英語で書く |
 
-継続行字下げの一括除去は完了（トップレベル宣言 docstring）。太字始まり・末尾ピリオド無しの乖離も 2026-06-22 に能動一括移行で解消済（[`../docstring-tidyup-plan.md`](../docstring-tidyup-plan.md) Phase 4）。残る太字は named-theorem 言及 4 件のみ。
+継続行字下げの一括除去は完了（トップレベル宣言 docstring）。太字始まり・末尾ピリオド無しの乖離も 2026-06-22 に一括移行した（[`../docstring-tidyup-plan.md`](../docstring-tidyup-plan.md) Phase 4）が、**太字始まりは移行後に再発しており完了していない**（上表参照）。一括移行は一度きりでは効かず、新規宣言が規約を再導入する — 完了状態を散文にキャッシュせず、上表の再計測コマンドで毎回引くこと。
 
 ## プロジェクト固有タグとの同居
 

@@ -20,7 +20,7 @@
     {
       "id": "ca20f7f5-4ebb-4f34-8592-fdd834499c3d",
       "prompt_ids": ["ec510508"],
-      "note": "relay leg 4。MarkovCore.lean を Prelim/Receiver1/Receiver2 + umbrella へ分割 (e83c1533) → Phase 7 headline marton_achievability を Achievability.lean で closure (8f6f2f07) → 2 ゲート (63d37b8f honesty / 0f30e5d1 style)。注意: このターンは Phase 8 bookkeeping (README 定理表 + 本 proof-log の起票) を末尾に含む不可分ターンであり、その分だけツールコールが上振れしている。また計測時点でセッション進行中のため打ち切り値。"
+      "note": "relay leg 4。MarkovCore.lean を Prelim/Receiver1/Receiver2 + umbrella へ分割 (e83c1533) → Phase 7 headline marton_achievability を Achievability.lean で closure (8f6f2f07) → 2 ゲート (63d37b8f honesty / 0f30e5d1 style)。注意: このターンは Phase 8 bookkeeping (README 定理表 + 本 proof-log の起票) を末尾に含む不可分ターンであり、その分だけツールコールが上振れしている。wall time は末尾に長い idle を含むので active time で読むこと。"
     }
   ],
   "filters": { "file_prefix": "InformationTheory/Shannon" },

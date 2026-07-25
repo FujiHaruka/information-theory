@@ -62,6 +62,13 @@ For "does Mathlib have lemma X?" questions, **try `loogle` before `rg`/`grep`**.
   - **Conclusion pattern**: `|- _ ≤ _` finds inequalities.
 - **Fall back to `rg`** for text-level searches: comments, docstrings, file-structure exploration, or pattern matches not tied to a specific identifier.
 
+## In-repo asset search (before writing a helper lemma)
+
+The section above answers "does Mathlib have it?". The misses in practice are on the other question — **"did we already write it?"** — and no amount of loogle prevents them.
+
+- **Search by conclusion shape as well as by name.** A name search only finds declarations that share your naming instinct; the ones that don't are structurally invisible. Real case (Marton, 2026-07-25): `∑ z, μ.real {z} = 1` was re-declared `private` while **seven** copies already existed in-repo, two of them public and inside the file's own import closure. Successive name queries plateaued at four; the remaining three surfaced only under `rg -B4 '\.real \{.*\} = 1\s*(:=|$)'` filtered to `lemma|theorem` lines. One of them (`sum_prob_real_singleton_eq_one`) has no `measureReal` in its name at all.
+- **Diff candidate signatures with `#check`, not by reading the declaration lines.** Hypotheses from a `variable` block (`[Fintype T]`, instance args, section hypotheses) do not appear on the declaration line, so `rg` output cannot tell you which of two near-duplicates is the stronger one. Elaborate both and compare.
+
 ## Dependency / consumer reverse-lookup tools (`scripts/dep_*.sh`)
 
 Mechanically look up dependency relations among in-project declarations. The implementation is `scripts/DepGraph.lean` (`import InformationTheory`). Unlike `rg`'s text matching, it picks up **true term-level references** (mentions in docstrings / comments don't count). Three modes:

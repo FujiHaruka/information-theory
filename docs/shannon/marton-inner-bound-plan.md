@@ -2,12 +2,11 @@
 
 > **Parent**: [`broadcast-channel-moonshot-plan.md`](broadcast-channel-moonshot-plan.md) §L-BC5 (解除)
 
-**Status**: ✅ **headline 到達 (proof-done)** — degraded 仮定を外した一般 (non-degraded) two-receiver
-broadcast channel に対する **Marton inner bound (El Gamal–Kim *Network Information Theory* Thm 8.3、
-private message のみ)** を、親 plan の撤退ライン **L-BC5** を解除して形式化した。
-**Phase 0–7 完了**: headline `marton_achievability` (`Marton/Achievability.lean`、`@[entry_point]`) が
+**Status**: ✅ **CLOSED (proof-done + bookkeeping 完了)** — degraded 仮定を外した一般 (non-degraded)
+two-receiver broadcast channel に対する **Marton inner bound (El Gamal–Kim *Network Information
+Theory* Thm 8.3、private message のみ)** を、親 plan の撤退ライン **L-BC5** を解除して形式化した。
+**Phase 0–8 完了**: headline `marton_achievability` (`Marton/Achievability.lean`、`@[entry_point]`) が
 0 sorry / 0 `@residual` で閉じ、2 ゲート (honesty / style) とも PASS。**生きた撤退ラインは 0**。
-残るは **Phase 8 = bookkeeping** (README 定理表 / 親 plan 同期 / proof-log / WZ 再配線)。
 **SoT**: 在庫 [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md) + 本 plan。詳細履歴は git。
 **再検証** (prose にキャッシュしない。`Marton/` は `MarkovCore/` サブディレクトリを含むので**ディレクトリ指定**):
 
@@ -32,7 +31,7 @@ rg -n "Marton|ConditionalAEP" InformationTheory.lean                        # ro
 - [x] Phase 6a' — E1 の Markov 原子 + covering 集合の strong 化 (方針 B) ✅ (`c776a03f`、→ D5)
 - [x] Phase 6b — 受信機 2 の誤り解析 (MarkovCore + ErrorAnalysis の鏡像) ✅ (`43d7ea76`)
 - [x] Phase 7 — 組み立て = headline `marton_achievability` ✅ (`8f6f2f07` → 監査 `63d37b8f` → style `0f30e5d1`)
-- [ ] Phase 8 — bookkeeping (README / 親 plan / proof-log / WZ 再配線) 📋 ★ 次の一手
+- [x] Phase 8 — bookkeeping (README / 親 plan / proof-log / WZ 再配線 / 申し送り消化) ✅ (`b9bd465d` 〜 `ec955da1`)
 
 ---
 
@@ -114,6 +113,8 @@ ambient iid 法則に**一致する**からで、Marton は `martonAux₁` の�
   取り違えても型は通るが意味が壊れる。
 - **covering は weak 版 4 本を残したまま strong 版 4 本を並置**した (削除・書換ではない)。strong ⊆ weak
   なので上界は含意され、`C = martonCoveringBandConst = 0` で weak 版に退化する = 領域不変性の検算になる。
+  4 本の結論は `∃ ε > 0, ε < ε₀ ∧ ∃ N, …` 形 (`70bc39aa`)。**半径上界 `ε < ε₀` が結論に内容を与える**:
+  上界が無い旧形は `ε` を大きく取ると失敗事象が空になり空虚に成立しえた。
 - **`MarkovCore` は非対称**: 受信機 1 のみが持つ `marton_condAEP_jointlyTypical_ge` と
   `marton_strongRadius_prob_tendsto_one` は下流が消費しないので鏡像を作っていない (Phase 7 でも不要と確定)。
 
@@ -142,42 +143,30 @@ ambient iid 法則に**一致する**からで、Marton は `martonAux₁` の�
 `MarkovCore` は `e83c1533` で `MarkovCore/{Prelim,Receiver1,Receiver2}` に分割され、`MarkovCore.lean`
 自身は 3 本を再輸出する umbrella になった (root は 4 本すべて登録済)。
 
-### Phase 8 — bookkeeping 📋 ★ 次の一手
+### Phase 8 ✅ 完了 — bookkeeping + 申し送り消化
 
-2 ゲートは Phase 7 内で消化済 (honesty `63d37b8f` / style `0f30e5d1`) なので、残りは 4 件:
-
-- [ ] **README 定理表**: `docs/readme-theorems.txt` の Ch.15 行に `marton_achievability` を追記
-  (degraded 版 `bc_achievability` と並べる) → `deno run -A scripts/gen_readme_table.ts --write`。
-  **未追記であることを確認済** (`rg marton docs/readme-theorems.txt` が 0 件)。
-- [ ] **親 plan 同期** (下記「親との同期点」3 箇所)。
-- [ ] **proof-log**: `docs/shannon/` に Marton の proof-log は 1 本も無い (`find docs -name "*marton*"` で
-  確認済 = 在庫と本 plan のみ)。Phase 4/5/6a'/6b/7 を 1 本に統合して起こす。**proof-log: yes**。
-- [ ] **follow-up (6a' 由来、Marton 家系の外)**: WZ `WynerZiv/Achievability/Concentration.lean` の
-  `private` 3 本 (`wz_pi_nonuniform_mean_concentration` / `wz_pi_nonuniform_concentration_tendsto` /
-  `wz_sum_eq_typeCount_mul`) は `Shannon/ConditionalAEP.lean` と同一命題。WZ 側を本モジュールへ
-  再配線する (重複解消)。headline には不要なので本 plan の closure を塞がない。
-- [ ] `deno run -A scripts/plan_lint.ts docs/shannon/marton-*.md docs/shannon/broadcast-channel-moonshot-plan.md`。
+README 定理表への `marton_achievability` 登録 + proof-log/metrics 起票 (`b9bd465d`) →
+follow-up 一括 (`4876e101` 〜 `ec955da1`): `ε_cov` の明示 binder 化 / `exists_martonRateSplit` の
+strict 版統合 / `bc_achievability` の `hR₁` 改名 / singleton 質量和の重複 7 コピーを
+`Probability/SingletonMass.lean` へ統合 / WZ `Concentration.lean` を `Shannon/ConditionalAEP.lean` へ
+再配線 / mutual covering 4 本に半径上界 `ε < ε₀` を追加 / `@audit:ok` 対称化 / style ゲート /
+`session_metrics.ts` の subagent 集計対応。**proof-log: yes** →
+[`../proof-logs/proof-log-marton-inner-bound.md`](../proof-logs/proof-log-marton-inner-bound.md)
++ [`../metrics/marton-inner-bound.metrics.md`](../metrics/marton-inner-bound.metrics.md)。
 
 ---
 
 ## 申し送り (非緊急。Marton 家系の外に出るものを含む)
 
-1. **`ε_cov` が `ErrorAnalysis.lean` で auto-bound implicit になっている** ⚠ 潜在的な脆さ。
-   `marton_random_codebook_alias₁_le` / `marton_random_codebook_alias₂_le` は binder に `{ε : ℝ}` しか
-   宣言していないのに本文で `ε_cov` を使っており、`autoImplicit` が `{ε_cov : ℝ}` を署名の**先頭**に
-   挿入している (`#check` で確認済)。同種の `ε_cov` は関数値引数からは推論できないことがあり、
-   実際 `marton_inputTier_marginal` の呼び出しは `(ε_cov := ε_cov)` の明示を必要としている。
-   明示 binder に直すのが望ましいが、署名の引数順が変わるので単独 leg 扱い。
-2. **`@audit:ok` の付与漏れ 4 本** (headline 経路上ではないので Phase 7 の監査対象外だった):
-   `Marton/Covering.lean` の weak 版 3 本 (`meas_marton_codebook_no_jointlyTypicalPair_lt` /
-   `marton_mutual_covering` / `marton_mutual_covering_of_indepAux`) と `Marton/Basic.lean` の
-   `exists_martonRateSplit`。strong 版 3 本には付与済 ⇒ 家系 closure 時の対称化バッチ候補。
-3. **BC (degraded) 家系側**: `Achievability/Assembly.lean` の `bc_achievability` が取る `_hR₁` は
-   underscore 接頭辞だが**実際に使われている** (`bc_Ec_lt_of_rate` へ `_hR₁.le` で渡している)。
-   `hR₁` に改名すべき。`_hR₂` は本当に未使用なのでそのままでよい。
-4. **`docs/rules/docstrings.md` の「module docstring の本文は 2 スペース字下げ」規則は repo 355 ファイル中
-   0 件が遵守していない** (全部 flush-left)。規則を消すか repo 一括パスを組むかは人間判断。
-   `docs/rules/` は本 plan の書込権限外なので記録のみ。
+Phase 8 で 4 件消化済 (`ε_cov` の明示 binder 化 / `@audit:ok` 対称化 / `bc_achievability` の `hR₁` 改名 /
+`docs/rules/docstrings.md` の module docstring 字下げ規則の訂正)。残るのは 2 件:
+
+1. **質量和 `∑ z, μ.real {z} = 1` の証明内再導出が ~20 箇所残る** (Pinsker / MaxEntropy / WynerZiv /
+   MultipleAccess 等 ~15 ファイル)。宣言レベルの重複 7 本は `Probability/SingletonMass.lean` へ
+   統合済 (`71965d3f`) だが、`have` での再導出は手つかず。多くは
+   `sum_measureReal_singleton_univ_eq_one _` の 1 行に潰せるが一部は非機械的。
+2. **mutual covering 4 本の量化順は強化余地あり** (任意)。署名は `∀η ∀ε₀ ∃ε` だが証明中の `ε` は `η` に
+   依存しないので `∀ε₀ ∃ε ∀η ∃N` へ強められる。Phase 8 では散文側を署名に合わせる形で決着させた。
 
 ---
 
@@ -204,12 +193,12 @@ ambient iid 法則に**一致する**からで、Marton は `martonAux₁` の�
 
 親 `broadcast-channel-moonshot-plan.md` の 3 箇所が本子 plan の状態の**キャッシュ**。**衝突時は子が SoT**。
 
-1. **Status 行**: degraded ✅ CLOSED / 一般 BC (Marton) ✅ headline 到達 の 2 本立て + 子へのリンク。
+1. **Status 行**: degraded ✅ CLOSED / 一般 BC (Marton) ✅ CLOSED の 2 本立て + 子へのリンク。
 2. **要点の L-BC5 記述**: slug は**凍結なので消さない**。Marton 部分は解除 → headline 到達、
    Körner–Marton は scope-out 継続。
 3. **Sub-plan 一覧テーブルの Marton 行**: 状態欄が進捗のキャッシュ。
 
-Phase 7 完了時点 (2026-07-26) で 3 箇所とも同期済。Phase 8 の README 追記が済んだら 3 に反映する。
+Phase 8 完了時点 (2026-07-26) で 3 箇所とも同期済。本 plan は CLOSED なので以後の更新は発生しない。
 
 ---
 
@@ -252,9 +241,8 @@ Phase 7 完了時点 (2026-07-26) で 3 箇所とも同期済。Phase 8 の READ
    — `marton_condAEP_jointlyTypical_ge` / `marton_strongRadius_prob_tendsto_one` の鏡像は実際に不要で、
    受信機ごとに別物の covering 半径を `min` + `jointStronglyTypicalSet_mono_radius` で開き直す段が
    まさに必要だった。⇒ 対称性の主張は「実装で潰した後なら書いてよい」。
-5. **`exists_martonRateSplit` (`Marton/Basic.lean`) は Phase 7 の入力としては弱い (未決の判断軸)**:
-   結論が `0 ≤ R₁' ∧ 0 ≤ R₂'` だが、covering のレート条件 `(4C+6)·ε_cov < R₁'` は `R₁' = 0` では
-   充足不能。Phase 7 は `Achievability.lean` 内の private `exists_martonRateSplit_pos` で両レートを
-   `min ((I₁−R₁−R₁')/2) ((I₂−R₂−R₂')/2)` だけ押し上げて回避し、**`Basic.lean` の署名は変更していない**。
-   ⇒ 「`Basic.lean` 側を `0 < R₁' ∧ 0 < R₂'` に強めて private 版を畳む」か「public は弱い形のまま残す」
-   かは**未決**。強める場合は `scripts/dep_consumers.sh` で consumer を実測してから。
+5. **弱い public 形を private ラッパで補うくらいなら public を強める**: `exists_martonRateSplit`
+   (`Marton/Basic.lean`) の結論を `0 ≤ R₁'` から `0 < R₁'` へ強め、`Achievability.lean` の private
+   ラッパを畳んだ (`4876e101`)。証明側の変更は `mul_nonneg` → `mul_pos` の 1 行で、**強い形が最初から
+   ただで出ていた**。「public は弱い形のまま残し、必要な側が private で押し上げる」判断は、コストの
+   実測 (`dep_consumers.sh` で consumer 数、強化の差分行数) を取る前に採らない。
