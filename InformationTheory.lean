@@ -4,6 +4,9 @@
 -- Meta: orphan-detection 用 @[entry_point] attribute
 import InformationTheory.Meta.EntryPoint
 
+-- 有限型上の測度の singleton 質量 (共有ユーティリティ)
+import InformationTheory.Probability.SingletonMass
+
 -- Fano 不等式
 import InformationTheory.Fano
 import InformationTheory.Fano.Entropy

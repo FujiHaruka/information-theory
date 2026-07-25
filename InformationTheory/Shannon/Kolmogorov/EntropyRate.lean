@@ -402,7 +402,7 @@ theorem entropyByCount_le_of_strongTypical
   haveI : IsProbabilityMeasure (μ.map (Xs 0)) :=
     Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
   have hqX_sum_one : (∑ a : α, (μ.map (Xs 0)).real {a}) = 1 :=
-    sum_measureReal_singleton_eq_one (μ.map (Xs 0))
+    sum_measureReal_singleton_univ_eq_one (μ.map (Xs 0))
   have hT_sum : (∑ a : α, typeCount x a) = n := sum_typeCount x
   exact conditionalKL_HXemp_le μ Xs hXs hn_pos hn hn_ne x hx
     (fun a ↦ (μ.map (Xs 0)).real {a}) (fun _ ↦ rfl) hpos hqX_sum_one

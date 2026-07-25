@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.IIDProductInput.Basic
 import InformationTheory.Shannon.AEP.Rate
@@ -34,15 +35,6 @@ lemma measureReal_pi_singleton_eq_prod
     (Measure.pi κ).real {x} = ∏ i, (κ i).real {x i} := by
   rw [measureReal_def, Measure.pi_singleton, ENNReal.toReal_prod]
   rfl
-
-lemma sum_measureReal_singleton_univ_eq_one
-    {γ : Type*} [Fintype γ] [MeasurableSpace γ] [MeasurableSingletonClass γ]
-    (ν : Measure γ) [IsProbabilityMeasure ν] :
-    (∑ x : γ, ν.real {x}) = 1 := by
-  have h_univ_real : ν.real ((Finset.univ : Finset γ) : Set γ) = 1 := by
-    rw [Finset.coe_univ, measureReal_def, measure_univ]; rfl
-  rw [← sum_measureReal_singleton (μ := ν) (Finset.univ : Finset γ)] at h_univ_real
-  exact h_univ_real
 
 omit [Nonempty α] [Fintype β] [DecidableEq β] [Nonempty β] in
 lemma jointDistribution_real_singleton

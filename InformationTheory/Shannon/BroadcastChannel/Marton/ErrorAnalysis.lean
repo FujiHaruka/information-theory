@@ -1,3 +1,4 @@
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.BroadcastChannel.Achievability.ErrorAnalysis
 import InformationTheory.Shannon.BroadcastChannel.Marton.Covering
 import InformationTheory.Shannon.MultipleAccess.Achievability.Codebook
@@ -67,11 +68,6 @@ variable {V₁ V₂ α β₁ β₂ : Type*}
 
 /-! ### Sums against a slice of a product law -/
 
-private lemma sum_measureReal_singleton_univ {γ : Type*} [Fintype γ] [MeasurableSpace γ]
-    [MeasurableSingletonClass γ] (μ : Measure γ) [IsProbabilityMeasure μ] :
-    ∑ z : γ, μ.real {z} = 1 := by
-  rw [sum_measureReal_singleton, Finset.coe_univ, probReal_univ]
-
 private lemma sum_exchange_three {A B D : Type*} [Fintype A] [Fintype B] [Fintype D]
     (a : A → ℝ) (b : B → ℝ) (c : B → D → ℝ) (d : A → D → ℝ) :
     ∑ v : A, a v * ∑ j : B, b j * ∑ k : D, c j k * d v k
@@ -99,7 +95,7 @@ private lemma sum_measureReal_slice_le
     rw [← Measure.prod_swap, Measure.real,
       Measure.map_apply measurable_swap (Set.toFinite S).measurableSet, hpre]
     rfl
-  have hsum1 : ∑ b : B, ν.real {b} = 1 := sum_measureReal_singleton_univ ν
+  have hsum1 : ∑ b : B, ν.real {b} = 1 := sum_measureReal_singleton_univ_eq_one ν
   rw [← mac_prodReal_eq_slice_sum P ν J, ← hswap, mac_prodReal_eq_slice_sum ν P S]
   calc ∑ b : B, ν.real {b} * P.real {a | (b, a) ∈ S}
       ≤ ∑ b : B, ν.real {b} * C :=
@@ -634,7 +630,7 @@ private lemma sum_codebook_alias_le
     _ ≤ ∑ r : Fin M' → (Fin n → A), (codebookMeasure p M' n).real {r} * C :=
         Finset.sum_le_sum fun r _ ↦ mul_le_mul_of_nonneg_left (hrow r) measureReal_nonneg
     _ = C := by
-        rw [← Finset.sum_mul, sum_measureReal_singleton_univ, one_mul]
+        rw [← Finset.sum_mul, sum_measureReal_singleton_univ_eq_one, one_mul]
 
 /-- Averaged alias bound over the full three-tier Marton ensemble.  An alias codeword taken from
 a *different message row* than the transmitted one is jointly typical with the received word with
@@ -760,9 +756,9 @@ theorem marton_random_codebook_alias₁_le
                 = Real.exp (-(n : ℝ) * (martonInfo₁ pV K W - 3 * ε)) := by
             intro c₂
             haveI := hLprob r (c₂ m.2)
-            rw [← Finset.sum_mul, sum_measureReal_singleton_univ, one_mul]
+            rw [← Finset.sum_mul, sum_measureReal_singleton_univ_eq_one, one_mul]
           simp only [hx]
-          rw [← Finset.sum_mul, sum_measureReal_singleton_univ, one_mul]
+          rw [← Finset.sum_mul, sum_measureReal_singleton_univ_eq_one, one_mul]
 
 /-! ### Receiver-2 error decomposition -/
 
@@ -1009,7 +1005,7 @@ theorem marton_random_codebook_alias₂_le
             Finset.sum_le_sum fun x _ ↦
               mul_le_mul_of_nonneg_left (hslice x) measureReal_nonneg
         _ = Real.exp (-(n : ℝ) * (martonInfo₂ pV K W - 3 * ε)) := by
-            rw [← Finset.sum_mul, sum_measureReal_singleton_univ, one_mul]
+            rw [← Finset.sum_mul, sum_measureReal_singleton_univ_eq_one, one_mul]
   calc ∑ c₁ : MartonSubcodebook M₁ M₁' n V₁,
           (martonSubcodebookMeasure (pV.map Prod.fst) M₁ M₁' n).real {c₁}
             * ∑ c₂ : MartonSubcodebook M₂ M₂' n V₂,
@@ -1021,7 +1017,7 @@ theorem marton_random_codebook_alias₂_le
         Finset.sum_le_sum fun c₁ _ ↦
           mul_le_mul_of_nonneg_left (hsecond c₁) measureReal_nonneg
     _ = Real.exp (-(n : ℝ) * (martonInfo₂ pV K W - 3 * ε)) := by
-        rw [← Finset.sum_mul, sum_measureReal_singleton_univ, one_mul]
+        rw [← Finset.sum_mul, sum_measureReal_singleton_univ_eq_one, one_mul]
 
 end InformationTheory.Shannon.BroadcastChannel.Marton
 

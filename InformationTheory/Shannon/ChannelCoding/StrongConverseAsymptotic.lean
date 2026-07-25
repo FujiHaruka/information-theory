@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.ChannelCoding.StrongConverse
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import InformationTheory.Shannon.CsiszarProjection
@@ -51,10 +52,8 @@ omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] i
 /-- For a Markov channel each fiber `W x` is a probability measure, so its singleton masses
 sum to `1` over the finite output alphabet. -/
 lemma sum_channel_real_singleton_eq_one (W : Channel α β) [IsMarkovKernel W] (x : α) :
-    ∑ b : β, (W x).real {b} = 1 := by
-  haveI : IsProbabilityMeasure (W x) := inferInstance
-  rw [show (∑ b : β, (W x).real {b}) = ∑ b ∈ (Finset.univ : Finset β), (W x).real {b} from rfl,
-    sum_measureReal_singleton, Finset.coe_univ, probReal_univ]
+    ∑ b : β, (W x).real {b} = 1 :=
+  sum_measureReal_singleton_univ_eq_one (W x)
 
 omit [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β] in
 /-- Cross-entropy form of `klDivPmf`: for a sub-probability-free pmf `P` (only required
@@ -415,13 +414,6 @@ theorem klDiv_channel_le_capacity
 /-! ## Phase B: non-i.i.d. Chebyshev concentration of the information density -/
 
 omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
-/-- Singleton masses of a probability measure on the finite output alphabet sum to `1`. -/
-lemma sum_prob_real_singleton_eq_one (μ : Measure β) [IsProbabilityMeasure μ] :
-    ∑ b : β, μ.real {b} = 1 := by
-  rw [show (∑ b : β, μ.real {b}) = ∑ b ∈ (Finset.univ : Finset β), μ.real {b} from rfl,
-    sum_measureReal_singleton, Finset.coe_univ, probReal_univ]
-
-omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
 /-- The expectation of the per-letter log-likelihood ratio `log (W a)(·) − log q*(·)` under the
 channel fiber `W a` is the discrete KL divergence `D(W a ‖ q*)`. -/
 lemma integral_logRatio_eq_klDivPmf
@@ -476,7 +468,7 @@ lemma highLLRSet_real_le
   haveI : IsProbabilityMeasure Pm := by rw [hPm_def]; infer_instance
   -- Basic pmf facts.
   have hqf_pos : ∀ b, 0 < qf b := hq_pos
-  have hqf_sum : ∑ b, qf b = 1 := sum_prob_real_singleton_eq_one _
+  have hqf_sum : ∑ b, qf b = 1 := sum_measureReal_singleton_univ_eq_one _
   have hWa_sum : ∀ a, ∑ b : β, (W a).real {b} = 1 := sum_channel_real_singleton_eq_one W
   have hLB : B = ∑ a : α, ∑ b : β, |L a b| := by
     rw [hB_def]; simp only [llrUnifBound, hL_def, hqf_def]

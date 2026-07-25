@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.ConditionalMethodOfTypes
 import InformationTheory.Shannon.RateDistortion.AchievabilityCodebookMatchProbability
 import InformationTheory.Shannon.RateDistortion.AchievabilityAsymptoticFailureDecay
@@ -76,16 +77,6 @@ lemma measureReal_le_add_measureReal_of_subset_union
   have h_union_le : μ.real (A ∪ B) ≤ μ.real A + μ.real B :=
     measureReal_union_le _ _
   linarith
-
-lemma sum_measureReal_singleton_univ_eq_one
-    {ι : Type*} [MeasurableSpace ι] [Fintype ι] [MeasurableSingletonClass ι]
-    (μ : Measure ι) [IsProbabilityMeasure μ] :
-    ∑ i : ι, μ.real {i} = 1 := by
-  have h_real_univ : μ.real ((Finset.univ : Finset ι) : Set ι) = 1 := by
-    rw [Finset.coe_univ, measureReal_def, measure_univ]
-    rfl
-  have h_sum_eq := sum_measureReal_singleton (μ := μ) (Finset.univ : Finset ι)
-  rw [h_sum_eq, h_real_univ]
 
 lemma measureReal_prod_eq_sum_measureReal_singleton_mul_measureReal_section
     {ι γ : Type*} [MeasurableSpace ι] [Fintype ι] [MeasurableSingletonClass ι]

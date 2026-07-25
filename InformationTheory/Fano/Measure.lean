@@ -1,5 +1,6 @@
 import InformationTheory.Fano.Core
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 import Mathlib.Probability.ProbabilityMassFunction.Basic
@@ -102,14 +103,6 @@ A glue lemma for invoking the discrete Fano inequality at each `y : Y`, in a for
 Dirac mass at `xh`.
 -/
 
-omit [DecidableEq X] [Nonempty X] in
-private lemma sum_real_singleton_eq_one (Q : Measure X) [IsProbabilityMeasure Q] :
-    ∑ x : X, Q.real {x} = 1 := by
-  rw [show (∑ x : X, Q.real {x}) = ∑ x ∈ (Finset.univ : Finset X), Q.real {x} from rfl,
-      sum_measureReal_singleton]
-  rw [show ((Finset.univ : Finset X) : Set X) = Set.univ from Finset.coe_univ]
-  simp [measureReal_def, measure_univ]
-
 /-- The `FiniteJointPMF X X` built from a probability measure `Q : Measure X` and a guess
 `xh : X`, with a Dirac mass at `xh` in the second coordinate, i.e.
 `mass x x' = Q.real {x} · 𝟙[x' = xh]`. -/
@@ -129,7 +122,7 @@ def diracPMF (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
         (fun h ↦ (h (Finset.mem_univ _)).elim)]
       simp
     rw [Finset.sum_congr rfl (fun x _ ↦ hInner x)]
-    exact sum_real_singleton_eq_one Q
+    exact sum_measureReal_singleton_univ_eq_one Q
 
 /-! ### Computations for `diracPMF` -/
 
@@ -157,7 +150,7 @@ private lemma diracPMF_marginalY (Q : Measure X) [IsProbabilityMeasure Q] (xh x'
   · rw [hx', if_pos rfl]
     have : (∑ x : X, (diracPMF Q xh).mass x xh) = ∑ x : X, Q.real {x} :=
       Finset.sum_congr rfl (fun x _ ↦ by rw [diracPMF_mass, if_pos rfl])
-    rw [this, sum_real_singleton_eq_one]
+    rw [this, sum_measureReal_singleton_univ_eq_one]
   · rw [if_neg hx']
     apply Finset.sum_eq_zero
     intro x _

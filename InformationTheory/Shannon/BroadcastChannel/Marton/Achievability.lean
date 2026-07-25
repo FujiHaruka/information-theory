@@ -43,11 +43,6 @@ variable {V₁ V₂ α β₁ β₂ : Type*}
 
 /-! ### Generic finite-sum plumbing -/
 
-private lemma sum_measureReal_singleton_univ {γ : Type*} [Fintype γ] [MeasurableSpace γ]
-    [MeasurableSingletonClass γ] (μ : Measure γ) [IsProbabilityMeasure μ] :
-    ∑ z : γ, μ.real {z} = 1 := by
-  rw [sum_measureReal_singleton, Finset.coe_univ, probReal_univ]
-
 /-- Reading the outer two tiers of a three-tier weighted average as one product tier. -/
 private lemma sum_prodTier_eq {κ₁ κ₂ κX : Type*} [Fintype κ₁] [Fintype κ₂] [Fintype κX]
     (w₁ : κ₁ → ℝ) (w₂ : κ₂ → ℝ) (wX : κ₁ → κ₂ → κX → ℝ) (f : κ₁ → κ₂ → κX → ℝ) :
@@ -96,7 +91,8 @@ private lemma sum_pair_le_add_prodReal {A B : Type*}
     rw [Finset.sum_congr rfl fun b (_ : b ∈ Finset.univ) ↦
       (by ring : μ₂.real {b} * (t + S.indicator (fun _ ↦ (1 : ℝ)) (a, b))
         = μ₂.real {b} * t + μ₂.real {b} * S.indicator (fun _ ↦ (1 : ℝ)) (a, b)),
-      Finset.sum_add_distrib, ← Finset.sum_mul, sum_measureReal_singleton_univ, one_mul, hslice a]
+      Finset.sum_add_distrib, ← Finset.sum_mul, sum_measureReal_singleton_univ_eq_one, one_mul,
+      hslice a]
   calc ∑ a : A, μ₁.real {a} * ∑ b : B, μ₂.real {b} * F a b
       ≤ ∑ a : A, μ₁.real {a}
           * ∑ b : B, μ₂.real {b} * (t + S.indicator (fun _ ↦ (1 : ℝ)) (a, b)) := by
@@ -109,7 +105,7 @@ private lemma sum_pair_le_add_prodReal {A B : Type*}
           Finset.sum_congr rfl fun a (_ : a ∈ Finset.univ) ↦
             (by ring : μ₁.real {a} * (t + μ₂.real {b | (a, b) ∈ S})
               = μ₁.real {a} * t + μ₁.real {a} * μ₂.real {b | (a, b) ∈ S}),
-          Finset.sum_add_distrib, ← Finset.sum_mul, sum_measureReal_singleton_univ, one_mul]
+          Finset.sum_add_distrib, ← Finset.sum_mul, sum_measureReal_singleton_univ_eq_one, one_mul]
 
 /-! ### Aggregating one receiver's Bonferroni decomposition over the ensemble -/
 
@@ -370,7 +366,7 @@ private lemma marton_ensemble_E0₁_le
         simp only [hΨ_def]
         refine le_of_le_of_eq (Finset.sum_le_sum fun x _ ↦
           mul_le_mul_of_nonneg_left (hbnd x) measureReal_nonneg) ?_
-        rw [← Finset.sum_mul, sum_measureReal_singleton_univ, one_mul]
+        rw [← Finset.sum_mul, sum_measureReal_singleton_univ_eq_one, one_mul]
       linarith
   calc ∑ c₁ : MartonSubcodebook M₁ M₁' n V₁,
           (martonSubcodebookMeasure (pV.map Prod.fst) M₁ M₁' n).real {c₁}
@@ -511,7 +507,7 @@ private lemma marton_ensemble_E0₂_le
         simp only [hΨ_def]
         refine le_of_le_of_eq (Finset.sum_le_sum fun x _ ↦
           mul_le_mul_of_nonneg_left (hbnd x) measureReal_nonneg) ?_
-        rw [← Finset.sum_mul, sum_measureReal_singleton_univ, one_mul]
+        rw [← Finset.sum_mul, sum_measureReal_singleton_univ_eq_one, one_mul]
       linarith
   calc ∑ c₁ : MartonSubcodebook M₁ M₁' n V₁,
           (martonSubcodebookMeasure (pV.map Prod.fst) M₁ M₁' n).real {c₁}
@@ -734,8 +730,8 @@ private lemma marton_exists_codebook_le_avg
       ((martonCodebookToCode pV K W hM₁ hM₂ ε c₁ c₂ cX).averageErrorProb₁ W).toReal
         + ((martonCodebookToCode pV K W hM₁ hM₂ ε c₁ c₂ cX).averageErrorProb₂ W).toReal)
     (fun _ ↦ measureReal_nonneg) (fun _ ↦ measureReal_nonneg) (fun _ _ _ ↦ measureReal_nonneg)
-    (sum_measureReal_singleton_univ _) (sum_measureReal_singleton_univ _)
-    (fun _ _ ↦ sum_measureReal_singleton_univ _) B h_avg
+    (sum_measureReal_singleton_univ_eq_one _) (sum_measureReal_singleton_univ_eq_one _)
+    (fun _ _ ↦ sum_measureReal_singleton_univ_eq_one _) B h_avg
 
 /-! ### Headline -/
 

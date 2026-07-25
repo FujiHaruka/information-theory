@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.StrongTypicality
 import InformationTheory.Shannon.Sanov.TendstoSandwich
 import InformationTheory.Shannon.TypeClassLowerBound
@@ -384,26 +385,6 @@ lemma sum_log_natCast_succ_le {γ : Type*} [Fintype γ] (g : γ → ℕ) (n : �
       = (Fintype.card γ : ℝ) * Real.log ((n : ℝ) + 1) := by
     rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
   linarith
-
-lemma sum_measureReal_singleton_eq_one {γ : Type*} [Fintype γ]
-    [MeasurableSpace γ] [MeasurableSingletonClass γ]
-    (ν : Measure γ) [IsProbabilityMeasure ν] :
-    (∑ a : γ, ν.real {a}) = 1 := by
-  classical
-  have h_univ_eq : (Set.univ : Set γ)
-      = ⋃ a ∈ (Finset.univ : Finset γ), ({a} : Set γ) := by ext a; simp
-  have h_disj : (↑(Finset.univ : Finset γ) : Set γ).PairwiseDisjoint
-      (fun a ↦ ({a} : Set γ)) := by
-    intro a₁ _ a₂ _ ha s hs1 hs2 q hq
-    have hq1 := hs1 hq; have hq2 := hs2 hq
-    simp only [Set.mem_singleton_iff] at hq1 hq2
-    exact (ha (hq1.symm.trans hq2)).elim
-  have h_meas : ∀ a ∈ (Finset.univ : Finset γ),
-      MeasurableSet ({a} : Set γ) := fun _ _ ↦ measurableSet_singleton _
-  have h_sum : ν.real (Set.univ : Set γ) = ∑ a : γ, ν.real {a} := by
-    rw [h_univ_eq, measureReal_biUnion_finset h_disj h_meas]
-  have h_univ : ν.real (Set.univ) = 1 := probReal_univ (μ := ν)
-  rw [← h_sum, h_univ]
 
 lemma neg_sum_mul_log_eq_neg_sum_mul_log_sub_sum_mul_log_div
     {γ : Type*} [Fintype γ] (p q : γ → ℝ)
@@ -1133,10 +1114,10 @@ lemma conditional_KL_concentration_ge
   -- qZ marginalizes to a probability measure on α (resp. β).
   -- ∑ p, qZ p = 1.
   have h_qZ_sum_one : (∑ p : α × β, qZ p) = 1 := by
-    rw [hqZ_def]; exact sum_measureReal_singleton_eq_one (μ.map (jointSequence Xs Ys 0))
+    rw [hqZ_def]; exact sum_measureReal_singleton_univ_eq_one (μ.map (jointSequence Xs Ys 0))
   -- ∑ a, qX a = 1.
   have h_qX_sum_one : (∑ a : α, qX a) = 1 := by
-    rw [hqX_def]; exact sum_measureReal_singleton_eq_one (μ.map (Xs 0))
+    rw [hqX_def]; exact sum_measureReal_singleton_univ_eq_one (μ.map (Xs 0))
   -- qX a > 0 from qZ-marginal: qX a = ∑_b qZ(a, b), each term > 0.
   have hqX_pos : ∀ a : α, 0 < qX a := by
     intro a
