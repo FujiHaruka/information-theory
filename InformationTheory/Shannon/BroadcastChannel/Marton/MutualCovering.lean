@@ -488,6 +488,12 @@ lemma integral_pairIndicator_mul_sharedSnd_le [IsProbabilityMeasure μ]
         rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal hq0, pairProb]
 
 include hX hY hS hIndep hXlaw hYlaw in
+/-- Covariance of two codeword pairs sharing exactly one index, under the two uniform slice
+bounds.  Each bound constrains one coordinate of `S` only, so both are needed: the pairs sharing
+their first index are governed by the `β`-slices and those sharing their second index by the
+`α`-slices.
+
+@audit:ok -/
 theorem covariance_pairIndicator_shared_le [IsProbabilityMeasure μ]
     (hsliceY : ∀ x, (μY (Prod.mk x ⁻¹' S)).toReal ≤ qbar)
     (hsliceX : ∀ y, (μX ((fun x ↦ (x, y)) ⁻¹' S)).toReal ≤ qbar)
@@ -516,6 +522,10 @@ theorem covariance_pairIndicator_shared_le [IsProbabilityMeasure μ]
   linarith
 
 include hX hY hS hIndep hXlaw hYlaw in
+/-- Sharpened variance bound: the diagonal terms contribute `M₁ M₂ p`, and the pairs sharing one
+index contribute at most `qbar * p` each.
+
+@audit:ok -/
 theorem variance_pairCount_le' [IsProbabilityMeasure μ]
     (hsliceY : ∀ x, (μY (Prod.mk x ⁻¹' S)).toReal ≤ qbar)
     (hsliceX : ∀ y, (μX ((fun x ↦ (x, y)) ⁻¹' S)).toReal ≤ qbar) :
@@ -581,7 +591,9 @@ theorem variance_pairCount_le' [IsProbabilityMeasure μ]
 include hX hY hS hIndep hXlaw hYlaw in
 /-- Sharpened second-moment estimate behind Marton's mutual covering lemma.  When every
 conditional slice of `S` has mass at most `qbar`, the probability that no codeword pair lands
-in `S` splits into a term governed by the product `M₁ M₂` and two terms carrying `qbar`. -/
+in `S` splits into a term governed by the product `M₁ M₂` and two terms carrying `qbar`.
+
+@audit:ok -/
 theorem meas_pairCount_eq_zero_le' [IsProbabilityMeasure μ]
     (hsliceY : ∀ x, (μY (Prod.mk x ⁻¹' S)).toReal ≤ qbar)
     (hsliceX : ∀ y, (μX ((fun x ↦ (x, y)) ⁻¹' S)).toReal ≤ qbar)
