@@ -3,7 +3,7 @@ import InformationTheory.Shannon.TimeBandLimiting.TraceBound
 /-!
 # Time-and-band-limiting operator — the window deficit and second moment
 
-Leg E, second-moment half. The window deficit `tr A − ∫∫_[0,T]² |k|²` and the second moment
+The window deficit `tr A − ∫∫_[0,T]² |k|²` and the second moment
 `tr A²` expressed as the windowed kernel energy, the inputs the sharp Landau–Pollak–Slepian
 lower bound on the count near `1` would consume through `∑ λₙ(1 − λₙ) = tr A − tr A²`.
 -/
@@ -288,7 +288,7 @@ theorem bandKernel_window_deficit_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
   rw [setIntegral_congr_fun measurableSet_Icc (fun t _ => hinner t), hsub, hrefl]
   ring
 
-/-- **Leg E-sharp gateway atom.** The trace deficit of the time-and-band limiting operator against
+/-- The trace deficit of the time-and-band limiting operator against
 its window is `O(log WT)`: the reproducing kernel `k(t − s) = sin(2πW(t−s))/(π(t−s))` loses only
 logarithmically much of its energy `‖k_t‖² = 2W` off the window `[0,T]`.
 
@@ -587,8 +587,8 @@ theorem norm_timeBandLimitingOp_sq_le_inner (T W : ℝ) (f : E) :
   have h0 : (0 : ℝ) ≤ ‖timeBandLimitingOp T W f‖ := norm_nonneg _
   nlinarith [hcontract, h0]
 
-/-- **Leg E-sharp.** The second moment of the time-and-band limiting operator along *any* complete
-orthonormal basis is exactly the energy of the reproducing kernel over the window square:
+/-- The second moment of the time-and-band limiting operator along *any* complete orthonormal
+basis is exactly the energy of the reproducing kernel over the window square:
 `tr A² = ∫₀ᵀ∫₀ᵀ |k(t−s)|² ds dt`. Together with `tsum_inner_timeBandLimitingOp_eq` (`tr A = 2WT`)
 this identifies both moments of `A` with explicit kernel integrals.
 
@@ -727,7 +727,7 @@ theorem tsum_norm_timeBandLimitingOp_sq_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < 
       ← integral_tsum hmeas hdom, integral_congr_ae (ae_of_all _ hpt), integral_complex_ofReal]
   exact_mod_cast key
 
-/-- **The Landau-Widom second moment, non-asymptotically.** `tr A − tr A² ≤ 2 + log(1 + 2WT)`
+/-- The Landau-Widom second moment, non-asymptotically: `tr A − tr A² ≤ 2 + log(1 + 2WT)`
 along any complete orthonormal basis: the time-and-band limiting operator differs from a projection
 by only logarithmically much. For an eigenbasis the left side is `∑ₙ λₙ(1 − λₙ)`, the quantity that
 measures how far the prolate spectrum is from the `0/1` cliff.
@@ -746,8 +746,8 @@ content is the *count* `#{n | λₙ > c} = 2WT + O(log WT)`, which still needs (
 multiplicity bridge to read this sum as `∑ₙ λₙ(1 − λₙ)` and (b) the Chebyshev split from the
 second moment to the count. What it does settle is that the analytic input to both is in hand.
 
-Audited 2026-07-17 (independent), on the one question that decides the leg: is this the object the
-wall's residue needs, or a *weaker relative* of it (the trap that overturned Leg E-atom)? It is the
+Audited 2026-07-17 (independent), on the one question that decides it: is this the object the
+wall's residue needs, or a *weaker relative* of it? It is the
 object, and the strength diff was checked in both directions. Textbook Landau-Widom is an asymptotic
 *equality* `tr A − tr A² ~ (1/π²)·log(2WT)`; this is only a one-sided upper bound with a loose
 constant — strictly weaker. That weaker form is nevertheless *sufficient*, and the argument was

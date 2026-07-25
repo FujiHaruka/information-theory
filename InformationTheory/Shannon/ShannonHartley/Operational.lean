@@ -17,10 +17,9 @@ the continuous-time band-limited AWGN channel and states the Shannon-Hartley ide
 
     `contAwgnOperationalCapacity W N₀ P = W · log(1 + P / (N₀ · W))`
 
-as `contAwgn_eq_shannonHartley` (now proved in `ConverseFinal.lean`, `sorryAx`-free).
+as `contAwgn_eq_shannonHartley` (proved in `ConverseFinal.lean`).
 The converse half lands via the prolate-count domination `bandGramReal_high_count_le` — it needs
-only `prolateCount T W c / T → 2W`, not the tight Landau-Pollak-Slepian concentration — so the once
-`nyquist-2w-dof`-tagged residual is history, not a live wall.
+only `prolateCount T W c / T → 2W`, not the tight Landau-Pollak-Slepian concentration.
 
 `IsBandlimited` uses the *L²-Fourier spectral support* of the complexification (a genuine
 band-limit constraint, not junk-`0`). The Paley-Wiener sup bound `bandlimited_sup_bound`
@@ -66,12 +65,12 @@ The definition aims to make `contAwgn_eq_shannonHartley` *true*, *non-circular*,
   onto `span{φᵢ}`; Bessel caps it by `‖f‖₂² ≤ T·P` uniformly in `k`, and Cauchy interlacing caps
   the per-dimension gains by the prolate eigenvalues. Rate `W·log(1 + P/(N₀·W))` is reached in the
   `T → ∞` limit exactly when `≈ 2WT` of those eigenvalues are near `1`.
-* **Non-circularity (C1–C4).** A codeword is a genuine band-limited *function* `ℝ → ℝ`
-  (C1), never a length-`⌊2WT⌋` sample vector; `contAwgnMaxMessages` contains no `2W` or
-  `⌊2WT⌋` (C2); the observation count `k` is a *free* `ℕ` field, not pinned to `⌊2WT⌋` (C4); the
-  factor `2W` is not in any definition and must emerge from the DOF proof (C3) — `testFn` is asked
-  only for orthonormality and `[0, T]` support. Consequently `contAwgn_eq_shannonHartley` cannot
-  be closed by `rfl`/`unfold`.
+* **Non-circularity.** A codeword is a genuine band-limited *function* `ℝ → ℝ`, never a
+  length-`⌊2WT⌋` sample vector; `contAwgnMaxMessages` contains no `2W` or `⌊2WT⌋`; the
+  observation count `k` is a *free* `ℕ` field, not pinned to `⌊2WT⌋`; the factor `2W` is not in
+  any definition and must emerge from the degrees-of-freedom proof — `testFn` is asked only for
+  orthonormality and `[0, T]` support. Consequently `contAwgn_eq_shannonHartley` cannot be closed
+  by `rfl`/`unfold`.
 * **Non-degeneracy.** The noise genuinely corrupts the signal (variance `N₀/2 > 0` whenever
   `N₀ > 0`). Neither oversampling nor undersampling inflates the signal-to-noise ratio: raising
   `k` adds observations but Bessel holds `∑ᵢ ⟨f, φᵢ⟩² ≤ ‖f‖₂²` uniformly, so extra observations
@@ -107,7 +106,7 @@ def IsBandlimited (f : ℝ → ℝ) (W : ℝ) : Prop :=
     (𝓕 (hf.toLp (fun t : ℝ => (f t : ℂ))) : Lp ℂ 2 volume)
       =ᵐ[volume.restrict {ξ : ℝ | W < |ξ|}] 0
 
-/-- **`L²`-`L¹` Fourier-agreement bridge.** For `f ∈ L¹ ∩ L²`, the coeFn of the `L²`-Fourier
+/-- The `L²`-`L¹` Fourier-agreement bridge: for `f ∈ L¹ ∩ L²`, the coeFn of the `L²`-Fourier
 transform of the canonical `Lp` representative of `f` agrees almost everywhere with the classical
 `L¹` Fourier integral `𝓕 f` (the pointwise `VectorFourier.fourierIntegral`).
 
@@ -170,7 +169,7 @@ theorem l2Fourier_eq_fourierIntegral (f : ℝ → ℂ)
         Real.continuous_fourierChar continuous_inner φ.integrable hf1_int).symm
   rw [hA, hB]
 
-/-- **`L²`-`L¹` inverse-Fourier-agreement bridge.** The inverse-transform sibling of
+/-- The `L²`-`L¹` inverse-Fourier-agreement bridge, the inverse-transform sibling of
 `l2Fourier_eq_fourierIntegral`: for `f ∈ L¹ ∩ L²`, the coeFn of the `L²`-inverse-Fourier transform
 of the canonical `Lp` representative agrees almost everywhere with the classical `L¹` inverse
 Fourier integral `𝓕⁻ f`. Used by `bandlimited_sup_bound` to realize a band-limited signal as the
@@ -334,7 +333,7 @@ theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
 `P`, and `M` messages.
 
 The encoder maps each message to a genuine band-limited *function* `ℝ → ℝ` (never a fixed
-sample vector — this is the non-circularity constraint C1), whose whole-line energy is at most
+sample vector — this is what keeps the definition non-circular), whose whole-line energy is at most
 `T · P`. The receiver does not read the codeword pointwise; it correlates it against `k`
 **orthonormal test functions supported in `[0, T]`**, observing the vector
 `i ↦ ∫ (encoder m)·(testFn i)` corrupted by independent Gaussian noise
@@ -346,8 +345,8 @@ It replaces a point-sampling observation map that was an isometry only at the Ny
 i.e. calibrated at exactly the value the Shannon-Hartley identity has to prove; the refutation is
 recorded in `docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP.
 
-The observation count `k` is a *free* `ℕ` field (constraint C4), and no field mentions `2W` or
-`⌊2WT⌋` (constraint C3): `testFn` is asked only to be orthonormal and supported in `[0, T]`, and
+The observation count `k` is a *free* `ℕ` field, and no field mentions `2W` or
+`⌊2WT⌋`: `testFn` is asked only to be orthonormal and supported in `[0, T]`, and
 the `W` in `encoder_bandlimited` is a physical bandwidth, not a dimension count. The `≈ 2WT`
 degrees-of-freedom count is therefore not available from this definition. It has to come from the
 prolate-spheroidal eigenvalue distribution: a band-limited `f` satisfies `∫ f·φᵢ = ⟪f, P_W φᵢ⟫`,
@@ -367,7 +366,7 @@ structure ContAwgnCode (T W P : ℝ) (M : ℕ) where
   `[0, T]`, and charging it only for the energy it happens to park inside the window leaves the
   rest free to be reflected back in by the reproducing kernel. -/
   encoder_power : ∀ m, (∫ t, (encoder m t) ^ 2) ≤ T * P
-  /-- The number of observations (a free `ℕ` parameter; constraint C4). -/
+  /-- The number of observations, a free `ℕ` parameter not pinned to `⌊2WT⌋`. -/
   k : ℕ
   /-- The test functions the receiver correlates the codeword against. -/
   testFn : Fin k → (ℝ → ℝ)
@@ -425,7 +424,7 @@ noncomputable def ContAwgnCode.averageError {T W P : ℝ} {M : ℕ}
 
 /-- The largest number of messages distinguishable over the window `[0, T]` with average
 error probability at most `ε` — an *operational* primitive that contains no `2W` or
-`⌊2WT⌋` (constraint C2). -/
+`⌊2WT⌋`. -/
 noncomputable def contAwgnMaxMessages (T W N₀ P ε : ℝ) : ℕ :=
   sSup { M : ℕ | ∃ c : ContAwgnCode T W P M, (c.averageError N₀).toReal ≤ ε }
 

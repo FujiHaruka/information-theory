@@ -10,7 +10,7 @@ import InformationTheory.Shannon.AWGN.Converse
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Continuous-time Shannon-Hartley: achievability (Cover-Thomas Ch. 9.6, Phase 3)
+# Continuous-time Shannon-Hartley: achievability (Cover-Thomas Ch. 9.6)
 
 The `≥` half of the operational Shannon-Hartley sandwich,
 
@@ -24,7 +24,7 @@ The two have different characters, and the split is the point. Boundedness is *w
 Bessel's inequality against the orthonormal `ContAwgnCode.testFn` caps the observed energy by
 `T·P` uniformly in the observation count, which is enough for `BddAbove` but only enough for the
 crude rate `P/N₀`. Achievability at the *exact* constant is not wall-independent: it needs the
-`≈ 2WT` degrees-of-freedom count (the `nyquist-2w-dof` wall, Leg E), because the test family must
+`≈ 2WT` degrees-of-freedom count (the `nyquist-2w-dof` wall), because the test family must
 recover near-unit gain on `≈ 2WT` dimensions. See the two declarations for detail.
 
 ## The synthesis bridge
@@ -34,12 +34,12 @@ recover near-unit gain on `≈ 2WT` dimensions. See the two declarations for det
 `ContAwgnCode` get built from a discrete `awgn_achievability` codebook. Its three properties power
 the reduction:
 
-* **(ii) interpolation exactness** — `synthSignal T n a (j·(T/n)) = a j`
+* interpolation exactness — `synthSignal T n a (j·(T/n)) = a j`
   (`synthSignal_sample`).
-* **(i) band-limitedness** — `IsBandlimited (synthSignal T n a) W` when `n ≤ 2WT`
+* band-limitedness — `IsBandlimited (synthSignal T n a) W` when `n ≤ 2WT`
   (`synthSignal_bandlimited`): each shifted `sincN(·/Δ)` has spectrum supported in
   `[-1/(2Δ), 1/(2Δ)] = [-n/(2T), n/(2T)] ⊆ [-W, W]`.
-* **(iii) Parseval energy** — `∫ t, (synthSignal T n a t)² = (T/n)·∑ᵢ (a i)²`
+* Parseval energy — `∫ t, (synthSignal T n a t)² = (T/n)·∑ᵢ (a i)²`
   (`synthSignal_energy`), an equality on the *whole line*, which is exactly the shape
   `ContAwgnCode.encoder_power` asks for: with `a = √(n/T)·c` it reads `∑ᵢ cᵢ² ≤ T·P`.
 
@@ -74,9 +74,9 @@ theorem sincN_natCast_sub (p q : ℕ) :
     sincN_int_eq_kronecker]
   simp [sub_eq_zero]
 
-/-! ## §B — (ii) interpolation exactness -/
+/-! ## §B — interpolation exactness -/
 
-/-- **(ii)** At a sample node `t = j·(T/n)`, the synthesis recovers the sample value exactly:
+/-- At a sample node `t = j·(T/n)`, the sinc synthesis recovers the sample value exactly:
 all sinc cross-terms vanish (`sincN` at nonzero integers is `0`). -/
 theorem synthSignal_sample (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n)
     (j : Fin n) :
@@ -301,9 +301,9 @@ theorem synthSignal_toLp_eq_sum (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 
     simp only [synthSignal, Complex.ofReal_sum, Complex.ofReal_mul]
   exact (MemLp.coeFn_toLp _).trans hRHS.symm
 
-/-! ## §C — (i) band-limitedness -/
+/-! ## §C — band-limitedness -/
 
-/-- **(i)** The synthesis is band-limited to `[-W, W]` provided the sample count satisfies the
+/-- The sinc synthesis is band-limited to `[-W, W]` provided the sample count satisfies the
 Nyquist bound `n ≤ 2WT`: each shifted `sincN(·/Δ)` (spacing `Δ = T/n`) has spectrum supported
 in `[-1/(2Δ), 1/(2Δ)] = [-n/(2T), n/(2T)]`, and `n/(2T) ≤ W`.
 
@@ -378,7 +378,7 @@ theorem synthSignal_sq_integrable (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
   filter_upwards with t
   rw [Complex.norm_real, Real.norm_eq_abs, sq_abs]
 
-/-- **(iii)** Parseval / sinc self-reproducing energy identity: the whole-line energy of the
+/-- Parseval / sinc self-reproducing energy identity: the whole-line energy of the sinc
 synthesis equals `Δ · ∑ᵢ (a i)²` with `Δ = T/n`. Follows from the sinc orthogonality
 `∫ sincN((t-iΔ)/Δ)·sincN((t-jΔ)/Δ) dt = Δ·δᵢⱼ`.
 

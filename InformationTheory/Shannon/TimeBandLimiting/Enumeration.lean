@@ -3,7 +3,7 @@ import InformationTheory.Shannon.TimeBandLimiting.Operator
 /-!
 # Time-and-band-limiting operator — the decreasing eigenvalue enumeration
 
-Leg C / C'. The eigenvalues of `A` in decreasing order (`prolateEigenvalues`), rebuilt from the
+The eigenvalues of `A` in decreasing order (`prolateEigenvalues`), rebuilt from the
 structural compact self-adjoint spectral theorem since Mathlib's ordered sequence is
 `FiniteDimensional`-gated; its antitonicity, `[0,1]` range, and decay to `0`; the non-vacuity
 witness `timeBandLimitingOp_ne_zero` making the leading eigenvalue strictly positive; and the
@@ -15,7 +15,7 @@ namespace InformationTheory.Shannon.TimeBandLimiting
 open MeasureTheory
 open scoped ENNReal symmDiff FourierTransform
 
-/-! ### Leg C — the decreasing prolate eigenvalue enumeration -/
+/-! ### The decreasing prolate eigenvalue enumeration -/
 
 section Enumeration
 
@@ -68,8 +68,8 @@ theorem eigenvalue_le_one {T W μ : ℝ} (hμ : (prolateEnd T W).HasEigenvalue (
 def prolateEigenvalueSet (T W c : ℝ) : Set ℝ :=
   {μ : ℝ | c < μ ∧ (prolateEnd T W).HasEigenvalue (μ : ℂ)}
 
-/-- **Atom 1.** For a positive threshold `c`, the compact operator `A` has only finitely many
-eigenvalues above `c`: an infinite family would give an orthonormal sequence of eigenvectors whose
+/-- For a positive threshold `c`, the compact operator `A` has only finitely many eigenvalues
+above `c`: an infinite family would give an orthonormal sequence of eigenvectors whose
 images stay `c`-separated, contradicting compactness.
 @audit:ok -/
 theorem prolateEigenvalueSet_finite (T W : ℝ) {c : ℝ} (hc : 0 < c) :
@@ -547,7 +547,7 @@ theorem prolateEigenvalues_eq_zero_of_time_nonpos {T : ℝ} (hT : T ≤ 0) (W : 
 end Degeneracy
 
 /-!
-### The `2WT` trace bound (Leg E)
+### The `2WT` trace bound
 
 The crude `2WT` trace bound — the part of the degrees-of-freedom story that Bessel reaches on its
 own. (The Landau–Pollak–Slepian *concentration* is a strictly stronger statement and is not proved

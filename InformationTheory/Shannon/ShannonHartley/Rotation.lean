@@ -5,9 +5,9 @@ import Mathlib.LinearAlgebra.Matrix.Charpoly.Basic
 import Mathlib.Algebra.Polynomial.Roots
 
 /-!
-# Shannon–Hartley converse — S1: isotropic-Gaussian rotation invariance
+# Shannon–Hartley converse — isotropic-Gaussian rotation invariance
 
-The measure-theoretic crux of the Shannon–Hartley converse rotation (leg 27, C2). An isotropic
+The measure-theoretic crux of the Shannon–Hartley converse rotation. An isotropic
 Gaussian on `Fin k → ℝ` with per-coordinate mean `v i` and common variance `N` is invariant under
 an orthogonal transformation, up to rotating the mean:
 
@@ -33,7 +33,7 @@ namespace InformationTheory.Shannon.ShannonHartley
 open MeasureTheory ProbabilityTheory Matrix Complex WithLp TimeBandLimiting
 open scoped NNReal RealInnerProductSpace ComplexConjugate
 
-/-- Isotropic Gaussian rotation invariance (S1): the law of `v + Z` with `Z ~ N(0, N·I)` on
+/-- Isotropic Gaussian rotation invariance: the law of `v + Z` with `Z ~ N(0, N·I)` on
 `Fin k → ℝ`, pushed forward by an orthogonal matrix `O`, equals the law of `(O v) + Z`.  Concretely,
 the pushforward of `Measure.pi (fun i => gaussianReal (v i) N)` under `O.mulVec` is
 `Measure.pi (fun i => gaussianReal ((O.mulVec v) i) N)`. -/
@@ -265,8 +265,8 @@ noncomputable def bandGramRealMatrix (W : ℝ) {k : ℕ} (φ : Fin k → ℝ →
   fun i j =>
     (Matrix.gram ℂ (fun i => (bandLimitSubspace W).starProjection (testFnLift φ hmem i)) i j).re
 
-/-- **B1 (gateway atom).** The band-limited Gram of the complex lift of a real test family has real
-entries: it is the `ℝ → ℂ`-image of `bandGramRealMatrix`. -/
+/-- The band-limited Gram of the complex lift of a real test family has real entries: it is the
+`ℝ → ℂ`-image of `bandGramRealMatrix`. -/
 theorem bandGram_eq_map_real (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
     (hmem : ∀ i, MemLp (φ i) 2 volume) :
     Matrix.gram ℂ (fun i => (bandLimitSubspace W).starProjection (testFnLift φ hmem i))
@@ -324,7 +324,8 @@ lemma bandGramRealUnitary_transpose_mem_orthogonalGroup (W : ℝ) {k : ℕ} (φ 
   exact (Matrix.mem_orthogonalGroup_iff' (Fin k) ℝ).mp
     (bandGramRealUnitary_mem_orthogonalGroup W φ hmem)
 
-/-- **Real spectral diagonalization.** `Oᵀ Gᵣ O = diagonal μ`, the frame S3 rotates the code by. -/
+/-- Real spectral diagonalization of the band-Gram: `Oᵀ Gᵣ O = diagonal μ`, the frame the
+converse rotates the code into. -/
 theorem bandGramRealMatrix_diagonalize (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
     (hmem : ∀ i, MemLp (φ i) 2 volume) :
     (↑(bandGramRealUnitary W φ hmem) : Matrix (Fin k) (Fin k) ℝ)ᵀ
@@ -342,8 +343,8 @@ private lemma roots_prod_X_sub_C_fun {k : ℕ} (a : Fin k → ℂ) :
   · simp [Polynomial.roots_X_sub_C]
   · simp [Finset.prod_ne_zero_iff, Polynomial.X_sub_C_ne_zero]
 
-/-- **Count bridge (converse head-count).** The number of real band-Gram eigenvalues exceeding `c`
-is at most `prolateCount T W c`. The real-eigenvalue façade of
+/-- The number of real band-Gram eigenvalues exceeding `c` is at most `prolateCount T W c`,
+the head-count the converse consumes. The real-eigenvalue façade of
 `gram_high_eigen_finrank_le_prolateCount_real`, obtained by matching the real spectrum against the
 complex band-Gram spectrum at the characteristic-polynomial level. -/
 theorem bandGramReal_high_count_le (T W : ℝ) {c : ℝ} (hc : 0 < c) {k : ℕ}
@@ -438,7 +439,7 @@ private lemma testFnLift_orthonormal {k : ℕ} (φ : Fin k → ℝ → ℝ)
   rw [hinner, h_on i j]
   split_ifs <;> simp
 
-/-- **S3b.** The eigenvector images are `E`-orthogonal, with squared norm the band-Gram eigenvalue:
+/-- The eigenvector images are `E`-orthogonal, with squared norm the band-Gram eigenvalue:
 `⟨gᵢ, gᵢ'⟩ = δᵢᵢ' · νᵢ`. -/
 private lemma inner_bandGramColumn (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
     (hmem : ∀ i, MemLp (φ i) 2 volume) (i i' : Fin k) :
@@ -494,7 +495,7 @@ private lemma norm_sq_bandGramColumn (W : ℝ) {k : ℕ} (φ : Fin k → ℝ →
   rw [h] at hself
   simpa using hself.symm
 
-/-- **Deliverable 1.** The band-Gram is PSD, so its eigenvalues are nonnegative. -/
+/-- The band-Gram is positive semidefinite, so its eigenvalues are nonnegative. -/
 theorem bandGramRealEigenvalues_nonneg (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
     (hmem : ∀ i, MemLp (φ i) 2 volume) :
     ∀ i, 0 ≤ bandGramRealEigenvalues W φ hmem i := by
@@ -548,8 +549,8 @@ private lemma norm_sq_testFnLift_combo (W : ℝ) {k : ℕ} (φ : Fin k → ℝ �
   rw [hinner, horth] at hself
   simpa using hself.symm
 
-/-- **Deliverable 2.** The band-Gram eigenvalues are at most `1` (the projection `P_W` contracts the
-orthonormal raw frame). -/
+/-- The band-Gram eigenvalues are at most `1` (the projection `P_W` contracts the orthonormal
+raw frame). -/
 theorem bandGramRealEigenvalues_le_one (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
     (hmem : ∀ i, MemLp (φ i) 2 volume)
     (h_on : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0) :
@@ -607,7 +608,7 @@ private lemma inner_starProjection_testFn_encoder {T W P : ℝ} {M : ℕ} (c : C
       = testFnLift c.encoder c.encoder_memLp m := Submodule.starProjection_eq_self_iff.mpr hFmem
   rw [Submodule.inner_starProjection_left_eq_right, hPF]
 
-/-- **S3a.** The rotated observation is `Re ⟨gᵢ, Fₘ⟩` per coordinate. -/
+/-- The rotated observation is `Re ⟨gᵢ, Fₘ⟩` per coordinate. -/
 private lemma rotate_observation_eq_inner_re {T W P : ℝ} {M : ℕ} (c : ContAwgnCode T W P M)
     (m : Fin M) (i : Fin c.k) :
     (c.rotate (↑(bandGramRealUnitary W c.testFn c.testFn_memLp) :
@@ -659,7 +660,7 @@ private lemma signalLaw_integral_coord_sq {T W P : ℝ} {M : ℕ} [NeZero M]
   simp_rw [integral_dirac]
   rw [ENNReal.toReal_inv, ENNReal.toReal_natCast, smul_eq_mul]
 
-/-- **Deliverable 3.** For an arbitrary code `c`, rotating by `Oᵀ` (the transpose of the band-Gram
+/-- For an arbitrary code `c`, rotating by `Oᵀ` (the transpose of the band-Gram
 eigenvector matrix) factors the rotated observation's per-coordinate second moment as `νᵢ · Qᵢ`,
 where `νᵢ = bandGramRealEigenvalues` and the per-mode powers `Qᵢ ≥ 0` satisfy `∑Qᵢ ≤ T·P`. This is
 the ellipsoid data the water-filling converse consumes. -/
@@ -793,7 +794,7 @@ theorem contAwgn_rotated_secondMoment {T W P N₀ : ℝ} {M : ℕ} [NeZero M]
       simp [hgi0]
     · rw [if_neg hνi, ← mul_div_assoc, mul_div_cancel_left₀ _ hνi]
 
-/-- **C2 (per-code ellipsoid converse).** Rotating a `ContAwgnCode` by the real orthogonal
+/-- Per-code ellipsoid converse: rotating a `ContAwgnCode` by the real orthogonal
 eigenvector matrix of the band-Gram operator turns the operational parallel-Gaussian converse
 into the diagonal (eigenbasis) form: the log message count is bounded by the per-eigenvalue
 parallel-Gaussian sum with gains `νᵢ = bandGramRealEigenvalues …` folded into an ellipsoid power

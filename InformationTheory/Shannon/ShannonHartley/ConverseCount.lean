@@ -3,12 +3,12 @@ import Mathlib.Analysis.InnerProductSpace.GramMatrix
 import Mathlib.Analysis.Matrix.Spectrum
 
 /-!
-# Count domination for the Shannon–Hartley converse (C2 core)
+# Count domination for the Shannon–Hartley converse
 
 For an arbitrary code's orthonormal, time-limited test family `φ : Fin k → E` (with `E =
 L²(ℝ;ℂ)`), the number of *band-limited Gram* eigenvalues exceeding `c` is at most
 `prolateCount T W c`. This is the bridge that dominates an arbitrary code's Gram spectrum by the
-operator spectrum of `A = timeBandLimitingOp T W`; it feeds the C4 head-count.
+operator spectrum of `A = timeBandLimitingOp T W`; it feeds the water-filling head-count.
 
 The band-limited Gram matrix is `Gᵢⱼ = ⟪P_W φᵢ, P_W φⱼ⟫`, whose eigenvalues are counted by
 `bandGramEigenvalues`. The proof realizes the high-eigenvalue eigenspace inside `E` (via the
@@ -86,22 +86,24 @@ private lemma gramEig_mem {k : ℕ} (v : Fin k → E) (S : Submodule ℂ E) (hv 
     (i : Fin k) : gramEig v i ∈ S :=
   Submodule.sum_mem _ fun l _ => Submodule.smul_mem _ _ (hv l)
 
-/-- **Count domination (converse min-max).** The number of band-limited Gram eigenvalues of an
-orthonormal, time-limited test family `φ` that exceed `c` is at most `prolateCount T W c`. Dominates
-the arbitrary code's Gram spectrum by the operator spectrum of `A = timeBandLimitingOp T W`.
+/-- Count domination in the converse min-max direction: the number of band-limited Gram
+eigenvalues of an orthonormal, time-limited test family `φ` that exceed `c` is at most
+`prolateCount T W c`. Dominates the arbitrary code's Gram spectrum by the operator spectrum of
+`A = timeBandLimitingOp T W`.
 
-Audited 2026-07-18 (independent, before C4 water-filling consumes it): sorryAx-free (`#print axioms`
+Audited 2026-07-18 (independent): sorryAx-free (`#print axioms`
 = `[propext, Classical.choice, Quot.sound]`, machine-verified against commit `c2d31b84`; the
 consumed `frame_form_le_op_form` and `finrank_le_prolateCount_of_form_gt` are transitively confirmed
 sorry-free too). Honest count-domination, not false-as-framed: (1) `bandGramEigenvalues W φ` is the
 non-degenerate band-limited-Gram spectrum (see its docstring), so the count pins the fine structure
-C4 needs. (2) `h_on`/`h_tl` are pure structural preconditions (orthonormal signals confined to
-`[0,T]`); neither bundles a count/eigenvalue/prolate claim — no `:True` slot, no circular `:= h`, no
+water-filling needs. (2) `h_on`/`h_tl` are pure structural preconditions (orthonormal signals
+confined to `[0,T]`); neither bundles a count/eigenvalue/prolate claim — no `:True` slot, no
+circular `:= h`, no
 `*Hypothesis`. (3) Genuine reduction: the eigenimages realize the high-`ν` Gram eigenspace as
 `S ⊆ bandLimitSubspace W` with `finrank S = #{νⱼ > c}` and A-Rayleigh `> c` on `S` (honest Bessel
 `frame_form_le_op_form` giving `∑ᵢ‖⟪g,φᵢ⟫‖² ≤ Re⟪Ag,g⟫`, then the `νⱼ > c` strict comparison
-`c∑‖aⱼ‖²νⱼ < ∑‖aⱼ‖²νⱼ²`), so C1 min-max applies. Non-circular: no "codewords = prolate basis"
-assumption.
+`c∑‖aⱼ‖²νⱼ < ∑‖aⱼ‖²νⱼ²`), so the min-max bound applies. Non-circular: no
+"codewords = prolate basis" assumption.
 @audit:ok -/
 theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < c)
     {k : ℕ} (φ : Fin k → E) (h_on : Orthonormal ℂ φ)
@@ -278,7 +280,7 @@ noncomputable def testFnLift {k : ℕ} (φ : Fin k → ℝ → ℝ) (hmem : ∀ 
     Fin k → E :=
   fun i => ((hmem i).ofReal (K := ℂ)).toLp (fun t => ((φ i t : ℝ) : ℂ))
 
-/-- **Count domination for a real test family.** For an orthonormal, `[0,T]`-supported real test
+/-- Count domination for a real test family: for an orthonormal, `[0,T]`-supported real test
 family `φ`, the number of band-limited Gram eigenvalues of its complex lift exceeding `c` is at most
 `prolateCount T W c`. Real-`ℝ → ℝ` façade of `gram_high_eigen_finrank_le_prolateCount`, consumed by
 the continuous-time AWGN code's `testFn`.

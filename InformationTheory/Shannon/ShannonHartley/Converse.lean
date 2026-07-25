@@ -9,7 +9,7 @@ import InformationTheory.Shannon.AWGN.ChannelMeasurability
 import InformationTheory.Shannon.AWGN.ConverseMutualInfoFiniteness
 
 /-!
-# Shannon-Hartley converse — C3: operational parallel-Gaussian converse (equal-noise form)
+# Shannon-Hartley converse — the operational parallel-Gaussian converse (equal-noise form)
 
 The converse chain for a `ContAwgnCode T W P M`, reducing the operational rate `log M` to the
 per-coordinate parallel-Gaussian sum plus Fano's error terms:
@@ -17,7 +17,7 @@ per-coordinate parallel-Gaussian sum plus Fano's error terms:
 `log M ≤ ∑ᵢ ½·log(1 + P'ᵢ/(N₀/2)) + binEntropy(Pe) + Pe·log(M − 1)`
 
 with `∑ᵢ P'ᵢ ≤ T·P`. This is the **equal-noise** form (constant per-coordinate noise `N₀/2`); the
-Gram/prolate gains `νᵢ` enter downstream (C2 rotation + C4 water-filling) on the signal-power side.
+Gram/prolate gains `νᵢ` enter downstream (rotation + water-filling) on the signal-power side.
 
 The chain (mirroring the discrete AWGN converse's wiring):
 1. Fano + DPI single-shot: `log M ≤ I(W; Y).toReal + Fano`  (`shannon_converse_single_shot`).
@@ -587,12 +587,12 @@ lemma contAwgn_mi_W_ne_top {T W P : ℝ} {M : ℕ} [NeZero M]
   rw [h_eq]
   exact AWGN.awgnConverseJoint_mutualInfo_ne_top hNv_ne h_meas ac
 
-/-! ## §C3 — the operational parallel-Gaussian converse -/
+/-! ## §C — the operational parallel-Gaussian converse -/
 
-/-- **C3 (per-coordinate form): operational parallel-Gaussian converse.** Strengthens
+/-- The operational parallel-Gaussian converse in per-coordinate form. It strengthens
 `contAwgn_operational_converse` by exposing the per-coordinate second-moment ellipsoid
 `P'ᵢ ≤ ∫ (xᵢ)² ∂(contAwgnSignalLaw c N₀)` in place of the plain-sum budget `∑ P'ᵢ ≤ T·P`.
-Water-filling (C2/C4) needs the per-coordinate constraint; the plain-sum version is the
+Water-filling needs the per-coordinate constraint; the plain-sum version is the
 corollary `contAwgn_operational_converse` directly below. -/
 theorem contAwgn_operational_converse_percoord {T W P N₀ : ℝ} {M : ℕ}
     (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hM : 2 ≤ M)
@@ -669,7 +669,8 @@ theorem contAwgn_operational_converse_percoord {T W P N₀ : ℝ} {M : ℕ}
     ENNReal.toReal_mono hSfin h23
   linarith
 
-/-- **C3: operational parallel-Gaussian converse** (equal-noise form; gains `νᵢ` enter in C4).
+/-- The operational parallel-Gaussian converse in equal-noise form (the Gram/prolate gains `νᵢ`
+enter downstream at water-filling).
 For a `ContAwgnCode` with `2 ≤ M` and average error `Pe`, the log message count is bounded by
 the per-coordinate parallel-Gaussian sum plus the Fano terms. Plain-sum corollary of
 `contAwgn_operational_converse_percoord`: the per-coordinate ellipsoid `P'ᵢ ≤ ∫ (xᵢ)² ∂p`

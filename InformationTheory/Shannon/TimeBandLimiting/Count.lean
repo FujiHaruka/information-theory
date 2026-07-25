@@ -3,7 +3,7 @@ import InformationTheory.Shannon.TimeBandLimiting.SecondMoment
 /-!
 # Time-and-band-limiting operator — the two-sided eigenvalue count and achievability
 
-Leg R2. The two-sided eigenvalue count concentration `#{λ > c} = 2WT ± D/·` with
+The two-sided eigenvalue count concentration `#{λ > c} = 2WT ± D/·` with
 `D = 2 + log(1 + 2WT)` and the threshold `c` free, assembled through a Hilbert basis adapted to
 `E = V ⊕ Vᗮ`, and the Shannon–Hartley achievability consequence.
 -/
@@ -438,7 +438,7 @@ theorem exists_real_orthonormalBasis_prolateEigenspaceSup (T W : ℝ) {c : ℝ} 
       hsurj.range_comp w
     rw [hru, hspanC]
 
-/-- **Upper half of the eigenvalue count concentration.** With `D := 2 + log(1 + 2WT)`, the number
+/-- Upper half of the eigenvalue count concentration: with `D := 2 + log(1 + 2WT)`, the number
 of eigenvalues of `A` exceeding `c` is at most `2WT + D/c`, for every free threshold `0 < c`.
 
 Together with `le_prolateCount` this is the Landau-Pollak-Slepian concentration
@@ -535,7 +535,7 @@ theorem prolateCount_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (hc : 
     (le_div_iff₀ hc).mpr (by linarith [hkey])
   linarith [h1, hsum_le]
 
-/-- **Lower half of the eigenvalue count concentration.** With `D := 2 + log(1 + 2WT)`, the number
+/-- Lower half of the eigenvalue count concentration: with `D := 2 + log(1 + 2WT)`, the number
 of eigenvalues of `A` exceeding `c` is at least `2WT − D/(1 − c)`, for every free `0 < c < 1`.
 
 The companion of `prolateCount_le`. This is the half no trace bound alone can reach: `tr A = 2WT`
@@ -675,7 +675,7 @@ theorem prolateEigenspaceSup_le_bandLimitSubspace (T W : ℝ) {c : ℝ} (hc : 0 
   have := Submodule.smul_mem (bandLimitSubspace W) (μ : ℂ)⁻¹ hAmem
   rwa [smul_smul, inv_mul_cancel₀ hμ0, one_smul] at this
 
-/-- **Time-window energy concentration.** For `v ∈ V = prolateEigenspaceSup T W c` and `0 < c`, the
+/-- Time-window energy concentration: for `v ∈ V = prolateEigenspaceSup T W c` and `0 < c`, the
 time-limited energy retains at least the fraction `c` of the total energy:
 `c ‖v‖² ≤ ‖Q_T v‖²`, where `Q_T = (timeLimitSubspace T).starProjection`.
 
@@ -706,9 +706,9 @@ theorem le_norm_timeLimitProj_sq_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
   rw [h2, hself] at h1
   exact h1
 
-/-- **Injectivity of `Q_T` on `V`.** For `0 < c`, if a `V`-member is annihilated by the
-time-limiting projection then it is zero. Immediate corollary of the energy concentration:
-`Q_T v = 0` forces `c ‖v‖² ≤ 0`, and `c > 0` gives `v = 0`. -/
+/-- The time-limiting projection `Q_T` is injective on `V`: for `0 < c`, a `V`-member annihilated
+by `Q_T` is zero. Immediate corollary of the energy concentration: `Q_T v = 0` forces
+`c ‖v‖² ≤ 0`, and `c > 0` gives `v = 0`. -/
 theorem eq_zero_of_timeLimitProj_eq_zero (T W c : ℝ) (hc : 0 < c) {v : E}
     (hv : v ∈ prolateEigenspaceSup T W c)
     (hQ : (timeLimitSubspace T).starProjection v = 0) :
@@ -719,7 +719,8 @@ theorem eq_zero_of_timeLimitProj_eq_zero (T W c : ℝ) (hc : 0 < c) {v : E}
   have hnorm0 : ‖v‖ = 0 := le_antisymm (by nlinarith [norm_nonneg v]) (norm_nonneg v)
   exact norm_eq_zero.mp hnorm0
 
-/-- **Gram lower bound `G ≥ c·I` on a `V`-ONB.** For a `ℂ`-orthonormal family `u` inside
+/-- The Gram lower bound `G ≥ c·I` on an orthonormal basis of `V`: for a `ℂ`-orthonormal family `u`
+inside
 `V = prolateEigenspaceSup T W c` and real coefficients `b`, the quadratic form of `A` on the
 combination `x = ∑ᵢ bᵢ • uᵢ` dominates `c ∑ᵢ bᵢ²`:
 `c ∑ᵢ bᵢ² ≤ Re⟪A x, x⟫`.
@@ -753,13 +754,12 @@ theorem le_re_inner_timeBandLimitingOp_sum_smul (T W c : ℝ) (hc : 0 < c)
   rw [hnorm] at h1
   exact h1
 
-/-- **Lp → pointwise `ℝ → ℝ` lift (the `testFn` representative lift, route-independent).** A
-star-fixed `L²(ℝ;ℂ)` element that is a.e.-supported in `[0,T]` — the shape `Q_T ψ` takes for a
-star-fixed `ψ ∈ V` — has a genuine pointwise real representative supported in `[0,T]`: a function
-`f : ℝ → ℝ` with `f` in `L²`, `Function.support f ⊆ [0,T]` *pointwise*, and `(f : ℝ → ℂ)` a.e. equal
-to the given class.
+/-- Pointwise `ℝ → ℝ` lift of an `Lp` class supported in the window. A star-fixed `L²(ℝ;ℂ)`
+element that is a.e.-supported in `[0,T]` — the shape `Q_T ψ` takes for a star-fixed `ψ ∈ V` — has
+a genuine pointwise real representative supported in `[0,T]`: a function `f : ℝ → ℝ` with `f` in
+`L²`, `Function.support f ⊆ [0,T]` *pointwise*, and `(f : ℝ → ℂ)` a.e. equal to the given class.
 
-This is the atom the plan flagged as the dominant cost of the `ContAwgnCode.testFn` construction: it
+This is what the `ContAwgnCode.testFn` construction costs: it
 converts an a.e. equivalence class into the honest pointwise `ℝ → ℝ` function the structure field
 `testFn` demands, pinning both the pointwise support (`testFn_support`) and the real-valuedness. Once
 the a.e. identity `(f : ℝ → ℂ) =ᵐ u` is in hand, every integral/inner-product fact about the family
@@ -806,9 +806,9 @@ theorem exists_pointwise_repr_of_mem_timeLimit_star_fixed (T : ℝ) {u : E}
         rw [Set.mem_Icc, not_and_or, not_le, not_le] at hmem_t; exact hmem_t
       exact (htoff htc).symm
 
-/-- **Lp → pointwise `ℝ → ℝ` lift, without a support constraint.** A star-fixed `L²(ℝ;ℂ)` element
-has a genuine pointwise real representative: a function `f : ℝ → ℝ` in `L²` with `(f : ℝ → ℂ)` a.e.
-equal to the given class. This is the support-free sibling of
+/-- Pointwise `ℝ → ℝ` lift of an `Lp` class, without a support constraint. A star-fixed `L²(ℝ;ℂ)`
+element has a genuine pointwise real representative: a function `f : ℝ → ℝ` in `L²` with
+`(f : ℝ → ℂ)` a.e. equal to the given class. This is the support-free sibling of
 `exists_pointwise_repr_of_mem_timeLimit_star_fixed`, needed for the band-limited encoder family whose
 members are not `[0,T]`-supported. The representative is `Re ∘ u`: it is `L²` because `Re` is a norm-1
 Lipschitz image, and it recovers a representative of `u` because star-fixedness (`star u = u`) makes

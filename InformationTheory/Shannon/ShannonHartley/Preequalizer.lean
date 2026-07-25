@@ -15,7 +15,7 @@ namespace InformationTheory.Shannon.ShannonHartleyPreequalizer
 
 open scoped InnerProductSpace
 
-/-- **Pre-equalizer.** A bounded-below (`c ‖v‖² ≤ ‖A v‖²`, `c > 0`) linear endomorphism of a
+/-- A bounded-below (`c ‖v‖² ≤ ‖A v‖²`, `c > 0`) linear endomorphism of a
 finite-dimensional inner-product space is surjective with a norm-controlled preimage: every target
 `t` has an `a` with `A a = t` and `‖a‖² ≤ (1/c) ‖t‖²`.
 

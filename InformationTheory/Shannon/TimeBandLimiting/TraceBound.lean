@@ -3,7 +3,7 @@ import InformationTheory.Shannon.TimeBandLimiting.Enumeration
 /-!
 # Time-and-band-limiting operator — the trace bound and spectral gap
 
-Leg E / R1. The reproducing kernel `k_t = 2W sincN(2W(t − ·))` of the band-limited subspace, the
+The reproducing kernel `k_t = 2W sincN(2W(t − ·))` of the band-limited subspace, the
 reproducing property `(P_W f)(t) = ⟪k_t, f⟫`, the Bessel trace bound `∑ᵢ ⟪A eᵢ, eᵢ⟫ ≤ 2WT` with
 its Markov consequence `c · #{λ > c} ≤ 2WT`, and the spectral gap below `c`: `A` restricted to the
 orthogonal complement of the high eigenspaces has norm `≤ c`, together with the eigenbasis trace
@@ -177,8 +177,8 @@ theorem integrableOn_inner_bandKernelLp_sq (T W : ℝ) (hW : 0 ≤ W) (f : E) :
   filter_upwards [ae_restrict_of_ae (bandLimitProj_apply_eq_inner W hW f)] with t ht
   rw [ht]
 
-/-- **Leg E gateway atom.** The trace of the time-and-band limiting operator along any finite
-orthonormal family is at most `2WT`.
+/-- The trace of the time-and-band limiting operator along any finite orthonormal family is at
+most `2WT`.
 
 The quadratic form `⟪A eᵢ, eᵢ⟫ = ∫_[0,T] |⟪k_t, eᵢ⟫|² dt` (`inner_timeBandLimitingOp_self_eq`) turns
 the trace into an integral of a *finite* sum, so the sum and the integral commute without any
@@ -270,8 +270,8 @@ theorem hasSum_norm_inner_bandKernelLp_sq {ι : Type*} (b : HilbertBasis ι ℂ 
     HasSum (fun i => ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2) (‖bandKernelLp W t‖ ^ 2) :=
   hasSum_norm_inner_sq b (bandKernelLp W t)
 
-/-- **Leg E-trace.** The trace of the time-and-band limiting operator along *any* complete
-orthonormal basis is exactly `2WT`.
+/-- The trace of the time-and-band limiting operator along *any* complete orthonormal basis is
+exactly `2WT`.
 
 This upgrades the Bessel *inequality* `sum_inner_timeBandLimitingOp_le` to a Parseval *equality*.
 The quadratic form `⟪A bᵢ, bᵢ⟫ = ∫_[0,T] |⟪k_t, bᵢ⟫|² dt` (`inner_timeBandLimitingOp_self_eq`) makes
@@ -395,7 +395,7 @@ theorem prolateEigenspaceSup_invariant (T W c : ℝ) :
     exact Submodule.smul_mem _ _ hwV
   exact hle hv
 
-/-! ### Leg R1 — the spectral gap below `c` -/
+/-! ### The spectral gap below `c` -/
 
 theorem prolateEigenspaceSup_orthogonal_invariant (T W c : ℝ) :
     ∀ v ∈ (prolateEigenspaceSup T W c)ᗮ,
@@ -493,8 +493,8 @@ theorem prolateRestrict_norm_le (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   rw [← enorm_eq_nnnorm, ← ofReal_norm] at hle
   exact (ENNReal.ofReal_le_ofReal_iff hc.le).mp hle
 
-/-- **The spectral gap below `c`.** On the orthogonal complement of the span of every eigenspace
-of `A` with eigenvalue exceeding `c`, the Rayleigh quotient of `A` is at most `c`.
+/-- The spectral gap below `c`: on the orthogonal complement of the span of every eigenspace of
+`A` with eigenvalue exceeding `c`, the Rayleigh quotient of `A` is at most `c`.
 
 This is the qualitative half of the eigenvalue count: together with the exact trace
 `tsum_inner_timeBandLimitingOp_eq` (`tr A = 2WT`) and the second-moment bound
@@ -647,7 +647,7 @@ theorem le_inner_timeBandLimitingOp_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
   refine Finset.sum_le_sum (fun i _ => ?_)
   exact mul_le_mul_of_nonneg_right (hνgt i).le (by positivity)
 
-/-- **Count domination (converse min-max upper bound).** Any subspace `S` on which the Rayleigh
+/-- Count domination in the converse min-max direction: any subspace `S` on which the Rayleigh
 quotient of `A = timeBandLimitingOp T W` strictly exceeds `c` has dimension at most
 `prolateCount T W c`: the number of "high-gain" directions is capped by the number of prolate
 eigenvalues above `c`. Finite-dimensional min-max half of Cauchy interlacing; converse companion
@@ -833,8 +833,9 @@ instance prolate_eigenspace_completeSpace (T W : ℝ) (μ : ℂ) :
     exact isClosed_eq (ContinuousLinearMap.continuous _) continuous_const
   infer_instance
 
-/-- **P1 — the complete eigen-Hilbert basis (gateway).** `A = timeBandLimitingOp T W` is compact and
-self-adjoint, so its eigenspaces are total (`orthogonalComplement_iSup_eigenspaces_eq_bot`).
+/-- A complete orthonormal eigenbasis of `A = timeBandLimitingOp T W` exists. The operator is
+compact and self-adjoint, so its eigenspaces are total
+(`orthogonalComplement_iSup_eigenspaces_eq_bot`).
 Collating a Hilbert basis of each eigenspace (`exists_hilbertBasis`, uniform in `μ`) over
 `Σ μ : ℂ, …` and gluing by `mkOfOrthogonalEqBot` yields a complete orthonormal eigenbasis of `E`,
 with real nonnegative eigenvalues, whose vectors with eigenvalue above `c` span the high eigenspace
@@ -843,9 +844,9 @@ with real nonnegative eigenvalues, whose vectors with eigenvalue above `c` span 
 Independent honesty audit 2026-07-18 (`7a08b9c2`): no hypotheses; the whole construction is in the
 body. All three conjuncts are genuinely proven — the eigen-relation and nonnegativity pointwise, and
 the span identity by a real two-sided `le_antisymm` (not `:True`). The third conjunct is non-vacuous:
-were `{i | c < lam i}` empty for all `c > 0`, nonnegativity would force `lam ≡ 0`, contradicting P2's
-`∑ lam = 2WT ≠ 0` for `0 < W`, `0 < T`. sorryAx-free (`#print axioms` = `[propext, Classical.choice,
-Quot.sound]`).
+were `{i | c < lam i}` empty for all `c > 0`, nonnegativity would force `lam ≡ 0`, contradicting
+`tsum_eigen_eq_two_mul`'s `∑ lam = 2WT ≠ 0` for `0 < W`, `0 < T`. sorryAx-free (`#print axioms` =
+`[propext, Classical.choice, Quot.sound]`).
 @audit:ok -/
 theorem exists_eigen_hilbertBasis (T W : ℝ) :
     ∃ (ι : Type) (b : HilbertBasis ι ℂ E) (lam : ι → ℝ),
@@ -978,8 +979,8 @@ theorem exists_eigen_hilbertBasis (T W : ℝ) :
       have hbe := hmem i
       rwa [(hreal i).1] at hbe
 
-/-- **P2 — trace transport.** The eigenvalue sum along the complete eigenbasis equals `2WT`, by
-feeding the eigenbasis to `tsum_inner_timeBandLimitingOp_eq` and simplifying each Rayleigh quotient
+/-- The eigenvalue sum along a complete eigenbasis of `A` equals `2WT`, obtained by feeding the
+eigenbasis to `tsum_inner_timeBandLimitingOp_eq` and simplifying each Rayleigh quotient
 `⟪A bᵢ, bᵢ⟫.re` to its eigenvalue `lam i`. -/
 theorem tsum_eigen_eq_two_mul (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     {ι : Type} (b : HilbertBasis ι ℂ E) (lam : ι → ℝ)
@@ -995,8 +996,8 @@ theorem tsum_eigen_eq_two_mul (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
         tsum_congr fun i => (hval i).symm
     _ = 2 * W * T := tsum_inner_timeBandLimitingOp_eq T W hT hW b
 
-/-- **P3a-fin.** For `t > 0`, only finitely many eigenbasis vectors have eigenvalue above `t`: they
-are orthonormal (hence linearly independent) and lie in the finite-dimensional high eigenspace
+/-- For `t > 0`, only finitely many eigenbasis vectors have eigenvalue above `t`: they are
+orthonormal (hence linearly independent) and lie in the finite-dimensional high eigenspace
 `prolateEigenspaceSup T W t`. -/
 theorem setOf_lt_lam_finite (T W : ℝ) {ι : Type} (b : HilbertBasis ι ℂ E) (lam : ι → ℝ)
     (hspan : ∀ c : ℝ, 0 < c →
@@ -1014,8 +1015,8 @@ theorem setOf_lt_lam_finite (T W : ℝ) {ι : Type} (b : HilbertBasis ι ℂ E) 
     exact (b.orthonormal.comp _ Subtype.val_injective).linearIndependent
   exact Set.finite_coe_iff.mp hli.finite
 
-/-- **P3a.** The super-level count of the eigenbasis eigenvalues equals `prolateCount`: the vectors
-with eigenvalue above `t` form an orthonormal basis of `prolateEigenspaceSup T W t`, so their number
+/-- The super-level count of the eigenbasis eigenvalues equals `prolateCount`: the vectors with
+eigenvalue above `t` form an orthonormal basis of `prolateEigenspaceSup T W t`, so their number
 is its `finrank`. -/
 theorem ncard_setOf_lt_lam (T W : ℝ) {ι : Type} (b : HilbertBasis ι ℂ E) (lam : ι → ℝ)
     (hspan : ∀ c : ℝ, 0 < c →
@@ -1030,7 +1031,7 @@ theorem ncard_setOf_lt_lam (T W : ℝ) {ι : Type} (b : HilbertBasis ι ℂ E) (
   rw [hspan t ht, ← hrange, finrank_span_eq_card hli, ← Nat.card_eq_fintype_card,
     Nat.card_coe_set_eq]
 
-/-- **P3b.** For `t > 0`, the decreasing enumeration exceeds `t` exactly on an initial segment
+/-- For `t > 0`, the decreasing enumeration exceeds `t` exactly on an initial segment
 `{0, …, prolateCount T W t − 1}`. This is the generalized-inverse duality
 `t < prolateEigenvalues T W n ↔ n < prolateCount T W t`, packaged as a set identity. The `←`
 direction uses the finiteness of the eigenvalue set above `t` to produce a spectral gap just above
@@ -1080,7 +1081,7 @@ theorem setOf_lt_prolateEigenvalues_eq_Iio (T W : ℝ) {t : ℝ} (ht : 0 < t) :
   simp only [Set.mem_setOf_eq, Set.mem_Iio]
   exact hiff n
 
-/-- **P3 — multiplicity bridge.** The eigenvalue sum along the eigenbasis equals the sum over the
+/-- The multiplicity bridge: the eigenvalue sum along the eigenbasis equals the sum over the
 decreasing enumeration `prolateEigenvalues`, since both nonnegative families share the super-level
 counts `#{· > c} = prolateCount T W c` (the eigenbasis vectors above `c` span
 `prolateEigenspaceSup T W c`, whose `finrank` *is* `prolateCount` — `ncard_setOf_lt_lam`; the
@@ -1177,13 +1178,13 @@ eigenvalue enumeration: `∑ₙ λₙ = 2WT` (the exact first spectral moment of
 Proof-done, sorryAx-free, and independent of the `wall:nyquist-2w-dof` concentration. It composes
 three pieces, each proved from assets already in Mathlib / this file:
 
-1. **P1 (`exists_eigen_hilbertBasis`)** — a complete orthonormal *eigen*basis of `A`. The compact
+1. `exists_eigen_hilbertBasis` — a complete orthonormal *eigen*basis of `A`. The compact
    self-adjoint spectral theorem (`ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot`:
    the eigenspaces are total) glues per-eigenspace Hilbert bases (`exists_hilbertBasis`, uniform in
    `μ`) into one orthonormal family via `HilbertBasis.mkOfOrthogonalEqBot`, with real nonnegative
    eigenvalues whose above-`c` vectors span `prolateEigenspaceSup T W c`.
-2. **P2 (`tsum_eigen_eq_two_mul`)** — feeding that eigenbasis to the trace identity gives `∑ λ = 2WT`.
-3. **P3 (`tsum_eigen_eq_tsum_prolateEigenvalues`)** — the multiplicity bridge to `prolateEigenvalues`,
+2. `tsum_eigen_eq_two_mul` — feeding that eigenbasis to the trace identity gives `∑ λ = 2WT`.
+3. `tsum_eigen_eq_tsum_prolateEigenvalues` — the multiplicity bridge to `prolateEigenvalues`,
    the generalized inverse `sInf {c > 0 | prolateCount T W c ≤ n}` of the counting function: both
    nonnegative families share the super-level counts `prolateCount T W t`, so a layer-cake identity
    equates their sums.
@@ -1194,7 +1195,7 @@ the converse lands via count domination `bandGramReal_high_count_le`, not this i
 
 Independent honesty audit 2026-07-18 (`7a08b9c2`): unconditional — the body `obtain`s the eigenbasis
 data `heig`/`hnn`/`hspan` from the hypothesis-free `exists_eigen_hilbertBasis`, so it discharges (does
-not assume) the P2/P3 preconditions. The only hypotheses `hT : 0 ≤ T`, `hW : 0 < W` are domain
+not assume) the eigenbasis preconditions. The only hypotheses `hT : 0 ≤ T`, `hW : 0 < W` are domain
 regularity (matching the already-audited `tsum_inner_timeBandLimitingOp_eq`), fixing the nonnegative
 value `2WT`. No load-bearing hypothesis, no circularity. sorryAx-free (`#print axioms` = `[propext,
 Classical.choice, Quot.sound]`).

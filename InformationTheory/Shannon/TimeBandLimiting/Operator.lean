@@ -15,11 +15,11 @@ import InformationTheory.Shannon.ShannonHartley.Achievability
 /-!
 # The time-and-band-limiting operator on `L²(ℝ;ℂ)` — the operator itself
 
-Cover–Thomas Ch. 9.6 (Shannon–Hartley), Phase 2 spectral leg A/B. The base module for the
+Cover–Thomas Ch. 9.6 (Shannon–Hartley). The base module for the
 `Shannon/TimeBandLimiting/` family: the Hilbert space `E = L²(ℝ;ℂ)`, the time- and band-limited
 closed subspaces, the operator `A = P_W ∘ Q_T ∘ P_W`, its self-adjointness, positivity, norm
 bound `‖A‖ ≤ 1`, compactness, and the parameter-boundary degeneracy (`A = 0` for `T ≤ 0` or
-`W ≤ 0`).  See the umbrella `TimeBandLimiting.lean` for the full leg-by-leg overview.
+`W ≤ 0`).  See the umbrella `TimeBandLimiting.lean` for the full overview.
 -/
 
 namespace InformationTheory.Shannon.TimeBandLimiting
@@ -135,7 +135,7 @@ theorem timeBandLimitingOp_norm_le_one (T W : ℝ) :
     _ = 1 := by norm_num
 
 /-!
-## Compactness (Leg B)
+## Compactness
 
 Compactness of `A = P_W ∘ Q_T ∘ P_W` is reduced to compactness of the *sinc integral operator*
 `C = Q_T ∘ P_W`. Since `A = P_W ∘ C` (the definition, reassociated) and `P_W` is bounded,
@@ -191,8 +191,9 @@ theorem timeBandLimitingOp_eq_bandProj_comp (T W : ℝ) :
 
 /-- The orthogonal projection onto `zeroOnLp S` acts, a.e., as multiplication by the indicator of
 `Sᶜ`. Proven via the uniqueness of the orthogonal projection: the candidate `𝟙_{Sᶜ}·g` lies in the
-subspace, and the residual `𝟙_S·g` is orthogonal to it. Both Leaf 1 (`S = [0,T]ᶜ`, the time-limiting
-`Q_T`) and Leaf 2's frequency-side multiplier (`S = {|ξ| > W}`, giving `𝟙_[-W,W]·𝓕f`) are instances,
+subspace, and the residual `𝟙_S·g` is orthogonal to it. Both the time-limiting `Q_T`
+(`S = [0,T]ᶜ`) and the frequency-side multiplier (`S = {|ξ| > W}`, giving `𝟙_[-W,W]·𝓕f`) are
+instances,
 so the projection-uniqueness argument is written once here.
 @audit:ok -/
 theorem zeroOnLp_starProjection_apply_ae {S : Set ℝ} (hS : MeasurableSet S) (g : E) :
@@ -230,9 +231,8 @@ theorem zeroOnLp_starProjection_apply_ae {S : Set ℝ} (hS : MeasurableSet S) (g
         rw [hpx, Set.indicator_of_mem (by simpa using hx), sub_self]
       rw [hgP, inner_zero_left]
 
-/-- **Leaf 1** (`Q_T` = multiplication by `𝟙_[0,T]`). The orthogonal projection onto the
-time-limited subspace acts, a.e., as multiplication by the indicator of `[0,T]`. The instance
-`S = [0,T]ᶜ` of `zeroOnLp_starProjection_apply_ae`.
+/-- The orthogonal projection `Q_T` onto the time-limited subspace acts, a.e., as multiplication
+by the indicator of `[0,T]`. The instance `S = [0,T]ᶜ` of `zeroOnLp_starProjection_apply_ae`.
 @audit:ok -/
 theorem timeLimitProj_apply_ae (T : ℝ) (g : E) :
     ((timeLimitSubspace T).starProjection g : ℝ → ℂ) =ᵐ[volume]
@@ -302,14 +302,14 @@ theorem compl_setOf_lt_abs (W : ℝ) : {ξ : ℝ | W < |ξ|}ᶜ = Set.Icc (-W) W
 theorem measurableSet_setOf_lt_abs (W : ℝ) : MeasurableSet {ξ : ℝ | W < |ξ|} :=
   measurableSet_lt measurable_const measurable_norm
 
-/-- **The band-limiting projection is the Fourier multiplier by `𝟙_[-W,W]`.** Combining the
-conjugation identity `bandLimitProj_eq_fourier_conj` with the projection-uniqueness computation
-`zeroOnLp_starProjection_apply_ae` on the frequency side. This is the "half" of Leaf 2 that lives
-entirely inside the abstract projection API; the remaining half is the identification of the
-multiplier's action with sinc convolution, which needs the Fourier transform to be evaluated
-concretely. Note this half needs no sign condition on `W`: for `W < 0` the interval `[-W,W]` is
-empty and both sides vanish, so the sign asymmetry of Leaf 2 is localized entirely in the passage
-from the multiplier `𝟙_[-W,W]` to the kernel `2W sincN(2W·)`.
+/-- The band-limiting projection is the Fourier multiplier by `𝟙_[-W,W]`, obtained by combining
+the conjugation identity `bandLimitProj_eq_fourier_conj` with the projection-uniqueness
+computation `zeroOnLp_starProjection_apply_ae` on the frequency side. This is the "half" of
+`bandLimitProj_apply_ae` that lives entirely inside the abstract projection API; the remaining
+half is the identification of the multiplier's action with sinc convolution, which needs the
+Fourier transform to be evaluated concretely. Note this half needs no sign condition on `W`: for
+`W < 0` the interval `[-W,W]` is empty and both sides vanish, so the sign asymmetry is localized
+entirely in the passage from the multiplier `𝟙_[-W,W]` to the kernel `2W sincN(2W·)`.
 @audit:ok -/
 theorem fourier_bandLimitProj_apply_ae (W : ℝ) (f : E) :
     ((Lp.fourierTransformₗᵢ ℝ ℂ ((bandLimitSubspace W).starProjection f) : E) : ℝ → ℂ)
@@ -480,7 +480,7 @@ theorem fourierInv_bandLimitSpec_eq (W : ℝ) (hW : 0 < W) (f : E) (t : ℝ) :
   push_cast
   ring
 
-/-- **Leaf 2** (`P_W` = convolution with `2W sincN(2W·)`). The orthogonal projection onto the
+/-- The orthogonal projection `P_W` onto the
 band-limited subspace acts, a.e., as convolution with the ideal low-pass `2W sincN(2W·)` (whose
 Fourier transform is `𝟙_[-W,W]`). This is the abstract `starProjection`-of-a-`comap`-under-`𝓕` ↔
 concrete sinc-convolution identity, and it is what turns the operator `C = Q_T ∘ P_W` into an
@@ -638,7 +638,7 @@ theorem sincN_memLp_two :
   rw [Real.norm_of_nonneg hnn, Complex.norm_real, Real.norm_eq_abs, sq_abs]
   exact hpt x
 
-/-- **Leaf 3** (the kernel is `L²`). `sincConvKernel` is square-integrable on `ℝ × ℝ`: the
+/-- `sincConvKernel` is square-integrable on `ℝ × ℝ`: the
 `t`-indicator confines the mass to `[0,T]` and the inner mass `∫_ℝ (2W sincN(2W(t−s)))² ds` is a
 finite constant `C` (independent of `t`, by translation invariance of Lebesgue measure), so
 `‖k‖₂² ≤ C · vol[0,T] < ∞`. The finite `L²` mass of the ideal low-pass `2W sincN(2W·)` is obtained by
@@ -728,7 +728,7 @@ theorem sincConvKernel_memLp (T W : ℝ) :
     _ < ∞ := ENNReal.mul_lt_top hC_lt (by rw [Real.volume_Icc]; exact ENNReal.ofReal_lt_top)
 
 /-!
-### The Hilbert–Schmidt machinery (Leaf 4)
+### The Hilbert–Schmidt machinery
 
 Mathlib has no Hilbert–Schmidt / Schatten API, so the "`L²` kernel ⟹ compact operator" implication
 is built here from scratch. The construction is deliberately reusable: `l2KernelOp` is the
@@ -1232,8 +1232,8 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
   | add hf hg _ hfV hgV => exact V.add_mem hfV hgV
   | isClosed => exact hVclosed
 
-/-- **Leaf 4** (generic `L²`-kernel ⟹ compact operator). An integral operator on `L²(ℝ;ℂ)` whose
-kernel is `L²` on `ℝ × ℝ` is a compact operator; it is realized a.e. as `f ↦ ∫ k(·,s) f(s) ds`.
+/-- An integral operator on `L²(ℝ;ℂ)` whose kernel is `L²` on `ℝ × ℝ` is a compact operator; it
+is realized a.e. as `f ↦ ∫ k(·,s) f(s) ds`.
 Built via the reusable `l2KernelOp` Hilbert–Schmidt machinery above (Mathlib has no Hilbert–Schmidt
 API). Stated existentially so the operator object is genuinely constructed together with its
 compactness rather than assumed; the a.e.-representation clause pins `Op` uniquely (an `Lp` element
@@ -1253,8 +1253,9 @@ theorem l2KernelOperator_isCompact {k : ℝ → ℝ → ℂ}
   exact integral_congr_ae (by filter_upwards [h2] with s hs using by rw [hs])
 
 /-- The sinc integral operator `C = Q_T ∘ P_W` acts a.e. as the integral operator of
-`sincConvKernel`. Genuine composition of Leaf 1 and Leaf 2. The `0 ≤ W` hypothesis is inherited
-from Leaf 2 as a parameter precondition and is discharged by the caller's case split.
+`sincConvKernel`. Genuine composition of `timeLimitProj_apply_ae` and `bandLimitProj_apply_ae`.
+The `0 ≤ W` hypothesis is inherited from the latter as a parameter precondition and is discharged
+by the caller's case split.
 @audit:ok -/
 theorem timeBandLimitingComp_apply_ae (T W : ℝ) (hW : 0 ≤ W) (f : E) :
     (timeBandLimitingComp T W f : ℝ → ℂ) =ᵐ[volume]
@@ -1297,13 +1298,13 @@ theorem timeBandLimitingComp_isCompact (T W : ℝ) :
       exact (hOp_ae f).trans (timeBandLimitingComp_apply_ae T W hW f).symm
     rwa [hEq] at hOp_cpt
 
-/-- **The time-and-band limiting operator is compact.** `A = P_W ∘ C` with `C = Q_T ∘ P_W` compact
+/-- The time-and-band limiting operator is compact: `A = P_W ∘ C` with `C = Q_T ∘ P_W` compact
 (the sinc integral operator) and `P_W` bounded, so `A` is compact by `clm_comp`.
 
 Unconditional: the signature carries no hypothesis on `T` or `W`, and both degenerate parameter
 ranges are discharged by real proofs rather than assumed away — `W < 0` via
 `bandLimitSubspace_eq_bot_of_nonpos` (`P_W = 0`, so `C = 0`), `T < 0` via the empty `[0,T]`
-(`Q_T = 0`), and `W = 0` inside Leaf 2 as a genuine null-band case.
+(`Q_T = 0`), and `W = 0` inside `bandLimitProj_apply_ae` as a genuine null-band case.
 @audit:ok -/
 theorem timeBandLimitingOp_isCompact (T W : ℝ) :
     IsCompactOperator (timeBandLimitingOp T W) := by
