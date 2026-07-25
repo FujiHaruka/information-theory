@@ -5,7 +5,7 @@
 **Status**: 🚧 進行中 — degraded 仮定を外した一般 (non-degraded) two-receiver broadcast channel に対する
 **Marton inner bound (El Gamal–Kim *Network Information Theory* Thm 8.3、private message のみ)** の形式化。
 親 plan の撤退ライン **L-BC5** (一般 BC + Marton は完全 scope-out) を**ユーザー指示で解除**して追う。
-Phase 1/2/4 完了 (mutual covering の second moment 中核 + 鋭化 + region 述語、root 登録済)、Phase 3/5-8 未着手。
+Phase 1/2/3/4 完了 (second moment 中核 + 鋭化 + region 述語 + 5-tuple ambient、root 登録済)、Phase 5-8 未着手。
 **SoT**: 在庫 [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md) + 本 plan。詳細履歴は git。
 **再検証** (prose にキャッシュしない):
 `scripts/sig_view.ts --sorry InformationTheory/Shannon/BroadcastChannel/Marton/*.lean` /
@@ -17,7 +17,7 @@ Phase 1/2/4 完了 (mutual covering の second moment 中核 + 鋭化 + region �
 - [x] Phase 0 — Mathlib / in-project 在庫調査 ✅ → [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md)
 - [x] Phase 1 — mutual covering の second moment 中核 (抽象 `S` 版) ✅ `Marton/MutualCovering.lean` (cd5c379a)
 - [x] Phase 2 — region 述語 + レート分割の消去補題 + root 登録 ✅ `Marton/Basic.lean` (fa43fcb6)
-- [ ] Phase 3 — 5-tuple ambient plumbing + `martonInfo₁/₂/V₁V₂` 📋
+- [x] Phase 3 — 5-tuple ambient plumbing + `martonInfo₁/₂/V₁V₂` ✅ `Marton/Setup.lean` (5800094e)
 - [x] Phase 4 — 共分散の鋭化 (conditional slice 版) ✅ `MutualCovering.lean` 追記 (6183832d) ★ sum-rate 制約の要
 - [ ] Phase 5 — typicality 具体化 = `marton_mutual_covering` 📋
 - [ ] Phase 6a — 受信機 1 の誤り解析 (選択索引の独立性) 📋
@@ -221,7 +221,8 @@ Mathlib 壁 0 件 / 既存率 89% / 自前構築 8 種。**proof-log: no**。
 
 ### Phase 5 — typicality 具体化 = `marton_mutual_covering` 📋
 
-- 入力: Phase 3 (ambient / 情報量)、Phase 4 (鋭い評価)、既存
+- 入力: Phase 3 (ambient / 情報量 / **`martonAmbient_entropy_coord`** = ambient 上の entropy を
+  per-coordinate 版へ落とす補題。情報量を典型集合の指数と噛ませる際に必ず要る)、Phase 4 (鋭い評価)、既存
   `jointlyTypicalSet_indep_prob_ge` (`RateDistortion/AchievabilityJointTypicalEncoder.lean:255`) /
   `conditionalTypicalSlice_card_le` (`SlepianWolf/ConditionalTypicalSlice.lean:140`) /
   `typicalSet_prob_le` (`AEP/Basic/Achievability.lean:507`) /
