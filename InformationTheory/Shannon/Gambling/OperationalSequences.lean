@@ -118,11 +118,10 @@ lemma lawPmf_mem_stdSimplex (μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω 
     rw [h1, Finset.coe_univ]
     exact probReal_univ
 
-/-- **Operational gambling theorem** (Cover–Thomas §6.3): for an i.i.d. horse-race
-sequence `Xs`, a fixed bet `b` under odds `o`, the time-averaged log-wealth growth
-`(1/n)·log S_n` converges almost surely to the doubling rate
-`doublingRate b o (lawPmf μ (Xs 0))`, where `lawPmf μ (Xs 0)` is the law of a single
-race.
+/-- For an i.i.d. horse-race sequence `Xs` and a fixed bet `b` under odds `o`, the
+time-averaged log-wealth growth `(1/n)·log S_n` converges almost surely to the doubling
+rate `doublingRate b o (lawPmf μ (Xs 0))`, where `lawPmf μ (Xs 0)` is the law of a single
+race (Cover–Thomas §6.3).
 @audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). `lawPmf μ (Xs 0)` is a genuine definitional binding (the pushforward law
 of `Xs 0`, computed from the existing `μ`/`Xs`), NOT a bundled hypothesis: there is no
@@ -172,10 +171,9 @@ theorem seqLogWealth_proportional_div_tendsto
   filter_upwards [h_main] with ω hω
   rwa [h_closed] at hω
 
-/-- **Operational Kelly optimality** (Cover–Thomas §6.3): the proportional (Kelly) bet
-`b = p` is asymptotically optimal. Almost surely both the arbitrary full-support bet `b`
-and the Kelly bet `p` have a growth rate, and the arbitrary bet does not beat the Kelly
-bet.
+/-- The proportional (Kelly) bet `b = p` is asymptotically optimal at the sequence level
+(Cover–Thomas §6.3): almost surely both the arbitrary full-support bet `b` and the Kelly
+bet `p` have a growth rate, and the arbitrary bet does not beat the Kelly bet.
 @audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). `lawPmf μ (Xs 0)` is a definitional binding; `hb`/`hb_pos`/`ho`
 (full-support bet + positive odds) are the same correctness preconditions as the parent
@@ -204,9 +202,9 @@ theorem seqLogWealth_proportional_asymptotically_optimal
   filter_upwards [h_b, h_kelly] with ω hωb hωk
   exact ⟨hωb, hωk, h_opt⟩
 
-/-- **Exponential wealth growth** (Cover–Thomas §6.3): if the doubling rate is positive,
-the log-wealth `log S_n` diverges to `+∞` almost surely, i.e. wealth grows exponentially.
-Operationally, a positive doubling rate means the gambler gets rich.
+/-- If the doubling rate is positive, the log-wealth `log S_n` diverges to `+∞` almost
+surely, i.e. wealth grows exponentially: a positive doubling rate means the gambler gets
+rich (Cover–Thomas §6.3).
 @audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). Pure corollary of H1 (`seqLogWealth_div_tendsto_doublingRate`) via
 `log S_n = (log S_n / n)·n` + `Tendsto.pos_mul_atTop`; the limit `W*` comes from H1's
@@ -231,9 +229,9 @@ theorem seqLogWealth_tendsto_atTop_of_pos_doublingRate
   filter_upwards [eventually_gt_atTop 0] with n hn
   exact div_mul_cancel₀ _ (Nat.cast_ne_zero.mpr hn.ne')
 
-/-- **Ruin under a losing bet** (Cover–Thomas §6.3): if the doubling rate is negative,
-the log-wealth `log S_n` diverges to `−∞` almost surely, i.e. wealth decays to zero
-exponentially. Operationally, a negative doubling rate means the gambler goes broke.
+/-- If the doubling rate is negative, the log-wealth `log S_n` diverges to `−∞` almost
+surely, i.e. wealth decays to zero exponentially: a negative doubling rate means the
+gambler goes broke (Cover–Thomas §6.3).
 @audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). Pure corollary of H1 (`seqLogWealth_div_tendsto_doublingRate`) via
 `log S_n = (log S_n / n)·n` + `Tendsto.neg_mul_atTop`; the limit `W*` comes from H1's

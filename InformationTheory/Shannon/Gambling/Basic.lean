@@ -114,9 +114,8 @@ lemma doublingRate_gap_eq_klDivPmf (p b o : α → ℝ)
   · rw [Real.log_mul hxpos.ne' (ho x).ne', Real.log_mul (hb_pos x).ne' (ho x).ne']
     ring
 
-/-- **Theorem 6.1.2** (Cover–Thomas): proportional (Kelly) betting maximizes the
-doubling rate. For any full-support bet `b` and positive odds `o`,
-`W(b, o, p) ≤ W(p, o, p)`.
+/-- Proportional (Kelly) betting maximizes the doubling rate: for any full-support bet `b`
+and positive odds `o`, `W(b, o, p) ≤ W(p, o, p)`. This is Cover–Thomas Theorem 6.1.2.
 @audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`); `hb_pos` is a genuine correctness precondition (counterexample without it:
 `p=(1/2,1/2)`, `o=(2,2)`, `b=(1,0)` gives `W(b,o,p)=(1/2)log 2 > 0 = W(p,o,p)` since

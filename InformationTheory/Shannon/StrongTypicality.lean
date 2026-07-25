@@ -90,7 +90,7 @@ lemma indepFun_letterIndicator
     Pairwise fun i j ↦
       letterIndicator Xs a i ⟂ᵢ[μ] letterIndicator Xs a j := by
   intro i j hij
-  -- letterIndicator Xs a i = (fun x => if x = a then 1 else 0) ∘ (Xs i)
+  -- letterIndicator Xs a i = (fun x ↦ if x = a then 1 else 0) ∘ (Xs i)
   set f : α → ℝ := fun x ↦ if x = a then (1 : ℝ) else 0 with hf_def
   have hf_meas : Measurable f := measurable_of_finite _
   have h := (hindep hij).comp hf_meas hf_meas
@@ -206,8 +206,8 @@ lemma letterIndicator_inProbability
   show ε ≤ dist (f n ω) (g ω) ↔ ε ≤ |f n ω - g ω|
   rw [Real.dist_eq]
 
-/-- **Strong typicality**: for `Xs` i.i.d. with finite alphabet, the probability of the
-strongly typical set tends to one, `μ {ω | jointRV Xs n ω ∈ A^*_ε^n} → 1`. -/
+/-- For `Xs` i.i.d. with a finite alphabet, the probability of the strongly typical set tends
+to one, `μ {ω | jointRV Xs n ω ∈ A^*_ε^n} → 1`. -/
 @[entry_point]
 theorem stronglyTypicalSet_prob_tendsto_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]

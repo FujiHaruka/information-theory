@@ -50,7 +50,8 @@ open InformationTheory.Shannon.EPICase1RatioLimit
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
-/-- **TT-`epi_of_*`** — `R(0) ≥ 0 ⟹ EPI` for the two-time object.
+/-- Nonnegativity of the two-time log-ratio gap at `0` gives the entropy power inequality
+`N(X + Y) ≥ N(X) + N(Y)`.
 
 `twoTimeLogRatioGap_at_zero` rewrites `R 0` to the EPI bridge form, so
 `R 0 ≥ 0 ⟺ entropyPower (X+Y) ≥ entropyPower X + entropyPower Y`. Mirrors
@@ -168,7 +169,7 @@ producer.
 
 `J_X`/`J_Y` Fisher pin (honesty-load-bearing). The Fisher infos are NOT free
 variables: `J_X`/`J_Y` are defined as the total-domain functions
-`fun σ => if 0 < σ then fisherInfoOfDensityReal ((h_reg_*.reg_at σ _).density_t) else 0`.
+`fun σ ↦ if 0 < σ then fisherInfoOfDensityReal ((h_reg_*.reg_at σ _).density_t) else 0`.
 The same quantity supplies both (a) `matchedTimePath_exists`'s entropy-power
 `HasDerivAt` (via `deBruijn_identity_v2` → `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt`)
 and (b) Pillar B's per-`t` density-pin (`dif_pos` under `s t > 0`). `density_t` is

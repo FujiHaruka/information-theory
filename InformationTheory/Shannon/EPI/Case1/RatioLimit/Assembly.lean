@@ -191,10 +191,10 @@ genuine order-limit bridge (§1 `epi_of_csiszarLogRatioGap_tendsto`) to obtain t
 classical (case-1, a.c. inputs) entropy power inequality. Pure assembly — no new
 analytic content, no `sorry`. -/
 
-/-- **Case-1 EPI (with-noise, entropic-CLT-free), under heat-flow + scaling
-regularity**. The classical entropy power inequality
-`N(law(X+Y)) ≥ N(law X) + N(law Y)` for a.c. inputs, assembled from the two genuine
-pillars:
+/-- The classical entropy power inequality `N(law(X+Y)) ≥ N(law X) + N(law Y)` for
+absolutely continuous inputs, proved with auxiliary Gaussian noise and without an entropic
+CLT, under heat-flow and scaling regularity preconditions. It is assembled from the two
+genuine pillars:
 
 * `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1085`, genuine):
   the log-ratio gap `R = csiszarLogRatioGap X Y Z_X Z_Y P` is `AntitoneOn (Set.Ici 0)`.

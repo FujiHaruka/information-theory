@@ -26,21 +26,16 @@ self-contained statements of the **de Bruijn identity** along the Gaussian heat 
 The per-time analytic core is the existing genuine assembly `debruijnIdentityV2_holds_assembled`
 (routed through `deBruijn_identity_v2`); the integrated form is the existing FTC assembly
 `debruijnIntegrationIdentity_holds`. The genuine content of this file is the **non-vacuity**
-witness: `IsDeBruijnPathRegular` previously had no inhabitant, so the integrated identity was
-vacuity-risk. We construct the Gaussian inhabitant (gateway atom) genuinely, and a general
-absolutely-continuous producer in which only the path-integrand interval-integrability remains a
-localized residual.
+witness for `IsDeBruijnPathRegular`: a Gaussian inhabitant, and a general absolutely-continuous
+producer.
 
 ## Main statements
 
 * `debruijn_identity_per_time` — the per-time de Bruijn identity for a general probability
   density `pX`, with the V2 Fisher information on the right.
-* `isDeBruijnPathRegular_gaussian` — the Gaussian inhabitant of `IsDeBruijnPathRegular` (gateway
-  atom, fully genuine).
-* `debruijn_identity_integrated_gaussian` — the integrated de Bruijn identity for a Gaussian `X`
-  (fully genuine).
-* `isDeBruijnPathRegular_of_heat_flow` — the general a.c. producer (`reg_t`/`cont` genuine; the
-  interval-integrability field is a localized residual).
+* `isDeBruijnPathRegular_gaussian` — the Gaussian inhabitant of `IsDeBruijnPathRegular`.
+* `debruijn_identity_integrated_gaussian` — the integrated de Bruijn identity for a Gaussian `X`.
+* `isDeBruijnPathRegular_of_heat_flow` — the general a.c. producer of `IsDeBruijnPathRegular`.
 * `debruijn_identity_integrated` — the integrated de Bruijn identity for a general a.c. `X`.
 
 ## References
@@ -84,7 +79,7 @@ noncomputable def isRegularDeBruijnHypV2_of_density
   pX_law := hpX_law
   pX_mom := hpX_mom
 
-/-! ## Phase 3 — de Bruijn per-time standalone -/
+/-! ## The per-time de Bruijn identity -/
 
 /-- **de Bruijn identity (per-time, density form, Cover–Thomas Theorem 17.7.2).**
 
@@ -117,9 +112,9 @@ theorem debruijn_identity_per_time
   exact deBruijn_identity_v2 X Z hX hZ hXZ ht
     (isRegularDeBruijnHypV2_of_density hZ_law pX hpX_nn hpX_meas hpX_law hpX_mom ht)
 
-/-! ## Phase 4 — gateway atom: Gaussian path-regularity -/
+/-! ## Gaussian path-regularity -/
 
-/-- **Gateway atom (gaussian).** The Gaussian inhabitant of `IsDeBruijnPathRegular`: for
+/-- The Gaussian inhabitant of `IsDeBruijnPathRegular`: for
 `X ∼ 𝒩(m, v)` (`v ≠ 0`), `Z ∼ 𝒩(0, 1)`, `X ⊥ Z`, the heat-flow path is regular on `[0, T]`.
 The density witness path is `fPath t = gaussianPDFReal m (v + t)`, whose Fisher information is the
 bounded continuous closed form `1 / (v + t)`, so the path integrand is interval-integrable; the
@@ -214,7 +209,7 @@ theorem debruijn_identity_integrated_gaussian
   debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT
     (isDeBruijnPathRegular_gaussian X Z hX hZ hXZ hv hX_law hZ_law T)
 
-/-! ## Phase 4 — general absolutely-continuous producer -/
+/-! ## General absolutely-continuous producer -/
 
 /-- Interval-integrability of the heat-flow path integrand `(1/2)·J(pX ∗ g_t)` on `[0, T]`.
 
@@ -353,7 +348,8 @@ private lemma debruijnHeatPath_intervalIntegrable
     rw [intervalIntegrable_iff_integrableOn_Ioc_of_le hT.le]
     exact hres
 
-/-- **General a.c. path-regularity producer.** For `X ⊥ Z` with `Z ∼ 𝒩(0, 1)` and an explicit
+/-- The general absolutely-continuous producer of `IsDeBruijnPathRegular`. For `X ⊥ Z` with
+`Z ∼ 𝒩(0, 1)` and an explicit
 probability density `pX` of `X` with finite second moment and finite differential entropy
 (`hpX_ent`), the heat-flow path is regular on `[0, T]`. The per-time regularity (`reg_t`) is the
 density bundle `isRegularDeBruijnHypV2_of_density`; the heat-flow entropy continuity (`cont`)

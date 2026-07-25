@@ -67,8 +67,8 @@ theorem integral_ptRepr_mul {s : Set ℝ} (hs : MeasurableSet s) (f g : Lp ℝ 2
   rw [htf, htg, RCLike.inner_apply, conj_trivial]
   ring
 
-/-- **Keystone.** An orthonormal family in `Lp ℝ 2 volume`, each member supported a.e. in
-`[0, T]`, lifts to a family of genuine `ℝ → ℝ` functions that satisfy the three
+/-- An orthonormal family in `Lp ℝ 2 volume`, each member supported a.e. in `[0, T]`, lifts to
+a family of genuine `ℝ → ℝ` functions that satisfy the three
 `ContAwgnCode.testFn` regularity fields: everywhere-support in `[0, T]`, `MemLp`, and pointwise
 orthonormality `∫ t, gᵢ t · gⱼ t = δᵢⱼ`. -/
 theorem exists_pointwise_orthonormal_of_orthonormal {k : ℕ} {T : ℝ}

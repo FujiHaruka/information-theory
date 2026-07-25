@@ -296,7 +296,7 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
       pX_meas := measurable_gaussianPDFReal m v
       pX_law := by
         -- `P.map X = gaussianReal m v = withDensity (gaussianPDF m v)`,
-        -- and `gaussianPDF m v = fun x => ofReal (gaussianPDFReal m v x)` (def).
+        -- and `gaussianPDF m v = fun x ↦ ofReal (gaussianPDFReal m v x)` (def).
         rw [_hX_law, gaussianReal_of_var_ne_zero m hv, gaussianPDF_def]
       -- Second-moment regularity (genuine, Gaussian case). `X ∼ 𝒩(m,v)` has a finite
       -- second moment: `id ∈ L²(gaussianReal m v)` (`memLp_id_gaussianReal`), so
@@ -370,14 +370,14 @@ noncomputable def isDeBruijnTailHyp_of_gaussian
   Z_law := hZ_law
   h_inf := ⊤
   tail_limit := by
-    -- Goal: `Tendsto (fun T => Real.toEReal (h(P.map (gaussConv X Z T)))) atTop (𝓝 ⊤)`.
-    -- Strategy: build `Tendsto (fun T => (1/2) * log (2πe(v+T))) atTop atTop`,
+    -- Goal: `Tendsto (fun T ↦ Real.toEReal (h(P.map (gaussConv X Z T)))) atTop (𝓝 ⊤)`.
+    -- Strategy: build `Tendsto (fun T ↦ (1/2) * log (2πe(v+T))) atTop atTop`,
     -- congr with the closed-form on `[0, ∞)`, then lift to EReal.
     have h2pi_pos : (0 : ℝ) < 2 * Real.pi := by positivity
     have hexp_pos : (0 : ℝ) < Real.exp 1 := Real.exp_pos 1
     have h2pie_pos : (0 : ℝ) < 2 * Real.pi * Real.exp 1 := mul_pos h2pi_pos hexp_pos
     have hhalf_pos : (0 : ℝ) < (1 / 2 : ℝ) := by norm_num
-    -- `Tendsto (fun T : ℝ => (v : ℝ) + T) atTop atTop`.
+    -- `Tendsto (fun T : ℝ ↦ (v : ℝ) + T) atTop atTop`.
     have h_shift : Tendsto (fun T : ℝ ↦ (v : ℝ) + T) atTop atTop :=
       tendsto_atTop_add_const_left atTop (v : ℝ) tendsto_id
     -- Scale by `2πe > 0`.
@@ -475,8 +475,9 @@ theorem continuousOn_one_div_two_times_v_plus
   refine ContinuousOn.div continuousOn_const ?_ h_pos
   exact (continuous_const.mul (continuous_const.add continuous_id)).continuousOn
 
-/-- **Continuity of `s' ↦ differentialEntropy(P.map (X + √s' · Z))` on `[0, T]`
-for Gaussian `X`**. -/
+/-- For Gaussian `X ∼ 𝒩(m, v)` with `v ≠ 0` and standard normal `Z` independent of `X`, the
+heat-flow entropy `s' ↦ differentialEntropy (P.map (X + √s' · Z))` is continuous on `[0, T]`,
+since it agrees there with the closed form `(1/2)·log (2π e (v + s'))`. -/
 theorem continuousOn_differentialEntropy_heat_flow_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)

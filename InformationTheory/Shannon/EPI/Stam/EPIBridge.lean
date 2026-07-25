@@ -496,9 +496,10 @@ theorem epi_pipeline_idempotent
     IsEntropyPowerInequalityHypothesis X Y P :=
   (isStamToEPIBridgeHyp_of_epi h_epi) h_stam
 
-/-- **3-arg via Stam (route through `IsStamToEPIBridgeHyp` rather than direct
-EPI hypotheses)**: shows that the Stam-pipeline 3-arg form composes with
-`entropy_power_inequality_three_arg`.
+/-- The three-summand entropy power inequality, normalized by `gaussianEntropyPowerConst`,
+from Stam inequality and Stam-to-EPI bridge hypotheses on the pairs `(X, Y)` and
+`(X + Y, Z)` rather than from entropy-power-inequality hypotheses directly. It shows that
+the Stam-pipeline three-summand form composes with `entropy_power_inequality_three_arg`.
 
 `@audit:ok` -/
 @[entry_point]

@@ -152,10 +152,10 @@ lemma sideInfoJointEntropy_eq_chain (pY : γ → ℝ) (pXgivenY : γ → α → 
           + ∑ y, pY y * (∑ x, Real.negMulLog (pXgivenY y x)) := by
         rw [Finset.sum_add_distrib]
 
-/-- **Conditional Kelly optimality** (Cover–Thomas, towards Theorem 6.1.3): proportional
-betting on each observed value of the side information maximizes the conditional doubling
-rate. For any full-support strategy `b` and positive odds `o`,
-`W(b | Y) ≤ W(pXgivenY | Y)`.
+/-- Proportional (Kelly) betting on each observed value of the side information maximizes
+the conditional doubling rate: for any full-support strategy `b` and positive odds `o`,
+`W(b | Y) ≤ W(pXgivenY | Y)`. This is the conditional step towards Cover–Thomas
+Theorem 6.1.3.
 @audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`); genuine per-`y` reuse of `doublingRate_le_proportional` weighted by
 `pY y ≥ 0`, no bundling. All hypotheses are regularity preconditions (`hpY`/`hcond` pmf,
@@ -174,10 +174,11 @@ theorem condDoublingRate_le_proportional
     (doublingRate_le_proportional (pXgivenY y) (b y) o (hcond y) (hb y) (hb_pos y) ho)
     (hpY.1 y)
 
-/-- **Theorem 6.1.3** (Cover–Thomas, gambling with side information): the increment of the
-optimal doubling rate obtained from the side information `Y` equals the mutual information
-`I(X; Y)`. Writing `W*(X | Y)` for the optimal conditional doubling rate and `W*(X)` for
-the optimal doubling rate of the `X`-marginal, `W*(X | Y) − W*(X) = I(X; Y)`.
+/-- The increment of the optimal doubling rate obtained from the side information `Y` equals
+the mutual information `I(X; Y)`. Writing `W*(X | Y)` for the optimal conditional doubling
+rate and `W*(X)` for the optimal doubling rate of the `X`-marginal,
+`W*(X | Y) − W*(X) = I(X; Y)`. This is Cover–Thomas Theorem 6.1.3 (gambling with side
+information).
 @audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). Not trivial-circular: the increment reduces to `H(X) − H(X|Y)`, but the RHS
 `sideInfoMutualInfo` is the symmetric `H(X) + H(Y) − H(X, Y)`, so the closing `linarith`

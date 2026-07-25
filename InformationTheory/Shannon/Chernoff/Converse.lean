@@ -6,10 +6,10 @@ The achievability half (`chernoff_lemma_achievability`, `Chernoff/Basic.lean`) g
 `limsup_n -(1/n) log bayesErrorMinPmf ≤ chernoffInfo P₁ P₂`: the optimal Bayes error exponent
 cannot exceed the Chernoff information.
 
-Plan + phase breakdown: `docs/shannon/chernoff-converse-plan.md`. The conceptual crux — the
-I-projection (Csiszár) Pythagorean theorem `CsiszarProjection.csiszar_pythagoras_inequality` —
-is already genuine in-project; this file wires the exponential-tilt mediator
-`chernoffMediator P₁ P₂ λ*` to it and to the Sanov LDP lower bound.
+The conceptual crux — the I-projection (Csiszár) Pythagorean theorem
+`CsiszarProjection.csiszar_pythagoras_inequality` — is already available in-project; this file
+wires the exponential-tilt mediator `chernoffMediator P₁ P₂ λ*` to it and to the Sanov LDP
+lower bound.
 -/
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.Sanov.LDP
@@ -31,7 +31,7 @@ open scoped BigOperators Topology
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
-/-! ### Phase A — pmf-level variational identity
+/-! ### The pmf-level variational identity
 
 The divergence of the Chernoff mediator `T_λ = P₁^{1-λ}P₂^λ / Z(λ)` against `P₁` has the
 closed form `λ · E_{T_λ}[log(P₂/P₁)] - log Z(λ)`. At the optimal `λ*` (interior, where the
@@ -272,18 +272,17 @@ theorem chernoffMediator_isMinOn
     mul_nonneg hlam_nonneg hP_half
   linarith
 
-/-! ### Phase B/C — Sanov lower bound + assembly
+/-! ### Sanov lower bound and assembly
 
-Target headline (lives in `docs/shannon/chernoff-converse-plan.md` until proven, to keep the
-project's 0-`sorry` invariant — the README publicly claims "no sorry"):
+The headline of this section is
 
 `chernoff_converse : limsup_n -(1/n) log (bayesErrorMinPmf P₁ P₂ n) ≤ chernoffInfo P₁ P₂`.
 
 Route: `chernoffMediator P₁ P₂ λ*` is the I-projection of `P₁` onto the half-space
 `{p : ∑ p_a log(P₂ a/P₁ a) ≥ 0}`; `csiszar_pythagoras_inequality` identifies
-`⨅_{p∈K} klDivPmf p P₁` with `klDivPmf (T_λ*) P₁ = chernoffInfo` (Phase A). The error region
-`{x : P₁ⁿ(x) ≤ P₂ⁿ(x)}` is that half-space lifted to empirical type classes, so
-`sanov_ldp_equality` supplies `(1/n) log P₁ⁿ(region) → -chernoffInfo`, and
+`⨅_{p∈K} klDivPmf p P₁` with `klDivPmf (T_λ*) P₁ = chernoffInfo` (the variational identity
+above). The error region `{x : P₁ⁿ(x) ≤ P₂ⁿ(x)}` is that half-space lifted to empirical type
+classes, so `sanov_ldp_equality` supplies `(1/n) log P₁ⁿ(region) → -chernoffInfo`, and
 `bayesErrorMinPmf ≥ (1/2)·P₁ⁿ(region)` closes the converse. -/
 
 section PhaseB
@@ -297,7 +296,7 @@ open InformationTheory.Shannon.MaxEntropyConstrained
 
 variable [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-- Discretised error region (H1): count vectors `c` (with `∑ c = n`) whose type class lands in
+/-- Discretized error region: count vectors `c` (with `∑ c = n`) whose type class lands in
 the likelihood-ratio test region `{x | ∏ P₁(x_i) ≤ ∏ P₂(x_i)}`. (Clone of `Hoeffding.E_r`.) -/
 noncomputable def chernoffErrorCounts
     (P₁ P₂ : α → ℝ) (n : ℕ) : Finset (TypeCountIndex α n) :=
@@ -317,8 +316,9 @@ lemma mem_chernoffErrorCounts_iff (P₁ P₂ : α → ℝ) (n : ℕ) (c : TypeCo
   unfold chernoffErrorCounts
   simp only [Finset.mem_filter, Finset.mem_univ, true_and]
 
-/-- H2: product aggregation by counts — for `x ∈ typeClassByCount c`,
-`∏ i, f (x i) = ∏ a, (f a)^(c a)`. (Multiplicative analogue of `sum_const_aggr_of_mem_typeClassByCount`.) -/
+/-- Product aggregation by counts: for `x ∈ typeClassByCount c`,
+`∏ i, f (x i) = ∏ a, (f a)^(c a)`. (Multiplicative analogue of
+`sum_const_aggr_of_mem_typeClassByCount`.) -/
 lemma prod_aggr_of_mem_typeClassByCount
     {n : ℕ} {c : α → ℕ} {x : Fin n → α} (hx : x ∈ typeClassByCount c) (f : α → ℝ) :
     (∏ i : Fin n, f (x i)) = ∏ a : α, (f a) ^ (c a) := by
@@ -362,7 +362,7 @@ lemma typeCount_sum_eq {n : ℕ} (x : Fin n → α) : (∑ a : α, typeCount x a
   rw [h]
   simp
 
-/-- H3 (W3): the likelihood-ratio error region equals the union of error type classes. -/
+/-- The likelihood-ratio error region equals the union of the error type classes. -/
 lemma chernoffErrorRegion_eq_union (P₁ P₂ : α → ℝ) (n : ℕ) :
     {x : Fin n → α | ∏ i, P₁ (x i) ≤ ∏ i, P₂ (x i)}
       = ⋃ c ∈ chernoffErrorCounts P₁ P₂ n,
@@ -394,7 +394,7 @@ lemma chernoffErrorRegion_eq_union (P₁ P₂ : α → ℝ) (n : ℕ) :
     rw [e1, e2]
     exact hc.2
 
-/-- H4 (W4): the `Measure.pi Q` mass of a finite set of sequences as a finite real sum of
+/-- The `Measure.pi Q` mass of a finite set of sequences as a finite real sum of
 products of singleton masses. (Extracted from the inline block in `typeClass_Qn_le`.) -/
 lemma measurePi_toReal_eq_sum (Q : Measure α) [IsProbabilityMeasure Q]
     {n : ℕ} (S : Finset (Fin n → α)) :
@@ -410,7 +410,7 @@ lemma measurePi_toReal_eq_sum (Q : Measure α) [IsProbabilityMeasure Q]
     ← MeasureTheory.sum_measureReal_singleton (μ := Measure.pi (fun _ : Fin n ↦ Q)) S]
   exact Finset.sum_congr rfl fun x _ ↦ h_pi_singleton x
 
-/-- H5: the Bayes error dominates half the `P₁`-mass of any sub-region of the error region. -/
+/-- The Bayes error dominates half the `P₁`-mass of any sub-region of the error region. -/
 lemma bayesErrorMinPmf_ge_half_sum
     (P₁ P₂ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₂_nn : ∀ a, 0 ≤ P₂ a) (n : ℕ)
     (S : Finset (Fin n → α))
@@ -430,7 +430,7 @@ lemma bayesErrorMinPmf_ge_half_sum
     rw [hstep1]; exact hstep2
   linarith [hcomb]
 
-/-! #### H7 — perturbation membership + degenerate handling -/
+/-! #### Perturbation membership and degenerate handling -/
 
 /-- The likelihood-ratio membership `∏ P₁^c ≤ ∏ P₂^c` is equivalent to the log-form
 `0 ≤ ∑ a, (c a)·log(P₂ a/P₁ a)` (both products positive under full support). -/
@@ -526,7 +526,7 @@ lemma roundedType_mem_chernoffErrorCounts_eventually
   rw [h_scale]
   exact le_of_lt (mul_pos hn_R hΦn)
 
-/-- H8 step: the Bayes error dominates half the `P₁`-measure of the error region. -/
+/-- The Bayes error dominates half the `P₁`-measure of the error region. -/
 lemma bayesErrorMinPmf_ge_half_measurePi
     (P₁ P₂ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₂_nn : ∀ a, 0 ≤ P₂ a)
     (Q : Measure α) [IsProbabilityMeasure Q] (hQ_real : ∀ a, Q.real {a} = P₁ a) (n : ℕ) :
@@ -634,8 +634,8 @@ private lemma chernoffRegion_rate_isBoundedUnder_below
   have h := mul_le_mul_of_nonneg_left h_log_pow_le h_n_inv_pos.le
   rwa [show (1 / (n : ℝ)) * ((n : ℝ) * Real.log m) = Real.log m by field_simp] at h
 
-/-- **Chernoff converse** (Cover–Thomas Theorem 11.9.1, converse half): the optimal Bayes
-error exponent cannot exceed the Chernoff information. Proved on the interior `0 < λ* < 1`
+/-- The optimal Bayes error exponent cannot exceed the Chernoff information (Cover–Thomas
+Theorem 11.9.1, converse half). Proved on the interior `0 < λ* < 1`
 (the overlapping-support / non-degenerate case; `hlam_io` is a non-degeneracy precondition,
 not load-bearing).
 @audit:ok -/

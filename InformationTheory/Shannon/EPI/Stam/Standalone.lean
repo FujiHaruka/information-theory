@@ -16,7 +16,7 @@ and `IsBlachmanConvReady` producers, the convolution Fisher finiteness bound) is
 
 * `fisherInfoOfDensity_ne_zero_of_regular` — a regular density has nonzero Fisher information.
 * `fisherInfoOfDensity_convDensityAdd_gaussian_pos` — the Fisher information of a Gaussian-smoothed
-  density `pX ∗ g_t` is strictly positive and finite (positivity producer, Phase 1).
+  density `pX ∗ g_t` is strictly positive and finite (the positivity producer).
 * `stam_inequality_smoothed_density` — the headline Stam inequality
   `1 / J(fX ∗ fY) ≥ 1 / J(fX) + 1 / J(fY)` for `fX = pX ∗ g_t`, `fY = pY ∗ g_t`.
 
@@ -95,9 +95,9 @@ theorem fisherInfoOfDensity_ne_zero_of_regular {f : ℝ → ℝ}
   have hf0 : (0 : ℝ) = f 0 := tendsto_nhds_unique htend tendsto_const_nhds
   linarith [h_reg.pos 0, hf0]
 
-/-- **Phase 1 positivity producer.** The Fisher information of a Gaussian-smoothed probability
-density `pX ∗ g_t` (`t > 0`) is strictly positive (as a real number): finiteness comes from the
-convolution Fisher bound `J ≤ 1/t`, and nonzero-ness from regularity.
+/-- The Fisher information of a Gaussian-smoothed probability density `pX ∗ g_t` (`t > 0`) is
+strictly positive as a real number: finiteness comes from the convolution Fisher bound
+`J ≤ 1/t`, and nonzero-ness from regularity.
 
 @audit:ok -/
 theorem fisherInfoOfDensity_convDensityAdd_gaussian_pos
@@ -166,13 +166,13 @@ theorem stam_inequality_smoothed_density
     isBlachmanConvReady_convDensityAdd_gaussian pX pY ht
       hpX_nn hpX_meas hpX_int hpX_mass hpX_norm
       hpY_nn hpY_meas hpY_int hpY_mass hpY_norm
-  -- Fisher positivity of each smoothed density (Phase 1 producer)
+  -- Fisher positivity of each smoothed density
   have hJX_pos : 0 < (fisherInfoOfDensity fX).toReal :=
     fisherInfoOfDensity_convDensityAdd_gaussian_pos pX ht hpX_nn hpX_meas hpX_int hpX_norm
   have hJY_pos : 0 < (fisherInfoOfDensity fY).toReal :=
     fisherInfoOfDensity_convDensityAdd_gaussian_pos pY ht hpY_nn hpY_meas hpY_int hpY_norm
   -- Fisher positivity of the convolution `fX ∗ fY`, via the 4-fold interchange
-  -- `fX ∗ fY = (pX ∗ pY) ∗ g_{2t}`, reducing to the Phase 1 producer at variance `2t`.
+  -- `fX ∗ fY = (pX ∗ pY) ∗ g_{2t}`, reducing to the positivity producer at variance `2t`.
   have hJsum_pos : 0 < (fisherInfoOfDensity (convDensityAdd fX fY)).toReal := by
     have hinter : convDensityAdd fX fY
         = convDensityAdd (convDensityAdd pX pY) (gaussianPDFReal 0 ⟨2 * t, by positivity⟩) := by

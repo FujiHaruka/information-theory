@@ -52,8 +52,8 @@ structure RelayCode (M n : ℕ) (α α₁ β β₁ : Type*)
   relay   : ∀ (i : Fin n), (Fin i.val → β₁) → α₁
   decoder : (Fin n → β) → Fin M
 
-/-- **Cut-set outer bound (scalar form)**: the minimum of the broadcast-cut rate
-`Ib = I(X; Y₁, Y | X₁)` and the MAC-cut rate `Im = I(X, X₁; Y)`. The outer maximisation over
+/-- The cut-set outer bound in scalar form: the minimum of the broadcast-cut rate
+`Ib = I(X; Y₁, Y | X₁)` and the MAC-cut rate `Im = I(X, X₁; Y)`. The outer maximization over
 joint input pmfs `p(x, x₁)` is left to callers. -/
 noncomputable def relayCutsetBound (Ib Im : ℝ) : ℝ := min Ib Im
 
@@ -74,10 +74,10 @@ variable {α α₁ β β₁ : Type*}
 variable {n : ℕ}
 
 omit [DecidableEq α] [DecidableEq α₁] [DecidableEq β] in
-/-- **MAC-cut single-letterization**: under a memoryless relay channel (joint input
-`(Xᵢ, X₁ᵢ)` to receiver output `Yᵢ`), the block mutual information `I(Xⁿ, X₁ⁿ; Yⁿ)` is bounded
-by the per-letter sum `∑ᵢ I(Xᵢ, X₁ᵢ; Yᵢ)`. The memoryless structure is a precondition; the
-inequality (the genuine content) is proven, not assumed.
+/-- Under a memoryless relay channel (joint input `(Xᵢ, X₁ᵢ)` to receiver output `Yᵢ`), the
+MAC-cut block mutual information `I(Xⁿ, X₁ⁿ; Yⁿ)` is bounded by the per-letter sum
+`∑ᵢ I(Xᵢ, X₁ᵢ; Yᵢ)`. The memoryless structure is a precondition; the inequality (the genuine
+content) is proven, not assumed.
 @audit:ok -/
 theorem relay_mac_cut_singleletterize
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -96,9 +96,9 @@ theorem relay_mac_cut_singleletterize
     (fun i ω ↦ (Xs i ω, X₁s i ω)) Ys hJoint hYs h_per_letter h_outputs
 
 omit [DecidableEq α] [DecidableEq β] [DecidableEq β₁] in
-/-- **Broadcast-cut single-letterization**: the conditional block mutual information
-`I(Xⁿ; Y₁ⁿ, Yⁿ | X₁ⁿ)` is bounded by the per-letter sum `∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ)`, under the
-memoryless relay channel with joint input `(Xᵢ, X₁ᵢ)` and joint output `(Y₁ᵢ, Yᵢ)`.
+/-- The broadcast-cut conditional block mutual information `I(Xⁿ; Y₁ⁿ, Yⁿ | X₁ⁿ)` is bounded by
+the per-letter sum `∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ)`, under the memoryless relay channel with joint
+input `(Xᵢ, X₁ᵢ)` and joint output `(Y₁ᵢ, Yᵢ)`.
 @audit:ok -/
 theorem relay_broadcast_cut_singleletterize
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -133,8 +133,8 @@ variable {α α₁ β : Type*}
   [Fintype β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 variable {M n : ℕ} [NeZero M]
 
-/-- **MAC-cut operational outer bound** (relay channel, Cover–Thomas Thm 15.10.1, MAC cut): for a
-uniformly distributed message `W` decoded from the receiver output `Yⁿ`, the rate is bounded by
+/-- The operational outer bound at the MAC cut of a relay channel (Cover–Thomas Thm 15.10.1): for
+a uniformly distributed message `W` decoded from the receiver output `Yⁿ`, the rate is bounded by
 the per-letter MAC-cut sum plus a Fano slack,
 `log M ≤ ∑ᵢ I(Xᵢ, X₁ᵢ; Yᵢ) + h(Pe) + Pe · log(M - 1)`, where `Pe` is the block decoding error
 probability.
@@ -143,7 +143,7 @@ The proof chains destination Fano (`shannon_converse_single_shot`), the data-pro
 inequality along the block Markov chain `W → (Xⁿ, X₁ⁿ) → Yⁿ` (`mutualInfo_le_of_markov`), and the
 MAC-cut single-letterization (`relay_mac_cut_singleletterize`). The Markov and memoryless
 hypotheses are *preconditions* (structure / regularity); the per-letter inequality (the genuine
-content) is proven, not assumed, so neither hypothesis is load-bearing. The outer maximisation
+content) is proven, not assumed, so neither hypothesis is load-bearing. The outer maximization
 over joint input pmfs `p(x, x₁)` — and hence the conversion of the per-letter sum to
 `n · max_p I` — is left to callers, which is why the conclusion keeps the explicit per-letter sum.
 @audit:ok -/
@@ -205,13 +205,13 @@ variable {α α₁ β β₁ : Type*}
 variable {M n : ℕ} [NeZero M]
 
 omit [DecidableEq α] [DecidableEq α₁] [DecidableEq β] [DecidableEq β₁] in
-/-- **Broadcast-cut message-level telescoping** (relay channel, Cover–Thomas Thm 15.10.1,
-broadcast cut): the message–output mutual information `I(W; Yⁿ)` is bounded directly by the
+/-- Message-level telescoping at the broadcast cut of a relay channel (Cover–Thomas
+Thm 15.10.1): the message–output mutual information `I(W; Yⁿ)` is bounded directly by the
 per-letter conditional sum `∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ)`, where `Xᵢ = encoder(W)ᵢ` is the i-th
 sender symbol and `X₁ᵢ = relay i (Y₁^{<i})` is the i-th relay symbol read causally from the
 relay's past observations.
 
-This is the gateway atom for the broadcast cut: it cannot be obtained from
+The bound cannot be obtained from
 `relay_broadcast_cut_singleletterize` (which single-letterizes the *block* conditional
 `I(Xⁿ; Y₁ⁿ, Yⁿ | X₁ⁿ)`), because routing through the block quantity leaves a chain-rule
 remainder `I(W; X₁ⁿ) ≠ 0` (the relay input `X₁ⁿ` depends causally on `W` through the
@@ -426,16 +426,16 @@ variable {α α₁ β β₁ : Type*}
     [MeasurableSpace β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁]
 variable {M n : ℕ} [NeZero M]
 
-/-- **Broadcast-cut operational outer bound** (relay channel, Cover–Thomas Thm 15.10.1, broadcast
-cut): for a uniformly distributed message `W` decoded from the receiver output `Yⁿ`, the rate is
-bounded by the per-letter broadcast-cut sum plus a Fano slack,
+/-- The operational outer bound at the broadcast cut of a relay channel (Cover–Thomas
+Thm 15.10.1): for a uniformly distributed message `W` decoded from the receiver output `Yⁿ`, the
+rate is bounded by the per-letter broadcast-cut sum plus a Fano slack,
 `log M ≤ ∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ) + h(Pe) + Pe · log(M - 1)`, where `Xᵢ = encoder(W)ᵢ`,
 `X₁ᵢ = relay i (Y₁^{<i})`, and `Pe` is the block decoding error probability.
 
 The proof chains destination Fano (`shannon_converse_single_shot`) with the broadcast-cut
 message-level telescoping (`relay_broadcast_cut_message_telescope`). The memoryless d-separation
 hypothesis is a *precondition* (channel structure / regularity); the per-letter inequality (the
-genuine content) is proven, not assumed. The outer maximisation over joint input pmfs is left to
+genuine content) is proven, not assumed. The outer maximization over joint input pmfs is left to
 callers, which is why the conclusion keeps the explicit per-letter sum.
 @audit:ok -/
 theorem relay_broadcast_cut_outer_bound
@@ -488,7 +488,7 @@ probability.
 The proof combines the two cut bounds (`relay_broadcast_cut_outer_bound` and
 `relay_mac_cut_outer_bound`) via `le_min`. The memoryless / Markov / causal-relay hypotheses are
 *preconditions* (channel structure / regularity); the genuine content is carried by the two
-single-letterization cut lemmas and is proven, not assumed. The outer maximisation over joint
+single-letterization cut lemmas and is proven, not assumed. The outer maximization over joint
 input pmfs `p(x, x₁)` — the textbook `n · max_p` — is left to callers, which is why the conclusion
 keeps the explicit per-letter sums.
 @audit:ok -/
