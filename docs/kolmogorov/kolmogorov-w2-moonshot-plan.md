@@ -15,21 +15,19 @@
 - [x] Gateway atom — prefix-free 機械 U_pf + K + P_U + Kraft 1 回適用 ✅ (`PrefixMachine.lean`、`537c5ab8`/`a448b313`)
 - [x] Phase P7 — 普遍確率下界 (CT 14.6.1) ✅ (`UniversalProbability.lean`、`16ce3108`/`4303c4b6`)
 - [x] Phase P8 — prefix K と普遍確率の **factor-2 関係** ✅ (`Levin.lean`、`6861eb14`/`be6d1f7f`/`07acd1c0`)
-      — **教科書の加法版 Levin 定理は証明していない** (この機械では真偽不明 ⟹ plan 段 park、§Phase P8)
-- [ ] Phase P9 — Chaitin Ω (§14.9) 🚧 Ω 収束 + prefix K 非計算性は着地 (`Omega.lean`、`4f55f459`/`07057aa1`)、
-      **Ω 自体の非計算性のみ未了** → park (`plan:kolmogorov-w2-omega-noncomputable`)
-- [ ] Phase P10 — Kolmogorov 十分統計量 (§14.12、stretch、最重量) 📋 ← **次のマイルストーン**
+      — **教科書の加法版 Levin 定理は証明していない** (この機械では真偽不明 ⟹ 後継 scope、§Phase P8)
+- [x] Phase P9 — Chaitin Ω (§14.9) ✅ 波内スコープは着地 (`Omega.lean`、`4f55f459`/`07057aa1`)。
+      **Ω 自体の非計算性は後継 scope** (`plan:kolmogorov-w2-omega-noncomputable`、着手コストは P10 で低下 → §Phase P9)
+- [x] Phase P10 — Kolmogorov 十分統計量 (§14.12) ✅ (`SufficientStatistic.lean`、
+      `ffefd9d8`/`ec2f6eba`/`56d6a773`/`d6cc3062`) → 在庫 [`kolmogorov-w2-p10-inventory.md`](kolmogorov-w2-p10-inventory.md)
 
-**第 2 波の control state (cold-read 用)**: gateway atom は通過 ⟹ make-or-break は解消し **R-W2a は回避**
-(自己限定符号が実際に組めた)。P7 は DONE。**P8 は factor-2 関係として着地** —
-`-log₂ P_U(x) ≤ K(x) ≤ 2·(-log₂ P_U(x)) + 1` が第 2 波の頂点であり、**教科書の加法版
-`|K(x) + log₂ P_U(x)| ≤ c` は証明していない**。加法版はこの機械では真偽不明ゆえコード側に `sorry` を置かず
-**plan 段のみで park** (§residual slug 方針、後継は加法的普遍 prefix 機械の構成)。P9 は Ω 収束
-(`chaitinOmega_le_one`) + **prefix K の非計算性** (`prefixComplexity_not_computable`) まで着地し、
-**Ω 自体の非計算性だけが未了** (park、下記 slug 表)。**次のマイルストーンは P10** = 解析壁でなく最重量の
-定義量 (250–500 行) = 撤退候補で DAG 末尾の stretch のまま。`wall:` を打つ先は現状無い (genuine 壁判定は
-実測後に初めて行う)。途中 sorry の残置状況は plan に焼き込まず
-`rg "@residual" InformationTheory/Shannon/Kolmogorov/` で都度確認する。
+**第 2 波の control state (cold-read 用)**: **第 2 波は達成** — M0 / gateway atom / P7 / P8 / P9 / P10 が全て着地した。
+頂点は P8 の factor-2 関係 `-log₂ P_U(x) ≤ K(x) ≤ 2·(-log₂ P_U(x)) + 1`、DAG 末尾の P10 (§14.12 十分統計量) も
+`SufficientStatistic.lean` で着地し、在庫が唯一の退避候補としていた crux (機械の自己シミュレーション) まで
+退避なしで閉じた。**残るのは後継 scope 2 件で、第 2 波の未達ではない** (§ゴール / Scope の達成判定):
+(a) **加法版 Levin 定理** = 別の機械 (加法的普遍 prefix 機械) の構成 (`plan:kolmogorov-w2-levin`)、
+(b) **Ω 自体の非計算性** (`plan:kolmogorov-w2-omega-noncomputable`)。`wall:` を打つ先は最後まで現れなかった。
+sorry / residual の残置状況は plan に焼き込まず `rg "@residual" InformationTheory/Shannon/Kolmogorov/` で都度確認する。
 
 ## ゴール / Scope
 
@@ -43,9 +41,20 @@
 後継ルートへ移す** — 別の機械を建てる必要があり、leg でなく別 moonshot 級 (§residual slug 方針)。
 
 **In (第 2 波)**: gateway atom (prefix-free 機械 U_pf + K + P_U + Kraft 1 回適用) → **P7 普遍確率下界** (CT 14.6.1)
-→ **P8 factor-2 関係** (flagship、上記の訂正後の形) → **P9 Chaitin Ω** (§14.9、収束 + 非計算性。**Ω 自体の
-非計算性は park**、§Phase P9) → **P10 Kolmogorov 十分統計量** (§14.12、stretch)。P10 はユーザー確定で本 moonshot の最終 Phase に含めるが、honest に「最重量の
-定義量ビルド (250–500 行)、撤退ライン候補」と扱い DAG 上は P7–P9 closure 後の stretch 位置に置く。
+→ **P8 factor-2 関係** (flagship、上記の訂正後の形) → **P9 Chaitin Ω** (§14.9、収束 + prefix K 非計算性)
+→ **P10 Kolmogorov 十分統計量** (§14.12)。
+
+**達成判定 (2026-07-25)**: **In の 5 項すべてが着地 ⟹ 第 2 波は達成**。P7 / P8 / P9 / P10 の着地物と commit は
+§Phase 詳細。**残 2 件は「未達」ではなく「後継 scope」** — どちらも第 2 波の In が要求する命題ではなく、
+**別の object を建てる**話だから区別する:
+
+| 後継 scope | 何が要るか | slug |
+|---|---|---|
+| 加法版 Levin `\|K(x) + log₂ P_U(x)\| ≤ c` | この機械では真偽不明 ⟹ **加法的普遍 prefix 機械の構成** (別 moonshot 級) | `plan:kolmogorov-w2-levin` |
+| Ω 自体の非計算性 | 実数計算可能性の定式化 **または** 候補定式化 (ii) の帰着 (P10 の Primrec 群で着手コスト低下) | `plan:kolmogorov-w2-omega-noncomputable` |
+
+いずれも**コード側に対応する `sorry` を持たない** (前者は真偽不明ゆえ `@residual` を貼れない、後者は命題を
+まだ述べていない) ⟹ park は plan 段のみ。
 
 **Out (非ゴール)**: Mathlib への PR / upstream、prefix 複雑性 K の bit↔nat 精密変換の作り込み、
 Martin-Löf randomness の一般理論 (P9 の「algorithmically random」主張に要る範囲を超えた展開)。
@@ -68,14 +77,14 @@ Martin-Löf randomness の一般理論 (P9 の「algorithmically random」主張
    ┌──── P7 普遍確率下界 ✅ ────┐  P_U(x) ≥ 2^{-K(x)} + 対数形 (factor-2 関係の下半分)
    │                          │
    ▼                          ▼
-P9 Chaitin Ω 🚧              P8 factor-2 関係 ✅ (flagship、`Levin.lean`)
+P9 Chaitin Ω ✅              P8 factor-2 関係 ✅ (flagship、`Levin.lean`)
  収束 ✅ (chaitinOmega_le_one)   K(x) = 2·m(x) + 1 (構造恒等式) + P_U(x) ≤ 2^{-m(x)} (数え上げ)
  prefix K 非計算性 ✅            ⟹ K(x) ≤ 2·(-log₂ P_U(x)) + 1、P7 と合流して両側 factor-2
- Ω 自体の非計算性 → park        加法版は加法的普遍機械を要する ⟹ 後継 moonshot へ park (コード側 sorry 無し)
-   │                          │
-   └────────┬─────────────────┘
-            ▼
-        P10 Kolmogorov 十分統計量 (§14.12、stretch、最重量定義量 250–500 行、撤退候補) ← 次のマイルストーン
+ Ω 自体の非計算性 → 後継 scope   加法版は加法的普遍機械を要する ⟹ 後継 scope (コード側 sorry 無し)
+                              │  (P10 は P8 のみを消費、P9 とは独立)
+                              ▼
+        P10 Kolmogorov 十分統計量 ✅ (§14.12、`SufficientStatistic.lean` 594 行)
+        two-part 符号 + MDL の headline 2 本 + 自己シミュレーション crux まで proof-done
 ```
 
 ### gateway atom = 第 2 波の礎石 ✅ (下流が消費する API)
@@ -107,8 +116,13 @@ inventory は全 P を downgrade した (P7 △→○、P8 ✖→△、P9 ✖→
 軽かったのは**着地した命題が当初掲げた加法版ではなく factor-2 版**だからである。着手前に prefix invariance の
 2 倍係数 (weaker relative) の strength diff を 1 回通したことで、加法版が「まだ証明していない命題」ではなく
 「この機械では真偽不明の命題」だと判明した (§Phase P8)。⟹ **行数が予算内に収まったことを、命題が当初予定どおり
-入った証拠に読み替えないこと**。残る P10 も同じ規律で扱う (最重量なのは定義量 = 選択 (big) であって解析壁ではない、
-という見立て自体を実測で検算する)。
+入った証拠に読み替えないこと**。
+
+**P10 での検算結果 (両方向に効いた)**: 「最重量なのは定義量 = 選択 (big) であって解析壁ではない」という見立ては
+実測で維持された (`wall:` 0 件で closure)。一方 **行数は見積 250–500 に対し実績 594 = 上振れ**し、重さの所在も
+定義群ではなく **crux (bit codec の `Primrec` 化 + 機械の自己シミュレーション)** に寄っていた。⟹ 見積下振れ
+(P8) と上振れ (P10) の両方を実測が是正しており、**行数見積は着地の可否を予言しない**という同じ結論に落ちる。
+そして P10 の係数会計は P8 と同じ構造 — 教科書形の係数 1 は取れず `4·⌈log₂|S|⌉` を**定義側に**置く (§Phase P10)。
 
 ### 定義形 (Mathlib-shape-driven、consumed lemma の conclusion form に合わせる)
 
@@ -141,14 +155,18 @@ inventory は全 P を downgrade した (P7 △→○、P8 ✖→△、P9 ✖→
 | `invariance` / `invariance_code` | `Invariance.lean:53/36` | prefix 不変性の pointwise-over-descriptions 雛形 |
 | `incompressible_count` | `Counting.lean:108` | K 版数え上げの雛形 (Kraft でより精密化可) |
 | `complexity_not_computable` / `condComplexity_not_computable` | `Noncomputable.lean:83/40` | **P9 prefix K 非計算性の Berry 論法 転用元** (転用済) |
-| `entropy μ Xs` | `Bridge.lean:40` | P10 KSS / MDL の H(X) 項 |
-| `ComputablePred.halting_problem` | `Mathlib/Computability/Halting.lean:65` | Ω 自体の非計算性 (park slug) の背骨候補 (第 1 波 P5 と同弾) |
+| `ComputablePred.halting_problem` | `Mathlib/Computability/Halting.lean:65` | Ω 自体の非計算性 (後継 scope) の背骨候補 (第 1 波 P5 と同弾) |
+
+**`entropy` (`Bridge.lean:40`) は第 2 波の依存ではない** (当初は P10 の H(X) 項として挙げていた)。CT §14.12 の
+対象は 1 本の文字列 `x` についての量で測度が出てこないため — P10 在庫 §F の判定であり、着地した
+`SufficientStatistic.lean` も `Bridge` を import していない (child = 在庫が SoT)。
 
 ### 実装原則
 
 - **Skeleton-driven**: 各 Phase は全補題を `:= by sorry` で建て type-check done を確認してから 1 sorry ずつ充填。
   inventory §着手 skeleton (`PrefixMachine.lean` 出だし) がそのまま Gateway atom の skeleton。
-- **並走レーン**: 残る並走可能レーンは P10 (stretch) と Ω 自体の非計算性 (park slug、第 1 波 halting 資産のみ依存)。
+- **並走レーン**: 第 2 波内に残るレーンは無い。後継 scope 2 件は互いに独立 (加法版 Levin = 機械の建て替え /
+  Ω 非計算性 = 停止問題への帰着) なので、着手するなら別々の子 plan として並走可能。
 - **第 1 波資産の signature 変更なし**: 第 2 波は第 1 波資産を read-only 消費する新規定義群 ⟹ 第 1 波側の
   consumer ripple 解析は不要。**第 2 波内部の `prefixUniversalEval` も P8 では触らなかった** (出口 (ii) を採らず、
   P8 は `tsum_inv_two_pow_length_le_one` の一般化 = 旧名を署名同一 wrapper で残す形で済んだ ⟹ ripple 0)。
@@ -162,73 +180,40 @@ inventory は全 P を downgrade した (P7 △→○、P8 ✖→△、P9 ✖→
 
 ### Phase M0 — Mathlib API 在庫調査 ✅
 
-- **状態**: DONE。[`kolmogorov-w2-inventory.md`](kolmogorov-w2-inventory.md) (340 行) が SoT。Kraft-McMillan
-  (有限 UD 符号版) + `summable_of_sum_le` + `ENNReal.tsum_eq_iSup_sum` が Ω/P_U 収束を供給する overturn を
-  machine/loogle 確認済み。§Key-preconditions box (Kraft の有限性・型クラス・ℝ≥0∞ 設計) が着手前の必読。
-- **proof-log**: no (調査 Phase)。
+DONE。[`kolmogorov-w2-inventory.md`](kolmogorov-w2-inventory.md) が SoT (Kraft 既存の overturn +
+§Key-preconditions box)。P10 分は別在庫 [`kolmogorov-w2-p10-inventory.md`](kolmogorov-w2-p10-inventory.md)。
+proof-log: no (調査 Phase)。
 
 ### Gateway atom — prefix-free 機械 U_pf + K + P_U + Kraft 1 回適用 ✅
 
-- **状態**: DONE (`PrefixMachine.lean`、commits `537c5ab8` + honesty/style ゲート `a448b313`)。**R-W2a 回避** —
-  自己限定 literal 符号 (単進長さ前置 `selfDelimit`) が実際に組め、Kraft 接続まで通った ⟹ make-or-break 解消。
-  提供 API の一覧は §Approach「gateway atom = 第 2 波の礎石」。**P9 leg で `tsum_inv_two_pow_length_le_one`
-  (有限 Kraft → 可算無限 lift の汎用 plumbing) が後から追加**され、P_U / Ω 双方の `≤ 1` を 2–3 行にした。
-- **proof-log**: yes (取得済)。
+DONE (`PrefixMachine.lean`、`537c5ab8` + ゲート `a448b313`)。**R-W2a 回避** — 自己限定 literal 符号
+(単進長さ前置 `selfDelimit`) が実際に組め Kraft 接続まで通った ⟹ make-or-break 解消。提供 API は
+§Approach「gateway atom = 第 2 波の礎石」。proof-log: yes (取得済)。
 
 ### Phase P7 — 普遍確率下界 (CT 14.6.1) ✅
 
-- **状態**: DONE (`UniversalProbability.lean`、commits `16ce3108` + ゲート `4303c4b6`)。実測 ~80 行 =
-  見積 60–120 行の下側。
-- **成果物** (3 本、いずれも仮説なし):
-  ```lean
-  @[entry_point] theorem universalProb_ge_two_pow_neg_prefixComplexity (x : ℕ) :
-      (2 : ℝ≥0∞)⁻¹ ^ prefixComplexity x ≤ universalProb x
-  theorem universalProb_le_one (x : ℕ) : universalProb x ≤ 1
-  theorem neg_logb_universalProb_le_prefixComplexity (x : ℕ) :
-      -Real.logb 2 (universalProb x).toReal ≤ (prefixComplexity x : ℝ)
-  ```
-- **P8 への含意**: 3 本目が **Levin の (≤) 方向そのもの**であり、しかも `0 < universalProb x` を仮説に持たない
-  (K が total ⟹ P_U(x) ≥ 2^{-K(x)} > 0 が全 x で出る)。⟹ P8 は (≥) 方向だけを残す。
-- **proof-log**: no。
+DONE (`UniversalProbability.lean`、`16ce3108` + ゲート `4303c4b6`、実測 ~80 行 = 見積 60–120 行の下側)。
+`universalProb_ge_two_pow_neg_prefixComplexity` (`@[entry_point]`) / `universalProb_le_one` /
+`neg_logb_universalProb_le_prefixComplexity` の 3 本、いずれも仮説なし。3 本目が factor-2 関係の下半分そのもので、
+`0 < universalProb x` を仮説に持たない (K が total ⟹ 全 x で正) ため P8 は上半分だけを残した。proof-log: no。
 
 ### Phase P8 — prefix K と普遍確率の factor-2 関係 (flagship `@[entry_point]`) ✅
 
-- **状態**: DONE (`Levin.lean` ~245 行 / 16 decl、commits `6861eb14` + honesty ゲート `be6d1f7f` +
-  style ゲート `07acd1c0`)。見積 200–400 行の下側。`InformationTheory.lean` へ import 登録済。
-- **着地した成果物** (いずれも仮説なし。署名は `scripts/sig_view.ts` で都度確認):
-  ```lean
-  noncomputable def payloadComplexity (x : ℕ) : ℕ         -- 最短 payload 長 m(x)
-  def padDelimit (m : ℕ) (d : List Bool) : List Bool      -- 単進 run を offset 分短縮したラッパ
-  theorem prefixComplexity_eq_two_mul_payloadComplexity_add_one (x : ℕ) :
-      prefixComplexity x = 2 * payloadComplexity x + 1
-  theorem universalProb_le_two_pow_neg_payloadComplexity (x : ℕ) :
-      universalProb x ≤ (2 : ℝ≥0∞)⁻¹ ^ payloadComplexity x
-  @[entry_point] theorem prefixComplexity_le_two_mul_neg_logb_universalProb (x : ℕ) :
-      (prefixComplexity x : ℝ) ≤ 2 * (-Real.logb 2 (universalProb x).toReal) + 1
-  ```
-  P7 の `neg_logb_universalProb_le_prefixComplexity` と合流して **両側 factor-2 関係**
-  `-log₂ P_U(x) ≤ K(x) ≤ 2·(-log₂ P_U(x)) + 1` = 第 2 波の頂点。当初案の `0 < universalProb x →` ガードは
-  予定どおり不要だった (P7 下界 + `ENNReal.pow_pos`、§定義形「対数形の型」)。
-- **証明機構 (SFE ではなく数え上げ)**: x を出力する program は長さ ≥ m(x) の payload に単射で入り、その payload を
-  `padDelimit m` で巻き直すと質量が `2^{-m(x)}` × (prefix-free 集合上の Kraft 可算和) の形で露出する。⟹
-  **Shannon-Fano-Elias (算術符号) の逆向き構成は要らなかった**。`padDelimit m` は `m ≠ 0` では機械の program に
-  ならない (単進前置が payload 長を下回り受理ガードが弾く) が、必要なのは像の prefix-free 性だけ。
-- **enabling 資産の一般化 (ripple 0)**: `tsum_inv_two_pow_length_le_one` を
-  **`PrefixFree.tsum_inv_two_pow_length_le_one`** (任意 prefix-free 集合 + 空語なし。有限形は `PrefixFree.kraft`)
-  に一般化。旧名は署名同一の wrapper として残したので `Omega.lean` / `UniversalProbability.lean` の consumer は
-  無変更で通った。
-- **strength diff ゲートの判定 (着手前の 3 択に決着、textbook-object strength diff)**: 教科書の prefix invariance は
-  加法的 `K(x) ≤ K_A(x) + c_A` だが in-tree は `K(x) ≤ 2·|q| + b` (`Omega.lean`) の **weaker relative**。3 択の帰結:
-  1. **(i) 自己限定済み記述を渡して加法定数に落とす = 困難ではなく原理的に不可能**。`dom_imp_mem_range` が受理
-     program を `Set.range selfDelimit` に閉じ込め、`selfDelimit_length` が `|selfDelimit d| = 2·|d| + 1` を与える
-     ⟹ `prefixComplexity_eq_two_mul_payloadComplexity_add_one` が `K = 2·m + 1` を **恒等式として**主張する。
-     記述をどう符号化して渡しても加法定数は回復しない (2 倍は機械の def の性質)。
+- **状態**: DONE (`Levin.lean` ~245 行 / 16 decl、`6861eb14` + ゲート `be6d1f7f` / `07acd1c0`)。見積 200–400 行の
+  下側。headline `prefixComplexity_le_two_mul_neg_logb_universalProb` (`@[entry_point]`、仮説なし) が P7 下界と
+  合流して **両側 factor-2 関係** `-log₂ P_U(x) ≤ K(x) ≤ 2·(-log₂ P_U(x)) + 1` = 第 2 波の頂点。支える 2 本は
+  `prefixComplexity_eq_two_mul_payloadComplexity_add_one` (構造恒等式) と
+  `universalProb_le_two_pow_neg_payloadComplexity` (数え上げ)。**Shannon-Fano-Elias の逆向き構成は不要だった**。
+- **strength diff ゲートの判定 (着手前の 3 択に決着、後継ルートの根拠なので保持)**: 教科書の prefix invariance は
+  加法的 `K(x) ≤ K_A(x) + c_A` だが in-tree は `K(x) ≤ 2·|q| + b` (`Omega.lean`) の **weaker relative**。
+  1. **(i) 自己限定済み記述を渡して加法定数に落とす = 困難ではなく原理的に不可能**。受理 program が
+     `Set.range selfDelimit` に閉じ `|selfDelimit d| = 2·|d| + 1` ⟹ `K = 2·m + 1` は**恒等式**であり、記述の
+     符号化をどう変えても加法定数は回復しない (2 倍は機械の def の性質)。
   2. **(ii) 機械 def 変更 = 後継ルート**。「符号自身の prefix-free 性が parse 境界を与える」モードこそ
-     **加法的普遍 prefix 機械**に要るものだが、任意の `Nat.Partrec.Code` 上で dovetail 先着順フィルタを回して機械を
+     **加法的普遍 prefix 機械**に要るが、任意の `Nat.Partrec.Code` 上で dovetail 先着順フィルタを回して機械を
      建てる必要がある (生の `Code` の `List Bool` 入力上の停止集合は prefix-free でない) ⟹ leg ではなく別
      moonshot 級の構成。実測 ripple 表 (下) はこの後継の見積用にそのまま残す。
-  3. **(iii) 採用したが「言い換え」から「証明」へ格上げ**。flagship を factor-2 版に言い換えるだけで済ませず、
-     **実在する機械に対して両側の真の bound を証明**した。
+  3. **(iii) 採用のうえ「言い換え」から「証明」へ格上げ** — 実在する機械に対して両側の真の bound を証明した。
 - **(ii) を後継 plan で選ぶ場合の ripple (`scripts/dep_consumers.sh` 実測、P8 着手前の値)**:
 
   | target | direct consumers | 内訳 (file) |
@@ -244,46 +229,70 @@ inventory は全 P を downgrade した (P7 △→○、P8 ✖→△、P9 ✖→
   `|K(x) + log₂ P_U(x)| ≤ c` (CT §14.6) は **`sorry + @residual(plan:kolmogorov-w2-levin)` としても置いていない**。
   この機械に対しては**未証明ではなく真偽不明** — x を出力する全 program の総質量が最短 1 本の質量の定数倍に収まるか、
   という機械固有の研究水準の問いになる。**偽かもしれない命題に `@residual` を貼ること自体が defect** ⟹ park は
-  plan 段のみ (§settled facts の human-judgment entry が決着条件を持つ)。`Levin.lean` の module docstring は
-  「加法定理は加法的普遍 prefix 機械についての主張でありここでは主張しない」を明示している。
-- **proof-log**: yes を指定していたが**未取得** (`docs/proof-logs/` に該当ファイル無し、`rg` 実測)。数え上げ機構が
-  SFE 逆向き構成を置き換えた点は method 資産としての価値があるので、回収するなら後続 leg で。
+  plan 段のみ (§settled facts の human-judgment entry が決着条件を持つ)。
+- **proof-log**: yes を指定していたが**未取得**。数え上げ機構が SFE 逆向き構成を置き換えた点は method 資産として
+  価値があるので、回収するなら後続 leg で。
 
-### Phase P9 — Chaitin Ω (§14.9) 🚧 部分 DONE
+### Phase P9 — Chaitin Ω (§14.9) ✅ 波内スコープは着地
 
-- **状態**: `Omega.lean` 着地 (commits `4f55f459` + ゲート `07057aa1`)。**入ったもの / 入っていないものを厳密に**:
+- **状態**: DONE (`Omega.lean`、`4f55f459` + ゲート `07057aa1`)。**入った**: `chaitinOmega` 定義 + 収束
+  `chaitinOmega_le_one` (`@[entry_point]`) / `chaitinOmega_pos` / `chaitinOmega_ne_top`、interpret モード入口
+  (`prefixInterpretProg` / `prefixUniversalEval_interpret`)、prefix invariance (`K(x) ≤ 2·|q| + b`、⚠️ P8 節)、
+  **prefix K の非計算性** `prefixComplexity_not_computable` (`@[entry_point]`、Berry 論法)。
+- **入っていない = 後継 scope**: **Ω 自体の非計算性**。着地したのは **K の非計算性であって Ω の非計算性ではない**
+  (別 object、コード側 docstring も Ω 非計算性を主張していない) ⟹ `plan:kolmogorov-w2-omega-noncomputable`
+  (着手時に子 plan を起票)。「algorithmically random」の主張も同 slug に同梱。
+- **🔄 着手コストが P10 で下がった (2026-07-25、最重要の状態変化)**: §settled facts の候補定式化 (ii)
+  `¬ ComputablePred (fun n ↦ (prefixUniversalEval (decode n)).Dom)` は「実数計算可能性の自前定式化」を回避できる
+  代わりに **機械の computability infra** を前提としていたが、それが P10 の crux 用に in-tree へ入った。
+  **再利用できる decl (`SufficientStatistic.lean`、署名は `scripts/sig_view.ts` で都度確認)**:
 
-  **入った (DONE)**:
-  ```lean
-  noncomputable def chaitinOmega : ℝ≥0∞
-  @[entry_point] theorem chaitinOmega_le_one : chaitinOmega ≤ 1     -- 収束 (Kraft lift)
-  theorem chaitinOmega_pos : 0 < chaitinOmega                       -- 退化 (Ω = 0) の排除
-  theorem chaitinOmega_ne_top : chaitinOmega ≠ ⊤
-  def prefixInterpretProg / theorem prefixUniversalEval_interpret   -- interpret モード入口
-  theorem prefix_invariance_code / prefix_invariance                -- K(x) ≤ 2 * |q| + b (⚠️ P8 節)
-  @[entry_point] theorem prefixComplexity_not_computable            -- prefix K の非計算性 (Berry)
-  ```
-  非計算性の補助 (`shortestPrefixProg` 系 / `exists_prefixIncompressible`) も同ファイルに同居。
+  | decl | file:line | (ii) での役割 |
+  |---|---|---|
+  | `encodeNat_primrec : Primrec encodeNat` | `SufficientStatistic.lean:250` | bit codec の計算可能性 (往路) |
+  | `decodeNat_primrec : Primrec decodeNat` | `:297` | 同 (復路) |
+  | `parseUnary_primrec : Primrec parseUnary` | `:319` | 単進長さ前置の parse |
+  | `payloadDispatch_computable : Computable payloadDispatch` | `:347` | 2 モード dispatch を `Code × ℕ` へ |
+  | `decodePayload_eq_dispatch` / `decodePayload_partrec : Partrec decodePayload` | `:375` / `:383` | **`decodePayload` の partrec 性** (`Nat.Partrec.Code.eval_part` 経由) |
+  | `encodeNat_decodeNat_concat` | `:216` | canonical (末尾 `true`) 上の逆向き round-trip |
 
-  **入っていない (未了)**: **Ω 自体の非計算性** (「Ω の各 bit が停止問題を解く」古典論法)。当初この Phase の
-  成果物欄はこれを含めていたが、着地したのは **K の非計算性であって Ω の非計算性ではない** — 両者は別 object。
-  コード側 docstring は Ω の非計算性を一切主張していない (`Omega.lean` §Main results)。⟹ **park**:
-  `plan:kolmogorov-w2-omega-noncomputable` (§residual slug 方針の表、着手時に子 plan を起票)。
-  「algorithmically random」の主張も同 park に同梱 (Out 節の範囲を超えない範囲で)。
-- **park の理由 (順序決定であって scope 落としではない)**: Ω 非計算性を述べるには「実数の計算可能性」の定式化を
-  自前で建てる必要があり (Mathlib 不在、§settled facts の loogle 実測)、flagship の P8 を先に取る方が
-  第 2 波全体の価値が高い。P8 / P10 の後に budget が残れば回収する。
+  `prefixUniversalEval p = if (parseUnary p).1 = (parseUnary p).2.length then decodePayload (parseUnary p).2
+  else Part.none` (`PrefixMachine.lean:172`) なので、**残るのは (a) 上表からの `Partrec prefixUniversalEval` の
+  組み立て + `Primcodable (List Bool)` 越しの `fun n ↦ … (decode n)` への持ち上げ、(b) 停止問題からの帰着**
+  (`ComputablePred.halting_problem` @ `Mathlib/Computability/Halting.lean:65`、interpret 入口
+  `prefixUniversalEval_interpret` @ `Omega.lean:126` が任意 code の停止を prefix program の停止へ写す経路)。
+  (a)(b) はいずれも**見立てであって未実測** — 着手時に gateway atom 1 本で検算すること。
 - **proof-log**: no。
 
-### Phase P10 — Kolmogorov 十分統計量 (§14.12、stretch、最重量) 📋
+### Phase P10 — Kolmogorov 十分統計量 (§14.12) ✅
 
-- **依存**: prefix K (Gateway atom) + 第 1 波 `entropy` (`Bridge.lean:40`)。DAG 末尾の stretch。
-- **成果物**: モデル `S ∋ x` の記述長 `K(S) + log|S|`、最小十分統計量、MDL 原理の定式化。
-- **見積行数**: **250–500 行** (第 2 波最重量、解析壁ではなく**定義量が多い**)。ファイル `SufficientStatistic.lean`。
-- **proof-log**: **yes** (定義量が多く設計判断を残す価値)。
-- **撤退ライン**: **本 Phase 全体が撤退候補**。第 2 波の成立条件は P7 / P8 / P9 (park 分を除く) の closure であり、
-  P10 が 1 セッションで定義群を組めない場合は第 2.5 波へ park (P7–P9 の成否には無関係)。park slug
-  `plan:kolmogorov-w2-kss`。
+- **状態**: DONE (`SufficientStatistic.lean` 594 行 / 56 decl、`ffefd9d8` + 補追 `ec2f6eba` / `56d6a773` +
+  style ゲート `d6cc3062`)。見積 250–500 行に対し **実績 594 行 = 上振れ** (重さは定義群でなく crux 側、
+  §Approach「under-estimation ガード」)。在庫 = [`kolmogorov-w2-p10-inventory.md`](kolmogorov-w2-p10-inventory.md)。
+- **依存**: prefix K (Gateway atom) + `payloadComplexity` / `prefixComplexity_eq_two_mul_payloadComplexity_add_one`
+  (P8 `Levin.lean`) のみ。**第 1 波 `entropy` は依存しない** (§Approach 末尾、在庫 §F が SoT)。**P9 も依存しない** —
+  在庫は `prefix_invariance` を使う段で `Omega` を import する想定だったが、実装は payload 世界の
+  `payload_invariance` を自前で建てたため `Omega` を import していない (import 行と `rg` で確認)。
+- **着地した成果物** (署名は `scripts/sig_view.ts` で都度確認):
+  - **headline 2 本 (`@[entry_point]`)**: `prefixComplexity_le_twoPartLength` (two-part 符号の達成可能性) /
+    `mdlComplexity_sub_prefixComplexity_le` (MDL 原理、両側)
+  - **定義 6 本**: `modelCode` / `modelComplexity` / `twoPartLength` / `mdlComplexity` / `structureFunction` (ℕ∞ 値) /
+    `IsSufficientStatistic` (c を明示引数)
+  - **構造関数系**: `structureFunction_antitone` / `structureFunction_zero` (k=0 で `⊤`) /
+    `structureFunction_eq_zero_of_singleton_budget`、MDL 系 `mdlComplexity_spec` / `mdlComplexity_le_of_mem`
+  - **十分統計量の witness**: `exists_isSufficientStatistic_singleton` (`∃ c, ∀ x, IsSufficientStatistic c x {x}`)、
+    supporting `modelComplexity_singleton_le`
+  - **crux (在庫が唯一の退避候補としていた本体)**: `payloadComplexity_two_part_le` = 機械の自己シミュレーション。
+    bit codec の `Primrec` 化 (`encodeNat_primrec` / `decodeNat_primrec` / `parseUnary_primrec`) +
+    `Nat.Partrec.Code.eval_part` 経由の `decodePayload_partrec` で組み、**退避なしで closure**。
+    副産物 `payload_invariance` (`:411`) は payload 世界の**加法的** invariance (`≤ q.length + b`) で、後継 scope
+    (加法的普遍機械) の見積に効く。
+- **係数会計 (honest scope、在庫 §Honest scope call (C1))**: 教科書の `K(x) ≤ K(S) + log|S| + O(1)` は**係数 1 では
+  取れない** (`K = 2·m + 1` が恒等式ゆえ index 項に 2×2 が乗る) ⟹ **`4 * Nat.clog 2 S.card` を `twoPartLength` の
+  定義側に埋め込む**ことで headline を加法定数のみの汚染に落とした。**教科書の two-part 不等式と同一視して命名
+  しない**のは P8 の name laundering 禁止の再演 (module docstring が明示)。
+- **proof-log**: yes を指定していたが**未取得** (P8 と同じ扱い、回収するなら後続 leg で)。
+- **撤退ライン**: **未発動** (§撤退ライン)。
 
 ---
 
@@ -300,8 +309,15 @@ inventory は全 P を downgrade した (P7 △→○、P8 ✖→△、P9 ✖→
   factor-2 版であり、**教科書の加法版だけが後継ルートへ park** (§residual slug 方針)。factor-2 版を教科書 Levin と
   称さない禁止事項は恒久的に有効 (name laundering)。slug は他文書参照のため register に残す。
 
-**判定 (現時点)**: R-W2a 回避済、R-W2b 未発動 (P8 は factor-2 形で proof-done、最小成果を超過)。残る撤退ラインは
-P10 の Phase 全体撤退候補 (§Phase P10) のみ。
+- **R-W2c** (在庫が提案した P10 の crux 単独 park = `payloadComplexity_two_part_le` を共有 sorry 補題として残し、
+  定義群 + 構造的定理だけ type-check done で着地させる): **未発動** — crux 本体が proof-done で閉じたため
+  縮退出口を使わなかった。同時に、在庫が「入れるのは可だが headline にしない」条件付きで許容していた
+  Route A (`natLen (modelCode S)` 版の弱い two-part bound) も**採らなかった** (K(S) 版 (B) が入ったため不要)。
+  slug は他文書参照のため register に残す。
+
+**判定 (現時点)**: R-W2a 回避済 / R-W2b 未発動 / R-W2c 未発動、**さらに §Phase P10 の「本 Phase 全体が撤退候補」も
+未発動** (P10 は proof-done で着地)。⟹ **第 2 波で発動した撤退ラインは 0 件**。残る撤退ラインは無く、後継 scope
+2 件は撤退ではなく別 object の新規建て (§ゴール / Scope の達成判定)。
 
 ---
 
@@ -311,14 +327,19 @@ inventory 推奨に従い **第 1 波 §Out の単一 `wall:prefix-free-tower` �
 第 2 波の途中 sorry は **object 別の `plan:` slug** に分割し、各 slug は将来分割する子 plan の filename stem
 (kebab-case、`-plan.md` を除く) と一致させる:
 
-| slug (`@residual(plan:…)`) | 対応子 plan (未作成、分割時に起票) | object |
+| slug (`@residual(plan:…)`) | 状態 | object |
 |---|---|---|
-| `kolmogorov-w2-prefix-machine` | `kolmogorov-w2-prefix-machine-plan.md` | Gateway atom (U_pf / PrefixFree / K) |
-| `kolmogorov-w2-universal-prob` | `kolmogorov-w2-universal-prob-plan.md` | P7 P_U 定義 + 下界 |
-| `kolmogorov-w2-omega` | `kolmogorov-w2-omega-plan.md` | P9 Ω 収束 (着地済、退避不要になった) |
-| `kolmogorov-w2-omega-noncomputable` | `kolmogorov-w2-omega-noncomputable-plan.md` (未作成) | **Ω 自体の非計算性** (実数計算可能性の定式化 + U_pf の partrec 性) |
-| `kolmogorov-w2-levin` | `kolmogorov-w2-levin-plan.md` (未作成) | **加法版 Levin 定理**。**plan 段の park で、対応する `sorry` はコード側に 0 本** (下記) |
-| `kolmogorov-w2-kss` | `kolmogorov-w2-kss-plan.md` | P10 十分統計量 |
+| `kolmogorov-w2-prefix-machine` | 退避不要で closure (子 plan 起票せず) | Gateway atom (U_pf / PrefixFree / K) |
+| `kolmogorov-w2-universal-prob` | 同上 | P7 P_U 定義 + 下界 |
+| `kolmogorov-w2-omega` | 同上 | P9 Ω 収束 |
+| `kolmogorov-w2-kss` | **同上 (P10 着地で closure)** — crux まで含めて退避せず着地したため子 plan 起票は不要 | P10 十分統計量 |
+| `kolmogorov-w2-omega-noncomputable` | **後継 scope (子 plan 未作成)** | **Ω 自体の非計算性** (実数計算可能性の定式化 **または** 候補定式化 (ii)。P10 の Primrec 群を再利用可 → §Phase P9) |
+| `kolmogorov-w2-levin` | **後継 scope (子 plan 未作成)、コード側 `sorry` は 0 本** | **加法版 Levin 定理** (下記) |
+
+**新 slug `kolmogorov-w2-machine-partrec` は追加しない**: P10 在庫 §壁の列挙が crux
+(`payloadComplexity_two_part_le`) 用の共有 sorry 補題 slug として推奨していたが、**crux が退避なしで closure した
+ため貼る先の `sorry` が存在しない**。「`sorry` の無い slug は登録しない」(register の divergence 防止) ⟹ 不採用。
+在庫だけを読むと未登録が抜けに見えるのでここに記録を残す。
 
 `kolmogorov-w2-omega-noncomputable` は **`wall:` ではなく `plan:`** — 実数計算可能性が Mathlib に無いのは
 「解析が難しい (hard)」ではなく「定式化と自作インフラを選ぶ (big)」側だからである (§settled facts の loogle 実測)。
@@ -361,7 +382,9 @@ re-derive (Mathlib 実ファイル Read + loogle) につきここに保持する
   - クエリ `Computable, Real` → **Found 0 declarations** / `ComputableReal` → **unknown identifier**
   - **含意**: 「Ω は計算不可能」を述べるには **「実数が計算可能」の定義を自前で建てる**必要がある。さらにその
     証明の最初の非自明ブロックは **`prefixUniversalEval` の partrec 性** (`List Bool ↔ ℕ` 符号化越しに
-    `parseUnary` / `decodeNat` の computability を通す) で、これは現状 in-tree にも無い。
+    `parseUnary` / `decodeNat` の computability を通す) だった。**この部品側は 2026-07-25 の P10 で in-tree に
+    入った** (`parseUnary_primrec` / `decodeNat_primrec` / `decodePayload_partrec`、再利用表は §Phase P9)。
+    loogle-neg の claim 自体 (Mathlib に計算可能実数が無い) は不変。
   - **候補定式化 3 つ** (後続 leg が再調査せず拾えるよう保持):
     (i) `IsComputableReal` 自前定義 (計算可能有理近似列 + 計算可能収束率) → `¬ IsComputableReal Ω`。
         古典的に正統だが重い。
@@ -369,6 +392,11 @@ re-derive (Mathlib 実ファイル Read + loogle) につきここに保持する
         実数計算可能性の定義を建てずに Ω 非計算性の中身を述べられる。`ComputablePred.halting_problem`
         (`Mathlib/Computability/Halting.lean:65`) からの帰着。**実装者の推奨**。
     (iii) 別 leg / 子 plan に切り出す (= 今回採用した順序、slug `plan:kolmogorov-w2-omega-noncomputable`)。
+
+- **claim (confidence = `loogle-neg`、verbatim 出力の SoT は P10 在庫 §G / §壁の列挙)**: §14.12 の全 object
+  (`SufficientStatistic` / `structureFunction` / `MinimumDescriptionLength` / `descriptionLength` /
+  `KolmogorovComplexity`) と `Primcodable (Finset _)` / `Primcodable (Multiset _)` / `Primrec` × `encodeNat` は
+  **Mathlib に Found 0**。いずれも壁ではなく (a) 定義の選択 / (b) 設計での回避 / (c) 自作で処理済 (P10 で実測裏付け)。
 
 - **claim (confidence = `machine`)**: 着地した機械では **`prefixComplexity x = 2 * payloadComplexity x + 1` が
   恒等式**として成り立つ (`≤` ではなく `=`)。受理 program が `Set.range selfDelimit` に閉じ、
@@ -413,9 +441,11 @@ re-derive (Mathlib 実ファイル Read + loogle) につきここに保持する
   `prefixUniversalEval` / `prefixComplexity` / Kraft 1 回適用)
 - `UniversalProbability.lean` — P7 (`universalProb` 定義 + 下界)
 - `Omega.lean` — P9 (`chaitinOmega` 定義 + `≤ 1` / `0 <` / `≠ ⊤` + interpret モード入口 + prefix invariance +
-  **prefix K の**非計算性)。Ω 自体の非計算性は park slug の新ファイル (起票時に決める) へ
+  **prefix K の**非計算性)。Ω 自体の非計算性は後継 scope の新ファイル (起票時に決める) へ
 - `Levin.lean` — P8 (`payloadComplexity` / `padDelimit` + factor-2 関係の flagship)
-- `SufficientStatistic.lean` — P10 (KSS / MDL、stretch)
+- `SufficientStatistic.lean` — P10 (KSS / MDL、594 行 / 56 decl。定義群 + 構造関数 + **bit codec の `Primrec` 化 +
+  自己シミュレーション crux** を同居させている。1500 行制限には余裕があるが、後継 scope が computability infra を
+  拡張するなら `PrefixComputability.lean` として切り出す候補)
 
 各ファイル追加時に `InformationTheory.lean` へ import 行を登録。`private` helper を共有する sub-module は
 同一ファイルに置く (file-scoped `private`)。
@@ -444,3 +474,10 @@ re-derive (Mathlib 実ファイル Read + loogle) につきここに保持する
    (当初の加法版の野心は削除せず後継ルートへ移した)。**加法版はコード側に `sorry` を置かない** — この機械では
    真偽不明であり、偽かもしれない命題に `@residual` を貼るのは defect ⟹ park は plan 段のみ、決着条件は
    §settled facts の human-judgment entry が持つ。factor-2 版を教科書 Levin と称するのは恒久的に禁止。
+7. **P10 は crux まで proof-done、新 slug は建てない (active、在庫推奨からの逸脱を明示)**: P10 在庫は crux
+   `payloadComplexity_two_part_le` を共有 sorry 補題にする前提で新 slug `kolmogorov-w2-machine-partrec` を
+   推奨していたが、bit codec の `Primrec` 化 + `Nat.Partrec.Code.eval_part` による自己シミュレーションが実際に
+   組めたため **crux ごと closure** ⟹ 貼る先の `sorry` が存在せず slug を登録しない (§residual slug 方針)。
+   同時に在庫提案の撤退ライン R-W2c も未発動、Route A (退化する弱い版) も採らなかった。**P10 の係数 4 を
+   `twoPartLength` の定義側に埋め込む判断は維持** — 教科書形の係数 1 はこの機械では偽であり、定義に埋めるのが
+   唯一の honest な回避 (name laundering 禁止、§Phase P10)。
