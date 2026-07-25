@@ -65,6 +65,8 @@ variable {V₁ V₂ α β₁ β₂ : Type*}
   [Fintype β₁] [DecidableEq β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
   [Fintype β₂] [DecidableEq β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
 
+/-! ### Sums against a slice of a product law -/
+
 private lemma sum_measureReal_singleton_univ {γ : Type*} [Fintype γ] [MeasurableSpace γ]
     [MeasurableSingletonClass γ] (μ : Measure γ) [IsProbabilityMeasure μ] :
     ∑ z : γ, μ.real {z} = 1 := by
@@ -103,6 +105,8 @@ private lemma sum_measureReal_slice_le
       ≤ ∑ b : B, ν.real {b} * C :=
         Finset.sum_le_sum fun b _ ↦ mul_le_mul_of_nonneg_left (hC b) measureReal_nonneg
     _ = C := by rw [← Finset.sum_mul, hsum1, one_mul]
+
+/-! ### Receiver-1 fiber bound and alias slice -/
 
 /-- Uniform fiber bound for the `(V₁, Y₁)` jointly typical set: whatever the received word,
 the `V₁`-block mass of the codewords jointly typical with it is at most
@@ -218,6 +222,8 @@ theorem marton_alias_slice_avg_le₁
         (q.1, fun i ↦ (q.2 i).1) ∈
           jointlyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonY₁s n ε }
     (fun y ↦ marton_jointlyTypicalFiber₁_le pV K W hpV hK hW n (fun i ↦ (y i).1))
+
+/-! ### Receiver-2 fiber bound and alias slice -/
 
 /-- Uniform fiber bound for the `(V₂, Y₂)` jointly typical set: whatever the received word,
 the `V₂`-block mass of the codewords jointly typical with it is at most

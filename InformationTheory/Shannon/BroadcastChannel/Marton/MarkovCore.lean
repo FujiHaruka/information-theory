@@ -83,7 +83,7 @@ private lemma sum_map_real_singleton_mul {Ω γ : Type*}
     exact Finset.sum_congr rfl fun z _ ↦ smul_eq_mul _ _
   rw [← h1, h2, h3]
 
-/-! ### Coordinate laws of the Marton ambient measure -/
+/-! ### Coordinate laws of the Marton ambient measure — receiver 1 -/
 
 private lemma marton_map_Y₁
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
@@ -251,7 +251,7 @@ private lemma marton_condMean_sum_eq_entropy_joint
   unfold entropy pmfLog
   exact Finset.sum_congr rfl fun r _ ↦ by rw [Real.negMulLog]; ring
 
-/-! ### The radius separation -/
+/-! ### The radius separation — receiver 1 -/
 
 /-- The Lipschitz factor relating the type radius of the transmitted `(V₁, X)`-block to the width
 of the three entropy bands it has to pin.  The sum runs over the whole alphabet, so letters carrying
@@ -347,7 +347,7 @@ private lemma marton_bandTerm_joint_le
     Finset.sum_nonneg fun _ _ ↦ abs_nonneg _
   linarith
 
-/-! ### The three bands -/
+/-! ### The three bands — receiver 1 -/
 
 private lemma marton_band_aux
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
@@ -484,7 +484,7 @@ private lemma marton_band_joint
   simp only [Set.mem_setOf_eq, mem_typicalSet_iff, not_lt] at hyb
   exact hyb
 
-/-! ### The conditional AEP -/
+/-! ### The conditional AEP — receiver 1 -/
 
 /-- Whatever auxiliary word `v₁` and input word `x` the encoder transmits, as long as their
 empirical type is pinned to the ambient `(V₁, X)`-law at radius `martonStrongRadius`, the channel
@@ -598,7 +598,7 @@ theorem marton_condAEP_jointlyTypical_ge
   have hbad : ν.real Gᶜ ≤ tol := hN n hn v₁ x hstrong
   linarith
 
-/-! ### From a type-pinned auxiliary pair to a type-pinned transmitted pair -/
+/-! ### From a type-pinned auxiliary pair to a type-pinned transmitted pair — receiver 1 -/
 
 /-- The type radius at which the *selected auxiliary pair* has to be pinned for the transmitted
 `(V₁, X)` block to be pinned at `martonStrongRadius`.  The two are separated by the alphabet size
