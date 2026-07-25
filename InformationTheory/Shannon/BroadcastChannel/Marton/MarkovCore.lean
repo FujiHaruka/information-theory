@@ -579,4 +579,122 @@ theorem marton_condAEP_jointlyTypical_ge
   have hbad : ν.real Gᶜ ≤ tol := hN n hn v₁ x hstrong
   linarith
 
+/-! ### From a type-pinned auxiliary pair to a type-pinned transmitted pair -/
+
+/-- The type radius at which the *selected auxiliary pair* has to be pinned for the transmitted
+`(V₁, X)` block to be pinned at `martonStrongRadius`.  The two are separated by the alphabet size
+because the conditional mean of a letter statistic of the input is an average of the auxiliary
+type against the input kernel, so a type deviation of the pair is amplified by the number of
+auxiliary letters before it reaches the input. -/
+noncomputable def martonCoveringRadius
+    (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) (ε : ℝ) : ℝ :=
+  martonStrongRadius pV K W ε / (4 * ((Fintype.card (V₁ × V₂) : ℝ) + 1))
+
+lemma martonCoveringRadius_pos
+    (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) {ε : ℝ}
+    (hε : 0 < ε) :
+    0 < martonCoveringRadius pV K W ε := by
+  unfold martonCoveringRadius
+  have h := martonStrongRadius_pos pV K W hε
+  positivity
+
+/-- The transmitted `(V₁, X)` block inherits the type pin of the selected auxiliary pair: drawing
+the input word letterwise from `K` applied to a pair whose joint type is pinned at
+`martonCoveringRadius` leaves the pair `(v₁, x)` outside the strongly typical set of radius
+`martonStrongRadius` with probability at most `tol`, uniformly in the selected pair.
+
+@residual(plan:marton-inner-bound-plan) -/
+theorem marton_transmitted_stronglyTypical_le
+    (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {ε tol : ℝ} (hε : 0 < ε) (htol : 0 < tol) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (v₁ : Fin n → V₁) (v₂ : Fin n → V₂),
+      (v₁, v₂) ∈ jointStronglyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonV₂s n
+          (martonCoveringRadius pV K W ε) →
+      (Measure.pi fun i ↦ K (v₁ i, v₂ i)).real
+          { x : Fin n → α | (fun i ↦ (v₁ i, x i)) ∉ stronglyTypicalSet
+              (martonAmbientMeasure pV K W) (jointSequence martonV₁s martonXs) n
+                (martonStrongRadius pV K W ε) }
+        ≤ tol := by
+  sorry
+
+/-- The receiver-1 error term of a selected auxiliary pair, averaged over the input tier: whatever
+type-pinned pair the encoder selects, drawing the input word from `K` and passing it through the
+channel leaves `(v₁, y₁)` outside the weakly jointly typical set with probability at most `tol`.
+
+This is the form the error decomposition of `Marton.ErrorAnalysis` consumes, since the threshold
+is uniform in the selected pair and hence in the code. -/
+theorem marton_condAEP_selected_avg_le
+    (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {ε tol : ℝ} (hε : 0 < ε) (htol : 0 < tol) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (v₁ : Fin n → V₁) (v₂ : Fin n → V₂),
+      (v₁, v₂) ∈ jointStronglyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonV₂s n
+          (martonCoveringRadius pV K W ε) →
+      ∑ x : Fin n → α, (Measure.pi fun i ↦ K (v₁ i, v₂ i)).real {x}
+          * (Measure.pi fun i ↦ W (x i)).real
+              { y : Fin n → β₁ × β₂ | (v₁, fun i ↦ (y i).1) ∉
+                  jointlyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonY₁s n ε }
+        ≤ tol := by
+  classical
+  obtain ⟨N₁, hN₁⟩ := marton_transmitted_stronglyTypical_le pV K W hε (half_pos htol)
+  obtain ⟨N₂, hN₂⟩ := marton_condAEP_jointlyTypical pV K W hε (half_pos htol)
+  refine ⟨max N₁ N₂, fun n hn v₁ v₂ hpair ↦ ?_⟩
+  set μX : Measure (Fin n → α) := Measure.pi fun i ↦ K (v₁ i, v₂ i) with hμX
+  haveI : IsProbabilityMeasure μX := by rw [hμX]; infer_instance
+  set Sbad : Set (Fin n → α) :=
+    { x | (fun i ↦ (v₁ i, x i)) ∉ stronglyTypicalSet (martonAmbientMeasure pV K W)
+        (jointSequence martonV₁s martonXs) n (martonStrongRadius pV K W ε) } with hSbad
+  set f : (Fin n → α) → ℝ := fun x ↦ (Measure.pi fun i ↦ W (x i)).real
+    { y : Fin n → β₁ × β₂ | (v₁, fun i ↦ (y i).1) ∉
+        jointlyTypicalSet (martonAmbientMeasure pV K W) martonV₁s martonY₁s n ε } with hf
+  have hf_nonneg : ∀ x, 0 ≤ f x := fun _ ↦ measureReal_nonneg
+  have hf_le_one : ∀ x, f x ≤ 1 := by
+    intro x
+    haveI : IsProbabilityMeasure (Measure.pi fun i ↦ W (x i)) := inferInstance
+    refine le_of_le_of_eq (measureReal_mono (Set.subset_univ _) (measure_ne_top _ _)) ?_
+    exact probReal_univ
+  have hbadmass : μX.real Sbad ≤ tol / 2 := hN₁ n (le_trans (le_max_left _ _) hn) v₁ v₂ hpair
+  have hgood : ∀ x ∈ Finset.univ.filter (fun x ↦ x ∉ Sbad), f x ≤ tol / 2 := by
+    intro x hx
+    have hx' : x ∉ Sbad := (Finset.mem_filter.mp hx).2
+    have hstrong : (fun i ↦ (v₁ i, x i)) ∈ stronglyTypicalSet (martonAmbientMeasure pV K W)
+        (jointSequence martonV₁s martonXs) n (martonStrongRadius pV K W ε) := by
+      by_contra hcon
+      exact hx' hcon
+    exact hN₂ n (le_trans (le_max_right _ _) hn) v₁ x hstrong
+  have hcoe : ((Finset.univ.filter (fun x ↦ x ∈ Sbad) : Finset (Fin n → α)) : Set (Fin n → α))
+      = Sbad := by
+    ext x
+    simp
+  have hsplit : ∑ x ∈ Finset.univ.filter (fun x ↦ x ∈ Sbad), μX.real {x} * f x
+      + ∑ x ∈ Finset.univ.filter (fun x ↦ x ∉ Sbad), μX.real {x} * f x
+      = ∑ x : Fin n → α, μX.real {x} * f x :=
+    Finset.sum_filter_add_sum_filter_not _ _ _
+  have hpart₁ : ∑ x ∈ Finset.univ.filter (fun x ↦ x ∈ Sbad), μX.real {x} * f x ≤ tol / 2 := by
+    calc ∑ x ∈ Finset.univ.filter (fun x ↦ x ∈ Sbad), μX.real {x} * f x
+        ≤ ∑ x ∈ Finset.univ.filter (fun x ↦ x ∈ Sbad), μX.real {x} * 1 :=
+          Finset.sum_le_sum fun x _ ↦
+            mul_le_mul_of_nonneg_left (hf_le_one x) measureReal_nonneg
+      _ = μX.real Sbad := by
+          simp only [mul_one]
+          rw [sum_measureReal_singleton, hcoe]
+      _ ≤ tol / 2 := hbadmass
+  have hpart₂ : ∑ x ∈ Finset.univ.filter (fun x ↦ x ∉ Sbad), μX.real {x} * f x ≤ tol / 2 := by
+    calc ∑ x ∈ Finset.univ.filter (fun x ↦ x ∉ Sbad), μX.real {x} * f x
+        ≤ ∑ x ∈ Finset.univ.filter (fun x ↦ x ∉ Sbad), μX.real {x} * (tol / 2) :=
+          Finset.sum_le_sum fun x hx ↦
+            mul_le_mul_of_nonneg_left (hgood x hx) measureReal_nonneg
+      _ = (∑ x ∈ Finset.univ.filter (fun x ↦ x ∉ Sbad), μX.real {x}) * (tol / 2) := by
+          rw [Finset.sum_mul]
+      _ ≤ 1 * (tol / 2) := by
+          refine mul_le_mul_of_nonneg_right ?_ (by linarith)
+          rw [sum_measureReal_singleton]
+          exact le_of_le_of_eq (measureReal_mono (Set.subset_univ _) (measure_ne_top _ _))
+            probReal_univ
+      _ = tol / 2 := one_mul _
+  linarith [hsplit, hpart₁, hpart₂]
+
 end InformationTheory.Shannon.BroadcastChannel.Marton
