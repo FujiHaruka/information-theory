@@ -61,7 +61,7 @@ theorem prefixUniversalEval_partrec : Partrec prefixUniversalEval := by
 /-- The halting set of the self-delimiting machine is undecidable: a decision
 procedure for it would decide the halting problem of Mathlib's universal
 interpreter, which the interpret-mode entry `prefixInterpretProg` embeds into it.
--/
+@audit:ok -/
 @[entry_point]
 theorem prefixUniversalEval_dom_not_computablePred :
     ¬ ComputablePred fun p : List Bool ↦ (prefixUniversalEval p).Dom := by
