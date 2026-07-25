@@ -1,0 +1,24 @@
+{
+  "problem": "Ch.14 第 2 波 Phase P8 — prefix 複雑さと普遍確率の factor-2 関係 (`Levin.lean`)",
+  "problem_detail": "新規 242 行 / 16 decl + `PrefixMachine.lean` の Kraft 一般化 3 decl。教科書 (CT §14.6) の加法版 Levin 符号化定理ではなく、着地した機械 `prefixUniversalEval` に対して真な両側 bound `-log₂ P_U(x) ≤ K(x) ≤ 2·(-log₂ P_U(x)) + 1` を証明した leg。commits 6861eb14 / be6d1f7f / 07acd1c0",
+  "proof_log": "docs/proof-logs/proof-log-kolmogorov-w2-p8-levin.md",
+  "sessions": [
+    {
+      "id": "4f92163a-a2a9-495c-a56d-cdec98c7f062/subagents/agent-alevin-factor2-df0bb674ed212cf1",
+      "prompt_ids": ["601853bd"],
+      "note": "lean-implementer: skeleton-driven で `PrefixMachine.lean` の Kraft を一般 prefix-free 集合へ拡張 → `Levin.lean` 16 decl (payloadComplexity / padDelimit / 構造恒等式 / 数え上げ上界 / headline)。0 sorry で着地 (commit 6861eb14)"
+    },
+    {
+      "id": "4f92163a-a2a9-495c-a56d-cdec98c7f062/subagents/agent-alevin-honesty-e8e0455dc0164193",
+      "prompt_ids": ["601853bd"],
+      "note": "honesty-auditor: @audit:ok 6 件 + 退化非依存注記。加法版を sorry 化できない (真偽未確定ゆえ tier 5 になる) ことを判定 (commit be6d1f7f)"
+    },
+    {
+      "id": "4f92163a-a2a9-495c-a56d-cdec98c7f062/subagents/agent-alevin-style-c7479ea06e222dd2",
+      "prompt_ids": ["601853bd"],
+      "note": "style-auditor: 一般 Kraft への委譲を docstring に明示 (commit 07acd1c0)"
+    }
+  ],
+  "filters": { "file_prefix": "InformationTheory/Shannon/Kolmogorov" },
+  "idle_gap_minutes": 5
+}

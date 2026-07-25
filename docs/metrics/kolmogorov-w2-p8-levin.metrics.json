@@ -1,0 +1,231 @@
+{
+  "problem": "Ch.14 第 2 波 Phase P8 — prefix 複雑さと普遍確率の factor-2 関係 (`Levin.lean`)",
+  "proof_log": "docs/proof-logs/proof-log-kolmogorov-w2-p8-levin.md",
+  "generated_at": "2026-07-25T03:12:25.955Z",
+  "filters": {
+    "file_prefix": "InformationTheory/Shannon/Kolmogorov"
+  },
+  "idle_gap_minutes": 5,
+  "sessions": [
+    {
+      "id": "4f92163a-a2a9-495c-a56d-cdec98c7f062/subagents/agent-alevin-factor2-df0bb674ed212cf1",
+      "note": "lean-implementer: skeleton-driven で `PrefixMachine.lean` の Kraft を一般 prefix-free 集合へ拡張 → `Levin.lean` 16 decl (payloadComplexity / padDelimit / 構造恒等式 / 数え上げ上界 / headline)。0 sorry で着地 (commit 6861eb14)",
+      "start": "2026-07-25T00:16:23.477Z",
+      "end": "2026-07-25T00:32:01.624Z",
+      "wall_time_seconds": 938,
+      "active_time_seconds": 938,
+      "turns": 77,
+      "tool_calls": {
+        "Read": 12,
+        "Bash": 38,
+        "TaskCreate": 3,
+        "TaskUpdate": 5,
+        "Edit": 23,
+        "Write": 1
+      },
+      "bash_breakdown": {
+        "rg": 7,
+        "ls": 2,
+        "wc": 1,
+        "lake_env_lean": 20,
+        "lake_build": 3,
+        "cat": 1,
+        "awk": 1,
+        "python3": 1,
+        "git": 2
+      },
+      "bash_total": 38,
+      "edits_by_file": {
+        "InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean": 7,
+        "InformationTheory/Shannon/Kolmogorov/Levin.lean": 15,
+        "InformationTheory.lean": 1
+      },
+      "writes_by_file": {
+        "InformationTheory/Shannon/Kolmogorov/Levin.lean": 1
+      },
+      "reads_by_file": {
+        "/Users/haruka/.claude/CLAUDE.md": 1,
+        "CLAUDE.md": 1,
+        "docs/audit/audit-tags.md": 3,
+        "InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean": 3,
+        "InformationTheory/Shannon/Kolmogorov/UniversalProbability.lean": 1,
+        "docs/kolmogorov/kolmogorov-w2-moonshot-plan.md": 1,
+        "docs/rules/docstrings.md": 1,
+        "docs/rules/lean-style.md": 1
+      },
+      "matched_edits": 22,
+      "matched_writes": 1,
+      "tool_errors": 1,
+      "tokens": {
+        "input": 242,
+        "output": 61467,
+        "cache_read": 14547915,
+        "cache_creation": 367376
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "sidechain_entries": 205
+    },
+    {
+      "id": "4f92163a-a2a9-495c-a56d-cdec98c7f062/subagents/agent-alevin-honesty-e8e0455dc0164193",
+      "note": "honesty-auditor: @audit:ok 6 件 + 退化非依存注記。加法版を sorry 化できない (真偽未確定ゆえ tier 5 になる) ことを判定 (commit be6d1f7f)",
+      "start": "2026-07-25T00:34:08.848Z",
+      "end": "2026-07-25T00:50:34.444Z",
+      "wall_time_seconds": 986,
+      "active_time_seconds": 986,
+      "turns": 36,
+      "tool_calls": {
+        "Read": 9,
+        "Bash": 20,
+        "Edit": 10
+      },
+      "bash_breakdown": {
+        "rg": 4,
+        "git": 3,
+        "other": 12,
+        "python3": 1
+      },
+      "bash_total": 20,
+      "edits_by_file": {
+        "InformationTheory/Shannon/Kolmogorov/Levin.lean": 9,
+        "InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean": 1
+      },
+      "writes_by_file": {},
+      "reads_by_file": {
+        "/Users/haruka/.claude/CLAUDE.md": 1,
+        "docs/audit/audit-tags.md": 2,
+        "docs/audit/honesty-auditor-core.md": 1,
+        "InformationTheory/Shannon/Kolmogorov/Levin.lean": 1,
+        "InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean": 2,
+        "docs/kolmogorov/kolmogorov-w2-moonshot-plan.md": 1,
+        "docs/rules/docstrings.md": 1
+      },
+      "matched_edits": 10,
+      "matched_writes": 0,
+      "tool_errors": 0,
+      "tokens": {
+        "input": 138,
+        "output": 48630,
+        "cache_read": 7239430,
+        "cache_creation": 367718
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "sidechain_entries": 111
+    },
+    {
+      "id": "4f92163a-a2a9-495c-a56d-cdec98c7f062/subagents/agent-alevin-style-c7479ea06e222dd2",
+      "note": "style-auditor: 一般 Kraft への委譲を docstring に明示 (commit 07acd1c0)",
+      "start": "2026-07-25T00:51:27.300Z",
+      "end": "2026-07-25T00:55:38.905Z",
+      "wall_time_seconds": 252,
+      "active_time_seconds": 252,
+      "turns": 16,
+      "tool_calls": {
+        "Read": 9,
+        "Bash": 9,
+        "Edit": 1
+      },
+      "bash_breakdown": {
+        "git": 1,
+        "echo": 7,
+        "lake_env_lean": 1
+      },
+      "bash_total": 9,
+      "edits_by_file": {
+        "InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean": 1
+      },
+      "writes_by_file": {},
+      "reads_by_file": {
+        "/Users/haruka/.claude/CLAUDE.md": 1,
+        "docs/rules/README.md": 1,
+        "docs/rules/docstrings.md": 1,
+        "docs/rules/naming.md": 1,
+        "docs/rules/lean-style.md": 1,
+        "docs/rules/module-structure.md": 1,
+        "InformationTheory/Shannon/Kolmogorov/Levin.lean": 1,
+        "InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean": 2
+      },
+      "matched_edits": 1,
+      "matched_writes": 0,
+      "tool_errors": 0,
+      "tokens": {
+        "input": 70,
+        "output": 14626,
+        "cache_read": 2224719,
+        "cache_creation": 206723
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "sidechain_entries": 56
+    }
+  ],
+  "totals": {
+    "start": "2026-07-25T00:16:23.477Z",
+    "end": "2026-07-25T00:55:38.905Z",
+    "wall_time_seconds": 2176,
+    "active_time_seconds": 2176,
+    "turns": 129,
+    "tool_calls": {
+      "Read": 30,
+      "Bash": 67,
+      "TaskCreate": 3,
+      "TaskUpdate": 5,
+      "Edit": 34,
+      "Write": 1
+    },
+    "bash_breakdown": {
+      "rg": 11,
+      "ls": 2,
+      "wc": 1,
+      "lake_env_lean": 21,
+      "lake_build": 3,
+      "cat": 1,
+      "awk": 1,
+      "python3": 2,
+      "git": 6,
+      "other": 12,
+      "echo": 7
+    },
+    "bash_total": 67,
+    "edits_by_file": {
+      "InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean": 9,
+      "InformationTheory/Shannon/Kolmogorov/Levin.lean": 24,
+      "InformationTheory.lean": 1
+    },
+    "writes_by_file": {
+      "InformationTheory/Shannon/Kolmogorov/Levin.lean": 1
+    },
+    "reads_by_file": {
+      "/Users/haruka/.claude/CLAUDE.md": 3,
+      "CLAUDE.md": 1,
+      "docs/audit/audit-tags.md": 5,
+      "InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean": 7,
+      "InformationTheory/Shannon/Kolmogorov/UniversalProbability.lean": 1,
+      "docs/kolmogorov/kolmogorov-w2-moonshot-plan.md": 2,
+      "docs/rules/docstrings.md": 3,
+      "docs/rules/lean-style.md": 2,
+      "docs/audit/honesty-auditor-core.md": 1,
+      "InformationTheory/Shannon/Kolmogorov/Levin.lean": 2,
+      "docs/rules/README.md": 1,
+      "docs/rules/naming.md": 1,
+      "docs/rules/module-structure.md": 1
+    },
+    "matched_edits": 33,
+    "matched_writes": 1,
+    "tool_errors": 1,
+    "tokens": {
+      "input": 450,
+      "output": 124723,
+      "cache_read": 24012064,
+      "cache_creation": 941817
+    },
+    "models": [
+      "claude-opus-5"
+    ],
+    "sidechain_entries": 372
+  }
+}

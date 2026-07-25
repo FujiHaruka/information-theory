@@ -1,0 +1,29 @@
+{
+  "problem": "Ch.14 第 2 波 Phase P10 — Kolmogorov 十分統計量 / MDL (`SufficientStatistic.lean`)",
+  "problem_detail": "CT §14.12、新規 594 行 / 56 decl。定義 6 本 + 構造関数 + bit codec の `Primrec` 化 + 機械の自己シミュレーション crux `payloadComplexity_two_part_le` + headline 2 本。在庫 1c965555 / 実装 ffefd9d8 / 完成 ec2f6eba / 追補 56d6a773 / style d6cc3062",
+  "proof_log": "docs/proof-logs/proof-log-kolmogorov-w2-p10-kss.md",
+  "sessions": [
+    {
+      "id": "4f92163a-a2a9-495c-a56d-cdec98c7f062/subagents/agent-ap10-inventory-2b2b0234a22d45da",
+      "prompt_ids": ["601853bd"],
+      "note": "mathlib-inventory: `kolmogorov-w2-p10-inventory.md` 414 行。scratchpad 上で probe 4 本 + skeleton (定義 6 + 定理 7) を `lake env lean` で 0 error / 0 sorry 検証してから在庫化 (commit 1c965555)。write 対象は docs と scratchpad のみで .lean 本体には触れていない"
+    },
+    {
+      "id": "5fdb5421-5012-444a-83fc-e3ebb250d0c4/subagents/agent-ap10-impl-c2e151bbd4ade561",
+      "prompt_ids": ["ab69c939", "953a963a"],
+      "note": "lean-implementer: skeleton 31 sorry → 0 sorry。crux (自己シミュレーション) 込みで proof done (commits ffefd9d8 / ec2f6eba)。2 ターン目は十分統計量 witness の追補 (56d6a773)"
+    },
+    {
+      "id": "5fdb5421-5012-444a-83fc-e3ebb250d0c4/subagents/agent-ap10-honesty-4e603229f37ea09f",
+      "prompt_ids": ["ab69c939"],
+      "note": "honesty-auditor: @audit:ok 9 件。係数 1 版がこの機械では偽であることを独立に数え上げで確認し、実装ノートの過剰な negative claim を出所別に訂正"
+    },
+    {
+      "id": "5fdb5421-5012-444a-83fc-e3ebb250d0c4/subagents/agent-ap10-style-cf61e37dac287bce",
+      "prompt_ids": ["953a963a"],
+      "note": "style-auditor: 出典表記のダッシュを兄弟ファイルに整合 (commit d6cc3062)"
+    }
+  ],
+  "filters": { "file_prefix": "InformationTheory/Shannon/Kolmogorov" },
+  "idle_gap_minutes": 5
+}
