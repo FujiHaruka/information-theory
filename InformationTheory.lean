@@ -130,6 +130,7 @@ import InformationTheory.Shannon.Kolmogorov.Omega
 import InformationTheory.Shannon.Kolmogorov.Levin
 import InformationTheory.Shannon.Kolmogorov.SufficientStatistic
 import InformationTheory.Shannon.Kolmogorov.PrefixComputability
+import InformationTheory.Shannon.Kolmogorov.OmegaNoncomputable
 import InformationTheory.Shannon.Sanov.RoundedTypeSequence
 import InformationTheory.Shannon.Sanov.MultinomialLowerBound
 import InformationTheory.Shannon.Sanov.LiminfBound

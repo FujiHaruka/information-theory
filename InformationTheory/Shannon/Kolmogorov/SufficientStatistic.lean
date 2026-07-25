@@ -344,7 +344,7 @@ noncomputable def payloadDispatch : List Bool → Option (Code × ℕ)
       some (Denumerable.ofNat Code (parseUnary bs).1,
         Nat.pair (decodeNat (parseUnary bs).2) 0)
 
-theorem payloadDispatch_computable : Computable payloadDispatch := by
+theorem payloadDispatch_primrec : Primrec payloadDispatch := by
   have hb : Primrec fun x : List Bool × (Bool × List Bool) ↦ x.2.1 :=
     Primrec.fst.comp Primrec.snd
   have hbs : Primrec fun x : List Bool × (Bool × List Bool) ↦ x.2.2 :=
@@ -367,10 +367,13 @@ theorem payloadDispatch_computable : Computable payloadDispatch := by
           Nat.pair (decodeNat (parseUnary t.2).2) 0))
         (some (Code.id, decodeNat t.2)) :=
     (Primrec.cond hb hint hlit).to₂
-  refine ((Primrec.list_casesOn Primrec.id (Primrec.const none) hh).of_eq ?_).to_comp
+  refine (Primrec.list_casesOn Primrec.id (Primrec.const none) hh).of_eq ?_
   rintro (_ | ⟨b, bs⟩)
   · rfl
   · cases b <;> rfl
+
+theorem payloadDispatch_computable : Computable payloadDispatch :=
+  payloadDispatch_primrec.to_comp
 
 theorem decodePayload_eq_dispatch (d : List Bool) :
     decodePayload d = (payloadDispatch d : Part (Code × ℕ)).bind fun p ↦ eval p.1 p.2 := by
