@@ -25,9 +25,9 @@ variable {U α β₁ β₂ : Type*}
 
 /-! ### Receiver-2 (cloud) error analysis -/
 
-/-- **Receiver-2 two-event Bonferroni bound.**  When the pair `m` is sent, the receiver-2
-per-pair error probability of the cloud joint-typical decoder is bounded by the correct-cloud
-atypical event `E0` plus the wrong-cloud alias union bound.  This is the single-user
+/-- Receiver-2 two-event Bonferroni bound: when the pair `m` is sent, the receiver-2 per-pair
+error probability of the cloud joint-typical decoder is bounded by the correct-cloud atypical
+event `E0` plus the wrong-cloud alias union bound.  This is the single-user
 `errorProbAt_le_E1_plus_E2` applied along the `β₂`-projection `fun i ↦ (y i).2` of the block
 output. -/
 theorem bc_errorProbAt₂_le_bonferroni
@@ -106,9 +106,10 @@ theorem bc_errorProbAt₂_le_bonferroni
         gcongr
         exact measureReal_biUnion_finset_le _ _
 
-/-- **Receiver-2 cloud independent-pair bound.**  Under the product of the cloud block law and
-the `Y₂` block law (the random-coding measure for a wrong cloud codeword drawn independently of
-the received output), the probability of joint typicality is at most `exp(−n (I(U; Y₂) − 3ε))`.
+/-- Receiver-2 cloud independent-pair bound: under the product of the cloud block law and the
+`Y₂` block law (the random-coding measure for a wrong cloud codeword drawn independently of
+the received output), the probability of joint typicality is at most
+`exp(−n (I(U; Y₂) − 3ε))`.
 A wrapper of the single-user `jointlyTypicalSet_indep_prob_le` with the exponent rewritten into
 the `bcInfo₂` form; full support is a regularity precondition, not load-bearing. -/
 theorem bc_cloud_indep_prob_le
@@ -342,11 +343,11 @@ lemma bc_block_law_UXY_singleton
           (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2))).real {(u i, x i, yp i)} :=
         measureReal_pi_singleton_eq_prod _ _
 
-/-- **Master superposition channel fold.**  The `(U, X, Ypair)`-split block law of a finite
-set `T` equals the average over the cloud codeword `u ~ pUⁿ` and the *conditional* satellite
-codeword `x ~ Πₗ K(uₗ)` of the paired-channel mass of the corresponding slice of `T`.  This is
-the BC analogue of `mac_chan_fold_triple_set`, with the conditional (superposition) satellite
-law replacing the second MAC input's flat product. -/
+/-- Master superposition channel fold: the `(U, X, Ypair)`-split block law of a finite set `T`
+equals the average over the cloud codeword `u ~ pUⁿ` and the *conditional* satellite codeword
+`x ~ Πₗ K(uₗ)` of the paired-channel mass of the corresponding slice of `T`.  This is the BC
+analogue of `mac_chan_fold_triple_set`, with the conditional (superposition) satellite law
+replacing the second MAC input's flat product. -/
 lemma bc_chan_fold_master
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -393,10 +394,10 @@ lemma bc_chan_fold_master
   · rw [if_pos h, if_pos h]
   · rw [if_neg h, if_neg h, mul_zero]
 
-/-- **`(U, Y₂)` channel fold (β₂-marginal form).**  The `Y₂`-block law of a finite set `T`
-equals the cloud/satellite/channel average of the `β₂`-projected channel mass.  Derived from
-the master fold by projecting out `U`, `X`, and the `β₁`-output.  This is the receiver-2
-analytic core: the pair output is marginalized to `β₂`. -/
+/-- Channel fold on the `(U, Y₂)` axes, in `β₂`-marginal form: the `Y₂`-block law of a finite
+set `T` equals the cloud/satellite/channel average of the `β₂`-projected channel mass.
+Derived from the master fold by projecting out `U`, `X`, and the `β₁`-output.  This is the
+receiver-2 analytic core: the pair output is marginalized to `β₂`. -/
 lemma bc_chan_fold_Y₂_set
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -427,10 +428,10 @@ lemma bc_chan_fold_Y₂_set
       ((fun t ↦ (fun i ↦ (t.2.2 i).2 : Fin n → β₂)) ⁻¹' T)]
   simp only [Set.mem_preimage]
 
-/-- **Receiver-2 wrong-cloud averaged swap.**  For a wrong cloud message `w₂' ≠ m.2`, the
-two-tier random-codebook average of the wrong-cloud alias event (drawn independently of the
-transmitted satellite `cX m`) equals the independent product law `(U-block) ⊗ (Y₂-block)`, and
-is therefore at most `exp(−n (I(U; Y₂) − 3ε))`.  Combines the satellite single-row marginal
+/-- Receiver-2 wrong-cloud averaged swap: for a wrong cloud message `w₂' ≠ m.2`, the two-tier
+random-codebook average of the wrong-cloud alias event (drawn independently of the transmitted
+satellite `cX m`) equals the independent product law `(U-block) ⊗ (Y₂-block)`, and is
+therefore at most `exp(−n (I(U; Y₂) − 3ε))`.  Combines the satellite single-row marginal
 (`measurePreserving_eval`), the cloud two-row marginal (`codebook_marginal_two`), the `(U, Y₂)`
 channel fold, and the independent-pair bound `bc_cloud_indep_prob_le`. -/
 theorem bc_random_codebook_wrongcloud_swap
@@ -527,12 +528,12 @@ theorem bc_random_codebook_wrongcloud_swap
   rw [hmain]
   exact bc_cloud_indep_prob_le pU K W hpU hK hW n hε
 
-/-- **`(U, Y₂)` channel fold (joint form).**  The joint `(U, Y₂)`-block law of a finite set
-`T` equals the cloud/satellite/channel average of the `β₂`-projected channel mass, retaining
-the cloud block `u` inside the slice.  Derived from the master fold by projecting out `X` and
-the `β₁`-output while keeping `U`.  This is the receiver-2 correct-cloud analytic core, where
-the transmitted cloud both indexes the slice and steers the satellite (the `U`-preserving
-counterpart of `bc_chan_fold_Y₂_set`). -/
+/-- Channel fold on the `(U, Y₂)` axes, in joint form: the joint `(U, Y₂)`-block law of a
+finite set `T` equals the cloud/satellite/channel average of the `β₂`-projected channel mass,
+retaining the cloud block `u` inside the slice.  Derived from the master fold by projecting
+out `X` and the `β₁`-output while keeping `U`.  This is the receiver-2 correct-cloud analytic
+core, where the transmitted cloud both indexes the slice and steers the satellite (the
+`U`-preserving counterpart of `bc_chan_fold_Y₂_set`). -/
 lemma bc_chan_fold_UY₂_set
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -567,13 +568,14 @@ lemma bc_chan_fold_UY₂_set
       ((fun t ↦ ((t.1, fun i ↦ (t.2.2 i).2) : (Fin n → U) × (Fin n → β₂))) ⁻¹' T)]
   simp only [Set.mem_preimage]
 
-/-- **Receiver-2 correct-cloud averaged swap (E0).**  The two-tier random-codebook average of
-the correct-cloud atypical event equals the *joint* `(U, Y₂)`-block law of the atypical set:
-the correct cloud `cU m.2` steers the satellite, so `(cU m.2, Y₂)` follows the ambient joint
-law (not the independent product).  Combines the satellite single-row marginal
-(`measurePreserving_eval`), the cloud single-row marginal (`codebook_marginal_one`), and the
-joint `(U, Y₂)` channel fold (`bc_chan_fold_UY₂_set`).  This is a true equality; the typicality
-LLN that makes the joint mass vanish is a separate receiver-2 leg. -/
+/-- Receiver-2 correct-cloud averaged swap for the `E0` event: the two-tier random-codebook
+average of the correct-cloud atypical event equals the *joint* `(U, Y₂)`-block law of the
+atypical set, because the correct cloud `cU m.2` steers the satellite, so `(cU m.2, Y₂)`
+follows the ambient joint law (not the independent product).  Combines the satellite
+single-row marginal (`measurePreserving_eval`), the cloud single-row marginal
+(`codebook_marginal_one`), and the joint `(U, Y₂)` channel fold (`bc_chan_fold_UY₂_set`).
+This is an equality; the typicality LLN that makes the joint mass vanish is established
+separately in `bc_E0₂_vanishing`. -/
 theorem bc_random_codebook_E0₂_swap
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -649,7 +651,7 @@ theorem bc_random_codebook_E0₂_swap
 
 /-! ### Receiver-1 (strong) error analysis -/
 
-/-- **Receiver-1 three-event Bonferroni bound.**  When the pair `m` is sent, the receiver-1
+/-- Receiver-1 three-event Bonferroni bound: when the pair `m` is sent, the receiver-1
 per-pair error probability of the superposition joint-typical decoder is bounded by three
 sub-events along the `β₁`-projection `fun i ↦ (y i).1` of the block output:
 
@@ -731,7 +733,7 @@ theorem bc_errorProbAt₁_le_bonferroni3
             Finset.mem_univ _⟩, ?_⟩
         show (cU q.2, cX (q.1, q.2), y₁) ∈ J
         exact hq_mem
-    -- Case analyse on whether the correct triple is typical.
+    -- Case analysis on whether the correct triple is typical.
     by_cases hc_typ : (cU m.2, cX m, y₁) ∈ J
     · by_cases h_alias : ∃ q : Fin M₁ × Fin M₂, (cU q.2, cX q, y₁) ∈ J ∧ q ≠ (m.1, m.2)
       · obtain ⟨q, hq_mem, hq_ne⟩ := h_alias
@@ -885,8 +887,8 @@ private lemma pi_marginal_two {ι δ : Type*} [Fintype ι] [DecidableEq ι]
       _ = 1 := sum_measureReal_singleton_univ_eq_one _
   rw [h_sum_other, mul_one]
 
-/-- **`(U, Y₁)` channel fold (β₁-marginal form).**  The `Y₁`-block law of a finite set `T`
-equals the cloud/satellite/channel average of the `β₁`-projected channel mass.  The
+/-- Channel fold on the `(U, Y₁)` axes, in `β₁`-marginal form: the `Y₁`-block law of a finite
+set `T` equals the cloud/satellite/channel average of the `β₁`-projected channel mass.  The
 receiver-1 analogue of `bc_chan_fold_Y₂_set`.
 @audit:ok -/
 lemma bc_chan_fold_Y₁_set
@@ -966,7 +968,7 @@ lemma bc_block_law_UX_paired_singleton
     ← measureReal_pi_singleton_eq_prod (fun _ : Fin n ↦ pU) u,
     ← measureReal_pi_singleton_eq_prod (fun l ↦ K (u l)) x]
 
-/-- **Receiver-1 wrong-cloud independent-pair bound.**  The distributed average over an
+/-- Receiver-1 wrong-cloud independent-pair bound: the distributed average over an
 independent `(U, X)` pair and the `Y₁`-block law of the jointly-typical event is at most
 `exp(−n (I((U, X); Y₁) − 3ε))`.  BC instantiation of `macJTS_indep_prob_le_both` with the
 axes `(U, X) ⟂ Y₁`.
@@ -1008,7 +1010,7 @@ theorem bc_joint_indep_prob_le
     Measure.isProbabilityMeasure_map (measurable_jointRV bcY₁s hbcY₁s n).aemeasurable
   set Puxblk := μ.map (jointRV (jointSequence bcUs bcXs) n) with hPuxblk_def
   set Py₁blk := μ.map (jointRV bcY₁s n) with hPy₁blk_def
-  -- The gateway independent-pair bound (reshaped macJTS).
+  -- The independent-pair bound (reshaped macJTS).
   have h_gw := macJTS_indep_prob_le_both μ bcUs bcXs bcY₁s hbcUs hbcXs hbcY₁s
     (bcAmbient_iIndepFun_coord pU K W (fun q ↦ (q.1, q.2.1)) hselUX)
     (fun i ↦ bcAmbient_identDistrib_coord pU K W (fun q ↦ (q.1, q.2.1)) hselUX i)
@@ -1071,10 +1073,10 @@ theorem bc_joint_indep_prob_le
   unfold bcInfoJoint
   ring
 
-/-- **Unconditional conditional-slice satellite covering bound.**  The typicality hypotheses
-of `bc_conditional_slice_prob_le` are dropped: when `u` or `y₁` is atypical the slice is empty
-(joint typicality forces both marginals typical), so the bound holds vacuously; when both are
-typical it is the gateway atom.
+/-- Conditional-slice satellite covering bound with the typicality hypotheses removed: when
+`u` or `y₁` is atypical the slice is empty (joint typicality forces both marginals typical),
+so the bound holds vacuously; when both are typical it is exactly
+`bc_conditional_slice_prob_le`.
 @audit:ok -/
 theorem bc_conditional_slice_prob_le_uncond
     (pU : Measure U) [IsProbabilityMeasure pU]
@@ -1109,12 +1111,12 @@ theorem bc_conditional_slice_prob_le_uncond
     rw [hempty, measureReal_empty]
     exact Real.exp_nonneg _
 
-/-- **Receiver-1 wrong-satellite/correct-cloud averaged swap (E_b).**  For a wrong satellite
-index `m₁' ≠ m.1` (same cloud column `m.2`), the two-tier random-codebook average of the
-wrong-satellite alias event is at most `exp(−n (I(X; Y₁ ∣ U) − 4ε))`.  Both the transmitted
-satellite `cX m` (channel driver) and the alias `cX (m₁', m.2)` are drawn i.i.d. from the same
-cloud column `m.2`; averaging out the alias inside the channel integral yields the conditional
-covering bound `bc_conditional_slice_prob_le_uncond`.
+/-- Receiver-1 wrong-satellite/correct-cloud averaged swap for the `E_b` event: for a wrong
+satellite index `m₁' ≠ m.1` (same cloud column `m.2`), the two-tier random-codebook average of
+the wrong-satellite alias event is at most `exp(−n (I(X; Y₁ ∣ U) − 4ε))`.  Both the
+transmitted satellite `cX m` (channel driver) and the alias `cX (m₁', m.2)` are drawn i.i.d.
+from the same cloud column `m.2`; averaging out the alias inside the channel integral yields
+the conditional covering bound `bc_conditional_slice_prob_le_uncond`.
 @audit:ok -/
 theorem bc_random_codebook_Eb_swap
     (pU : Measure U) [IsProbabilityMeasure pU]
@@ -1233,11 +1235,11 @@ theorem bc_random_codebook_Eb_swap
     _ = Real.exp (-(n : ℝ) * (bcInfo₁ pU K W - 4 * ε)) := by
         rw [← Finset.sum_mul, sum_measureReal_singleton_univ_eq_one, one_mul]
 
-/-- **Receiver-1 wrong-cloud averaged swap (E_c).**  For a wrong cloud message `p.1 ≠ m.2`
-(with any satellite index `p.2`), the two-tier random-codebook average of the wrong-cloud alias
-event is at most `exp(−n (I((U, X); Y₁) − 3ε))`.  The wrong cloud `cU p.1` and its satellite
-`cX (p.2, p.1)` are drawn independently of the transmitted `(cX m)`-driven channel, giving the
-independent-pair bound `bc_joint_indep_prob_le`.
+/-- Receiver-1 wrong-cloud averaged swap for the `E_c` event: for a wrong cloud message
+`p.1 ≠ m.2` (with any satellite index `p.2`), the two-tier random-codebook average of the
+wrong-cloud alias event is at most `exp(−n (I((U, X); Y₁) − 3ε))`.  The wrong cloud `cU p.1`
+and its satellite `cX (p.2, p.1)` are drawn independently of the transmitted `(cX m)`-driven
+channel, giving the independent-pair bound `bc_joint_indep_prob_le`.
 @audit:ok -/
 theorem bc_random_codebook_Ec_swap
     (pU : Measure U) [IsProbabilityMeasure pU]

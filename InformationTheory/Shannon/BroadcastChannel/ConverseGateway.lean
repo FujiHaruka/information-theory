@@ -8,23 +8,24 @@ import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule
 
 /-!
-# Degraded broadcast channel — converse single-letterization (gateway probe)
+# Degraded broadcast channel — converse single-letterization
 
-This is a **gateway-atom probe** for the degraded broadcast channel (BC) converse
-(Cover–Thomas Thm 15.6.2). It is intentionally NOT registered in `InformationTheory.lean`.
-
-The converse single-letterization for the degraded BC introduces auxiliary variables
+Chain-rule material for the converse of the degraded broadcast channel (BC) coding theorem
+(Cover–Thomas Thm 15.6.2). The single-letterization introduces auxiliary variables
 `Uᵢ = (W₂, Y₂^{i-1})` and splits into two bounds:
 
-* bound (a) `R₂`-side: `I(W₂; Y₂ⁿ) ≤ ∑ᵢ I(Uᵢ; Y_{2,i})` — pure chain-rule plumbing on a
-  *prefix* conditioner, no new infrastructure needed.
-* bound (b) `R₁`-side: `I(W₁; Y₁ⁿ | W₂) = ∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` — requires the
+* the `R₂`-side bound `I(W₂; Y₂ⁿ) ≤ ∑ᵢ I(Uᵢ; Y_{2,i})` — chain-rule plumbing on a *prefix*
+  conditioner.
+* the `R₁`-side bound `I(W₁; Y₁ⁿ | W₂) = ∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` — this one requires the
   **Csiszár sum identity** to swap the prefix conditioner `Y₁^{i-1}` ↔ `Y₂^{i-1}` under
   degradedness `X → Y₁ → Y₂`.
 
-The Csiszár sum identity is the decisive atom. It is a rearrangement of the MI chain rule
-but needs *suffix*-sequence machinery (`B_{i+1}ⁿ`), of which there is no in-project
-precedent (all existing chain-rule infrastructure is *prefix*-based `Y^{<i}`).
+## Implementation notes
+
+The Csiszár sum identity is a rearrangement of the mutual-information chain rule, but it is
+stated over *suffix* sequences `B_{i+1}ⁿ` whereas the rest of the chain-rule API here is
+*prefix*-based (`Y^{<i}`); its proof therefore goes through the reflection-based
+`condMutualInfo_suffix_chain_rule`.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -37,11 +38,11 @@ variable {γ : Type*} [Fintype γ] [Nonempty γ]
   [MeasurableSpace γ] [MeasurableSingletonClass γ] [StandardBorelSpace γ]
 variable {n : ℕ}
 
-/-- **Y-axis n-variable MI chain rule** (helper for bound (a)):
+/-- Chain rule for mutual information expanded along the sequence argument:
 `I(W; Bⁿ) = ∑ᵢ I(W; Bᵢ | B^{<i})`.
 
 Derived from the left-axis `mutualInfo_chain_rule_fin` by `mutualInfo_comm` +
-`condMutualInfo_comm`.  Prefix conditioner `B^{<i}` only — no suffix machinery.
+`condMutualInfo_comm`.  The conditioner is the prefix `B^{<i}` only.
 @audit:ok -/
 lemma mutualInfo_chain_rule_Y_fin
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -61,12 +62,12 @@ lemma mutualInfo_chain_rule_Y_fin
     measurable_pi_iff.mpr fun j ↦ hBs _
   exact condMutualInfo_comm μ (Bs i) W _ (hBs i) hW hpref
 
-/-- **BC converse bound (a)** (`R₂`-side, the easy half): with `Uᵢ = (W₂, Y₂^{i-1})`,
-`I(W₂; Y₂ⁿ) ≤ ∑ᵢ I(Uᵢ; Y_{2,i})`.
+/-- Receiver-2 single-letterization for the BC converse: with `Uᵢ = (W₂, Y₂^{i-1})`, the
+message–output mutual information obeys `I(W₂; Y₂ⁿ) ≤ ∑ᵢ I(Uᵢ; Y_{2,i})`.
 
-Chain-rule plumbing: expand `I(W₂; Y₂ⁿ)` via the Y-axis chain rule into
+Chain-rule plumbing: expand `I(W₂; Y₂ⁿ)` along the sequence argument into
 `∑ᵢ I(W₂; Y_{2,i} | Y₂^{i-1})`, then bound each summand by `I((W₂, Y₂^{i-1}); Y_{2,i})`
-(adding the prefix to the data variable can only increase MI).  Prefix conditioner only.
+(adding the prefix to the data variable can only increase mutual information).
 @audit:ok -/
 theorem bc_converse_bound_a
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -103,8 +104,8 @@ theorem bc_converse_bound_a
     mutualInfo_ne_top μ (fun ω ↦ (W₂ ω, pref ω)) (Y₂s i) (hW₂.prodMk hpref) (hY₂s i)
   exact (ENNReal.toReal_le_toReal hne1 hne2).mpr hle
 
-/-- **Csiszár sum identity** (the decisive atom for bound (b)): for any two finite-alphabet
-sequences `As`, `Bs` over `Fin n`,
+/-- **Csiszár sum identity** (the key ingredient of the `R₁`-side bound): for any two
+finite-alphabet sequences `As`, `Bs` over `Fin n`,
 `∑ᵢ I(A^{i-1}; Bᵢ | B_{i+1}ⁿ) = ∑ᵢ I(B_{i+1}ⁿ; Aᵢ | A^{i-1})`.
 
 Here `A^{i-1}` is the *prefix* `fun j : Fin i.val ↦ Aⱼ` and `B_{i+1}ⁿ` is the *suffix*

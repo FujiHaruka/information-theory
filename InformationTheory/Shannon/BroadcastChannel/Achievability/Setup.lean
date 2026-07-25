@@ -67,7 +67,7 @@ instance bcJointDistribution.instIsProbabilityMeasure
 /-! ### I.i.d. ambient measure on `ℕ → U × α × β₁ × β₂` -/
 
 /-- The i.i.d. broadcast ambient measure:
-`Measure.infinitePi (fun _ => bcJointDistribution pU K W)`. -/
+`Measure.infinitePi (fun _ ↦ bcJointDistribution pU K W)`. -/
 noncomputable def bcAmbientMeasure
     (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) :
     Measure (ℕ → U × α × β₁ × β₂) :=
@@ -147,7 +147,7 @@ noncomputable def bcCodebookMeasure
   (bcCloudCodebookMeasure pU M₂ n).bind
     (fun u ↦ (bcSatelliteCodebookMeasure K M₁ M₂ n u).map (fun x ↦ (u, x)))
 
-/-! ### Gateway atom infrastructure: i.i.d. coordinate facts for the BC ambient measure
+/-! ### I.i.d. coordinate facts for the BC ambient measure
 
 Every random variable consumed by the covering bound has the form `fun ω ↦ g (ω i)` for a
 measurable coordinate selector `g : U × α × β₁ × β₂ → γ`.  These are the BC analogues of the
@@ -534,16 +534,16 @@ lemma bc_slice_card_le
     exact hsub hz
   exact_mod_cast Finset.card_le_card hfin_sub
 
-/-! ### Gateway atom: conditional-slice satellite typicality bound -/
+/-! ### Conditional-slice satellite typicality bound -/
 
-/-- **Conditional-slice satellite typicality probability bound** (superposition covering
-step).  For a fixed *typical* cloud codeword `u` and a fixed *typical* received word `y₁`,
+/-- Conditional-slice satellite typicality probability bound for the superposition covering
+argument.  For a fixed *typical* cloud codeword `u` and a fixed *typical* received word `y₁`,
 the probability under the conditional product law `Πᵢ K(uᵢ)` that an independently drawn
 satellite `x` is jointly typical with `(u, y₁)` is at most `exp(−n (I(X; Y₁ ∣ U) − 4ε))`.
 This is the receiver-1 "wrong satellite, correct cloud" sub-event of the superposition
 random-coding argument (Cover–Thomas Thm 15.6.2); the exponent matches `bcInfo₁`, with the
 `4ε` slack the sum of the four entropy-typicality windows (matching the `3ε` slack of the
-MAC atoms `macJTS_indep_prob_le_*`).  Full support (`hpU`/`hK`/`hW`) is a regularity
+MAC lemmas `macJTS_indep_prob_le_*`).  Full support (`hpU`/`hK`/`hW`) is a regularity
 precondition of the AEP mass bounds, not load-bearing.
 @audit:ok -/
 theorem bc_conditional_slice_prob_le

@@ -50,9 +50,10 @@ variable {M₁ M₂ n : ℕ}
 
 /-! ## Typed Y-axis chain rule (helper for bound (a)) -/
 
-/-- **Y-axis n-variable MI chain rule** with the left variable a different type from the
-sequence: `I(W; Bⁿ) = ∑ᵢ I(W; Bᵢ | B^{<i})`. The typed analogue of the gateway's
-`mutualInfo_chain_rule_Y_fin`. -/
+/-- Chain rule for mutual information expanded along the sequence argument, with the left
+variable `W` of a different type from the sequence: `I(W; Bⁿ) = ∑ᵢ I(W; Bᵢ | B^{<i})`. Typed
+analogue of `mutualInfo_chain_rule_Y_fin`, which requires `W` and the `Bᵢ` to share one
+alphabet. -/
 lemma mutualInfo_chain_rule_Y_fin' {δ γ : Type*}
     [MeasurableSpace δ] [StandardBorelSpace δ] [Nonempty δ]
     [Fintype γ] [MeasurableSpace γ] [MeasurableSingletonClass γ]
@@ -76,9 +77,10 @@ lemma mutualInfo_chain_rule_Y_fin' {δ γ : Type*}
 
 /-! ## Receiver-2 single-letterization (the easy chain-rule half, bound (a)) -/
 
-/-- **BC converse bound (a)** (`R₂`-side, receiver 2): with `Uᵢ = (W₂, Y₂^{i-1})`,
-`I(W₂; Y₂ⁿ) ≤ ∑ᵢ I(Uᵢ; Y_{2,i})`. Pure chain-rule plumbing on a prefix conditioner — no
-Csiszár identity, no degradedness. Typed analogue of the gateway's `bc_converse_bound_a`. -/
+/-- Receiver-2 single-letterization for the BC converse: with `Uᵢ = (W₂, Y₂^{i-1})`, the
+message–output mutual information obeys `I(W₂; Y₂ⁿ) ≤ ∑ᵢ I(Uᵢ; Y_{2,i})`. Pure chain-rule
+plumbing on a prefix conditioner — no Csiszár identity, no degradedness. Typed analogue of
+`bc_converse_bound_a`. -/
 theorem bc_singleletterize_bound₂
     [NeZero M₂]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -113,7 +115,7 @@ so the finite-alphabet / standard-Borel structure of the variable context is unu
 omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
   [StandardBorelSpace β₁] [Nonempty β₁] [Fintype β₂] [MeasurableSingletonClass β₂]
   [StandardBorelSpace β₂] [Nonempty β₂] in
-/-- **BC converse, receiver-1 corner bound** (message level): under a uniform message `W₁`,
+/-- Receiver-1 corner bound of the BC converse at the message level: under a uniform `W₁`,
 `log |M₁| ≤ I(W₁; (W₂, Y₁ⁿ)) + h(Pe₁) + Pe₁ · log(|M₁| − 1)`, with `Pe₁` the receiver-1
 error probability of the `Y₁`-only decoder. -/
 theorem bc_converse_bound₁
@@ -146,7 +148,7 @@ theorem bc_converse_bound₁
 omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
   [Fintype β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Nonempty β₁]
   [StandardBorelSpace β₂] [Nonempty β₂] in
-/-- **BC converse, receiver-2 corner bound** (message level): under a uniform message `W₂`,
+/-- Receiver-2 corner bound of the BC converse at the message level: under a uniform `W₂`,
 `log |M₂| ≤ I(W₂; Y₂ⁿ) + h(Pe₂) + Pe₂ · log(|M₂| − 1)`, with `Pe₂` the receiver-2 error
 probability. -/
 theorem bc_converse_bound₂
@@ -176,7 +178,7 @@ theorem bc_converse_bound₂
 
 omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
   [StandardBorelSpace β₁] [Nonempty β₁] [StandardBorelSpace β₂] [Nonempty β₂] in
-/-- **BC converse — message-level Fano outer bound**: for uniform messages decoded by
+/-- Message-level Fano outer bound for the broadcast channel: for uniform messages decoded by
 per-receiver decoders, the rate pair satisfies the two message-level Fano information bounds,
 packaged as `InBCCapacityRegion`. The single-letterization that turns this into the textbook
 degraded-BC converse is `bc_converse`. -/
@@ -303,8 +305,8 @@ private lemma bc_input_singleletterize_lhs_noise_collapse
     ((hXs i).prodMk hRESTmeas) Efull]
   exact hd
 
-/-- **BC converse, receiver-1 input-level single-letterization** (Route B, term-by-term
-degradedness): under a memoryless broadcast channel with the conditioning message `W₂`
+/-- Receiver-1 input-level single-letterization of the BC converse, via term-by-term
+degradedness: under a memoryless broadcast channel with the conditioning message `W₂`
 upstream of the channel and physical degradedness `X → Y₁ → Y₂`, the conditional block
 input–output mutual information collapses to the per-letter auxiliary-variable sum
 `I(Xⁿ; Y₁ⁿ | W₂) ≤ ∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` with `Uᵢ = (W₂, Y₂^{i-1})`.
@@ -515,8 +517,8 @@ theorem bc_input_singleletterize
   rw [← ENNReal.toReal_le_toReal hLfin hsumfin, ENNReal.toReal_sum (fun i _ ↦ hRfin i)]
   exact hreal
 
-/-- **BC converse, receiver-1 single-letterized corner bound** (bound (b)): the message–output
-mutual information `I(W₁; (W₂, Y₁ⁿ))` is bounded by the per-letter auxiliary-variable sum
+/-- Receiver-1 single-letterized corner bound of the BC converse: the message–output mutual
+information `I(W₁; (W₂, Y₁ⁿ))` is bounded by the per-letter auxiliary-variable sum
 `∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` with `Uᵢ = (W₂, Y₂^{i-1})`, `Xᵢ = (encoder (W₁, W₂))ᵢ`.
 
 Reduction: independence gives `I(W₁; (W₂, Y₁ⁿ)) = I(W₁; Y₁ⁿ | W₂)`; data processing along
@@ -580,8 +582,8 @@ theorem bc_singleletterize_bound₁
 
 /-! ## Single-letterized headline -/
 
-/-- **BC converse — genuine single-letter outer bound** (Cover–Thomas Thm 15.6.2): for
-uniform, independent messages sent over a degraded memoryless broadcast channel
+/-- Single-letter outer bound for the degraded broadcast channel (Cover–Thomas Thm 15.6.2):
+for uniform, independent messages sent over a degraded memoryless broadcast channel
 `X → Y₁ → Y₂` and decoded per receiver, the rate pair `(log |M₁|, log |M₂|)` lies in the
 auxiliary-variable capacity region whose information bounds are the per-letter channel sums
 `∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` (receiver 1) and `∑ᵢ I(Uᵢ; Y_{2,i})` (receiver 2), with

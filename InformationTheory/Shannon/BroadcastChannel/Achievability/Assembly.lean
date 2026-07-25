@@ -30,12 +30,12 @@ same skeleton as the MAC achievability assembly (`InformationTheory.Shannon.MAC`
 `Achievability.lean`), adapted to the two-tier (cloud / conditional-satellite) codebook and
 the two per-receiver error probabilities:
 
-* **C.1** — E0 vanishing: the correct-cloud (`(U, Y₂)`) and correct-triple (`(U, X, Y₁)`)
-  atypical masses tend to `0` (AEP / LLN).
-* **C.2** — per-codebook `averageErrorProb.toReal` decomposition into the Bonferroni terms.
-* **C.3** — two-codebook average bounds (weight-summed swaps).
-* **C.4** — pigeonhole to a deterministic codebook pair.
-* **C.5** — rate-slack vanishing + degradedness `I((U, X); Y₁) ≥ I(X; Y₁ ∣ U) + I(U; Y₂)`.
+* `E0` vanishing: the correct-cloud (`(U, Y₂)`) and correct-triple (`(U, X, Y₁)`) atypical
+  masses tend to `0` (AEP / LLN).
+* per-codebook `averageErrorProb.toReal` decomposition into the Bonferroni terms.
+* two-codebook average bounds (weight-summed swaps).
+* pigeonhole to a deterministic codebook pair.
+* rate-slack vanishing + degradedness `I((U, X); Y₁) ≥ I(X; Y₁ ∣ U) + I(U; Y₂)`.
 -/
 
 /-- Pairwise independence of any BC coordinate selector under the ambient measure. -/
@@ -50,11 +50,12 @@ lemma bcAmbient_pairwise_coord {γ : Type*} [MeasurableSpace γ]
   intro i j hij
   exact (bcAmbient_iIndepFun_coord pU K W g hg).indepFun hij
 
-/-! #### C.1 — E0 vanishing -/
+/-! #### Vanishing of the `E0` terms -/
 
-/-- **`(U, X, Y₁)` channel fold.**  The `(U, X, Y₁)`-block law of a finite set `T` equals the
-cloud/satellite/channel average of the `β₁`-projected channel mass.  Receiver-1 analogue of
-`bc_chan_fold_UY₂_set`, obtained from the master fold by projecting the pair output to `β₁`. -/
+/-- Channel fold on the `(U, X, Y₁)` axes: the `(U, X, Y₁)`-block law of a finite set `T`
+equals the cloud/satellite/channel average of the `β₁`-projected channel mass.  Receiver-1
+analogue of `bc_chan_fold_UY₂_set`, obtained from the master fold by projecting the pair
+output to `β₁`. -/
 lemma bc_chan_fold_UXY₁_set
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -91,9 +92,9 @@ lemma bc_chan_fold_UXY₁_set
         (Fin n → U) × (Fin n → α) × (Fin n → β₁))) ⁻¹' T)]
   simp only [Set.mem_preimage]
 
-/-- **Receiver-1 correct-triple averaged swap (E0).**  The two-tier random-codebook average of
-the correct-triple atypical event equals the joint `(U, X, Y₁)`-block law of the atypical set.
-Receiver-1 analogue of `bc_random_codebook_E0₂_swap`. -/
+/-- Receiver-1 correct-triple averaged swap for the `E0` event: the two-tier random-codebook
+average of the correct-triple atypical event equals the joint `(U, X, Y₁)`-block law of the
+atypical set.  Receiver-1 analogue of `bc_random_codebook_E0₂_swap`. -/
 theorem bc_random_codebook_E0₁_swap
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -165,8 +166,8 @@ theorem bc_random_codebook_E0₁_swap
   refine Finset.sum_congr rfl (fun x _ ↦ ?_)
   ring
 
-/-- **Receiver-2 E0 vanishing.**  The correct-cloud atypical `(U, Y₂)`-block mass tends to `0`
-by the two-variable joint AEP (`jointlyTypicalSet_prob_tendsto_one`). -/
+/-- The receiver-2 `E0` error term vanishes: the correct-cloud atypical `(U, Y₂)`-block mass
+tends to `0` by the two-variable joint AEP (`jointlyTypicalSet_prob_tendsto_one`). -/
 theorem bc_E0₂_vanishing
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -225,8 +226,8 @@ theorem bc_E0₂_vanishing
     simpa using h_real.const_sub (1 : ℝ)
   exact Filter.Tendsto.congr (fun n ↦ (key n).symm) h0
 
-/-- **Receiver-1 E0 vanishing.**  The correct-triple atypical `(U, X, Y₁)`-block mass tends to
-`0` by the three-variable joint AEP (`macJointlyTypicalSet_prob_tendsto_one`). -/
+/-- The receiver-1 `E0` error term vanishes: the correct-triple atypical `(U, X, Y₁)`-block
+mass tends to `0` by the three-variable joint AEP (`macJointlyTypicalSet_prob_tendsto_one`). -/
 theorem bc_E0₁_vanishing
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -304,11 +305,11 @@ theorem bc_E0₁_vanishing
     simpa using h_real.const_sub (1 : ℝ)
   exact Filter.Tendsto.congr (fun n ↦ (key n).symm) h0
 
-/-! #### C.2 — per-codebook `averageErrorProb.toReal` decomposition -/
+/-! #### Per-codebook `averageErrorProb.toReal` decomposition -/
 
-/-- **Receiver-2 per-codebook averaging bound.**  The `.toReal` of the receiver-2 average error
-probability of the deterministic code `bcCodebookToCode cU cX` is at most the uniform average of
-the two-event Bonferroni bound (`bc_errorProbAt₂_le_bonferroni`). -/
+/-- Per-codebook averaging bound for receiver 2: the `.toReal` of the receiver-2 average
+error probability of the deterministic code `bcCodebookToCode cU cX` is at most the uniform
+average of the two-event Bonferroni bound (`bc_errorProbAt₂_le_bonferroni`). -/
 theorem bc_averageErrorProb₂_toReal_le
     (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ}
@@ -339,9 +340,9 @@ theorem bc_averageErrorProb₂_toReal_le
   refine mul_le_mul_of_nonneg_left ?_ (by positivity)
   exact Finset.sum_le_sum (fun m _ ↦ bc_errorProbAt₂_le_bonferroni pU K W hM₁ hM₂ cU cX m)
 
-/-- **Receiver-1 per-codebook averaging bound.**  The `.toReal` of the receiver-1 average error
-probability of `bcCodebookToCode cU cX` is at most the uniform average of the three-event
-Bonferroni bound (`bc_errorProbAt₁_le_bonferroni3`). -/
+/-- Per-codebook averaging bound for receiver 1: the `.toReal` of the receiver-1 average
+error probability of `bcCodebookToCode cU cX` is at most the uniform average of the
+three-event Bonferroni bound (`bc_errorProbAt₁_le_bonferroni3`). -/
 theorem bc_averageErrorProb₁_toReal_le
     (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) {ε : ℝ}
@@ -378,7 +379,7 @@ theorem bc_averageErrorProb₁_toReal_le
   refine mul_le_mul_of_nonneg_left ?_ (by positivity)
   exact Finset.sum_le_sum (fun m _ ↦ bc_errorProbAt₁_le_bonferroni3 pU K W hM₁ hM₂ cU cX m)
 
-/-! #### C.3 — two-codebook average bounds
+/-! #### Two-codebook average bounds
 
 The two-tier codebook expectation is the nonnegative-weighted "linear functional"
 `L f = ∑ cU, wU cU * ∑ cX, wX cU cX * f cU cX`.  The generic `bc_weighted_two_tier_*`
@@ -432,8 +433,9 @@ lemma bc_weighted_two_tier_sum_index {κU κX ι : Type*} [Fintype κU] [Fintype
         rw [h1 cU, Finset.mul_sum]
     _ = ∑ i ∈ s, ∑ cU : κU, wU cU * ∑ cX : κX, wX cU cX * h i cU cX := Finset.sum_comm
 
-/-- **Receiver-2 aggregation.**  Fold the per-message two-event Bonferroni bound and the two
-`L`-evaluated swaps (E0 mass `A`, wrong-cloud exponent `e2`) into the closed form. -/
+/-- Receiver-2 aggregation: folding the per-message two-event Bonferroni bound together with
+the two evaluated swaps (`E0` mass `A`, wrong-cloud exponent `e2`) bounds the two-tier
+weighted codebook average by the closed form `A + (M₂ − 1) · e2`. -/
 lemma bc_pair_aggregate₂ {κU κX : Type*} [Fintype κU] [Fintype κX]
     {M₁ M₂ : ℕ} (hM₂ : 0 < M₂)
     (wU : κU → ℝ) (wX : κU → κX → ℝ)
@@ -494,9 +496,10 @@ lemma bc_pair_aggregate₂ {κU κX : Type*} [Fintype κU] [Fintype κX]
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_prod, Fintype.card_fin,
           Fintype.card_fin, nsmul_eq_mul, ← mul_assoc, hMinvM, one_mul]
 
-/-- **Receiver-1 aggregation.**  Fold the per-message three-event Bonferroni bound and the
-three `L`-evaluated swaps (E0 mass `A`, wrong-satellite exponent `eb`, wrong-cloud exponent
-`ec`) into the closed form. -/
+/-- Receiver-1 aggregation: folding the per-message three-event Bonferroni bound together
+with the three evaluated swaps (`E0` mass `A`, wrong-satellite exponent `eb`, wrong-cloud
+exponent `ec`) bounds the two-tier weighted codebook average by the corresponding closed
+form. -/
 lemma bc_pair_aggregate₁ {κU κX : Type*} [Fintype κU] [Fintype κX]
     {M₁ M₂ : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂)
     (wU : κU → ℝ) (wX : κU → κX → ℝ)
@@ -596,8 +599,8 @@ lemma bc_pair_aggregate₁ {κU κX : Type*} [Fintype κU] [Fintype κX]
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_prod, Fintype.card_fin,
           Fintype.card_fin, nsmul_eq_mul, ← mul_assoc, hMinvM, one_mul]
 
-/-- **Receiver-2 two-codebook average bound.**  The random-codebook expectation of the
-receiver-2 average error is at most the (vanishing) E0 mass plus the wrong-cloud exponent.
+/-- Two-codebook average bound for receiver 2: the random-codebook expectation of the
+receiver-2 average error is at most the (vanishing) `E0` mass plus the wrong-cloud exponent.
 -/
 theorem bc_random_codebook_average₂_le
     (pU : Measure U) [IsProbabilityMeasure pU]
@@ -637,8 +640,8 @@ theorem bc_random_codebook_average₂_le
     (fun m w₂' hmem ↦ le_of_le_of_eq (bc_random_codebook_wrongcloud_swap pU K W hpU hK hW hε m w₂'
       (Finset.mem_erase.mp hmem).1) hexp₂)
 
-/-- **Receiver-1 two-codebook average bound.**  The random-codebook expectation of the
-receiver-1 average error is at most the (vanishing) E0 mass plus the wrong-satellite (`E_b`)
+/-- Two-codebook average bound for receiver 1: the random-codebook expectation of the
+receiver-1 average error is at most the (vanishing) `E0` mass plus the wrong-satellite (`E_b`)
 and wrong-cloud (`E_c`) exponents.
 -/
 theorem bc_random_codebook_average₁_le
@@ -690,7 +693,7 @@ theorem bc_random_codebook_average₁_le
     (fun m p hmem ↦ le_of_le_of_eq (bc_random_codebook_Ec_swap pU K W hpU hK hW hε m p
       (Finset.mem_erase.mp (Finset.mem_product.mp hmem).1).1) hexpc)
 
-/-! #### C.4 — random → deterministic (two-tier pigeonhole) -/
+/-! #### Random → deterministic (two-tier pigeonhole) -/
 
 /-- Abstract two-tier pigeonhole.  Nonnegative outer weights `wU` summing to `1`, and for every
 outer index a nonnegative inner-weight family `wX cU` summing to `1`, whose weighted double
@@ -738,9 +741,10 @@ lemma bc_two_tier_pigeonhole {κU κX : Type*} [Fintype κU] [Fintype κX]
             ⟨cU₀, Finset.mem_univ _, mul_lt_mul_of_pos_left (hinner_gt cU₀) hcU₀⟩
   exact absurd h_avg (not_le.mpr h_contra)
 
-/-- **Two-tier pigeonhole.**  If the random-codebook expectation of the summed per-receiver
-errors is `≤ B`, some deterministic cloud/satellite codebook pair achieves the summed error
-`≤ B`.  Bounding the *sum* lets a single codebook meet both receivers' targets simultaneously. -/
+/-- Two-tier pigeonhole for the superposition random code: if the random-codebook expectation
+of the summed per-receiver errors is `≤ B`, some deterministic cloud/satellite codebook pair
+achieves the summed error `≤ B`.  Bounding the *sum* lets a single codebook meet both
+receivers' targets simultaneously. -/
 theorem bc_exists_codebook_le_avg
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
@@ -788,7 +792,7 @@ theorem bc_exists_codebook_le_avg
       + ((bcCodebookToCode pU K W hM₁ hM₂ ε cU cX).averageErrorProb₂ W).toReal)
     (fun _ ↦ measureReal_nonneg) (fun _ _ ↦ measureReal_nonneg) hwU_sum hwX_sum B h_avg
 
-/-! #### C.5 — degradedness + rate slack -/
+/-! #### Degradedness and rate slack -/
 
 /-- Kernel identity: composing `κ` with a conditioner-only append `prodMkRight A' Q` equals
 the plain product kernel `κ ×ₖ Q`. -/
@@ -952,8 +956,8 @@ lemma bcMarkovChain_UX_Y₁_Y₂
   exact isMarkovChain_of_append (bcJointDistribution pU K W) (fun q ↦ (q.1, q.2.1))
     (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2) hAs hZc hBs Q (bcDegraded_append pU K W Q hQeq)
 
-/-- **Degradedness superadditivity.**  Under physical degradedness `X → Y₁ → Y₂`, the joint
-information `I((U, X); Y₁)` dominates the sum of the two per-receiver informations
+/-- Superadditivity under degradedness: for a physically degraded channel `X → Y₁ → Y₂`, the
+joint information `I((U, X); Y₁)` dominates the sum of the two per-receiver informations
 `I(X; Y₁ ∣ U) + I(U; Y₂)`.  Chain rule `I((U, X); Y₁) = I(U; Y₁) + I(X; Y₁ ∣ U)` plus data
 processing `I(U; Y₁) ≥ I(U; Y₂)`.  This makes the receiver-1 joint-decoding rate sum
 `R₁ + R₂ < I((U, X); Y₁)` follow automatically from the two corner constraints.
