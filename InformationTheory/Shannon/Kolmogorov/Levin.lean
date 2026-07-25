@@ -72,14 +72,16 @@ open Computability (encodeNat decodeNat)
 /-- The payload complexity of `x`: the length of the shortest payload `d` that
 decodes to `x`. Every accepted program of `prefixUniversalEval` is `selfDelimit`
 of its payload, so this is the complexity measure the machine actually minimizes,
-up to the self-delimiting overhead. -/
+up to the self-delimiting overhead.
+@audit:ok -/
 noncomputable def payloadComplexity (x : ℕ) : ℕ :=
   sInf { l | ∃ d : List Bool, d.length = l ∧ x ∈ decodePayload d }
 
 /-- The self-delimiting wrapper with its unary run of `true`s shortened by the
 offset `m`: `replicate (d.length - m) true ++ false :: d`. For `m ≤ d.length` the
 images over all payloads still form a prefix-free set, while each codeword is
-shorter than `selfDelimit d` by exactly `m`. -/
+shorter than `selfDelimit d` by exactly `m`.
+@audit:ok -/
 def padDelimit (m : ℕ) (d : List Bool) : List Bool :=
   List.replicate (d.length - m) true ++ false :: d
 
@@ -105,6 +107,10 @@ theorem payloadComplexity_le_of_mem {x : ℕ} {d : List Bool} (h : x ∈ decodeP
     payloadComplexity x ≤ d.length :=
   Nat.sInf_le ⟨d, rfl, h⟩
 
+/-- Prefix complexity is rigidly determined by the shortest payload length,
+`K(x) = 2 * m(x) + 1`, because every accepted program is `selfDelimit` of its
+payload and `selfDelimit` doubles the payload length.
+@audit:ok -/
 theorem prefixComplexity_eq_two_mul_payloadComplexity_add_one (x : ℕ) :
     prefixComplexity x = 2 * payloadComplexity x + 1 := by
   refine le_antisymm ?_ ?_
@@ -177,6 +183,10 @@ theorem tsum_inv_two_pow_padDelimit_length_le_one (m : ℕ) :
   exact (padDelimit_image_prefixFree m).tsum_inv_two_pow_length_le_one
     (nil_not_mem_padDelimit_image m)
 
+/-- The counting bound `P_U(x) ≤ 2^{-m(x)}` for the shortest payload length
+`m(x)`: the programs producing `x` inject into the payloads of length at least
+`m(x)`, whose weights are `2^{-m(x)}` times a Kraft-summable family.
+@audit:ok -/
 theorem universalProb_le_two_pow_neg_payloadComplexity (x : ℕ) :
     universalProb x ≤ (2 : ℝ≥0∞)⁻¹ ^ payloadComplexity x := by
   have hA : ∀ p : { p : List Bool // x ∈ prefixUniversalEval p },
@@ -221,7 +231,10 @@ theorem universalProb_le_two_pow_neg_payloadComplexity (x : ℕ) :
 /-- The upper half of the factor-two relation between prefix complexity and
 universal probability: `K(x) ≤ 2 * (-log₂ P_U(x)) + 1`. Together with
 `neg_logb_universalProb_le_prefixComplexity` this places `K(x)` between
-`-log₂ P_U(x)` and twice that value plus one. -/
+`-log₂ P_U(x)` and twice that value plus one. The bound is not the degenerate
+`logb 2 0 = 0` reading: `universalProb_ge_two_pow_neg_prefixComplexity` and
+`universalProb_le_one` pin `P_U(x)` to `(0, 1]`.
+@audit:ok -/
 @[entry_point]
 theorem prefixComplexity_le_two_mul_neg_logb_universalProb (x : ℕ) :
     (prefixComplexity x : ℝ) ≤ 2 * (-Real.logb 2 (universalProb x).toReal) + 1 := by

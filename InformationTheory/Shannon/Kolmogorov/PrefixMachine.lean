@@ -211,6 +211,9 @@ theorem prefixUniversalEval_literal (x : ℕ) :
   rw [prefixLiteralProg, prefixUniversalEval, parseUnary_selfDelimit]
   simp [decodePayload, Computability.decode_encodeNat]
 
+/-- The Kraft-McMillan bound `∑ 2^{-|p|} ≤ 1` for a finite subset of an arbitrary
+prefix-free set of codewords with no empty codeword.
+@audit:ok -/
 theorem PrefixFree.kraft {S : Set (List Bool)} (hS : PrefixFree S) (h0 : [] ∉ S)
     (u : Finset (List Bool)) (hu : (↑u : Set (List Bool)) ⊆ S) :
     ∑ p ∈ u, (1 / 2 : ℝ) ^ p.length ≤ 1 := by
