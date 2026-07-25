@@ -13,6 +13,12 @@ The section also fixes the notion of a computable nonnegative extended real used
 to state that `Ω` is not one: a computable sequence of dyadic numerators whose
 values approximate the target within `2 ^ (-n)`.
 
+The stage approximations increase to `Ω` — each is a subsum of the halting
+weight, and every finite subsum is already reached at some stage. So a
+computable approximation of `Ω` from above lets one search for a stage whose
+weight is within `2 ^ (-n)` of `Ω`, and that search is itself computable because
+every comparison involved is between natural numbers over a common power of two.
+
 ## Main definitions
 
 * `IsComputableENNReal` — computability of an extended nonnegative real by a
@@ -20,6 +26,7 @@ values approximate the target within `2 ^ (-n)`.
 * `prefixEvaln` — the step-bounded evaluator of the self-delimiting machine.
 * `omegaApprox` — the stage-`t` approximation to `Ω` from below, with numerator
   `omegaApproxNum` over the denominator `2 ^ t`.
+* `searchPred` — the stage-lookup predicate, phrased over natural numbers.
 
 ## Main results
 
@@ -28,6 +35,10 @@ values approximate the target within `2 ^ (-n)`.
   finite budget already produces it.
 * `omegaApproxNum_computable` — the numerators of the lower approximation form a
   computable sequence.
+* `iSup_omegaApprox` — the stage approximations have supremum `Ω`, so
+  `exists_omegaApprox_gt` brings them within any positive margin of `Ω`.
+* `searchTime_computable` — the stage located by the search is a computable
+  function of the requested precision.
 -/
 
 open scoped ENNReal
@@ -276,5 +287,203 @@ theorem omegaApproxNum_computable : Computable omegaApproxNum := by
       ((primrec_two_pow.comp
         (Primrec.nat_sub.comp Primrec.fst (Primrec.list_length.comp Primrec.snd))).to₂)
   exact (primrec_list_sum.comp hmap).to_comp
+
+/-! ### Monotonicity and cofinality of the lower approximation -/
+
+theorem prefixEvaln_isSome_mono {k₁ k₂ : ℕ} {p : List Bool} (h : k₁ ≤ k₂)
+    (hp : (prefixEvaln k₁ p).isSome) : (prefixEvaln k₂ p).isSome := by
+  obtain ⟨x, hx⟩ := Option.isSome_iff_exists.mp hp
+  exact Option.isSome_iff_exists.mpr ⟨x, prefixEvaln_mono h hx⟩
+
+theorem haltingList_toFinset_subset {t₁ t₂ : ℕ} (h : t₁ ≤ t₂) :
+    (haltingList t₁).toFinset ⊆ (haltingList t₂).toFinset := by
+  intro p hp
+  rw [List.mem_toFinset, mem_haltingList] at hp ⊢
+  exact ⟨hp.1.trans h, prefixEvaln_isSome_mono h hp.2⟩
+
+theorem omegaApprox_mono : Monotone omegaApprox :=
+  fun _ _ h ↦ Finset.sum_le_sum_of_subset (haltingList_toFinset_subset h)
+
+theorem sum_le_chaitinOmega {s : Finset (List Bool)}
+    (hs : ∀ p ∈ s, (prefixUniversalEval p).Dom) :
+    ∑ p ∈ s, (2 : ℝ≥0∞)⁻¹ ^ p.length ≤ chaitinOmega := by
+  classical
+  have hinj : ∀ x ∈ s.attach, ∀ y ∈ s.attach,
+      (⟨x.1, hs x.1 x.2⟩ : { p : List Bool // (prefixUniversalEval p).Dom })
+        = ⟨y.1, hs y.1 y.2⟩ → x = y :=
+    fun _ _ _ _ hxy ↦ Subtype.ext (by simpa using hxy)
+  calc ∑ p ∈ s, (2 : ℝ≥0∞)⁻¹ ^ p.length
+      = ∑ q ∈ s.attach.image fun x ↦
+          (⟨x.1, hs x.1 x.2⟩ : { p : List Bool // (prefixUniversalEval p).Dom }),
+          (2 : ℝ≥0∞)⁻¹ ^ (q : List Bool).length := by
+        rw [Finset.sum_image hinj]
+        exact (Finset.sum_attach s fun p ↦ (2 : ℝ≥0∞)⁻¹ ^ p.length).symm
+    _ ≤ chaitinOmega := by rw [chaitinOmega]; exact ENNReal.sum_le_tsum _
+
+theorem omegaApprox_le_chaitinOmega (t : ℕ) : omegaApprox t ≤ chaitinOmega := by
+  rw [omegaApprox]
+  refine sum_le_chaitinOmega fun p hp ↦ ?_
+  rw [List.mem_toFinset, mem_haltingList] at hp
+  exact prefixEvaln_dom_iff.mpr ⟨t, hp.2⟩
+
+theorem exists_sum_le_omegaApprox (s : Finset { p : List Bool // (prefixUniversalEval p).Dom }) :
+    ∃ t, ∑ q ∈ s, (2 : ℝ≥0∞)⁻¹ ^ (q : List Bool).length ≤ omegaApprox t := by
+  classical
+  have hex : ∀ q : { p : List Bool // (prefixUniversalEval p).Dom },
+      ∃ k, (prefixEvaln k (q : List Bool)).isSome := fun q ↦ prefixEvaln_dom_iff.mp q.2
+  obtain ⟨t, ht⟩ : ∃ t : ℕ, ∀ q ∈ s,
+      (q : List Bool).length ≤ t ∧ (prefixEvaln t (q : List Bool)).isSome := by
+    refine ⟨s.sup fun q ↦ max (hex q).choose (q : List Bool).length, fun q hq ↦ ?_⟩
+    have hle : max (hex q).choose (q : List Bool).length
+        ≤ s.sup fun q ↦ max (hex q).choose (q : List Bool).length :=
+      Finset.le_sup (f := fun q ↦ max (hex q).choose (q : List Bool).length) hq
+    exact ⟨(le_max_right _ _).trans hle,
+      prefixEvaln_isSome_mono ((le_max_left _ _).trans hle) (hex q).choose_spec⟩
+  refine ⟨t, ?_⟩
+  have hsub : s.image (Subtype.val : { p : List Bool // (prefixUniversalEval p).Dom } → List Bool)
+      ⊆ (haltingList t).toFinset := by
+    intro p hp
+    obtain ⟨q, hq, rfl⟩ := Finset.mem_image.mp hp
+    rw [List.mem_toFinset, mem_haltingList]
+    exact ht q hq
+  calc ∑ q ∈ s, (2 : ℝ≥0∞)⁻¹ ^ (q : List Bool).length
+      = ∑ p ∈ s.image (Subtype.val :
+          { p : List Bool // (prefixUniversalEval p).Dom } → List Bool),
+          (2 : ℝ≥0∞)⁻¹ ^ p.length :=
+        (Finset.sum_image (f := fun p : List Bool ↦ (2 : ℝ≥0∞)⁻¹ ^ p.length)
+          (g := Subtype.val) fun _ _ _ _ h ↦ Subtype.ext h).symm
+    _ ≤ omegaApprox t := by rw [omegaApprox]; exact Finset.sum_le_sum_of_subset hsub
+
+theorem chaitinOmega_eq_iSup_sum :
+    chaitinOmega = ⨆ s : Finset { p : List Bool // (prefixUniversalEval p).Dom },
+      ∑ q ∈ s, (2 : ℝ≥0∞)⁻¹ ^ (q : List Bool).length := by
+  rw [chaitinOmega]
+  exact ENNReal.tsum_eq_iSup_sum
+
+theorem exists_omegaApprox_gt {ε : ℝ≥0∞} (hε : ε ≠ 0) :
+    ∃ t, chaitinOmega < omegaApprox t + ε := by
+  have hlt : chaitinOmega - ε < chaitinOmega :=
+    ENNReal.sub_lt_self chaitinOmega_ne_top chaitinOmega_pos.ne' hε
+  obtain ⟨s, hs⟩ := lt_iSup_iff.mp (hlt.trans_eq chaitinOmega_eq_iSup_sum)
+  obtain ⟨t, ht⟩ := exists_sum_le_omegaApprox s
+  exact ⟨t, ENNReal.lt_add_of_sub_lt_right (Or.inl chaitinOmega_ne_top) (hs.trans_le ht)⟩
+
+theorem iSup_omegaApprox : ⨆ t, omegaApprox t = chaitinOmega := by
+  refine le_antisymm (iSup_le omegaApprox_le_chaitinOmega) ?_
+  rw [chaitinOmega_eq_iSup_sum]
+  refine iSup_le fun s ↦ ?_
+  obtain ⟨t, ht⟩ := exists_sum_le_omegaApprox s
+  exact ht.trans (le_iSup _ t)
+
+/-! ### Locating a stage from a computable approximation -/
+
+theorem inv_two_pow_add_self (k : ℕ) :
+    (2 : ℝ≥0∞)⁻¹ ^ (k + 1) + (2 : ℝ≥0∞)⁻¹ ^ (k + 1) = (2 : ℝ≥0∞)⁻¹ ^ k := by
+  have h2 : (2 : ℝ≥0∞) * 2⁻¹ = 1 := ENNReal.mul_inv_cancel two_ne_zero (by simp)
+  calc (2 : ℝ≥0∞)⁻¹ ^ (k + 1) + (2 : ℝ≥0∞)⁻¹ ^ (k + 1)
+      = (2 : ℝ≥0∞)⁻¹ ^ k * ((2 : ℝ≥0∞) * 2⁻¹) := by rw [pow_succ]; ring
+    _ = (2 : ℝ≥0∞)⁻¹ ^ k := by rw [h2, mul_one]
+
+theorem natCast_mul_inv_pow_eq (c : ℕ) {d ℓ m : ℕ} (h : ℓ + d = m) :
+    (c : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ ℓ = ((c * 2 ^ d : ℕ) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ m := by
+  subst h
+  have hkey : ((2 ^ d : ℕ) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ (ℓ + d) = (2 : ℝ≥0∞)⁻¹ ^ ℓ := by
+    simpa using natCast_two_pow_sub_mul_inv_pow (ℓ := ℓ) (t := ℓ + d) (Nat.le_add_right ℓ d)
+  rw [Nat.cast_mul, mul_assoc, hkey]
+
+/-- The search predicate behind the stage lookup, written over the common
+denominator `2 ^ (n + 2 + t)` so that every comparison is between natural
+numbers: `a (n + 2) * 2 ^ (-(n+2)) ≤ omegaApprox t + 2 ^ (-(n+1))`. -/
+def searchPred (a : ℕ → ℕ) (n t : ℕ) : Prop :=
+  a (n + 2) * 2 ^ t ≤ omegaApproxNum t * 2 ^ (n + 2) + 2 ^ (t + 1)
+
+noncomputable instance instDecidableSearchPred (a : ℕ → ℕ) (n t : ℕ) :
+    Decidable (searchPred a n t) :=
+  Nat.decLe _ _
+
+theorem searchPred_iff (a : ℕ → ℕ) (n t : ℕ) :
+    searchPred a n t ↔ (a (n + 2) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ (n + 2)
+      ≤ omegaApprox t + (2 : ℝ≥0∞)⁻¹ ^ (n + 1) := by
+  have hne : (2 : ℝ≥0∞)⁻¹ ^ (n + 2 + t) ≠ 0 :=
+    pow_ne_zero _ (ENNReal.inv_ne_zero.mpr (by simp))
+  have htop : (2 : ℝ≥0∞)⁻¹ ^ (n + 2 + t) ≠ ⊤ :=
+    ENNReal.pow_ne_top (ENNReal.inv_ne_top.mpr two_ne_zero)
+  have h1 : (a (n + 2) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ (n + 2)
+      = ((a (n + 2) * 2 ^ t : ℕ) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ (n + 2 + t) :=
+    natCast_mul_inv_pow_eq _ rfl
+  have h2a : omegaApprox t
+      = ((omegaApproxNum t * 2 ^ (n + 2) : ℕ) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ (n + 2 + t) := by
+    rw [omegaApprox_eq_num]
+    exact natCast_mul_inv_pow_eq _ (by omega)
+  have h2b : (2 : ℝ≥0∞)⁻¹ ^ (n + 1)
+      = ((2 ^ (t + 1) : ℕ) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ (n + 2 + t) := by
+    simpa using natCast_mul_inv_pow_eq (c := 1) (d := t + 1) (ℓ := n + 1) (by omega)
+  rw [h1, h2a, h2b, ← add_mul, ← Nat.cast_add,
+    ENNReal.mul_le_mul_iff_left hne htop, Nat.cast_le]
+  exact Iff.rfl
+
+theorem searchPred_computablePred {a : ℕ → ℕ} (ha : Computable a) :
+    ComputablePred fun p : ℕ × ℕ ↦ searchPred a p.1 p.2 := by
+  have hmul : Computable₂ fun x y : ℕ ↦ x * y := Primrec₂.to_comp Primrec.nat_mul
+  have hadd : Computable₂ fun x y : ℕ ↦ x + y := Primrec₂.to_comp Primrec.nat_add
+  have hshift : Primrec fun p : ℕ × ℕ ↦ p.1 + 2 :=
+    Primrec.nat_add.comp Primrec.fst (Primrec.const 2)
+  have hlhs : Computable fun p : ℕ × ℕ ↦ a (p.1 + 2) * 2 ^ p.2 :=
+    hmul.comp (ha.comp hshift.to_comp) (primrec_two_pow.comp Primrec.snd).to_comp
+  have hrhs : Computable fun p : ℕ × ℕ ↦ omegaApproxNum p.2 * 2 ^ (p.1 + 2) + 2 ^ (p.2 + 1) :=
+    hadd.comp
+      (hmul.comp (omegaApproxNum_computable.comp Computable.snd)
+        (primrec_two_pow.comp hshift).to_comp)
+      (primrec_two_pow.comp (Primrec.nat_add.comp Primrec.snd (Primrec.const 1))).to_comp
+  obtain ⟨f, hf, hfeq⟩ := ComputablePred.computable_iff.mp
+    (PrimrecPred.computablePred (p := fun q : ℕ × ℕ ↦ q.1 ≤ q.2) Primrec.nat_le)
+  refine ComputablePred.computable_iff.mpr
+    ⟨fun p ↦ f (a (p.1 + 2) * 2 ^ p.2,
+      omegaApproxNum p.2 * 2 ^ (p.1 + 2) + 2 ^ (p.2 + 1)), hf.comp (hlhs.pair hrhs), ?_⟩
+  funext p
+  exact congrFun hfeq
+    (a (p.1 + 2) * 2 ^ p.2, omegaApproxNum p.2 * 2 ^ (p.1 + 2) + 2 ^ (p.2 + 1))
+
+theorem exists_searchPred {a : ℕ → ℕ}
+    (ha : ∀ n : ℕ, (a n : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n ≤ chaitinOmega + (2 : ℝ≥0∞)⁻¹ ^ n)
+    (n : ℕ) : ∃ t, searchPred a n t := by
+  have hbase : ((2 : ℝ≥0∞)⁻¹ ^ (n + 2)) ≠ 0 :=
+    pow_ne_zero _ (ENNReal.inv_ne_zero.mpr (by simp))
+  obtain ⟨t, ht⟩ := exists_omegaApprox_gt hbase
+  refine ⟨t, (searchPred_iff a n t).mpr ?_⟩
+  calc (a (n + 2) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ (n + 2)
+      ≤ chaitinOmega + (2 : ℝ≥0∞)⁻¹ ^ (n + 2) := ha (n + 2)
+    _ ≤ omegaApprox t + (2 : ℝ≥0∞)⁻¹ ^ (n + 2) + (2 : ℝ≥0∞)⁻¹ ^ (n + 2) :=
+        add_le_add ht.le le_rfl
+    _ = omegaApprox t + (2 : ℝ≥0∞)⁻¹ ^ (n + 1) := by
+        rw [add_assoc]
+        exact congrArg _ (inv_two_pow_add_self (n + 1))
+
+theorem searchTime_computable {a : ℕ → ℕ} (ha : Computable a)
+    (hex : ∀ n, ∃ t, searchPred a n t) : Computable fun n ↦ Nat.find (hex n) :=
+  Computable.find (searchPred_computablePred ha) hex
+
+theorem chaitinOmega_lt_omegaApprox_find {a : ℕ → ℕ}
+    (ha : ∀ n : ℕ, chaitinOmega ≤ (a n : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ n + (2 : ℝ≥0∞)⁻¹ ^ n)
+    (hex : ∀ n, ∃ t, searchPred a n t) (n : ℕ) :
+    chaitinOmega < omegaApprox (Nat.find (hex n)) + (2 : ℝ≥0∞)⁻¹ ^ n := by
+  have hne : ((2 : ℝ≥0∞)⁻¹ ^ (n + 1) + (2 : ℝ≥0∞)⁻¹ ^ (n + 2)) ≠ ⊤ :=
+    ENNReal.add_ne_top.mpr ⟨ENNReal.pow_ne_top (ENNReal.inv_ne_top.mpr two_ne_zero),
+      ENNReal.pow_ne_top (ENNReal.inv_ne_top.mpr two_ne_zero)⟩
+  have hsum : (2 : ℝ≥0∞)⁻¹ ^ (n + 1) + (2 : ℝ≥0∞)⁻¹ ^ (n + 2) + (2 : ℝ≥0∞)⁻¹ ^ (n + 2)
+      = (2 : ℝ≥0∞)⁻¹ ^ n := by
+    rw [add_assoc, congrArg (HAdd.hAdd ((2 : ℝ≥0∞)⁻¹ ^ (n + 1))) (inv_two_pow_add_self (n + 1))]
+    exact inv_two_pow_add_self n
+  have hmargin : (2 : ℝ≥0∞)⁻¹ ^ (n + 1) + (2 : ℝ≥0∞)⁻¹ ^ (n + 2) < (2 : ℝ≥0∞)⁻¹ ^ n :=
+    hsum ▸ ENNReal.lt_add_right hne (pow_ne_zero _ (ENNReal.inv_ne_zero.mpr (by simp)))
+  have hP := (searchPred_iff a n (Nat.find (hex n))).mp (Nat.find_spec (hex n))
+  refine lt_of_le_of_lt ?_
+    (ENNReal.add_lt_add_left (omegaApprox_ne_top (Nat.find (hex n))) hmargin)
+  calc chaitinOmega
+      ≤ (a (n + 2) : ℝ≥0∞) * (2 : ℝ≥0∞)⁻¹ ^ (n + 2) + (2 : ℝ≥0∞)⁻¹ ^ (n + 2) := ha (n + 2)
+    _ ≤ omegaApprox (Nat.find (hex n)) + (2 : ℝ≥0∞)⁻¹ ^ (n + 1) + (2 : ℝ≥0∞)⁻¹ ^ (n + 2) :=
+        add_le_add hP le_rfl
+    _ = omegaApprox (Nat.find (hex n))
+          + ((2 : ℝ≥0∞)⁻¹ ^ (n + 1) + (2 : ℝ≥0∞)⁻¹ ^ (n + 2)) := add_assoc _ _ _
 
 end InformationTheory.Kolmogorov
