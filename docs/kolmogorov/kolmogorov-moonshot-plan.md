@@ -36,10 +36,11 @@ SLLN (CT 14.5.1) も proof-done・sorryAx-free・監査済** (`Incompressible.le
 **第 1 波 完了 (cold-read 用)**: P1–P5 が全 proof-done ⟹ 第 1 波背骨に未完 leg は無い。flagship
 `kolmogorov_entropy_rate` は上界 (method-of-types 再アーキ R1–R4) / 下界 (数え上げ + AEP) の両半分 + squeeze で
 完全 proof-done sorryAx-free @audit:ok。残る P6 SLLN は stretch (第 1 波成否に無関係)。第 1 波背骨に壁 residual は無い
-(唯一の genuine 壁は第 2 波 prefix 塔、slug は §Out が保持)。
+(かつて「唯一の genuine 壁 = 第 2 波 prefix 塔」と見立てたが over-estimation で撤回済 → §Out)。
 
 **次 leg 戦略 (control state)**: 第 1 波 + stretch P6 いずれも達成済み。flag-only cosmetic は 2026-07-24 に CLOSED。
-本 moonshot の残 route はゼロ (P1–P6 全 proof-done + 監査済)。第 2 波 prefix 塔 (P7–P9) は別 moonshot として隔離。
+本 moonshot の残 route はゼロ (P1–P6 全 proof-done + 監査済)。第 2 波 prefix 塔 (P7–P10) は別 moonshot として隔離
+(進捗の SoT は [`kolmogorov-w2-moonshot-plan.md`](kolmogorov-w2-moonshot-plan.md) の DAG。本節にはキャッシュしない)。
 
 ## Sub-plan 一覧
 
