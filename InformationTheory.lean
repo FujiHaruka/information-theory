@@ -104,6 +104,8 @@ import InformationTheory.Shannon.BroadcastChannel.Marton.MutualCovering
 import InformationTheory.Shannon.BroadcastChannel.Marton.Setup
 import InformationTheory.Shannon.BroadcastChannel.Marton.Covering
 import InformationTheory.Shannon.BroadcastChannel.Marton.ErrorAnalysis
+import InformationTheory.Shannon.ConditionalAEP
+import InformationTheory.Shannon.BroadcastChannel.Marton.MarkovCore
 import InformationTheory.Shannon.RelayCutset
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity
