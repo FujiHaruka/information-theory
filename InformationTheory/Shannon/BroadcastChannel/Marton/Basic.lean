@@ -22,7 +22,7 @@ elimination.
 ## Main results
 
 * `exists_martonRateSplit` — a rate pair satisfying the three inequalities strictly admits a
-  splitting into subcodebook rates meeting the covering and decoding constraints.
+  splitting into positive subcodebook rates meeting the covering and decoding constraints.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -52,13 +52,15 @@ theorem InMartonRegion.mono {R₁ R₂ I₁ I₂ I₁₂ I₁' I₂' I₁₂' : 
   ⟨h.bound₁.trans h₁, h.bound₂.trans h₂, by linarith [h.boundSum]⟩
 
 /-- Splitting of a strictly interior rate pair into subcodebook rates: the three strict Marton
-inequalities produce nonnegative rates `R₁'`, `R₂'` whose sum exceeds `I₁₂` while each message
+inequalities produce positive rates `R₁'`, `R₂'` whose sum exceeds `I₁₂` while each message
 rate still leaves room for its subcodebook, `R₁ + R₁' < I₁` and `R₂ + R₂' < I₂`. This is the
 direction of the Fourier–Motzkin elimination that the coding scheme consumes; the reverse
-direction, that such a splitting forces the three inequalities, is immediate. -/
+direction, that such a splitting forces the three inequalities, is immediate. Positivity rather
+than nonnegativity is what the covering step needs: it sizes the selection radius by a fraction
+of each subcodebook rate, which a rate of zero leaves no room for. -/
 theorem exists_martonRateSplit {R₁ R₂ I₁ I₂ I₁₂ : ℝ}
     (h₁ : R₁ < I₁) (h₂ : R₂ < I₂) (hsum : R₁ + R₂ < I₁ + I₂ - I₁₂) :
-    ∃ R₁' R₂' : ℝ, 0 ≤ R₁' ∧ 0 ≤ R₂' ∧ I₁₂ < R₁' + R₂' ∧ R₁ + R₁' < I₁ ∧ R₂ + R₂' < I₂ := by
+    ∃ R₁' R₂' : ℝ, 0 < R₁' ∧ 0 < R₂' ∧ I₁₂ < R₁' + R₂' ∧ R₁ + R₁' < I₁ ∧ R₂ + R₂' < I₂ := by
   have ha : 0 < I₁ - R₁ := sub_pos.mpr h₁
   have hb : 0 < I₂ - R₂ := sub_pos.mpr h₂
   -- Distribute the slack `D = (I₁ - R₁) + (I₂ - R₂)` between the two subcodebooks in
@@ -71,7 +73,7 @@ theorem exists_martonRateSplit {R₁ R₂ I₁ I₂ I₁₂ : ℝ}
       max_lt (by linarith) (by norm_num), ?_⟩
     exact (div_lt_iff₀ hD).mp (lt_of_lt_of_le (by linarith) (le_max_left _ _))
   obtain ⟨θ, hθ₀, hθ₁, hθ⟩ := key ((I₁ - R₁) + (I₂ - R₂)) (by linarith) (by linarith)
-  refine ⟨(I₁ - R₁) * θ, (I₂ - R₂) * θ, mul_nonneg ha.le hθ₀.le, mul_nonneg hb.le hθ₀.le,
+  refine ⟨(I₁ - R₁) * θ, (I₂ - R₂) * θ, mul_pos ha hθ₀, mul_pos hb hθ₀,
     by nlinarith, ?_, ?_⟩
   · nlinarith [mul_pos ha (sub_pos.mpr hθ₁)]
   · nlinarith [mul_pos hb (sub_pos.mpr hθ₁)]

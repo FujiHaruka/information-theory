@@ -652,7 +652,7 @@ theorem marton_random_codebook_alias₁_le
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hpV : ∀ v : V₁ × V₂, 0 < pV.real {v}) (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') {ε : ℝ}
+    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') {ε ε_cov : ℝ}
     (m : Fin M₁ × Fin M₂) (q : Fin M₁ × Fin M₁') (hne : q.1 ≠ m.1) :
     ∑ c₁ : MartonSubcodebook M₁ M₁' n V₁,
         (martonSubcodebookMeasure (pV.map Prod.fst) M₁ M₁' n).real {c₁}
@@ -900,7 +900,7 @@ theorem marton_random_codebook_alias₂_le
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hpV : ∀ v : V₁ × V₂, 0 < pV.real {v}) (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') {ε : ℝ}
+    {M₁ M₂ M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') {ε ε_cov : ℝ}
     (m : Fin M₁ × Fin M₂) (q : Fin M₂ × Fin M₂') (hne : q.1 ≠ m.2) :
     ∑ c₁ : MartonSubcodebook M₁ M₁' n V₁,
         (martonSubcodebookMeasure (pV.map Prod.fst) M₁ M₁' n).real {c₁}

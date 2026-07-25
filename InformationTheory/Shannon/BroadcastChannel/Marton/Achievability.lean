@@ -111,22 +111,6 @@ private lemma sum_pair_le_add_prodReal {A B : Type*}
               = μ₁.real {a} * t + μ₁.real {a} * μ₂.real {b | (a, b) ∈ S}),
           Finset.sum_add_distrib, ← Finset.sum_mul, sum_measureReal_singleton_univ, one_mul]
 
-/-! ### Splitting a rate pair into positive subcodebook rates -/
-
-private lemma exists_martonRateSplit_pos {R₁ R₂ I₁ I₂ I₁₂ : ℝ}
-    (h₁ : R₁ < I₁) (h₂ : R₂ < I₂) (hsum : R₁ + R₂ < I₁ + I₂ - I₁₂) :
-    ∃ R₁' R₂' : ℝ, 0 < R₁' ∧ 0 < R₂' ∧ I₁₂ < R₁' + R₂' ∧ R₁ + R₁' < I₁ ∧ R₂ + R₂' < I₂ := by
-  obtain ⟨R₁', R₂', hR₁'nn, hR₂'nn, hsum', h₁', h₂'⟩ := exists_martonRateSplit h₁ h₂ hsum
-  refine ⟨R₁' + min ((I₁ - R₁ - R₁') / 2) ((I₂ - R₂ - R₂') / 2),
-    R₂' + min ((I₁ - R₁ - R₁') / 2) ((I₂ - R₂ - R₂') / 2), ?_, ?_, ?_, ?_, ?_⟩ <;>
-  · have hpos : 0 < min ((I₁ - R₁ - R₁') / 2) ((I₂ - R₂ - R₂') / 2) :=
-      lt_min (by linarith) (by linarith)
-    have hA : min ((I₁ - R₁ - R₁') / 2) ((I₂ - R₂ - R₂') / 2) ≤ (I₁ - R₁ - R₁') / 2 :=
-      min_le_left _ _
-    have hB : min ((I₁ - R₁ - R₁') / 2) ((I₂ - R₂ - R₂') / 2) ≤ (I₂ - R₂ - R₂') / 2 :=
-      min_le_right _ _
-    linarith
-
 /-! ### Aggregating one receiver's Bonferroni decomposition over the ensemble -/
 
 /-- Fold a per-message decomposition into a transmitted-pair term and an alias family into a
@@ -801,7 +785,7 @@ theorem marton_achievability
         (c.averageErrorProb₁ W).toReal < ε' ∧ (c.averageErrorProb₂ W).toReal < ε' := by
   classical
   obtain ⟨R₁', R₂', hR₁'pos, hR₂'pos, hcovR, hdec₁, hdec₂⟩ :=
-    exists_martonRateSplit_pos hR₁lt hR₂lt hRsum
+    exists_martonRateSplit hR₁lt hR₂lt hRsum
   -- The decoding radius, sized by the slack the two decoding constraints leave.
   set ε : ℝ := min ((martonInfo₁ pV K W - R₁ - R₁') / 6)
     ((martonInfo₂ pV K W - R₂ - R₂') / 6) with hε_def

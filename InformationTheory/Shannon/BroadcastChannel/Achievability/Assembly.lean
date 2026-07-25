@@ -1091,7 +1091,7 @@ theorem bc_achievability
     (hpU : ∀ u : U, 0 < pU.real {u}) (hK : ∀ (u : U) (a : α), 0 < (K u).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
     (hdeg : IsBCDegraded W)
-    {R₁ R₂ : ℝ} (_hR₁ : 0 < R₁) (_hR₂ : 0 < R₂)
+    {R₁ R₂ : ℝ} (hR₁ : 0 < R₁) (_hR₂ : 0 < R₂)
     (hR₁lt : R₁ < bcInfo₁ pU K W) (hR₂lt : R₂ < bcInfo₂ pU K W)
     {ε' : ℝ} (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n, N ≤ n →
@@ -1129,7 +1129,7 @@ theorem bc_achievability
     (by have h34 : 3 * (4 * ε / 3) = 4 * ε := by ring
         rw [h34]; exact hgapb) hε'5
   obtain ⟨Nc, hNc⟩ := bc_Ec_lt_of_rate (Ijoint := bcInfoJoint pU K W) (R₁ := R₁) (R₂ := R₂)
-    (ε := ε) (ε' := ε' / 5) _hR₁.le hgapc hε'5
+    (ε := ε) (ε' := ε' / 5) hR₁.le hgapc hε'5
   refine ⟨max (max N₀₂ N₀₁) (max (max N₂ Nb) Nc), fun n hn ↦ ?_⟩
   have hn₀₂ : N₀₂ ≤ n := le_trans (le_trans (le_max_left _ _) (le_max_left _ _)) hn
   have hn₀₁ : N₀₁ ≤ n := le_trans (le_trans (le_max_right _ _) (le_max_left _ _)) hn
