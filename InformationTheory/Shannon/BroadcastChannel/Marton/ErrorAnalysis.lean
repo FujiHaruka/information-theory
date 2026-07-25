@@ -35,7 +35,7 @@ of `Marton.MarkovCore` to apply to it.
 * `martonMessageDecoder₁`, `martonMessageDecoder₂`, `martonCodebookToCode` — the two message
   decoders and the assembled `BroadcastCode`.
 
-## Main results
+## Main statements
 
 * `marton_jointlyTypicalFiber₁_le` and `marton_alias_slice_avg_le₁` — the alias estimate against
   an arbitrary law of the received word.
@@ -359,6 +359,12 @@ private lemma martonMessageDecoder₁_eq_of_unique
   rw [dif_pos h]
   exact h.unique (Classical.choose_spec h.exists) hw
 
+/-- Receiver-1 error decomposition at a fixed message pair: the error probability is at most the
+probability that the transmitted auxiliary word fails to be jointly typical with the received word,
+plus the sum, over the auxiliary codewords of every other message row, of the probability that one
+of them is jointly typical with it.  Quantifying the covering index existentially is what keeps a
+second typical index inside the transmitted row off the error event, so the alias sum ranges over
+the rows of the other messages only. -/
 theorem marton_errorProbAt₁_le_bonferroni
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ M₁' M₂' n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) (hM₁' : 0 < M₁') (hM₂' : 0 < M₂')
@@ -418,10 +424,14 @@ theorem marton_errorProbAt₁_le_bonferroni
     _ ≤ ν.real E1 + ∑ q ∈ S, ν.real (Ea q) :=
         add_le_add le_rfl (measureReal_biUnion_finset_le _ _)
 
+/-- The message-averaged form of `marton_errorProbAt₁_le_bonferroni`: averaging the pointwise
+decomposition over all message pairs bounds the receiver-1 average error probability by the mean
+of the transmitted-pair term and of the alias sum.  The bound holds at every selection radius
+`ε_cov`, which is what lets the covering radius be chosen independently of the decoding radius. -/
 theorem marton_averageErrorProb₁_toReal_le
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ M₁' M₂' n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) (hM₁' : 0 < M₁') (hM₂' : 0 < M₂')
-    {ε : ℝ}
+    {ε ε_cov : ℝ}
     (c₁ : MartonSubcodebook M₁ M₁' n V₁) (c₂ : MartonSubcodebook M₂ M₂' n V₂)
     (cX : Fin M₁ × Fin M₂ → (Fin n → α)) :
     ((martonCodebookToCode pV K W hM₁ hM₂ ε c₁ c₂ cX).averageErrorProb₁ W).toReal

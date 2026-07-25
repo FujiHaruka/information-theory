@@ -29,7 +29,7 @@ pair pins the empirical type of the transmitted words.
   radius of a jointly strongly typical pair into the weak bands of the two blocks and of their
   joint sequence.
 
-## Main results
+## Main statements
 
 * `mem_jointlyTypicalSet_swap` — the jointly typical set is symmetric in its two blocks.
 * `measureReal_jointlyTypicalFiber_le` and `measureReal_jointlyTypicalFiberSnd_le` — both
@@ -40,6 +40,13 @@ pair pins the empirical type of the transmitted words.
   weakly and at the strongly typical set.
 * `marton_mutual_covering` and `marton_strong_mutual_covering` — the same statements for the
   auxiliary variables of Marton's inner bound, with the covering threshold read as `I(V₁; V₂)`.
+* `meas_marton_codebook_no_jointlyTypicalPair_lt` and
+  `meas_marton_codebook_no_jointStronglyTypicalPair_lt` — the same two bounds with the typicality
+  parameter left as a hypothesis, so that a consumer may choose one radius meeting the covering
+  conditions together with those of the decoding analysis.
+* `marton_mutual_covering_of_indepAux` and `marton_strong_mutual_covering_of_indepAux` — the
+  degenerate regime of independent auxiliary variables, certifying that the hypotheses of the two
+  covering statements are jointly satisfiable.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -50,6 +57,8 @@ open scoped ENNReal NNReal BigOperators
 
 set_option linter.unusedSectionVars false
 set_option linter.unusedDecidableInType false
+
+/-! ### Symmetry of the jointly typical set -/
 
 section TypicalSwap
 
@@ -83,6 +92,10 @@ lemma entropy_jointSequence_swap
   simp only [Equiv.prodComm_apply, Prod.swap_prod_mk]
   rw [measureReal_map_jointSequence_swap μ Xs Ys hXs hYs a b]
 
+/-- The jointly typical set is symmetric in its two blocks: a pair `(x, y)` is jointly typical for
+`(Xs, Ys)` exactly when the swapped pair `(y, x)` is jointly typical for `(Ys, Xs)`.  Both the
+per-letter log-likelihood and the joint entropy are invariant under the swap, so the three bands
+defining membership are exchanged rather than changed. -/
 lemma mem_jointlyTypicalSet_swap
     (μ : Measure Ω) (Xs : ℕ → Ω → A) (Ys : ℕ → Ω → B)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
@@ -106,6 +119,8 @@ lemma mem_jointlyTypicalSet_swap
 
 end TypicalSwap
 
+/-! ### Mass of the conditional slices -/
+
 section SliceMass
 
 variable {Ω : Type*} [MeasurableSpace Ω]
@@ -125,6 +140,10 @@ variable (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : ℕ → Ω → A) (Ys
   (hposZ : ∀ p : A × B, 0 < (μ.map (jointSequence Xs Ys 0)).real {p})
 
 include hXs hYs hindepX hidentX hindepY hidentY hindepZ hidentZ hposX hposY hposZ in
+/-- Uniform bound on the conditional slices of the jointly typical set taken along the first
+block: whatever the second word `y`, the i.i.d. law of the first sequence gives the set of words
+jointly typical with `y` mass at most `exp(-n (I(X; Y) - 3ε))`, where `I(X; Y)` is read as
+`H(X) + H(Y) - H(X, Y)`. -/
 lemma measureReal_jointlyTypicalFiber_le (n : ℕ) {ε : ℝ} (y : Fin n → B) :
     (μ.map (jointRV Xs n)).real ((fun x ↦ (x, y)) ⁻¹' jointlyTypicalSet μ Xs Ys n ε)
       ≤ Real.exp ((n : ℝ) * (entropy μ (jointSequence Xs Ys 0) - entropy μ (Xs 0)
@@ -161,6 +180,10 @@ lemma measureReal_jointlyTypicalFiber_le (n : ℕ) {ε : ℝ} (y : Fin n → B) 
         ring_nf
 
 include hXs hYs hindepX hidentX hindepY hidentY hindepZ hidentZ hposX hposY hposZ in
+/-- The mirror image of `measureReal_jointlyTypicalFiber_le`, slicing along the second block: the
+same exponential bound holds for the mass the i.i.d. law of the second sequence gives to the words
+jointly typical with a prescribed first word `x`.  The covering estimate needs both families,
+since the second-moment argument controls the two directions of the pair count separately. -/
 lemma measureReal_jointlyTypicalFiberSnd_le (n : ℕ) {ε : ℝ} (x : Fin n → A) :
     (μ.map (jointRV Ys n)).real (Prod.mk x ⁻¹' jointlyTypicalSet μ Xs Ys n ε)
       ≤ Real.exp ((n : ℝ) * (entropy μ (jointSequence Xs Ys 0) - entropy μ (Xs 0)
@@ -185,6 +208,8 @@ lemma measureReal_jointlyTypicalFiberSnd_le (n : ℕ) {ε : ℝ} (x : Fin n → 
   ring
 
 end SliceMass
+
+/-! ### A pair of codebooks as the covering ambient -/
 
 section CodebookAmbient
 
@@ -274,6 +299,8 @@ theorem meas_codebook_no_pair_le (μX : Measure A) (μY : Measure B)
 
 end CodebookAmbient
 
+/-! ### The block law of an i.i.d. sequence -/
+
 section BlockLaw
 
 variable {Ω : Type*} [MeasurableSpace Ω]
@@ -293,6 +320,8 @@ lemma map_jointRV_eq_pi (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : ℕ �
   rw [hpi, hmarg]
 
 end BlockLaw
+
+/-! ### Tail estimates for the three Chebyshev terms -/
 
 section Tail
 
@@ -397,6 +426,8 @@ private lemma codebook_bound_nonneg {gq pv : ℝ} {n m₁ m₂ : ℕ} (hp : 0 �
 
 end Tail
 
+/-! ### The band constant of the strong radius -/
+
 section StrongRadius
 
 variable {Ω : Type*} [MeasurableSpace Ω]
@@ -457,6 +488,8 @@ lemma jointStronglyTypicalSet_subset_jointlyTypicalSet_bandConst
     hε.le ?_ ?_ ?_ <;> rw [hC] <;> nlinarith [hε, h₁, h₂, h₃]
 
 end StrongRadius
+
+/-! ### Mutual covering over abstract alphabets -/
 
 section Covering
 
@@ -688,6 +721,8 @@ theorem meas_codebook_no_jointStronglyTypicalPair_lt
   linarith
 
 end Covering
+
+/-! ### Marton's auxiliary variables: the weakly typical reading -/
 
 section MartonCovering
 

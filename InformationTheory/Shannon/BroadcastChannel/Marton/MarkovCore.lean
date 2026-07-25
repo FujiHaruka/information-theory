@@ -32,8 +32,9 @@ auxiliary pair has to be pinned for the transmitted block to be pinned at `marto
 
 ## Main statements
 
-* `marton_condAEP_jointlyTypical` — the conditional AEP: the channel output of a type-pinned
-  `(V₁, X)`-block is jointly typical with the auxiliary word with probability `≥ 1 - tol`.
+* `marton_condAEP_jointlyTypical` and `marton_condAEP_jointlyTypical_ge` — the conditional AEP:
+  the channel output of a type-pinned `(V₁, X)`-block is jointly typical with the auxiliary word
+  with probability `≥ 1 - tol`, stated on the failure event and on its complement.
 * `marton_strongRadius_prob_tendsto_one` — the ambient ensemble meets the type pin with
   probability tending to one, so the conditional AEP is not vacuous.
 * `marton_transmitted_stronglyTypical_le` — the input drawn from a type-pinned auxiliary pair
