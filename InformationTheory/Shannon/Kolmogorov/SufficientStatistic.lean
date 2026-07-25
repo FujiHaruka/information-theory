@@ -9,7 +9,7 @@ import InformationTheory.Shannon.Kolmogorov.Levin
 /-!
 # Kolmogorov sufficient statistics and two-part descriptions
 
-Cover-Thomas (2nd ed.) §14.12. A finite model `S ∋ x` describes `x` in two parts:
+Cover–Thomas (2nd ed.) §14.12. A finite model `S ∋ x` describes `x` in two parts:
 the model itself, and the index of `x` inside `S`. The model part is measured by
 the prefix complexity `modelComplexity S` of a canonical code for `S`, and the
 index part by `Nat.clog 2 S.card` bits.
@@ -47,7 +47,7 @@ sides pass through the same identity.
 
 ## References
 
-Cover-Thomas (2nd ed.) §14.12.
+Cover–Thomas (2nd ed.) §14.12.
 
 ## Tags
 
