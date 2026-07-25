@@ -93,6 +93,8 @@ universalProb_ge_two_pow_neg_prefixComplexity | The universal probability domina
 prefixComplexity_le_two_mul_neg_logb_universalProb | Prefix complexity and universal probability agree up to a factor of two for the self-delimiting machine, -log₂ P_U(x) ≤ K(x) ≤ 2·(-log₂ P_U(x)) + 1
 chaitinOmega_le_one | Chaitin's halting probability converges, Ω ≤ 1, by the Kraft bound on the prefix-free halting set (Cover–Thomas §14.9)
 prefixComplexity_not_computable | Prefix Kolmogorov complexity is not a computable function (Berry's paradox)
+prefixUniversalEval_dom_not_computablePred | The halting set of the self-delimiting universal machine is undecidable, by reduction from the halting problem
+chaitinOmega_not_computable | Chaitin's Ω is not computable: no computable sequence of dyadic numerators approximates it to within 2^(-n) at every precision (Cover–Thomas §14.9); the negation is proved for that additive predicate, which the textbook notion of a computable real implies, while the converse implication is not formalized because Mathlib carries no computable arithmetic on ℚ
 prefixComplexity_le_twoPartLength | Every two-part description bounds the prefix complexity, K(x) ≤ K(S) + 4·⌈log₂ S.card⌉ + O(1); the index coefficient 4 is fixed by the self-delimiting machine and built into the description length, so this is not the textbook additive form with coefficient 1 on the index part
 mdlComplexity_sub_prefixComplexity_le | The shortest coefficient-4 two-part description length and the prefix complexity agree up to an additive constant, in both directions — a statement about that quantity, not the textbook MDL principle
 
