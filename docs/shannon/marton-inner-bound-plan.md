@@ -5,8 +5,8 @@
 **Status**: 🚧 進行中 — degraded 仮定を外した一般 (non-degraded) two-receiver broadcast channel に対する
 **Marton inner bound (El Gamal–Kim *Network Information Theory* Thm 8.3、private message のみ)** の形式化。
 親 plan の撤退ライン **L-BC5** (一般 BC + Marton は完全 scope-out) を**ユーザー指示で解除**して追う。
-**Phase 0–6a' 完了**: mutual covering は weak / strong の両版が proof-done、受信機 1 の誤り分解 +
-E1 (条件付き AEP) + E2 (alias) も proof-done。残りは **Phase 6b (受信機 2) + 7 (組み立て) + 8 (ゲート等)**。
+**Phase 0–6b 完了**: mutual covering は weak / strong の両版が proof-done、**両受信機**の誤り分解 +
+E1 (条件付き AEP) + E2 (alias) も proof-done。残りは **Phase 7 (組み立て) + 8 (ゲート等)**。
 **SoT**: 在庫 [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md) + 本 plan。詳細履歴は git。
 **再検証** (prose にキャッシュしない):
 
@@ -29,8 +29,8 @@ rg -n "Marton|ConditionalAEP" InformationTheory.lean                        # ro
 - [x] Phase 5 — typicality 具体化 = `marton_mutual_covering` (weak) ✅ (`0d3412ec`)
 - [x] Phase 6a — 受信機 1 の誤り分解 + E2 ✅ (`49a7191f`)
 - [x] Phase 6a' — E1 の Markov 原子 + covering 集合の strong 化 (方針 B) ✅ (`c776a03f` まで、→ D5)
-- [ ] Phase 6b — 受信機 2 の誤り解析 + averaged swap 📋 ★ 次の一手
-- [ ] Phase 7 — 組み立て = headline `marton_achievability` 📋
+- [x] Phase 6b — 受信機 2 の誤り解析 (MarkovCore + ErrorAnalysis の鏡像) ✅ (`43d7ea76` まで、→ D5)
+- [ ] Phase 7 — 組み立て = headline `marton_achievability` 📋 ★ 次の一手
 - [ ] Phase 8 — 2 ゲート + README + 親 plan 同期 + proof-log 📋
 
 ---
@@ -53,10 +53,11 @@ R₁ + R₂ < I(V₁;Y₁) + I(V₂;Y₂) − I(V₁;V₂)   -- martonInfoV₁V�
 
 1. **抽象 second-moment 層** (Phase 1/4): 可測集合 `S ⊆ α × β` と `iIndepFun (codebookFamily X Y) μ`
    だけを仮定して `P(どの組も S に落ちない) ≤ …` を出す層。typicality を一切参照しない。
-2. **typicality 層** (Phase 3/5/6a'): `S` を具体的な同時典型集合と置き、`p` の下界とスライスの
+2. **typicality 層** (Phase 3/5/6a'/6b): `S` を具体的な同時典型集合と置き、`p` の下界とスライスの
    一様上界 `q̄` を指数形で供給する層。**weak / strong の切替はこの層に閉じる** (下記 D5)。
-3. **operational 層** (Phase 6–7): 符号帳から `BroadcastCode` を作り、Bonferroni + averaged swap +
-   pigeonhole で平均誤り確率を落とす層。既存 `bc_achievability` の骨格を写経する。
+3. **operational 層** (Phase 6–7): 符号帳から `BroadcastCode` を作り、Bonferroni + pigeonhole で
+   平均誤り確率を落とす層。`bc_achievability` の**骨格**は参考になるが、個々の補題は写経できない
+   ことが 6b で確定した (→ 判断ログ 4)。
 
 **符号帳の索引設計 (本 plan で確定させた中核の設計判断)**: Marton の符号帳は
 **メッセージ索引と covering 索引の直積** `Fin Mᵢ × Fin M̃ᵢ` を持つ。
@@ -97,9 +98,12 @@ in-project の typicality mass bound が**例外なく要求する full support 
 
 ### D2. 構造改修はしない (`dep_consumers.sh` で機械実測済)
 
-`BroadcastCode` (19 decl / 5 file) は符号化器の型がそのまま使えるので**無改修**、blast radius 0。
-`InBCCapacityRegion` (3 decl / 2 file) は制約が 2 本しかないので、既存を改修せず `InMartonRegion` を
-新規追加する。Phase 6a/6a' でもこの判断は覆っていない。
+`BroadcastCode` は符号化器の型がそのまま使えるので**無改修**、blast radius 0。
+`InBCCapacityRegion` は制約が 2 本しかないので、既存を改修せず `InMartonRegion` を
+新規追加する。Phase 6a/6a'/6b でもこの判断は覆っていない (6b 終了時点の実測は
+`BroadcastCode` 22 decl / 6 file・`InBCCapacityRegion` 3 decl / 2 file。うち Marton 側は
+`martonCodebookToCode` + Bonferroni 2 本の 3 件で、すべて `BroadcastCode` を**消費するだけ**)。
+Phase 7 の前に再実測するときは `scripts/dep_consumers.sh` を回す (prose の数はキャッシュ)。
 
 ### D3. headline の rate 制約は**厳密不等号**で置く (`InMartonRegion` を仮説に取らない)
 
@@ -136,23 +140,30 @@ weak 典型なのに出力側経験エントロピーが `H(Y₁)` から `0.251
 
 **方針 B (採用・完了)**: `martonSelectRow` の判定を `jointStronglyTypicalSet` へ。**復号側は weak のまま**。
 `MutualCovering.lean` (抽象 `S` 層) と `Setup.lean` / `Basic.lean` は**無改変**で済んだ
-(Phase 1/4 を抽象に切った設計判断がここで効いた)。実装で判明した予測との差分 3 点 —
-**後続 Phase が消費するのでここに残す**:
+(Phase 1/4 を抽象に切った設計判断がここで効いた)。実装で判明した予測との差分 4 点 —
+**Phase 7 が消費するのでここに残す** (宣言名で参照する。行番号はキャッシュすると腐るので書かない)。
 
 1. **半径は 3 本の入れ子**である (起票時は 2 本しか想定していなかった):
-   復号 `ε` ⊃ 送信対の pin `martonStrongRadius pV K W ε` ⊃ covering の pin
-   `martonCoveringRadius pV K W ε`。定義は
+   復号 `ε` ⊃ 送信対の pin `martonStrongRadius(₂) pV K W ε` ⊃ covering の pin
+   `martonCoveringRadius(₂) pV K W ε`。定義 (`MarkovCore.lean`、逐語確認済) は
    `martonStrongRadius ε = ε / (2 * (1 + martonBandConst))`、
-   `martonCoveringRadius ε = martonStrongRadius ε / (4 * (card (V₁ × V₂) + 1))`
-   (`MarkovCore.lean` L269 / L603、逐語確認済)。
-   **帯定数は 2 種で流用不可**: `martonBandConst` が `(V₁, X)` 対用、
-   `coveringBandConst` / `martonCoveringBandConst` が `(V₁, V₂)` 対用。
-2. **起票時に無かった 2 本目の Markov lemma が要った**。covering が与えるのは `(v₁,v₂)` の strong
+   `martonCoveringRadius ε = martonStrongRadius ε / (4 * (card (V₁ × V₂) + 1))`。
+2. **covering 半径は受信機間で共通化できない** (⚠ 6b が plan の予測を覆した点)。起票時の plan は
+   「`martonCoveringRadius` は covering 側の量なので**共通**、分岐するのは `martonBandConst` 以降」と
+   書いていたが**誤り**: 上式のとおり `martonCoveringRadius` は `martonStrongRadius` 経由で
+   `martonBandConst` に依存する。⇒ 6b は独立に **`martonCoveringRadius₂`** を新設し、Phase 7 で両者の
+   `min` を取れるよう **`stronglyTypicalSet_mono_radius` / `jointStronglyTypicalSet_mono_radius`**
+   (半径単調性、in-project に不在だったので新規に建てた汎用 2 本、`MarkovCore.lean` の
+   `RadiusMonotone` 節) を用意した。**帯定数は 3 種あり流用不可**: `martonBandConst` が `(V₁,X)` 対用、
+   `martonBandConst₂` が `(V₂,X)` 対用、`coveringBandConst` / `martonCoveringBandConst`
+   (`Covering.lean`) が `(V₁,V₂)` 対用。取り違えても型は通るが意味が壊れる。
+3. **起票時に無かった 2 本目の Markov lemma が要った**。covering が与えるのは `(v₁,v₂)` の strong
    同時典型だが、gateway atom が要求するのは `(v₁,x)` の strong 典型で `x` は `Π K(v₁ᵢ,v₂ᵢ)` から引かれる。
-   この橋が `marton_transmitted_stronglyTypical_le` (`MarkovCore.lean` L691)。E1 の最終形は
-   `marton_condAEP_selected_avg_le` (L808、**入力段平均版**。閾値が選択対より前に立つので符号について一様
-   — これが `ErrorAnalysis` が消費できる唯一の形)。
-3. **covering は weak 版 4 本を残したまま strong 版 4 本を並置した** (削除・書換ではない)。
+   この橋が `marton_transmitted_stronglyTypical_le` (受信機 2 版 `marton_transmitted_stronglyTypical₂_le`)。
+   E1 の最終形は `marton_condAEP_selected_avg_le` / `marton_condAEP_selected_avg₂_le`
+   (**入力段平均版**。閾値が選択対より前に立つので符号について一様 — これが `ErrorAnalysis` が
+   消費できる唯一の形)。
+4. **covering は weak 版 4 本を残したまま strong 版 4 本を並置した** (削除・書換ではない)。
    strong ⊆ weak なので strong 版の上界が weak 版を含意する。**領域は不変** — 監査が
    `C = martonCoveringBandConst = 0` で既存 weak 版の `3ε` / `6ε` に退化することを確認済 (D5 の予測どおり)。
 
@@ -165,7 +176,7 @@ weak 典型なのに出力側経験エントロピーが `H(Y₁)` から `0.251
 
 ## Phase 詳細
 
-### Phase 0–6a' ✅ 完了
+### Phase 0–6b ✅ 完了
 
 | Phase | 出力 | commit |
 |---|---|---|
@@ -176,7 +187,8 @@ weak 典型なのに出力側経験エントロピーが `H(Y₁)` から `0.251
 | 4 | `MutualCovering.lean` 追記 = `covariance_pairIndicator_shared_le` / `variance_pairCount_le'` / `meas_pairCount_eq_zero_le'` (→ D4) | `6183832d` |
 | 5 | `Marton/Covering.lean` = weak 版 mutual covering `marton_mutual_covering` (`@[entry_point]`) + swap 橋 45 行 + ambient 輸送 | `0d3412ec` |
 | 6a | `Marton/ErrorAnalysis.lean` = 符号帳/選択/復号器の定義 + `marton_errorProbAt₁_le_bonferroni` + `marton_averageErrorProb₁_toReal_le` + E2 (`sum_codebook_alias_le` / `marton_random_codebook_alias₁_le`)。E2 は Phase 5 のファイバー上界が一様なため選択の条件付けを解かずに通り、警戒した averaged swap の作り込みは不要だった | `49a7191f` |
-| 6a' | 下記 | `e4e73e87` → `d87ada71` → `e4fa6af2` → `7dd1f6ac` → `db7adca9` → `cbe4beb8` → `1fa8eefa` → `c776a03f` |
+| 6a' | 下記 | `e4e73e87` → … → `c776a03f` |
+| 6b | `MarkovCore.lean` に受信機 2 の鏡像 (`martonBandConst₂` / `martonStrongRadius₂` / `martonCoveringRadius₂` / 帯補題群₂ / `marton_condAEP_jointlyTypical₂` / `marton_transmitted_stronglyTypical₂_le` / `marton_condAEP_selected_avg₂_le`) + 汎用の半径単調性 2 本 (→ D5-2)、`ErrorAnalysis.lean` に受信機 2 の 6 本 (`marton_jointlyTypicalFiber₂_le` / `marton_alias_slice_avg_le₂` / `martonMessageDecoder₂_eq_of_unique` / `marton_errorProbAt₂_le_bonferroni` / `marton_averageErrorProb₂_toReal_le` / `marton_random_codebook_alias₂_le`)。実装 ~1070 行 (起票見積 350–500 の 2 倍超 — Phase 7 の見積を読むときの校正点)。`ErrorAnalysis` は 6 本ずつで対称だが `MarkovCore` は非対称: 受信機 1 のみが持つ `marton_condAEP_jointlyTypical_ge` (補集合読み替え) と `marton_strongRadius_prob_tendsto_one` (非空虚性の証明書) は**下流が消費しないので鏡像を作らなかった** — Phase 7 で `…₂_ge` を探しても無い | `0e9f21d5` → `4d05f51f` → `c237ab1f` → `43d7ea76` |
 
 **Phase 6a' の内訳** (gateway-atom-first の順序を守り、`Covering.lean` の書換より先に E1 の Markov 原子を撃った):
 
@@ -186,48 +198,55 @@ weak 典型なのに出力側経験エントロピーが `H(Y₁)` から `0.251
   (`wz_pi_nonuniform_mean_concentration` / `wz_pi_nonuniform_concentration_tendsto` /
   `wz_sum_eq_typeCount_mul`) と同一命題**であり、WZ を本モジュールへ再配線するのは **follow-up**
   (module docstring に記載済 → Phase 8)。
-- **新規ファイル `Marton/MarkovCore.lean`** — Marton の 2 本の Markov lemma (→ D5-2) + 帯補題群 + 半径定義。
+- **新規ファイル `Marton/MarkovCore.lean`** — Marton の 2 本の Markov lemma (→ D5-3) + 帯補題群 + 半径定義。
 - `Covering.lean` に strong 版 4 本を並置、`ErrorAnalysis.lean` の `martonSelectRow` を strong 判定へ
   (`ε_cov` を独立パラメータとして追加)。
 - **proof-log: yes** (Phase 4/5 の proof-log に統合)。
 
-### Phase 6b — 受信機 2 の誤り解析 + averaged swap 📋 ★ 次の一手
+### Phase 7 — 組み立て = headline `marton_achievability` 📋 ★ 次の一手
 
-- 入力: Phase 6a/6a' の受信機 1 側 (対称なので写経)、`bc_errorProbAt₂_le_bonferroni`
-  (`Achievability/ErrorAnalysis.lean:28`)。
-- 出力: `Marton/ErrorAnalysis.lean` の受信機 2 側 + 平均誤り確率への変換
-  (`marton_errorProbAt₂_le_bonferroni` / `marton_averageErrorProb₂_toReal_le` / alias₂)。
-- **6a' からの申し送り**: `marton_condAEP_selected_avg_le` の **`V₂`/`Y₂` 版**が要る。
-  `MarkovCore.lean` の帯補題群 (`marton_band_aux` / `marton_band_out` / `marton_band_joint` +
-  `martonBandConst` / `martonStrongRadius`) を `martonV₂s` / `martonY₂s` で写経する。
-  半径の入れ子構造 (D5-1) はそのまま踏襲 — `martonCoveringRadius` は covering 側の量なので**共通**、
-  分岐するのは `martonBandConst` 以降。
-- BC (degraded) と違い **cloud/satellite の 2 段構造がない**ので、受信機 2 は受信機 1 の**完全な鏡像**。
-  degraded 版にあった `bcInfoJoint` / wrong-cloud の段は**まるごと不要**。
-- 見積り: **350–500 行** (6a' で MarkovCore が 880 行に育ったぶん、写経量は起票時見積より増える)。
-- **proof-log: no** (6a/6a' の写経)。撤退: L-MT6。
-
-### Phase 7 — 組み立て = headline `marton_achievability` 📋
-
-- 入力: Phase 2 (`exists_martonRateSplit`)、Phase 6a/6a'/6b、
-  `bc_two_tier_pigeonhole` (`Assembly.lean:699`、完全に抽象なのでそのまま呼べる)、
-  `bcCodebookToCode` (`Setup.lean:678`) の相当物、`martonCodebookToCode` (6a で定義済)。
+- 入力: Phase 2 (`exists_martonRateSplit`)、Phase 6a/6a'/6b、`bc_two_tier_pigeonhole`
+  (`Achievability/Assembly.lean`)、`bcCodebookToCode` (`Achievability/Setup.lean`) の相当物、
+  `martonCodebookToCode` (6a で定義済)。
 - **covering は ε を仮説に取る版を消費する**: `marton_strong_mutual_covering` は `ε` を結論側 (`∃`) に
   出しているので、復号解析と `ε` を協調させる Phase 7 では
-  **`meas_marton_codebook_no_jointStronglyTypicalPair_lt`** (`Covering.lean:946`) を使う。
+  **`meas_marton_codebook_no_jointStronglyTypicalPair_lt`** (`Marton/Covering.lean`) を使う。
   レート条件は `I₁₂ + (C+3)ε < R₁'+R₂'` / `(4C+6)ε < R₁'` / `(4C+6)ε < R₂'`
   (`C = martonCoveringBandConst pV K W`、逐語確認済)。
-- **6a' からの申し送り (ε 配分)**: covering は `ε_cov := martonCoveringRadius pV K W ε` で instantiate する。
-  `martonCoveringRadius ε → 0 (ε→0)` なので covering のレート条件は `ε` を小さく取れば必ず満たせるが、
-  **ε 配分の制約が 1 本増える**: 既存 5 系統 (covering 失敗 / E0₁ / E0₂ / alias₁ / alias₂) に加えて
-  **6 系統目 = covering のレート条件 3 本を `ε_cov` 経由で同時に満たす条件**。
+
 - 出力: `Marton/Achievability.lean`
   - headline `marton_achievability` — 署名は在庫 §1.1 を D3 に従って厳密不等号 3 本へ差し替えた形。
   - **docstring 要件** (D1): 一般カーネル形であること + 決定的 `x = f(v₁,v₂)` 版は直接の系として
     出ないこと + `hpV`/`hK`/`hW` が full support の**正則性前提**であること (load-bearing ではない) を明記。
   - **半径の 3 本入れ子 (D5-1) も docstring に 1 文で書く** — 復号 `ε` と選択 `ε_cov` が別物である
     ことは署名から読み取れないため。
-- 見積り: **250–400 行**。先行: Phase 2, 6a, 6a', 6b。**proof-log: yes**。撤退: L-MT6。
+- 見積り: **250–400 行** (6b が起票見積の 2 倍超になった実績があるので上振れを見込む)。
+  先行: Phase 2, 6a, 6a', 6b。**proof-log: yes**。撤退: L-MT6。
+
+**Phase 7 が踏む設計事実 (6b までの実装で確定。予測ではなく実物確認済)**:
+
+1. **半径は 3 本の入れ子** (→ D5-1): 復号 `ε` ⊃ 送信語 pin `martonStrongRadius(₂) ε` ⊃
+   covering pin `martonCoveringRadius(₂) ε`。
+2. **帯定数は 3 種あり流用不可** (→ D5-2): `martonBandConst` = `(V₁,X)` 対用 /
+   `martonBandConst₂` = `(V₂,X)` 対用 / `coveringBandConst`・`martonCoveringBandConst`
+   (`Covering.lean`) = `(V₁,V₂)` 対用。取り違えると型は通るが意味が壊れる。
+3. **ε 配分の制約は 2 本増える** (旧記述「1 本増える」は covering 半径共通化の誤りに由来する過少計上)。
+   covering は `ε_cov := min (martonCoveringRadius pV K W ε) (martonCoveringRadius₂ pV K W ε)` で
+   instantiate し、`jointStronglyTypicalSet_mono_radius` で各受信機側の半径へ開き直す。既存 5 系統
+   (covering 失敗 / E0₁ / E0₂ / alias₁ / alias₂) に加えて、(6) covering のレート条件 3 本を `ε_cov` で
+   同時に満たす条件、(7) `ε_cov ≤ martonCoveringRadius(₂) ε` の両立 (= `min` + 単調性で開き直す段) が要る。
+4. **strong 半径と weak 半径を同一にすると証明不能** (WZ 家系の doctrine): 同一半径だと `O(ε)` の
+   部分ラベル入替クラスが開く。分離は**厳密不等号**で入れる。
+5. **`marton_random_codebook_alias₂_le` の三重和の順序は受信機 1 版と揃えてある** (`c₁` 外側 → `c₂` →
+   `cX`、両署名を逐語確認済)。Phase 7 で両受信機の alias 評価を**同一のアンサンブル期待値**に対して
+   union bound するための設計判断。⚠ ただし `bc_two_tier_pigeonhole` は文字どおり **2 段** (`κU` / `κX`)
+   なので、3 段のアンサンブルをそのまま食わせることはできない — 外側 2 段を
+   `κU := MartonSubcodebook₁ × MartonSubcodebook₂` (重み = 積) に束ねる再結合
+   (`Fintype.sum_prod_type`、`Mathlib/Data/Fintype/BigOperators.lean` に在庫) が 1 段要る。
+6. **`ErrorAnalysis` は選択がテストする典型性の種類に鈍感**: `martonSelectRow` を「入力語上の確率法則を
+   生む」という事実だけを通して読むので、`martonStrongRadius₂` / `martonBandConst₂` /
+   `martonCoveringRadius₂` は `ErrorAnalysis.lean` では一度も現れない (`rg` で機械確認)。
+   ⇒ 半径の配分は Phase 7 と `MarkovCore` の間だけで閉じる。
 
 ### Phase 8 — 2 ゲート + README + 親 plan 同期 + proof-log 📋
 
@@ -253,7 +272,7 @@ weak 典型なのに出力側経験エントロピーが `H(Y₁)` から `0.251
 | **L-MT3** | Phase 3 の 5-tuple ambient plumbing が 4-tuple の写経で済まず爆発する | 補助変数を `V := V₁ × V₂` と束ねた 4-tuple に落とし、射影を後付けする | **不発動** (Phase 3 完了) |
 | **L-MT4** | Phase 6a の非構成的 encoder / 選択索引の独立性が既存 `bcCodebookToCode` 系と噛み合わない | sum-rate 制約なしの**退化版** (`V₁ ⟂ V₂`) を先に閉じる。mutual covering 不要 (`I₁₂ = 0`) | **trigger 条件は 6a で成立したが発動せず**。方針 B (D5) が成功したので**もはや trigger しない** — 退避先は Phase 1/4/5 の成果を headline に載せられず B に劣る |
 | **L-MT5** | Phase 4 の鋭化 (3 変数独立性 + Tonelli) が閉じない | 粗い版のまま上を組み、headline の sum-rate 制約を `R₁+R₂ < I₁+I₂−2·I₁₂` に**弱化**。真の Marton は別 plan へ split | **不発動** (Phase 4 完了)。なお D5 の障害には対応しない |
-| **L-MT6** | Phase 6b / 7 の ε 配分 6 系統 / pigeonhole の合成が閉じない | headline を `sorry` + `@residual(plan:marton-assembly-plan)` に退避し、Phase 6 までの部品を proof-done として登録する | **未発動 (active)** — 残 Phase の唯一の生きた撤退口 |
+| **L-MT6** | Phase 7 の ε 配分 7 系統 (→ Phase 7 設計事実 3) / 三重和を 2 段 pigeonhole へ再結合する段 (→ 同 5) が閉じない | headline を `sorry` + `@residual(plan:marton-assembly-plan)` に退避し、Phase 6b までの部品を proof-done として登録する | **未発動 (active)** — 残 Phase の唯一の生きた撤退口 |
 
 > **禁止事項の再確認**: どの撤退ラインでも「covering が成立する」「選択索引が独立である」等を
 > `*Hypothesis` 述語に束ねて仮説として渡す形は取らない (CLAUDE.md「検証の誠実性」tier 5)。
@@ -270,7 +289,7 @@ weak 典型なのに出力側経験エントロピーが `H(Y₁)` から `0.251
    scope-out 継続、を括弧書きで足す形。
 3. **Sub-plan 一覧テーブルの Marton 行**: 状態欄が進捗のキャッシュ。
 
-Phase 6a' 完了時点 (2026-07-25) で 3 箇所とも同期済。以降、本 plan の進捗が動いたら 3 の状態欄を追随させる。
+Phase 6b 完了時点 (2026-07-25) で 3 箇所とも同期済。以降、本 plan の進捗が動いたら 3 の状態欄を追随させる。
 
 ---
 
@@ -288,13 +307,21 @@ Phase 6a' 完了時点 (2026-07-25) で 3 箇所とも同期済。以降、本 p
 ## 判断ログ
 
 1. **層の境界を「抽象度」で切る (D5 で価値が実証された)**: Phase 1/4 が typicality を一切知らないのは
-   設計であり偶然ではない。おかげで方針 B (weak → strong の切替) が `MutualCovering.lean` 730 行を
-   **無改変**で通過し、書換は typicality 層に閉じた。Phase 6b/7 でも新しい判定基準を導入するときは
+   設計であり偶然ではない。おかげで方針 B (weak → strong の切替) が `MutualCovering.lean` を
+   **無改変**で通過し、書換は typicality 層に閉じた。6b も同型で、`ErrorAnalysis` は選択の典型性の
+   種類に鈍感なまま鏡像が入った (→ Phase 7 設計事実 6)。Phase 7 でも新しい判定基準を導入するときは
    まず「どの層に属するか」を決めてから書く。
 2. **weak 版は削除せず strong 版を並置する**: 6a' の書換で weak 版 4 本を消さなかったのは、
    (a) strong ⊆ weak なので両立し、(b) 復号側は weak のままで、(c) `C = 0` で strong 版が weak 版に
-   退化することが領域不変性の検算になるため。Phase 6b/7 でどちらを呼ぶかは**選択側か復号側か**で決まる。
-3. **半径を「パラメータ」ではなく「`ε` の計算項」にした**: `martonStrongRadius` / `martonCoveringRadius` を
-   `ε` の関数として定義したので、下流の署名が持つ半径は `ε` 1 本のままで済んでいる。
-   Phase 6b で `V₂` 側の帯定数を足すときも**この規約を守る** (パラメータを増やすと Phase 7 の ε 配分が
-   6 系統から爆発する)。
+   退化することが領域不変性の検算になるため。Phase 7 でどちらを呼ぶかは**選択側か復号側か**で決まる
+   (選択 = `martonSelectRow` は strong、復号 = `martonMessageDecoder₁/₂` は weak。逐語確認済)。
+3. **半径を「パラメータ」ではなく「`ε` の計算項」にした**: `martonStrongRadius(₂)` /
+   `martonCoveringRadius(₂)` を `ε` の関数として定義したので、下流の署名が持つ半径は `ε` 1 本で済む。
+   6b の `V₂` 側もこの規約を守った。Phase 7 で `min` を取るときも**新しい半径パラメータは足さない**
+   (足すと ε 配分が 7 系統から爆発する)。
+4. **「対称だから共通/流用できる」は実物で確認するまで書かない**: 6b は plan の対称性予測を 2 件
+   覆した — (a) covering 半径は受信機共通ではない (`martonStrongRadius` 依存、→ D5-2)、
+   (b) 受信機 1 の Bonferroni は degraded BC 版を一切呼ばず自己完結する
+   (alias 和の索引形が `Fin M₂` 単独 vs `Fin M₂ × Fin M₂'` で異なるため、鏡像元は同一ファイル内の
+   Marton 受信機 1 側 6 本)。D4 の「スライス上界は両方向が要る」も同じ軸の反例。
+   ⇒ Phase 7 で「degraded 版の組み立てを写経できる」と書きたくなったら、まず該当宣言を Read する。
