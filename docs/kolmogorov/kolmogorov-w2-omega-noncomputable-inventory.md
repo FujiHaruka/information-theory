@@ -391,7 +391,7 @@ can still halt, deciding the machine's halting set.
   computable sequence of dyadic rationals with error `2 ^ (-n)`.
 * `prefixEvaln` — the step-bounded evaluator of the self-delimiting machine.
 
-## Main results
+## Main statements
 
 * `chaitinOmega_not_computable` — `Ω` is not a computable real.
 -/

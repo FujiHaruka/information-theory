@@ -381,7 +381,7 @@ formula capacity W₁ via `mutualInfo_iid_eq_nsmul` + Fekete's subadditive lemma
 * `BlockwiseChannel.capacityN W n` — per-block capacity (1-letter sup analog)
 * `BlockwiseChannel.capacity_lim W` — limit form
 
-## Main results
+## Main statements
 
 * `capacityN_subadditive` — `capacityN W (m+n) ≤ capacityN W m + capacityN W n`
 * `capacity_lim_eq_of_subadditive` — Fekete limit existence

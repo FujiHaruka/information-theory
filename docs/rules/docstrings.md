@@ -19,7 +19,7 @@ Mathlib のドキュメント規約（<https://leanprover-community.github.io/co
 
 1. **付ける対象（Mathlib docBlame 非対称）**: docstring を**必須**とするのは
    `def` / `abbrev` / `structure` / `class` / `inductive` と、headline 定理
-   （`@[entry_point]` / module doc の *Main results* に挙がるもの）。
+   （`@[entry_point]` / module doc の *Main statements* に挙がるもの）。
    **内部の補助 theorem / lemma には原則付けない** — 名前で statement を語らせる
    （Mathlib は補助補題をほぼ裸にしており、文書化率は宣言全体の ~17–20%）。
    - **name-adequacy gate**: 名前が statement を語れない補題だけ、最小 1 行の数学的 docstring を付ける

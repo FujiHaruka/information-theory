@@ -41,7 +41,7 @@ IT+Probability サブツリー全体で、theorem/lemma 1 件が占める行数 
 ### 1.3 ヘッダ・ドキュメント
 
 - **Copyright/License/Authors ヘッダがほぼ全ファイルに存在** (sample 300 で 289)。
-- module doc `/-!` テンプレートが定型: `# Title` → `## Main definitions` → `## Main results`
+- module doc `/-!` テンプレートが定型: `# Title` → `## Main definitions` → `## Main statements`
   → `## References` (+必要に応じ `## Implementation notes`)。本文は **英語**。
 - `@[simp]`/`@[deprecated NewName (since := "DATE")]`/`protected`/`@[refl]` 等を規律的に使う。
 
@@ -101,7 +101,7 @@ IT+Probability サブツリー全体で、theorem/lemma 1 件が占める行数 
    settled facts の混在」が、コード docstring 側で起きている。
 4. **Copyright/License ヘッダ欠如** (2/269) — 機械的に付与可能。upstream には必須。
 5. **module doc が自由形式** — doc を書く習慣はある (97%) が、Mathlib テンプレ
-   (Main definitions / Main results / References) ではなく `## 構成` / `## 設計メモ` で日本語。
+   (Main definitions / Main statements / References) ではなく `## 構成` / `## 設計メモ` で日本語。
    構造を寄せれば習慣はそのまま活きる。
 6. **ファイル名がプロセス由来** — 概念名へ (`Walls` → 各 Wall の数学的対象名へ分割等)。
 

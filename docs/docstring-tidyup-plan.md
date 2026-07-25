@@ -37,7 +37,7 @@ docstring が綺麗だと、後続の概念分割で切り出し単位を判断�
 **2 つの結合したワークストリームを、ファイル単位で 1 パスにまとめて適用する** (全ファイルを 2 回走査しない):
 
 1. **module doc 整形** — [`rules/docstrings.md`](rules/docstrings.md) のテンプレ順序へ寄せ、
-   プロセス語彙の散文を除去/移設し、`## Main results` に headline を捕捉する。
+   プロセス語彙の散文を除去/移設し、`## Main statements` に headline を捕捉する。
 2. **宣言 docstring の選別削除** — 下記 keep/strip ルールで、内部補助補題の**散文**を削る。
    honesty タグは残す。名前が事実を語れない補題は削らず最小 1 行に留める (name-adequacy gate)。
 3. **生き残る散文の英語化** — 上 2 つで残った docstring / コメントの散文を**英語で書く** (既存日本語は翻訳)。
@@ -49,7 +49,7 @@ docstring が綺麗だと、後続の概念分割で切り出し単位を判断�
 **なぜこの形か**:
 
 - module doc と宣言 docstring は結合している。補助補題の散文を削ると、その意味の置き場所は module doc の
-  `## Main results` / `## Main definitions` に移る。だから「削る」と「main results 捕捉」は同一パスで行う。
+  `## Main statements` / `## Main definitions` に移る。だから「削る」と「main statements 捕捉」は同一パスで行う。
 - 純 doc 編集は**コメントだけ**を触るので elaboration に影響しない (= compile が壊れない)。
   rename を**この pass では行わない**ことで text-only を保ち、ファミリ並列 / 高速化を可能にする。
 - 「2 割まで下げる」という数値は**追わない**。タグ保持 (644+66) と entry_point (709) と def (478) を残すため、
@@ -60,7 +60,7 @@ docstring が綺麗だと、後続の概念分割で切り出し単位を判断�
 宣言 docstring の**散文**は、宣言が次のいずれかなら **keep**(整える):
 
 - `def` / `abbrev` / `structure` / `class` / `inductive` (Mathlib docBlame と同じ: 定義は文書化必須)
-- `@[entry_point]` 付き / module doc の `## Main results` に挙がる headline 定理
+- `@[entry_point]` 付き / module doc の `## Main statements` に挙がる headline 定理
 - `@residual(...)` / `@audit:*` を持つ宣言 — ただし**散文は削ってタグだけ残してよい**
   (例: audit:ok の補助補題は散文を削り `/-- @audit:ok(...) -/` だけ残す)
 
