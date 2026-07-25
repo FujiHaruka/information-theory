@@ -468,11 +468,8 @@ theorem lz78_phrase_count_fiber_card_le_nat (n c : ℕ) :
     fintype_card_parentData_eq c
   omega
 
-/-- **Distinct-phrase fiber-cardinality count (the genuine combinatorial
-counting core of G2)**.
-
-The number of `n`-tuples `x : Fin n → α` whose genuine greedy parse emits
-exactly `c` distinct phrases is bounded by `(n + 1) · c! · |α|^c`. This is the
+/-- The number of `n`-tuples `x : Fin n → α` whose greedy parse emits exactly `c`
+distinct phrases is bounded by `(n + 1) · c! · |α|^c`. This is the combinatorial
 counting fact behind the polynomial Kraft bound `lz78_block_kraft_poly`: the
 map `x ↦ (lz78PhraseStrings (List.ofFn x), tail)` is injective
 (`lz78PhraseStrings_flatten_prefix` reconstructs `List.ofFn x`, and
@@ -601,11 +598,9 @@ theorem lz78_block_kraft_term_le (n c : ℕ) :
     _ ≤ ((n : ℝ) + 1) * (1 / 2 : ℝ) ^ c :=
         mul_le_mul_of_nonneg_left hcore hn1
 
-/-- **G2 — polynomial `n`-block Kraft for the genuine greedy parse (the
-genuine combinatorial converse brick)**.
-
-The Kraft sum of `2^{-L_n(x)}` over all `n`-tuples `x : Fin n → α` is bounded
-by a polynomial in `n`:
+/-- Polynomial `n`-block Kraft bound for the greedy parse: the Kraft sum of
+`2^{-L_n(x)}` over all `n`-tuples `x : Fin n → α` is bounded by a polynomial
+in `n`:
 
 ```
 ∑_{x : Fin n → α} (1/2)^{lz78GreedyEncodingLength n x} ≤ (n + 1)^2.
@@ -628,7 +623,7 @@ The math is `O(n)`, so any polynomial degree `≥ 1` is a true bound; the degree
 `2` here gives the summable `μ(B_n) ≤ 1/n^2` in the Barron Markov +
 Borel–Cantelli lift (`blockLogAvg₂_minus_error_le_rate_ae`).
 
-This is the genuine combinatorial new-math brick of the LZ78 converse
+This is the combinatorial core of the LZ78 converse
 (Cover–Thomas Thm 13.5.3 lower bound, distinct-phrase counting).
 
 The proof structure (Parts A + B + C, all proven, sorryAx-free) is assembled from
@@ -644,7 +639,7 @@ The proof structure (Parts A + B + C, all proven, sorryAx-free) is assembled fro
   `factorial_two_pow_le_succ_pow`), then `sum_geometric_two_le` and
   `(n+1)·2 ≤ (n+1)²` (with the `n = 0` boundary `1 ≤ 1`).
 
-The genuine combinatorial brick (Part B) is closed, so this theorem is fully
+Part B, the combinatorial counting core, is proved, so this theorem is fully
 `sorryAx`-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`),
 carrying no `@residual`. The statement is TRUE-as-framed (numerically checked
 α=Bool, n≤6, with large slack; `n = 0` boundary exactly `1 ≤ 1`). -/
@@ -714,22 +709,23 @@ theorem lz78_block_kraft_poly (n : ℕ) :
                 exact mul_le_mul_of_nonneg_left h2le hnpos
             _ = ((n : ℝ) + 1) ^ 2 := by ring
 
-/-- The per-`n` bad-set measure bound (Markov on the discrete block law + G2).
+/-- The per-`n` bad-set measure bound (Markov on the discrete block law plus the
+polynomial Kraft bound `lz78_block_kraft_poly`).
 
 For `n ≥ 1`, the LZ78 converse bad set
 `B_n = {ω : lz/n < blockLogAvg₂ n ω − err_n}`
 has `μ`-measure at most `1/n²`, where
 `err_n = (2 log n + 2 log(n+1))/(n log 2)`.
 
-This is the genuine Markov step of the Barron lift. The bad set factors through
+This is the Markov step of the Barron lift. The bad set factors through
 the block random variable (`lz` and `blockLogAvg₂` depend on `ω` only via
 `block_n ω`), so `μ(B_n) = (μ.map block_n)(S_n) = ∑_{x ∈ S_n} Pₙ(x)` over the
 discrete block law `Pₙ = μ.map block_n`. For each `x ∈ S_n` with `Pₙ(x) > 0`
 the defining inequality (cleared of denominators) gives
 `Pₙ(x) < 2^{−Lₙ(x)}·2^{−n·err_n}`, and `2^{−n·err_n} = 1/(n²(n+1)²)`. Summing
-and applying G2 (`lz78_block_kraft_poly`: `∑_x 2^{−Lₙ(x)} ≤ (n+1)²`) gives
-`μ(B_n) ≤ (n+1)²/(n²(n+1)²) = 1/n²`. The genuine combinatorial residual lives
-entirely in G2; this lemma is its measure-theoretic plumbing. -/
+and applying `lz78_block_kraft_poly` (`∑_x 2^{−Lₙ(x)} ≤ (n+1)²`) gives
+`μ(B_n) ≤ (n+1)²/(n²(n+1)²) = 1/n²`. The combinatorial content lives entirely in
+that Kraft bound; this lemma is its measure-theoretic plumbing. -/
 theorem lz78_converse_bad_set_measure_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) (n : ℕ) (hn : 1 ≤ n) :
@@ -837,7 +833,7 @@ theorem lz78_converse_bad_set_measure_le
           nlinarith [hLn, hℓ2]
         have := (Real.log_lt_log_iff hPpos (by positivity)).mp hlogP_lt
         exact le_of_lt this
-    -- Sum the per-element bound and apply G2.
+    -- Sum the per-element bound and apply the polynomial Kraft bound.
     calc ∑ x ∈ S, Pn.real {x}
         ≤ ∑ x ∈ S, (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x)
             * (1 / ((n : ℝ) ^ 2 * ((n : ℝ) + 1) ^ 2)) :=
@@ -882,19 +878,19 @@ This is the Barron competitive-optimality a.s. lift (Cover–Thomas Thm 13.5.3):
 a per-realization LZ78 codeword can be *shorter* than `−log₂ Pₙ{xⁿ}`, so the
 expectation-level converse `H_D ≤ E[L]` does not transfer pointwise. The lift
 is a Markov + first Borel–Cantelli argument on the bad set
-`B_n = {ω : lz/n < blockLogAvg₂ n ω − err_n}`: by G2 (`lz78_block_kraft_poly`),
+`B_n = {ω : lz/n < blockLogAvg₂ n ω − err_n}`: by `lz78_block_kraft_poly`,
 `μ(B_n) = Pₙ{xⁿ : Pₙ(xⁿ) < 2^{−Lₙ}·2^{−n·err}} ≤ 2^{−n·err}·∑ 2^{−Lₙ} ≤
 2^{−n·err}·(n+1)²`, and with `n·err = 2 log₂(n+1) + 2 log₂ n` this is `≤ 1/n²`,
 summable, so first Borel–Cantelli gives `∀ᵐ ω, ∀ᶠ n, ω ∉ B_n`.
 
 Modeled on the Z-side `blockLogAvgZ_ge_negLogQInftyZ_minus_error`
 (`SMB/AlgoetCover/Liminf.lean`) — the same Markov + p-series + Borel–Cantelli
-template. The body is `sorry`-free: the Markov + Borel–Cantelli lift is
-genuinely proven; it consumes the genuine combinatorial brick G2
-(`lz78_block_kraft_poly`) through the per-`n` bad-set measure bound
-`lz78_converse_bad_set_measure_le`. G2 (and hence its Part B counting lemma
-`lz78_phrase_count_fiber_card_le`) is now closed, so this lemma is fully
-`sorryAx`-free. -/
+template. The body is `sorry`-free: the Markov + Borel–Cantelli lift is proven
+outright, consuming the combinatorial polynomial Kraft bound
+`lz78_block_kraft_poly` through the per-`n` bad-set measure bound
+`lz78_converse_bad_set_measure_le`. That Kraft bound (and hence its counting
+lemma `lz78_phrase_count_fiber_card_le`) is itself proved, so this lemma is
+fully `sorryAx`-free. -/
 theorem blockLogAvg₂_minus_error_le_rate_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
@@ -912,7 +908,7 @@ theorem blockLogAvg₂_minus_error_le_rate_ae
     fun n ↦ {ω | (lz78GreedyEncodingLength n (q.blockRV n ω) : ℝ) / (n : ℝ)
         < blockLogAvg₂ μ q n ω - err n} with hB
   -- Per-`n` bad-set measure bound `μ(B n) ≤ 1/n²` (Markov on the discrete
-  -- block law + G2 polynomial Kraft); summable, so first Borel–Cantelli.
+  -- block law + polynomial Kraft); summable, so first Borel–Cantelli.
   have h_bound : ∀ n, 1 ≤ n → μ (B n) ≤ (1 : ℝ≥0∞) / ((n : ℝ≥0∞) ^ 2) :=
     fun n hn ↦ lz78_converse_bad_set_measure_le μ p n hn
   -- ∑' n, μ (B n) < ∞ (p-series), via the same machinery as
@@ -950,12 +946,11 @@ theorem blockLogAvg₂_minus_error_le_rate_ae
   simp only [hB, Set.mem_setOf_eq, not_lt] at hn
   exact hn
 
-/-- **LZ78 converse lower bound for the genuine greedy parser
-(Cover–Thomas Theorem 13.5.3, lower-bound half), a.s. form**.
-
-For a stationary ergodic source `p` the per-symbol length of the genuine
-longest-prefix-match greedy LZ78 parse is, almost surely, asymptotically at
-least the bit entropy rate:
+/-- The almost-sure LZ78 converse lower bound for the longest-prefix-match greedy
+parser (Cover–Thomas Theorem 13.5.3, lower-bound half): for a stationary ergodic
+source `p` the per-symbol length of the greedy LZ78 parse
+`lz78GreedyEncodingLength` is, almost surely, asymptotically at least the bit
+entropy rate:
 
 ```
 entropyRate₂ μ p ≤ liminf_n (1/n) · lz78GreedyEncodingLength(X^n)   a.s.
@@ -973,22 +968,22 @@ RHS is the bit entropy rate `entropyRate₂ = entropyRate / Real.log 2`
 `ZivEntropyBridge.lean` ("Base-2 (bit) layer") and
 `McMillanKraftBridge.lean` (converse target `blockLogAvg₂`).
 
-The dependency shape (Barron reduction): the body is genuinely wired from two
-bricks plus the bit SMB convergence,
+The dependency shape (Barron reduction): the body is wired from two ingredients
+plus the bit SMB convergence,
 
 * `shannon_mcmillan_breiman₂` (SMB in bits, sorryAx-free) — gives
   `Tendsto blockLogAvg₂ → entropyRate₂` a.s.;
-* `blockLogAvg₂_minus_error_le_rate_ae` (G3, Barron a.s.-eventual lift) —
+* `blockLogAvg₂_minus_error_le_rate_ae` (the Barron a.s.-eventual lift) —
   gives `∀ᶠ n, blockLogAvg₂ n ω − err_n ≤ lz/n` a.s., with `err_n → 0`;
 
 assembled by `Filter.liminf_le_liminf` between the lower sequence
 `Low n = blockLogAvg₂ n ω − err_n` (which `→ entropyRate₂`, so
 `liminf Low = entropyRate₂`) and `lz/n` (bounded above by
-`lz78_rate_le_const`, hence cobounded below). The genuine converse
-content (the Barron competitive-optimality lift) is in G3, which in turn
-consumes the genuine combinatorial brick G2 (`lz78_block_kraft_poly`, the
-polynomial `n`-block Kraft bound). G2's Part B counting lemma
-(`lz78_phrase_count_fiber_card_le`) is now closed, so this converse is fully
+`lz78_rate_le_const`, hence cobounded below). The converse content (the Barron
+competitive-optimality lift) sits in `blockLogAvg₂_minus_error_le_rate_ae`, which
+in turn consumes the combinatorial `lz78_block_kraft_poly` (the polynomial
+`n`-block Kraft bound). That bound's counting lemma
+`lz78_phrase_count_fiber_card_le` is proved, so this converse is fully
 `sorryAx`-free.
 
 This statement is TRUE-as-framed against the bit target `entropyRate₂` (the
@@ -1067,7 +1062,7 @@ theorem lz78Greedy_converse_ae
       ⟨(1 + 8 * Real.log (Fintype.card α + 1) / Real.log 2)
           + ((Nat.log 2 (Fintype.card α) : ℝ) + 2),
         fun n ↦ lz78_rate_le_const n _⟩
-  -- `Low n ≤ rate ω n` eventually, from G3.
+  -- `Low n ≤ rate ω n` eventually, from the Barron a.s.-eventual lift.
   have h_le : ∀ᶠ n in Filter.atTop, Low n ≤ rate ω n := by
     filter_upwards [h_lift] with n hn
     simpa only [hLow, hrate, hq] using hn

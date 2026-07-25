@@ -398,14 +398,13 @@ theorem lz78PhraseStrings_mul_log_le_of_length
   have := lz78PhraseStrings_mul_log_le (input n)
   rwa [hlen n] at this
 
-/-- **Genuine distinct-phrase-count asymptotic
-`c(n) = O(n / log n)`**: combining the product bound `(★)`
-(`lz78PhraseStrings_mul_log_le`) with the genuine inversion lemma
-`isBigO_natCast_div_log_of_mul_log_le`
-(`LZ78/PhraseCountAsymptotics.lean`), the *genuine longest-prefix
-greedy* distinct phrase count is `O(n / log n)`. This connects the
-distinct invariant to the Cover–Thomas Eq. 13.124 envelope with
-no honest hypothesis. -/
+/-- The distinct phrase count of the longest-prefix greedy parse
+`lz78PhraseStrings` is `O(n / log n)`: combining the product bound `(★)`
+(`lz78PhraseStrings_mul_log_le`) with the inversion lemma
+`isBigO_natCast_div_log_of_mul_log_le` (`LZ78/PhraseCountAsymptotics.lean`)
+gives `c(n) = O(n / log n)`. This connects the distinct-phrase invariant to the
+Cover–Thomas Eq. 13.124 envelope, with the length normalization
+`(input n).length = n` as the only hypothesis. -/
 @[entry_point]
 theorem lz78PhraseStrings_count_isBigO
     (input : ℕ → List α) (hlen : ∀ n, (input n).length = n) :

@@ -203,8 +203,8 @@ theorem condState_grouping_perFiber_logsum
   rw [← hgrp]
   exact hlogsum
 
-/-- **Conditional `(k-state, length)` grouped entropy bound for an abstract phrase
-set**.
+/-- Conditional `(k-state, length)` grouped entropy bound for an abstract phrase
+set.
 
 Given a finite phrase set `phrases : Finset (List α)`, a `k`-state assignment
 `st : List α → (Fin k → α)`, and positivity of the per-phrase conditional mass,
@@ -370,10 +370,10 @@ theorem state_marginalization_bound
 
 /-! ## Conditional grouping bound with mean-length overhead -/
 
-/-- **Conditional `(k-state, length)` grouped entropy bound with mean-length
-overhead** (LZ78 achievability, `o(n)` form).
+/-- Conditional `(k-state, length)` grouped entropy bound with mean-length
+overhead, the `o(n)` form used for LZ78 achievability.
 
-The mean-length / empirical-entropy upgrade of `condState_grouping_bound`: the
+This is the mean-length / empirical-entropy upgrade of `condState_grouping_bound`: the
 loose `c · log D` overhead (worst-case `Θ(n)`) is replaced by the manifestly
 `o(n)` empirical-entropy overhead `c · log (N / c) + c + c · log #states`, where
 `N = ∑_{w ∈ phrases} |w|` is the total parsed length and

@@ -34,7 +34,7 @@ input and emits the prefix the moment it leaves the dictionary:
 
 The emitted string is then *definitionally* `∉ dict`, so `Nodup.concat`
 applies directly with no longest-match reconstruction. This is exactly
-LZ78's behaviour (match the longest dictionary prefix, append one new
+LZ78's behavior (match the longest dictionary prefix, append one new
 symbol), recorded in the cheapest shape for the invariant proof.
 
 We track only the phrase strings here — that is the object the
@@ -188,10 +188,10 @@ theorem foldrLength_take_ge_of_forall_ne_nil (L : List (List α))
       List.length_pos_iff.mpr (hne _ (List.getElem_mem hjm))
     omega
 
-/-- **Total symbol count across emitted phrases plus the unfinished tail
-equals the input length** (worker form): the symbols consumed so far are
-`(dict total length) + cur.length`, and the worker conserves
-`(emitted total length) + cur.length + input.length`. -/
+/-- Worker form of the length budget: the total symbol count across the phrases
+the worker emits is at most the symbols it holds, namely the accumulated `dict`
+length plus `cur.length` plus `input.length`. No length is created, since the
+worker only re-emits `dict` entries and pieces carved out of `cur ++ input`. -/
 theorem lz78PhraseStringsAux_total_length :
     ∀ (fuel : ℕ) (dict : List (List α)) (cur input : List α),
       input.length < fuel →

@@ -6,9 +6,8 @@ import InformationTheory.Shannon.StrongTypicality
 /-!
 # Rate-distortion achievability — strong-typical ⊆ distortion-typical inclusion
 
-This file proves the "Piece C" inclusion of the unconditional rate-distortion
-achievability programme (`docs/shannon/rate-distortion-achievability-unconditional-plan.md`):
-a joint strongly-typical pair is distortion-typical,
+This file proves the inclusion that the unconditional rate-distortion
+achievability chain rests on: a joint strongly-typical pair is distortion-typical,
 
   `jointStronglyTypicalSet μ Xs Ys n ε_join
       ⊆ distortionTypicalSet μ Xs Ys d n ε_dist δ_typ`.
@@ -160,10 +159,9 @@ theorem jointStronglyTypicalSet_subset_jointlyTypicalSet
     have hZmeas : ∀ i, Measurable (jointSequence Xs Ys i) := measurable_jointSequence Xs Ys hXs hYs
     exact stronglyTypicalSet_subset_typicalSet μ (jointSequence Xs Ys) hZmeas hn h_bound_Z hZ
 
-/-! ## Piece C: joint strong typicality implies distortion typicality -/
+/-! ## Joint strong typicality implies distortion typicality -/
 
-/-- **Piece C** (rate-distortion unconditional achievability). A joint strongly
-typical pair is distortion typical:
+/-- A joint strongly typical pair is distortion typical:
 
   `jointStronglyTypicalSet μ Xs Ys n ε_join
       ⊆ distortionTypicalSet μ Xs Ys d n ε_dist δ_typ`.
@@ -194,7 +192,7 @@ theorem jts_subset_dts_of_dist_slack
     have hb := blockDistortion_le_of_mem_jointStronglyTypicalSet μ Xs Ys hXs hYs d hn hε_join hp
     linarith [hb, h_dist_slack]
 
-/-! ## Piece B: marginal-preserving full-support perturbation
+/-! ## Marginal-preserving full-support perturbation
 
 The strong-typicality achievability theorem requires a strictly-positive optimal
 joint pmf. Starting from a minimizer `qStar ∈ RDConstraint P_X d D` (which may sit
@@ -328,19 +326,20 @@ lemma rdPerturb_expectedDist_le
   obtain ⟨lam₁, h1, h2, h3⟩ := exists_lam_forall_lt_of_continuous hcont hg0
   exact ⟨lam₁, h1, h2, fun lam hlp hle ↦ le_of_lt (h3 lam hlp hle)⟩
 
-/-! ## Piece A: existence of consistent slack parameters
+/-! ## Existence of consistent slack parameters
 
 Given a strictly-positive joint pmf `q'` with `mutualInfoPmf q' < R` and expected
 distortion within `ε/4` of the constraint, we select the five slack parameters
 `ε_X, ε_join, ε_dist, δ_kl, δ_typ` (plus the KL floor `qZ_min`) that simultaneously
 satisfy every hypothesis of `rate_distortion_achievability_strong` (with the
-relaxation `D ↦ D + ε/4`, `ε' ↦ ε/2`) and the side conditions of Piece C
-(`jts_subset_dts_of_dist_slack`). All quantities are finite constants determined
+relaxation `D ↦ D + ε/4`, `ε' ↦ ε/2`) and the side conditions of
+`jts_subset_dts_of_dist_slack`. All quantities are finite constants determined
 by `q'`; the selection is pure real arithmetic, not an analytic wall. -/
 
-/-- **Piece A** (rate-distortion unconditional achievability). Slack existence:
-selects `ε_X, ε_join, ε_dist, δ_kl, δ_typ, qZ_min` satisfying the rate gap,
-distortion budget, strong-to-weak `ε`-bounds and the KL-floor domination. -/
+/-- Slack parameters `ε_X, ε_join, ε_dist, δ_kl, δ_typ, qZ_min` satisfying the rate
+gap, the distortion budget, the strong-to-weak `ε`-bounds and the KL-floor
+domination all exist simultaneously, for a strictly positive joint pmf `q'` whose
+mutual information is below `R`. -/
 lemma rdSlack_exists
     {d : DistortionFn α β} {D R ε : ℝ}
     {q' : α × β → ℝ} (hq'_simp : q' ∈ stdSimplex ℝ (α × β))
@@ -610,13 +609,13 @@ theorem rate_distortion_achievability_operational
   have hE'_le : expectedDistortionPmf d q' ≤ D + ε / 4 :=
     hlam₁_prop lam hlam_pos hlam_le_lam₁
   have hq'_mem : q' ∈ RDConstraint P_X d (D + ε / 4) := ⟨hq'_simp, hmarg_q', hE'_le⟩
-  -- Step 3: select slack parameters (Piece A).
+  -- Step 3: select slack parameters.
   obtain ⟨ε_X, ε_join, ε_dist, δ_kl, δ_typ, qZ_min,
       hε_X_pos, hε_join_pos, hε_dist_pos, hδ_kl_pos, hδ_typ_nn, hε_X_lt_ε_join,
       h_rate_gap, h_slack, h_dist_slack, h_bound_X, h_bound_Y, h_bound_Z,
       hqZ_min_pos, hqZ_min_le, hδ_kl_dominates⟩ :=
     rdSlack_exists hq'_simp hq'_pos hI'_lt_R hE'_le hε
-  -- Step 4: the strong-to-distortion inclusion (Piece C).
+  -- Step 4: the strong-to-distortion inclusion.
   have hmarg_X : ((rdAmbient q').map
           (jointSequence (α := α) (β := β) iidXs iidYs 0)).map Prod.fst
         = (rdAmbient q').map (iidXs (α := α) (β := β) 0) := by

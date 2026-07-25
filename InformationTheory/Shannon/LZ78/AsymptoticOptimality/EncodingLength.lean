@@ -51,21 +51,18 @@ def lz78GreedyEncodingLength (n : ℕ) (x : Fin n → α) : ℕ :=
     simpa using this
   simp [hc]
 
-/-- **Distinct phrase count of the genuine greedy parse on an `n`-tuple is
-`≤ n`**: the genuine longest-prefix parse of `List.ofFn x` emits at most `n`
-distinct phrases (`lz78PhraseStrings_count_le` plus `List.length_ofFn`). -/
+/-- The longest-prefix greedy parse `lz78PhraseStrings` of `List.ofFn x` emits at
+most `n` distinct phrases (`lz78PhraseStrings_count_le` plus `List.length_ofFn`). -/
 theorem lz78GreedyPhraseCount_ofFn_le (n : ℕ) (x : Fin n → α) :
     (lz78PhraseStrings (List.ofFn x)).length ≤ n := by
   have := lz78PhraseStrings_count_le (List.ofFn x)
   rwa [List.length_ofFn] at this
 
-/-- **Cover–Thomas Lemma 13.5.2 bit-length upper bound for the genuine
-greedy parse**.
-
-The genuine greedy encoding length for `x : Fin n → α` is bounded by
-`n · (log(n+1) + log|α| + 2)`, since the parse has `c ≤ n` distinct phrases,
-each costing at most `bitLength n |α|` bits. Combines the distinct-phrase
-count bound `c ≤ n` with `bitLength`-monotonicity in the dictionary size. -/
+/-- The greedy encoding length `lz78GreedyEncodingLength n x` of `x : Fin n → α`
+is bounded by `n · (log(n+1) + log|α| + 2)`, since the parse has `c ≤ n` distinct
+phrases, each costing at most `bitLength n |α|` bits. Combines the distinct-phrase
+count bound `c ≤ n` with `bitLength`-monotonicity in the dictionary size. This is
+the bit-length upper bound of Cover–Thomas Lemma 13.5.2. -/
 @[entry_point]
 theorem lz78_encoding_length_le_n_log_n_plus_const (n : ℕ) (x : Fin n → α) :
     lz78GreedyEncodingLength n x ≤
@@ -220,11 +217,11 @@ theorem lz78_rate_le_const [Nonempty α] (n : ℕ) (x : Fin n → α) :
       = (n : ℝ) * ((1 + 8 * b / Real.log 2) + (L + 2)) := by ring
   linarith [hterm1, hterm2]
 
-/-- **Per-symbol bit-rate decomposed into a `c·log c` term and an `o(1)`
-overhead** (deterministic, per-`n`).
+/-- The per-symbol greedy bit-rate decomposes, deterministically and for each `n`,
+into a `c·log c` term and an `o(1)` overhead.
 
 For `0 < n`, writing `c = (lz78PhraseStrings (List.ofFn x)).length` for the
-genuine distinct phrase count, the greedy bit-rate splits as
+distinct phrase count of the greedy parse, the greedy bit-rate splits as
 
 ```
 lz/n ≤ (c · log c) / (log 2 · n) + overhead(n, x)
@@ -232,7 +229,7 @@ lz/n ≤ (c · log c) / (log 2 · n) + overhead(n, x)
 
 where the overhead `overhead(n, x) = (c · log 2 + c · (log₂|α| + 2)) / (log 2 · n)`
 collects the `+1`-shift slack (`log(c+1) ≤ log 2 + log c`) and the alphabet /
-parent-index constant cost. The first term is the genuine combinatorial
+parent-index constant cost. The first term is the combinatorial
 `c·log₂c/n` that the Ziv comparison connects to `blockLogAvg₂ = -log₂Pₙ/n`;
 the overhead is `o(1)` since `c = O(n/log n)` (`lz78PhraseStrings_count_isBigO`).
 
@@ -332,8 +329,9 @@ def IsLZ78EncodingLengthBoundPassthrough (B : ℕ → ℕ) : Prop :=
     IsLZ78EncodingLengthBoundPassthrough α B ↔
       ∀ (n : ℕ) (x : Fin n → α), lz78GreedyEncodingLength n x ≤ B n := Iff.rfl
 
-/-- **Cover–Thomas Lemma 13.5.2 form discharges the bound
-pass-through** with the canonical bound `n · (log(n+1) + log|α| + 2)`. -/
+/-- The canonical bound `n · (log(n+1) + log|α| + 2)` satisfies the
+encoding-length pass-through predicate, supplied by the Cover–Thomas Lemma 13.5.2
+bound `lz78_encoding_length_le_n_log_n_plus_const`. -/
 @[entry_point]
 theorem IsLZ78EncodingLengthBoundPassthrough.canonical :
     IsLZ78EncodingLengthBoundPassthrough α

@@ -455,20 +455,17 @@ theorem ziv_aseventual_le_blockLogAvg₂
   rw [h_smb.limsup_eq]
   exact h_ziv
 
-/-- **Ziv-inequality achievability upper bound for the genuine greedy
-parser (Cover–Thomas Lemma 13.5.5 / Theorem 13.5.3 upper-bound half),
-a.s. form**.
-
-For a stationary ergodic source `p` the per-symbol length of the genuine
-longest-prefix-match greedy LZ78 parse is, almost surely, asymptotically at
-most the bit entropy rate:
+/-- The almost-sure Ziv-inequality achievability upper bound for the
+longest-prefix-match greedy parser: for a stationary ergodic source `p` the
+per-symbol length of the greedy LZ78 parse `lz78GreedyEncodingLength` is, almost
+surely, asymptotically at most the bit entropy rate:
 
 ```
 limsup_n (1/n) · lz78GreedyEncodingLength(X^n) ≤ entropyRate₂ μ p   a.s.
 ```
 
-This is the achievability (upper-bound) half of LZ78 asymptotic
-optimality, i.e. the a.s.-eventual Ziv inequality
+This is the achievability (upper-bound) half of LZ78 asymptotic optimality
+(Cover–Thomas Lemma 13.5.5 / Theorem 13.5.3), i.e. the a.s.-eventual Ziv inequality
 `limsup (c·log₂ c / n) ≤ H₂` combined with the SMB upper bound.
 
 Units: the encoding length is a base-2 code length (`bitLength` uses
@@ -538,13 +535,11 @@ theorem lz78Greedy_achievability_ae
     with ω h_smb h_ziv
   exact h_ziv.trans h_smb.limsup_eq.le
 
-/-- **LZ78 asymptotic optimality with the genuine greedy parsing
-implementation (Cover–Thomas Theorem 13.5.3)**.
-
-For a stationary ergodic source `p : ErgodicProcess μ α` on a finite
-alphabet `α`, the per-symbol output length of the genuine
-longest-prefix-match greedy LZ78 parse converges almost surely to the
-bit entropy rate:
+/-- LZ78 asymptotic optimality for the concrete greedy parser
+`lz78GreedyEncodingLength` (Cover–Thomas Theorem 13.5.3). For a stationary
+ergodic source `p : ErgodicProcess μ α` on a finite alphabet `α`, the per-symbol
+output length of the longest-prefix-match greedy LZ78 parse converges almost
+surely to the bit entropy rate:
 
 ```
 lim_{n → ∞} (1/n) · lz78GreedyEncodingLength(X^n) = entropyRate₂ μ p   a.s.

@@ -146,7 +146,7 @@ private lemma sum_real_triple_mid_of_map_eq
       MeasurableSet ({(x, y, u)} : Set (α × β × U)) := fun _ _ ↦ measurableSet_singleton _
   rw [h_map, h_pre, measureReal_biUnion_finset h_disj h_meas]
 
-/-- **General two-variable pmf-to-measure bridge.** For finite alphabets `A`, `B`
+/-- The general two-variable pmf-to-measure bridge: for finite alphabets `A`, `B`
 and a probability measure `μ` with measurable coordinates `Xs : Ω → A`,
 `Uo : Ω → B`, the pmf-form mutual information of the empirical joint pmf equals
 the measure-form `(mutualInfo μ Xs Uo).toReal`. Proved by identifying the three

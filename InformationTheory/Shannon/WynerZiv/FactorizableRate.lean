@@ -334,9 +334,9 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **The key lemma: a convex combination of two factorizable feasible
-points at thresholds `D₁, D₂` is feasible at the mixed threshold
-`a D₁ + b D₂`** (with shared decoder `f`).
+/-- A convex combination of two factorizable feasible points at thresholds
+`D₁, D₂` is feasible at the mixed threshold `a D₁ + b D₂`, with the decoder `f`
+shared between the two points.
 
 This is the structural step that turns convexity into a one-liner on
 factorizable joints: feasibility survives convex combinations on the
@@ -664,8 +664,8 @@ lemma objective_mem_wzRateValueSet
       ∈ wzRateValueSet P_XY d D :=
   mem_wzRateValueSet_iff.mpr ⟨k, qf, hqf, rfl⟩
 
-/-- **Landing lemma (direct, `Fin k` form).** Any feasible factorizable point at
-auxiliary alphabet `Fin k` bounds the reshaped rate from above. This is what
+/-- Any feasible factorizable point at auxiliary alphabet `Fin k` bounds the
+reshaped rate from above. This is what
 lets the single-letterization auxiliary land *directly*, with no cardinality
 reduction. The `BddBelow` side condition is discharged (via the objective's
 data-processing non-negativity) in `Converse.lean` by
@@ -702,7 +702,7 @@ lemma wzRateValueSet_mono_in_D
   obtain ⟨k, qf, hqf, rfl⟩ := hv
   exact ⟨k, qf, WynerZivFactorizableConstraint_mono_in_D (Fin k) P_XY d hD hqf, rfl⟩
 
-/-- **The reshaped Wyner–Ziv rate is antitone in `D`.** A larger distortion budget
+/-- The reshaped Wyner–Ziv rate is antitone in `D`: a larger distortion budget
 enlarges the value set (`wzRateValueSet_mono_in_D`), so its infimum is smaller.
 The `BddBelow` at `D'` and non-emptiness at `D` are the standard `csInf_le_csInf`
 side conditions — both discharged in `Converse.lean` (via
@@ -748,8 +748,8 @@ lemma sum_marginalSnd {A B : Type*} [Fintype A] [Fintype B] (p : A × B → ℝ)
   rw [Finset.sum_comm]
   exact (Fintype.sum_prod_type p).symm
 
-/-- **Mixture-affinity of pmf mutual information.** For two joint pmfs
-`p₁ : A × B₁ → ℝ` and `p₂ : A × B₂ → ℝ`, each of total mass `1` and sharing the
+/-- Pmf mutual information is affine under disjoint-union mixtures. For two joint
+pmfs `p₁ : A × B₁ → ℝ` and `p₂ : A × B₂ → ℝ`, each of total mass `1` and sharing the
 *same* first marginal (`marginalFst p₁ = marginalFst p₂`, i.e. `I(X ; branch) = 0`),
 form the disjoint-union mixture `mix : A × (B₁ ⊕ B₂) → ℝ` with
 
@@ -922,8 +922,8 @@ lemma wzRateValueSet_reindex_mem
 
 /-! ### §10.2 Time-sharing of the reshaped value set and rate -/
 
-/-- **Time-sharing closure of the reshaped value set.** The set of attainable
-Wyner–Ziv objective values is closed under convex combination across distortion
+/-- The set of attainable Wyner–Ziv objective values is closed under time-sharing,
+that is, under convex combination across distortion
 budgets: if `v₁` is attainable at budget `D₁` and `v₂` at budget `D₂`, then the
 mixture `a·v₁ + b·v₂` is attainable at the mixed budget `a·D₁ + b·D₂`.
 
@@ -1101,7 +1101,7 @@ theorem wzRateValueSet_timeShare_mem
   have hmem := wzRateValueSet_reindex_mem (P_XY := P_XY) (d := d) hfeas
   rwa [hobj] at hmem
 
-/-- **Convexity of the reshaped Wyner–Ziv rate in `D`.** Directly from the
+/-- The reshaped Wyner–Ziv rate is convex in `D`. This follows directly from the
 time-sharing closure `wzRateValueSet_timeShare_mem`: every mixture `a·v₁ + b·v₂`
 lies in the value set at the mixed budget, so its infimum is bounded above by
 `a·v₁ + b·v₂` for all attainable `v₁, v₂`; taking nested infima gives the convex
@@ -1153,12 +1153,12 @@ theorem wynerZivRate_convex_in_D
     linarith
   linarith
 
-/-- **Weighted (n-ary) time-sharing closure of the reshaped value set.** Induction
-over the finite index set `s` of the binary closure `wzRateValueSet_timeShare_mem`:
-a convex combination `∑ i, p i · w i` of attainable objective values (each `w i`
-attainable at its own budget `Dv i`) is attainable at the mixed budget
-`∑ i, p i · Dv i`. The tail weights are renormalized so the binary lemma applies at
-each induction step. -/
+/-- Weighted (n-ary) time-sharing closure of the reshaped value set: a convex
+combination `∑ i, p i · w i` of attainable objective values (each `w i` attainable
+at its own budget `Dv i`) is attainable at the mixed budget `∑ i, p i · Dv i`.
+Proved by induction over the finite index set `s` from the binary closure
+`wzRateValueSet_timeShare_mem`, renormalizing the tail weights so the binary lemma
+applies at each induction step. -/
 lemma wzRateValueSet_weightedSum_mem
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     {d : α → γ → ℝ}
@@ -1223,10 +1223,10 @@ lemma wzRateValueSet_weightedSum_mem
       rw [heq_w, heq_Dv]
       exact hbin
 
-/-- **Uniform `Fin n` time-sharing corollary.** The average `(1/n)·∑ᵢ w i` of `n`
-attainable objective values is attainable at the averaged budget `(1/n)·∑ᵢ Dv i`.
-Specialization of `wzRateValueSet_weightedSum_mem` to uniform weights `p ≡ 1/n`;
-this is the form the operational converse consumes. -/
+/-- The average `(1/n)·∑ᵢ w i` of `n` attainable objective values is attainable at
+the averaged budget `(1/n)·∑ᵢ Dv i`. Uniform `Fin n` specialization of
+`wzRateValueSet_weightedSum_mem` at weights `p ≡ 1/n`; this is the form the
+operational converse consumes. -/
 lemma wzRateValueSet_avg_mem
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     {d : α → γ → ℝ} {n : ℕ} (hn : 0 < n)

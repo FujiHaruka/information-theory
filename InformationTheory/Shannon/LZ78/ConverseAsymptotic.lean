@@ -176,11 +176,9 @@ theorem IsLZ78PhraseCountAsymptotic.linear_of_count_le_n
     intro n
     exact_mod_cast h_le n
 
-/-- **Conversion from per-`n` `ZivCountingBound` with the natural
-envelope `B n = (B₀ n : ℝ)`**: if for every `n` the per-`n` Ziv counting
-bound holds with a real envelope `B n`, and `B` is eventually
-non-negative, then the asymptotic predicate holds. This is the
-ergonomic entry point when the upstream caller already has the
+/-- If for every `n` the per-`n` Ziv counting bound holds with a real envelope
+`B n`, and `B` is eventually non-negative, then the asymptotic predicate holds.
+This is the ergonomic entry point when the upstream caller already has the
 per-`n` `ZivCountingBound` lemma. -/
 theorem IsLZ78PhraseCountAsymptotic.of_ZivCountingBound
     {p : ℕ → LZ78Parsing α} {B : ℕ → ℝ}
@@ -234,9 +232,7 @@ section MainAsymptoticResult
 
 variable {α : Type*}
 
-/-- **Main statement: LZ78 phrase-count asymptotic upper
-bound, hypothesis pass-through form.**
-
+/-- LZ78 phrase-count asymptotic upper bound, in hypothesis pass-through form.
 For any family of LZ78 parsings `p : ℕ → LZ78Parsing α` and any
 real-valued envelope `B : ℕ → ℝ`, if the per-`n` Ziv counting bound
 `(p n).count ≤ B n` holds and `B` is eventually non-negative, then the
