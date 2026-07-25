@@ -11,7 +11,7 @@ This file hosts the foundational, mutually-independent lemmas of the LZ78
 Ziv-inequality entropy bridge (Cover–Thomas §13.5), built on top of the
 already-genuine SMB layer (`blockLogAvg`, `ShannonMcMillanBreiman.lean`).
 
-## Main results
+## Main statements
 
 * `log_sum_inequality` — the (finite) **log-sum inequality**
   `(∑ aᵢ)·log((∑aᵢ)/(∑bᵢ)) ≤ ∑ aᵢ·log(aᵢ/bᵢ)`, derived from convexity of

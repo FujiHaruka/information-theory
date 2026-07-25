@@ -25,7 +25,7 @@ theorem.
   packaged as a `Filtration ℕᵒᵈ m₀`.
 * `tailSigma` — the tail σ-algebra `⨅ n, comap (T^[n]) m₀`.
 
-## Main results
+## Main statements
 
 * `backwardFiltration_apply` — applied form (definitional).
 * `tailSigma_le_comap_iterate` — `tailSigma ≤ comap (T^[n]) m₀` for every `n`.

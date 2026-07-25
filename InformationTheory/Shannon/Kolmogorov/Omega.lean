@@ -20,7 +20,7 @@ self-delimiting interpreter describes that string in `2 · natLen k + O(1)` bits
 * `chaitinOmega` — the halting probability `Ω` in `ℝ≥0∞`.
 * `prefixInterpretProg` — the self-delimited interpretation program.
 
-## Main results
+## Main statements
 
 * `chaitinOmega_le_one` — `Ω ≤ 1`, the Kraft bound on the halting set.
 * `chaitinOmega_pos` — `0 < Ω`.

@@ -22,7 +22,7 @@ equality `capacityN_ofMemoryless_eq` via:
 * the per-letter marginal bridge and Cover-Thomas Thm 7.9 chain
   (the ≤ direction).
 
-## Main results
+## Main statements
 
 * `capacityN_ofMemoryless_eq` — `(ofMemoryless W).capacityN n` matches
   `n · capacity W` (per-`n` equality).

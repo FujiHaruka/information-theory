@@ -12,7 +12,7 @@ program). Since there are only finitely many programs of length below `k`, only
 finitely many `x` can be that simple, and — the type of naturals being infinite —
 an incompressible `x` with `k ≤ complexity x` always exists.
 
-## Main results
+## Main statements
 
 * `incompressible_count` — `#{x | complexity x < k} < 2 ^ k`.
 * `exists_incompressible` — for every `k` some `x` has `k ≤ complexity x`.

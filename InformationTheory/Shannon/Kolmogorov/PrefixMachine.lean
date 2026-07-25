@@ -28,7 +28,7 @@ Kraft-McMillan inequality applies to each of its finite subsets.
 * `prefixComplexity` — prefix Kolmogorov complexity `K(x)`.
 * `universalProb` — the universal probability `P_U(x)` in `ℝ≥0∞`.
 
-## Main results
+## Main statements
 
 * `PrefixFree.uniquelyDecodable` — prefix-free (with no empty codeword) implies
   uniquely decodable, bridging to `kraft_mcmillan_inequality`.

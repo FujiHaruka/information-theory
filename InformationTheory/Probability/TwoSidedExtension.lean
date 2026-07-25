@@ -45,7 +45,7 @@ and `TwoSidedExtension/LogCondIntegral.lean`:
 * `obsZ μ p N J` — the joint observation `ω ↦ fun j : J ↦ X (T^[(j+N).toNat] ω)`.
 * `shiftedMarginal μ p J` — `μ.map (obsZ μ p (shiftAmount J) J)`.
 
-## Main results
+## Main statements
 
 * `shiftedMarginal_eq_of_shift` — N-independence: any sufficient shift gives
   the same pushforward, via stationarity.

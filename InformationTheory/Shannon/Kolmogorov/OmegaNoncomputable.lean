@@ -30,7 +30,7 @@ halting set of the machine would be decidable, which it is not.
   `omegaApproxNum` over the denominator `2 ^ t`.
 * `searchPred` — the stage-lookup predicate, phrased over natural numbers.
 
-## Main results
+## Main statements
 
 * `chaitinOmega_not_computable` — `Ω` is not computably approximable.
 * `prefixEvaln_primrec` — the bounded evaluator is primitive recursive.

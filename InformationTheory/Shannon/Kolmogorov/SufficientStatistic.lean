@@ -24,7 +24,7 @@ index part by `Nat.clog 2 S.card` bits.
 * `IsSufficientStatistic` — a model whose two-part description is within an
   additive constant of `prefixComplexity x`.
 
-## Main results
+## Main statements
 
 * `prefixComplexity_le_twoPartLength` — every two-part description bounds the
   prefix complexity, up to an additive constant.

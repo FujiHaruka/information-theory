@@ -14,7 +14,7 @@ search is a partial recursive description of an incompressible string using only
 two facts collide: the searched string has complexity at least `k` but at most
 `natLen k + O(1) < k` for large `k` (Berry's paradox).
 
-## Main results
+## Main statements
 
 * `complexity_not_computable` — `complexity` is not a computable function.
 -/

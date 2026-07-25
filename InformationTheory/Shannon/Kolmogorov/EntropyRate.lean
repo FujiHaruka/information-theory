@@ -28,10 +28,14 @@ the conditional literal bound; the lower half combines the counting bound
 file establishes the flagship statement and the plumbing lemmas the two halves
 consume.
 
-## Main results
+## Main definitions
+
+* `encodeBlock` — the base-`card α` numeral encoding a length-`m` block as `ℕ`.
+
+## Main statements
 
 * `kolmogorov_entropy_rate` — the flagship convergence (via the two halves).
-* `encodeBlock` / `encodeBlock_injective` — injective encoding of a block as `ℕ`.
+* `encodeBlock_injective` — that encoding of a block as `ℕ` is injective.
 * `integrable_condComplexity_jointRV` — the block-complexity integrand is integrable.
 -/
 

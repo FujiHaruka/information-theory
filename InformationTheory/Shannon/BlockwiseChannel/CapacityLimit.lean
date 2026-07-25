@@ -10,7 +10,7 @@ single-letter `capacity W`. This follows directly from the per-`n` equality
 `capacityN_ofMemoryless_eq` (the sequence is eventually the constant
 `capacity W`).
 
-## Main results
+## Main statements
 
 * `capacity_lim_eq_capacity_of_memoryless` — the limit form matches the
   single-letter capacity.

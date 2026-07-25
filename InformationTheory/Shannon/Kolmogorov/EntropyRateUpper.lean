@@ -31,7 +31,7 @@ upper bound.
 * `typeDecoder` — the decoder as a function `ℕ → ℕ → Part ℕ`.
 * `enumWords` / `typeSig` — the length-`n` word enumerator and the occurrence signature.
 
-## Main results
+## Main statements
 
 * `typeDecoder_partrec` — `typeDecoder` is `Partrec₂`.
 -/

@@ -50,7 +50,7 @@ inequality**, followed by a sandwich argument bounding both
 * §5 is the sandwich `limsup A_n ≤ ∫f` and `liminf A_n ≥ ∫f` a.e.
 * §6 is the main theorem `birkhoff_ergodic_ae`.
 
-## Main results
+## Main statements
 
 * `birkhoffAverageReal_comp_T` — recursion for the time average.
 * `integral_birkhoffAverageReal_eq` — `∫ A_n dμ = ∫ f dμ`.

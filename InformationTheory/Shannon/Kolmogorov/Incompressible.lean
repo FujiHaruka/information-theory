@@ -19,7 +19,7 @@ description length. Incompressibility then forces the binary entropy up to its
 maximum `log 2`, and strict unimodality of `binEntropy` (via a fixed positive gap
 away from `1/2`) pins the frequency to `1/2`.
 
-## Main results
+## Main statements
 
 * `incompressible_freq_near_half` — the frequency of ones of every incompressible
   block is eventually within any `δ > 0` of `1/2`.

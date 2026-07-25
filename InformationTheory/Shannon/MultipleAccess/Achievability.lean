@@ -27,7 +27,7 @@ This file aggregates the two submodules:
   `(⟨0, hM₁⟩, ⟨0, hM₂⟩)` when none / not-unique.
 * `macCodebookToCode` — bundle two codebooks + the joint-typical decoder into a `MACCode`.
 
-## Main results
+## Main statements
 
 * `mac_errorProbAt_le_bonferroni4` — the four-event union bound on the per-pair error
   probability: `E0` (the correct pair is not typical) plus the three alias sums

@@ -24,7 +24,7 @@ product law `Πᵢ K(Uᵢ)` steered by the cloud codeword, rather than a flat pr
   `bcCloudCodebookMeasure`, `bcSatelliteCodebookMeasure`, `bcCodebookMeasure` — the
   two-tier ensemble; the satellite law is a **conditional product** `Πᵢ K(Uᵢ)`.
 
-## Main results
+## Main statements
 
 * `bc_conditional_slice_prob_le` — the gateway covering bound: the conditional-product
   mass of the jointly-typical satellite slice is `≤ exp(−n (I(X; Y₁ ∣ U) − ε))`.

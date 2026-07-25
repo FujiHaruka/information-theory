@@ -23,7 +23,7 @@ Cesàro sandwich use to discharge the four hypotheses of
 * `pmfLogCond μ p i ω` — per-step conditional negative log-likelihood
   `-log (condDistrib (obs i) (blockRV i) μ (block_i ω)).real {obs i ω}`.
 
-## Main results
+## Main statements
 
 * `block_measure_succ_singleton_eq` — multiplicative ENNReal chain rule at
   singletons: `P_{n+1}({block_{n+1} ω}) = P_n({block_n ω}) · c_n(...){obs n ω}`.

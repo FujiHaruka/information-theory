@@ -13,7 +13,7 @@ recursive payload decoder `decodePayload`. The second reduces the halting
 problem of Mathlib's universal interpreter to it along the interpret-mode entry
 `prefixInterpretProg`.
 
-## Main results
+## Main statements
 
 * `prefixUniversalEval_partrec` — the machine is partial recursive.
 * `prefixUniversalEval_dom_not_computablePred` — its halting set is undecidable.

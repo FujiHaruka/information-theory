@@ -29,7 +29,7 @@ sub-distribution `∑_a q(v · a | v) ≤ 1`.
   ω-independent node-context conditional (NOT the path-prefix `condPhraseProb`,
   which is observation-dependent and a dead start).
 
-## Main results
+## Main statements
 
 * `sum_extend_marginal_real_eq` — Kolmogorov consistency,
   `∑_a P(blockRV (m+1) = Fin.snoc v a) = P(blockRV m = v)`. The first `m`

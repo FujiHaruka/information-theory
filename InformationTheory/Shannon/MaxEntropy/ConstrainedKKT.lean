@@ -18,15 +18,18 @@ the unconstrained Lagrangian) appears as the moment-matching hypothesis
 which we pass through (Mathlib lacks the convex-duality theorems needed to
 *solve* for `λ`; it does have everything we need to *use* a given solution).
 
-## Main results
+## Main definitions
 
 * `logPartitionψ`                         — log-partition function `ψ(λ)`
 * `expFamilyDist`                         — exponential-family pmf
                                             `x ↦ exp (⟨λ, f x⟩ - ψ(λ))`
+* `KKTSolution`                           — packaged Lagrange multiplier + moment witness
+
+## Main statements
+
 * `expFamilyDist_eq_gibbsPmf`             — bridge `expFamilyDist = gibbsPmf`
 * `expFamilyDist_mem_stdSimplex`          — `expFamilyDist λ f ∈ stdSimplex`
 * `expFamilyDist_pos`                     — pointwise strict positivity
-* `KKTSolution`                           — packaged Lagrange multiplier + moment witness
 * `entropy_expFamilyDist_eq_legendre`     — Legendre identity
                                             `H(p*) = ψ(λ) - ⟨λ, c⟩`
 * `expFamily_maximizes_entropy`           — constraint-respecting `P` satisfies
@@ -50,7 +53,8 @@ not provide).
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 12.1.1.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 12.1.1.
 -/
 
 namespace InformationTheory.Shannon.MaxEntropyConstrainedKKT

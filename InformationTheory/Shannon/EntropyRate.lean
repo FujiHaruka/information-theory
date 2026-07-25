@@ -25,7 +25,7 @@ The Birkhoff ergodic theorem and the Shannon–McMillan–Breiman theorem build 
 * `conditionalEntropyTail μ p n := condEntropy μ (p.obs n) (p.blockRV n)`
   — `H(X_n | X_0, …, X_{n-1})`.
 
-## Main results
+## Main statements
 
 * `blockEntropy_succ_chain_rule` — `H_{n+1} = H_n + H(X_n | X_{<n})` (chain rule).
 * `blockEntropy_eq_sum_conditionalEntropyTail` — iterated chain rule.

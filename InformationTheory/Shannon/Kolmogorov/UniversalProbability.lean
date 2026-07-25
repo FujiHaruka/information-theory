@@ -15,7 +15,7 @@ Together the two bounds place `P_U(x)` in the interval `(0, 1]`, so its real
 logarithm is well defined and `-log₂ P_U(x) ≤ K(x)` — one half of Levin's coding
 theorem.
 
-## Main results
+## Main statements
 
 * `universalProb_ge_two_pow_neg_prefixComplexity` — the lower bound
   `2^{-K(x)} ≤ P_U(x)`.

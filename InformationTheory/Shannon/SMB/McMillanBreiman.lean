@@ -33,7 +33,7 @@ need Birkhoff.
 * `blockLogAvg μ p n ω` — `-(1/n) * log P_n({block_n ω})`, the per-block
   empirical entropy estimator for the observed sample.
 
-## Main results
+## Main statements
 
 * `shannon_mcmillan_breiman_of_sandwich` — sandwich version: from the two
   Cover–Thomas inequalities (`liminf ≥ H`, `limsup ≤ H`) plus a.s.

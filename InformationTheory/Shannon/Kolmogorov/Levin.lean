@@ -29,7 +29,7 @@ prefix-free set.
 * `padDelimit` — the unary length-prefix wrapper with the run of `true`s
   shortened by a fixed offset.
 
-## Main results
+## Main statements
 
 * `prefixComplexity_eq_two_mul_payloadComplexity_add_one` — the structural
   identity `K(x) = 2 * m(x) + 1` for the shortest payload length `m(x)`.

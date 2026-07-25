@@ -22,7 +22,7 @@ theorem.
 * `StationaryProcess.blockRV n` — joint `(X_0, …, X_{n-1}) : Ω → (Fin n → α)`.
 * `ErgodicProcess` — extends `StationaryProcess` with `Ergodic T μ`.
 
-## Main results
+## Main statements
 
 * `StationaryProcess.measurable_obs` — each `obs i` is measurable.
 * `StationaryProcess.measurable_blockRV` — `blockRV n` is measurable.
