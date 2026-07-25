@@ -89,7 +89,8 @@ noncomputable def mdlComplexity (x : ℕ) : ℕ :=
 because the constraint set is empty for small budgets, where the value has to be
 `⊤` rather than `0`. -/
 noncomputable def structureFunction (x k : ℕ) : ℕ∞ :=
-  sInf { l | ∃ S : Finset ℕ, x ∈ S ∧ modelComplexity S ≤ k ∧ (Nat.clog 2 S.card : ℕ∞) = l }
+  sInf { l | ∃ S : Finset ℕ,
+    x ∈ S ∧ modelComplexity S ≤ k ∧ (Nat.clog 2 S.card : ℕ∞) = l }
 
 /-- A model `S` is a sufficient statistic for `x` at slack `c` when it contains
 `x` and its two-part description is no longer than `prefixComplexity x + c`. The
@@ -144,7 +145,7 @@ theorem mdlComplexity_le_of_mem {x : ℕ} {S : Finset ℕ} (h : x ∈ S) :
 theorem encodeNat_zero : encodeNat 0 = [] := rfl
 
 theorem encodeNat_cast_posNum (p : PosNum) : encodeNat (p : ℕ) = encodePosNum p := by
-  show encodeNum ((p : ℕ) : Num) = encodePosNum p
+  change encodeNum ((p : ℕ) : Num) = encodePosNum p
   rw [PosNum.of_to_nat]
   rfl
 
@@ -154,7 +155,7 @@ theorem encodePosNum_eq_cons (p : PosNum) :
   | one => rfl
   | bit0 q _ =>
     have hc : ((PosNum.bit0 q : PosNum) : ℕ) = (q : ℕ) + (q : ℕ) := PosNum.cast_bit0 q
-    show false :: encodePosNum q = _
+    change false :: encodePosNum q = _
     congr 1
     · symm
       rw [decide_eq_false_iff_not]
@@ -162,7 +163,7 @@ theorem encodePosNum_eq_cons (p : PosNum) :
     · rw [show ((PosNum.bit0 q : PosNum) : ℕ) / 2 = (q : ℕ) by omega, encodeNat_cast_posNum]
   | bit1 q _ =>
     have hc : ((PosNum.bit1 q : PosNum) : ℕ) = (q : ℕ) + (q : ℕ) + 1 := PosNum.cast_bit1 q
-    show true :: encodePosNum q = _
+    change true :: encodePosNum q = _
     congr 1
     · symm
       rw [decide_eq_true_iff]
@@ -191,15 +192,15 @@ theorem encodePosNum_decodePosNum_concat (w : List Bool) :
     have hne : (v ++ [true] : List Bool) ≠ [] := by simp
     cases b with
     | false =>
-      show encodePosNum (PosNum.bit0 (decodePosNum (v ++ [true]))) = _
-      show false :: encodePosNum (decodePosNum (v ++ [true])) = _
+      change encodePosNum (PosNum.bit0 (decodePosNum (v ++ [true]))) = _
+      change false :: encodePosNum (decodePosNum (v ++ [true])) = _
       rw [ih]
       simp
     | true =>
-      show encodePosNum (if (v ++ [true] : List Bool) = [] then PosNum.one
+      change encodePosNum (if (v ++ [true] : List Bool) = [] then PosNum.one
         else PosNum.bit1 (decodePosNum (v ++ [true]))) = _
       rw [if_neg hne]
-      show true :: encodePosNum (decodePosNum (v ++ [true])) = _
+      change true :: encodePosNum (decodePosNum (v ++ [true])) = _
       rw [ih]
       simp
 
@@ -207,7 +208,7 @@ theorem encodeNat_decodeNat_concat (w : List Bool) :
     encodeNat (decodeNat (w ++ [true])) = w ++ [true] := by
   have hne : (w ++ [true] : List Bool) ≠ [] := by simp
   have h1 : decodeNat (w ++ [true]) = ((decodePosNum (w ++ [true]) : PosNum) : ℕ) := by
-    show ((decodeNum (w ++ [true]) : Num) : ℕ) = _
+    change ((decodeNum (w ++ [true]) : Num) : ℕ) = _
     rw [Computability.decodeNum, if_neg hne]
     simp
   rw [h1, encodeNat_cast_posNum, encodePosNum_decodePosNum_concat]
@@ -242,7 +243,7 @@ theorem encodeNat_primrec : Primrec encodeNat := by
     PrimrecRel.comp Primrec.eq (Primrec.nat_mod.comp Primrec.fst (Primrec.const 2))
       (Primrec.const 1)
   have hstep : Primrec bitStep := by
-    show Primrec fun s : ℕ × List Bool ↦
+    change Primrec fun s : ℕ × List Bool ↦
       if s.1 = 0 then s else (s.1 / 2, s.2 ++ [decide (s.1 % 2 = 1)])
     refine Primrec.ite (PrimrecRel.comp Primrec.eq Primrec.fst (Primrec.const 0)) Primrec.id ?_
     exact Primrec.pair (Primrec.nat_div.comp Primrec.fst (Primrec.const 2))
@@ -255,7 +256,7 @@ theorem encodeNat_primrec : Primrec encodeNat := by
 
 theorem decodeNat_of_ne_nil {l : List Bool} (h : l ≠ []) :
     decodeNat l = ((decodePosNum l : PosNum) : ℕ) := by
-  show ((decodeNum l : Num) : ℕ) = _
+  change ((decodeNum l : Num) : ℕ) = _
   rw [Computability.decodeNum, if_neg h]
   simp
 
@@ -267,12 +268,12 @@ theorem decodeNat_cons (b : Bool) (l : List Bool) :
   · rw [if_neg hne, decodeNat_of_ne_nil hne]
     cases b with
     | false =>
-      show ((PosNum.bit0 (decodePosNum l) : PosNum) : ℕ) = _
+      change ((PosNum.bit0 (decodePosNum l) : PosNum) : ℕ) = _
       rw [PosNum.cast_bit0]
       simp
       ring
     | true =>
-      show ((if l = [] then PosNum.one else PosNum.bit1 (decodePosNum l) : PosNum) : ℕ) = _
+      change ((if l = [] then PosNum.one else PosNum.bit1 (decodePosNum l) : PosNum) : ℕ) = _
       rw [if_neg hne, PosNum.cast_bit1]
       simp
       ring
@@ -387,7 +388,7 @@ theorem payloadComplexity_le_of_eval (c : Code) :
     rw [← encodeCode_eq]; exact Denumerable.ofNat_encode c
   have hmem : x ∈ decodePayload
       (true :: (List.replicate (encodeCode c) true ++ (false :: q))) := by
-    show x ∈ eval (Denumerable.ofNat Code
+    change x ∈ eval (Denumerable.ofNat Code
         (parseUnary (List.replicate (encodeCode c) true ++ (false :: q))).1)
       (Nat.pair (decodeNat
         (parseUnary (List.replicate (encodeCode c) true ++ (false :: q))).2) 0)
@@ -504,14 +505,25 @@ def listIndexDecoder (y i : ℕ) : Option ℕ := ((decode (α := List ℕ) y).ge
 
 theorem listIndexDecoder_partrec :
     Partrec₂ fun y i ↦ (listIndexDecoder y i : Part ℕ) := by
-  sorry
+  have hgetD : Primrec fun p : ℕ × ℕ ↦ ((decode (α := List ℕ) p.1).getD []) :=
+    Primrec.option_getD.comp (Primrec.decode.comp Primrec.fst) (Primrec.const [])
+  exact Computable.ofOption (Primrec.list_getElem?.comp hgetD Primrec.snd).to_comp
 
-theorem singletonCode_partrec : Partrec₂ fun (y _ : ℕ) ↦ (Part.some (encode [y]) : Part ℕ) := by
-  sorry
+theorem singletonCode_partrec :
+    Partrec₂ fun (y _ : ℕ) ↦ (Part.some (encode [y]) : Part ℕ) :=
+  Computable₂.partrec₂
+    (Primrec.encode.comp (Primrec.list_cons.comp Primrec.fst (Primrec.const []))).to_comp
 
 theorem modelComplexity_singleton_le :
     ∃ c : ℕ, ∀ x : ℕ, modelComplexity {x} ≤ prefixComplexity x + c := by
-  sorry
+  obtain ⟨c, hc⟩ := payloadComplexity_two_part_le _ singletonCode_partrec
+  refine ⟨2 * c, fun x ↦ ?_⟩
+  have h := hc (encode [x]) x 0 (Part.mem_some _)
+  have h0 : natLen 0 = 0 := by simp [natLen, encodeNat_zero]
+  rw [h0] at h
+  simp only [modelComplexity, modelCode, Finset.sort_singleton,
+    prefixComplexity_eq_two_mul_payloadComplexity_add_one]
+  omega
 
 /-- Every two-part description of `x` bounds its prefix complexity, up to an
 additive constant independent of `x` and of the model. The index part carries the
@@ -520,8 +532,19 @@ textbook inequality `K(x) ≤ K(S) + log |S| + O(1)`; the model part does carry
 coefficient `1`. -/
 @[entry_point]
 theorem prefixComplexity_le_twoPartLength :
-    ∃ c : ℕ, ∀ (x : ℕ) (S : Finset ℕ), x ∈ S → prefixComplexity x ≤ twoPartLength S + c := by
-  sorry
+    ∃ c : ℕ, ∀ (x : ℕ) (S : Finset ℕ),
+      x ∈ S → prefixComplexity x ≤ twoPartLength S + c := by
+  obtain ⟨c, hc⟩ := payloadComplexity_two_part_le _ listIndexDecoder_partrec
+  refine ⟨2 * c, fun x S hxS ↦ ?_⟩
+  obtain ⟨i, hi, hix⟩ := exists_index_of_mem hxS
+  have hval : listIndexDecoder (modelCode S) i = some x := by
+    rw [listIndexDecoder, modelCode, Encodable.encodek]
+    simpa using hix
+  have h := hc x (modelCode S) i (by simp [hval])
+  have hnat : natLen i ≤ Nat.clog 2 S.card := natLen_le_clog_card hi
+  simp only [twoPartLength, modelComplexity,
+    prefixComplexity_eq_two_mul_payloadComplexity_add_one]
+  omega
 
 /-- The shortest two-part description length agrees with the prefix complexity up
 to an additive constant. As with `prefixComplexity_le_twoPartLength`, the index
@@ -532,6 +555,16 @@ principle. -/
 theorem mdlComplexity_sub_prefixComplexity_le :
     ∃ c : ℕ, ∀ x : ℕ, mdlComplexity x ≤ prefixComplexity x + c ∧
       prefixComplexity x ≤ mdlComplexity x + c := by
-  sorry
+  obtain ⟨c₁, h₁⟩ := modelComplexity_singleton_le
+  obtain ⟨c₂, h₂⟩ := prefixComplexity_le_twoPartLength
+  refine ⟨c₁ + c₂, fun x ↦ ⟨?_, ?_⟩⟩
+  · have hle : mdlComplexity x ≤ twoPartLength {x} :=
+      mdlComplexity_le_of_mem (Finset.mem_singleton_self x)
+    rw [twoPartLength, Finset.card_singleton, Nat.clog_one_right] at hle
+    have := h₁ x
+    omega
+  · obtain ⟨S, hxS, hS⟩ := mdlComplexity_spec x
+    have := h₂ x S hxS
+    omega
 
 end InformationTheory.Kolmogorov
