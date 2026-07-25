@@ -33,15 +33,17 @@ index part by `Nat.clog 2 S.card` bits.
 
 ## Implementation notes
 
-The index part of `twoPartLength` carries the coefficient `4`, not `1`. This is a
-property of the machine `prefixUniversalEval` rather than of the argument: prefix
-complexity and payload complexity are rigidly tied by the identity
-`prefixComplexity x = 2 * payloadComplexity x + 1`, and a self-delimited index
-costs twice its bit length inside a payload, so the two factors of two multiply.
-The textbook inequality `K(x) ≤ K(S) + log |S| + O(1)`, with coefficient `1` on
-the index part, is a statement about an additively universal prefix machine and
-is not claimed here; the coefficient on the model part `modelComplexity S` is
-exactly `1` because both sides pass through the same identity.
+The index part of `twoPartLength` carries the coefficient `4`, not `1`, and the
+two factors of two have different sources. One is a property of the machine
+`prefixUniversalEval`: prefix complexity and payload complexity are rigidly tied
+by the identity `prefixComplexity x = 2 * payloadComplexity x + 1`, so a bound
+proved in the payload world doubles on the way back. The other is a property of
+the packing used here, which delimits the index with `selfDelimit` and therefore
+spends two bits per index bit. The textbook inequality
+`K(x) ≤ K(S) + log |S| + O(1)`, with coefficient `1` on the index part, is a
+statement about an additively universal prefix machine and is not claimed here;
+the coefficient on the model part `modelComplexity S` is exactly `1` because both
+sides pass through the same identity.
 
 ## References
 
@@ -62,39 +64,46 @@ open Computability (encodeNat decodeNat encodeNum decodeNum encodePosNum decodeP
 /-- The canonical code of a finite model: the `Encodable` code of its sorted
 element list. Sorted lists are used rather than `Finset` itself because the
 decoder that reads a model back has to be primitive recursive, and `List ℕ` is
-`Primcodable` while `Finset ℕ` is not. -/
+`Primcodable` while `Finset ℕ` is not.
+@audit:ok -/
 noncomputable def modelCode (S : Finset ℕ) : ℕ := encode (S.sort (· ≤ ·))
 
 /-- The description length of a finite model: the prefix complexity of its
 canonical code. Using prefix complexity rather than the literal length of
 `modelCode` keeps the quantity insensitive to the redundancy of the canonical
-code. -/
+code.
+@audit:ok -/
 noncomputable def modelComplexity (S : Finset ℕ) : ℕ := prefixComplexity (modelCode S)
 
 /-- The length of the two-part description built from the model `S`: the model
-part plus the index part. The coefficient `4` on the index part is forced by the
-machine (see the implementation notes); the coefficient on the model part is
-exactly `1`. -/
+part plus the index part. The coefficient `4` on the index part is built into the
+definition rather than recovered by the argument (see the implementation notes);
+the coefficient on the model part is exactly `1`.
+@audit:ok -/
 noncomputable def twoPartLength (S : Finset ℕ) : ℕ :=
   modelComplexity S + 4 * Nat.clog 2 S.card
 
 /-- The shortest two-part description length of `x`, minimized over all finite
 models containing `x`. The singleton model always competes, so the infimum is
-attained (`mdlComplexity_spec`). -/
+attained (`mdlComplexity_spec`).
+@audit:ok -/
 noncomputable def mdlComplexity (x : ℕ) : ℕ :=
   sInf { l | ∃ S : Finset ℕ, x ∈ S ∧ twoPartLength S = l }
 
 /-- The structure function of `x`: the least index part `⌈log₂ |S|⌉` over models
 `S ∋ x` whose description length is within the budget `k`. The value is `ℕ∞`
 because the constraint set is empty for small budgets, where the value has to be
-`⊤` rather than `0`. -/
+`⊤` rather than `0` (`structureFunction_zero`); over `ℕ` the empty infimum would
+collapse to `0` and contradict `structureFunction_antitone`.
+@audit:ok -/
 noncomputable def structureFunction (x k : ℕ) : ℕ∞ :=
   sInf { l | ∃ S : Finset ℕ,
     x ∈ S ∧ modelComplexity S ≤ k ∧ (Nat.clog 2 S.card : ℕ∞) = l }
 
 /-- A model `S` is a sufficient statistic for `x` at slack `c` when it contains
 `x` and its two-part description is no longer than `prefixComplexity x + c`. The
-slack is an explicit argument so that minimality statements can quantify over it. -/
+slack is an explicit argument so that minimality statements can quantify over it.
+@audit:ok -/
 def IsSufficientStatistic (c x : ℕ) (S : Finset ℕ) : Prop :=
   x ∈ S ∧ twoPartLength S ≤ prefixComplexity x + c
 
@@ -484,6 +493,12 @@ theorem twoPartUnpack_partrec {A : ℕ → ℕ → Part ℕ} (hA : Partrec₂ A)
       (packIndex_primrec.to_comp.comp (Computable.fst.comp Computable.fst))
   exact Partrec.bind hf hg
 
+/-- Feeding a partial recursive `A` a value `y` and an index `i` costs, in payload
+complexity, no more than the payload complexity of `y` plus the self-delimited
+index, up to a constant depending only on `A`. The hypothesis `Partrec₂ A` is what
+puts `A` on the machine at all: it is discharged into a `Code` and never supplies
+the bound.
+@audit:ok -/
 theorem payloadComplexity_two_part_le (A : ℕ → ℕ → Part ℕ) (hA : Partrec₂ A) :
     ∃ c : ℕ, ∀ (x y i : ℕ), x ∈ A y i →
       payloadComplexity x ≤ payloadComplexity y + 2 * natLen i + c := by
@@ -525,11 +540,19 @@ theorem modelComplexity_singleton_le :
     prefixComplexity_eq_two_mul_payloadComplexity_add_one]
   omega
 
+theorem exists_isSufficientStatistic_singleton :
+    ∃ c : ℕ, ∀ x : ℕ, IsSufficientStatistic c x {x} := by
+  obtain ⟨c, hc⟩ := modelComplexity_singleton_le
+  refine ⟨c, fun x ↦ ⟨Finset.mem_singleton_self x, ?_⟩⟩
+  rw [twoPartLength, Finset.card_singleton, Nat.clog_one_right]
+  simpa using hc x
+
 /-- Every two-part description of `x` bounds its prefix complexity, up to an
 additive constant independent of `x` and of the model. The index part carries the
 machine-specific coefficient `4` built into `twoPartLength`, so this is not the
 textbook inequality `K(x) ≤ K(S) + log |S| + O(1)`; the model part does carry
-coefficient `1`. -/
+coefficient `1`.
+@audit:ok -/
 @[entry_point]
 theorem prefixComplexity_le_twoPartLength :
     ∃ c : ℕ, ∀ (x : ℕ) (S : Finset ℕ),
@@ -550,7 +573,8 @@ theorem prefixComplexity_le_twoPartLength :
 to an additive constant. As with `prefixComplexity_le_twoPartLength`, the index
 part of `twoPartLength` carries the machine-specific coefficient `4`, so this is
 a statement about that quantity and not the textbook minimum description length
-principle. -/
+principle.
+@audit:ok -/
 @[entry_point]
 theorem mdlComplexity_sub_prefixComplexity_le :
     ∃ c : ℕ, ∀ x : ℕ, mdlComplexity x ≤ prefixComplexity x + c ∧
