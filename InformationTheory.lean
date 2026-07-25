@@ -127,6 +127,7 @@ import InformationTheory.Shannon.Kolmogorov.Noncomputable
 import InformationTheory.Shannon.Kolmogorov.PrefixMachine
 import InformationTheory.Shannon.Kolmogorov.UniversalProbability
 import InformationTheory.Shannon.Kolmogorov.Omega
+import InformationTheory.Shannon.Kolmogorov.Levin
 import InformationTheory.Shannon.Sanov.RoundedTypeSequence
 import InformationTheory.Shannon.Sanov.MultinomialLowerBound
 import InformationTheory.Shannon.Sanov.LiminfBound

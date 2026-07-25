@@ -32,6 +32,9 @@ Kraft-McMillan inequality applies to each of its finite subsets.
 
 * `PrefixFree.uniquelyDecodable` — prefix-free (with no empty codeword) implies
   uniquely decodable, bridging to `kraft_mcmillan_inequality`.
+* `PrefixFree.kraft` / `PrefixFree.tsum_inv_two_pow_length_le_one` — the finite
+  and infinite Kraft bounds `∑ 2^{-|p|} ≤ 1` for an arbitrary prefix-free set of
+  codewords with no empty codeword.
 * `prefixUniversalEval_kraft` — every finite set of valid programs satisfies the
   Kraft bound `∑ 2^{-|p|} ≤ 1`.
 * `tsum_inv_two_pow_length_le_one` — the infinite form of the Kraft bound, for
@@ -133,6 +136,10 @@ theorem parseUnary_selfDelimit (bs : List Bool) :
   simp only [selfDelimit]
   exact parseUnary_replicate bs.length bs
 
+theorem selfDelimit_length (bs : List Bool) : (selfDelimit bs).length = 2 * bs.length + 1 := by
+  simp only [selfDelimit, List.length_append, List.length_replicate, List.length_cons]
+  omega
+
 theorem range_selfDelimit_prefixFree : PrefixFree (Set.range selfDelimit) := by
   rintro a ⟨s, rfl⟩ b ⟨t, rfl⟩ hab
   obtain ⟨w, hw⟩ := hab
@@ -204,42 +211,45 @@ theorem prefixUniversalEval_literal (x : ℕ) :
   rw [prefixLiteralProg, prefixUniversalEval, parseUnary_selfDelimit]
   simp [decodePayload, Computability.decode_encodeNat]
 
+theorem PrefixFree.kraft {S : Set (List Bool)} (hS : PrefixFree S) (h0 : [] ∉ S)
+    (u : Finset (List Bool)) (hu : (↑u : Set (List Bool)) ⊆ S) :
+    ∑ p ∈ u, (1 / 2 : ℝ) ^ p.length ≤ 1 := by
+  have hUD : UniquelyDecodable (↑u : Set (List Bool)) :=
+    uniquelyDecodable_mono (hS.uniquelyDecodable h0) hu
+  have hk := kraft_mcmillan_inequality (α := Bool) (S := u) hUD
+  simpa [Fintype.card_bool] using hk
+
 /-- Every finite set of valid programs of the self-delimiting machine satisfies
 the Kraft-McMillan bound `∑ 2^{-|p|} ≤ 1`.
 @audit:ok -/
 theorem prefixUniversalEval_kraft (u : Finset (List Bool))
     (hu : ∀ p ∈ u, (prefixUniversalEval p).Dom) :
-    ∑ p ∈ u, (1 / 2 : ℝ) ^ p.length ≤ 1 := by
-  have hsub : (↑u : Set (List Bool)) ⊆ {p | (prefixUniversalEval p).Dom} :=
+    ∑ p ∈ u, (1 / 2 : ℝ) ^ p.length ≤ 1 :=
+  prefixUniversalEval_dom_prefixFree.kraft prefixUniversalEval_nil_not_dom u
     fun p hp ↦ hu p (Finset.mem_coe.mp hp)
-  have hUD_dom : UniquelyDecodable {p | (prefixUniversalEval p).Dom} :=
-    prefixUniversalEval_dom_prefixFree.uniquelyDecodable prefixUniversalEval_nil_not_dom
-  have hUD_u : UniquelyDecodable (↑u : Set (List Bool)) := uniquelyDecodable_mono hUD_dom hsub
-  have hk := kraft_mcmillan_inequality (α := Bool) (S := u) hUD_u
-  simpa [Fintype.card_bool] using hk
 
 private theorem inv_two_pow_eq_ofReal (n : ℕ) :
     (2 : ℝ≥0∞)⁻¹ ^ n = ENNReal.ofReal ((1 / 2 : ℝ) ^ n) := by
   rw [ENNReal.ofReal_pow (by norm_num), one_div, ENNReal.ofReal_inv_of_pos (by norm_num)]
   norm_num
 
-/-- The infinite Kraft bound: any set of valid programs of the self-delimiting
-machine, cut out by a predicate `P`, has total weight `∑ 2^{-|p|} ≤ 1`. Every
-finite subsum is a Kraft sum, and `ℝ≥0∞`-valued sums are suprema of those.
+/-- The infinite Kraft bound for an arbitrary prefix-free set of codewords: the
+total weight `∑ 2^{-|p|}` is at most `1`. Every finite subsum is a Kraft sum, and
+`ℝ≥0∞`-valued sums are suprema of those.
 @audit:ok -/
-theorem tsum_inv_two_pow_length_le_one {P : List Bool → Prop}
-    (hP : ∀ p, P p → (prefixUniversalEval p).Dom) :
-    ∑' p : { p : List Bool // P p }, (2 : ℝ≥0∞)⁻¹ ^ (p : List Bool).length ≤ 1 := by
+theorem PrefixFree.tsum_inv_two_pow_length_le_one {S : Set (List Bool)} (hS : PrefixFree S)
+    (h0 : [] ∉ S) :
+    ∑' p : { p : List Bool // p ∈ S }, (2 : ℝ≥0∞)⁻¹ ^ (p : List Bool).length ≤ 1 := by
   classical
   rw [ENNReal.tsum_eq_iSup_sum]
   refine iSup_le fun s ↦ ?_
-  have hinj : Set.InjOn (Subtype.val : { p : List Bool // P p } → List Bool) ↑s :=
+  have hinj : Set.InjOn (Subtype.val : { p : List Bool // p ∈ S } → List Bool) ↑s :=
     fun a _ b _ hab ↦ Subtype.ext hab
-  have hdom : ∀ q ∈ s.image (Subtype.val : { p : List Bool // P p } → List Bool),
-      (prefixUniversalEval q).Dom := by
+  have hsub : (↑(s.image (Subtype.val : { p : List Bool // p ∈ S } → List Bool)) :
+      Set (List Bool)) ⊆ S := by
     intro q hq
-    obtain ⟨r, _, rfl⟩ := Finset.mem_image.mp hq
-    exact hP _ r.2
+    obtain ⟨r, _, rfl⟩ := Finset.mem_image.mp (Finset.mem_coe.mp hq)
+    exact r.2
   calc ∑ p ∈ s, (2 : ℝ≥0∞)⁻¹ ^ (p : List Bool).length
       = ∑ q ∈ s.image Subtype.val, (2 : ℝ≥0∞)⁻¹ ^ q.length :=
         (Finset.sum_image (f := fun q : List Bool ↦ (2 : ℝ≥0∞)⁻¹ ^ q.length) hinj).symm
@@ -247,7 +257,18 @@ theorem tsum_inv_two_pow_length_le_one {P : List Bool → Prop}
         Finset.sum_congr rfl fun q _ ↦ inv_two_pow_eq_ofReal q.length
     _ = ENNReal.ofReal (∑ q ∈ s.image Subtype.val, (1 / 2 : ℝ) ^ q.length) :=
         (ENNReal.ofReal_sum_of_nonneg fun q _ ↦ by positivity).symm
-    _ ≤ 1 := ENNReal.ofReal_le_one.mpr (prefixUniversalEval_kraft _ hdom)
+    _ ≤ 1 := ENNReal.ofReal_le_one.mpr (hS.kraft h0 _ hsub)
+
+/-- The infinite Kraft bound: any set of valid programs of the self-delimiting
+machine, cut out by a predicate `P`, has total weight `∑ 2^{-|p|} ≤ 1`. Every
+finite subsum is a Kraft sum, and `ℝ≥0∞`-valued sums are suprema of those.
+@audit:ok -/
+theorem tsum_inv_two_pow_length_le_one {P : List Bool → Prop}
+    (hP : ∀ p, P p → (prefixUniversalEval p).Dom) :
+    ∑' p : { p : List Bool // P p }, (2 : ℝ≥0∞)⁻¹ ^ (p : List Bool).length ≤ 1 :=
+  PrefixFree.tsum_inv_two_pow_length_le_one
+    (prefixUniversalEval_dom_prefixFree.mono fun p hp ↦ hP p hp)
+    fun h ↦ prefixUniversalEval_nil_not_dom (hP [] h)
 
 /-- Prefix Kolmogorov complexity `K(x)`: the length of the shortest
 self-delimiting program producing `x`. The literal echo makes the set nonempty,
