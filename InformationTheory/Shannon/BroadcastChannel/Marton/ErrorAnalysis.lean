@@ -249,7 +249,9 @@ keeps the codewords of every other row independent of the transmission.
 Strong typicality — rather than the weak typicality the decoders use — is what pins the empirical
 type of the selected pair, and hence, through the input kernel, the empirical type of the
 transmitted `(V₁, X)` block that the receiver-1 conditional AEP consumes.  The selection radius
-`ε_cov` is therefore a parameter of its own, independent of the decoding radius. -/
+`ε_cov` is therefore a parameter of its own, independent of the decoding radius.
+
+@audit:ok -/
 noncomputable def martonSelectRow
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂)
     {M₁' M₂' n : ℕ} (hM₁' : 0 < M₁') (hM₂' : 0 < M₂') (ε_cov : ℝ)
@@ -489,7 +491,11 @@ a *different message row* than the transmitted one is jointly typical with the r
 probability at most `exp(−n (I(V₁; Y₁) − 3ε))`.  The covering choice reads only the transmitted
 rows, so the alias row stays independent of the transmission even though the choice depends on
 the codebook; and because the fiber bound behind `marton_alias_slice_avg_le₁` is uniform over
-received words, the law of the received word never has to be identified. -/
+received words, the law of the received word never has to be identified.  The estimate reads the
+selection only through the fact that it yields a probability law on input words, so it is
+insensitive to the radius and to the typicality notion the selection tests.
+
+@audit:ok -/
 theorem marton_random_codebook_alias₁_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]

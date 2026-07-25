@@ -409,7 +409,9 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 amplified to reach the weak bands of the two blocks and of their joint sequence.  It is the
 single constant governing both directions the covering estimate needs: the exponential lower
 bound on the mass of the strongly typical set, and the slice bound obtained by reading that set
-inside a weakly typical set of the widened radius. -/
+inside a weakly typical set of the widened radius.
+
+@audit:ok -/
 noncomputable def coveringBandConst (μ : Measure Ω) (Xs : ℕ → Ω → A) (Ys : ℕ → Ω → B) : ℝ :=
   (Fintype.card B : ℝ) * logSumAbs μ Xs + (Fintype.card A : ℝ) * logSumAbs μ Ys
     + logSumAbs μ (jointSequence Xs Ys)
@@ -566,7 +568,9 @@ include hXs hYs hindepX hidentX hindepY hidentY hindepZ hidentZ hposX hposY hpos
 than the weakly typical one, so this bound implies the weak reading of `ε`-widened radius; the
 price is that the covering rate conditions are stated at the radius amplified by
 `coveringBandConst`, which is what converts the strong radius into the weak bands governing
-both the mass of the set and its conditional slices. -/
+both the mass of the set and its conditional slices.
+
+@audit:ok -/
 theorem meas_codebook_no_jointStronglyTypicalPair_lt
     {R₁' R₂' ε η : ℝ} (hε : 0 < ε) (hη : 0 < η)
     (hcov : entropy μ (Xs 0) + entropy μ (Ys 0) - entropy μ (jointSequence Xs Ys 0)
@@ -886,7 +890,9 @@ theorem marton_mutual_covering_of_indepAux
 
 /-- The Lipschitz factor relating the type radius of a jointly strongly typical auxiliary pair to
 the weak bands of the two auxiliary blocks and of their joint sequence.  It is the covering
-counterpart of `martonBandConst`, which governs the transmitted `(V₁, X)` pair instead. -/
+counterpart of `martonBandConst`, which governs the transmitted `(V₁, X)` pair instead.
+
+@audit:ok -/
 noncomputable def martonCoveringBandConst
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) : ℝ :=
   coveringBandConst (martonAmbientMeasure pV K W) martonV₁s martonV₂s
@@ -899,7 +905,9 @@ lemma martonCoveringBandConst_nonneg
 /-- Mutual covering for Marton's auxiliary codebooks at a prescribed typicality parameter, with
 the covering set read as the jointly *strongly* typical one.  This is the form the encoder's
 selection rule consumes: a strongly typical selected pair is what pins the empirical type of the
-transmitted words, which the receiver-1 conditional AEP needs. -/
+transmitted words, which the receiver-1 conditional AEP needs.
+
+@audit:ok -/
 theorem meas_marton_codebook_no_jointStronglyTypicalPair_lt
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -944,7 +952,9 @@ here contains the weak one.
 
 The hypotheses `hpV`, `hK`, `hW` are the full-support regularity preconditions shared by every
 typicality bound in this development; they are what rules out a deterministic input map
-`x = f(v₁, v₂)` and forces the general-kernel formulation. -/
+`x = f(v₁, v₂)` and forces the general-kernel formulation.
+
+@audit:ok -/
 @[entry_point]
 theorem marton_strong_mutual_covering
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
@@ -990,7 +1000,9 @@ theorem marton_strong_mutual_covering
 /-- Strongly typical mutual covering with independent auxiliary variables, where the covering
 threshold `I(V₁; V₂)` vanishes and every pair of positive rates therefore qualifies.  This is the
 degenerate regime of Marton's inner bound, and it certifies that the hypotheses of
-`marton_strong_mutual_covering` are jointly satisfiable. -/
+`marton_strong_mutual_covering` are jointly satisfiable.
+
+@audit:ok -/
 theorem marton_strong_mutual_covering_of_indepAux
     (p₁ : Measure V₁) [IsProbabilityMeasure p₁] (p₂ : Measure V₂) [IsProbabilityMeasure p₂]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]

@@ -596,7 +596,9 @@ theorem marton_condAEP_jointlyTypical_ge
 `(V₁, X)` block to be pinned at `martonStrongRadius`.  The two are separated by the alphabet size
 because the conditional mean of a letter statistic of the input is an average of the auxiliary
 type against the input kernel, so a type deviation of the pair is amplified by the number of
-auxiliary letters before it reaches the input. -/
+auxiliary letters before it reaches the input.
+
+@audit:ok -/
 noncomputable def martonCoveringRadius
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) (ε : ℝ) : ℝ :=
   martonStrongRadius pV K W ε / (4 * ((Fintype.card (V₁ × V₂) : ℝ) + 1))
@@ -678,7 +680,13 @@ lemma martonCoveringRadius_pos
 /-- The transmitted `(V₁, X)` block inherits the type pin of the selected auxiliary pair: drawing
 the input word letterwise from `K` applied to a pair whose joint type is pinned at
 `martonCoveringRadius` leaves the pair `(v₁, x)` outside the strongly typical set of radius
-`martonStrongRadius` with probability at most `tol`, uniformly in the selected pair. -/
+`martonStrongRadius` with probability at most `tol`, uniformly in the selected pair.
+
+The pin the hypothesis supplies is the full empirical type of the pair, which is finer than the
+`(V₁, X)`-type the conclusion pins, and the ambient ensemble meets it with probability tending to
+one at every positive radius, so the statement is not vacuous.
+
+@audit:ok -/
 theorem marton_transmitted_stronglyTypical_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -793,7 +801,9 @@ type-pinned pair the encoder selects, drawing the input word from `K` and passin
 channel leaves `(v₁, y₁)` outside the weakly jointly typical set with probability at most `tol`.
 
 This is the form the error decomposition of `Marton.ErrorAnalysis` consumes, since the threshold
-is uniform in the selected pair and hence in the code. -/
+is uniform in the selected pair and hence in the code.
+
+@audit:ok -/
 theorem marton_condAEP_selected_avg_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
