@@ -89,6 +89,10 @@ arithmeticCode_expected_length_bounds
 kolmogorov_entropy_rate | Kolmogorov complexity converges to the entropy rate, (1/n)·E[C(Xⁿ|n)] → H(X)/log 2 for an i.i.d. source (Cover–Thomas Thm 14.3.1)
 condComplexity_not_computable | Kolmogorov complexity is not a computable function, for any fixed side information (Cover–Thomas Thm 14.6)
 incompressible_seq_freq_tendsto_half | Incompressible binary sequences obey a law of large numbers: the frequency of ones converges to 1/2 (Cover–Thomas Thm 14.5.1)
+universalProb_ge_two_pow_neg_prefixComplexity | The universal probability dominates the shortest program's weight, P_U(x) ≥ 2^(-K(x)) (Cover–Thomas Thm 14.6.1)
+prefixComplexity_le_two_mul_neg_logb_universalProb | Prefix complexity and universal probability agree up to a factor of two for the self-delimiting machine, -log₂ P_U(x) ≤ K(x) ≤ 2·(-log₂ P_U(x)) + 1
+chaitinOmega_le_one | Chaitin's halting probability converges, Ω ≤ 1, by the Kraft bound on the prefix-free halting set (Cover–Thomas §14.9)
+prefixComplexity_not_computable | Prefix Kolmogorov complexity is not a computable function (Berry's paradox)
 
 @ 15 | Distributed source coding
 slepian_wolf_full_rate_region_achievability
