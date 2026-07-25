@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.Sanov.Basic
-import Mathlib.Probability.Moments.Variance
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Integral.Bochner.SumMeasure
+import Mathlib.Probability.Moments.Variance
 
 /-!
 # Conditional asymptotic equipartition for independent non-identical products
@@ -18,7 +18,7 @@ of the block buys.  The pin half amplifies the type radius by `∑ p, |(ν p)[ψ
 that needs the ambient deviation below `ε` must supply a block whose type radius is smaller than
 `ε` by that factor.
 
-## Main results
+## Main statements
 
 * `pi_nonuniform_mean_concentration` — finite-`n` Chebyshev for a non-identically distributed
   independent product.
@@ -26,6 +26,8 @@ that needs the ambient deviation below `ε` must supply a block whose type radiu
 * `sum_eq_typeCount_mul` — method-of-types regrouping of a per-coordinate sum.
 * `abs_sum_mul_sub_sum_mul_le` — the linear functional of a type is Lipschitz in the type.
 * `pi_empiricalMean_deviation_le_of_type_close` — the two halves combined.
+
+## Implementation notes
 
 The Wyner–Ziv achievability chain carries file-private copies of these statements specialized to
 its own alphabets; this module is their type-generic home.
@@ -44,6 +46,9 @@ variable {T β : Type*} [Fintype T] [DecidableEq T]
 
 /-! ### Chebyshev on a non-identically distributed product -/
 
+/-- Chebyshev's inequality for an independent, not identically distributed product: the mass the
+product `Measure.pi ν` puts on the blocks whose empirical mean of `ψ` deviates from the mean of the
+per-coordinate means by `δ` or more is at most `(∑ i, variance (ψ i) (ν i)) / (n ^ 2 * δ ^ 2)`. -/
 lemma pi_nonuniform_mean_concentration
     {n : ℕ} (hn : 0 < n)
     (ν : Fin n → Measure β) [∀ i, IsProbabilityMeasure (ν i)]
@@ -120,7 +125,7 @@ of statistics bounded by `B` puts mass at most `tol` on the `δ`-deviation set o
 
 @audit:ok -/
 lemma pi_nonuniform_concentration_tendsto
-    {B δ tol : ℝ} (hδ : 0 < δ) (htol : 0 < tol) (_hB : 0 ≤ B) :
+    {B δ tol : ℝ} (hδ : 0 < δ) (htol : 0 < tol) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (ν : Fin n → Measure β),
         (∀ i, IsProbabilityMeasure (ν i)) → ∀ (ψ : Fin n → β → ℝ),
         (∀ i y, |ψ i y| ≤ B) →
@@ -174,6 +179,8 @@ lemma pi_nonuniform_concentration_tendsto
 
 /-! ### Linear functionals of an empirical type -/
 
+/-- Method-of-types regrouping: summing a statistic over the coordinates of a block equals summing
+it over the alphabet, each letter weighted by the number of coordinates carrying it. -/
 lemma sum_eq_typeCount_mul {n : ℕ} (z : Fin n → T) (f : T → ℝ) :
     ∑ i, f (z i) = ∑ p : T, (typeCount z p : ℝ) * f p := by
   classical
@@ -183,6 +190,8 @@ lemma sum_eq_typeCount_mul {n : ℕ} (z : Fin n → T) (f : T → ℝ) :
   rw [Finset.sum_const, nsmul_eq_mul]
   rfl
 
+/-- The linear functional `t ↦ ∑ p, t p * g p` is Lipschitz in the coordinatewise distance of its
+argument, with constant `∑ p, |g p|`. -/
 lemma abs_sum_mul_sub_sum_mul_le (t q g : T → ℝ) {r : ℝ}
     (hclose : ∀ p, |t p - q p| ≤ r) :
     |(∑ p, t p * g p) - ∑ p, q p * g p| ≤ (∑ p, |g p|) * r := by
@@ -217,7 +226,7 @@ a caller that wants the deviation read against an entropy supplies that identifi
 
 @audit:ok -/
 theorem pi_empiricalMean_deviation_le_of_type_close
-    {B ε tol : ℝ} (hε : 0 < ε) (htol : 0 < tol) (hB : 0 ≤ B) :
+    {B ε tol : ℝ} (hε : 0 < ε) (htol : 0 < tol) :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n → ∀ (ν : T → Measure β),
         (∀ p, IsProbabilityMeasure (ν p)) → ∀ (ψ : T → β → ℝ),
         (∀ p y, |ψ p y| ≤ B) → ∀ (q : T → ℝ) (r : ℝ) (zb : Fin n → T),
@@ -229,7 +238,7 @@ theorem pi_empiricalMean_deviation_le_of_type_close
           ≤ tol := by
   classical
   obtain ⟨N, hN⟩ := pi_nonuniform_concentration_tendsto (β := β)
-    (B := B) (δ := ε / 2) (tol := tol) (by linarith) htol hB
+    (B := B) (δ := ε / 2) (tol := tol) (by linarith) htol
   refine ⟨N, fun n hn ν hν ψ hψ q r zb hclose hpin ↦ ?_⟩
   haveI : ∀ i : Fin n, IsProbabilityMeasure (ν (zb i)) := fun i ↦ hν (zb i)
   set g : T → ℝ := fun p ↦ ∫ y, ψ p y ∂(ν p) with hg

@@ -23,7 +23,7 @@ radius `ε` is not enough: it pins an entropy alone, which leaves the conditiona
 * `martonBandConst` — the Lipschitz factor of the three band pins.
 * `martonStrongRadius` — the type radius at which the transmitted blocks must be pinned.
 
-## Main results
+## Main statements
 
 * `marton_condAEP_jointlyTypical` — the conditional AEP: the channel output of a type-pinned
   `(V₁, X)`-block is jointly typical with the auxiliary word with probability `≥ 1 - tol`.
@@ -131,9 +131,9 @@ lemma martonJointDistribution_real_singleton
 
 /-! ### The Markov identity `V₁ — X — Y₁` -/
 
--- Averaging a statistic of `(V₁, Y₁)` over the channel against the ambient `(V₁, X)`-law returns
--- its ambient `(V₁, Y₁)`-average: the output is conditionally independent of the auxiliary pair
--- given the input.  This is where the compProd structure of the per-coordinate law enters.
+/- Averaging a statistic of `(V₁, Y₁)` over the channel against the ambient `(V₁, X)`-law returns
+its ambient `(V₁, Y₁)`-average: the output is conditionally independent of the auxiliary pair
+given the input.  This is where the compProd structure of the per-coordinate law enters. -/
 private lemma marton_sum_condMean_eq
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -398,7 +398,7 @@ private lemma marton_band_out
   classical
   obtain ⟨N, hN⟩ := pi_empiricalMean_deviation_le_of_type_close
     (T := V₁ × α) (β := β₁ × β₂)
-    (B := logSumAbs (martonAmbientMeasure pV K W) martonY₁s) hε htol (logSumAbs_nonneg _ _)
+    (B := logSumAbs (martonAmbientMeasure pV K W) martonY₁s) hε htol
   refine ⟨N, fun n hn v₁ x hstrong ↦ ?_⟩
   have hB1 : ∀ (_ : V₁ × α) (y : β₁ × β₂),
       |pmfLog (martonAmbientMeasure pV K W) martonY₁s y.1|
@@ -440,7 +440,7 @@ private lemma marton_band_joint
   obtain ⟨N, hN⟩ := pi_empiricalMean_deviation_le_of_type_close
     (T := V₁ × α) (β := β₁ × β₂)
     (B := logSumAbs (martonAmbientMeasure pV K W) (jointSequence martonV₁s martonY₁s))
-    hε htol (logSumAbs_nonneg _ _)
+    hε htol
   refine ⟨N, fun n hn v₁ x hstrong ↦ ?_⟩
   have hB1 : ∀ (p : V₁ × α) (y : β₁ × β₂),
       |pmfLog (martonAmbientMeasure pV K W) (jointSequence martonV₁s martonY₁s) (p.1, y.1)|
