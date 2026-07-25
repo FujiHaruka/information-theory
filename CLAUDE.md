@@ -62,17 +62,9 @@ For "does Mathlib have lemma X?" questions, **try `loogle` before `rg`/`grep`**.
   - **Conclusion pattern**: `|- _ ≤ _` finds inequalities.
 - **Fall back to `rg`** for text-level searches: comments, docstrings, file-structure exploration, or pattern matches not tied to a specific identifier.
 
-### ⚠️ `rg -rn` フットガン（verbatim 確認を静かに壊す）
+### ⚠️ `rg -rn` フットガン（既定フラグが道具を静かに壊す原型 → `§SELF-REPORT-DRIFT`）
 
-**`rg -rn "pat"` は `-r n` = `--replace n` とパースされる** — 各マッチが literal `n` に置換され、`-n` は食われる。
-エラーは出ない。`rg -rn "def errorProbAt" f.lean` → `noncomputable n`（`def errorProbAt` が `n` に化けた）。
-正しくは `rg -n "def errorProbAt" f.lean` → `192:noncomputable def errorProbAt`。
-
-**危険なのは沈黙**: 出力は一見もっともらしく、**verbatim 署名確認の最中に読んだテキストが壊れていても気づけない**
-（「Verbatim confirmation」節と `§SELF-REPORT-DRIFT` が守ろうとしている当の失敗形）。2026-07-17 leg 14 で
-実際に発生し、実装者が「`rg` は `def` を含むパターンで出力を破壊する環境固有バグ」と誤診断して報告 →
-オーケストレーターは `-n` で書いたため再現できず → 監査が偶然踏んで真因（フラグのタイプミス、決定論的・環境非依存）
-を特定した。**症状を環境のせいにする前にフラグを疑え。** 短縮フラグの束ね（`-rn`）は `rg` では使わない。
+`rg` の `-r` は `--replace`（値を取る）。grep の `-r`=recursive の手癖で `-rn` / `-ril` と束ねると後続フラグが置換文字列に食われ、**エラーなく**出力が壊れる（`rg` は再帰が既定なので `-r` は不要）。今は PreToolUse フック（`.claude/hooks/block-rg-replace.sh`）が実行前に block する。行番号=`-n` / 大小無視=`-i` / ファイル名のみ=`-l` を個別指定し、置換したい時だけ長形式 `--replace` を使う。**メタ教訓**: 症状を環境のせいにする前にフラグを疑え（フックは parser でなく heuristic なので踏み切れない隙は残る）。
 
 ## Dependency / consumer reverse-lookup tools (`scripts/dep_*.sh`)
 
