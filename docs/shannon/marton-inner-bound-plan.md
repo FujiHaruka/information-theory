@@ -6,7 +6,9 @@
 **Marton inner bound (El Gamal–Kim *Network Information Theory* Thm 8.3、private message のみ)** の形式化。
 親 plan の撤退ライン **L-BC5** (一般 BC + Marton は完全 scope-out) を**ユーザー指示で解除**して追う。
 Phase 1-5 完了 (**mutual covering lemma 本体 `marton_mutual_covering` が proof-done**、root 登録済)、
-残るは誤り解析 (6a/6b) + 組み立て (7) + ゲート (8)。撤退ライン L-MT1〜6 は**全て不発動**。
+Phase 6a は誤り分解 + E2 まで完了。**E1 が weak typicality の在庫では閉じないと判明 (→ D5)**、
+covering 集合のみ strong 化する方針 B を採用。残りは Phase 6a' (strong 移行) + 6b + 7 + 8。
+撤退ライン L-MT1/5/6 不発動、L-MT4 は trigger 成立するが**発動しない** (B に劣るため、→ D5)。
 **SoT**: 在庫 [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md) + 本 plan。詳細履歴は git。
 **再検証** (prose にキャッシュしない):
 `scripts/sig_view.ts --sorry InformationTheory/Shannon/BroadcastChannel/Marton/*.lean` /
@@ -21,7 +23,10 @@ Phase 1-5 完了 (**mutual covering lemma 本体 `marton_mutual_covering` が pr
 - [x] Phase 3 — 5-tuple ambient plumbing + `martonInfo₁/₂/V₁V₂` ✅ `Marton/Setup.lean` (5800094e)
 - [x] Phase 4 — 共分散の鋭化 (conditional slice 版) ✅ `MutualCovering.lean` 追記 (6183832d) ★ sum-rate 制約の要
 - [x] Phase 5 — typicality 具体化 = `marton_mutual_covering` ✅ `Marton/Covering.lean` (0d3412ec)
-- [ ] Phase 6a — 受信機 1 の誤り解析 (選択索引の独立性) 📋
+- [~] Phase 6a — 受信機 1 の誤り解析 🔶 分解 + E2 完了 `Marton/ErrorAnalysis.lean` (49a7191f)、
+      **E1 は weak では閉じない (→ D5)**。E2 は Phase 5 のファイバー上界が一様なため選択の条件付けを
+      解かずに通り、plan が警戒した averaged swap の作り込みは不要だった
+- [ ] Phase 6a' — **E1 の Markov 原子 (gateway) → covering 集合の strong 化** 📋 ★ 次の一手 (→ D5)
 - [ ] Phase 6b — 受信機 2 の誤り解析 + averaged swap 📋
 - [ ] Phase 7 — 組み立て = headline `marton_achievability` 📋
 - [ ] Phase 8 — 2 ゲート + README + 親 plan 同期 + proof-log 📋
@@ -145,6 +150,57 @@ P(A = 0) ≤ (M₁ + M₂)/(M₁ M₂ p) = 1/(M₂ p) + 1/(M₁ p)
 
 ⇒ **Phase 4 を独立の Phase として立てる** (在庫にはこの区別がない)。ここが閉じないときの退避は
 L-MT5 (弱化領域を headline にし、鋭化を別 plan へ split) — **不発動**。
+
+### D5. E1 は weak typicality の在庫では閉じない → covering 集合のみ strong 化 (方針 B) ★
+
+**判定** (実装者が発見 → `proof-pivot-advisor` が独立検証、反証 3 本を試みたうえで支持):
+「選択された `V₁ⁿ` に対して**一様に** E1 が成り立つ」は**偽**。
+「符号帳アンサンブル平均としての E1 → 0」はおそらく真だが、**weak の在庫では閉じない**
+(閉じる唯一の weak 経路は Sanov / I-射影の大偏差論で、下記 A として却下)。
+⇒ E1 をアンサンブル形で述べた補題に `@audit:defect(false-statement)` を貼るのは**過剰**。
+
+**機構**: E1 が要求するのは「真の対が典型」= **下界**。Phase 5 のファイバー上界は受信語について
+一様だが**向きが逆**。上界は選択の条件付けの下でも生き残る (E2 が助かった理由) が、下界は壊れる。
+degraded BC が閉じるのは `codebook_marginal_one` で送信符号語の法則が ambient iid 法則に
+**一致する (厳密な等式、`Assembly.lean:154`)** から。Marton は `martonAux₁` の行添字が
+両行全体の関数 (`ErrorAnalysis.lean:260`) なのでこの潰し込みが**原理的に不可能**。
+
+**反例** (実 `def` を Read して逐語確認 + 数値確認、クラスであってインスタンスではない):
+補助アルファベット 3 元、周辺分布 `(1/2, 1/4, 1/4)`。型 `(1/2, 1/2, 0)` は経験エントロピーの偏差が
+**ちょうど 0** = 完全に weak 典型なのに、出力側の経験エントロピーの極限が `H(Y₁)` から
+**0.251 nats (n によらない定数)** ずれる。破れは「型の第 1 成分が 1/2」の 1 径数族**全体**で立つ。
+補助アルファベットが 2 元だと weak 制約 1 本で型が pin され反例は消えるので、**一般アルファベットでのみ**
+false-as-framed。
+
+**方針 B (採用)** — `martonSelectRow` の判定を `jointStronglyTypicalSet` へ。**復号側は weak のまま**:
+
+- `MutualCovering.lean` (730 行) は**無改変**。`S : Set (α × β)` が素の `variable` (`:54`) で
+  typicality を一切参照しないため (Phase 1/4 を抽象に切った設計判断がここで効く)。
+- `Covering.lean` (669 行): 書換は **4 decl / 約 300 行** (`meas_codebook_no_jointlyTypicalPair_lt`
+  L337–488 / `meas_marton_codebook_no_jointlyTypicalPair_lt` L503–598 / `marton_mutual_covering` L610 /
+  `marton_mutual_covering_of_indepAux` L642)。中身は指数の付け替え。残り約 420 行は残る。
+- `Setup.lean` / `Basic.lean` は**無改変**。`ErrorAnalysis.lean` の coupling は **6 decl に閉じる**
+  (`dep_consumers` 実測)。E2 の核 `sum_codebook_alias_le` は選択規則について抽象なので
+  署名がほぼ残る見込み (**未確認** — 読解判断で機械検証していない)。
+- **`jointStronglyTypicalSet_subset_jointlyTypicalSet` (`RateDistortion/AchievabilityUnconditional.lean:135`、
+  sorry-free) により、Phase 5 の両方向スライス上界と swap 橋 45 行は包含で再利用できる**。
+- 領域は不変 (slack が Lipschitz 増幅されるだけ)。
+
+**最初の一手 — 順序を逆にしないこと**: `Covering.lean` の書換より先に、**E1 の Markov 原子を
+gateway-atom-first で撃つ**。`Covering.lean` に触れず単独で述べられる形 =
+「strong 同時典型な任意の対に対し、通信路出力の下で weak 同時典型に入る確率が `1−tol` 以上 (n 十分大)」。
+ここが通らなければ strong 移行の 300 行が丸ごと sunk cost になる。
+`wz_pi_nonuniform_concentration_tendsto` (`WynerZiv/Achievability/Concentration.lean:873`) は
+WZ の型を一切参照しない**汎用の非同分布独立積 Chebyshev 集中**で E1 が要求する形そのもの。
+ただし `private` でファイルに閉じているので共有モジュールへの昇格が要る (再導出なら約 60 行)。
+
+**却下した代替**: **A** (weak のまま Sanov / I-射影) — 型空間上の I-射影一意性 + 定量ギャップという
+在庫ゼロの凸解析 600–900 行、かつ `R₁'+R₂'` に上界制約が新規に要り Phase 7 の Fourier–Motzkin を
+再設計することになる。**L-MT5 (領域弱化) はこの障害に対応しない** (弱化しても選択は残るので E1 は同じく破れる)。
+**L-MT4** は trigger 条件が文字通り成立するが、退避先が sum-rate 制約を捨てる =
+Phase 1/4/5 の成果が headline に載らないため **B に劣る**。B が 2 leg 失敗した後の最後の手段。
+**退避は C** = E1 を `sorry` + `@residual(plan:marton-inner-bound-plan)` にして Phase 7 を先に通し、
+部品を無条件命題として確定させる。
 
 ---
 
