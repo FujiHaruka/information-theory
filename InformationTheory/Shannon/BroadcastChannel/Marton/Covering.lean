@@ -825,7 +825,9 @@ private lemma marton_coveringAmbient_facts
 /-- Mutual covering for Marton's auxiliary codebooks at a prescribed typicality parameter.
 The parameter `ε` is a hypothesis rather than an output, so that a consumer may choose one `ε`
 meeting the smallness conditions here together with those of the decoding analysis;
-`marton_mutual_covering` is the form in which `ε` is chosen. -/
+`marton_mutual_covering` is the form in which `ε` is chosen.
+
+@audit:ok -/
 theorem meas_marton_codebook_no_jointlyTypicalPair_lt
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -862,7 +864,9 @@ probability that no pair of codewords is jointly typical is below any prescribed
 
 The hypotheses `hpV`, `hK`, `hW` are the full-support regularity preconditions shared by every
 typicality bound in this development; they are what rules out a deterministic input map
-`x = f(v₁, v₂)` and forces the general-kernel formulation. -/
+`x = f(v₁, v₂)` and forces the general-kernel formulation.
+
+@audit:ok -/
 @[entry_point]
 theorem marton_mutual_covering
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
@@ -895,7 +899,9 @@ theorem marton_mutual_covering
 /-- Mutual covering with independent auxiliary variables, where the covering threshold
 `I(V₁; V₂)` vanishes and every pair of positive rates therefore qualifies.  This is the
 degenerate regime of Marton's inner bound, and it certifies that the hypotheses of
-`marton_mutual_covering` are jointly satisfiable. -/
+`marton_mutual_covering` are jointly satisfiable.
+
+@audit:ok -/
 theorem marton_mutual_covering_of_indepAux
     (p₁ : Measure V₁) [IsProbabilityMeasure p₁] (p₂ : Measure V₂) [IsProbabilityMeasure p₂]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]

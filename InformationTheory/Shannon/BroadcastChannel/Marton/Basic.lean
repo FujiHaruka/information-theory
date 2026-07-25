@@ -57,7 +57,9 @@ rate still leaves room for its subcodebook, `R₁ + R₁' < I₁` and `R₂ + R�
 direction of the Fourier–Motzkin elimination that the coding scheme consumes; the reverse
 direction, that such a splitting forces the three inequalities, is immediate. Positivity rather
 than nonnegativity is what the covering step needs: it sizes the selection radius by a fraction
-of each subcodebook rate, which a rate of zero leaves no room for. -/
+of each subcodebook rate, which a rate of zero leaves no room for.
+
+@audit:ok -/
 theorem exists_martonRateSplit {R₁ R₂ I₁ I₂ I₁₂ : ℝ}
     (h₁ : R₁ < I₁) (h₂ : R₂ < I₂) (hsum : R₁ + R₂ < I₁ + I₂ - I₁₂) :
     ∃ R₁' R₂' : ℝ, 0 < R₁' ∧ 0 < R₂' ∧ I₁₂ < R₁' + R₂' ∧ R₁ + R₁' < I₁ ∧ R₂ + R₂' < I₂ := by
