@@ -110,7 +110,9 @@ private lemma sum_measureReal_slice_le
 
 /-- Uniform fiber bound for the `(V₁, Y₁)` jointly typical set: whatever the received word,
 the `V₁`-block mass of the codewords jointly typical with it is at most
-`exp(−n (I(V₁; Y₁) − 3ε))`. -/
+`exp(−n (I(V₁; Y₁) − 3ε))`.
+
+@audit:ok -/
 lemma marton_jointlyTypicalFiber₁_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -199,7 +201,9 @@ lemma marton_jointlyTypicalFiber₁_le
 
 /-- Averaged alias bound at receiver 1.  For an arbitrary output law `ν`, drawing the alias
 codeword independently of `ν` from the `V₁`-block law makes the probability that it is jointly
-typical with the received word at most `exp(−n (I(V₁; Y₁) − 3ε))`. -/
+typical with the received word at most `exp(−n (I(V₁; Y₁) − 3ε))`.
+
+@audit:ok -/
 theorem marton_alias₁_slice_avg_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -496,7 +500,9 @@ probability that the transmitted auxiliary word fails to be jointly typical with
 plus the sum, over the auxiliary codewords of every other message row, of the probability that one
 of them is jointly typical with it.  Quantifying the covering index existentially is what keeps a
 second typical index inside the transmitted row off the error event, so the alias sum ranges over
-the rows of the other messages only. -/
+the rows of the other messages only.
+
+@audit:ok -/
 theorem marton_errorProbAt₁_le_bonferroni
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ M₁' M₂' n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) (hM₁' : 0 < M₁') (hM₂' : 0 < M₂')
@@ -559,7 +565,9 @@ theorem marton_errorProbAt₁_le_bonferroni
 /-- The message-averaged form of `marton_errorProbAt₁_le_bonferroni`: averaging the pointwise
 decomposition over all message pairs bounds the receiver-1 average error probability by the mean
 of the transmitted-pair term and of the alias sum.  The bound holds at every selection radius
-`ε_cov`, which is what lets the covering radius be chosen independently of the decoding radius. -/
+`ε_cov`, which is what lets the covering radius be chosen independently of the decoding radius.
+
+@audit:ok -/
 theorem marton_averageErrorProb₁_toReal_le
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ M₁' M₂' n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) (hM₁' : 0 < M₁') (hM₂' : 0 < M₂')

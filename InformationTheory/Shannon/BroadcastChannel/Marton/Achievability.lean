@@ -779,7 +779,9 @@ argument.
 No typicality radius appears in the statement, and the construction uses three nested ones rather
 than a single shared one: the two decoders test weak joint typicality at a radius `ε`, the
 transmitted blocks are pinned at the strictly smaller `martonStrongRadius`, and the encoder
-selects a pair pinned at the smaller `martonCoveringRadius` again. -/
+selects a pair pinned at the smaller `martonCoveringRadius` again.
+
+@audit:ok -/
 @[entry_point]
 theorem marton_achievability
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
