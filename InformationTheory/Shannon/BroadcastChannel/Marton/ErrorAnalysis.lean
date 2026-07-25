@@ -532,7 +532,8 @@ theorem marton_random_codebook_alias₁_le
   -- Step 1: marginalize the input codebook to the transmitted row.
   have step1 : ∀ (c₁ : MartonSubcodebook M₁ M₁' n V₁) (c₂ : MartonSubcodebook M₂ M₂' n V₂),
       (∑ cX : Fin M₁ × Fin M₂ → (Fin n → α),
-          (martonInputCodebookMeasure pV K W hM₁' hM₂' ε_cov c₁ c₂).real {cX} * G (c₁ q.1 q.2) (cX m))
+          (martonInputCodebookMeasure pV K W hM₁' hM₂' ε_cov c₁ c₂).real {cX}
+            * G (c₁ q.1 q.2) (cX m))
         = ∑ x : Fin n → α, (L (c₁ m.1) (c₂ m.2)).real {x} * G (c₁ q.1 q.2) x := by
     intro c₁ c₂
     have hmp : (martonInputCodebookMeasure pV K W hM₁' hM₂' ε_cov c₁ c₂).map (Function.eval m)

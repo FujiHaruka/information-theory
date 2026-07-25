@@ -18,10 +18,17 @@ the conditional mean of the log-likelihood costs a Lipschitz factor; `martonStro
 smaller radius and `martonBandConst` the factor.  Weak typicality of the transmitted blocks at
 radius `ε` is not enough: it pins an entropy alone, which leaves the conditional means free.
 
+The type pin itself is supplied by the encoder's selection rule, which picks a *strongly* typical
+auxiliary pair.  Passing that pin from the auxiliary pair to the transmitted `(V₁, X)` block costs
+one more radius separation, because the conditional mean of a letter statistic of the input is the
+auxiliary type averaged against the input kernel; `martonCoveringRadius` is the radius at which the
+auxiliary pair has to be pinned for the transmitted block to be pinned at `martonStrongRadius`.
+
 ## Main definitions
 
 * `martonBandConst` — the Lipschitz factor of the three band pins.
 * `martonStrongRadius` — the type radius at which the transmitted blocks must be pinned.
+* `martonCoveringRadius` — the radius at which the selected auxiliary pair must be pinned.
 
 ## Main statements
 
@@ -29,6 +36,10 @@ radius `ε` is not enough: it pins an entropy alone, which leaves the conditiona
   `(V₁, X)`-block is jointly typical with the auxiliary word with probability `≥ 1 - tol`.
 * `marton_strongRadius_prob_tendsto_one` — the ambient ensemble meets the type pin with
   probability tending to one, so the conditional AEP is not vacuous.
+* `marton_transmitted_stronglyTypical_le` — the input drawn from a type-pinned auxiliary pair
+  inherits the pin.
+* `marton_condAEP_selected_avg_le` — the two combined: the receiver-1 error term of a selected
+  auxiliary pair, averaged over the input tier, is below any prescribed tolerance.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -590,6 +601,72 @@ noncomputable def martonCoveringRadius
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) (ε : ℝ) : ℝ :=
   martonStrongRadius pV K W ε / (4 * ((Fintype.card (V₁ × V₂) : ℝ) + 1))
 
+private lemma martonJointDistribution_map_VX
+    (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    (martonJointDistribution pV K W).map (fun q ↦ ((q.1, q.2.1), q.2.2.1)) = pV ⊗ₘ K := by
+  have hmeas : Measurable (fun q : V₁ × V₂ × α × β₁ × β₂ ↦ ((q.1, q.2.1), q.2.2.1)) :=
+    (measurable_fst.prodMk (measurable_fst.comp measurable_snd)).prodMk
+      (measurable_fst.comp (measurable_snd.comp measurable_snd))
+  unfold martonJointDistribution
+  rw [Measure.map_map hmeas MeasurableEquiv.prodAssoc.measurable,
+    Measure.map_map (hmeas.comp MeasurableEquiv.prodAssoc.measurable)
+      MeasurableEquiv.prodAssoc.measurable]
+  have hcomp : ((fun q : V₁ × V₂ × α × β₁ × β₂ ↦ ((q.1, q.2.1), q.2.2.1)) ∘
+      (MeasurableEquiv.prodAssoc : ((V₁ × V₂) × α × β₁ × β₂) ≃ᵐ (V₁ × V₂ × α × β₁ × β₂))) ∘
+      (MeasurableEquiv.prodAssoc : (((V₁ × V₂) × α) × β₁ × β₂) ≃ᵐ ((V₁ × V₂) × α × β₁ × β₂))
+      = Prod.fst := rfl
+  rw [hcomp]
+  exact Measure.fst_compProd _ _
+
+private lemma marton_map_V₁V₂
+    (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    (martonAmbientMeasure pV K W).map (jointSequence martonV₁s martonV₂s 0) = pV := by
+  have h : (martonAmbientMeasure pV K W).map (jointSequence martonV₁s martonV₂s 0)
+      = (martonJointDistribution pV K W).map (fun q ↦ (q.1, q.2.1)) :=
+    martonAmbient_map_coord pV K W (fun q ↦ (q.1, q.2.1))
+      (measurable_fst.prodMk (measurable_fst.comp measurable_snd)) 0
+  rw [h, martonJointDistribution_map_V pV K W]
+
+private lemma marton_ambient_V₁X_real_singleton
+    (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] (a₁ : V₁) (a : α) :
+    ((martonAmbientMeasure pV K W).map (jointSequence martonV₁s martonXs 0)).real {(a₁, a)}
+      = ∑ p : V₁ × V₂, pV.real {p} * (if p.1 = a₁ then (K p).real {a} else 0) := by
+  classical
+  have hg1 : Measurable (fun w : (V₁ × V₂) × α ↦ (w.1.1, w.2)) :=
+    (measurable_fst.comp measurable_fst).prodMk measurable_snd
+  have hg2 : Measurable (fun q : V₁ × V₂ × α × β₁ × β₂ ↦ ((q.1, q.2.1), q.2.2.1)) :=
+    (measurable_fst.prodMk (measurable_fst.comp measurable_snd)).prodMk
+      (measurable_fst.comp (measurable_snd.comp measurable_snd))
+  have hmapVX : (martonAmbientMeasure pV K W).map (jointSequence martonV₁s martonXs 0)
+      = (pV ⊗ₘ K).map (fun w : (V₁ × V₂) × α ↦ (w.1.1, w.2)) := by
+    rw [marton_map_V₁X pV K W, ← martonJointDistribution_map_VX pV K W,
+      Measure.map_map hg1 hg2]
+    rfl
+  have hcompProd : ∀ (p : V₁ × V₂) (x : α),
+      (pV ⊗ₘ K).real {(p, x)} = pV.real {p} * (K p).real {x} := by
+    intro p x
+    have h := jointDistribution_singleton pV K p x
+    rw [jointDistribution_def] at h
+    rw [Measure.real, h, ENNReal.toReal_mul]
+    rfl
+  have hsum := sum_map_real_singleton_mul (pV ⊗ₘ K) (fun w : (V₁ × V₂) × α ↦ (w.1.1, w.2)) hg1
+    (fun c : V₁ × α ↦ if c = (a₁, a) then (1 : ℝ) else 0)
+  rw [hmapVX]
+  rw [show ((pV ⊗ₘ K).map (fun w : (V₁ × V₂) × α ↦ (w.1.1, w.2))).real {(a₁, a)}
+      = ∑ c : V₁ × α, ((pV ⊗ₘ K).map (fun w : (V₁ × V₂) × α ↦ (w.1.1, w.2))).real {c}
+          * (if c = (a₁, a) then (1 : ℝ) else 0) by simp]
+  rw [hsum, Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl fun p _ ↦ ?_
+  by_cases hp : p.1 = a₁
+  · simp [hcompProd p, hp, Prod.ext_iff]
+  · simp [hp, Prod.ext_iff]
+
 lemma martonCoveringRadius_pos
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) {ε : ℝ}
     (hε : 0 < ε) :
@@ -601,9 +678,7 @@ lemma martonCoveringRadius_pos
 /-- The transmitted `(V₁, X)` block inherits the type pin of the selected auxiliary pair: drawing
 the input word letterwise from `K` applied to a pair whose joint type is pinned at
 `martonCoveringRadius` leaves the pair `(v₁, x)` outside the strongly typical set of radius
-`martonStrongRadius` with probability at most `tol`, uniformly in the selected pair.
-
-@residual(plan:marton-inner-bound-plan) -/
+`martonStrongRadius` with probability at most `tol`, uniformly in the selected pair. -/
 theorem marton_transmitted_stronglyTypical_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -617,7 +692,101 @@ theorem marton_transmitted_stronglyTypical_le
               (martonAmbientMeasure pV K W) (jointSequence martonV₁s martonXs) n
                 (martonStrongRadius pV K W ε) }
         ≤ tol := by
-  sorry
+  classical
+  have hρpos : 0 < martonStrongRadius pV K W ε := martonStrongRadius_pos pV K W hε
+  have hcardpos : (0 : ℝ) < (Fintype.card (V₁ × α) : ℝ) := by
+    have h : 0 < Fintype.card (V₁ × α) := Fintype.card_pos
+    exact_mod_cast h
+  have hcardnn : (0 : ℝ) ≤ (Fintype.card (V₁ × V₂) : ℝ) := Nat.cast_nonneg _
+  have hkey : (Fintype.card (V₁ × V₂) : ℝ) * martonCoveringRadius pV K W ε
+      < martonStrongRadius pV K W ε / 2 := by
+    unfold martonCoveringRadius
+    rw [← mul_div_assoc, div_lt_div_iff₀ (by positivity) (by norm_num : (0 : ℝ) < 2)]
+    nlinarith [hρpos, hcardnn]
+  obtain ⟨N, hN⟩ := pi_empiricalMean_deviation_le_of_type_close (T := V₁ × V₂) (β := α) (B := 1)
+    (ε := martonStrongRadius pV K W ε) (tol := tol / (Fintype.card (V₁ × α) : ℝ))
+    hρpos (by positivity)
+  refine ⟨N, fun n hn v₁ v₂ hpair ↦ ?_⟩
+  set zb : Fin n → V₁ × V₂ := fun i ↦ (v₁ i, v₂ i) with hzb
+  set q : V₁ × V₂ → ℝ := fun p ↦ pV.real {p} with hq
+  have htypeclose : ∀ p, |(typeCount zb p : ℝ) / (n : ℝ) - q p|
+      ≤ martonCoveringRadius pV K W ε := by
+    have hmem := (mem_jointStronglyTypicalSet_iff (martonAmbientMeasure pV K W) martonV₁s
+      martonV₂s n (martonCoveringRadius pV K W ε) v₁ v₂).mp hpair
+    rw [mem_stronglyTypicalSet_iff, marton_map_V₁V₂ pV K W] at hmem
+    exact hmem
+  set Adev : V₁ × α → Set (Fin n → α) := fun c ↦
+    { x : Fin n → α | martonStrongRadius pV K W ε ≤
+        |(typeCount (fun i ↦ (v₁ i, x i)) c : ℝ) / (n : ℝ)
+          - ((martonAmbientMeasure pV K W).map (jointSequence martonV₁s martonXs 0)).real {c}| }
+    with hAdev
+  have hsub : { x : Fin n → α | (fun i ↦ (v₁ i, x i)) ∉ stronglyTypicalSet
+        (martonAmbientMeasure pV K W) (jointSequence martonV₁s martonXs) n
+          (martonStrongRadius pV K W ε) }
+      ⊆ ⋃ c ∈ (Finset.univ : Finset (V₁ × α)), Adev c := by
+    intro x hx
+    rw [Set.mem_setOf_eq, mem_stronglyTypicalSet_iff, not_forall] at hx
+    obtain ⟨c, hc⟩ := hx
+    exact Set.mem_biUnion (Finset.mem_univ c) (le_of_lt (lt_of_not_ge hc))
+  have hper : ∀ c : V₁ × α, (Measure.pi fun i ↦ K (zb i)).real (Adev c)
+      ≤ tol / (Fintype.card (V₁ × α) : ℝ) := by
+    rintro ⟨a₁, a⟩
+    set ψ : V₁ × V₂ → α → ℝ := fun p y ↦ if p.1 = a₁ ∧ y = a then (1 : ℝ) else 0 with hψ
+    have hψbound : ∀ p y, |ψ p y| ≤ 1 := by
+      intro p y
+      simp only [hψ]
+      split_ifs <;> norm_num
+    have hint : ∀ p : V₁ × V₂,
+        (∫ y, ψ p y ∂(K p)) = if p.1 = a₁ then (K p).real {a} else 0 := by
+      intro p
+      by_cases hp : p.1 = a₁
+      · rw [if_pos hp, integral_fintype (Integrable.of_finite)]
+        simp [hψ, hp]
+      · rw [if_neg hp]
+        simp [hψ, hp]
+    have hmeanEq : (∑ p, q p * ∫ y, ψ p y ∂(K p))
+        = ((martonAmbientMeasure pV K W).map (jointSequence martonV₁s martonXs 0)).real {(a₁, a)}
+        := by
+      rw [marton_ambient_V₁X_real_singleton pV K W a₁ a]
+      exact Finset.sum_congr rfl fun p _ ↦ by rw [hint p]
+    have hcount : ∀ x : Fin n → α, (∑ i, ψ (zb i) (x i))
+        = (typeCount (fun i ↦ (v₁ i, x i)) (a₁, a) : ℝ) := by
+      intro x
+      rw [typeCount, Finset.card_filter]
+      push_cast
+      exact Finset.sum_congr rfl fun i _ ↦ by simp [hψ, hzb, Prod.ext_iff]
+    have hpin : (∑ p, |∫ y, ψ p y ∂(K p)|) * martonCoveringRadius pV K W ε
+        < martonStrongRadius pV K W ε / 2 := by
+      have hle : (∑ p : V₁ × V₂, |∫ y, ψ p y ∂(K p)|) ≤ (Fintype.card (V₁ × V₂) : ℝ) := by
+        calc (∑ p : V₁ × V₂, |∫ y, ψ p y ∂(K p)|) ≤ ∑ _p : V₁ × V₂, (1 : ℝ) := by
+              refine Finset.sum_le_sum fun p _ ↦ ?_
+              rw [hint p]
+              haveI : IsProbabilityMeasure (K p) := inferInstance
+              split_ifs
+              · rw [abs_of_nonneg measureReal_nonneg]
+                exact le_of_le_of_eq (measureReal_mono (Set.subset_univ _) (measure_ne_top _ _))
+                  probReal_univ
+              · norm_num
+          _ = (Fintype.card (V₁ × V₂) : ℝ) := by
+              rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one]
+      have hrpos : 0 < martonCoveringRadius pV K W ε := martonCoveringRadius_pos pV K W hε
+      exact lt_of_le_of_lt (mul_le_mul_of_nonneg_right hle hrpos.le) hkey
+    have hsetEq : Adev (a₁, a)
+        = { x : Fin n → α | martonStrongRadius pV K W ε ≤ |(∑ i, ψ (zb i) (x i)) / (n : ℝ)
+            - ∑ p, q p * ∫ y, ψ p y ∂(K p)| } := by
+      ext x
+      simp only [hAdev, Set.mem_setOf_eq, hcount x, hmeanEq]
+    rw [hsetEq]
+    exact hN n hn K (fun p ↦ inferInstance) ψ hψbound q (martonCoveringRadius pV K W ε) zb
+      htypeclose hpin
+  refine le_trans (measureReal_mono hsub (measure_ne_top _ _)) ?_
+  refine le_trans (measureReal_biUnion_finset_le _ _) ?_
+  calc ∑ c ∈ (Finset.univ : Finset (V₁ × α)), (Measure.pi fun i ↦ K (zb i)).real (Adev c)
+      ≤ ∑ _c ∈ (Finset.univ : Finset (V₁ × α)), tol / (Fintype.card (V₁ × α) : ℝ) :=
+        Finset.sum_le_sum fun c _ ↦ hper c
+    _ = tol := by
+        rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+        field_simp
 
 /-- The receiver-1 error term of a selected auxiliary pair, averaged over the input tier: whatever
 type-pinned pair the encoder selects, drawing the input word from `K` and passing it through the
