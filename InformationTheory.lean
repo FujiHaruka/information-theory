@@ -1,13 +1,13 @@
 -- This module serves as the root of the `InformationTheory` library.
 -- Import modules here that should be built as part of `lake build`.
 
--- Meta: orphan-detection 用 @[entry_point] attribute
+-- Meta: the @[entry_point] attribute used for orphan detection
 import InformationTheory.Meta.EntryPoint
 
--- 有限型上の測度の singleton 質量 (共有ユーティリティ)
+-- Shared utility: singleton masses of a measure on a finite type
 import InformationTheory.Probability.SingletonMass
 
--- Fano 不等式
+-- Fano's inequality
 import InformationTheory.Fano
 import InformationTheory.Fano.Entropy
 import InformationTheory.Fano.BinaryJensen

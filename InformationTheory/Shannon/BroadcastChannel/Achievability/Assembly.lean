@@ -1018,13 +1018,15 @@ theorem bc_degraded_infoJoint_ge
   simp only [bcInfo₁, bcInfo₂, bcInfoJoint, ← hμ]
   linarith [htoReal]
 
-/-- **Receiver-1 wrong-cloud rate-slack vanishing (`E_c`).**  With the joint AEP gap
+/-- The receiver-1 wrong-cloud rate slack (`E_c`) vanishes: with the joint AEP gap
 `I((U, X); Y₁) − (R₁ + R₂) − 3ε > 0` and non-negative rate `0 ≤ R₁`, the wrong-cloud
 prefactor `(⌈exp(nR₂)⌉−1)·⌈exp(nR₁)⌉` times `exp(n(−I((U, X); Y₁) + 3ε))` falls below any
 tolerance for large `n`.  The `0 ≤ R₁` hypothesis is essential: for `R₁ < 0` the ceil
 `⌈exp(nR₁)⌉` floors at `1` instead of shrinking like `exp(nR₁)`, so the negative slack the
-gap allocates to the `R₁` factor is not delivered and the prefactor diverges.  The caller
-`bc_achievability` supplies `0 < R₁`, so this precondition is met.
+gap allocates to the `R₁` factor is not delivered and the prefactor diverges.  The bound is
+stated over abstract rates so that a superposition scheme may instantiate it at either the
+message rates or the subcodebook rates; every such instantiation runs at a strictly positive
+rate, so the precondition is met.
 -/
 theorem bc_Ec_lt_of_rate {Ijoint R₁ R₂ ε ε' : ℝ}
     (hR₁ : 0 ≤ R₁) (hgap : 0 < Ijoint - (R₁ + R₂) - 3 * ε) (hε' : 0 < ε') :
@@ -1071,8 +1073,8 @@ theorem bc_Ec_lt_of_rate {Ijoint R₁ R₂ ε ε' : ℝ}
 
 /-! ### Headline: degraded broadcast achievability -/
 
-/-- **Broadcast channel achievability (degraded, superposition inner bound).**
-Cover–Thomas *Elements of Information Theory* Thm 15.6.2 achievability.  Over a physically
+/-- Achievability half of the degraded broadcast channel coding theorem, in the superposition
+inner-bound form of Cover–Thomas *Elements of Information Theory* Thm 15.6.2.  Over a physically
 degraded broadcast channel `W` with cloud law `pU` and conditional input kernel `K`, any
 rate pair strictly inside the auxiliary-variable region
 
@@ -1194,11 +1196,13 @@ theorem bc_achievability
         = (∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
               * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
                   (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
-                    * ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₁ W).toReal)
+                    * ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₁
+                        W).toReal)
           + (∑ cU : BCCloudCodebook M₂ n U, (bcCloudCodebookMeasure pU M₂ n).real {cU}
               * ∑ cX : BCSatelliteCodebook M₁ M₂ n α,
                   (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
-                    * ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₂ W).toReal)
+                    * ((bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX).averageErrorProb₂
+                        W).toReal)
           := bc_weighted_two_tier_add
             (fun cU ↦ (bcCloudCodebookMeasure pU M₂ n).real {cU})
             (fun cU cX ↦ (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX})

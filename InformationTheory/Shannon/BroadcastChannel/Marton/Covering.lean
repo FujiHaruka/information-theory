@@ -860,9 +860,9 @@ theorem meas_marton_codebook_no_jointlyTypicalPair_lt
 /-- Marton's mutual covering lemma.  Two subcodebooks are drawn independently, the first from
 the `V₁`-marginal of the auxiliary law and the second from its `V₂`-marginal, at positive rates
 `R₁'` and `R₂'` whose sum exceeds the dependence `I(V₁; V₂)` between the auxiliary variables.
-Then below any prescribed bound `ε₀` there is a typicality parameter for which, at every large
-enough blocklength, the probability that no pair of codewords is jointly typical is below any
-prescribed `η`.
+Then for every prescribed failure level `η` and every prescribed bound `ε₀` there is a typicality
+parameter `ε < ε₀` for which, at every large enough blocklength, the probability that no pair of
+codewords is jointly typical is below `η`.
 
 The upper bound `ε < ε₀` is what gives the conclusion content.  A typicality radius wide enough
 to swallow the whole space empties the failure event, so a statement asserting only `0 < ε`
@@ -988,9 +988,9 @@ theorem meas_marton_codebook_no_jointStronglyTypicalPair_lt
 /-- Marton's mutual covering lemma at the strongly typical set.  Two subcodebooks are drawn
 independently, the first from the `V₁`-marginal of the auxiliary law and the second from its
 `V₂`-marginal, at positive rates `R₁'` and `R₂'` whose sum exceeds the dependence `I(V₁; V₂)`
-between the auxiliary variables.  Then below any prescribed bound `ε₀` there is a typicality
-parameter for which, at every large enough blocklength, the probability that no pair of codewords
-is jointly strongly typical is below any prescribed `η`.
+between the auxiliary variables.  Then for every prescribed failure level `η` and every prescribed
+bound `ε₀` there is a typicality parameter `ε < ε₀` for which, at every large enough blocklength,
+the probability that no pair of codewords is jointly strongly typical is below `η`.
 
 This is strictly stronger than `marton_mutual_covering`: the strongly typical set is contained in
 the weakly typical one of the radius widened by `martonCoveringBandConst`, so the event bounded

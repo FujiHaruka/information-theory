@@ -21,12 +21,12 @@ term and the high-information-density tail term to `0`.
 
 ## Main statements
 
-* `klDiv_channel_le_capacity` — the capacity saddle point `D(W(a)‖q*) ≤ capacity W`
-  (Phase A, the load-bearing core).
+* `klDiv_channel_le_capacity` — the capacity saddle point `D(W(a)‖q*) ≤ capacity W`.
 * `mutualInfo_segment_hasDerivAt` — the one-sided directional derivative of `I(p_t; W)`
-  along the segment towards the Dirac input `δ_a` (the gateway atom for Phase A).
-* `channelCoding_highLLR_tendsto_zero` — the average high-LLR tail mass tends to `0`
-  (Phase B; non-i.i.d. Chebyshev concentration).
+  along the segment towards the Dirac input `δ_a`, which is what makes the saddle point
+  an envelope statement.
+* `channelCoding_highLLR_tendsto_zero` — the average high-LLR tail mass tends to `0`, by
+  non-i.i.d. Chebyshev concentration.
 * `channelCoding_strong_converse_asymptotic` — the Wolfowitz strong converse headline.
 
 ## References
@@ -46,7 +46,7 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-/-! ## Phase A self-build: keystone bridge + envelope directional derivative -/
+/-! ## Capacity saddle point: keystone bridge + envelope directional derivative -/
 
 omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
 /-- For a Markov channel each fiber `W x` is a probability measure, so its singleton masses
@@ -107,7 +107,8 @@ lemma mutualInfoOfChannel_toReal_eq_outputEntropy_sub
   -- weighted fiber conditional entropy via `negMulLog_mul`.
   rw [Fintype.sum_prod_type
     (f := fun ab : α × β ↦ Real.negMulLog (p ab.1 * (W ab.1).real {ab.2}))]
-  -- Per-input identity: negMulLog (p x) − ∑_b negMulLog (p x · W x b) = − p x · ∑_b negMulLog (W x b)
+  -- Per-input identity: negMulLog (p x) − ∑_b negMulLog (p x · W x b)
+  --   = − p x · ∑_b negMulLog (W x b)
   have hper : ∀ x : α,
       Real.negMulLog (p x) - (∑ b : β, Real.negMulLog (p x * (W x).real {b}))
         = - (p x * ∑ b : β, Real.negMulLog ((W x).real {b})) := by
@@ -141,10 +142,10 @@ lemma mutualInfoOfChannel_toReal_eq_outputEntropy_sub
     linarith [hHX_sub]
   linarith [this]
 
-/-- Gateway atom (Phase A): the one-sided (right) directional derivative of
-`t ↦ I(p_t; W).toReal` at `t = 0` along the segment `p_t := (1 - t) • p + t • δ_a` towards the
-Dirac input at `a`, equal to `D(W(a)‖q*) − I(p; W)` (the envelope/Danskin cancellation: the
-moving reference `q_{p_t}` contributes nothing because `∑_b (dq/dt)(b) = 0`).
+/-- The one-sided (right) directional derivative of `t ↦ I(p_t; W).toReal` at `t = 0` along the
+segment `p_t := (1 - t) • p + t • δ_a` towards the Dirac input at `a` equals
+`D(W(a)‖q*) − I(p; W)` (the envelope/Danskin cancellation: the moving reference `q_{p_t}`
+contributes nothing because `∑_b (dq/dt)(b) = 0`).
 
 Stated as a `HasDerivWithinAt` over `Set.Ici 0` (right derivative), NOT a two-sided
 `HasDerivAt`. The two-sided form is FALSE for boundary achievers: when `p a = 0`, for `t < 0`
@@ -344,7 +345,7 @@ theorem mutualInfo_segment_hasDerivAt
   have hx0 : F 0 = G 0 := hkey 0 (by norm_num)
   exact (hG_deriv.hasDerivWithinAt).congr_of_eventuallyEq hev hx0
 
-/-- Capacity saddle point (Phase A, load-bearing self-build): for a capacity-achieving input
+/-- Capacity saddle point: for a capacity-achieving input
 `p` with full-support output `q* := outputDistribution (pmfToMeasure p) W`, every input symbol
 `a` satisfies `D(W(a)‖q*) ≤ capacity W`. Carved out as a shared lemma for reuse across the
 channel-coding converse family.
@@ -364,7 +365,7 @@ theorem klDiv_channel_le_capacity
   set e : α → ℝ := Pi.single a (1 : ℝ) with he_def
   set F : ℝ → ℝ := fun t ↦
     (mutualInfoOfChannel (pmfToMeasure ((1 - t) • p + t • e)) W).toReal with hF_def
-  -- The gateway atom: the right derivative of `F` at `0` is the saddle gap.
+  -- The right derivative of `F` at `0` is the saddle gap.
   have hderiv : HasDerivWithinAt F
       (klDivPmf (fun b ↦ (W a).real {b})
           (fun b ↦ (outputDistribution (pmfToMeasure p) W).real {b})
@@ -411,7 +412,7 @@ theorem klDiv_channel_le_capacity
     le_csSup (capacity_bddAbove W) ⟨p, hp, rfl⟩
   exact le_trans h1 h2
 
-/-! ## Phase B: non-i.i.d. Chebyshev concentration of the information density -/
+/-! ## Non-i.i.d. Chebyshev concentration of the information density -/
 
 omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
 /-- The expectation of the per-letter log-likelihood ratio `log (W a)(·) − log q*(·)` under the
@@ -567,7 +568,8 @@ lemma highLLRSet_real_le
     -- factorize both singleton masses into products
     have hPmr : (Measure.pi (fun i ↦ W (c.encoder m i))).real {y}
         = ∏ i, (W (c.encoder m i)).real {y i} := by
-      show ((Measure.pi (fun i ↦ W (c.encoder m i))) {y}).toReal = ∏ i, (W (c.encoder m i)).real {y i}
+      show ((Measure.pi (fun i ↦ W (c.encoder m i))) {y}).toReal
+          = ∏ i, (W (c.encoder m i)).real {y i}
       rw [Measure.pi_singleton, ENNReal.toReal_prod]; rfl
     have hQr : Q.real {y} = ∏ i, qf (y i) := by
       rw [hQ_def]
@@ -632,7 +634,7 @@ lemma highLLRSet_real_le
     linarith [step, eq2.le, eq2.ge]
   exact le_trans hle1 hfin
 
-/-- Phase B: the average high-LLR tail mass vanishes as the block length grows, using the
+/-- The average high-LLR tail mass vanishes as the block length grows, using the
 non-i.i.d. Chebyshev concentration (`meas_ge_le_variance_div_sq` + `variance_sum_pi`) with the
 i.i.d. reference `q*^n` and threshold `n·(capacity W + δ/2)`. Depends on the saddle point
 `klDiv_channel_le_capacity` for the uniform per-codeword mean bound. -/
@@ -720,7 +722,7 @@ theorem channelCoding_strong_converse_asymptotic
   -- Probability-measure instances for the i.i.d. reference `Q := q*^n`.
   haveI hPp : IsProbabilityMeasure (pmfToMeasure p) := pmfToMeasure_isProbabilityMeasure hp
   haveI hqProb : IsProbabilityMeasure (outputDistribution (pmfToMeasure p) W) := inferInstance
-  -- (Phase B black box) the average high-LLR tail mass tends to `0`.
+  -- The average high-LLR tail mass tends to `0`.
   have hT0 := channelCoding_highLLR_tendsto_zero W hδ hp hp_max hq_pos M c
   -- (C-1) the exponential term `exp (n·(C + δ/2)) / M n` tends to `0`.
   have hE0 : Tendsto (fun n : ℕ ↦ Real.exp ((n : ℝ) * (capacity W + δ / 2)) / (M n : ℝ))

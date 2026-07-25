@@ -113,7 +113,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [DecidableEq β] [Nonempty β] in
 /-- Block X-law identification. Under `iIndepFun (Xs ·) μ` and
 `h_match_X : μ.map (Xs 0) = p`, the block law `μ.map (jointRV Xs n)` equals
-`Measure.pi (fun _ : Fin n => p)`. This is the bridge to the
+`Measure.pi (fun _ : Fin n ↦ p)`. This is the bridge to the
 `codebookMeasure p M n` structure.
 
 Promoted to non-`private` so the two-codebook MAC achievability averaging in
@@ -130,7 +130,7 @@ lemma block_law_X_eq_pi_p
     μ.map (InformationTheory.Shannon.jointRV Xs n)
       = Measure.pi (fun _ : Fin n ↦ p) := by
   classical
-  -- Restrict `Xs` to `Fin n`: `Xs' : Fin n → Ω → α := fun i => Xs i`.
+  -- Restrict `Xs` to `Fin n`: `Xs' : Fin n → Ω → α := fun i ↦ Xs i`.
   set Xs' : Fin n → Ω → α := fun i ↦ Xs i with hXs'_def
   have hXs'_meas : ∀ i : Fin n, AEMeasurable (Xs' i) μ := fun i ↦ (hXs i).aemeasurable
   -- `iIndepFun Xs' μ` from `iIndepFun (Xs ·) μ` by restriction.
@@ -140,7 +140,7 @@ lemma block_law_X_eq_pi_p
   have h_pi_form : μ.map (fun ω i ↦ Xs' i ω)
         = Measure.pi (fun i ↦ μ.map (Xs' i)) :=
     (iIndepFun_iff_map_fun_eq_pi_map hXs'_meas).mp hindepX'
-  -- `μ.map (jointRV Xs n) = μ.map (fun ω i => Xs' i ω)` (defeq).
+  -- `μ.map (jointRV Xs n) = μ.map (fun ω i ↦ Xs' i ω)` (defeq).
   have h_jointRV_eq : InformationTheory.Shannon.jointRV Xs n
         = fun ω (i : Fin n) ↦ Xs' i ω := rfl
   rw [h_jointRV_eq, h_pi_form]
@@ -154,7 +154,7 @@ omit [DecidableEq α] [Nonempty α] [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSingletonClass β] in
 /-- Block Y-law identification. Symmetric to `block_law_X_eq_pi_p`. We do
 not assume `μ.map (Ys 0) = outputDistribution p W`; instead, we just identify
-`μ.map (jointRV Ys n) = Measure.pi (fun _ => μ.map (Ys 0))`. -/
+`μ.map (jointRV Ys n) = Measure.pi (fun _ ↦ μ.map (Ys 0))`. -/
 private lemma block_law_Y_eq_pi
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Ys : ℕ → Ω → β) (hYs : ∀ i, Measurable (Ys i))
@@ -183,9 +183,9 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 /-- Block joint-law identification. Under `Pairwise … ⟂ᵢ[μ] …` for the
 joint sequence and `h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W`,
 the block-joint law `μ.map ⟨jointRV Xs n, jointRV Ys n⟩` corresponds to the product
-`Measure.pi (fun _ => jointDistribution p W)` via reshape. Stated in the
-"reshaped" form: the law of `ω ↦ fun i => (Xs i ω, Ys i ω)` is
-`Measure.pi (fun _ => jointDistribution p W)`. -/
+`Measure.pi (fun _ ↦ jointDistribution p W)` via reshape. Stated in the
+"reshaped" form: the law of `ω ↦ fun i ↦ (Xs i ω, Ys i ω)` is
+`Measure.pi (fun _ ↦ jointDistribution p W)`. -/
 private lemma block_joint_law_eq_pi
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -344,7 +344,7 @@ lemma codebook_marginal_one
       intro c; ring
     rw [Finset.sum_congr rfl (fun c _ ↦ h_reassoc c)]
     -- Use a bijection `Codebook M n α ≃ (Fin n → α) × ((Fin M).erase m → (Fin n → α))`
-    -- via `c ↦ (c m, fun m' => c m'.1)`. We avoid building this Equiv explicitly and
+    -- via `c ↦ (c m, fun m' ↦ c m'.1)`. We avoid building this Equiv explicitly and
     -- use the Fintype.sum_prod identity in product form.
     -- Concretely: `c : Fin M → β` can be split via `Function.update` and using
     -- the fact that `Fintype.sum (g) ` on `Fin M → β` equals
@@ -636,7 +636,7 @@ private lemma E1_lhs_sum_eq_Q_sum
     rw [hTfin_def]
     rw [Finset.sum_filter]
   rw [h_lhs_to_T]
-  -- bijection Tfin ≃ Sfin via (x, y) ↦ fun i => (x i, y i).
+  -- bijection Tfin ≃ Sfin via (x, y) ↦ fun i ↦ (x i, y i).
   apply Finset.sum_bij
     (i := fun (p : (Fin n → α) × (Fin n → β)) _ ↦
       (fun i ↦ (p.1 i, p.2 i) : Fin n → α × β))
@@ -743,7 +743,7 @@ private lemma random_codebook_E1_swap
       exact this
     rw [Finset.prod_congr rfl (fun i _ ↦ hprod i)]
     rw [Finset.prod_mul_distrib, h_P_singleton x, h_pi_W_singleton x y]
-  -- Step 3: μ.map (fun ω i => (Xs i ω, Ys i ω)) = Q via block_joint_law_eq_pi.
+  -- Step 3: μ.map (fun ω i ↦ (Xs i ω, Ys i ω)) = Q via block_joint_law_eq_pi.
   set ζ : Ω → (Fin n → α × β) := fun ω i ↦ (Xs i ω, Ys i ω) with hζ_def
   have h_ζ_meas : Measurable ζ := by
     refine measurable_pi_lambda _ (fun i ↦ ?_)
@@ -799,7 +799,7 @@ private lemma random_codebook_E1_swap
   -- LHS = ∑_x P{x} * ((Pi W∘x).real {y | (x,y) ∉ JTS})
   --     = ∑_x P{x} * ∑_{y : (x,y) ∉ JTS} (Pi W∘x).real {y}
   --     = ∑_x ∑_{y : (x,y) ∉ JTS} P{x} * (Pi W∘x).real {y}
-  --     = ∑_{(x,y) : (x,y) ∉ JTS} Q.real {fun i => (x i, y i)}
+  --     = ∑_{(x,y) : (x,y) ∉ JTS} Q.real {fun i ↦ (x i, y i)}
   --     = ∑_{z ∈ ψ ⁻¹' JTSᶜ} Q.real {z}.
   have h_LHS_eq :
       ∑ x : Fin n → α, P.real {x} *

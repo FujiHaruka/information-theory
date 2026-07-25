@@ -19,7 +19,7 @@ elimination.
 
 * `InMartonRegion R₁ R₂ I₁ I₂ I₁₂` — the three inequalities cutting out the region.
 
-## Main results
+## Main statements
 
 * `exists_martonRateSplit` — a rate pair satisfying the three inequalities strictly admits a
   splitting into positive subcodebook rates meeting the covering and decoding constraints.

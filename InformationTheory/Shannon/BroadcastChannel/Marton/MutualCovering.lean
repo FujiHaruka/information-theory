@@ -29,7 +29,7 @@ to be large plus two terms carrying the ratio `qbar / p`.
 * `sharedFstSet S` / `sharedSndSet S` — the triples of codewords realizing two pairs that
   share one index.
 
-## Main results
+## Main statements
 
 * `integral_pairCount` — the first moment `E[A] = M₁ * M₂ * p`.
 * `covariance_pairIndicator_eq_zero` — covariance vanishes for pairs sharing no index.
