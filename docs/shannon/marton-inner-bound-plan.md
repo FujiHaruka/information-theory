@@ -5,7 +5,7 @@
 **Status**: 🚧 進行中 — degraded 仮定を外した一般 (non-degraded) two-receiver broadcast channel に対する
 **Marton inner bound (El Gamal–Kim *Network Information Theory* Thm 8.3、private message のみ)** の形式化。
 親 plan の撤退ライン **L-BC5** (一般 BC + Marton は完全 scope-out) を**ユーザー指示で解除**して追う。
-Phase 1 (mutual covering lemma の second moment 中核) 完了、Phase 2 以降 未着手。
+Phase 1 (mutual covering の second moment 中核) + Phase 4 (共分散の鋭化) 完了、Phase 2/3/5-8 未着手。
 **SoT**: 在庫 [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md) + 本 plan。詳細履歴は git。
 **再検証** (prose にキャッシュしない):
 `scripts/sig_view.ts --sorry InformationTheory/Shannon/BroadcastChannel/Marton/*.lean` /
@@ -18,7 +18,7 @@ Phase 1 (mutual covering lemma の second moment 中核) 完了、Phase 2 以降
 - [x] Phase 1 — mutual covering の second moment 中核 (抽象 `S` 版) ✅ `Marton/MutualCovering.lean` (cd5c379a)
 - [ ] Phase 2 — region 述語 + レート分割の消去補題 + root 登録 📋
 - [ ] Phase 3 — 5-tuple ambient plumbing + `martonInfo₁/₂/V₁V₂` 📋
-- [ ] Phase 4 — 共分散の鋭化 (conditional slice 版) 📋 ★ sum-rate 制約の要
+- [x] Phase 4 — 共分散の鋭化 (conditional slice 版) ✅ `MutualCovering.lean` 追記 (6183832d) ★ sum-rate 制約の要
 - [ ] Phase 5 — typicality 具体化 = `marton_mutual_covering` 📋
 - [ ] Phase 6a — 受信機 1 の誤り解析 (選択索引の独立性) 📋
 - [ ] Phase 6b — 受信機 2 の誤り解析 + averaged swap 📋
@@ -126,13 +126,24 @@ P(A = 0) ≤ (M₁ + M₂)/(M₁ M₂ p) = 1/(M₂ p) + 1/(M₁ p)
 条件は `R̃₁ > I(V₁;V₂)` **かつ** `R̃₂ > I(V₁;V₂)` — 教科書の **`R̃₁ + R̃₂ > I(V₁;V₂)` (和)** より真に強い。
 消去すると `R₁ + R₂ < I₁ + I₂ − 2·I(V₁;V₂)` という**弱い領域**しか出ない。
 
-鋭い版に必要なのは、添字を 1 本だけ共有する組に対する
-`E[1_{(i,j)}·1_{(i,j')}] = ∫ q(x)² dμX(x) ≤ q̄ · p` (`q(x) := μY(S のスライス)`、`q̄ := sup q`)。
-このとき共有項の寄与は `q̄/(M₁p) + q̄/(M₂p)` となり、typicality 具体化では `q̄/p ≤ exp(6nε)/(1−η)` で
-抑えられるので **`M̃ᵢ → ∞` だけで消える**。残るのは対角項 `1/(M₁M₂p)` = **和条件**そのもの。
+鋭い版に必要なのは、添字を 1 本だけ共有する組に対する共分散の評価である。共有項の寄与が
+`q̄/(M₁p) + q̄/(M₂p)` となり、typicality 具体化では `q̄/p ≤ exp(6nε)/(1−η)` で抑えられるので
+**`M̃ᵢ → ∞` だけで消える**。残るのは対角項 `1/(M₁M₂p)` = **和条件**そのもの。
+
+**スライス上界は両方向が要る (実装時に反例で確定)**。fst 共有側は `∫ q(x)² dμX ≤ q̄·p`
+(`q x := μY(x での β-fiber)`) に落ちるが、snd 共有側は `∫ r(y)² dμY` (`r y := μX(y での α-fiber)`)
+に落ちる。**μY 側の一様上界は μX 側を全く抑えない**ので、片方向だけを仮定した主張は偽:
+
+> `α = {0}`, `β = {0,1}`, `μX = δ₀`, `μY(0) = ε`, `μY(1) = 1−ε`, `S = {(0,0)}`。
+> β-fiber 上界は `ε`、`p = ε`。snd 共有組の共分散は `Var(1[Y=0]) = ε−ε²` で、
+> 主張される上界 `q̄·p = ε²` を `ε = 0.1` で破る (`0.09 > 0.01`)。
+
+⇒ `covariance_pairIndicator_shared_le` は `hsliceY` (x を固定した β-fiber) と
+`hsliceX` (y を固定した α-fiber) の**両方**を取る。どちらも `S` と `μX`, `μY` の構造的な量的性質であり、
+結論を担ぐ仮説ではない (核は second moment + Chebyshev のまま)。
 
 ⇒ **Phase 4 を独立の Phase として立てる** (在庫にはこの区別がない)。ここが閉じないときの退避は
-L-MT5 (弱化領域を headline にし、鋭化を別 plan へ split)。
+L-MT5 (弱化領域を headline にし、鋭化を別 plan へ split) — **不発動**。
 
 ---
 
@@ -191,20 +202,19 @@ Mathlib 壁 0 件 / 既存率 89% / 自前構築 8 種。**proof-log: no**。
   を要求 (`Bridge.lean:34`)。5-tuple の各射影に instance を通す必要がある。
 - 見積り: **360–550 行**。先行: Phase 2。**proof-log: no** (定型写経)。
 
-### Phase 4 — 共分散の鋭化 (conditional slice 版) 📋 ★
+### Phase 4 — 共分散の鋭化 (conditional slice 版) ✅ 完了 ★
 
-- 入力: Phase 1 の `covariance_pairIndicator_le` / `variance_pairCount_le`。
-- 出力: `Marton/MutualCovering.lean` への追記 (または `Marton/CoveringSharp.lean`)
-  - `covariance_pairIndicator_shared_le` — `p.1 = q.1 ∧ p.2 ≠ q.2` (と対称形) に対し
-    `cov ≤ q̄ * pairProb` を、一様スライス上界 `hslice : ∀ x, (μY (Prod.mk x ⁻¹' S)).toReal ≤ q̄` の下で。
-    機構: 3 本の符号語 `X i, Y j, Y j'` の同時法則が `μX.prod (μY.prod μY)` であること
-    (Phase 1 の `map_codewordPair` の 3 変数版、新規) + Tonelli で `∫ q(x)² dμX ≤ q̄ ∫ q dμX = q̄·p`。
-  - `variance_pairCount_le'` — `Var ≤ M₁M₂·p + M₁M₂(M₁+M₂)·q̄·p`。
-  - `meas_pairCount_eq_zero_le'` — `P(A=0) ≤ 1/(M₁M₂p) + q̄/(M₁p) + q̄/(M₂p)`。
-- **既存の粗い版は消さない** (`meas_pairCount_ambient_eq_zero_le` の消費者であり、`q̄` を供給できない
-  文脈での fallback として残す)。
-- 見積り: **150–250 行**。先行: Phase 1。**proof-log: yes** (3 変数独立性の取り回しは再利用価値が高い)。
-- 撤退: L-MT5。
+- 出力: `Marton/MutualCovering.lean` への追記 (397 → 718 行、11 decl 追加、commit `6183832d`)。
+  - `covariance_pairIndicator_shared_le` (L491) — 添字を 1 本だけ共有する組に対し `cov ≤ q̄ * pairProb`。
+    仮説は `hsliceY` / `hsliceX` の**両方向** (→ D4 の反例)。
+  - `variance_pairCount_le'` (L519) / `meas_pairCount_eq_zero_le'` (L585) — D4 の目標形どおり。
+    第 1 項 `1/(M₁M₂p)` が和条件、残り 2 項が `q̄/p` 経由の個別条件、という分離が出ている。
+- 既存の粗い版 4 本は**署名も結論も無改変** (`q̄` を供給できない文脈の fallback として残す)。
+  `variance_pairCount_le` の証明内部のみ、局所 `have` 2 本を `private lemma` へ切り出して鋭い版と共有。
+- 設計 (再利用価値あり): Tonelli を Bochner でなく **lintegral (`ℝ≥0∞`) で回す**と可積分性の議論が消え、
+  3 本目の補題群が各 20 行で閉じる。積型は **`α × (β × β)`** の向き (共有座標を最外) が決定的で、
+  `(α × β) × β` だと Tonelli が噛まない。
+- 撤退 L-MT5 は**不発動**。**proof-log: yes** (Phase 5 の proof-log に統合)。
 
 ### Phase 5 — typicality 具体化 = `marton_mutual_covering` 📋
 
@@ -213,6 +223,13 @@ Mathlib 壁 0 件 / 既存率 89% / 自前構築 8 種。**proof-log: no**。
   `conditionalTypicalSlice_card_le` (`SlepianWolf/ConditionalTypicalSlice.lean:140`) /
   `typicalSet_prob_le` (`AEP/Basic/Achievability.lean:507`) /
   `jointlyTypicalSet_prob_tendsto_one` (`ChannelCoding/Basic.lean:450`)。
+- **新規に要る橋 1 本** (Phase 4 実装時に実測、在庫にも本 plan 初版にも無かった項目):
+  Phase 4 の仮説は両方向 (`hsliceY` / `hsliceX`) を要求するが、in-project 資産は**片方向しか無い**。
+  `conditionalTypicalSlice_card_le` (`SlepianWolf/ConditionalTypicalSlice.lean:140`) は
+  定義 (`:51`) が `{ x | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε }` = **X-fiber** なので `hsliceX` 側は直接供給できる。
+  `hsliceY` (Y-fiber) 側の補題は `rg` で 0 件。`jointlyTypicalSet` の定義 (`ChannelCoding/Basic.lean:281`)
+  自体は X/Y について対称なので、`jointlyTypicalSet μ Ys Xs n ε = Prod.swap ⁻¹' jointlyTypicalSet μ Xs Ys n ε`
+  相当の輸送補題 (entropy 不変性経由) か `conditionalTypicalSlice_card_le` の鏡像を建てる。**壁ではなく配線、40–80 行**。
 - 出力: `Marton/Covering.lean`
   - `S := jointlyTypicalSet μ V₁s V₂s n ε` への具体化 (`α := Fin n → V₁`, `β := Fin n → V₂`)。
   - 符号帳 ambient の配線: `Ω := Codebook M̃₁ n V₁ × Codebook M̃₂ n V₂`、
@@ -228,7 +245,7 @@ Mathlib 壁 0 件 / 既存率 89% / 自前構築 8 種。**proof-log: no**。
     `hx` が立たない。
   - headline: `marton_mutual_covering` — `R̃₁ + R̃₂ > I₁₂` かつ `R̃ᵢ > 0` のとき
     `∃ N, ∀ n ≥ N, (符号帳測度).real {joint typical な組が 1 つも無い} < η'`。
-- 見積り: **250–400 行**。先行: Phase 3, 4。**proof-log: yes**。
+- 見積り: **300–480 行** (swap 橋 40–80 行を含む)。先行: Phase 3, 4。**proof-log: yes**。
 - 撤退: L-MT1。
 
 ### Phase 6a — 受信機 1 の誤り解析 📋
