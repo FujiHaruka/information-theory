@@ -1,0 +1,125 @@
+{
+  "problem": "Ch.14 Chaitin Ω 自体の非計算性 — 自己限定万能機械の停止確率 Ω が計算可能な二進有理近似列を持たないことの形式化 (gateway atom + Phase N0-N5 + honesty/style 2 ゲート)",
+  "proof_log": "docs/proof-logs/proof-log-kolmogorov-w2-omega-noncomputable.md",
+  "generated_at": "2026-07-25T06:31:50.346Z",
+  "filters": {
+    "file_prefix": "InformationTheory/Shannon/Kolmogorov"
+  },
+  "idle_gap_minutes": 5,
+  "sessions": [
+    {
+      "id": "423c46e2-e779-4f97-b071-6cdf22f5aae0",
+      "note": "オーケストレーター 1 セッション (relay leg 1)。Lean の編集は全て subagent に dispatch した (lean-implementer 4 体 / mathlib-inventory / lean-planner / honesty-auditor / style-auditor) ため、edits/writes は親のオーケストレーション分のみを表す。subagent 側の作業量は sidechain entries を見ること。",
+      "start": "2026-07-25T03:48:28.351Z",
+      "end": "2026-07-25T06:31:46.037Z",
+      "wall_time_seconds": 9798,
+      "active_time_seconds": 4401,
+      "turns": 36,
+      "tool_calls": {
+        "Skill": 2,
+        "Read": 7,
+        "Bash": 14,
+        "Write": 2,
+        "Agent": 10,
+        "ToolSearch": 2,
+        "SendMessage": 1,
+        "TaskCreate": 4,
+        "Edit": 1,
+        "TaskUpdate": 4
+      },
+      "bash_breakdown": {
+        "ls": 2,
+        "echo": 2,
+        "git": 4,
+        "rg": 2,
+        "deno": 4
+      },
+      "bash_total": 14,
+      "edits_by_file": {
+        "docs/readme-theorems.txt": 1
+      },
+      "writes_by_file": {
+        ".claude/handoff.md": 1,
+        "docs/metrics/kolmogorov-w2-omega-noncomputable.manifest.json": 1
+      },
+      "reads_by_file": {
+        "docs/kolmogorov/kolmogorov-w2-moonshot-plan.md": 1,
+        "InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean": 1,
+        "InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean": 1,
+        "InformationTheory/Shannon/Kolmogorov/Noncomputable.lean": 1,
+        "InformationTheory/Shannon/Kolmogorov/Omega.lean": 1,
+        "docs/readme-theorems.txt": 1,
+        ".claude/skills/proof-log/references/template.md": 1
+      },
+      "matched_edits": 0,
+      "matched_writes": 0,
+      "tool_errors": 0,
+      "tokens": {
+        "input": 186,
+        "output": 159002,
+        "cache_read": 15418526,
+        "cache_creation": 392854
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "sidechain_entries": 0
+    }
+  ],
+  "totals": {
+    "start": "2026-07-25T03:48:28.351Z",
+    "end": "2026-07-25T06:31:46.037Z",
+    "wall_time_seconds": 9798,
+    "active_time_seconds": 4401,
+    "turns": 36,
+    "tool_calls": {
+      "Skill": 2,
+      "Read": 7,
+      "Bash": 14,
+      "Write": 2,
+      "Agent": 10,
+      "ToolSearch": 2,
+      "SendMessage": 1,
+      "TaskCreate": 4,
+      "Edit": 1,
+      "TaskUpdate": 4
+    },
+    "bash_breakdown": {
+      "ls": 2,
+      "echo": 2,
+      "git": 4,
+      "rg": 2,
+      "deno": 4
+    },
+    "bash_total": 14,
+    "edits_by_file": {
+      "docs/readme-theorems.txt": 1
+    },
+    "writes_by_file": {
+      ".claude/handoff.md": 1,
+      "docs/metrics/kolmogorov-w2-omega-noncomputable.manifest.json": 1
+    },
+    "reads_by_file": {
+      "docs/kolmogorov/kolmogorov-w2-moonshot-plan.md": 1,
+      "InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean": 1,
+      "InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean": 1,
+      "InformationTheory/Shannon/Kolmogorov/Noncomputable.lean": 1,
+      "InformationTheory/Shannon/Kolmogorov/Omega.lean": 1,
+      "docs/readme-theorems.txt": 1,
+      ".claude/skills/proof-log/references/template.md": 1
+    },
+    "matched_edits": 0,
+    "matched_writes": 0,
+    "tool_errors": 0,
+    "tokens": {
+      "input": 186,
+      "output": 159002,
+      "cache_read": 15418526,
+      "cache_creation": 392854
+    },
+    "models": [
+      "claude-opus-5"
+    ],
+    "sidechain_entries": 0
+  }
+}

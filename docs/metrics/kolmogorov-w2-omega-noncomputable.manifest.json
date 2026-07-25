@@ -1,0 +1,13 @@
+{
+  "problem": "Ch.14 Chaitin Ω 自体の非計算性 — 自己限定万能機械の停止確率 Ω が計算可能な二進有理近似列を持たないことの形式化 (gateway atom + Phase N0-N5 + honesty/style 2 ゲート)",
+  "proof_log": "docs/proof-logs/proof-log-kolmogorov-w2-omega-noncomputable.md",
+  "sessions": [
+    {
+      "id": "423c46e2-e779-4f97-b071-6cdf22f5aae0",
+      "prompt_ids": ["0c45b5ee", "0364f60a"],
+      "note": "オーケストレーター 1 セッション (relay leg 1)。Lean の編集は全て subagent に dispatch した (lean-implementer 4 体 / mathlib-inventory / lean-planner / honesty-auditor / style-auditor) ため、edits/writes は親のオーケストレーション分のみを表す。subagent 側の作業量は sidechain entries を見ること。"
+    }
+  ],
+  "filters": { "file_prefix": "InformationTheory/Shannon/Kolmogorov" },
+  "idle_gap_minutes": 5
+}
