@@ -1,6 +1,6 @@
 # docstring tidy-up plan — Mathlib スタイルへの寄せ込み（英語化含む）
 
-**Status**: Phase 0–5 + 2.5 DONE (2026-06-22、CJK 0 / プロセス語彙 0 / full build green)。**Phase 5 DONE** (per-theorem 散文スタイル → Mathlib テンプレ、全ファミリ完遂。最終 = EPI honesty-dense light-touch `ea1490b0`)。**Parent**: なし (standalone) /
+**Status**: Phase 0–5 + 2.5 DONE (2026-06-22、CJK 0 / プロセス語彙 0 / full build green)。**Phase 5 DONE** (per-theorem 散文スタイル → Mathlib テンプレ、全ファミリ完遂。最終 = EPI honesty-dense light-touch `ea1490b0`)。**Phase 6 DONE** (2026-07-26、Phase 4 後に再発した先頭太字 topic ラベルの再スイープ)。**Parent**: なし (standalone) /
 **関連**: 規約 SoT [`rules/docstrings.md`](rules/docstrings.md) ・実測 [`mathlib-conventions-gap.md`](mathlib-conventions-gap.md) ・honesty タグ SoT [`audit/audit-tags.md`](audit/audit-tags.md)
 
 分割リファクタ (footprint の裾を named lemma に割る) に着手する**前に**、既存 docstring を Mathlib スタイルへ整える。
@@ -239,7 +239,7 @@ honesty audit 不要 (新規 sorry/@residual を導入しないため。タグ�
 能動一括移行で解消。topic ラベル / 太字センテンスは完全文の地の文へ、識別子の太字は backtick 化、
 inline named-theorem 言及の太字のみ残す。同時に末尾ピリオド付与・太字巻き込み honesty タグの unwrap も処理。
 
-- **残存太字は named-theorem 固有名の inline prose 参照 4 件のみ**（規約上 KEEP で正）:
+- **残存太字は named-theorem 固有名の inline prose 参照 4 件のみ**（2026-06-22 時点の実測。Phase 5 が named theorem に太字を*付与*し、その後 topic ラベルが再発 → Phase 6）:
   `Shannon/LZ78/ZivEntropyBridge.lean:16` / `Shannon/LZ78/EmpiricalEntropyMean.lean:28` の `**log-sum inequality**`、
   `Shannon/BirkhoffErgodic.lean:14` の `**Birkhoff individual ergodic theorem**`、
   `Shannon/Hoeffding/Lagrange.lean:19` の `**Intermediate Value Theorem**`。
@@ -312,6 +312,20 @@ Phase 0–4 で **密度・プロセス語彙・太字 topic ラベル・英語�
 ```
 
 確定した運用判断 (ロールアウトで踏襲): module doc の `## Implementation notes` にある proof-method 句 (`extracted by sandwiching`, `closes via …`) は **Q2 通り残す** (proof-idea の正規の置き場)。撤去するのは per-theorem docstring 側のレシピのみ。「ratio form: …」等の等価形提示は設計理由扱いで**残す** (レシピではない)。module doc header の `Cover-Thomas Theorem X.Y` framing 行は据え置き (per-theorem 引用のみ References へ寄せる)。
+
+### Phase 6 — 先頭太字 topic ラベルの再スイープ ✅ DONE (2026-07-26)
+
+Phase 4 の後に書かれた宣言が `**topic ラベル**:` 始まりを再導入していた分を除去。5 バッチ逐次 dispatch
+(`df40c66d` BroadcastChannel / `5145b9f1` MultipleAccess / `51a49ea1` TimeBandLimiting+ShannonHartley /
+`ef65ae25` LZ78+WynerZiv+RateDistortion / `1b3ceef5` 残り) で 48 ファイル。作業項目コード
+(`S3a` / `P3b` / `Leaf` / `Deliverable`) を数学記述へ言い換えた分も同パスで処理。
+
+- 太字始まりの総数 275 (111 ファイル) → 90 (69 ファイル)。**残る 90 は全て named theorem**
+  ([`rules/docstrings.md`](rules/docstrings.md) item 5 が明示的に許す形) で、topic ラベルの残件は無い。
+- **検証**: 触れた全ファイル `lake env lean` 0 error / `@residual`・`@audit:*` タグは verbatim 保存。
+- **教訓 (Phase 4 と同じ機構の再現)**: 一括移行は一度きりでは効かない。規約を知らない新規宣言が
+  太字ラベルを書き戻す。再計測コマンドは**総数**しか返さず違反数ではない (named theorem か否かは
+  機械判定できない) ので、compliant な床 90 を超えた分だけをラベル単位で仕分ける。
 
 ## DoD
 
