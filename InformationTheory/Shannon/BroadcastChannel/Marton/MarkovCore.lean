@@ -1043,7 +1043,9 @@ private lemma marton_condMean_sum_eq_entropy_joint₂
 
 /-- The Lipschitz factor relating the type radius of the transmitted `(V₂, X)`-block to the width
 of the three entropy bands it has to pin.  It is a separate constant from `martonBandConst`, since
-the bands it controls are the entropies of the second output. -/
+the bands it controls are the entropies of the second output.
+
+@audit:ok -/
 noncomputable def martonBandConst₂
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) : ℝ :=
   (Fintype.card α : ℝ) * logSumAbs (martonAmbientMeasure pV K W) martonV₂s
@@ -1055,7 +1057,9 @@ noncomputable def martonBandConst₂
 
 /-- The type radius at which the transmitted `(V₂, X)`-block has to be pinned for the second
 receiver's output bands to hold at radius `ε`.  Like `martonStrongRadius` it is a computed term of
-`ε`, so the signatures downstream carry one radius only. -/
+`ε`, so the signatures downstream carry one radius only.
+
+@audit:ok -/
 noncomputable def martonStrongRadius₂
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) (ε : ℝ) : ℝ :=
   ε / (2 * (1 + martonBandConst₂ pV K W))
@@ -1276,7 +1280,9 @@ output leaves the pair `(v₂, y₂)` outside the weakly jointly typical set wit
 `tol`, for every block length past a threshold depending on `ε` and `tol` alone.
 
 This is the receiver-2 mirror of `marton_condAEP_jointlyTypical`; the channel is not degraded, so
-the two receivers are related by exchanging the auxiliary and output coordinates alone. -/
+the two receivers are related by exchanging the auxiliary and output coordinates alone.
+
+@audit:ok -/
 theorem marton_condAEP_jointlyTypical₂
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -1325,7 +1331,9 @@ theorem marton_condAEP_jointlyTypical₂
 /-- The type radius at which the selected auxiliary pair has to be pinned for the transmitted
 `(V₂, X)` block to be pinned at `martonStrongRadius₂`.  It mirrors `martonCoveringRadius` with the
 receiver-2 band constant; an assembly that needs both pins at once takes the minimum of the two
-radii and reopens each of them with `jointStronglyTypicalSet_mono_radius`. -/
+radii and reopens each of them with `jointStronglyTypicalSet_mono_radius`.
+
+@audit:ok -/
 noncomputable def martonCoveringRadius₂
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) (ε : ℝ) : ℝ :=
   martonStrongRadius₂ pV K W ε / (4 * ((Fintype.card (V₁ × V₂) : ℝ) + 1))
@@ -1377,7 +1385,9 @@ lemma martonCoveringRadius₂_pos
 /-- The transmitted `(V₂, X)` block inherits the type pin of the selected auxiliary pair: drawing
 the input word letterwise from `K` applied to a pair whose joint type is pinned at
 `martonCoveringRadius₂` leaves the pair `(v₂, x)` outside the strongly typical set of radius
-`martonStrongRadius₂` with probability at most `tol`, uniformly in the selected pair. -/
+`martonStrongRadius₂` with probability at most `tol`, uniformly in the selected pair.
+
+@audit:ok -/
 theorem marton_transmitted_stronglyTypical₂_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -1492,7 +1502,9 @@ type-pinned pair the encoder selects, drawing the input word from `K` and passin
 channel leaves `(v₂, y₂)` outside the weakly jointly typical set with probability at most `tol`.
 
 This is the form the error decomposition of `Marton.ErrorAnalysis` consumes, since the threshold
-is uniform in the selected pair and hence in the code. -/
+is uniform in the selected pair and hence in the code.
+
+@audit:ok -/
 theorem marton_condAEP_selected_avg₂_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]

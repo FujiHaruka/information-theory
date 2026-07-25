@@ -221,7 +221,9 @@ theorem marton_alias_slice_avg_le₁
 
 /-- Uniform fiber bound for the `(V₂, Y₂)` jointly typical set: whatever the received word,
 the `V₂`-block mass of the codewords jointly typical with it is at most
-`exp(−n (I(V₂; Y₂) − 3ε))`. -/
+`exp(−n (I(V₂; Y₂) − 3ε))`.
+
+@audit:ok -/
 lemma marton_jointlyTypicalFiber₂_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -312,7 +314,9 @@ lemma marton_jointlyTypicalFiber₂_le
 
 /-- Averaged alias bound at receiver 2.  For an arbitrary output law `ν`, drawing the alias
 codeword independently of `ν` from the `V₂`-block law makes the probability that it is jointly
-typical with the received word at most `exp(−n (I(V₂; Y₂) − 3ε))`. -/
+typical with the received word at most `exp(−n (I(V₂; Y₂) − 3ε))`.
+
+@audit:ok -/
 theorem marton_alias_slice_avg_le₂
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -765,7 +769,9 @@ private lemma martonMessageDecoder₂_eq_of_unique
 `marton_errorProbAt₁_le_bonferroni`: the error probability is at most the probability that the
 transmitted auxiliary word fails to be jointly typical with the received word, plus the sum, over
 the auxiliary codewords of every other message row, of the probability that one of them is jointly
-typical with it. -/
+typical with it.
+
+@audit:ok -/
 theorem marton_errorProbAt₂_le_bonferroni
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ M₁' M₂' n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) (hM₁' : 0 < M₁') (hM₂' : 0 < M₂')
@@ -827,7 +833,9 @@ theorem marton_errorProbAt₂_le_bonferroni
 
 /-- The message-averaged form of `marton_errorProbAt₂_le_bonferroni`: averaging the pointwise
 decomposition over all message pairs bounds the receiver-2 average error probability by the mean
-of the transmitted-pair term and of the alias sum. -/
+of the transmitted-pair term and of the alias sum.
+
+@audit:ok -/
 theorem marton_averageErrorProb₂_toReal_le
     (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {M₁ M₂ M₁' M₂' n : ℕ} (hM₁ : 0 < M₁) (hM₂ : 0 < M₂) (hM₁' : 0 < M₁') (hM₂' : 0 < M₂')
@@ -869,7 +877,9 @@ theorem marton_averageErrorProb₂_toReal_le
 of `marton_random_codebook_alias₁_le`.  An alias codeword taken from a *different message row*
 than the transmitted one is jointly typical with the received word with probability at most
 `exp(−n (I(V₂; Y₂) − 3ε))`.  The ensemble is summed in the same order as at receiver 1, the alias
-row now sitting in the inner subcodebook tier. -/
+row now sitting in the inner subcodebook tier.
+
+@audit:ok -/
 theorem marton_random_codebook_alias₂_le
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
