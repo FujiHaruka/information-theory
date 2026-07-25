@@ -5,29 +5,31 @@
 **Status**: 🚧 進行中 — degraded 仮定を外した一般 (non-degraded) two-receiver broadcast channel に対する
 **Marton inner bound (El Gamal–Kim *Network Information Theory* Thm 8.3、private message のみ)** の形式化。
 親 plan の撤退ライン **L-BC5** (一般 BC + Marton は完全 scope-out) を**ユーザー指示で解除**して追う。
-Phase 1-5 完了 (**mutual covering lemma 本体 `marton_mutual_covering` が proof-done**、root 登録済)、
-Phase 6a は誤り分解 + E2 まで完了。**E1 が weak typicality の在庫では閉じないと判明 (→ D5)**、
-covering 集合のみ strong 化する方針 B を採用。残りは Phase 6a' (strong 移行) + 6b + 7 + 8。
-撤退ライン L-MT1/5/6 不発動、L-MT4 は trigger 成立するが**発動しない** (B に劣るため、→ D5)。
+**Phase 0–6a' 完了**: mutual covering は weak / strong の両版が proof-done、受信機 1 の誤り分解 +
+E1 (条件付き AEP) + E2 (alias) も proof-done。残りは **Phase 6b (受信機 2) + 7 (組み立て) + 8 (ゲート等)**。
 **SoT**: 在庫 [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md) + 本 plan。詳細履歴は git。
 **再検証** (prose にキャッシュしない):
-`scripts/sig_view.ts --sorry InformationTheory/Shannon/BroadcastChannel/Marton/*.lean` /
-`#print axioms InformationTheory.Shannon.BroadcastChannel.Marton.meas_pairCount_eq_zero_le` /
-`rg -n "Marton" InformationTheory.lean` (root 登録の有無)。
+
+```
+rg -c "sorry|@residual" InformationTheory/Shannon/BroadcastChannel/Marton/*.lean \
+  InformationTheory/Shannon/ConditionalAEP.lean          # 無出力 = 0 件
+rg -c "@audit:ok" InformationTheory/Shannon/BroadcastChannel/Marton/*.lean
+scripts/sig_view.ts --names InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore.lean
+#print axioms InformationTheory.Shannon.BroadcastChannel.Marton.marton_strong_mutual_covering
+rg -n "Marton|ConditionalAEP" InformationTheory.lean                        # root 登録の有無
+```
 
 ## 進捗
 
 - [x] Phase 0 — Mathlib / in-project 在庫調査 ✅ → [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md)
-- [x] Phase 1 — mutual covering の second moment 中核 (抽象 `S` 版) ✅ `Marton/MutualCovering.lean` (cd5c379a)
-- [x] Phase 2 — region 述語 + レート分割の消去補題 + root 登録 ✅ `Marton/Basic.lean` (fa43fcb6)
-- [x] Phase 3 — 5-tuple ambient plumbing + `martonInfo₁/₂/V₁V₂` ✅ `Marton/Setup.lean` (5800094e)
-- [x] Phase 4 — 共分散の鋭化 (conditional slice 版) ✅ `MutualCovering.lean` 追記 (6183832d) ★ sum-rate 制約の要
-- [x] Phase 5 — typicality 具体化 = `marton_mutual_covering` ✅ `Marton/Covering.lean` (0d3412ec)
-- [~] Phase 6a — 受信機 1 の誤り解析 🔶 分解 + E2 完了 `Marton/ErrorAnalysis.lean` (49a7191f)、
-      **E1 は weak では閉じない (→ D5)**。E2 は Phase 5 のファイバー上界が一様なため選択の条件付けを
-      解かずに通り、plan が警戒した averaged swap の作り込みは不要だった
-- [ ] Phase 6a' — **E1 の Markov 原子 (gateway) → covering 集合の strong 化** 📋 ★ 次の一手 (→ D5)
-- [ ] Phase 6b — 受信機 2 の誤り解析 + averaged swap 📋
+- [x] Phase 1 — mutual covering の second moment 中核 (抽象 `S` 版) ✅ (`cd5c379a`)
+- [x] Phase 2 — region 述語 + レート分割の消去補題 + root 登録 ✅ (`fa43fcb6`)
+- [x] Phase 3 — 5-tuple ambient plumbing + `martonInfo₁/₂/V₁V₂` ✅ (`5800094e`)
+- [x] Phase 4 — 共分散の鋭化 (conditional slice 版) ✅ (`6183832d`) ★ sum-rate 制約の要
+- [x] Phase 5 — typicality 具体化 = `marton_mutual_covering` (weak) ✅ (`0d3412ec`)
+- [x] Phase 6a — 受信機 1 の誤り分解 + E2 ✅ (`49a7191f`)
+- [x] Phase 6a' — E1 の Markov 原子 + covering 集合の strong 化 (方針 B) ✅ (`c776a03f` まで、→ D5)
+- [ ] Phase 6b — 受信機 2 の誤り解析 + averaged swap 📋 ★ 次の一手
 - [ ] Phase 7 — 組み立て = headline `marton_achievability` 📋
 - [ ] Phase 8 — 2 ゲート + README + 親 plan 同期 + proof-log 📋
 
@@ -39,8 +41,8 @@ covering 集合のみ strong 化する方針 B を採用。残りは Phase 6a' (
 入力カーネル `K : Kernel (V₁ × V₂) α` に対し、3 本の制約
 
 ```
-R₁ < I(V₁;Y₁)                      -- martonInfo₁
-R₂ < I(V₂;Y₂)                      -- martonInfo₂
+R₁ < I(V₁;Y₁)                              -- martonInfo₁
+R₂ < I(V₂;Y₂)                              -- martonInfo₂
 R₁ + R₂ < I(V₁;Y₁) + I(V₂;Y₂) − I(V₁;V₂)   -- martonInfoV₁V₂ を差し引いた sum-rate
 ```
 
@@ -49,16 +51,14 @@ R₁ + R₂ < I(V₁;Y₁) + I(V₂;Y₂) − I(V₁;V₂)   -- martonInfoV₁V�
 
 **全体戦略は 3 層に分ける**。層の境界は「抽象度」で切ってあり、下層は上層の定義を一切知らない。
 
-1. **抽象 second-moment 層** (Phase 1、完了): 可測集合 `S ⊆ α × β` と
-   `iIndepFun (codebookFamily X Y) μ` だけを仮定して
-   `P(どの組も S に落ちない) ≤ (M₁+M₂)/(M₁M₂p)` を出す層。typicality を一切参照しない。
-2. **typicality 層** (Phase 3–5): `S := jointlyTypicalSet μ V₁s V₂s n ε` と具体化し、
-   `p` の下界 (既存 `jointlyTypicalSet_indep_prob_ge`) と conditional slice の一様上界 `q̄`
-   (既存 `conditionalTypicalSlice_card_le` × `typicalSet_prob_le`) を指数形で供給する層。
+1. **抽象 second-moment 層** (Phase 1/4): 可測集合 `S ⊆ α × β` と `iIndepFun (codebookFamily X Y) μ`
+   だけを仮定して `P(どの組も S に落ちない) ≤ …` を出す層。typicality を一切参照しない。
+2. **typicality 層** (Phase 3/5/6a'): `S` を具体的な同時典型集合と置き、`p` の下界とスライスの
+   一様上界 `q̄` を指数形で供給する層。**weak / strong の切替はこの層に閉じる** (下記 D5)。
 3. **operational 層** (Phase 6–7): 符号帳から `BroadcastCode` を作り、Bonferroni + averaged swap +
    pigeonhole で平均誤り確率を落とす層。既存 `bc_achievability` の骨格を写経する。
 
-**符号帳の索引設計 (本 plan で確定させる中核の設計判断)**: Marton の符号帳は
+**符号帳の索引設計 (本 plan で確定させた中核の設計判断)**: Marton の符号帳は
 **メッセージ索引と covering 索引の直積** `Fin Mᵢ × Fin M̃ᵢ` を持つ。
 `M̃ᵢ = ⌈exp(n R̃ᵢ)⌉` は「1 メッセージあたりの副符号帳サイズ」。符号化器は与えられた `(m₁,m₂)` に対し
 副符号帳の組 `(l₁,l₂)` を joint typical になるよう選ぶ (= mutual covering の適用点、固定 `(m₁,m₂)` ごとに
@@ -79,11 +79,6 @@ decode 2 : R₂ + R̃₂ < I(V₂;Y₂)
 決定的写像なので、`bc_achievability` の satellite 段と同じく `X^n` を符号帳の 1 段として
 `Πᵢ K(v₁ᵢ, v₂ᵢ)` から引き、pigeonhole で実現値を固定する。構造体の改修は不要。
 
-**既存資産の再利用率**: 誤り解析 + 組み立て (Phase 6–7) は
-`BroadcastChannel/Achievability/{ErrorAnalysis,Assembly}.lean` の写経が主で、
-net-new は (a) mutual covering の typicality 具体化、(b) 選択索引 `(L₁,L₂)` が符号帳全体の関数である
-ことに由来する独立性の扱い、の 2 点に局在する。
-
 ---
 
 ## 確定済みの設計判断 (実装 leg の前提)
@@ -100,264 +95,139 @@ in-project の typicality mass bound が**例外なく要求する full support 
 (Phase 7 の受け入れ条件)。「一般カーネル形で述べており、決定的 `x = f(v₁,v₂)` 版は本定理の直接の系
 としては出ない」ことを 1–2 文で書く。
 
-### D2. 構造改修はしない (逆依存を機械実測して確認)
+### D2. 構造改修はしない (`dep_consumers.sh` で機械実測済)
 
-`scripts/dep_consumers.sh` の実測値:
-
-| 対象 | direct consumers | 扱い |
-|---|---|---|
-| `InformationTheory.Shannon.BroadcastChannel.BroadcastCode` | **19 decl / 5 file** (Basic 10 / Converse 5 / ErrorAnalysis 2 / Setup 1 / Assembly 1) | 符号化器の型がそのまま使えるので**無改修**。blast radius 0 |
-| `InformationTheory.Shannon.BroadcastChannel.InBCCapacityRegion` | **3 decl / 2 file** (`Basic.lean:139 .mono` / `Converse.lean:179 bc_converse_message_level` / `Converse.lean:583 bc_converse`) | 制約が 2 本しかないので 3 本目が要るが、**既存を改修せず `InMartonRegion` を新規追加**する |
+`BroadcastCode` (19 decl / 5 file) は符号化器の型がそのまま使えるので**無改修**、blast radius 0。
+`InBCCapacityRegion` (3 decl / 2 file) は制約が 2 本しかないので、既存を改修せず `InMartonRegion` を
+新規追加する。Phase 6a/6a' でもこの判断は覆っていない。
 
 ### D3. headline の rate 制約は**厳密不等号**で置く (`InMartonRegion` を仮説に取らない)
 
-既存 `bc_achievability` (`Achievability/Assembly.lean:1087`) の署名を逐語確認した結果、あれは
-`InBCCapacityRegion` を仮説に取らず `hR₁lt : R₁ < bcInfo₁ pU K W` / `hR₂lt : R₂ < bcInfo₂ pU K W` の
-**厳密不等号 2 本**を直接取っている (`InBCCapacityRegion` は converse 側専用)。
-在庫 §1.1 の想定署名は `hmarton : InMartonRegion …` (非厳密 `≤`) だったが、**achievability に境界は
-乗らない**ので厳密形が正しい。⇒ headline は厳密不等号 3 本、`InMartonRegion` (`≤` 3 本) は
-region 記述 / README / 将来の converse 用として別途定義する。
+既存 `bc_achievability` (`Achievability/Assembly.lean`) は `InBCCapacityRegion` を仮説に取らず
+`hR₁lt` / `hR₂lt` の**厳密不等号 2 本**を直接取る (逐語確認済)。achievability に境界は乗らないので
+在庫 §1.1 の非厳密版は誤り。⇒ headline は厳密不等号 3 本、`InMartonRegion` (`≤` 3 本) は
+region 記述 / README / 将来の converse 用として別途定義する (Phase 2 で定義済)。
 
-### D4. Phase 1 の分散上界は**粗い版**であり、そのままでは sum-rate 制約に届かない ★
+### D4. 粗い分散上界では sum-rate 制約に届かない (Phase 4 の存在理由、機械確認済) ★
 
-Phase 1 の `variance_pairCount_le` は添字を共有する組に対し `cov ≤ pairProb` (= `p`) という
-一様上界を使っている (`MutualCovering.lean:198` `covariance_pairIndicator_le` を逐語確認)。
-結果として得られる `meas_pairCount_eq_zero_le` の結論は
+粗い版 `meas_pairCount_eq_zero_le` の結論 `P(A = 0) ≤ 1/(M₂p) + 1/(M₁p)` は
+`R̃₁ > I(V₁;V₂)` **かつ** `R̃₂ > I(V₁;V₂)` を要求し、教科書の**和条件**より真に強い
+(消去すると `R₁+R₂ < I₁+I₂−2·I₁₂` の弱い領域しか出ない)。鋭い版 `meas_pairCount_eq_zero_le'` は
+第 1 項 `1/(M₁M₂p)` (= 和条件) と `q̄/p` 経由の個別条件を分離する。
 
-```
-P(A = 0) ≤ (M₁ + M₂)/(M₁ M₂ p) = 1/(M₂ p) + 1/(M₁ p)
-```
+**スライス上界は両方向が要る** (実装時に反例で確定): fst 共有側は `∫ q(x)² dμX`、snd 共有側は
+`∫ r(y)² dμY` に落ち、**μY 側の一様上界は μX 側を全く抑えない**。
+反例: `α = {0}`, `β = {0,1}`, `μX = δ₀`, `μY(0) = ε`, `S = {(0,0)}` で snd 共有組の共分散 `ε−ε²` が
+主張上界 `q̄·p = ε²` を `ε = 0.1` で破る。⇒ `covariance_pairIndicator_shared_le` は
+`hsliceY` と `hsliceX` の**両方**を取る (どちらも `S` と周辺測度の構造的な量的性質であり、
+結論を担ぐ仮説ではない)。粗い版 4 本は fallback として無改変で残置。
 
-で、これが 0 に落ちるには **`M₁ p → ∞` かつ `M₂ p → ∞`** が要る。`p ≈ exp(−n·I(V₁;V₂))` なので
-条件は `R̃₁ > I(V₁;V₂)` **かつ** `R̃₂ > I(V₁;V₂)` — 教科書の **`R̃₁ + R̃₂ > I(V₁;V₂)` (和)** より真に強い。
-消去すると `R₁ + R₂ < I₁ + I₂ − 2·I(V₁;V₂)` という**弱い領域**しか出ない。
+### D5. E1 は weak typicality の在庫では閉じない → covering 集合のみ strong 化 (方針 B、**完了**) ★
 
-鋭い版に必要なのは、添字を 1 本だけ共有する組に対する共分散の評価である。共有項の寄与が
-`q̄/(M₁p) + q̄/(M₂p)` となり、typicality 具体化では `q̄/p ≤ exp(6nε)/(1−η)` で抑えられるので
-**`M̃ᵢ → ∞` だけで消える**。残るのは対角項 `1/(M₁M₂p)` = **和条件**そのもの。
+**判定 (2026-07 前半、実装者発見 → `proof-pivot-advisor` が反証 3 本を試みたうえで支持)**:
+「選択された `V₁ⁿ` に対して**一様に** E1 が成り立つ」は**偽**。機構は、E1 が要求するのが
+「真の対が典型」= **下界**であるのに対し Phase 5 のファイバー上界は**向きが逆**であること
+(上界は選択の条件付けの下でも生き残る = E2 が助かった理由)。degraded BC が閉じるのは
+`codebook_marginal_one` で送信符号語の法則が ambient iid 法則に**一致する**からで、Marton は
+`martonAux₁` の行添字が両行全体の関数なのでこの潰し込みが**原理的に不可能**。
+反例は補助アルファベット 3 元・周辺分布 `(1/2, 1/4, 1/4)`、型 `(1/2, 1/2, 0)` が
+weak 典型なのに出力側経験エントロピーが `H(Y₁)` から `0.251 nats` (n 非依存) ずれる、の 1 径数族。
+補助アルファベット 2 元では型が pin されて反例が消えるので、**一般アルファベットでのみ** false-as-framed。
 
-**スライス上界は両方向が要る (実装時に反例で確定)**。fst 共有側は `∫ q(x)² dμX ≤ q̄·p`
-(`q x := μY(x での β-fiber)`) に落ちるが、snd 共有側は `∫ r(y)² dμY` (`r y := μX(y での α-fiber)`)
-に落ちる。**μY 側の一様上界は μX 側を全く抑えない**ので、片方向だけを仮定した主張は偽:
+**方針 B (採用・完了)**: `martonSelectRow` の判定を `jointStronglyTypicalSet` へ。**復号側は weak のまま**。
+`MutualCovering.lean` (抽象 `S` 層) と `Setup.lean` / `Basic.lean` は**無改変**で済んだ
+(Phase 1/4 を抽象に切った設計判断がここで効いた)。実装で判明した予測との差分 3 点 —
+**後続 Phase が消費するのでここに残す**:
 
-> `α = {0}`, `β = {0,1}`, `μX = δ₀`, `μY(0) = ε`, `μY(1) = 1−ε`, `S = {(0,0)}`。
-> β-fiber 上界は `ε`、`p = ε`。snd 共有組の共分散は `Var(1[Y=0]) = ε−ε²` で、
-> 主張される上界 `q̄·p = ε²` を `ε = 0.1` で破る (`0.09 > 0.01`)。
+1. **半径は 3 本の入れ子**である (起票時は 2 本しか想定していなかった):
+   復号 `ε` ⊃ 送信対の pin `martonStrongRadius pV K W ε` ⊃ covering の pin
+   `martonCoveringRadius pV K W ε`。定義は
+   `martonStrongRadius ε = ε / (2 * (1 + martonBandConst))`、
+   `martonCoveringRadius ε = martonStrongRadius ε / (4 * (card (V₁ × V₂) + 1))`
+   (`MarkovCore.lean` L269 / L603、逐語確認済)。
+   **帯定数は 2 種で流用不可**: `martonBandConst` が `(V₁, X)` 対用、
+   `coveringBandConst` / `martonCoveringBandConst` が `(V₁, V₂)` 対用。
+2. **起票時に無かった 2 本目の Markov lemma が要った**。covering が与えるのは `(v₁,v₂)` の strong
+   同時典型だが、gateway atom が要求するのは `(v₁,x)` の strong 典型で `x` は `Π K(v₁ᵢ,v₂ᵢ)` から引かれる。
+   この橋が `marton_transmitted_stronglyTypical_le` (`MarkovCore.lean` L691)。E1 の最終形は
+   `marton_condAEP_selected_avg_le` (L808、**入力段平均版**。閾値が選択対より前に立つので符号について一様
+   — これが `ErrorAnalysis` が消費できる唯一の形)。
+3. **covering は weak 版 4 本を残したまま strong 版 4 本を並置した** (削除・書換ではない)。
+   strong ⊆ weak なので strong 版の上界が weak 版を含意する。**領域は不変** — 監査が
+   `C = martonCoveringBandConst = 0` で既存 weak 版の `3ε` / `6ε` に退化することを確認済 (D5 の予測どおり)。
 
-⇒ `covariance_pairIndicator_shared_le` は `hsliceY` (x を固定した β-fiber) と
-`hsliceX` (y を固定した α-fiber) の**両方**を取る。どちらも `S` と `μX`, `μY` の構造的な量的性質であり、
-結論を担ぐ仮説ではない (核は second moment + Chebyshev のまま)。
-
-⇒ **Phase 4 を独立の Phase として立てる** (在庫にはこの区別がない)。ここが閉じないときの退避は
-L-MT5 (弱化領域を headline にし、鋭化を別 plan へ split) — **不発動**。
-
-### D5. E1 は weak typicality の在庫では閉じない → covering 集合のみ strong 化 (方針 B) ★
-
-**判定** (実装者が発見 → `proof-pivot-advisor` が独立検証、反証 3 本を試みたうえで支持):
-「選択された `V₁ⁿ` に対して**一様に** E1 が成り立つ」は**偽**。
-「符号帳アンサンブル平均としての E1 → 0」はおそらく真だが、**weak の在庫では閉じない**
-(閉じる唯一の weak 経路は Sanov / I-射影の大偏差論で、下記 A として却下)。
-⇒ E1 をアンサンブル形で述べた補題に `@audit:defect(false-statement)` を貼るのは**過剰**。
-
-**機構**: E1 が要求するのは「真の対が典型」= **下界**。Phase 5 のファイバー上界は受信語について
-一様だが**向きが逆**。上界は選択の条件付けの下でも生き残る (E2 が助かった理由) が、下界は壊れる。
-degraded BC が閉じるのは `codebook_marginal_one` で送信符号語の法則が ambient iid 法則に
-**一致する (厳密な等式、`Assembly.lean:154`)** から。Marton は `martonAux₁` の行添字が
-両行全体の関数 (`ErrorAnalysis.lean:260`) なのでこの潰し込みが**原理的に不可能**。
-
-**反例** (実 `def` を Read して逐語確認 + 数値確認、クラスであってインスタンスではない):
-補助アルファベット 3 元、周辺分布 `(1/2, 1/4, 1/4)`。型 `(1/2, 1/2, 0)` は経験エントロピーの偏差が
-**ちょうど 0** = 完全に weak 典型なのに、出力側の経験エントロピーの極限が `H(Y₁)` から
-**0.251 nats (n によらない定数)** ずれる。破れは「型の第 1 成分が 1/2」の 1 径数族**全体**で立つ。
-補助アルファベットが 2 元だと weak 制約 1 本で型が pin され反例は消えるので、**一般アルファベットでのみ**
-false-as-framed。
-
-**方針 B (採用)** — `martonSelectRow` の判定を `jointStronglyTypicalSet` へ。**復号側は weak のまま**:
-
-- `MutualCovering.lean` (730 行) は**無改変**。`S : Set (α × β)` が素の `variable` (`:54`) で
-  typicality を一切参照しないため (Phase 1/4 を抽象に切った設計判断がここで効く)。
-- `Covering.lean` (669 行): 書換は **4 decl / 約 300 行** (`meas_codebook_no_jointlyTypicalPair_lt`
-  L337–488 / `meas_marton_codebook_no_jointlyTypicalPair_lt` L503–598 / `marton_mutual_covering` L610 /
-  `marton_mutual_covering_of_indepAux` L642)。中身は指数の付け替え。残り約 420 行は残る。
-- `Setup.lean` / `Basic.lean` は**無改変**。`ErrorAnalysis.lean` の coupling は **6 decl に閉じる**
-  (`dep_consumers` 実測)。E2 の核 `sum_codebook_alias_le` は選択規則について抽象なので
-  署名がほぼ残る見込み (**未確認** — 読解判断で機械検証していない)。
-- **`jointStronglyTypicalSet_subset_jointlyTypicalSet` (`RateDistortion/AchievabilityUnconditional.lean:135`、
-  sorry-free) により、Phase 5 の両方向スライス上界と swap 橋 45 行は包含で再利用できる**。
-- 領域は不変 (slack が Lipschitz 増幅されるだけ)。
-
-**最初の一手 — 順序を逆にしないこと**: `Covering.lean` の書換より先に、**E1 の Markov 原子を
-gateway-atom-first で撃つ**。`Covering.lean` に触れず単独で述べられる形 =
-「strong 同時典型な任意の対に対し、通信路出力の下で weak 同時典型に入る確率が `1−tol` 以上 (n 十分大)」。
-ここが通らなければ strong 移行の 300 行が丸ごと sunk cost になる。
-`wz_pi_nonuniform_concentration_tendsto` (`WynerZiv/Achievability/Concentration.lean:873`) は
-WZ の型を一切参照しない**汎用の非同分布独立積 Chebyshev 集中**で E1 が要求する形そのもの。
-ただし `private` でファイルに閉じているので共有モジュールへの昇格が要る (再導出なら約 60 行)。
-
-**却下した代替**: **A** (weak のまま Sanov / I-射影) — 型空間上の I-射影一意性 + 定量ギャップという
+**却下した代替 A** (weak のまま Sanov / I-射影) は、型空間上の I-射影一意性 + 定量ギャップという
 在庫ゼロの凸解析 600–900 行、かつ `R₁'+R₂'` に上界制約が新規に要り Phase 7 の Fourier–Motzkin を
-再設計することになる。**L-MT5 (領域弱化) はこの障害に対応しない** (弱化しても選択は残るので E1 は同じく破れる)。
-**L-MT4** は trigger 条件が文字通り成立するが、退避先が sum-rate 制約を捨てる =
-Phase 1/4/5 の成果が headline に載らないため **B に劣る**。B が 2 leg 失敗した後の最後の手段。
-**退避は C** = E1 を `sorry` + `@residual(plan:marton-inner-bound-plan)` にして Phase 7 を先に通し、
-部品を無条件命題として確定させる。
+再設計することになるため不採用。**L-MT5 (領域弱化) はこの障害に対応しない** (弱化しても選択は残る)。
+**退避 C** (E1 を `sorry` にして Phase 7 を先行) は方針 B の成功により**不要になった**。
 
 ---
 
 ## Phase 詳細
 
-各 Phase に「入力 / 出力 / 見積り行数 / 先行 Phase / proof-log」を書く。行数は在庫 §7 の見積りから
-Phase 1 の実績 (397 行) を差し引いて再配分したもの。
+### Phase 0–6a' ✅ 完了
 
-### Phase 0 — 在庫調査 ✅ 完了
+| Phase | 出力 | commit |
+|---|---|---|
+| 0 | 在庫 [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md)。Mathlib 壁 0 件 / 既存率 89% / 自前構築 8 種 | — |
+| 1 | `Marton/MutualCovering.lean` 抽象核 4 段 (`integral_pairCount` / `covariance_pairIndicator_eq_zero` / `variance_pairCount_le` / `meas_pairCount_eq_zero_le`) + 充足可能性証明書 | `cd5c379a` |
+| 2 | `Marton/Basic.lean` = `InMartonRegion` + `.mono` + `exists_martonRateSplit` (Fourier–Motzkin、`θ` のクランプが要る) + root 登録 | `fa43fcb6` |
+| 3 | `Marton/Setup.lean` = `martonJointDistribution` / `martonAmbientMeasure` + 座標補題 + `martonInfo₁/₂/V₁V₂` (entropy 差分形) + `martonAmbient_entropy_coord` | `5800094e` |
+| 4 | `MutualCovering.lean` 追記 = `covariance_pairIndicator_shared_le` / `variance_pairCount_le'` / `meas_pairCount_eq_zero_le'` (→ D4) | `6183832d` |
+| 5 | `Marton/Covering.lean` = weak 版 mutual covering `marton_mutual_covering` (`@[entry_point]`) + swap 橋 45 行 + ambient 輸送 | `0d3412ec` |
+| 6a | `Marton/ErrorAnalysis.lean` = 符号帳/選択/復号器の定義 + `marton_errorProbAt₁_le_bonferroni` + `marton_averageErrorProb₁_toReal_le` + E2 (`sum_codebook_alias_le` / `marton_random_codebook_alias₁_le`)。E2 は Phase 5 のファイバー上界が一様なため選択の条件付けを解かずに通り、警戒した averaged swap の作り込みは不要だった | `49a7191f` |
+| 6a' | 下記 | `e4e73e87` → `d87ada71` → `e4fa6af2` → `7dd1f6ac` → `db7adca9` → `cbe4beb8` → `1fa8eefa` → `c776a03f` |
 
-出力 = [`marton-inner-bound-inventory.md`](marton-inner-bound-inventory.md)。
-Mathlib 壁 0 件 / 既存率 89% / 自前構築 8 種。**proof-log: no**。
+**Phase 6a' の内訳** (gateway-atom-first の順序を守り、`Covering.lean` の書換より先に E1 の Markov 原子を撃った):
 
-### Phase 1 — mutual covering の second moment 中核 (抽象 `S` 版) ✅ 完了
+- **新規ファイル `InformationTheory/Shannon/ConditionalAEP.lean`** — 型汎用の条件付き AEP モジュール
+  (Chebyshev 集中 + 型 pin の Lipschitz 評価 + 合成 = `pi_empiricalMean_deviation_le_of_type_close`)。
+  **WZ `WynerZiv/Achievability/Concentration.lean` の `private` 版 3 本
+  (`wz_pi_nonuniform_mean_concentration` / `wz_pi_nonuniform_concentration_tendsto` /
+  `wz_sum_eq_typeCount_mul`) と同一命題**であり、WZ を本モジュールへ再配線するのは **follow-up**
+  (module docstring に記載済 → Phase 8)。
+- **新規ファイル `Marton/MarkovCore.lean`** — Marton の 2 本の Markov lemma (→ D5-2) + 帯補題群 + 半径定義。
+- `Covering.lean` に strong 版 4 本を並置、`ErrorAnalysis.lean` の `martonSelectRow` を strong 判定へ
+  (`ε_cov` を独立パラメータとして追加)。
+- **proof-log: yes** (Phase 4/5 の proof-log に統合)。
 
-- 入力: なし (Mathlib の `variance_sum` / `covariance_eq_sub` / `IndepFun.covariance_eq_zero` /
-  `meas_ge_le_variance_div_sq` のみ)。
-- 出力: `InformationTheory/Shannon/BroadcastChannel/Marton/MutualCovering.lean` (commit `cd5c379a`)。
-  中核 4 段 = `integral_pairCount` (第 1 モーメント) / `covariance_pairIndicator_eq_zero`
-  (添字を共有しない組の共分散 0) / `variance_pairCount_le` (分散上界) /
-  `meas_pairCount_eq_zero_le` (Chebyshev)。正準 i.i.d. ambient 上での充足可能性証明書
-  `meas_pairCount_ambient_eq_zero_le` 付き (仮説が供給不能で空回りするリスクは潰れている)。
-- 設計: 独立性は `iIndepFun (codebookFamily X Y) μ` の **1 本**で与える。`codebookFamily` は
-  2 本の符号帳を `Fin M₁ ⊕ Fin M₂` 添字の単一族へ interleave し、未使用座標を定数 padding して
-  終域を `α × β` に揃えたもの。代償は `[Nonempty α] [Nonempty β]` のみ。
-- **未実施**: `InformationTheory.lean` への import 登録 (意図的、Phase 2 で行う)。
-- **proof-log: no** (Phase 5 の proof-log に統合する)。
+### Phase 6b — 受信機 2 の誤り解析 + averaged swap 📋 ★ 次の一手
 
-### Phase 2 — region 述語 + レート分割の消去補題 + root 登録 📋
-
-- 入力: なし (純粋な実数の不等式)。
-- 出力: `InformationTheory/Shannon/BroadcastChannel/Marton/Basic.lean`
-  - `structure InMartonRegion (R₁ R₂ I₁ I₂ I₁₂ : ℝ) : Prop` — `bound₁` / `bound₂` / `boundSum` の 3 フィールド
-    (`InBCCapacityRegion` は改修しない → D2)。
-  - `InMartonRegion.mono` — `I₁ ≤ I₁'`, `I₂ ≤ I₂'`, **`I₁₂' ≤ I₁₂`** (第 3 引数だけ向きが逆) で単調。
-  - `exists_martonRateSplit` — Fourier–Motzkin。厳密 3 本 `R₁ < I₁`, `R₂ < I₂`,
-    `R₁+R₂ < I₁+I₂−I₁₂` から
-    `∃ R₁' R₂', 0 ≤ R₁' ∧ 0 ≤ R₂' ∧ I₁₂ < R₁'+R₂' ∧ R₁+R₁' < I₁ ∧ R₂+R₂' < I₂` を作る。
-    構成は `Rᵢ' := (Iᵢ−Rᵢ)·θ`、**`θ := max ((I₁₂/D + 1)/2) (1/2)`**、`D := (I₁−R₁)+(I₂−R₂)`。
-    `I₁₂ ≥ 0` が不要なのは正しいが、**クランプなしの素の `θ` は `I₁₂ < −D` で負になり `0 ≤ Rᵢ'` を破る**
-    (機械確認済)。`R̃` の合成チルダ (U+0303) は Lean の識別子として不正なのでプライム記法を使う。
-  - `InformationTheory.lean` に `Marton.MutualCovering` と `Marton.Basic` の import を追加
-    (BC ブロックは現状 `InformationTheory.lean:95-101`、その直後に足す)。
-    まだ誰にも消費されていない段階で登録するのは、`scripts/dep_*.sh` と CI に見えるようにするため。
-- 見積り: **90–130 行**。先行: なし。**proof-log: no**。
-
-### Phase 3 — 5-tuple ambient plumbing + 情報量 📋
-
-- 入力: `BroadcastChannel/Achievability/Setup.lean:54,71,159,172,182,212,247` (4-tuple 版の写経元)。
-- 出力: `InformationTheory/Shannon/BroadcastChannel/Marton/Setup.lean`
-  - `martonJointDistribution pV K W : Measure (V₁ × V₂ × α × β₁ × β₂)` — `pV ⊗ₘ K ⊗ₘ W` を
-    `MeasurableEquiv.prodAssoc` で整形 (`bcJointDistribution` より入れ子が 1 段深い)。
-  - `martonAmbientMeasure` (`Measure.infinitePi`) + 座標補題 4 本 (`map_coord` / `iIndepFun_coord` /
-    `identDistrib_coord` / `coord_marginal_pos`) + `singleton_pos` 相当。
-  - `martonInfo₁ = I(V₁;Y₁)` / `martonInfo₂ = I(V₂;Y₂)` / `martonInfoV₁V₂ = I(V₁;V₂)` を
-    **entropy 差分形**で定義 (`bcInfo₁` `Setup.lean:111` と同形)。`mutualInfo` (`ℝ≥0∞`) は使わない
-    — typicality の出口形と噛み合わないため。
-- 落とし穴: `entropy` は `[Fintype] [DecidableEq] [Nonempty] [MeasurableSpace] [MeasurableSingletonClass]`
-  を要求 (`Bridge.lean:34`)。5-tuple の各射影に instance を通す必要がある。
-- 見積り: **360–550 行**。先行: Phase 2。**proof-log: no** (定型写経)。
-
-### Phase 4 — 共分散の鋭化 (conditional slice 版) ✅ 完了 ★
-
-- 出力: `Marton/MutualCovering.lean` への追記 (397 → 718 行、11 decl 追加、commit `6183832d`)。
-  - `covariance_pairIndicator_shared_le` (L491) — 添字を 1 本だけ共有する組に対し `cov ≤ q̄ * pairProb`。
-    仮説は `hsliceY` / `hsliceX` の**両方向** (→ D4 の反例)。
-  - `variance_pairCount_le'` (L519) / `meas_pairCount_eq_zero_le'` (L585) — D4 の目標形どおり。
-    第 1 項 `1/(M₁M₂p)` が和条件、残り 2 項が `q̄/p` 経由の個別条件、という分離が出ている。
-- 既存の粗い版 4 本は**署名も結論も無改変** (`q̄` を供給できない文脈の fallback として残す)。
-  `variance_pairCount_le` の証明内部のみ、局所 `have` 2 本を `private lemma` へ切り出して鋭い版と共有。
-- 設計 (再利用価値あり): Tonelli を Bochner でなく **lintegral (`ℝ≥0∞`) で回す**と可積分性の議論が消え、
-  3 本目の補題群が各 20 行で閉じる。積型は **`α × (β × β)`** の向き (共有座標を最外) が決定的で、
-  `(α × β) × β` だと Tonelli が噛まない。
-- 撤退 L-MT5 は**不発動**。**proof-log: yes** (Phase 5 の proof-log に統合)。
-
-### Phase 5 — typicality 具体化 = `marton_mutual_covering` 📋
-
-- 入力: Phase 3 (ambient / 情報量 / **`martonAmbient_entropy_coord`** = ambient 上の entropy を
-  per-coordinate 版へ落とす補題。情報量を典型集合の指数と噛ませる際に必ず要る)、Phase 4 (鋭い評価)、既存
-  `jointlyTypicalSet_indep_prob_ge` (`RateDistortion/AchievabilityJointTypicalEncoder.lean:255`) /
-  `conditionalTypicalSlice_card_le` (`SlepianWolf/ConditionalTypicalSlice.lean:140`) /
-  `typicalSet_prob_le` (`AEP/Basic/Achievability.lean:507`) /
-  `jointlyTypicalSet_prob_tendsto_one` (`ChannelCoding/Basic.lean:450`)。
-- **新規に要る橋 1 本** (Phase 4 実装時に実測、在庫にも本 plan 初版にも無かった項目):
-  Phase 4 の仮説は両方向 (`hsliceY` / `hsliceX`) を要求するが、in-project 資産は**片方向しか無い**。
-  `conditionalTypicalSlice_card_le` (`SlepianWolf/ConditionalTypicalSlice.lean:140`) は
-  定義 (`:51`) が `{ x | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε }` = **X-fiber** なので `hsliceX` 側は直接供給できる。
-  `hsliceY` (Y-fiber) 側の補題は `rg` で 0 件。`jointlyTypicalSet` の定義 (`ChannelCoding/Basic.lean:281`)
-  自体は X/Y について対称なので、`jointlyTypicalSet μ Ys Xs n ε = Prod.swap ⁻¹' jointlyTypicalSet μ Xs Ys n ε`
-  相当の輸送補題 (entropy 不変性経由) か `conditionalTypicalSlice_card_le` の鏡像を建てる。**壁ではなく配線、40–80 行**。
-- 出力: `Marton/Covering.lean`
-  - `S := jointlyTypicalSet μ V₁s V₂s n ε` への具体化 (`α := Fin n → V₁`, `β := Fin n → V₂`)。
-  - 符号帳 ambient の配線: `Ω := Codebook M̃₁ n V₁ × Codebook M̃₂ n V₂`、
-    `μ := (codebookMeasure pV₁ M̃₁ n).prod (codebookMeasure pV₂ M̃₂ n)`、
-    `X i c := c.1 i` / `Y j c := c.2 j` に対し `iIndepFun (codebookFamily X Y) μ` を供給する。
-    ルート: `MeasurableEquiv.sumPiEquivProdPi` + `measurePreserving_sumPiEquivProdPi`
-    (`Mathlib/MeasureTheory/Constructions/Pi.lean:774/790`) で和型添字の `Measure.pi` へ移し、
-    `iIndepFun_pi` → `.comp ambientPad` (Phase 1 の `iIndepFun_codebookFamily_ambient` の証明を写経)。
-  - 指数評価: `p ≥ (1−η)·exp(−n(I₁₂+3ε))` / `q̄ ≤ exp(−n(I₁₂−3ε))` を合成し
-    `q̄/p ≤ exp(6nε)/(1−η)`。`η` は自由パラメータなので `η ≤ 1/2` 等で固定する
-    (在庫 §6 の注意点)。`v₁` が非 typical な場合はスライスが空
-    (`conditionalTypicalSlice_empty_of_y_not_typical`) — **この場合分けは実際には不要だった**
-    (当初の警告は過大見積り)。ファイバー所属が定義上そのまま第 1 連言を与えるので `hx` は無条件に立ち、
-    `conditionalTypicalSlice_card_le` は非 typical な y の場合分けを内部で済ませて全 y で成立する。
-  - headline: `marton_mutual_covering` (`@[entry_point]`)。
-- **実績** (669 行 / 16 decl / commit `0d3412ec`、見積 300–480 に対し上振れ):
-  - swap 橋は**配線で済んだ** (45 行、逆像の集合等式 + `Fintype.sum_equiv (Equiv.prodComm)`)。
-  - ambient 配線は plan 指定 (Phase 1 の独立性証明を写経) ではなく、**Phase 1 の正準 ambient へ
-    `MeasurePreserving` で結論ごと輸送**する形にした (31 行)。`sumPiEquivProdPi` を symm 方向 +
-    定数型族で使うと依存 Pi の instance 問題が消える。
-  - **plan に無かった橋 1 本**: 符号帳測度を `codebookMeasure` 形で述べるのに
-    `map_jointRV_eq_pi` が要る (6 行、`iIndepFun_iff_map_fun_eq_pi_map` 経由)。
-- **Phase 6-7 への申し送り**: headline は `ε` を結論側 (`∃`) に出している。復号解析と `ε` を協調させる必要が
-  あるので、**Phase 6-7 は `ε` を仮説に取る版 `meas_marton_codebook_no_jointlyTypicalPair_lt` を消費すること**
-  (条件 `I₁₂ + 3ε < R₁'+R₂'`, `6ε < R₁'`, `6ε < R₂'`)。
-- 充足可能性証明書 `marton_mutual_covering_of_indepAux` 付き (補助変数独立の場合、L-MT4 の退避先でもある)。
-- 撤退 L-MT1 は**不発動**。**proof-log: yes**。
-
-### Phase 6a — 受信機 1 の誤り解析 📋
-
-- 入力: `bc_errorProbAt₁_le_bonferroni3` (`ErrorAnalysis.lean:652`) /
-  `macJTS_indep_prob_le_X1` (`MultipleAccess/AchievabilityCore.lean:50`) / Phase 5。
-- 出力: `Marton/ErrorAnalysis.lean` の受信機 1 側。誤り事象を
-  (E0) 選ばれた `(l₁,l₂)` の組が joint typical でない — Phase 5 が潰す /
-  (E1) 真の `(m₁,l₁)` と `y₁` が joint typical でない — typicality LLN /
-  (E2) 偽の `(m₁',l₁')` と `y₁` が joint typical — `R₁+R̃₁ < I(V₁;Y₁)` が潰す、に分解。
-- **本 Phase 最大の解析リスク**: 選択索引 `(L₁,L₂)` が符号帳**全体**の関数なので、
-  「偽の符号語 `V₁^n(m₁',l₁')` が `Y₁^n` と独立」という素朴な主張は選択の条件付けを通ると崩れる。
-  緩和策は既存の averaged swap (`bc_random_codebook_E0₁_swap` `Assembly.lean:97`) と同じく、
-  符号帳測度上の平均を先に取ってから交換すること。ここは gateway-atom-first の対象
-  — 本 Phase に入る前に E2 の 1 原子だけを先に撃って通ることを確認する。
-- 見積り: **450–650 行**。先行: Phase 5。**proof-log: yes**。
-- 撤退: L-MT4 / L-MT6。
-
-### Phase 6b — 受信機 2 の誤り解析 + averaged swap 📋
-
-- 入力: Phase 6a の受信機 1 側 (対称なので写経)、`bc_errorProbAt₂_le_bonferroni` (`ErrorAnalysis.lean:28`)。
+- 入力: Phase 6a/6a' の受信機 1 側 (対称なので写経)、`bc_errorProbAt₂_le_bonferroni`
+  (`Achievability/ErrorAnalysis.lean:28`)。
 - 出力: `Marton/ErrorAnalysis.lean` の受信機 2 側 + 平均誤り確率への変換
-  (`bc_averageErrorProb₁_toReal_le` / `bc_averageErrorProb₂_toReal_le` の相当物)。
-- BC (degraded) と違い **cloud/satellite の 2 段構造がない**ので、受信機 2 は受信機 1 の完全な鏡像。
-  逆に degraded 版にあった `bcInfoJoint` / wrong-cloud の段は**まるごと不要**。
-- 見積り: **350–450 行**。先行: Phase 6a。**proof-log: no** (6a の写経)。
+  (`marton_errorProbAt₂_le_bonferroni` / `marton_averageErrorProb₂_toReal_le` / alias₂)。
+- **6a' からの申し送り**: `marton_condAEP_selected_avg_le` の **`V₂`/`Y₂` 版**が要る。
+  `MarkovCore.lean` の帯補題群 (`marton_band_aux` / `marton_band_out` / `marton_band_joint` +
+  `martonBandConst` / `martonStrongRadius`) を `martonV₂s` / `martonY₂s` で写経する。
+  半径の入れ子構造 (D5-1) はそのまま踏襲 — `martonCoveringRadius` は covering 側の量なので**共通**、
+  分岐するのは `martonBandConst` 以降。
+- BC (degraded) と違い **cloud/satellite の 2 段構造がない**ので、受信機 2 は受信機 1 の**完全な鏡像**。
+  degraded 版にあった `bcInfoJoint` / wrong-cloud の段は**まるごと不要**。
+- 見積り: **350–500 行** (6a' で MarkovCore が 880 行に育ったぶん、写経量は起票時見積より増える)。
+- **proof-log: no** (6a/6a' の写経)。撤退: L-MT6。
 
 ### Phase 7 — 組み立て = headline `marton_achievability` 📋
 
-- 入力: Phase 2 (`exists_martonRateSplit`)、Phase 5、Phase 6a/6b、
+- 入力: Phase 2 (`exists_martonRateSplit`)、Phase 6a/6a'/6b、
   `bc_two_tier_pigeonhole` (`Assembly.lean:699`、完全に抽象なのでそのまま呼べる)、
-  `bcCodebookToCode` (`Setup.lean:678`) の相当物。
+  `bcCodebookToCode` (`Setup.lean:678`) の相当物、`martonCodebookToCode` (6a で定義済)。
+- **covering は ε を仮説に取る版を消費する**: `marton_strong_mutual_covering` は `ε` を結論側 (`∃`) に
+  出しているので、復号解析と `ε` を協調させる Phase 7 では
+  **`meas_marton_codebook_no_jointStronglyTypicalPair_lt`** (`Covering.lean:946`) を使う。
+  レート条件は `I₁₂ + (C+3)ε < R₁'+R₂'` / `(4C+6)ε < R₁'` / `(4C+6)ε < R₂'`
+  (`C = martonCoveringBandConst pV K W`、逐語確認済)。
+- **6a' からの申し送り (ε 配分)**: covering は `ε_cov := martonCoveringRadius pV K W ε` で instantiate する。
+  `martonCoveringRadius ε → 0 (ε→0)` なので covering のレート条件は `ε` を小さく取れば必ず満たせるが、
+  **ε 配分の制約が 1 本増える**: 既存 5 系統 (covering 失敗 / E0₁ / E0₂ / alias₁ / alias₂) に加えて
+  **6 系統目 = covering のレート条件 3 本を `ε_cov` 経由で同時に満たす条件**。
 - 出力: `Marton/Achievability.lean`
-  - `martonCodebookToCode` — 3 段符号帳 + 選択関数から `BroadcastCode M₁ M₂ n α β₁ β₂` を作る。
-    選択は `Classical.choice` 経由の非構成的な選択になる (既存 `bcCodebookToCode` と型が違う点に注意)。
   - headline `marton_achievability` — 署名は在庫 §1.1 を D3 に従って厳密不等号 3 本へ差し替えた形。
   - **docstring 要件** (D1): 一般カーネル形であること + 決定的 `x = f(v₁,v₂)` 版は直接の系として
     出ないこと + `hpV`/`hK`/`hW` が full support の**正則性前提**であること (load-bearing ではない) を明記。
-- ε の配分は 5 系統 (covering 失敗 / E0₁ / E0₂ / alias₁ / alias₂)。
-- 見積り: **250–400 行**。先行: Phase 2, 5, 6a, 6b。**proof-log: yes**。
-- 撤退: L-MT6。
+  - **半径の 3 本入れ子 (D5-1) も docstring に 1 文で書く** — 復号 `ε` と選択 `ε_cov` が別物である
+    ことは署名から読み取れないため。
+- 見積り: **250–400 行**。先行: Phase 2, 6a, 6a', 6b。**proof-log: yes**。撤退: L-MT6。
 
 ### Phase 8 — 2 ゲート + README + 親 plan 同期 + proof-log 📋
 
@@ -365,27 +235,25 @@ Mathlib 壁 0 件 / 既存率 89% / 自前構築 8 種。**proof-log: no**。
   `style-auditor` (`.lean` decl/docstring を触った全 Phase) を、触ったファイルに対して起動。
 - `docs/readme-theorems.txt` に headline を追記 → `deno run -A scripts/gen_readme_table.ts --write`。
   Ch.15 行に degraded 版と並べる (章の対応は `docs/textbook-roadmap.md` Ch.15)。
-- 親 plan 同期 (下記「親への同期指示」)。
+- **follow-up (6a' 由来)**: WZ `Achievability/Concentration.lean` の `private` 3 本を
+  `Shannon/ConditionalAEP.lean` へ再配線する (重複命題の解消)。本 plan の headline には不要なので
+  Phase 7 を塞がない。
+- 親 plan 同期 (下記「親との同期点」)。
 - `deno run -A scripts/plan_lint.ts docs/shannon/marton-*.md docs/shannon/broadcast-channel-moonshot-plan.md`。
-- **proof-log: no** (Phase 4/5/6a/7 の proof-log を統合する metrics のみ)。
+- **proof-log: no** (Phase 4/5/6a'/7 の proof-log を統合する metrics のみ)。
 
 ---
 
 ## 撤退ライン (frozen slug — 他文書が参照しうる)
 
-在庫 §9 の提案 L-MT1〜L-MT4 を採用し、番号は維持する (在庫が参照しているため)。
-ただし **L-MT1 は射程を縮める**: 在庫が想定していた「4 ケース共分散分解」は Phase 1 で閉じたので、
-L-MT1 が残って担うのは typicality 具体化 (Phase 5) のみ。鋭化 (Phase 4) と組み立て (Phase 7) は
-新規スロット L-MT5 / L-MT6 に分ける。
-
-| slug | 発動条件 | 退避 (= `sorry` + `@residual`。述語化して仮定に積むのは禁止) | 退避後に残るもの |
+| slug | 発動条件 | 退避 (= `sorry` + `@residual`。述語化して仮定に積むのは禁止) | 状態 |
 |---|---|---|---|
-| **L-MT1** | Phase 5 の typicality 具体化 (符号帳 ambient 配線 or 指数合成) が 1 leg で閉じない | `marton_mutual_covering` の body を `sorry` + `@residual(plan:marton-inner-bound-plan)` にして、Phase 6–7 を先に組む | Phase 1–4 (抽象核 + 鋭化 + region + 情報量) は proof-done のまま。headline は条件付きにならず `sorry` 1 点に局在する |
-| **L-MT2** | 決定的 `x = f(v₁,v₂)` 版が full support 前提と両立しない (D1、**既に発動・解決済**) | 一般カーネル `K : Kernel (V₁ × V₂) α` 形で主定理を述べる。決定的版は別 leg | 主定理はそのまま成立。失うのは EGK Thm 8.3 の逐語形との一致だけ (docstring に明示 → Phase 7 受け入れ条件) |
-| **L-MT3** | Phase 3 の 5-tuple ambient plumbing が 4-tuple の写経で済まず爆発する | 補助変数を `V := V₁ × V₂` と束ねた 4-tuple `V × α × β₁ × β₂` に落とし、`bcAmbientMeasure` の形をそのまま保つ。射影 `V → V₁` / `V → V₂` を後付けする | 情報量の定義が射影経由になるだけで、Phase 4 以降の議論は不変 |
-| **L-MT4** | Phase 6a の非構成的 encoder / 選択索引の独立性が既存 `bcCodebookToCode` 系と噛み合わない | sum-rate 制約なしの**退化版** (`R₁ < I(V₁;Y₁)`, `R₂ < I(V₂;Y₂)`、`V₁ ⟂ V₂`) を先に閉じる。mutual covering 不要 (`I₁₂ = 0`) で既存 MAC 型 union bound だけで通る | 一般 BC に対する (弱い) inner bound が headline として残る。degraded 仮定なしの結果なので単体で新規性がある |
-| **L-MT5** | Phase 4 の鋭化 (3 変数独立性 + Tonelli) が閉じない | 粗い版 `meas_pairCount_eq_zero_le` のまま上を組み、headline の sum-rate 制約を `R₁+R₂ < I₁+I₂−2·I₁₂` に**弱化**する。真の Marton は `sorry` + `@residual(plan:marton-sharp-covering-plan)` で別 plan へ split | 弱化領域は Marton 領域に含まれる正しい inner bound なので、headline は無条件のまま (仮説束ねゼロ)。docstring に「教科書の領域より狭い」と明記する |
-| **L-MT6** | Phase 7 の ε 配分 5 系統 / pigeonhole の合成が閉じない | headline を `sorry` + `@residual(plan:marton-assembly-plan)` に退避し、Phase 6 までの部品を proof-done として登録する | mutual covering / region / 情報量 / 誤り解析の部品はすべて無条件命題として残る |
+| **L-MT1** | Phase 5 の typicality 具体化 (符号帳 ambient 配線 or 指数合成) が 1 leg で閉じない | `marton_mutual_covering` の body を `sorry` + `@residual(plan:marton-inner-bound-plan)` にして Phase 6–7 を先に組む | **不発動** (Phase 5 完了) |
+| **L-MT2** | 決定的 `x = f(v₁,v₂)` 版が full support 前提と両立しない (D1) | 一般カーネル `K : Kernel (V₁ × V₂) α` 形で主定理を述べる。決定的版は別 leg。失うのは EGK Thm 8.3 逐語形との一致だけ (docstring に明示 → Phase 7 受け入れ条件) | **発動・解決済** |
+| **L-MT3** | Phase 3 の 5-tuple ambient plumbing が 4-tuple の写経で済まず爆発する | 補助変数を `V := V₁ × V₂` と束ねた 4-tuple に落とし、射影を後付けする | **不発動** (Phase 3 完了) |
+| **L-MT4** | Phase 6a の非構成的 encoder / 選択索引の独立性が既存 `bcCodebookToCode` 系と噛み合わない | sum-rate 制約なしの**退化版** (`V₁ ⟂ V₂`) を先に閉じる。mutual covering 不要 (`I₁₂ = 0`) | **trigger 条件は 6a で成立したが発動せず**。方針 B (D5) が成功したので**もはや trigger しない** — 退避先は Phase 1/4/5 の成果を headline に載せられず B に劣る |
+| **L-MT5** | Phase 4 の鋭化 (3 変数独立性 + Tonelli) が閉じない | 粗い版のまま上を組み、headline の sum-rate 制約を `R₁+R₂ < I₁+I₂−2·I₁₂` に**弱化**。真の Marton は別 plan へ split | **不発動** (Phase 4 完了)。なお D5 の障害には対応しない |
+| **L-MT6** | Phase 6b / 7 の ε 配分 6 系統 / pigeonhole の合成が閉じない | headline を `sorry` + `@residual(plan:marton-assembly-plan)` に退避し、Phase 6 までの部品を proof-done として登録する | **未発動 (active)** — 残 Phase の唯一の生きた撤退口 |
 
 > **禁止事項の再確認**: どの撤退ラインでも「covering が成立する」「選択索引が独立である」等を
 > `*Hypothesis` 述語に束ねて仮説として渡す形は取らない (CLAUDE.md「検証の誠実性」tier 5)。
@@ -393,27 +261,16 @@ L-MT1 が残って担うのは typicality 具体化 (Phase 5) のみ。鋭化 (P
 
 ---
 
-## 親への同期指示 (親ファイルの編集は orchestrator が行う。本 plan では書き換えない)
+## 親との同期点 (plan_lint 双方向照合)
 
-`docs/shannon/broadcast-channel-moonshot-plan.md` に対し 3 箇所:
+親 `broadcast-channel-moonshot-plan.md` の 3 箇所が本子 plan の状態の**キャッシュ**。**衝突時は子が SoT**。
 
-1. **Status 行 (`:3`)**: 先頭を `**Status**: CLOSED ✅` から
-   `**Status**: degraded ✅ CLOSED / 一般 BC 🚧 進行中` へ。末尾の
-   「一般 (non-degraded) BC + Marton (L-BC5) は scope-out 継続 (textbook-roadmap Ch.15)。」を
-   「**L-BC5 (一般 BC + Marton) はユーザー指示で解除** → 子
-   [`marton-inner-bound-plan.md`](marton-inner-bound-plan.md) で追跡 (Phase 1 = mutual covering の
-   second moment 中核 完了)。Körner–Marton は scope-out 継続。」へ差し替える。
-2. **要点の L-BC5 記述 (`:12`)**: **slug は凍結なので消さない**。
-   「L-BC5 一般 (non-degraded) BC + Marton / Körner-Marton は完全 scope-out」を
-   「L-BC5 一般 (non-degraded) BC + Marton / Körner-Marton は完全 scope-out **(Marton 部分は解除 →
-   子 `marton-inner-bound-plan.md`。Körner–Marton は scope-out 継続)**」へ。
-3. **Sub-plan 一覧テーブル (`:17-21`)** に 1 行追加 (plan_lint の双方向照合点):
+1. **Status 行**: degraded ✅ CLOSED / 一般 BC 🚧 進行中 の 2 本立て + 子へのリンク。
+2. **要点の L-BC5 記述**: slug は**凍結なので消さない**。Marton 部分が解除されたこと + Körner–Marton は
+   scope-out 継続、を括弧書きで足す形。
+3. **Sub-plan 一覧テーブルの Marton 行**: 状態欄が進捗のキャッシュ。
 
-   ```
-   | [`marton-inner-bound-plan.md`](marton-inner-bound-plan.md) | L-BC5 解除 = 一般 BC の Marton inner bound (EGK Thm 8.3、private message のみ) | 🚧 進行中 (Phase 1 完了、Phase 2 以降 未着手) |
-   ```
-
-以降、本子 plan の進捗が動いたら 3 の状態欄を追随させる (衝突時は子が SoT)。
+Phase 6a' 完了時点 (2026-07-25) で 3 箇所とも同期済。以降、本 plan の進捗が動いたら 3 の状態欄を追随させる。
 
 ---
 
@@ -423,22 +280,21 @@ L-MT1 が残って担うのは typicality 具体化 (Phase 5) のみ。鋭化 (P
 |---|---|---|---|
 | Marton / mutual covering に対応する Mathlib 補題は存在しない (`"Paley"` / `"second_moment"` / `"covering_lemma"` はいずれも `Found 0 declarations`) | `loogle-neg` | 在庫 §8 のクエリを再実行 | 壁ではなく自前構築。近接テンプレ補題を各項目に名指し済 |
 | 決定的カーネルは in-project typicality の full support 前提を原理的に壊す (`Kernel.deterministic` の質量が `b ≠ f v` で 0) | `machine` | `Mathlib/Probability/Kernel/Basic.lean:58` + `Mathlib/MeasureTheory/Measure/Dirac.lean:44` を Read | D1 の根拠。強 typicality 版も同じ前提を要求するのでルート変更で回避不能 |
-| 粗い分散上界からは sum-rate 制約が出ない (D4) | `human-judgment` | Phase 4 の実装で機械確認する (`meas_pairCount_eq_zero_le'` が `1/(M₁M₂p)` 項を分離できるか) | 指数の算術による導出であり未機械検証。Phase 4 の受け入れ条件そのもの |
+| 「選択された `V₁ⁿ` に対して一様に E1」は一般アルファベットで**偽** (補助 3 元・型 `(1/2,1/2,0)` の 1 径数族で出力側経験エントロピーが `H(Y₁)` から n 非依存の定数ずれ) | `human-judgment` | 反例族を再構成 (実 `def` を Read して逐語確認済、`proof-pivot-advisor` が反証 3 本を試みたうえで支持) | D5 の根拠。方針 B の採用理由であり、weak 在庫に戻る誘惑が出たらここを読む |
+| 粗い分散上界からは sum-rate 制約が出ない (D4) | `machine` | `meas_pairCount_eq_zero_le'` (`MutualCovering.lean`) が `1/(M₁M₂p)` 項を分離しているか Read | Phase 4 で機械確認済 |
 
 ---
 
 ## 判断ログ
 
-1. **先発 atom は second moment 中核 (在庫の推奨を採らなかった)**: 在庫 §9 は L-MT4 (退化版
-   `V₁ ⟂ V₂`) を gateway atom に推していたが、退化版では mutual covering が自明化して**家系最大の
-   難所を迂回してしまう**ため gateway として機能しない、と orchestrator が判断し second moment 中核を
-   先発に据えた。結果 GO (Phase 1 完了)。L-MT4 は gateway ではなく Phase 6a の**退避先**として残す。
-2. **D4 (粗い分散上界では sum-rate に届かない) は plan 起票時の新規所見**: 在庫は共分散の
-   `q̄·p` 上界を #7-1 の内側に畳み込んでいて、粗い版と鋭い版の差が領域の大きさに直結することを
-   分離していなかった。Phase 4 を独立 Phase として立て、L-MT5 を新設した。
-3. **D3 (headline は厳密不等号) は在庫の想定署名の訂正**: 在庫 §1.1 は `hmarton : InMartonRegion …`
-   (非厳密) を仮説に置いていたが、既存 `bc_achievability` の署名を逐語確認した結果、
-   achievability 側は厳密不等号を直接取る形だった。`InMartonRegion` は region 記述用として定義する。
-4. **層の境界を「抽象度」で切る**: Phase 1 が typicality を一切知らないことは偶然ではなく設計。
-   Phase 4 の鋭化も抽象 `S` + 一様スライス上界 `q̄` の形で述べ、typicality 具体化は Phase 5 に閉じ込める。
-   これにより Phase 4 が閉じなくても Phase 5 以降の骨格が変わらない (L-MT5 の退避が局所で済む)。
+1. **層の境界を「抽象度」で切る (D5 で価値が実証された)**: Phase 1/4 が typicality を一切知らないのは
+   設計であり偶然ではない。おかげで方針 B (weak → strong の切替) が `MutualCovering.lean` 730 行を
+   **無改変**で通過し、書換は typicality 層に閉じた。Phase 6b/7 でも新しい判定基準を導入するときは
+   まず「どの層に属するか」を決めてから書く。
+2. **weak 版は削除せず strong 版を並置する**: 6a' の書換で weak 版 4 本を消さなかったのは、
+   (a) strong ⊆ weak なので両立し、(b) 復号側は weak のままで、(c) `C = 0` で strong 版が weak 版に
+   退化することが領域不変性の検算になるため。Phase 6b/7 でどちらを呼ぶかは**選択側か復号側か**で決まる。
+3. **半径を「パラメータ」ではなく「`ε` の計算項」にした**: `martonStrongRadius` / `martonCoveringRadius` を
+   `ε` の関数として定義したので、下流の署名が持つ半径は `ε` 1 本のままで済んでいる。
+   Phase 6b で `V₂` 側の帯定数を足すときも**この規約を守る** (パラメータを増やすと Phase 7 の ε 配分が
+   6 系統から爆発する)。
