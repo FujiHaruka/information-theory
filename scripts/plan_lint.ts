@@ -6,11 +6,11 @@
 // コード走査は純 Deno (rg はシェル関数で Deno.Command から spawn 不可)。git のみ外部コマンド。
 //
 // Usage:
-//   deno run -A scripts/plan_lint.ts                       # docs/**/*-plan.md 全部
+//   deno run -A scripts/plan_lint.ts                       # docs/**/*-plan.md 全部 (引退宣言名照合は既定 ON)
 //   deno run -A scripts/plan_lint.ts docs/shannon/foo-plan.md ...   # 指定 plan のみ
 //   deno run -A scripts/plan_lint.ts --out docs/plan-staleness-report.md
 //   deno run -A scripts/plan_lint.ts --hook <staged-plan> ...       # pre-commit 用: STALE のみ WARN, 常に exit 0
-//   deno run -A scripts/plan_lint.ts --check-decls          # backtick decl 照合も行う (noisy, 既定 off)
+//   deno run -A scripts/plan_lint.ts --check-decls          # backtick token 全件照合 (noisy, opt-in)
 //
 // 判定 (CLAUDE.md と整合):
 //   STALE (確定)   = (a) file:line の file が存在しない  (b) plan の wall:slug が code に無い
@@ -19,8 +19,20 @@
 //   SUSPECT (要レビュー) = 行ドリフト (line > file 行数) / git staleness (参照コードが plan より新しい)
 //                          / 親子 backlink 欠落 (子の Parent が指す親が子を sub-plan 参照していない)
 //                          / 親子 drift (子 plan が親 plan より後に更新 — 親 DAG/状態が stale の疑い)
-//                          / [--check-decls] backtick decl が code に無い (heuristic, 誤検出あり)
+//                          / 引退宣言名照合 (既定 ON) — plan の backtick token が git 履歴上には
+//                            宣言されていたが HEAD には無い名前と一致 (改名/削除の疑い、後継候補を併記)
+//                          / [--check-decls] backtick token が code の宣言に無い (heuristic, 誤検出あり)
 //   BUDGET         = plan > 600 行 (CLAUDE.md プラン予算)
+//
+// 設計判断: backtick token 全件照合 (--check-decls) を既定化しない理由
+//   実測 (2026-07): 全 plan の backtick token 3392 件 (uniq 2318) を declNames と照合すると大半が
+//   false positive で、内訳は Mathlib 補題名 (mul_add / le_trans / zpow_sub…) ・tactic 名 (ring_nf /
+//   field_simp) ・仮説名 (h_bound) ・commit hash ・散文単語・未実装の予定名 (planning ahead) が支配的。
+//   Mathlib 名は名前空間解決が要り source の正規表現では判定できない (1793 件中 516 しか一致しない)。
+//   一方 git 履歴索引 (scanRetiredDecls: 実際に in-project で宣言され後に消えた名前だけを集める) に
+//   絞ると plan との交差は uniq 16 種 (plan×token の findings 数では 19 件) まで縮む —
+//   Mathlib 名・tactic 名・未実装の予定名は履歴に存在しないため構造的に除外されるため。
+//   この精度差が、引退宣言名照合だけを既定化した理由。
 
 const CODE_ROOT = "InformationTheory";
 const DOCS_ROOT = "docs";
@@ -83,9 +95,9 @@ const WALL_RE = /@residual\(wall:([\w-]+)\)/g;
 const DECL_RE =
   /^\s*(?:@\[[^\]]*\]\s*)*(?:private\s+|protected\s+|noncomputable\s+|scoped\s+|local\s+)*(?:theorem|lemma|def|abbrev|structure|inductive|instance|class)\s+([A-Za-z_][\w'.]*)/gm;
 
-async function scanCode(): Promise<{ wallSlugs: Set<string>; declNames: Set<string> | null }> {
+async function scanCode(): Promise<{ wallSlugs: Set<string>; declNames: Set<string> }> {
   const wallSlugs = new Set<string>();
-  const declNames = flags.checkDecls ? new Set<string>() : null;
+  const declNames = new Set<string>();
   for await (const f of walk(CODE_ROOT, (p) => p.endsWith(".lean"))) {
     let txt: string;
     try {
@@ -94,9 +106,54 @@ async function scanCode(): Promise<{ wallSlugs: Set<string>; declNames: Set<stri
       continue;
     }
     for (const m of txt.matchAll(WALL_RE)) wallSlugs.add(m[1].toLowerCase());
-    if (declNames) for (const m of txt.matchAll(DECL_RE)) declNames.add(m[1]);
+    for (const m of txt.matchAll(DECL_RE)) declNames.add(m[1]);
   }
   return { wallSlugs, declNames };
+}
+
+// 引退宣言名索引: git 履歴 (追加された行) から DECL_RE で宣言名を集め、HEAD に残っている
+// ものを除く。Mathlib 名・tactic 名・未実装の予定名は履歴に一度も現れないため構造的に除外される
+// (--check-decls の noisy さの主因を回避できる理由 — 上部「設計判断」参照)。
+async function scanRetiredDecls(headDecls: Set<string>): Promise<Set<string>> {
+  const retired = new Set<string>();
+  const out = await git(["log", "-p", "--format=", "--diff-filter=AM", "--", CODE_ROOT]);
+  if (!out) return retired; // git 不可 (or 履歴なし環境) — 静かに無効化
+  // DECL_RE は matchAll 用に g/m 付き。行単位 exec では lastIndex 共有事故を避けるため
+  // 非 global の別インスタンスを使う (exec は毎回 index 0 から開始するので使い回して安全)。
+  const lineDeclRe = new RegExp(DECL_RE.source);
+  for (const raw of out.split("\n")) {
+    if (!raw.startsWith("+") || raw.startsWith("+++")) continue; // diff ヘッダ行を除外
+    const m = lineDeclRe.exec(raw.slice(1));
+    if (m) retired.add(m[1]);
+  }
+  for (const h of headDecls) retired.delete(h);
+  return retired;
+}
+
+// 引退名 r の後継候補: HEAD 宣言名のうち prefix が落ちた/付いたリネームの疑いがあるものを
+// 最大 2 件返す (部分一致・編集距離は使わない — ノイズが増えるため)。短すぎる suffix の
+// 偶然一致を避けるため候補は 4 文字以上に限り、かつ引退名の半分以上の長さを要求する
+// (例: chernoffMediator_klDivSumForm_eq_chernoffInfo (45) に対し chernoffInfo (12) は
+// 短すぎる部分一致として弾く)。長い一致 (= より具体的) を優先する。
+function successorCandidates(retired: string, headDecls: Set<string>): string[] {
+  const matches: string[] = [];
+  for (const h of headDecls) {
+    if (h.length < 4 || h.length * 2 < retired.length || h === retired) continue;
+    if (retired.endsWith(h) || h.endsWith(retired)) matches.push(h);
+  }
+  matches.sort((a, b) => b.length - a.length);
+  return matches.slice(0, 2);
+}
+
+// plan 本文の backtick token 抽出 (引退宣言名照合 / --check-decls 両方から使う共有ヘルパ)。
+function extractBacktickTokens(text: string): Set<string> {
+  return new Set(
+    [...text.matchAll(/`([A-Za-z_][\w'.]{3,})`/g)].map((m) => m[1]).filter((t) =>
+      !t.includes(".lean") &&
+      !/^(MeasureTheory|Mathlib|Set|Finset|Real|ENNReal|EReal|NNReal|Filter|Measure|Function|Nat|Int|List)\b/
+        .test(t)
+    ),
+  );
 }
 
 const gitTimeCache = new Map<string, number | null>();
@@ -157,7 +214,8 @@ interface Finding {
 async function lintPlan(
   plan: string,
   wallSlugs: Set<string>,
-  declNames: Set<string> | null,
+  declNames: Set<string>,
+  retiredDecls: Set<string>,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
   let text: string;
@@ -216,18 +274,28 @@ async function lintPlan(
     }
   }
 
-  // backtick decl 照合 (noisy, opt-in)
-  if (declNames) {
-    const toks = new Set(
-      [...text.matchAll(/`([A-Za-z_][\w'.]{3,})`/g)].map((m) => m[1]).filter((t) =>
-        !t.includes(".lean") &&
-        !/^(MeasureTheory|Mathlib|Set|Finset|Real|ENNReal|EReal|NNReal|Filter|Measure|Function|Nat|Int|List)\b/.test(t)
-      ),
-    );
+  // 引退宣言名照合 (既定 ON) — backtick token が git 履歴上にはあるが HEAD に無い宣言名と一致
+  const toks = extractBacktickTokens(text);
+  const reportedAsRetired = new Set<string>();
+  for (const t of toks) {
+    if (declNames.has(t)) continue;
+    if (retiredDecls.has(t)) {
+      reportedAsRetired.add(t);
+      const cands = successorCandidates(t, declNames);
+      const candMsg = cands.length ? ` — 後継候補: ${cands.join(", ")}` : "";
+      findings.push({
+        kind: "SUSPECT",
+        msg: `引退宣言名 \`${t}\` を参照 (git 履歴に存在・HEAD に無い)${candMsg}` +
+          ` — リネーム済みなら plan を更新、削除の記録として意図的なら無視可`,
+      });
+    }
+  }
+
+  // backtick token 全件照合 (noisy, opt-in) — 引退宣言名側で既に報告した token は二重報告しない
+  if (flags.checkDecls) {
     for (const t of toks) {
-      if (!declNames.has(t)) {
-        findings.push({ kind: "SUSPECT", msg: `backtick token \`${t}\` が code の宣言に無い (heuristic)` });
-      }
+      if (declNames.has(t) || reportedAsRetired.has(t)) continue;
+      findings.push({ kind: "SUSPECT", msg: `backtick token \`${t}\` が code の宣言に無い (heuristic)` });
     }
   }
 
@@ -300,6 +368,7 @@ async function lintGraph(
 // ── main ───────────────────────────────────────────────────────────────────
 
 const { wallSlugs, declNames } = await scanCode();
+const retiredDecls = await scanRetiredDecls(declNames);
 
 // 全 plan を読み込み親子グラフを構築する (lint 対象が部分集合でも親の本文が要るため、
 // グラフ構築は常に docs/**/*-plan.md 全体で行う)。
@@ -326,7 +395,7 @@ const plans = paths.length ? paths : allPlans;
 
 const all: { plan: string; findings: Finding[] }[] = [];
 for (const plan of plans) {
-  const f = await lintPlan(plan, wallSlugs, declNames);
+  const f = await lintPlan(plan, wallSlugs, declNames, retiredDecls);
   const text = planTexts.get(plan) ?? await Deno.readTextFile(plan).catch(() => "");
   if (text) f.push(...await lintGraph(plan, text, planSet, declaredParent, planTexts));
   if (f.length) all.push({ plan, findings: f });
