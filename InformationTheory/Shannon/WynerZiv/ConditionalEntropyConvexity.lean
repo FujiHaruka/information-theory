@@ -371,7 +371,7 @@ theorem wynerZivCondEntDiffConvex_holds
 /-- Convexity of the factorizable rate function in `D`, with the
 objective-convexity hypothesis fully discharged. -/
 @[entry_point]
-theorem wynerZivRateFactorizable_convex_in_D_unconditional
+theorem wynerZivRateFactorizable_convex_in_D
     {γ : Type*}
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     (d : α → γ → ℝ) (f : U × β → γ)

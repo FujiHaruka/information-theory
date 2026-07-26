@@ -105,7 +105,7 @@ file:line は実ファイルを Read で確認した値。Mathlib path は `.lak
 | `EReal.top_sub_bot` | `@[simp] theorem top_sub_bot : (⊤ : EReal) - ⊥ = ⊤` | `…/Operations.lean:347` | ✅ | A=⊤,B=⊥ 端 |
 | `EReal.coe_sub` / `EReal.coe_ennreal_toReal` | (有限差 → workhorse 橋、`_of_ac_integrable` 内で実使用) | `Mathlib/Data/EReal/…` | ✅ | bridge `differentialEntropyExt_of_ac_integrable` で既使用 |
 | `ENNReal` 加法 `⊤ + x = ⊤` (`top_add` / `add_top`) | (ℝ≥0∞ 標準、loogle 自明) | `Mathlib/Data/ENNReal/…` | ✅ | RHS=⊤ 枝 (片方 h=+∞ ⟹ RHS=⊤) |
-| `ENNReal.ofReal_le_ofReal` / `Real.exp_le_exp` | (有限枝 lift、`entropyPowerExt_mixed_add_ge` で実使用済) | `Mathlib/…` | ✅ | 既存 case 2/finite_ac で実使用 |
+| `ENNReal.ofReal_le_ofReal` / `Real.exp_le_exp` | (有限枝 lift、`entropyPowerExt_mixed_add_ge_of_regular` で実使用済) | `Mathlib/…` | ✅ | 既存 case 2/finite_ac で実使用 |
 
 **結論 A**: 拡張単調性 + ±∞ 退化値の lift に必要な EReal/ℝ≥0∞ 算術は **100% 既存**。唯一の注意は
 `exp_le_exp` が deprecated 化済で `exp_monotone` に乗り換えること。`exp_eq_top_iff`/`exp_eq_zero_iff`
@@ -202,7 +202,7 @@ Gaussian 弱収束 (approximation identity) は **Mathlib 完全不在** (W-Y2 �
   `W a.c. ∧ V indep ⟹ entropyPowerExt (P.map (W+V)) ≥ entropyPowerExt (P.map W)`
 - **3 枝構成**:
   - **−∞ 枝** (`differentialEntropyExt (P.map W) = ⊥`): `entropyPowerExt (P.map W) = exp ⊥ = 0`、`bot_le` / `zero_le'`。**genuine、~5 行**。
-  - **有限枝** (両 a.c.+integrable): 既存 `differentialEntropy_add_ge_of_indep` (`EPIUncondMixedCase.lean:76`、8 integrability honest precondition) を `EReal.exp_monotone` + `entropyPowerExt_of_ac_integrable` で lift。**genuine、~20 行** (`entropyPowerExt_mixed_add_ge` が雛形)。
+  - **有限枝** (両 a.c.+integrable): 既存 `differentialEntropy_add_ge_of_indep` (`EPIUncondMixedCase.lean:76`、8 integrability honest precondition) を `EReal.exp_monotone` + `entropyPowerExt_of_ac_integrable` で lift。**genuine、~20 行** (`entropyPowerExt_mixed_add_ge_of_regular` が雛形)。
   - **+∞ 枝** (`differentialEntropyExt (P.map W) = ⊤`): `entropyPowerExt (P.map W) = ⊤`、要 `entropyPowerExt (P.map (W+V)) = ⊤` = **+∞ 伝播** `h(W)=+∞ ∧ V indep ⟹ h(W+V)=+∞`。これが核心の自作。
 - **+∞ 伝播の数学**: h(W)=+∞ (正部発散 = W が裾の重い密度) のとき W+V も裾が残る (V との畳み込みは裾を消さない、親計画 §S5 verdict step 1 と同じ理由)。よって A(W+V)=∫⁻ ofReal(negMulLog density(W+V)) = ⊤。**Mathlib 壁ではなく extended-entropy plumbing** (親 def-fix plan §2 判定)。
 - **工数感**: −∞/有限枝 ~25 行 (既存資産流用)。+∞ 伝播 ~80-150 行 (畳み込みが裾を保つ lintegral 評価。`condDifferentialEntropy_le` の +∞ 版を EReal で組むか、density 直接評価)。**def-fix plan で `plan:epi-uncond-deffix-monotone-plan` slug 予約済 (wall でない)**。

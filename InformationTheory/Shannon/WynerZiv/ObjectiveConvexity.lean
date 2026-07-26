@@ -6,7 +6,7 @@ import InformationTheory.Shannon.WynerZiv.FactorizableRate
 
 This file discharges the `h_obj_convex` hypothesis carried by
 `WynerZiv/FactorizableRate.lean` (`wynerZivRateFactorizable_convex`,
-`wynerZivRateFactorizable_convex_in_D`): the convexity of the Wyner–Ziv
+`wynerZivRateFactorizable_convex_in_D_of_obj_convex`): the convexity of the Wyner–Ziv
 objective `I(X;U) − I(Y;U)` in the joint pmf `q`, along convex combinations
 of *factorisable* joints `q = κ(u|x)·P_XY(x,y)`.
 
@@ -42,7 +42,7 @@ That residual is published as the primitive predicate
 `WynerZivCondEntDiffConvex` — a genuine `ConvexOn`-shaped convexity-of-MI
 statement, the irreducible Lemma-15.9 core.  `h_obj_convex` is then derived
 in full from this single predicate (`wzObjective_convex_of_condEntDiff`),
-and the rate-level wrapper `wynerZivRateFactorizable_convex_in_D` is
+and the rate-level wrapper `wynerZivRateFactorizable_convex_in_D_of_obj_convex` is
 re-published with `h_obj_convex` replaced by the strictly more primitive
 `WynerZivCondEntDiffConvex`.
 
@@ -288,7 +288,7 @@ replaced by the more primitive conditional-entropy-difference convexity predicat
 `WynerZivCondEntDiffConvex` (discharged into `h_obj_convex` by
 `wzObjective_convex_of_condEntDiff`).
 
-`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
+`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D)` -/
 @[entry_point]
 theorem wynerZivRateFactorizable_convex_in_D_of_condEntDiff
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
@@ -307,7 +307,7 @@ theorem wynerZivRateFactorizable_convex_in_D_of_condEntDiff
       ≤ a * wynerZivRateFactorizable U P_XY d D₁
         + b * wynerZivRateFactorizable U P_XY d D₂ := by
   classical
-  exact wynerZivRateFactorizable_convex_in_D U h_pmf d f
+  exact wynerZivRateFactorizable_convex_in_D_of_obj_convex U h_pmf d f
     (fun q₁' q₂' hq₁' hq₂' a' b' ha' hb' hab' ↦
       wzObjective_convex_of_condEntDiff U P_XY h_core q₁' q₂' hq₁' hq₂' a' b' ha' hb' hab')
     h_feasible₁ h_feasible₂ h_attain₁ h_attain₂ ha hb hab

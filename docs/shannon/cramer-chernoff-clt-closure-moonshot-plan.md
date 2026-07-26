@@ -1,10 +1,10 @@
 # Cramér / Chernoff CLT-boundary closure ムーンショット計画 🌙
 
-**Status**: CLOSED ✅ — done (Phase 1-6 full closure 2026-06-11、headline `cramer_lower_boundary_unconditional` + 上流両 root sorryAx-free、独立監査 PASS)。
+**Status**: CLOSED ✅ — done (Phase 1-6 full closure 2026-06-11、headline `cramer_lower_boundary` + 上流両 root sorryAx-free、独立監査 PASS)。
 
 > ✅ **CLOSED (2026-06-11)** — Phase 1-6 full closure 達成。`InformationTheory/Shannon/CramerCltBoundaryClosure.lean`
 > (586 行, 0 sorry / 0 @residual, sorryAx-free, `InformationTheory.lean` import 済) に headline
-> `cramer_lower_boundary_unconditional` (内部最適 tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`
+> `cramer_lower_boundary` (内部最適 tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`
 > で residual largeness hypothesis を除去した Cramér 下界) を含む 10 decl を publish。独立 honesty 監査
 > (`@audit:ok` 全 10 件、`h_coboundedBelow` 非 vacuous 性まで機械検証) **PASS**。判断ログ #4 / commit `05ed225`。
 > **未配線残件 = 配線完了 (2026-06-11)**: 子 plan [`cramer-root-wiring-plan.md`](cramer-root-wiring-plan.md) が
@@ -68,7 +68,7 @@
 - [x] Phase 3 — CLT を tilted ambient へ適用 (witness 構築 + 既存 plumbing 注入) ✅ `tilted_halfline_tendsto_gaussian` + `gaussianReal_hasLaw_id` (`05ed225`)
 - [x] Phase 4 — 窓質量 → 1/2 (集合書換 + LLN 引き算) + `tiltedWindow_eventually_large_of_boundary` ✅ (`05ed225`)
 - [x] Phase 5 — residual predicate 緩和 (`1/2 → ∃C>0`) + boundary discharge ✅ `tilted_window_lower_to_halfline` + 緩和 reduction (`05ed225`)
-- [x] Phase 6 — Cramér end-to-end ✅ `cramer_lower_boundary_unconditional` (`05ed225`)、独立監査 PASS
+- [x] Phase 6 — Cramér end-to-end ✅ `cramer_lower_boundary` (`05ed225`)、独立監査 PASS
 
 ## Sub-plan 一覧
 
@@ -88,7 +88,7 @@
    非退化のとき窓質量 eventually `≥ 1/4`。
 3. residual predicate 緩和形 (`IsTiltedWindowEventuallyLargeC` or `1/2 → C` 一般化) +
    `IsMeasureInfinitePiTiltedEq` の境界 discharge。
-4. `cramer_lower_boundary_unconditional` (end-to-end): `a = deriv (cgf Y μ₀) lam` (内部点)
+4. `cramer_lower_boundary` (end-to-end): `a = deriv (cgf Y μ₀) lam` (内部点)
    で `cramer_lower_infinitePi'` の residual hypothesis を除去した形。
 
 ### Approach (overall strategy / shape of solution)
@@ -423,7 +423,7 @@ proof-log: no
 - [ ] `a := deriv (cgf Y μ₀) lam` が tilted mean `m` (`tiltedMean_eq_deriv_cgf`) なので、
   Phase 5 の boundary discharge を `a = m` インスタンスとして
   `cramer_lower_infinitePi'` の `h_res` 相当に供給
-- [ ] `cramer_lower_boundary_unconditional` (end-to-end): 内部点 `a = deriv (cgf Y μ₀) lam` で
+- [ ] `cramer_lower_boundary` (end-to-end): 内部点 `a = deriv (cgf Y μ₀) lam` で
   residual hypothesis を除去した Cramér 下界
   (`h_coboundedBelow` は据え置きか、これも内部 discharge できるか着手時判断 — できなければ
   hypothesis として残す)
@@ -496,7 +496,7 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
    本 plan が closure する **下流 consumer 2 root** (`cramer_lower` / `cramer_lower_infinitePi`) は
    #19 で false-statement (一般 `a` で偽) と判明していた。今回 `(h_deriv : deriv (cgf (X 0) μ) lam = a)` を
    signature に追加し true-as-stated 化 (`@audit:defect(false-statement)` → `@residual(plan:` 本 plan `)`、
-   独立監査 PASS)。**効果**: 本 plan の closure target (Phase 6 `cramer_lower_boundary_unconditional`、
+   独立監査 PASS)。**効果**: 本 plan の closure target (Phase 6 `cramer_lower_boundary`、
    内部点 `a = deriv (cgf Y μ₀) lam`) が consumer root の signature と **字面一致** — 以前の
    「plan が `a=deriv cgf lam` を狙うのに root は一般 `a` で over-promise」状態が解消。Phase 6 で
    `h_deriv` を `tiltedMean_eq_deriv_cgf` (`a = m = deriv cgf lam`) から供給する配線が直結になった。
@@ -528,7 +528,7 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
      **reduction tool (true implication、predicate を hypothesis に取る)** に留め、Phase 6 は `∀a` predicate を
      **bypass** して per-`(a,ε)` core `tilted_window_lower_to_halfline` を `a=m` で直接呼ぶ。headline の証明経路に
      false predicate は **乗らない** (監査 term 依存確認済)。
-   - **Phase 6 headline `cramer_lower_boundary_unconditional`**: 仮説は全て precondition
+   - **Phase 6 headline `cramer_lower_boundary`**: 仮説は全て precondition
      (`hY`/`h_bdd`/`hlam`/`h_deriv`(最適 tilt 位置, def-fix #24 と同型)/`hVar`(非退化)/`h_coboundedBelow`(liminf 正則性,
      `cramer_lower` 継承))。CLT 窓質量は内部供給 = load-bearing bundling なし。`ε→0⁺` collapse (`le_of_forall_sub_le`)
      で sharp exponent `-(λm − Λ)`。
@@ -548,5 +548,5 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
    それを唯一の consumer とする reduction `isMeasureInfinitePiTiltedEq_of_tiltedWindowLargeC` (consumer 0) は、
    closure 後 dead scaffolding 化していた (headline は live core `tilted_window_lower_to_halfline` を `a=m` で
    直接呼ぶ)。3点照合 (dep_consumers transitive 0 + 全ツリー textual grep = prose のみ) で削除、`#print axioms
-   cramer_lower_boundary_unconditional` = `[propext, Classical.choice, Quot.sound]` 維持を確認。上記 #4 の
+   cramer_lower_boundary` = `[propext, Classical.choice, Quot.sound]` 維持を確認。上記 #4 の
    「reduction tool に留め」記述は履歴 (削除前の状態)。false-as-framed の知見自体は roadmap 判断ログに残置。

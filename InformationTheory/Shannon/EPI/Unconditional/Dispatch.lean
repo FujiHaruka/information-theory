@@ -66,10 +66,9 @@ theorem entropyPowerExt_add_ge_finite_ac
 
 /-- Four-case dispatch for the extended-real entropy power inequality, splitting on absolute
 continuity of `P.map X` and `P.map Y`: both a.c. delegates to `entropyPowerExt_add_ge_finite_ac`,
-the mixed cases to `entropyPowerExt_mixed_add_ge` / `_symm`, and the doubly-singular case to
-`entropyPowerExt_singular_add_ge`. The integrability and finite-entropy hypotheses are
-path-dependent
-regularity preconditions threaded into the mixed-case lemmas.
+the mixed cases to `entropyPowerExt_mixed_add_ge_of_regular` / `_symm_of_regular`, and the
+doubly-singular case to `entropyPowerExt_singular_add_ge`. The integrability and finite-entropy
+hypotheses are path-dependent regularity preconditions threaded into the mixed-case lemmas.
 
 @audit:superseded-by(entropyPowerExt_add_ge) The fully unconditional version
 `entropyPowerExt_add_ge` (in `EPI.Unconditional.DispatchFull`, taking only `hX hY hXY`) is the
@@ -138,13 +137,13 @@ theorem entropyPowerExt_add_ge_dispatch_skeleton
     · -- Case 1 (both a.c.): delegate to `entropyPowerExt_add_ge_finite_ac`.
       exact entropyPowerExt_add_ge_finite_ac X Y P hX hY hXY hX_ac hY_ac hX_ent hY_ent hW_ent
     · -- Case 2 (X a.c., Y singular).
-      exact entropyPowerExt_mixed_add_ge X Y P hX hY hXY hX_ac hY_ac h_ac h_int hκ_v
+      exact entropyPowerExt_mixed_add_ge_of_regular X Y P hX hY hXY hX_ac hY_ac h_ac h_int hκ_v
         hκ_logp_int hκ_cross_int h_fibreEnt_int h_cross_int h_logq_int hX_ent hW_ent
   · by_cases hY_ac : P.map Y ≪ volume
     · -- Case 2 symmetric (Y a.c., X singular).
-      exact entropyPowerExt_mixed_add_ge_symm X Y P hX hY hXY hY_ac hX_ac h_ac_symm h_int_symm
-        hκ_v_symm hκ_logp_int_symm hκ_cross_int_symm h_fibreEnt_int_symm h_cross_int_symm
-        h_logq_int_symm hY_ent hWyx_ent
+      exact entropyPowerExt_mixed_add_ge_symm_of_regular X Y P hX hY hXY hY_ac hX_ac h_ac_symm
+        h_int_symm hκ_v_symm hκ_logp_int_symm hκ_cross_int_symm h_fibreEnt_int_symm
+        h_cross_int_symm h_logq_int_symm hY_ent hWyx_ent
     · -- Case 3 (both singular): RHS = 0.
       exact entropyPowerExt_singular_add_ge X Y P hX_ac hY_ac
 

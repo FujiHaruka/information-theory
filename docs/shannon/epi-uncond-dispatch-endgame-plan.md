@@ -13,7 +13,7 @@ prose にキャッシュせず `#print axioms` で都度確認 (CLAUDE.md「re-d
 ## 進捗
 
 - [x] Phase 0 — 在庫 gate ✅ (EReal exp 境界値 in-tree 確認、h=⊥⟹N=0 helper は `entropyPowerExt_singular` 末尾 verbatim と確定)
-- [x] Phase 1 — 柱 A: singular-case rewire ✅ (`entropyPowerExt_mixed_add_ge_uncond` + 対称版、gateway で 16 integrability + 4 finite-entropy 除去、`@audit:ok`)
+- [x] Phase 1 — 柱 A: singular-case rewire ✅ (`entropyPowerExt_mixed_add_ge` + 対称版、gateway で 16 integrability + 4 finite-entropy 除去、`@audit:ok`)
 - [x] Phase 2 — 柱 B: case-1 split ✅ (`entropyPowerExt_add_ge_case1`、6-way ⊤/⊥/有限 split、bridge で integrability 供給、own sorry 0、`@audit:ok`)
 - [x] Phase 3 — 柱 C: assembly ✅ (`entropyPowerExt_add_ge` = `hX hY hXY` のみ、`#print axioms` = `[propext, Classical.choice, Quot.sound]` 機械確認、5 declaration 独立 honesty-auditor all-OK、commit f767105)
 - [x] Phase 4 — 柱 D: headline 命名 + 同期 ✅ (真の無条件 headline = ℝ≥0∞ 版のみ確定、facts 台帳 + 親 Phase 5 同期)
@@ -140,13 +140,13 @@ proof-log: yes。skeleton-driven: 補題を `:= by sorry` で先に立て typech
 新 file `EPIUncondDispatchFull.lean` (namespace `InformationTheory.Shannon`、`open MeasureTheory
 Real ProbabilityTheory` + `EntropyPowerInequality`) に以下を立てる。
 
-- [ ] **`entropyPowerExt_mixed_add_ge_uncond`** (case 2: X a.c. ∧ Y 特異)。
+- [ ] **`entropyPowerExt_mixed_add_ge`** (case 2: X a.c. ∧ Y 特異)。
   - signature: `(X Y) (P) [IsProbabilityMeasure P] (hX hY : Measurable) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_sing : ¬ (P.map Y) ≪ volume)`、結論 `N(X+Y) ≥ N(X)+N(Y)`。
   - proof: `entropyPowerExt_singular hY_sing` で `N(Y)=0` → `RHS = N(X) + 0 = N(X)` (`add_zero`)。
     gateway #1 `entropyPowerExt_mono_add X Y P hX hY hXY hX_ac` で `N(X+Y) ≥ N(X)` を出し
     closure。**integrability 8 本 + finite-entropy 2 本除去**、仮説は `hX hY hXY hX_ac hY_sing` のみ。
-- [ ] **`entropyPowerExt_mixed_add_ge_symm_uncond`** (case 2 対称: Y a.c. ∧ X 特異)。
+- [ ] **`entropyPowerExt_mixed_add_ge_symm`** (case 2 対称: Y a.c. ∧ X 特異)。
   - signature: `... (hY_ac : (P.map Y) ≪ volume) (hX_sing : ¬ (P.map X) ≪ volume)`、結論同上。
   - proof: gateway #1 を `W=Y, V=X` で呼ぶ (`hWV` は `hXY.symm`) → `N(Y+X) ≥ N(Y)`。`add_comm` で
     `P.map (fun ω => Y ω + X ω) = P.map (fun ω => X ω + Y ω)` を整形 (`congrArg (P.map ·)` +
@@ -219,8 +219,8 @@ proof-log: yes。
     entropyPowerExt (P.map Y)`。**precondition 21 → 0**。
   - proof: 4 枝 `by_cases (P.map X ≪ volume)` × `by_cases (P.map Y ≪ volume)`:
     - 両 a.c. → 柱 B `entropyPowerExt_add_ge_case1`。
-    - X a.c. ∧ Y 特異 → 柱 A `entropyPowerExt_mixed_add_ge_uncond`。
-    - Y a.c. ∧ X 特異 → 柱 A 対称 `entropyPowerExt_mixed_add_ge_symm_uncond`。
+    - X a.c. ∧ Y 特異 → 柱 A `entropyPowerExt_mixed_add_ge`。
+    - Y a.c. ∧ X 特異 → 柱 A 対称 `entropyPowerExt_mixed_add_ge_symm`。
     - 両特異 → #4 `entropyPowerExt_singular_add_ge`。
 - [ ] **`#print axioms entropyPowerExt_add_ge`** = `[propext, Classical.choice,
   Quot.sound]` (sorryAx-free) を機械確認。`by_cases (≪ volume)` の `Classical.dec` は `Classical.choice`

@@ -19,7 +19,7 @@ refinement, supplied here.
   closed half-line.
 * `tiltedWindow_eventually_large_of_boundary` — at the boundary `a = m`, the
   tilted window mass is eventually `≥ 1/4`.
-* `cramer_lower_boundary`, `cramer_lower_boundary_unconditional` — the Cramér
+* `cramer_lower_boundary_at_tilted_mean`, `cramer_lower_boundary` — the Cramér
   lower bound at the optimal tilt, with the residual largeness hypothesis removed.
 
 ## Implementation notes
@@ -471,7 +471,7 @@ rate sequence (a precondition shared with `cramer_lower`).
 
 @audit:ok (`ε→0⁺` collapse via `le_of_forall_sub_le`; the CLT supplies the
 boundary window mass internally — no residual largeness hypothesis). -/
-theorem cramer_lower_boundary
+theorem cramer_lower_boundary_at_tilted_mean
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) (hlam : 0 ≤ lam)
     (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω₀ ↦ Y (ω 0);
@@ -514,20 +514,20 @@ theorem cramer_lower_boundary
     exact h
 
 /-- **Cramér's theorem** (lower bound, boundary closure, consumer form). The
-infinitePi-side restatement of `cramer_lower_boundary` with the cgf written on the
+infinitePi-side restatement of `cramer_lower_boundary_at_tilted_mean` with the cgf written on the
 coordinate-eval family `Y ∘ eval 0` under the un-tilted product, at the optimal
 tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`. The optimal-tilt hypothesis
 `h_deriv` pins `a = m = ∫ Y ∂tilted`, so the residual largeness hypothesis is
 removed: the boundary window mass is supplied internally by the CLT.
 
-See also `cramer_lower_boundary`.
+See also `cramer_lower_boundary_at_tilted_mean`.
 
 @audit:ok (`h_deriv`/`hVar`/`h_coboundedBelow` are all preconditions, not load-bearing —
 `h_deriv` pins `a = m` (the true-as-framed constraint), `hVar` is the non-degeneracy
 precondition, `h_coboundedBelow` is the standard `liminf_le_liminf` side-condition
 (satisfiable: rate terms ≤ 0 since `P ≤ 1`, not vacuous); matches consumer root
 `cramer_lower_infinitePi` signature verbatim). -/
-theorem cramer_lower_boundary_unconditional
+theorem cramer_lower_boundary
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (a lam : ℝ) (hlam : 0 ≤ lam)
     (h_deriv : deriv (cgf (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
@@ -558,6 +558,6 @@ theorem cramer_lower_boundary_unconditional
   -- Rewrite the goal at `a = m`, then identify the cgf, and apply the boundary lower bound.
   subst ham
   rw [hcgf_fun]
-  exact cramer_lower_boundary hY h_bdd lam hlam hVar h_coboundedBelow
+  exact cramer_lower_boundary_at_tilted_mean hY h_bdd lam hlam hVar h_coboundedBelow
 
 end InformationTheory.Shannon.CramerCltBoundary

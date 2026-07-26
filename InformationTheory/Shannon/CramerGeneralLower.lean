@@ -7,7 +7,7 @@ import InformationTheory.Shannon.Cramer.Cramer
 The Cramér lower-bound chain (`cramer_lower` / `cramer_lower_legendre` /
 `cramer_tendsto`) for the general i.i.d. statement on an arbitrary bounded
 `μ : Measure Ω`, `X : ℕ → Ω → ℝ`, discharged against the CLT-boundary headline
-`cramer_lower_boundary_unconditional`.
+`cramer_lower_boundary`.
 
 ## Main statements
 
@@ -160,7 +160,7 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   have h_deriv' : deriv (cgf (fun ω : ℕ → Ω ↦ X 0 (ω 0)) P) lam = a := by
     rw [← hcgf]; exact h_deriv
   -- Apply the headline with `Ω₀ := Ω`, `Y := X 0`, `μ₀ := μ`.
-  exact CramerCltBoundary.cramer_lower_boundary_unconditional
+  exact CramerCltBoundary.cramer_lower_boundary
     (μ₀ := μ) (Y := X 0) (h_meas 0) h_bdd0 a lam hlam h_deriv' hVar h_coboundedBelow
 
 /-- **Cramér's theorem** (lower bound, Legendre form).

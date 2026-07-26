@@ -34,7 +34,7 @@ combinations of feasible points stay feasible.
   predicate.
 * `WynerZivFactorizableConstraint_convex_combination` — feasibility survives
   convex combinations at the mixed distortion budget.
-* `wynerZivRateFactorizable_convex_in_D` — under convexity of the objective on
+* `wynerZivRateFactorizable_convex_in_D_of_obj_convex` — under convexity of the objective on
   factorizable joints, the rate function is convex in `D`.
 
 ## Implementation notes
@@ -411,7 +411,7 @@ witnesses at `D₁, D₂`, and `BddBelow` of the factorizable image at the mixed
 threshold, the inf over the mixed budget is bounded by the convex combination of
 objective values.
 
-`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
+`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D)` -/
 theorem wynerZivRateFactorizable_convex
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (f : U × β → γ)
     {D₁ D₂ : ℝ}
@@ -504,7 +504,7 @@ lemma wynerZivFactorizableObjective_image_bddBelow
 `wynerZivFactorizableObjective_image_bddBelow`, leaving the objective-convexity
 hypothesis and two feasibility witnesses.
 
-`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
+`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D)` -/
 theorem wynerZivRateFactorizable_convex_of_pmf
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     (d : α → γ → ℝ) (f : U × β → γ)
@@ -544,8 +544,8 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 pmf, objective convexity on factorizable joints, feasibility witnesses, and
 attainment of `R_WZ_fact(Dᵢ)` at those witnesses.
 
-`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
-theorem wynerZivRateFactorizable_convex_in_D
+`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D)` -/
+theorem wynerZivRateFactorizable_convex_in_D_of_obj_convex
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     (d : α → γ → ℝ) (f : U × β → γ)
     {D₁ D₂ : ℝ}

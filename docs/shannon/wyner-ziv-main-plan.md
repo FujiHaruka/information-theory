@@ -80,7 +80,7 @@ variable {α β γ U : Type*}
 | ~~converse gateway~~ (本ルート orphaned) | `csiszar_sum_identity_hetero` (`ConverseGateway.lean:48`、**sorryAx-free**) | prefix/suffix unconditional-MI 形が distortion-hostile な one-sided aux を生むため本ルート **orphaned** (sorryAx-free 維持、削除しない、他所で再利用しうる、wall ではない)。訂正後 rate step は conditional-MI chain (Csiszár 経由せず、判断ログ #2) |
 | converse gateway (訂正後、未構築) | `wz_perletter_markov` (`iIndepFun → IsMarkovChain Uᵢ−Xᵢ−Yᵢ`) | 真の決定 atom、condDistrib-from-iid、最深 wall リスク (`wz_converse_perletter_witness` sub-lemma #1、in-project 不在を grep 確認) |
 | converse feasible 着地 | `wynerZivRate_le_of_feasible` (`FactorizableRate.lean:678`) | reshape 後: 任意有限型 single-letterisation auxiliary を `wynerZivRate` の feasible 点として直接着地 (Carathéodory 不要) |
-| converse 凸性/単調 | `wynerZivRateFactorizable_convex_in_D` (`FactorizableRate.lean`) / `_antitone` | Jensen 段・antitone 段は情報側完成品を直呼び |
+| converse 凸性/単調 | `wynerZivRateFactorizable_convex_in_D` (`ConditionalEntropyConvexity.lean`) / `wynerZivRateFactorizable_antitone` (`FactorizableRate.lean`) | Jensen 段・antitone 段は情報側完成品を直呼び |
 | achiev covering | `jointTypicalLossyEncoder` / `distortionTypicalSet` / `encoder_failure_prob_le_exp_neg_M_avg` (`AchievabilityJointTypicalEncoder.lean` / `AchievabilityCodebookMatchProbability.lean`) | `U^n` 被覆 encoder + covering 失敗指数 |
 | achiev binning | `binningMeasure` (`Binning.lean:62`) / `binning_collision_prob` (`:106`) / `conditionalTypicalSlice` + `_card_le` (`ConditionalTypicalSlice.lean:140`) | bin 割当 + bin 衝突指数 + side-info decode |
 | achiev gateway 素材 | `conditionalStronglyTypicalSlice_mass_ge` (`ConditionalMethodOfTypes/Mass.lean:1274`) | side-info 被覆質量下界 (§10 gateway の最近接転写元) |

@@ -14,7 +14,7 @@ case 3 (both push-forwards singular) and case 2 (`X` a.c., `Y` singular).
 * `entropyPowerExt_singular_add_ge` — case 3 (both singular): RHS `= 0`, closed by `zero_le`.
 * `map_add_absolutelyContinuous` — `X` a.c. and `X ⊥ Y ⟹ X+Y` a.c. (convolution).
 * `differentialEntropy_add_ge_of_indep` — the real core `h(X) ≤ h(X+Y)`.
-* `entropyPowerExt_mixed_add_ge` / `_symm` — case 2 lifted to `ℝ≥0∞`.
+* `entropyPowerExt_mixed_add_ge_of_regular` / `_symm_of_regular` — case 2 lifted to `ℝ≥0∞`.
 
 ## Implementation notes
 
@@ -112,10 +112,10 @@ RHS is `N(X)`; both `X` and `X+Y` are a.c. with finite differential entropy, so
 regularity preconditions.
 
 @audit:superseded-by(entropyPowerExt_add_ge) Replaced by the unconditional
-`entropyPowerExt_mixed_add_ge_uncond`; retained as a proof-done leaf reachable only from the dead
+`entropyPowerExt_mixed_add_ge`; retained as a proof-done leaf reachable only from the dead
 dispatch skeleton.
 @audit:ok -/
-theorem entropyPowerExt_mixed_add_ge
+theorem entropyPowerExt_mixed_add_ge_of_regular
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_sing : ¬ P.map Y ≪ volume)
@@ -162,15 +162,15 @@ theorem entropyPowerExt_mixed_add_ge
   exact ENNReal.ofReal_le_ofReal (Real.exp_le_exp.mpr (by linarith))
 
 /-- Case 2 symmetric (`Y` a.c., `X` singular): `N(X+Y) ≥ N(X) + N(Y)`. Re-applies
-`entropyPowerExt_mixed_add_ge` with `X` and `Y` swapped via `X + Y = Y + X`, passing `hY_ent` /
-`hWyx_ent` into the `X`-role positions. The integrability and finite-entropy hypotheses are
-regularity preconditions for the `Y+X` path.
+`entropyPowerExt_mixed_add_ge_of_regular` with `X` and `Y` swapped via `X + Y = Y + X`, passing
+`hY_ent` / `hWyx_ent` into the `X`-role positions. The integrability and finite-entropy hypotheses
+are regularity preconditions for the `Y+X` path.
 
 @audit:superseded-by(entropyPowerExt_add_ge) Replaced by the unconditional
-`entropyPowerExt_mixed_add_ge_symm_uncond`; retained as a proof-done leaf reachable only from the
+`entropyPowerExt_mixed_add_ge_symm`; retained as a proof-done leaf reachable only from the
 dead dispatch skeleton.
 @audit:ok -/
-theorem entropyPowerExt_mixed_add_ge_symm
+theorem entropyPowerExt_mixed_add_ge_symm_of_regular
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hY_ac : (P.map Y) ≪ volume) (hX_sing : ¬ P.map X ≪ volume)
@@ -204,7 +204,7 @@ theorem entropyPowerExt_mixed_add_ge_symm
   -- `X + Y = Y + X` pointwise, and `N(X) + N(Y) = N(Y) + N(X)`.
   rw [show (fun ω ↦ X ω + Y ω) = (fun ω ↦ Y ω + X ω) from
         funext fun ω ↦ add_comm _ _, add_comm (entropyPowerExt (P.map X))]
-  exact entropyPowerExt_mixed_add_ge Y X P hY hX hXY.symm hY_ac hX_sing h_ac h_int hκ_v
+  exact entropyPowerExt_mixed_add_ge_of_regular Y X P hY hX hXY.symm hY_ac hX_sing h_ac h_int hκ_v
     hκ_logp_int hκ_cross_int h_fibreEnt_int h_cross_int h_logq_int hY_ent hWyx_ent
 
 end InformationTheory.Shannon

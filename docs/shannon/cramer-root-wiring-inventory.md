@@ -20,10 +20,10 @@
 | **B** | `InformationTheory.Shannon.Cramer.cramer_lower` | `InformationTheory/Shannon/Cramer/Cramer.lean:469` | `sorry`(:483) | 一般 iid `X : ℕ → Ω → ℝ` on bounded `μ`・headline より一般 |
 
 headline(sorryAx-free, `@audit:ok`):
-`InformationTheory.Shannon.CramerCltBoundary.cramer_lower_boundary_unconditional`
+`InformationTheory.Shannon.CramerCltBoundary.cramer_lower_boundary`
 @ `InformationTheory/Shannon/CramerCltBoundaryClosure.lean:588`
 
-> 再検証: `lake env lean` で `#print axioms cramer_lower_boundary_unconditional` →
+> 再検証: `lake env lean` で `#print axioms cramer_lower_boundary` →
 > `depends on axioms: [propext, Classical.choice, Quot.sound]`(sorryAx 不在、本セッションで実測)。
 
 import DAG(実測, `^import InformationTheory` grep):
@@ -148,7 +148,7 @@ lemma cgf_eval_eq_cgf_base
 **判定: transport で discharge 可能(wall ではない)。** 鍵 transport `iIndepFun_iff_map_fun_eq_infinitePi_map` は Mathlib 既存・型クラス事故なし。
 
 ただし以下 2 点が load-bearing precondition gap(headline 適用時に新規供給が要る):
-1. **`hVar`(非退化分散)**: headline `cramer_lower_boundary_unconditional` は `(hVar : 0 < Var[fun ω => Y(ω 0); infinitePi (μ₀.tilted (lam·Y))])` を要求。root B `cramer_lower` のシグネチャに `hVar` は **無い**。→ root B を headline で埋めるには (a) root B シグネチャに `hVar` 相当を追加するか、(b) root B の bounded 仮定 + 非退化を別途導く必要。**ここが root B 配線の最大難所**(transport そのものより precondition 整合)。
+1. **`hVar`(非退化分散)**: headline `cramer_lower_boundary` は `(hVar : 0 < Var[fun ω => Y(ω 0); infinitePi (μ₀.tilted (lam·Y))])` を要求。root B `cramer_lower` のシグネチャに `hVar` は **無い**。→ root B を headline で埋めるには (a) root B シグネチャに `hVar` 相当を追加するか、(b) root B の bounded 仮定 + 非退化を別途導く必要。**ここが root B 配線の最大難所**(transport そのものより precondition 整合)。
 2. **`h_coboundedBelow`**: root B も headline も同形で持つ(整合)。`h_deriv`(最適 tilt)も両者にある(def-fix #24 で root B にも追加済)。
 
 > **honesty 注記**: `hVar` は「非退化 precondition」であり load-bearing core ではない(headline の `@audit:ok` 監査でも precondition 判定)。root B に `hVar` を追加するのは hypothesis bundling ではなく regularity precondition 追加で OK。ただし root B は「一般 iid・degenerate(定数 X)も許す」ので、`hVar` 追加は **generality を僅かに狭める**(constant RV を除外)— これは数学的に正当(Cramér 下界は退化点で別扱い)。
@@ -163,7 +163,7 @@ lemma cgf_eval_eq_cgf_base
 
 ### hoist すべき decl(headline が forward 依存する `Discharge.*` 群、実測)
 
-headline `cramer_lower_boundary_unconditional` の forward 依存グラフ(`dep_graph.sh`)に現れる `InformationTheory.Shannon.Cramer.Discharge.*`(= 上流に持ち上げ対象):
+headline `cramer_lower_boundary` の forward 依存グラフ(`dep_graph.sh`)に現れる `InformationTheory.Shannon.Cramer.Discharge.*`(= 上流に持ち上げ対象):
 
 | decl | 現 file:line | kind | 備考 |
 |---|---|---|---|
@@ -206,14 +206,14 @@ headline が sorryAx-free である以上、hoist 対象は root A に依存し�
 | 確認 | コマンド | 結果 |
 |---|---|---|
 | 各 hoist decl の forward graph に root A が出るか | `dep_graph.sh <decl>` → grep `cramer_lower_infinitePi` | **7 decl すべて 0 hit**(非依存) |
-| headline の forward graph に root A が出るか | `dep_graph.sh cramer_lower_boundary_unconditional` → grep | **0 hit** |
+| headline の forward graph に root A が出るか | `dep_graph.sh cramer_lower_boundary` → grep | **0 hit** |
 | headline の forward graph に root B (`Cramer.cramer_lower`) が出るか | 同上 | **無し**(`Cramer.cramer_lower*` 不在) |
-| headline 自体の sorryAx | `#print axioms cramer_lower_boundary_unconditional` | `[propext, Classical.choice, Quot.sound]`(sorryAx 不在) |
+| headline 自体の sorryAx | `#print axioms cramer_lower_boundary` | `[propext, Classical.choice, Quot.sound]`(sorryAx 不在) |
 
 > 再検証コマンド:
 > ```
 > lake build InformationTheory   # root olean refresh(必須: stale だと未知 decl 扱い)
-> bash scripts/dep_graph.sh InformationTheory.Shannon.CramerCltBoundary.cramer_lower_boundary_unconditional
+> bash scripts/dep_graph.sh InformationTheory.Shannon.CramerCltBoundary.cramer_lower_boundary
 > rg -c "cramer_lower_infinitePi" dep_graph.dot   # → 0
 > ```
 
@@ -248,7 +248,7 @@ headline が sorryAx-free である以上、hoist 対象は root A に依存し�
    import: `MeasurePiTiltedFactorization` + `LC2DischargeExt`(+ `Cramer` helper)— **`CramerLC2PhaseC` は import しない**。
 2. `CramerLC2PhaseC.lean` をこの新上流モジュールに依存させ(import)、その下流に `CramerCltBoundaryClosure.lean`(headline)を置く。
 3. headline を `CramerLC2PhaseC` から import 可能になるので、root A の body を
-   `exact cramer_lower_boundary_unconditional hY h_bdd a lam hlam h_deriv hVar h_coboundedBelow`
+   `exact cramer_lower_boundary hY h_bdd a lam hlam h_deriv hVar h_coboundedBelow`
    で埋める。
 
 **ただし配線だけでは閉じない 1 点(最大想定難所)**:

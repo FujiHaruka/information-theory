@@ -14,11 +14,11 @@
 >   (:361)。interior ケースは `tiltedWindow_eventually_large_of_interior` (:463) で discharge。W-3 撤退
 >   (residual 縮約) どおり着地。**boundary ケースの CLT closure は ✅ 達成 (2026-06-11)**: 子
 >   `cramer-chernoff-clt-closure` plan が `InformationTheory/Shannon/CramerCltBoundaryClosure.lean`
->   (0 sorry, sorryAx-free, 監査 PASS) に headline `cramer_lower_boundary_unconditional` を publish
+>   (0 sorry, sorryAx-free, 監査 PASS) に headline `cramer_lower_boundary` を publish
 >   (内部最適 tilt `a = deriv cgf lam` で residual largeness hyp 除去)。子判断ログ #4 / `05ed225`。
 > - ✅ **配線完了 (2026-06-11, 判断ログ #26 / 子 `cramer-root-wiring-plan.md`)**: 上の closed-but-unwired
 >   状態を解消。`cramer_lower_infinitePi` (root A) は 8 decl を新上流 `CramerBoundaryUpstream.lean`
->   へ hoist して import cycle を解消 → `exact cramer_lower_boundary_unconditional` で discharge。一般 iid
+>   へ hoist して import cycle を解消 → `exact cramer_lower_boundary` で discharge。一般 iid
 >   `cramer_lower` (root B) は新下流 `CramerGeneralLower.lean` へ移設 → iid joint law transport で headline へ
 >   落として discharge。両 root **sorryAx-free** (独立監査 `@audit:ok`、`8a8a001`)。project 実 sorry 17→15。
 

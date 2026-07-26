@@ -18,7 +18,7 @@
 ### Goal(完成判定)
 
 親 moonshot で達成済の sorryAx-free headline
-`InformationTheory.Shannon.CramerCltBoundary.cramer_lower_boundary_unconditional`
+`InformationTheory.Shannon.CramerCltBoundary.cramer_lower_boundary`
 (`InformationTheory/Shannon/CramerCltBoundaryClosure.lean:588`、infinitePi 版 Cramér 下界、
 内部最適 tilt `a = deriv cgf lam` で residual largeness hypothesis 除去済、`@audit:ok`)を使い、
 上流に残る **2 つの root sorry** を proof done (0 sorry / 0 @residual) で discharge する:
@@ -54,7 +54,7 @@
   a2. CramerLC2PhaseC → 新上流 → headline file の一直線 DAG にし、headline を
       CramerLC2PhaseC から import 可能化(cycle 消滅)。
   a3. root A signature に hVar(非退化分散 precondition)を追加、逆依存 2 decl に thread。
-  a4. root A body の sorry を `exact cramer_lower_boundary_unconditional …` で discharge。
+  a4. root A body の sorry を `exact cramer_lower_boundary …` で discharge。
 
 [root B 配線(Phase B)= 下流新モジュール移設 + transport reduction]
   ⚠ 訂正(orchestrator が import 方向を実測): headline は
@@ -129,7 +129,7 @@ proof-log: no(調査のみ)
 在庫 §調査1/2 に全 verbatim あり。Phase A 着手直前に以下を Read / script で **最終確認**(配線は
 1 文字違いで型が落ちるので verbatim 必須):
 
-- [ ] **headline** `cramer_lower_boundary_unconditional`(`CramerCltBoundaryClosure.lean:588`)の
+- [ ] **headline** `cramer_lower_boundary`(`CramerCltBoundaryClosure.lean:588`)の
   引数順 = `hY, h_bdd, a, lam, hlam, h_deriv, hVar, h_coboundedBelow` と結論形を Read で固定。
   特に `hVar` の形 `0 < Var[fun ω => Y(ω 0); infinitePi (μ₀.tilted (fun ω => lam*Y ω))]`。
 - [ ] **root A** `cramer_lower_infinitePi`(`CramerLC2PhaseC.lean:147`、sorry @ :165)の
@@ -224,7 +224,7 @@ proof-log: yes(cycle-break の import 再配線で olean stale / 別 cycle 露�
 ### a4. root A の sorry を headline で discharge
 
 - [ ] root A body を
-  `exact cramer_lower_boundary_unconditional hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow`
+  `exact cramer_lower_boundary hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow`
   で埋める(結論 verbatim 一致なので `exact` 一発、引数順は M0 で固定済)。
 - [ ] **検証点**:`lake env lean InformationTheory/Shannon/Cramer/LC2PhaseC.lean` clean(0 sorry)。
   `#print axioms cramer_lower_infinitePi` = `[propext, Classical.choice, Quot.sound]`
@@ -275,7 +275,7 @@ transport で落とす。在庫 §調査1 の 3 段 transport:
   逆依存 **1 decl**(`cramer_lower_legendre`、`Cramer.lean:485`、M0 実測)に thread。
   > **generality 注記**:root B は「一般 iid・degenerate(定数 X)も許す」ので `hVar` 追加は
   > generality を僅かに狭める(constant RV 除外)。数学的に正当(Cramér 下界は退化点で別扱い)。
-- [ ] **B-6 discharge**:transport で結論を headline 形に書き換え `cramer_lower_boundary_unconditional` を
+- [ ] **B-6 discharge**:transport で結論を headline 形に書き換え `cramer_lower_boundary` を
   落として root B の sorry を埋める。
 
 ### 落とし穴

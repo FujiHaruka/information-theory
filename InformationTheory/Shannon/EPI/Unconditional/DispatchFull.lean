@@ -10,7 +10,7 @@ The fully unconditional entropy power inequality `entropyPowerExt_add_ge`, takin
 ## Main statements
 
 * `entropyPowerExt_add_ge` — the unconditional `ℝ≥0∞` entropy power inequality.
-* `entropyPowerExt_mixed_add_ge_uncond` / `_symm_uncond` — the mixed cases (one factor a.c., the
+* `entropyPowerExt_mixed_add_ge` / `_symm` — the mixed cases (one factor a.c., the
   other singular), via gateway monotonicity.
 * `entropyPowerExt_add_ge_case1` — case 1 (both a.c.), splitting on `⊤`/`⊥`/finite of the
   three differential entropies and delegating to `entropyPowerExt_add_ge_finite_ac`.
@@ -44,7 +44,7 @@ private theorem entropyPowerExt_eq_zero_of_diffEntExt_bot {μ : Measure ℝ}
 `N(X+Y) ≥ N(X)`. The only hypotheses are `hX hY hXY hX_ac hY_sing`.
 
 @audit:ok -/
-theorem entropyPowerExt_mixed_add_ge_uncond
+theorem entropyPowerExt_mixed_add_ge
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_sing : ¬ (P.map Y) ≪ volume) :
@@ -58,7 +58,7 @@ monotonicity (`W = Y`, `V = X`) gives `N(Y+X) ≥ N(Y)`, reshaped to `X+Y` by `a
 hypotheses are `hX hY hXY hY_ac hX_sing`.
 
 @audit:ok -/
-theorem entropyPowerExt_mixed_add_ge_symm_uncond
+theorem entropyPowerExt_mixed_add_ge_symm
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hY_ac : (P.map Y) ≪ volume) (hX_sing : ¬ (P.map X) ≪ volume) :
@@ -132,8 +132,8 @@ theorem entropyPowerExt_add_ge_case1
 
 /-- The fully unconditional extended-real **entropy power inequality** `N(X+Y) ≥ N(X) + N(Y)`, taking
 only `hX hY hXY`. The four-case split on absolute continuity of `P.map X` and `P.map Y` delegates to
-`entropyPowerExt_add_ge_case1` (both a.c.), `entropyPowerExt_mixed_add_ge_uncond` /
-`_symm_uncond` (mixed), and `entropyPowerExt_singular_add_ge` (both singular).
+`entropyPowerExt_add_ge_case1` (both a.c.), `entropyPowerExt_mixed_add_ge` /
+`_symm` (mixed), and `entropyPowerExt_singular_add_ge` (both singular).
 
 @audit:ok -/
 @[entry_point]
@@ -147,10 +147,10 @@ theorem entropyPowerExt_add_ge
     · -- Both a.c. → case 1.
       exact entropyPowerExt_add_ge_case1 X Y P hX hY hXY hX_ac hY_ac
     · -- X a.c., Y singular → case 2.
-      exact entropyPowerExt_mixed_add_ge_uncond X Y P hX hY hXY hX_ac hY_ac
+      exact entropyPowerExt_mixed_add_ge X Y P hX hY hXY hX_ac hY_ac
   · by_cases hY_ac : (P.map Y) ≪ volume
     · -- Y a.c., X singular → case 2 symmetric.
-      exact entropyPowerExt_mixed_add_ge_symm_uncond X Y P hX hY hXY hY_ac hX_ac
+      exact entropyPowerExt_mixed_add_ge_symm X Y P hX hY hXY hY_ac hX_ac
     · -- Both singular → case 3 (RHS = 0).
       exact entropyPowerExt_singular_add_ge X Y P hX_ac hY_ac
 

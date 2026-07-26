@@ -249,7 +249,7 @@ proof-log: yes。2 補題 `c=1` 合成 + 8 integrability precondition の honest
 
 proof-log: yes。S1 `entropyPowerExt_of_ac` / `_singular` を被せる薄いラッパ。
 
-- [ ] `entropyPowerExt_mixed_add_ge` (X a.c. ∧ Y 特異): `(hX hY : Measurable) (hXY : IndepFun X Y P)
+- [ ] `entropyPowerExt_mixed_add_ge_of_regular` (X a.c. ∧ Y 特異): `(hX hY : Measurable) (hXY : IndepFun X Y P)
   (hX_ac : P.map X ≪ volume) (hY_sing : ¬ P.map Y ≪ volume) → [Phase 3 の integrability 群]
   → entropyPowerExt (P.map (X+Y)) ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y)`。
   証明:
@@ -259,8 +259,8 @@ proof-log: yes。S1 `entropyPowerExt_of_ac` / `_singular` を被せる薄いラ�
     `entropyPowerExt_of_ac hW_ac` で `N(X+Y) = ofReal (exp (2 h(X+Y)))`。
   - `differentialEntropy_add_ge_of_indep` (Phase 3) で `h(X) ≤ h(X+Y)` →
     `2 h(X) ≤ 2 h(X+Y)` → `Real.exp_le_exp.mpr` → `ENNReal.ofReal_le_ofReal` で `N(X) ≤ N(X+Y)`。
-- [ ] `entropyPowerExt_mixed_add_ge_symm` (Y a.c. ∧ X 特異): `add_comm` で `X+Y = Y+X` を噛ませ
-  `entropyPowerExt_mixed_add_ge` に Y/X を入替えて再適用 (`hXY.symm` で `IndepFun Y X P`)。
+- [ ] `entropyPowerExt_mixed_add_ge_symm_of_regular` (Y a.c. ∧ X 特異): `add_comm` で `X+Y = Y+X` を噛ませ
+  `entropyPowerExt_mixed_add_ge_of_regular` に Y/X を入替えて再適用 (`hXY.symm` で `IndepFun Y X P`)。
   `differentialEntropy_map_add_comm` 系 / `P.map (X+Y) = P.map (Y+X)` の同一視が要るか Phase 4 で確認
   (要 in-tree 補題 or `add_comm` の funext)。
 
@@ -286,8 +286,8 @@ proof-log: yes。case 2/3 配線のスケルトン。**headline 主定理 body �
   → entropyPowerExt (P.map (X+Y)) ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y)` を
   `by_cases hX_ac : P.map X ≪ volume` / `by_cases hY_ac : P.map Y ≪ volume` の 4 分岐で組む:
   - 両特異 (`¬hX_ac ∧ ¬hY_ac`): Phase 1 `entropyPowerExt_singular_add_ge`。
-  - X a.c. ∧ Y 特異: Phase 4 `entropyPowerExt_mixed_add_ge` (+ Phase 3 integrability を供給)。
-  - Y a.c. ∧ X 特異: Phase 4 `entropyPowerExt_mixed_add_ge_symm`。
+  - X a.c. ∧ Y 特異: Phase 4 `entropyPowerExt_mixed_add_ge_of_regular` (+ Phase 3 integrability を供給)。
+  - Y a.c. ∧ X 特異: Phase 4 `entropyPowerExt_mixed_add_ge_symm_of_regular`。
   - **両 a.c. (case 1)**: `sorry` + `@residual(plan:epi-stam-to-conclusion-plan)` で park
     (既存 plan 群が closure する hard core、本 plan scope 外)。または傘 Phase 5 で
     case1 補題を渡す形に signature 化。

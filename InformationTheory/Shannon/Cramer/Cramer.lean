@@ -418,7 +418,7 @@ lemma klDiv_tilted_eq [IsProbabilityMeasure μ] (X : Ω → ℝ) (hX_meas : Meas
 `cramer_tendsto`) has been relocated downstream to
 `InformationTheory/Shannon/CramerGeneralLower.lean` (same namespace
 `InformationTheory.Shannon.Cramer`), where it can be discharged against the
-CLT-boundary headline `cramer_lower_boundary_unconditional` without an import
+CLT-boundary headline `cramer_lower_boundary` without an import
 cycle.  The chain uses `cramer_upper_legendre` (above, stays here) on the upper
 side. -/
 

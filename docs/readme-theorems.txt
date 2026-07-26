@@ -73,7 +73,7 @@ rate_distortion_converse_n_letter_singleLetter
 @ 11 | Hypothesis testing & large deviations
 stein_converse_finite_n
 sanov_ldp_upper_bound
-cramer_lower_boundary_unconditional | Cramér large-deviation lower bound
+cramer_lower_boundary | Cramér large-deviation lower bound
 chernoff_converse | Chernoff information error exponent (Bayesian, converse)
 tvNorm_le_sqrt_klDiv | Pinsker
 

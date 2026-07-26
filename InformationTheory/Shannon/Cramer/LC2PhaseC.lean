@@ -15,7 +15,7 @@ import InformationTheory.Meta.EntryPoint
 
 This file states the Cramér lower bound for the canonical i.i.d. infinite
 product setting, reducing the change-of-measure step to the CLT-boundary
-headline `CramerCltBoundary.cramer_lower_boundary_unconditional`.
+headline `CramerCltBoundary.cramer_lower_boundary`.
 
 The change-of-measure step relates the tilted infinite-product measure
 `Measure.infinitePi (fun _ : ℕ => μ₀.tilted (lam * Y ·))` to the cylinder tilt of
@@ -53,7 +53,7 @@ non-degeneracy hypothesis `hVar` and the cobounded-below hypothesis
 `h_coboundedBelow` are regularity preconditions, not part of the proof core.
 
 @audit:ok (body is a verbatim `exact` of the headline
-`cramer_lower_boundary_unconditional`. `hVar` is non-load-bearing: the
+`cramer_lower_boundary`. `hVar` is non-load-bearing: the
 window-mass `≥ 1/4` core is derived inside the CLT of the headline, where `hVar`
 is consumed only as the non-degeneracy input; at `Var = 0` the tilted sum is a.e.
 constant and the argument collapses, so granting `hVar` alone does not hand over
@@ -78,7 +78,7 @@ theorem cramer_lower_infinitePi
           (1 / (n : ℝ)) * Real.log
             ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
               {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop :=
-  CramerCltBoundary.cramer_lower_boundary_unconditional
+  CramerCltBoundary.cramer_lower_boundary
     hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
 
 /-- The Legendre form of `cramer_lower_infinitePi`, with the conclusion
