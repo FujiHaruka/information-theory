@@ -28,8 +28,13 @@ product identity, `IsUVChannelLaw`.
 * `bcOuterRegionUV_isClosed` — the region is closed.
 * `bcOuterRegionUV_nonempty` — the region is nonempty, so the union is indexed by a nonempty
   family of channel laws.
+* `isUVChannelLaw_iff` — a law is a channel law exactly when it is a law of the auxiliaries and
+  the input letter pushed through the channel, which describes the index of the union directly.
 * `IsUVChannelLaw.map_input_output` — a channel law has the channel joint `(ν.map X) ⊗ₘ W` as
   its input-output pair law, which is what a law copying the input into the output fails.
+* `not_isUVChannelLaw_uvOutputCopiesInputLaw` and `not_isUVChannelLaw_uvAuxCopiesOutputLaw` — the
+  constraint rejects two structurally different degenerate laws, one whose outputs copy the input
+  letter and one whose auxiliary copies an output over a one-letter input alphabet.
 * `IsUVChannelLaw.smul`, `IsUVChannelLaw.add` — mixtures of channel laws are channel laws, so
   averaging the letter laws of a code stays inside the index of the union.
 * `IsUVChannelLaw.map_auxiliaries` — re-encoding the two auxiliary alphabets keeps a channel
@@ -98,6 +103,32 @@ private lemma measurable_uvFirstThree :
 private lemma measurable_uvSplit :
     Measurable (fun q : U × V × α × β₁ × β₂ ↦ ((q.1, q.2.1, q.2.2.1), q.2.2.2)) :=
   measurable_uvFirstThree.prodMk (measurable_snd.comp (measurable_snd.comp measurable_snd))
+
+private lemma measurable_uvUnsplit :
+    Measurable (fun z : (U × V × α) × (β₁ × β₂) ↦ (z.1.1, z.1.2.1, z.1.2.2, z.2.1, z.2.2)) :=
+  (measurable_fst.comp measurable_fst).prodMk
+    ((measurable_fst.comp (measurable_snd.comp measurable_fst)).prodMk
+      ((measurable_snd.comp (measurable_snd.comp measurable_fst)).prodMk
+        ((measurable_fst.comp measurable_snd).prodMk (measurable_snd.comp measurable_snd))))
+
+lemma isUVChannelLaw_iff (W : BCChannel α β₁ β₂) (ν : Measure (U × V × α × β₁ × β₂)) :
+    IsUVChannelLaw W ν ↔
+      ν = ((ν.map fun q ↦ (q.1, q.2.1, q.2.2.1)) ⊗ₘ
+            W.comap (fun r : U × V × α ↦ r.2.2) (measurable_snd.comp measurable_snd)).map
+          (fun z : (U × V × α) × (β₁ × β₂) ↦ (z.1.1, z.1.2.1, z.1.2.2, z.2.1, z.2.2)) := by
+  have hid₁ : (fun z : (U × V × α) × (β₁ × β₂) ↦ (z.1.1, z.1.2.1, z.1.2.2, z.2.1, z.2.2)) ∘
+      (fun q : U × V × α × β₁ × β₂ ↦ ((q.1, q.2.1, q.2.2.1), q.2.2.2)) = id := rfl
+  have hid₂ : (fun q : U × V × α × β₁ × β₂ ↦ ((q.1, q.2.1, q.2.2.1), q.2.2.2)) ∘
+      (fun z : (U × V × α) × (β₁ × β₂) ↦ (z.1.1, z.1.2.1, z.1.2.2, z.2.1, z.2.2)) = id := rfl
+  constructor
+  · intro h
+    have h2 := congrArg (Measure.map (fun z : (U × V × α) × (β₁ × β₂) ↦
+      (z.1.1, z.1.2.1, z.1.2.2, z.2.1, z.2.2))) h
+    rwa [Measure.map_map measurable_uvUnsplit measurable_uvSplit, hid₁, Measure.map_id] at h2
+  · intro h
+    unfold IsUVChannelLaw
+    conv_lhs => rw [h]
+    rw [Measure.map_map measurable_uvSplit measurable_uvUnsplit, hid₂, Measure.map_id]
 
 /-- @audit:ok -/
 lemma IsUVChannelLaw.smul {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
@@ -348,25 +379,49 @@ end CodeLaw
 
 /-! ## The channel constraint is not vacuous
 
-The information slots do not mention the channel, so a five-tuple law that copies the input
-letter into both outputs carries a full input alphabet of information in every slot no matter
-which channel indexes the region.  Copying laws exist over every alphabet, so dropping the
-constraint would let the union exhaust the plane.  The law below copies a uniform bit into both
-outputs and is rejected over the channel that always outputs `(false, false)`. -/
+The information slots do not mention the channel, so the constraint is what stops the union from
+exhausting the plane, and it has to reject two structurally different families of laws.
 
-example :
-    ¬ IsUVChannelLaw (α := Bool) (β₁ := Bool) (β₂ := Bool)
-        (Kernel.const Bool (Measure.dirac (false, false)))
-        (((Fintype.card Bool : ℝ≥0∞)⁻¹ • Measure.count : Measure Bool).map
-          fun b ↦ ((b, b, b, b, b) : Bool × Bool × Bool × Bool × Bool)) := by
+A law that copies the input letter into both outputs carries a full input alphabet of information
+in every slot no matter which channel indexes the region, and such laws exist over every alphabet,
+so the output law has to be pinned to the channel.  `uvOutputCopiesInputLaw` copies a fair bit
+into both outputs and is rejected over the channel that always outputs `(false, false)`.
+
+Pinning the output law alone would still leave the auxiliaries free to read the outputs directly,
+which manufactures information about a receiver that the input letter does not carry.
+`uvAuxCopiesOutputLaw` lives over a one-letter input alphabet and has the channel joint as its
+input-output pair law, so it meets the first constraint, yet its first auxiliary is the output
+bit, and it is rejected as well. -/
+
+section NotVacuous
+
+/-- The broadcast channel over a binary input alphabet whose two receivers always read `false`,
+so that no input letter is visible at either output. -/
+noncomputable def uvBlindChannel : BCChannel Bool Bool Bool :=
+  Kernel.const Bool (Measure.dirac (false, false))
+
+instance uvBlindChannel_isMarkovKernel : IsMarkovKernel uvBlindChannel := by
+  unfold uvBlindChannel
+  infer_instance
+
+/-- The five-tuple law that draws a fair bit and copies it into the input letter, into both
+outputs and into both auxiliaries. -/
+noncomputable def uvOutputCopiesInputLaw : Measure (Bool × Bool × Bool × Bool × Bool) :=
+  ((Fintype.card Bool : ℝ≥0∞)⁻¹ • Measure.count : Measure Bool).map fun b ↦ (b, b, b, b, b)
+
+instance uvOutputCopiesInputLaw_isProbabilityMeasure :
+    IsProbabilityMeasure uvOutputCopiesInputLaw := by
+  unfold uvOutputCopiesInputLaw
+  exact Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+
+theorem not_isUVChannelLaw_uvOutputCopiesInputLaw :
+    ¬ IsUVChannelLaw uvBlindChannel uvOutputCopiesInputLaw := by
   intro h
-  set μ : Measure Bool := (Fintype.card Bool : ℝ≥0∞)⁻¹ • Measure.count with hμ_def
   have hcopy : Measurable fun b : Bool ↦ ((b, b, b, b, b) : Bool × Bool × Bool × Bool × Bool) :=
     measurable_of_countable _
-  haveI : IsProbabilityMeasure (μ.map fun b : Bool ↦
-      ((b, b, b, b, b) : Bool × Bool × Bool × Bool × Bool)) :=
-    Measure.isProbabilityMeasure_map hcopy.aemeasurable
   have hout := h.map_input_output
+  unfold uvOutputCopiesInputLaw uvBlindChannel at hout
+  set μ : Measure Bool := (Fintype.card Bool : ℝ≥0∞)⁻¹ • Measure.count with hμ_def
   rw [Measure.map_map (measurable_of_countable _) hcopy,
     Measure.map_map (measurable_of_countable _) hcopy] at hout
   have hS : MeasurableSet {p : Bool × Bool × Bool | p.2 = (true, true)} :=
@@ -388,6 +443,87 @@ example :
     simp [Kernel.const_apply, Measure.dirac_apply']
   rw [hleft, hright] at hval
   exact (ENNReal.inv_ne_zero.mpr (by norm_num)) hval
+
+/-- The law of two copies of a fair bit. -/
+noncomputable def uvFairBitPair : Measure (Bool × Bool) :=
+  (2 : ℝ≥0∞)⁻¹ • Measure.dirac (false, false) + (2 : ℝ≥0∞)⁻¹ • Measure.dirac (true, true)
+
+instance uvFairBitPair_isProbabilityMeasure : IsProbabilityMeasure uvFairBitPair := by
+  constructor
+  simp [uvFairBitPair, ENNReal.inv_two_add_inv_two]
+
+/-- The broadcast channel over a one-letter input alphabet that sends the same fair bit to both
+receivers, so that its input carries no information at all. -/
+noncomputable def uvFairBitChannel : BCChannel Unit Bool Bool := Kernel.const Unit uvFairBitPair
+
+instance uvFairBitChannel_isMarkovKernel : IsMarkovKernel uvFairBitChannel := by
+  unfold uvFairBitChannel
+  infer_instance
+
+/-- The five-tuple law over `uvFairBitChannel` whose first auxiliary is the common output bit and
+whose second auxiliary is constant. -/
+noncomputable def uvAuxCopiesOutputLaw : Measure (ℕ × ℕ × Unit × Bool × Bool) :=
+  (2 : ℝ≥0∞)⁻¹ • Measure.dirac (0, 0, (), false, false) +
+    (2 : ℝ≥0∞)⁻¹ • Measure.dirac (1, 0, (), true, true)
+
+instance uvAuxCopiesOutputLaw_isProbabilityMeasure :
+    IsProbabilityMeasure uvAuxCopiesOutputLaw := by
+  constructor
+  simp [uvAuxCopiesOutputLaw, ENNReal.inv_two_add_inv_two]
+
+theorem uvAuxCopiesOutputLaw_map_input_output :
+    uvAuxCopiesOutputLaw.map (fun q ↦ (q.2.2.1, q.2.2.2))
+      = (uvAuxCopiesOutputLaw.map fun q ↦ q.2.2.1) ⊗ₘ uvFairBitChannel := by
+  have hX : Measurable (fun q : ℕ × ℕ × Unit × Bool × Bool ↦ q.2.2.1) := measurable_of_countable _
+  have hXY : Measurable (fun q : ℕ × ℕ × Unit × Bool × Bool ↦ (q.2.2.1, q.2.2.2)) :=
+    measurable_of_countable _
+  have hmk : Measurable (Prod.mk (α := Unit) (β := Bool × Bool) ()) :=
+    measurable_const.prodMk measurable_id
+  have hmarg : (uvAuxCopiesOutputLaw.map fun q ↦ q.2.2.1) = Measure.dirac () := by
+    rw [uvAuxCopiesOutputLaw, Measure.map_add _ _ hX, Measure.map_smul, Measure.map_smul,
+      Measure.map_dirac' hX, Measure.map_dirac' hX, ← add_smul, ENNReal.inv_two_add_inv_two,
+      one_smul]
+  rw [hmarg, uvFairBitChannel, Measure.compProd_const, Measure.dirac_prod, uvAuxCopiesOutputLaw,
+    uvFairBitPair, Measure.map_add _ _ hXY, Measure.map_smul, Measure.map_smul,
+    Measure.map_dirac' hXY, Measure.map_dirac' hXY,
+    Measure.map_add _ _ hmk, Measure.map_smul, Measure.map_smul,
+    Measure.map_dirac' hmk, Measure.map_dirac' hmk]
+
+theorem not_isUVChannelLaw_uvAuxCopiesOutputLaw :
+    ¬ IsUVChannelLaw uvFairBitChannel uvAuxCopiesOutputLaw := by
+  intro h
+  unfold IsUVChannelLaw at h
+  set S : Set ((ℕ × ℕ × Unit) × (Bool × Bool)) := {z | z.1.1 = 0 ∧ z.2 = (true, true)} with hS_def
+  have hS : MeasurableSet S := (Set.to_countable S).measurableSet
+  have hsplit : Measurable (fun q : ℕ × ℕ × Unit × Bool × Bool ↦
+      ((q.1, q.2.1, q.2.2.1), q.2.2.2)) := measurable_of_countable _
+  have hπ : Measurable (fun q : ℕ × ℕ × Unit × Bool × Bool ↦ (q.1, q.2.1, q.2.2.1)) :=
+    measurable_of_countable _
+  have hmargπ : (uvAuxCopiesOutputLaw.map fun q ↦ (q.1, q.2.1, q.2.2.1))
+      = (2 : ℝ≥0∞)⁻¹ • Measure.dirac ((0 : ℕ), (0 : ℕ), ()) +
+        (2 : ℝ≥0∞)⁻¹ • Measure.dirac ((1 : ℕ), (0 : ℕ), ()) := by
+    rw [uvAuxCopiesOutputLaw, Measure.map_add _ _ hπ, Measure.map_smul, Measure.map_smul,
+      Measure.map_dirac' hπ, Measure.map_dirac' hπ]
+  have hval := (Measure.ext_iff.mp h) S hS
+  rw [Measure.map_apply hsplit hS, Measure.compProd_apply hS, hmargπ,
+    lintegral_add_measure, lintegral_smul_measure, lintegral_smul_measure,
+    lintegral_dirac, lintegral_dirac] at hval
+  have hlhs : uvAuxCopiesOutputLaw ((fun q : ℕ × ℕ × Unit × Bool × Bool ↦
+      ((q.1, q.2.1, q.2.2.1), q.2.2.2)) ⁻¹' S) = 0 := by
+    have hset : (fun q : ℕ × ℕ × Unit × Bool × Bool ↦ ((q.1, q.2.1, q.2.2.1), q.2.2.2)) ⁻¹' S
+        = {q | q.1 = 0 ∧ q.2.2.2 = (true, true)} := by
+      ext q; simp [hS_def]
+    rw [hset, uvAuxCopiesOutputLaw]
+    simp [Measure.dirac_apply]
+  have hset₁ : Prod.mk ((0 : ℕ), (0 : ℕ), ()) ⁻¹' S = {((true, true) : Bool × Bool)} := by
+    ext y; simp [hS_def]
+  have hset₂ : Prod.mk ((1 : ℕ), (0 : ℕ), ()) ⁻¹' S = (∅ : Set (Bool × Bool)) := by
+    ext y; simp [hS_def]
+  rw [hlhs, Kernel.comap_apply, Kernel.comap_apply, uvFairBitChannel, Kernel.const_apply] at hval
+  rw [hset₁, hset₂, uvFairBitPair] at hval
+  simp at hval
+
+end NotVacuous
 
 /-! ## Time sharing -/
 
