@@ -21,7 +21,7 @@ as `contAwgn_eq_shannonHartley` (proved in `ConverseFinal.lean`).
 The converse half lands via the prolate-count domination `bandGramReal_high_count_le` — it needs
 only `prolateCount T W c / T → 2W`, not the tight Landau-Pollak-Slepian concentration.
 
-`IsBandlimited` uses the *L²-Fourier spectral support* of the complexification (a genuine
+`IsBandlimited` uses the *L²-Fourier spectral support* of the complexification (a
 band-limit constraint, not junk-`0`). The Paley-Wiener sup bound `bandlimited_sup_bound`
 (`|f(t)| ≤ √(2W)·‖f‖₂`) is fully proven (`sorryAx`-free) over the `L²↔L¹` Fourier-agreement
 bridges `l2Fourier_eq_fourierIntegral` / `l2FourierInv_eq_fourierIntegralInv`; it caps pointwise
@@ -31,10 +31,10 @@ values by the *full-line* `L²` energy `‖f‖₂`.
 functions supported in `[0, T]`, against which the codeword is correlated
 (`ContAwgnCode.observation`) before independent Gaussian noise is added
 (`ContAwgnCode.errorProbAt`). This is the Karhunen-Loève discretization, and orthonormality is
-what makes the independent per-observation noise law exact. An earlier version of this file read
-the codeword pointwise on a grid, which is an isometry only at the Nyquist spacing and hence
-assumed what the theorem must prove; the refutation and the def-fix are recorded in
-`docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP.
+what makes the independent per-observation noise law exact. Reading the codeword pointwise on a
+grid instead would be an isometry only at the Nyquist spacing, hence would assume what the
+theorem must prove; see `docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP for the
+non-circularity argument.
 
 ## Main definitions
 
@@ -65,13 +65,13 @@ The definition aims to make `contAwgn_eq_shannonHartley` *true*, *non-circular*,
   onto `span{φᵢ}`; Bessel caps it by `‖f‖₂² ≤ T·P` uniformly in `k`, and Cauchy interlacing caps
   the per-dimension gains by the prolate eigenvalues. Rate `W·log(1 + P/(N₀·W))` is reached in the
   `T → ∞` limit exactly when `≈ 2WT` of those eigenvalues are near `1`.
-* **Non-circularity.** A codeword is a genuine band-limited *function* `ℝ → ℝ`, never a
+* **Non-circularity.** A codeword is a band-limited *function* `ℝ → ℝ`, never a
   length-`⌊2WT⌋` sample vector; `contAwgnMaxMessages` contains no `2W` or `⌊2WT⌋`; the
   observation count `k` is a *free* `ℕ` field, not pinned to `⌊2WT⌋`; the factor `2W` is not in
   any definition and must emerge from the degrees-of-freedom proof — `testFn` is asked only for
   orthonormality and `[0, T]` support. Consequently `contAwgn_eq_shannonHartley` cannot be closed
   by `rfl`/`unfold`.
-* **Non-degeneracy.** The noise genuinely corrupts the signal (variance `N₀/2 > 0` whenever
+* **Non-degeneracy.** The noise corrupts the signal (variance `N₀/2 > 0` whenever
   `N₀ > 0`). Neither oversampling nor undersampling inflates the signal-to-noise ratio: raising
   `k` adds observations but Bessel holds `∑ᵢ ⟨f, φᵢ⟩² ≤ ‖f‖₂²` uniformly, so extra observations
   split the same energy budget rather than duplicating it, and the whole-line `encoder_power`
@@ -97,10 +97,10 @@ complexification has spectral support in `[-W, W]`, i.e. vanishes almost everywh
 `{ξ | W < |ξ|}`. The complexification `t ↦ (f t : ℂ)` is needed because the L² Fourier transform
 `𝓕 : Lp ℂ 2 volume → Lp ℂ 2 volume` is complex-valued.
 
-This is a *genuine* band-limit constraint: unlike the L¹ `Real.fourierIntegral` (which is `0`
+This is a band-limit constraint: unlike the L¹ `Real.fourierIntegral` (which is `0`
 for every non-L¹ signal, hence vacuous — junk-`0` — on the entire target class of essentially
 time-limited band-limited L² signals), the L² transform is defined on the whole a.e. class and
-its support genuinely separates band-limited functions from broadband ones. -/
+its support separates band-limited functions from broadband ones. -/
 def IsBandlimited (f : ℝ → ℝ) (W : ℝ) : Prop :=
   ∃ hf : MemLp (fun t : ℝ => (f t : ℂ)) 2 volume,
     (𝓕 (hf.toLp (fun t : ℝ => (f t : ℂ))) : Lp ℂ 2 volume)
@@ -332,7 +332,7 @@ theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
 /-- A continuous-time AWGN code over the window `[0, T]` with bandwidth `W`, average power
 `P`, and `M` messages.
 
-The encoder maps each message to a genuine band-limited *function* `ℝ → ℝ` (never a fixed
+The encoder maps each message to a band-limited *function* `ℝ → ℝ` (never a fixed
 sample vector — this is what keeps the definition non-circular), whose whole-line energy is at most
 `T · P`. The receiver does not read the codeword pointwise; it correlates it against `k`
 **orthonormal test functions supported in `[0, T]`**, observing the vector
@@ -341,9 +341,9 @@ sample vector — this is what keeps the definition non-circular), whose whole-l
 matched-filter discretization of the channel: against an orthonormal family the coefficients of
 white noise are *exactly* i.i.d. `N(0, N₀/2)`, which is what makes the product law `Measure.pi`
 in `errorProbAt` an exact description of the physical channel rather than a surrogate for one.
-It replaces a point-sampling observation map that was an isometry only at the Nyquist spacing —
-i.e. calibrated at exactly the value the Shannon-Hartley identity has to prove; the refutation is
-recorded in `docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP.
+A point-sampling observation map would be an isometry only at the Nyquist spacing —
+i.e. calibrated at exactly the value the Shannon-Hartley identity has to prove; see
+`docs/shannon/shannon-hartley-facts.md` §OBSERVATION-MAP for the non-circularity argument.
 
 The observation count `k` is a *free* `ℕ` field, and no field mentions `2W` or
 `⌊2WT⌋`: `testFn` is asked only to be orthonormal and supported in `[0, T]`, and
@@ -444,7 +444,7 @@ bounded-binder form unfolds to `⨅ ε, ⨅ (_ : ε ∈ Set.Ioo 0 1), contAwgnRa
 `ε ∉ (0, 1)` the inner `⨅` ranges over an empty index, contributing the junk value
 `sInf ∅ = 0`. Since `contAwgnRate ≥ 0`, that phantom `0` collapses the whole infimum to `0`,
 making both `contAwgn_ge_shannonHartley` and `contAwgn_eq_shannonHartley` false as framed for
-`P > 0`. The subtype infimum ranges only over the genuine `(0, 1)` and carries no phantom. -/
+`P > 0`. The subtype infimum ranges only over `(0, 1)` and carries no phantom. -/
 noncomputable def contAwgnOperationalCapacity (W N₀ P : ℝ) : ℝ :=
   ⨅ ε : Set.Ioo (0 : ℝ) 1, contAwgnRate W N₀ P ε
 

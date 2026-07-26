@@ -506,7 +506,7 @@ so `A` restricts to a compact self-adjoint operator `S` there; every eigenvalue 
 eigenvalue of `A` lying in `[0, c]` (above `c` its eigenvector would land in `V ⊓ Vᗮ = ⊥`), and for
 a compact self-adjoint operator the norm *is* the spectral radius, so `‖S‖ ≤ c`. Cauchy-Schwarz
 then gives the Rayleigh bound. In particular this route does *not* construct a complete orthonormal
-eigenbasis of `A` — the obligation still open at `tsum_prolateEigenvalues_eq`.
+eigenbasis of `A` (that route is `tsum_prolateEigenvalues_eq`, taken separately).
 
 Unconditional in `T` and `W`: compactness, symmetry and positivity of `A` all hold for every
 parameter value, so no window or band nondegeneracy is assumed. Only `0 < c` is needed, and only to

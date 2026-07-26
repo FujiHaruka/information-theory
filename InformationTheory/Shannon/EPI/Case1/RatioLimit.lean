@@ -21,7 +21,7 @@ a.c. inputs) entropy power inequality, bypassing the entropic CLT wall.
 
 Let `R(t) = csiszarLogRatioGap X Y Z_X Z_Y P t
           = log N(law(X+Y+√t·(Z_X+Z_Y))) − log (N(law(X+√t·Z_X)) + N(law(Y+√t·Z_Y)))`,
-the genuine log-ratio gap (`EPIL3Integration.csiszarLogRatioGap`).
+the log-ratio gap (`EPIL3Integration.csiszarLogRatioGap`).
 
 * `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1085`, genuine,
   sorryAx-free) gives `AntitoneOn R (Set.Ici 0)`.
@@ -55,7 +55,7 @@ standard normals), the two `log`s converge to the same value, so `R t → 0`.
 All per-`t` regularity (a.c., finite-entropy integrability of the W-path laws, the
 8 fibre-integrability preconditions of `differentialEntropy_add_ge_of_indep`, finite
 variance) is threaded as honest preconditions in the signatures. The
-Stam core / EPI core is never bundled as a `*Hypothesis`. The genuine analytic glue
+Stam core / EPI core is never bundled as a `*Hypothesis`. The analytic glue
 (scaling cancellation, log-continuity composition, Gaussian additivity, order limit)
 is the deliverable; preconditions not discharged here remain honest hypotheses.
 

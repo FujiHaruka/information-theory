@@ -33,7 +33,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
         * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x ∂volume := by
   -- abbreviate the time-`t` convolution density.
   set p_t : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) with hp_t
-  -- STEP 2: strict positivity of `p_t` (genuine; `0 < ∫ pX = 1` from `hpX_mass`).
+  -- STEP 2: strict positivity of `p_t` (`0 < ∫ pX = 1` from `hpX_mass`).
   have hp_pos : ∀ x, 0 < p_t x := fun x ↦
     convDensityAdd_pos pX hpX_nn hpX_int (by rw [hpX_mass]; norm_num) ht x
   -- IBP quadruple: u, v, u', v'.
@@ -63,17 +63,17 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     rw [hv_def, hv'_def]
     exact convDensityAdd_deriv_hasDerivAt_self pX hpX_nn hpX_meas hpX_int ht x
   -- STEP 4: the three integrability preconditions.
-  -- `huv' = Integrable (u * v')`: entropy-finiteness wall.
+  -- `huv' = Integrable (u * v')`: from `convDensityAdd_logFactor_deriv2_integrable`.
   have huv' : Integrable (u * v') := by
     simpa only [Pi.mul_def, hu_def, hv'_def, hp_t] using
       convDensityAdd_logFactor_deriv2_integrable
         pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
-  -- `huv = Integrable (u * v)`: entropy-finiteness wall.
+  -- `huv = Integrable (u * v)`: from `convDensityAdd_logFactor_deriv_integrable`.
   have huv : Integrable (u * v) := by
     simpa only [Pi.mul_def, hu_def, hv_def, hp_t] using
       convDensityAdd_logFactor_deriv_integrable
         pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
-  -- `hu'v = Integrable (u' * v)`: from the Fisher-finiteness wall (`(logDeriv)²·p_t`),
+  -- `hu'v = Integrable (u' * v)`: from `convDensityAdd_fisher_integrable` (`(logDeriv)²·p_t`),
   --   since `u' x · v x = - logDeriv p_t x · deriv p_t x = -((logDeriv p_t x)²·p_t x)`.
   have hfisher := convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int hpX_mass ht
   -- pointwise identity `u' x · v x = -((logDeriv p_t x)² · p_t x)`, derived once.
@@ -131,11 +131,11 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
     rw [hx]; ring
   -- (2) pull out the `(1/2)` constant.
   rw [hstep1, integral_const_mul]
-  -- (3) IBP step wall: `∫ (- log p_t - 1)·∂²_x p_t = ∫ (logDeriv p_t)²·p_t`.
+  -- (3) IBP step: `∫ (- log p_t - 1)·∂²_x p_t = ∫ (logDeriv p_t)²·p_t`.
   rw [debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step pX hpX_nn hpX_meas hpX_int
         hpX_mass hpX_mom ht]
   -- (4) Fisher value: `∫ (logDeriv p_t)²·p_t = fisherInfoOfDensityReal p_t`,
-  --     integrability supplied by the Fisher-finiteness wall.
+  --     integrability supplied by `convDensityAdd_fisher_integrable`.
   rw [fisher_from_logDeriv p_t hp_nn
     (convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int hpX_mass ht)]
 
@@ -434,15 +434,15 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     -- abbreviate the path.
     set pPath : ℝ → ℝ → ℝ := fun s x ↦
       convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x with hpPath
-    -- `hint`: entropy-integrand integrability at `t` (entropy-finiteness wall), moved to
-    --   the `pPath t = g_{max t 0}` form via `max t 0 = t`.
+    -- `hint`: entropy-integrand integrability at `t` (`convDensityAdd_negMulLog_integrable`),
+    --   moved to the `pPath t = g_{max t 0}` form via `max t 0 = t`.
     have hint : Integrable (fun x ↦ Real.negMulLog (pPath t x)) volume := by
       have h := convDensityAdd_negMulLog_integrable
         pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
       refine h.congr ?_
       filter_upwards with x
       rw [hpPath]; simp only; rw [hmaxt]
-    -- `hmeas`: a.e.-strong-measurability of the entropy integrand, for `s` near `t` (genuine).
+    -- `hmeas`: a.e.-strong-measurability of the entropy integrand, for `s` near `t`.
     have hmeas : ∀ᶠ s in nhds t,
         AEStronglyMeasurable (fun x ↦ Real.negMulLog (pPath s x)) volume := by
       refine Filter.Eventually.of_forall (fun s ↦ ?_)
@@ -460,7 +460,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
         have h := huncurry.integral_prod_right (ν := volume)
         exact h.measurable
       exact (Real.continuous_negMulLog.measurable.comp hpath_meas).aestronglyMeasurable
-    -- `hderiv_meas`: a.e.-strong-measurability of `entDerivFn t` (genuine).
+    -- `hderiv_meas`: a.e.-strong-measurability of `entDerivFn t`.
     have hderiv_meas : AEStronglyMeasurable (entDerivFn t) volume := by
       have hg_meas : Measurable (gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩) :=
         measurable_gaussianPDFReal 0 _
@@ -629,7 +629,7 @@ theorem debruijnIdentityV2_holds_assembled
       rw [h_reg.pX_law, withDensity_apply _ MeasurableSet.univ, setLIntegral_univ]
     rw [hlint, Measure.map_apply hX MeasurableSet.univ, Set.preimage_univ, measure_univ]
     exact ENNReal.one_lt_top
-  -- pX is a genuine probability density ⇒ `∫ pX = 1` (mass = (P.map X) univ = P univ = 1).
+  -- pX is a probability density ⇒ `∫ pX = 1` (mass = (P.map X) univ = P univ = 1).
   --   Regularity precondition for the convolution Gaussian lower bound
   --   (`convDensityAdd_lower_bound_gaussian`).
   have hpX_mass : (∫ y, h_reg.pX y ∂volume) = 1 := by

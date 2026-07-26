@@ -130,7 +130,7 @@ lifted by `ENNReal.ofReal`), and discharge the pointwise liminf bound via contin
 `klFun` composed with the a.e. convergence.
 
 `hμ_ac`/`hμn_ac` (absolute continuity) and `h_ae` (a.e. convergence input) are
-preconditions; the conclusion is the genuine LSC inequality (not bundled).
+preconditions; the conclusion is the LSC inequality (not bundled).
 @audit:ok -/
 theorem klDiv_le_liminf_of_ae_tendsto
     (γ : Measure ℝ) [IsFiniteMeasure γ]
@@ -176,13 +176,13 @@ theorem klDiv_le_liminf_of_ae_tendsto
 open InformationTheory.Shannon
 open InformationTheory.Shannon.EPIConvDensity
 
-/-- W4, density-level a.e. subsequence convergence (genuine, the negMulLog-free
+/-- W4, density-level a.e. subsequence convergence (the negMulLog-free
 companion of `EPIVitaliAE.negMulLog_convDensity_tendsto_ae_subseq`). Along any sequence
 `u → 0⁺`, the smoothed densities `convDensityAdd pX g_{u n}` converge to `pX`
 a.e. along a subsequence `n ↦ u (ns n)` (`StrictMono ns`), *before* composing with
 any continuous map.
 
-Genuine route, identical to `EPIVitaliAE` but cut before the `negMulLog` composition:
+Same route as `EPIVitaliAE` but cut before the `negMulLog` composition:
 layer-1 L¹ convergence `convDensityAdd_tendsto_L1_zero` (`@audit:ok`, sorryAx-free) →
 `tendstoInMeasure_of_tendsto_eLpNorm` (Lp → measure) →
 `TendstoInMeasure.exists_seq_tendsto_ae` (measure → a.e. subsequence). No own `sorry`.
@@ -622,7 +622,7 @@ private theorem negMulLog_klFatou_bridge_identities {pX g : ℝ → ℝ} {f : �
 
 /-- The (α) upper bound assembly: differential-entropy upper semicontinuity of the
 smoothed densities at the `t → 0⁺` endpoint, via the klFun-Fatou KL lower-semicontinuity
-route (`klDiv_le_liminf_of_ae_tendsto`) and the genuine bridge
+route (`klDiv_le_liminf_of_ae_tendsto`) and the bridge
 `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`.
 
 For a probability density `pX` (nonneg, measurable, integrable, mass `1`, finite second
@@ -646,7 +646,7 @@ BOUNDEDNESS (the `hKL_limsup` step): the boundedness that the
 `negMulLog_convDensity_entropy_ge_density` (`EPIG2ConvEntropyDensity.lean`, `@audit:ok`,
 via the `cond-diff-entropy` route): each `h(μ_n) ≥ h(pX)`, so
 `KLr n = −h(μ_n) − cross_n ≤ −cross_n − h(pX)`, which converges (W3) and hence bounds
-`KLr` above. KL finiteness `klDiv μ_n γ ≠ ∞` (and `klDiv μ γ ≠ ∞`) is the genuine
+`KLr` above. KL finiteness `klDiv μ_n γ ≠ ∞` (and `klDiv μ γ ≠ ∞`) is the
 llr-integrability content, established from the volume-density entropy + cross
 integrability via `integrable_toReal_rnDeriv_mul_iff`. Along any subsequence W4 extracts
 an a.e.-convergent sub-subsequence; W1 + `ENNReal.liminf_toReal_eq` give
@@ -655,7 +655,7 @@ so `KLr → (klDiv μ γ).toReal` (squeeze), hence `h_n → −(klDiv μ γ).toR
 `tendsto_of_subseq_tendsto` promotes this to the full sequence, so `limsup h_n = h(pX)`.
 
 The hypotheses are all regularity preconditions (`pX` density regularity + `σ² ≠ 0` +
-`u → 0⁺` positivity); the conclusion is the genuine limsup inequality, not bundled.
+`u → 0⁺` positivity); the conclusion is the limsup inequality, not bundled.
 @audit:ok -/
 private theorem negMulLog_klFatou_entropy_tendsto {pX g : ℝ → ℝ} {f : ℕ → ℝ → ℝ}
     {σ2 : ℝ≥0} (hσ : σ2 ≠ 0)
@@ -695,7 +695,7 @@ private theorem negMulLog_klFatou_entropy_tendsto {pX g : ℝ → ℝ} {f : ℕ 
   set KLr : ℕ → ℝ := fun n ↦ (klDiv (μn n) γ).toReal with hKLr_def
   set cross_n : ℕ → ℝ := fun n ↦ ∫ x, f n x * Real.log (g x) ∂volume with hcr_def
   set crossμ : ℝ := ∫ x, pX x * Real.log (g x) ∂volume with hcrμ_def
-  -- KL finiteness for each `μn n` (= the genuine llr-integrability content), so that
+  -- KL finiteness for each `μn n` (= the llr-integrability content), so that
   -- the ℝ≥0∞ W1 bound can be transferred to `toReal`.
   have hKL_ne_top : ∀ n, klDiv (μn n) γ ≠ ∞ := fun n ↦
     klDiv_ne_top_of_density_log_integrable (hf_nn n) (fun x ↦ (hg_pos x).le)
@@ -717,7 +717,7 @@ private theorem negMulLog_klFatou_entropy_tendsto {pX g : ℝ → ℝ} {f : ℕ 
       (hcross_tendsto.neg).sub_const L
     have heq : - crossμ - L = (klDiv μ γ).toReal := by rw [hL_def]; ring
     rwa [heq] at this
-  -- Each `KLr n` is the `toReal` of a genuine real value (β + bridge), bounded above.
+  -- Each `KLr n` is the `toReal` of a real value (β + bridge), bounded above.
   have hKLr_upper : ∀ n, KLr n ≤ - cross_n n - L := fun n ↦ by
     have h1 := hhn_eq n
     have h2 := hbeta n

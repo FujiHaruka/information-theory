@@ -306,22 +306,23 @@ the first bound below `a₀`, the second above — gives `1 + (2/π²)·log(1+2W
 the looser `2 + log(1+2WT)`, which absorbs the `2WT < 1` branch without a case split at the
 headline.
 
-Scope (asked before reporting): this is the *deficit* bound, an explicit inequality at every fixed
+Scope: this is the *deficit* bound, an explicit inequality at every fixed
 `T` and `W` with no `WT → ∞` limit anywhere in it, and it is stated with a named constant rather
-than under an `∃ C`. It is not itself the Landau-Pollak-Slepian concentration that
-`wall:nyquist-2w-dof` names: reaching that still needs the polarized Parseval identity
-`∑ᵢ ‖A bᵢ‖² = ∫₀ᵀ∫₀ᵀ |k(t−s)|²` to read the double integral as `tr A²`, and the eigenbasis bridge of
-`tsum_prolateEigenvalues_eq` to read either moment against `prolateEigenvalues`. What it does settle
+than under an `∃ C`. It is one piece of the Landau-Pollak-Slepian concentration, not the whole of
+it: reaching that composes the polarized Parseval identity
+`∑ᵢ ‖A bᵢ‖² = ∫₀ᵀ∫₀ᵀ |k(t−s)|²` (reading the double integral as `tr A²`,
+`tsum_norm_timeBandLimitingOp_sq_eq`) with the eigenbasis bridge of `tsum_prolateEigenvalues_eq`
+(reading either moment against `prolateEigenvalues`). What this bound settles
 is that the analytic content of the second moment is elementary calculus, not missing theory.
 
-Audited 2026-07-17 (independent). The tail estimate was re-derived rather than taken on trust:
+The tail estimate was re-derived rather than taken on trust:
 `∫_{[0,T]} k(t−s)² ds = 2W − ψ(t) − ψ(T−t)` by substituting `u = t − s` and reflecting the far tail
 through the evenness of `k²`, so the deficit is `2∫₀ᵀψ` as claimed. Non-vacuity is real, not formal:
 `∫∫ ≥ 0` always, so at `∫∫ = 0` the claim would read `2WT ≤ 2 + log(1+2WT)`, false for large `T` —
-the bound has content, and `2 + log(1+2WT) = o(T)` keeps it useful to the consumers. Two structurally
-different degenerate boundaries were checked live: `T = 0` gives `0 ≤ 2`, and `2WT < 1` gives
-`2∫₀ᵀψ ≤ 2WT ≤ 1`, the branch the constant `2` absorbs. `hW : 0 < W` is regularity (it keeps
-`log(1+2WT)` off its junk branch), not load-bearing.
+the bound has content, and `2 + log(1+2WT) = o(T)` keeps it useful to the consumers. Two
+structurally different degenerate boundaries were checked: `T = 0` gives `0 ≤ 2`, and `2WT < 1`
+gives `2∫₀ᵀψ ≤ 2WT ≤ 1`, the branch the constant `2` absorbs. `hW : 0 < W` is regularity
+(it keeps `log(1+2WT)` off its junk branch), not load-bearing.
 @audit:ok -/
 theorem bandKernel_window_deficit_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
     2 * W * T - ∫ t in Set.Icc (0 : ℝ) T, ∫ s in Set.Icc (0 : ℝ) T, ‖bandKernel W t s‖ ^ 2
@@ -605,14 +606,14 @@ integral. Unlike the first moment the summands here are *not* pointwise nonnegat
 factor). No trace-class, Schatten, or spectral theory is used, and no cyclicity of the trace: the
 identity is proved for `A = P_W Q_T P_W` directly, never routed through `Q_T P_W Q_T`.
 
-Scope (asked before reporting): this is an *exact identity at every fixed `T`, `W`*, with no
+Scope: this is an *exact identity at every fixed `T`, `W`*, with no
 `WT → ∞` limit in it, quantified over *every* Hilbert basis of `L²(ℝ;ℂ)` — not a bound, not a
-specialization to a constructed basis. It is not itself the Landau-Pollak-Slepian concentration
-that `wall:nyquist-2w-dof` names: reading either moment against `prolateEigenvalues` still needs
-the eigenbasis multiplicity bridge (`tsum_prolateEigenvalues_eq`), and the count `#{λₙ > c}` needs
-the split argument on top of the moments.
+specialization to a constructed basis. It is one piece of the Landau-Pollak-Slepian concentration,
+not the whole of it: reading either moment against `prolateEigenvalues` goes through the eigenbasis
+multiplicity bridge (`tsum_prolateEigenvalues_eq`), and the count `#{λₙ > c}` composes both moments
+via a Chebyshev split (`prolateCount_le` / `le_prolateCount`).
 
-Audited 2026-07-17 (independent). The reading of the left side as `tr A²` was checked rather than
+The reading of the left side as `tr A²` was checked rather than
 assumed: `A` is self-adjoint in-tree (`timeBandLimitingOp_isSelfAdjoint`, consumed in the body), so
 `⟪A²bᵢ, bᵢ⟫ = ⟪A bᵢ, A bᵢ⟫ = ‖A bᵢ‖²`, and the identity is proved basis-independently — which is
 what makes the eigenbasis instance available for free once that basis is built. The quantification
@@ -739,26 +740,23 @@ difference needs both families summable: the first is summable because its terms
 with partial sums capped by `2WT` (`summable_inner_timeBandLimitingOp_self`), and the second is
 dominated by it termwise via `A² ≤ A` (`norm_timeBandLimitingOp_sq_le_inner`).
 
-Scope (asked before reporting): this is a bound at every fixed `T`, `W` with a named constant and
-no `WT → ∞` limit, quantified over every Hilbert basis. It is the second moment that
-`wall:nyquist-2w-dof` was narrowed to, but it does not by itself close that wall: the wall's
-content is the *count* `#{n | λₙ > c} = 2WT + O(log WT)`, which still needs (a) the eigenbasis
-multiplicity bridge to read this sum as `∑ₙ λₙ(1 − λₙ)` and (b) the Chebyshev split from the
-second moment to the count. What it does settle is that the analytic input to both is in hand.
+Scope: this is a bound at every fixed `T`, `W` with a named constant and
+no `WT → ∞` limit, quantified over every Hilbert basis. Composed with the eigenbasis multiplicity
+bridge (`tsum_prolateEigenvalues_eq`, reading this sum as `∑ₙ λₙ(1 − λₙ)`) and the Chebyshev split
+from the second moment to the count (`prolateCount_le` / `le_prolateCount`), this gives the
+Landau–Pollak–Slepian count concentration `#{n | λₙ > c} = 2WT + O(log WT)`.
 
-Audited 2026-07-17 (independent), on the one question that decides it: is this the object the
-wall's residue needs, or a *weaker relative* of it? It is the
-object, and the strength diff was checked in both directions. Textbook Landau-Widom is an asymptotic
+Textbook Landau-Widom is an asymptotic
 *equality* `tr A − tr A² ~ (1/π²)·log(2WT)`; this is only a one-sided upper bound with a loose
-constant — strictly weaker. That weaker form is nevertheless *sufficient*, and the argument was
-re-derived here rather than deferred: with `0 ≤ λ ≤ 1` (`timeBandLimitingOp_norm_le_one` plus
-`inner_timeBandLimitingOp_self_nonneg`), `tr A = 2WT` *exactly*, and `tr A − tr A² ≤ D`, the split
+constant — strictly weaker. That weaker form is nevertheless *sufficient*: with `0 ≤ λ ≤ 1`
+(`timeBandLimitingOp_norm_le_one` plus `inner_timeBandLimitingOp_self_nonneg`), `tr A = 2WT`
+*exactly*, and `tr A − tr A² ≤ D`, the split
 `#{λ>c} − ∑_{λ>c}λ = ∑_{λ>c}(1−λ) ≤ D/c` gives `#{λ>c} ≤ 2WT + D/c`, and
 `∑_{λ≤c}λ ≤ D/(1−c)` gives `#{λ>c} ≥ 2WT − D/(1−c)`. Both halves of `#{λ>c} = 2WT + O(log WT)` — the
-converse's and the achievability's — thus follow from the upper bound alone at any fixed `c`; at the
-plan's `c = 1/2` the error is `2D`. Neither the sharp constant nor a matching *lower* bound on the
-second moment is needed, so nothing was quietly weakened: the wall was framed on a stronger relative
-than its consumers require. `.re` hides no sign error — `A = P_W Q_T P_W` is positive semidefinite,
+converse's and the achievability's — thus follow from the upper bound alone at any fixed `c`; at
+`c = 1/2` the error is `2D`. Neither the sharp constant nor a matching *lower* bound on the
+second moment is needed: the textbook Landau-Widom asymptotic equality is stronger than what its
+consumers require. `.re` hides no sign error — `A = P_W Q_T P_W` is positive semidefinite,
 so `⟪A bᵢ, bᵢ⟫` is real (`inner_timeBandLimitingOp_self_nonneg`) and `.re` discards nothing.
 @audit:ok -/
 theorem tsum_inner_sub_norm_sq_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)

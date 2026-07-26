@@ -16,7 +16,7 @@ route for the LZ78 achievability bound `ziv_aseventual_le_blockLogAvg₂`
 The two simple grouping routes are ruled out: node-position grouping (the
 overhead trap) and marginal-length grouping (`ZivMeasureBridge.lean`, the
 direction is wrong since `∑ -log P_marginal ≥ -log Pₙ` for sources with memory).
-The genuine surviving structure is the conditional sub-distribution
+The surviving structure is the conditional sub-distribution
 `q(symbol | context)`, which reaches `-log Pₙ` via the chain rule. The first
 building block of that route is the per-context (fixed-tuple) conditional
 sub-distribution `∑_a q(v · a | v) ≤ 1`.
@@ -56,7 +56,7 @@ variable [MeasurableSpace Ω]
 /-! ## Step 1 — Kolmogorov consistency of the extended marginal -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- The block-extension fibre identity (genuine, unconditional): for a fixed
+/-- The block-extension fibre identity (unconditional): for a fixed
 tuple `v : Fin m → α` and symbol `a`, the preimage of the extended cylinder
 `{blockRV (m+1) = Fin.snoc v a}` is exactly the set of `ω` whose `m`-block is
 `v` and whose time-`m` observation is `a`. -/
@@ -93,7 +93,7 @@ theorem blockRV_succ_preimage_iUnion_eq
   · intro hv; exact ⟨p.obs m ω, hv, rfl⟩
 
 omit [DecidableEq α] [Nonempty α] in
-/-- Kolmogorov consistency (genuine, unconditional): the extended length-`m+1`
+/-- Kolmogorov consistency (unconditional): the extended length-`m+1`
 marginals over the last symbol sum to the length-`m` marginal,
 `∑_a P(blockRV (m+1) = Fin.snoc v a) = P(blockRV m = v)`. The first `m`
 coordinates of `blockRV (m+1)` agree with `blockRV m`, so the extended cylinders
@@ -144,7 +144,7 @@ theorem sum_extend_marginal_real_le
 the conditional mass of the extended block `Fin.snoc v a` given the context block
 `v`, `q(v, a) = P(blockRV (m+1) = Fin.snoc v a) / P(blockRV m = v)`.
 
-This is the genuine conditional `q(symbol | context)` the LZ78 achievability
+This is the conditional `q(symbol | context)` the LZ78 achievability
 chain rule requires — NOT the path-prefix ratio `condPhraseProb`, which is
 observation-dependent and a dead start (`∑ⱼ qⱼ ≈ c`). -/
 noncomputable def condContextProb
@@ -166,7 +166,7 @@ theorem condContext_sum_eq_one
   rw [← Finset.sum_div, sum_extend_marginal_real_eq μ p m v, div_self hpos.ne']
 
 omit [DecidableEq α] [Nonempty α] in
-/-- The per-context sub-distribution bound `∑_a q(v · a | v) ≤ 1`: the genuine
+/-- The per-context sub-distribution bound `∑_a q(v · a | v) ≤ 1`: the
 node-context conditional sub-distribution. This is the missing measure-theoretic
 piece the conditional log-sum step consumes (the third quantity, neither
 marginal nor path-prefix). -/
@@ -246,7 +246,7 @@ theorem condContextProb_path_eq_ratio
   rw [← blockRV_succ_eq_snoc p m ω]
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- Symbol-by-symbol chain-rule telescoping (genuine, equality): the per-path
+/-- Symbol-by-symbol chain-rule telescoping (equality): the per-path
 block probability factorizes as the product of node-context conditionals along
 the path, given positivity of the intermediate prefix masses. -/
 theorem prod_condContextProb_path_telescope
@@ -264,7 +264,7 @@ theorem prod_condContextProb_path_telescope
         mul_div_cancel₀ _ (hpos k (Nat.le_succ k))]
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- The conditional chain rule reaches `-log Pₙ` (genuine, equality): unlike the
+/-- The conditional chain rule reaches `-log Pₙ` (equality): unlike the
 marginal route (direction-mismatched), the node-context conditional sum
 reaches the block neg-log-probability exactly,
 `∑_{m<n} -log q_cond = -log Pₙ{block ω}`. -/
@@ -285,7 +285,7 @@ theorem sum_neg_log_condContextProb_path_eq
     prod_condContextProb_path_telescope μ p n ω hpos, prefixBlockProb]
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- The conditional chain rule equals `n · blockLogAvg` (genuine, equality): the
+/-- The conditional chain rule equals `n · blockLogAvg` (equality): the
 SMB-controlled quantity. Combined with SMB (`blockLogAvg → entropyRate`), this
 connects the conditional-context route to the source entropy limit. -/
 theorem sum_neg_log_condContextProb_path_eq_blockLogAvg

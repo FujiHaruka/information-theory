@@ -122,12 +122,13 @@ lemma lawPmf_mem_stdSimplex (μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω 
 time-averaged log-wealth growth `(1/n)·log S_n` converges almost surely to the doubling
 rate `doublingRate b o (lawPmf μ (Xs 0))`, where `lawPmf μ (Xs 0)` is the law of a single
 race (Cover–Thomas §6.3).
-@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
-Quot.sound]`). `lawPmf μ (Xs 0)` is a genuine definitional binding (the pushforward law
+sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`). `lawPmf μ (Xs 0)` is a definitional binding (the pushforward law
 of `Xs 0`, computed from the existing `μ`/`Xs`), NOT a bundled hypothesis: there is no
 `(h : μ[X 0] = doublingRate …)` slot. `[IsProbabilityMeasure μ]`/`hXs`/`hindep`/`hident`
-are regularity preconditions of the SLLN. Routes genuinely through `strong_law_ae_real`
-+ the non-trivial expectation→pmf bridge `integral_comp_law`; not vacuous/circular. -/
+are regularity preconditions of the SLLN. Routes through `strong_law_ae_real`
++ the non-trivial expectation→pmf bridge `integral_comp_law`; not vacuous/circular.
+@audit:ok -/
 @[entry_point]
 theorem seqLogWealth_div_tendsto_doublingRate
     (μ : Measure Ω) [IsProbabilityMeasure μ] (b o : α → ℝ)
@@ -151,10 +152,12 @@ theorem seqLogWealth_div_tendsto_doublingRate
 
 /-- The sequence-level growth rate of the proportional (Kelly) bet `b = p` in closed
 form, `W(p, o, p) = ∑ x, p x · log (o x) − H(p)`.
-@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
+sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). `lawPmf μ (Xs 0)` is a definitional binding; `ho` (positive odds) is a
 `log 0 = 0`-convention correctness precondition, not load-bearing. The closed form is a
-genuine rewrite of H1's limit via `doublingRate_proportional_eq`, non-circular. -/
+rewrite of `seqLogWealth_div_tendsto_doublingRate`'s limit via
+`doublingRate_proportional_eq`, non-circular.
+@audit:ok -/
 @[entry_point]
 theorem seqLogWealth_proportional_div_tendsto
     (μ : Measure Ω) [IsProbabilityMeasure μ] (o : α → ℝ) (ho : ∀ x, 0 < o x)
@@ -174,12 +177,13 @@ theorem seqLogWealth_proportional_div_tendsto
 /-- The proportional (Kelly) bet `b = p` is asymptotically optimal at the sequence level
 (Cover–Thomas §6.3): almost surely both the arbitrary full-support bet `b` and the Kelly
 bet `p` have a growth rate, and the arbitrary bet does not beat the Kelly bet.
-@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
+sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). `lawPmf μ (Xs 0)` is a definitional binding; `hb`/`hb_pos`/`ho`
 (full-support bet + positive odds) are the same correctness preconditions as the parent
 `doublingRate_le_proportional`, not load-bearing. The two a.s.-convergence conjuncts come
-from H1 (×2) and the third (deterministic) inequality from `doublingRate_le_proportional`;
-no conjunct is smuggled in as a hypothesis. -/
+from `seqLogWealth_div_tendsto_doublingRate` (×2) and the third (deterministic) inequality
+from `doublingRate_le_proportional`; no conjunct is smuggled in as a hypothesis.
+@audit:ok -/
 @[entry_point]
 theorem seqLogWealth_proportional_asymptotically_optimal
     (μ : Measure Ω) [IsProbabilityMeasure μ] (b o : α → ℝ)
@@ -205,13 +209,14 @@ theorem seqLogWealth_proportional_asymptotically_optimal
 /-- If the doubling rate is positive, the log-wealth `log S_n` diverges to `+∞` almost
 surely, i.e. wealth grows exponentially: a positive doubling rate means the gambler gets
 rich (Cover–Thomas §6.3).
-@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
-Quot.sound]`). Pure corollary of H1 (`seqLogWealth_div_tendsto_doublingRate`) via
-`log S_n = (log S_n / n)·n` + `Tendsto.pos_mul_atTop`; the limit `W*` comes from H1's
-conclusion, NOT a bundled `(h : Tendsto … (𝓝 W*))` hypothesis. `hpos : 0 < W*` is a
-genuine sign precondition (the divergence direction depends on the sign; at `W*=0` the
+sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`). Pure corollary of `seqLogWealth_div_tendsto_doublingRate` via
+`log S_n = (log S_n / n)·n` + `Tendsto.pos_mul_atTop`; the limit `W*` comes from that
+theorem's conclusion, NOT a bundled `(h : Tendsto … (𝓝 W*))` hypothesis. `hpos : 0 < W*`
+is a sign precondition (the divergence direction depends on the sign; at `W*=0` the
 direction is indeterminate), not load-bearing. Conclusion `Tendsto … atTop` is a real
-claim, not vacuous; the `n=0` boundary is handled via `eventually_gt_atTop 0`. -/
+claim, not vacuous; the `n=0` boundary is handled via `eventually_gt_atTop 0`.
+@audit:ok -/
 @[entry_point]
 theorem seqLogWealth_tendsto_atTop_of_pos_doublingRate
     (μ : Measure Ω) [IsProbabilityMeasure μ] (b o : α → ℝ)
@@ -232,13 +237,14 @@ theorem seqLogWealth_tendsto_atTop_of_pos_doublingRate
 /-- If the doubling rate is negative, the log-wealth `log S_n` diverges to `−∞` almost
 surely, i.e. wealth decays to zero exponentially: a negative doubling rate means the
 gambler goes broke (Cover–Thomas §6.3).
-@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
-Quot.sound]`). Pure corollary of H1 (`seqLogWealth_div_tendsto_doublingRate`) via
-`log S_n = (log S_n / n)·n` + `Tendsto.neg_mul_atTop`; the limit `W*` comes from H1's
-conclusion, NOT a bundled `(h : Tendsto … (𝓝 W*))` hypothesis. `hneg : W* < 0` is a
-genuine sign precondition (the divergence direction depends on the sign; at `W*=0` the
+sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`). Pure corollary of `seqLogWealth_div_tendsto_doublingRate` via
+`log S_n = (log S_n / n)·n` + `Tendsto.neg_mul_atTop`; the limit `W*` comes from that
+theorem's conclusion, NOT a bundled `(h : Tendsto … (𝓝 W*))` hypothesis. `hneg : W* < 0`
+is a sign precondition (the divergence direction depends on the sign; at `W*=0` the
 direction is indeterminate), not load-bearing. Conclusion `Tendsto … atBot` is a real
-claim, not vacuous; the `n=0` boundary is handled via `eventually_gt_atTop 0`. -/
+claim, not vacuous; the `n=0` boundary is handled via `eventually_gt_atTop 0`.
+@audit:ok -/
 @[entry_point]
 theorem seqLogWealth_tendsto_atBot_of_neg_doublingRate
     (μ : Measure Ω) [IsProbabilityMeasure μ] (b o : α → ℝ)
