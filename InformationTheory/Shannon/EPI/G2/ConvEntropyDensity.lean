@@ -13,7 +13,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # EPI G2 — (β) density-only lower bound
 
-This file packages the genuine Ω-level (β) lower bound
+This file packages the Ω-level (β) lower bound
 `negMulLog_convDensity_entropy_ge` (`EPIG2ConvEntropyMonotone.lean`) into a
 density-only wrapper: given just a probability density `pX` (plus minimal
 regularity), no abstract independent pair is required.
@@ -30,7 +30,7 @@ discharged here.
 
 ## Status — proof done (0 sorry / 0 residual)
 
-All 8 per-`n` preconditions of the Ω-level (β) lower bound are discharged genuinely here
+All 8 per-`n` preconditions of the Ω-level (β) lower bound are discharged here
 from the canonical construction:
 
 * per-fiber absolute continuity, `p log p` integrability, fiber-entropy integrability
@@ -43,7 +43,7 @@ from the canonical construction:
   `FisherInfoDeBruijnAssembly`) integrated against `pX`'s translate moments
   (the standalone `convCrossEntropy_perFibre_integrable` / `convCrossEntropy_zAvg_integrable`,
   fed the a.e. identifications `hLog` / `hfib_eq` in the proof body);
-* marginal log-density integrability (`∫ negMulLog p_t < ∞`, the genuine
+* marginal log-density integrability (`∫ negMulLog p_t < ∞`, the
   `convDensityAdd_negMulLog_integrable`);
 * joint llr integrability `h_int` (= KL finiteness `D(joint ‖ product) < ∞`): closed
   via `MeasureTheory.Measure.integrable_compProd_iff`.  The slice identity
@@ -117,7 +117,7 @@ by `z`) and the target is the input-convolution density `g`.
 
 The polynomial majorant `|log g| ≤ (A+1) + B·x²` (a.e.) comes from
 `convDensityAdd_logFactor_poly_majorant pX …`; the fiber `q` supplies the dominating
-moments.  All genuine (no `sorry`), reusing the template's domination structure. -/
+moments, reusing the template's domination structure (no `sorry`). -/
 
 /-- Second-moment integrability of the centered Gaussian density: `y²·g_v(y)` is
 `volume`-integrable.  Via `∫ y²·g_v = ∫ y² ∂(gaussianReal 0 v)` (finite by
@@ -358,7 +358,7 @@ template `h_int` block.  Given a probability space `μ` with coordinates `Z W`, 
 kernel `κ = condDistrib W Z μ` whose fibers a.e.-equal the (shifted) density `q(·−√s·z)`
 and whose marginal `μ.map W` has density `g`, with the polynomial majorant
 `|log g| ≤ (A+1)+B·x²`, the joint `llr` of the compProd vs. the product-with-const is
-`(μ.map Z) ⊗ₘ κ`-integrable.  All hypotheses are genuine regularity/integrability
+`(μ.map Z) ⊗ₘ κ`-integrable.  All hypotheses are regularity/integrability
 obligations (none encodes the EPI conclusion).
 @audit:ok -/
 theorem convJointLlr_integrable
@@ -788,7 +788,7 @@ private lemma convCrossEntropy_zAvg_wiring
 finite second moment and integrable entropy integrand. `v_Z` is any fixed positive
 variance for the auxiliary Gaussian; it does not appear in the conclusion.
 
-Proved by instantiating the genuine Ω-level (β) lower bound
+Proved by instantiating the Ω-level (β) lower bound
 `negMulLog_convDensity_entropy_ge` on the canonical product space `ℝ × ℝ`.
 @audit:ok -/
 @[entry_point]
@@ -957,7 +957,7 @@ theorem negMulLog_convDensity_entropy_ge_density
     convCrossEntropy_zAvg_wiring μ Z W s hs pX hpX_nn hpX_meas hpX_int hpX_mom hpX_mass
       u hu_pos n hZ_law hfib_eq hqW hp_t_nn
   -- (8) marginal log-density integrability: change measure `μ.map W → volume` and use
-  -- the genuine marginal entropy integrability `∫ negMulLog p_t < ∞`.
+  -- the marginal entropy integrability `∫ negMulLog p_t < ∞`.
   have h_negMulLog_p_t : Integrable (fun x ↦ Real.negMulLog (p_t x)) volume := by
     rw [hp_t_def]
     exact InformationTheory.Shannon.FisherInfo.convDensityAdd_negMulLog_integrable
@@ -969,7 +969,7 @@ theorem negMulLog_convDensity_entropy_ge_density
     filter_upwards [hqW] with x hx
     rw [hx, ENNReal.toReal_ofReal (hp_t_nn x)]
     simp only [Pi.neg_apply, Real.negMulLog, neg_neg, neg_mul]
-  -- (2) joint llr integrability (= KL finiteness `D(joint ‖ product) < ∞`), genuinely
+  -- (2) joint llr integrability (= KL finiteness `D(joint ‖ product) < ∞`),
   -- closed by the standalone `convJointLlr_integrable` (fiber `q := pX`, target `g := p_t`).
   haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
   have hsq_int : Integrable (fun z ↦ z ^ 2) (μ.map Z) := by
@@ -986,7 +986,7 @@ theorem negMulLog_convDensity_entropy_ge_density
     convJointLlr_integrable μ Z W pX p_t hpX_nn hp_t_nn hpX_meas hp_t_meas A B hs
       hW_ac vol_ac_W hκ_v h_ac hfib_eq hqW hLog hB_nn hκ_logp_int hκ_cross_int
       hpX_int hpX_mass hpX_mom hpX_abs_ent hsq_int
-  -- Instantiate the genuine Ω-level (β) lower bound.
+  -- Instantiate the Ω-level (β) lower bound.
   exact negMulLog_convDensity_entropy_ge X Z μ hX hZ hXZ v_Z hv_Z_pos hZ_law
     hpX_nn hpX_meas hpX_law u hu_pos n
     h_ac h_int hκ_v hκ_logp_int hκ_cross_int h_fibreEnt_int h_cross_int h_logq_int

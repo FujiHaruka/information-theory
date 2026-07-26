@@ -29,7 +29,7 @@ unit `W`. The hypothesis `0 < v` is required (`√v ≠ 0`); the `v = 0` degener
 by `√0 = 0`) is excluded.
 
 @audit:ok — pointwise identity (`funext` + `Real.sqrt_mul` + `field_simp`).
-Signature honest: the conclusion is an equality of two
+Signature: the conclusion is an equality of two
 explicit `gaussianConvolution` functions, not embedded in any hypothesis; `0 < v` is a
 non-degeneracy precondition (excludes the `√0 = 0` division), NOT load-bearing.
 `map_gaussianConvolution_rescale_eq` likewise `@audit:ok` (single `rw`). -/
@@ -55,16 +55,16 @@ theorem map_gaussianConvolution_rescale_eq {α : Type*} [MeasurableSpace α]
 
 /-! ## PB-2b — Fisher monotonicity under Gaussian convolution (Stam corollary)
 
-The genuine Stam-side input to closing `integrable_deriv`: convolution with a regular
+The Stam-side input to closing `integrable_deriv`: convolution with a regular
 density only *decreases* Fisher information, `J(pX ∗ fY) ≤ J(pX)`. This is the `lam = 1`
-specialization of the genuine convex Fisher bound `convex_fisher_bound_of_ready`
+specialization of the convex Fisher bound `convex_fisher_bound_of_ready`
 (`EPIBlachmanDensity.lean:932`, `@audit:ok`):
 
     `J(conv) ≤ lam²·J(fX) + (1-lam)²·J(fY)`  →  (`lam = 1`)  →  `J(conv) ≤ J(fX)`.
 
-It is conditioned on the *regularity* preconditions that the genuine Stam machinery
+It is conditioned on the *regularity* preconditions that the Stam machinery
 actually requires (`IsRegularDensityV2 fX/fY`, normalization, `IsBlachmanConvReady fX fY`),
-NOT on any inequality core — the bound is genuinely supplied by `convex_fisher_bound_of_ready`.
+NOT on any inequality core — the bound is supplied by `convex_fisher_bound_of_ready`.
 
 This does not directly close `integrable_deriv` for the case-1 producer: the
 producer's input density `pX = (P.map X).rnDeriv volume` is a *general* L¹ a.c. density with
@@ -79,13 +79,13 @@ strengthened input regularity (design (b)) so that `integrable_deriv` is supplie
 
 /-- Fisher monotonicity under Gaussian convolution (Stam `lam = 1` corollary).
 
-For densities `fX`, `fY` satisfying the genuine Stam regularity preconditions
+For densities `fX`, `fY` satisfying the Stam regularity preconditions
 (`IsRegularDensityV2`, normalization to `1`, and the `IsBlachmanConvReady` integrability /
 boundedness bundle), convolution decreases Fisher information:
 
     `(J(convDensityAdd fX fY)).toReal ≤ (J fX).toReal`.
 
-Genuine derivation: specialize `convex_fisher_bound_of_ready` at `lam = 1` (RHS collapses to
+Derivation: specialize `convex_fisher_bound_of_ready` at `lam = 1` (RHS collapses to
 `1²·J(fX) + 0²·J(fY) = J(fX)`). The hypotheses are regularity preconditions, NOT load-bearing
 — the inequality core is supplied by the `@audit:ok` `convex_fisher_bound_of_ready`. -/
 theorem fisherInfoOfDensity_convDensityAdd_le
@@ -109,7 +109,7 @@ input regularity. Since PB-1 fixes the noise to `𝒩(0,1)`, the unit-variance `
 required by `IsRegularDeBruijnHypV2` is satisfied directly (no reparametrization needed for
 the X / Y singletons; the sum-instance `𝒩(0,2)` is the only reparam case, deferred to a
 later wave). The `pX`-witness fields are the same plumbing as `IsRegularDeBruijnHypV2.ofHeatFlow`
-(`FisherInfoDeBruijnHeatFlow.lean`); the conv-pin `density_path` reuses the genuine density
+(`FisherInfoDeBruijnHeatFlow.lean`); the conv-pin `density_path` reuses the density
 of `P.map (X + √t·Z)`. -/
 
 /-- From method-X input regularity (`X`
@@ -120,8 +120,8 @@ The V2 `reg_at` instance is built directly (mirroring `IsRegularDeBruijnHypV2.of
 field plumbing, but taking the unit `Z_law` from `hZX_law` instead of an
 `IsHeatFlowDensity` witness — `ofHeatFlow` only consumes `h_heat.Z_law` anyway, so going
 direct avoids bundling the load-bearing heat-equation field). The `density_path`/conv-pin
-fields use the genuine convolution density. The `pX` series is a regularity precondition
-(`X` has a Lebesgue density + finite variance), discharged genuinely from `hX_ac`/`h_mom_X`.
+fields use the convolution density. The `pX` series is a regularity precondition
+(`X` has a Lebesgue density + finite variance), discharged from `hX_ac`/`h_mom_X`.
 
 The `integrable_deriv` field — interval-integrability of `t ↦ (1/2)·J(density_t)` on `[0,T]`
 — is supplied via design (b) (strengthened input regularity).
@@ -278,7 +278,7 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
         exact MeasureTheory.Measure.integrable_toReal_rnDeriv
       exact EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t
         hpX_meas hpX_int
-    · -- pointwise bound from the genuine `hbound`, transported to the `Ioc`-restricted measure.
+    · -- pointwise bound from `hbound`, transported to the `Ioc`-restricted measure.
       refine (ae_restrict_iff' measurableSet_Ioc).mpr (Filter.Eventually.of_forall ?_)
       intro t ht
       have hnn : (0 : ℝ) ≤ (1 / 2) *

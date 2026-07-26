@@ -83,7 +83,7 @@ limits), and Gaussian additivity yields `R t → 0`. -/
 
 The per-`t` regularity (a.c. + entropy integrability of the three W-path laws for
 the scaling step; the §3 squeeze regularity bundles `IsRescaledPathRegular` for the
-three paths) is threaded as honest preconditions; the noise Gaussian laws +
+three paths) is threaded as preconditions; the noise Gaussian laws +
 independence are regularity. No EPI / Stam core is bundled.
 @audit:ok -/
 theorem csiszarLogRatioGap_tendsto_zero_atTop
@@ -184,36 +184,36 @@ theorem csiszarLogRatioGap_tendsto_zero_atTop
 
 /-! ## §5 — End-to-end case-1 assembly (with-noise)
 
-`entropyPower_add_ge_case1_of_regular`: combine the genuine ratio antitonicity
+`entropyPower_add_ge_case1_of_regular`: combine the ratio antitonicity
 (`csiszarLogRatioGap_antitoneOn_Ici_zero`, `EPIStamToBridge.lean:1085`) and the
-genuine saturation (`csiszarLogRatioGap_tendsto_zero_atTop`, §4) through the
-genuine order-limit bridge (§1 `epi_of_csiszarLogRatioGap_tendsto`) to obtain the
+saturation (`csiszarLogRatioGap_tendsto_zero_atTop`, §4) through the
+order-limit bridge (§1 `epi_of_csiszarLogRatioGap_tendsto`) to obtain the
 classical (case-1, a.c. inputs) entropy power inequality. Pure assembly — no new
 analytic content, no `sorry`. -/
 
 /-- The classical entropy power inequality `N(law(X+Y)) ≥ N(law X) + N(law Y)` for
 absolutely continuous inputs, proved with auxiliary Gaussian noise and without an entropic
 CLT, under heat-flow and scaling regularity preconditions. It is assembled from the two
-genuine pillars:
+pillars:
 
-* `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1085`, genuine):
+* `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1085`):
   the log-ratio gap `R = csiszarLogRatioGap X Y Z_X Z_Y P` is `AntitoneOn (Set.Ici 0)`.
-* `csiszarLogRatioGap_tendsto_zero_atTop` (§4, genuine): `R t → 0` as `t → ∞`.
+* `csiszarLogRatioGap_tendsto_zero_atTop` (§4): `R t → 0` as `t → ∞`.
 
 By the order-limit bridge §1 `epi_of_csiszarLogRatioGap_tendsto`, antitonicity +
 `R t → 0` force `R 0 ≥ 0`, hence EPI. No entropic CLT — the saturation `R t → 0`
 is the scaling squeeze of §4.
 
-All hypotheses are honest regularity preconditions, the union of the two
+All hypotheses are regularity preconditions, the union of the two
 pillars' preconditions: pairwise + joint independence (`hXZX`/`hYZY`/`hXYZXY`), the
 three `IsDeBruijnRegularityHyp` / `IsHeatFlowEndpointRegular` density-witness bundles,
 the per-`t` `h_pos_stam` Fisher/Stam/Blachman bundle (ratio antitone side), the noise
 Gaussian laws + a.c. (`hZX_law`/`hZY_law`/`hZXZY_indep`/`hZX_ac`/`hZY_ac`/`hZXZY_ac`),
 the per-`t` scaling regularity (`h_scale_X/Y/sum`), and the per-path variance data +
 three `IsRescaledPathRegular` bundles (§4 side). None is load-bearing: the EPI /
-Stam core is supplied genuinely inside the two pillars; the conclusion
-`N(X+Y) ≥ N(X)+N(Y)` is not encoded in any hypothesis. Honest naming
-(`_of_regular`, not bare `_unconditional`): the regularity preconditions are real.
+Stam core is supplied inside the two pillars; the conclusion
+`N(X+Y) ≥ N(X)+N(Y)` is not encoded in any hypothesis. The name
+(`_of_regular`, not bare `_unconditional`) reflects this: the regularity preconditions are real.
 
 @audit:ok
 @audit:superseded-by(entropyPowerExt_add_ge_unconditional) Superseded by the
@@ -289,12 +289,12 @@ theorem entropyPower_add_ge_case1_of_regular
       varS (v_X + v_Y)) :
     entropyPower (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  -- Pillar 1: genuine ratio antitonicity on `Set.Ici 0`.
+  -- Pillar 1: ratio antitonicity on `Set.Ici 0`.
   have h_anti := csiszarLogRatioGap_antitoneOn_Ici_zero X Y Z_X Z_Y P
     hX hZX hXZX hY hZY hYZY hXYZXY
     h_reg_sum h_reg_X' h_reg_Y'
     h_endpt_sum h_endpt_X h_endpt_Y h_pos_stam
-  -- Pillar 2: genuine saturation `R t → 0`.
+  -- Pillar 2: saturation `R t → 0`.
   have h_lim := csiszarLogRatioGap_tendsto_zero_atTop X Y Z_X Z_Y P
     hX hY hZX hZY v_X v_Y hv_X hv_Y hZX_law hZY_law hZXZY_indep
     h_scale_X h_scale_Y h_scale_sum
@@ -437,11 +437,11 @@ hardcodes `P.map Z_X = gaussianReal 0 1` — so for `v_X ≠ 1` the hypotheses `
 jointly inhabitable). Fixing `hZX_law : P.map Z_X = gaussianReal 0 1` removes the
 contradiction. The body's `obtain ⟨v_X, hv_X, hZX_law⟩ : ∃ v, v≠0 ∧ … := ⟨1, one_ne_zero,
 hZX_law⟩` is HONEST (not circular `:= h`, not `:True`): it locally re-derives the
-`∃ v ≠ 0` shape the `_of_regular` plumbing expects, instantiated at the genuine witness
+`∃ v ≠ 0` shape the `_of_regular` plumbing expects, instantiated at the witness
 `v = 1` carried by the unit hypothesis. The conclusion `N(X+Y) ≥ N(X)+N(Y)` is unchanged and
-not weakened; the noise is genuinely auxiliary (absent from the conclusion) so the unit
+not weakened; the noise is auxiliary (absent from the conclusion) so the unit
 restriction loses no generality. The
-threaded `IsDeBruijnRegularityHyp` / `h_reg_*` are honest preconditions (residuals live in
+threaded `IsDeBruijnRegularityHyp` / `h_reg_*` are preconditions (residuals live in
 the producer's `integrable_deriv`, see `isDeBruijnRegularityHyp_of_methodX_unitnoise`). Not
 `@audit:ok` only because it threads residual-carrying regularity hyps.
 
@@ -461,7 +461,7 @@ This wrapper discharges the supply-able preconditions of
 
 The de Bruijn per-time regularity group (`h_reg_*'` / `h_endpt_*` / `h_pos_stam`)
 is not supplied from method-X (it depends on the moonshot
-`epi-debruijn-pertime-closure`) and is threaded as an honest precondition.
+`epi-debruijn-pertime-closure`) and is threaded as a precondition.
 
 @audit:superseded-by(entropyPowerExt_add_ge_unconditional) Has 0 consumers, carries an
 unresolved de Bruijn per-time wall (`@residual` below). Superseded by the unconditional EPI.

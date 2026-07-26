@@ -20,7 +20,7 @@ open InformationTheory.Shannon.EPIL3Integration (csiszarLogRatioGap csiszarLogRa
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
-/-! ## §1 — Order-theoretic deliverable (fully genuine)
+/-! ## §1 — Order-theoretic deliverable
 
 `epi_of_csiszarLogRatioGap_tendsto`: antitone `R` on `Ici 0` together with
 `R t → 0` forces `R 0 ≥ 0`, hence EPI. Pure order-limit argument; no analysis. -/
@@ -31,7 +31,7 @@ the entropy power inequality holds.
 
 `R 0 ≥ R t` for every `t ≥ 0` (antitonicity); since `R t → 0` and the tail predicate
 `R 0 ≥ R t` holds eventually, `ge_of_tendsto` gives `R 0 ≥ 0`. The final EPI step is
-`epi_of_csiszarLogRatioGap_zero_nonneg` (genuine bridge).
+`epi_of_csiszarLogRatioGap_zero_nonneg` (bridge).
 @audit:ok -/
 theorem epi_of_csiszarLogRatioGap_tendsto
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
@@ -50,7 +50,7 @@ theorem epi_of_csiszarLogRatioGap_tendsto
   -- Bridge to EPI.
   exact epi_of_csiszarLogRatioGap_zero_nonneg X Y Z_X Z_Y P h_zero_le
 
-/-! ## §2 — Scaling cancellation (genuine glue + threaded regularity)
+/-! ## §2 — Scaling cancellation (glue + threaded regularity)
 
 `N(law(X+√t·Z_X)) = t · N(law(X/√t + Z_X))` via `entropyPower_map_mul_const`. -/
 
@@ -60,7 +60,7 @@ theorem epi_of_csiszarLogRatioGap_tendsto
 
 `A + √t·B = √t·(A/√t + B)`, so the law on the left is the law on the right pushed
 forward by `(· * √t)`; `entropyPower_map_mul_const` with `c = √t` (squared `= t`)
-finishes. The a.c. + entropy-integrability of the *unscaled* W-path law are honest
+finishes. The a.c. + entropy-integrability of the *unscaled* W-path law are
 regularity preconditions (consumed by `entropyPower_map_mul_const`).
 @audit:ok -/
 theorem entropyPower_path_scaling
@@ -101,7 +101,7 @@ theorem entropyPower_path_scaling
 max-entropy upper bound. -/
 
 /-- A per-`t` regularity bundle for the rescaled path `A/√t + B`, holding the
-preconditions of the two genuine envelope lemmas
+preconditions of the two envelope lemmas
 (`differentialEntropy_add_ge_of_indep` for the lower bound, applied with
 `X := B, Y := A/√t`; `differentialEntropy_le_gaussian_of_variance_le` for the
 upper bound on `μ := P.map (A/√t + B)` with variance bound `varA/t + v_B`).
@@ -109,7 +109,7 @@ upper bound on `μ := P.map (A/√t + B)` with variance bound `varA/t + v_B`).
 This is a regularity bundle (IndepFun / a.c. / fibre integrabilities / mean +
 variance-bound + integrabilities), NOT load-bearing: it never contains the
 conclusion `Tendsto … N(B)` nor either envelope inequality — those are derived in
-`entropyPower_rescaled_path_tendsto` by calling the genuine lemmas with these
+`entropyPower_rescaled_path_tendsto` by calling the lemmas with these
 preconditions.
 
 Not load-bearing: each conjunct matches a regularity precondition of
@@ -185,7 +185,7 @@ def IsRescaledPathRegular (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeas
 Gaussian law of nonzero variance.
 
 Squeeze: lower bound `N(A/√t + B) ≥ N(B)` (independent-noise monotonicity,
-genuine `differentialEntropy_add_ge_of_indep` applied with `X := B, Y := A/√t`),
+`differentialEntropy_add_ge_of_indep` applied with `X := B, Y := A/√t`),
 upper bound `N(A/√t + B) ≤ 2πe·(varA/t + v_B) → 2πe·v_B = N(B)` (Gaussian
 max-entropy, `differentialEntropy_le_gaussian_of_variance_le`), both sandwiching
 `N(law B) = 2πe·v_B` (`entropyPower_gaussianReal`) as `varA/t → 0`
@@ -193,14 +193,14 @@ max-entropy, `differentialEntropy_le_gaussian_of_variance_le`), both sandwiching
 
 The squeeze structure (constant lower envelope from independent-noise monotonicity
 + decaying upper envelope from Gaussian max-entropy → common limit `N(B)`) is the
-genuine analytic content of this lemma. All the per-`t` data feeding the two
-genuine envelope lemmas are threaded as honest regularity preconditions
+analytic content of this lemma. All the per-`t` data feeding the two
+envelope lemmas are threaded as regularity preconditions
 (NOT load-bearing): `IndepFun B (A/√t)` (`h_indep`), a.c. of the path laws
 (`h_path_ac`, `hB_ac`), the 8 fibre integrabilities of the lower-bound lemma
 (`h_lb`), the max-entropy data of the upper-bound lemma (mean / variance bound by
 `varA/t + v_B` / integrabilities, packaged in `h_ub`). The conclusion
 `N(W t) → N(B)` is not encoded in any hypothesis — both envelopes are produced
-by genuine Mathlib / in-tree lemmas, and their common limit is computed here.
+by Mathlib / in-tree lemmas, and their common limit is computed here.
 
 `varA` (`= Var A`, threaded as a real regularity datum with `h_varA_nn : 0 ≤ varA`)
 @audit:ok -/
@@ -236,7 +236,7 @@ theorem entropyPower_rescaled_path_tendsto
     obtain ⟨h_indep, hW_ac, h_ac, h_int, hκ_v, hκ_logp, hκ_cross,
       h_fibreEnt, h_cross, h_logq⟩ := h_lb t ht
     have hAt_meas : Measurable (fun ω ↦ A ω / Real.sqrt t) := hA.div_const _
-    -- `h(B) ≤ h(B + A/√t)` from the genuine independent-noise monotonicity lemma.
+    -- `h(B) ≤ h(B + A/√t)` from the independent-noise monotonicity lemma.
     have h_de : InformationTheory.Shannon.differentialEntropy (P.map B)
         ≤ InformationTheory.Shannon.differentialEntropy
             (P.map (fun ω ↦ B ω + A ω / Real.sqrt t)) :=
@@ -313,13 +313,13 @@ integrability rather than the general density-witness wall.
 
 All conjuncts (IndepFun / a.c. / fibre a.c. / fibre self-entropy / fibre-entropy-over-z /
 joint-≪-product / squared-deviation / both path-entropy log-integrabilities + the 3
-conditional-KL cross-entropy integrabilities) are closed genuinely using `hA_ac` + the
+conditional-KL cross-entropy integrabilities) are closed using `hA_ac` + the
 `convDensityAdd` path-density identification + the extracted cross-entropy lemmas
 (`convCrossEntropy_perFibre_integrable` / `convCrossEntropy_zAvg_integrable` /
 `convJointLlr_integrable`, `EPIG2ConvEntropyDensity.lean`). -/
 
 /-- Scaling preserves absolute continuity: if `P.map A ≪ volume` then `P.map (A/√t) ≪ volume`
-for `t > 0` (the map `(·/√t)` is a Lebesgue-a.c. linear isomorphism). Genuine. -/
+for `t > 0` (the map `(·/√t)` is a Lebesgue-a.c. linear isomorphism). -/
 theorem map_div_sqrt_absolutelyContinuous
     (A : Ω → ℝ) (P : Measure Ω) (hA : Measurable A) (hA_ac : (P.map A) ≪ volume)
     {t : ℝ} (ht : 0 < t) :
@@ -349,7 +349,7 @@ theorem map_div_sqrt_absolutelyContinuous
 `A/√t` admits a Real density witness `pX := ((P.map (A/√t)).rnDeriv volume).toReal`
 with all the regularity (`≥ 0`, measurable, `withDensity` law, integrable, mass `= 1`,
 finite second moment) needed to invoke `convDensityAdd_negMulLog_integrable_pub` and the
-`pPath_eq_convDensityAdd` identification. Genuine. -/
+`pPath_eq_convDensityAdd` identification. -/
 theorem rescaledInput_density_witness
     (A : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hA_ac : (P.map A) ≪ volume)
@@ -1095,15 +1095,15 @@ the input `A` (`hAB : IndepFun A B P`), with `A` measurable + finite-second-mome
 data threaded as `varA`-regularity, construct the per-`t` regularity bundle
 `IsRescaledPathRegular A B P varA v_B`.
 
-The key insight (demonstrated genuinely here): the fibre of
+The key insight: the fibre of
 `condDistrib (B + A/√t) (A/√t) P` is the translated Gaussian `gaussianReal z v_B` (the
 law of `B + z` by `affineShiftKernel`/Gaussian translation). This avoids the
 density-witness obstruction for the general fibre: the fibre identification
 `condDistrib (B + A/√t) (A/√t) P =ᵐ affineShiftKernel (P.map B) 1` (`h_fibre_ae`) and
 the per-fibre a.c. `condDistrib z ≪ volume` (`hκ_v`, via `gaussianReal z v_B`) are both
-closed genuinely — exactly the conjuncts that are intractable in the general case.
+closed — exactly the conjuncts that are intractable in the general case.
 
-Honest preconditions only (NOT load-bearing): measurability, `IndepFun A B P`, the
+Preconditions only (NOT load-bearing): measurability, `IndepFun A B P`, the
 Gaussian noise law, finite-second-moment `h_mom_A` + `varA`-regularity (`h_var_bound`).
 The bundle being constructed is itself regularity (audited non-load-bearing at its def
 site §3).
@@ -1118,12 +1118,12 @@ because the fibre is Gaussian (not the input density), the joint-llr branch (b)
 abs-entropy `∫ q·|log q|` is the Gaussian self-entropy (finite via
 `integrable_density_log_density_of_gaussian`), so the inventory's suspected `hpX_ent`
 input-density-entropy precondition is not required (the `X`/`Z` roles are swapped vs.
-the density template, where the fibre is the input). All honest preconditions:
+the density template, where the fibre is the input). All preconditions:
 `hA_ac : P.map A ≪ volume` (case-1 a.c. input, NOT load-bearing — consumed only for the
 density witness and `P.map (A/√t) ≪ volume`), `h_mom_A` (finite second moment, feeds the
 Gaussian-fibre moment domination), the Gaussian noise law, `h_var_bound`.
 
-- Genuine (regularity, closed here): `IndepFun B (A/√t)` (`h_indep`), a.c. of `B + A/√t`
+- The regularity conjuncts (closed here): `IndepFun B (A/√t)` (`h_indep`), a.c. of `B + A/√t`
   and `A/√t + B` (`hW_ac`/`hμ_ac`), the fibre identification `h_fibre_ae` + per-fibre a.c.
   `hκ_v`, the variance bound (threaded `h_var_bound`), joint-≪-product, the fibre/path
   self-entropy + log-density integrabilities, the squared-deviation, and the **3

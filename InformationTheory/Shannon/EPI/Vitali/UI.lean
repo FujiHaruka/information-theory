@@ -29,7 +29,7 @@ The name (`Vitali/UI`) reflects this file's origin as the home of the Vitali
 superseded by the Fatou-LSC / conditioning sandwich above, and only the Gaussian
 max-entropy framing below survives.
 
-## Genuine framing helpers (probability-measure framing of `f_t`)
+## Framing helpers (probability-measure framing of `f_t`)
 
 `f_t := convDensityAdd pX g_t` is measurable and nonnegative; the smoothed-density
 measure `μ_t := volume.withDensity (ofReal ∘ f_t)` is a probability measure with
@@ -44,16 +44,14 @@ open MeasureTheory Real ProbabilityTheory Filter
 open InformationTheory.Shannon.EPIConvDensity
 open scoped ENNReal NNReal Topology
 
-/-! ## Genuine framing helpers (Steps 2-3) -/
-
-/-- Measurability of `f_t = convDensityAdd pX g_t`. Genuine. -/
+/-- Measurability of `f_t = convDensityAdd pX g_t`. -/
 theorem convDensityAdd_gaussian_measurable {pX : ℝ → ℝ} (hpX_meas : Measurable pX)
     {t : ℝ} (ht : 0 < t) :
     Measurable (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) :=
   convDensityAdd_pXpY_measurable pX (gaussianPDFReal 0 ⟨t, ht.le⟩) hpX_meas
     (measurable_gaussianPDFReal 0 ⟨t, ht.le⟩)
 
-/-- Nonnegativity of `f_t = convDensityAdd pX g_t`. Genuine. -/
+/-- Nonnegativity of `f_t = convDensityAdd pX g_t`. -/
 theorem convDensityAdd_gaussian_nonneg {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x)
     {t : ℝ} (ht : 0 < t) (x : ℝ) :
     0 ≤ convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x :=
@@ -61,7 +59,7 @@ theorem convDensityAdd_gaussian_nonneg {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤
     (fun y ↦ gaussianPDFReal_nonneg 0 ⟨t, ht.le⟩ y) x
 
 /-- The smoothed-density measure `μ_t := volume.withDensity (ofReal ∘ f_t)` is a
-probability measure (Step 2).
+probability measure.
 @audit:ok -/
 theorem convDensityAdd_gaussian_isProbabilityMeasure {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -85,7 +83,7 @@ theorem convDensityAdd_gaussian_isProbabilityMeasure {pX : ℝ → ℝ}
   simp
 
 /-- The differential entropy of the smoothed-density measure equals the entropy
-integral of the density (Step 2).
+integral of the density.
 @audit:ok -/
 theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -107,7 +105,7 @@ theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
   filter_upwards [hrn] with x hx
   rw [hx, ENNReal.toReal_ofReal (hf_nn x)]
 
-/-- Second-moment integrability of `f_t` (a genuinely closed helper).
+/-- Second-moment integrability of `f_t` (a closed helper).
 `x ↦ x² · f_t(x)` is `volume`-integrable.
 @audit:ok -/
 theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
@@ -261,7 +259,7 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
   rw [houter]
   exact ENNReal.ofReal_lt_top
 
-/-- First-moment integrability of `f_t` (a genuinely closed helper).
+/-- First-moment integrability of `f_t` (a closed helper).
 `x ↦ x · f_t(x)` is `volume`-integrable.
 @audit:ok -/
 theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
@@ -293,7 +291,7 @@ theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
           mul_le_mul_of_nonneg_right habs_le (hp_nn x)
       _ = (p_t x + x ^ 2 * p_t x) / 2 := by ring
 
-/-- The maxent upper bound (Step 3, genuinely closed). The entropy integral
+/-- The maxent upper bound. The entropy integral
 `∫ negMulLog f_t` is bounded above by the Gaussian max-entropy `(1/2) log(2πe·V)` with
 `V = (∫ x² pX) + t`.
 @audit:ok -/

@@ -69,11 +69,11 @@ of the endpoint continuity atom `heatFlowEntropyPower_continuousWithinAt_zero`
 with the continuous matched reparameterization
 `τ(t) = s t + r t` (`IsMatchedTimePath.cont`).
 
-Added preconditions are genuine regularity:
+Added preconditions are regularity:
 * `IsHeatFlowEndpointRegular (X+Y) Z P` — the single-noise endpoint atom's input.
 * the `matchedSum_law_eq` preconditions (unit-noise laws of `Z_X`, `Z_Y`, `Z`,
-the joint/pairwise independences, measurability) — honest
-noise-distribution facts, not bundled EPI/derivative content.
+the joint/pairwise independences, measurability) — noise-distribution facts,
+not bundled EPI/derivative content.
 * `h_pos : ∀ t, 0 < t → 0 < s t ∧ 0 < r t` — the matched-path positivity on the
 interior (the strict-mono inverse-function path satisfies it), threaded as a
 precondition exactly as `_hasDerivAt` threads `hst`/`hrt`.
@@ -179,7 +179,7 @@ theorem twoTimeLogRatioGap_continuousWithinAt_zero
 Mirrors `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1130`).
 
 Surface structure (matched to the single-time model). On the interior `Set.Ioi 0`
-`AntitoneOn` is genuine: continuity there is the interior differentiability
+`AntitoneOn` holds: continuity there is the interior differentiability
 (`_hasDerivAt.differentiableAt.differentiableWithinAt`), `interior (Ioi 0) = Ioi 0`,
 and per-`t` `deriv ≤ 0` is `(_hasDerivAt ...).deriv` rewritten to the closed-form
 derivative `J_S·(1/J_X + 1/J_Y) − 1`, bounded `≤ 0` by `_deriv_le_zero`
@@ -188,10 +188,10 @@ Fisher info) and the per-`t` harmonic Stam supply. The endpoint `0` is then
 re-attached via `AntitoneOn.insert_of_continuousWithinAt` + the endpoint
 continuity (Task 1).
 
-The added preconditions are all genuine regularity / Stam-supply, not a
+The added preconditions are all regularity / Stam-supply, not a
 bundling of the EPI conclusion (the `h_per_t` conjunction supplies positivity,
 the density-pin equalities, and the harmonic Stam `1/J_S ≥ 1/J_X + 1/J_Y` — the
-same shape as the model's `h_pos_stam`; the harmonic Stam is the genuine
+same shape as the model's `h_pos_stam`; the harmonic Stam is the
 single-noise-sum producer's output, threaded per-`t`).
 @audit:ok -/
 theorem twoTimeLogRatioGap_antitoneOn_Ici_zero
@@ -213,8 +213,8 @@ theorem twoTimeLogRatioGap_antitoneOn_Ici_zero
                     (fun ω ↦ X ω + Y ω) Z P)
     (h_endpt_sum : IsHeatFlowEndpointRegular (fun ω ↦ X ω + Y ω) Z P)
     (h_pos : ∀ t : ℝ, 0 < t → 0 < s t ∧ 0 < r t)
-    -- per-`t` regularity + harmonic Stam supply bundle (genuine, not bundled
-    -- conclusion): density-pins for `J_X`/`J_Y`, positivity, and harmonic Stam.
+    -- per-`t` regularity + harmonic Stam supply bundle (regularity only, not a
+    -- bundling of the conclusion): density-pins for `J_X`/`J_Y`, positivity, and harmonic Stam.
     (h_per_t : ∀ (t : ℝ), 0 < t → ∀ (hst : 0 < s t) (hrt : 0 < r t),
       J_X (s t) = InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
           ((h_reg_X.reg_at (s t) hst).density_t) ∧
@@ -228,7 +228,7 @@ theorem twoTimeLogRatioGap_antitoneOn_Ici_zero
         ≥ 1 / J_X (s t) + 1 / J_Y (r t)) :
     AntitoneOn (fun t : ℝ ↦ twoTimeLogRatioGap X Y Z_X Z_Y P s r t) (Set.Ici (0 : ℝ)) := by
   set f := fun t : ℝ ↦ twoTimeLogRatioGap X Y Z_X Z_Y P s r t with hf_def
-  -- Genuine interior differentiability (= continuity) on `Set.Ioi 0`.
+  -- Interior differentiability (= continuity) on `Set.Ioi 0`.
   have h_diff_Ioi : DifferentiableOn ℝ f (Set.Ioi 0) := by
     intro t ht
     have ht_pos : (0 : ℝ) < t := ht
@@ -239,7 +239,7 @@ theorem twoTimeLogRatioGap_antitoneOn_Ici_zero
       hX hZX hXZX hY hZY hYZY h_path_X h_path_Y h_reg_X h_reg_Y
       hZ hZ_law hXYZ hZX_law hZY_law hXY_ZXZY_pair hZX_ZY h_reg_sum
       ht_pos hst hrt hτ hJX_eq hJY_eq hJX_pos hJY_pos).differentiableAt).differentiableWithinAt
-  -- `AntitoneOn f (Set.Ioi 0)`, genuine: deriv ≤ 0 from `_hasDerivAt` + `_deriv_le_zero`.
+  -- `AntitoneOn f (Set.Ioi 0)`: deriv ≤ 0 from `_hasDerivAt` + `_deriv_le_zero`.
   have h_anti_Ioi : AntitoneOn f (Set.Ioi 0) := by
     refine antitoneOn_of_deriv_nonpos (convex_Ioi 0) h_diff_Ioi.continuousOn
       (by rw [interior_Ioi]; exact h_diff_Ioi) ?_
@@ -510,7 +510,7 @@ theorem sumHeatFlowEP_div_heatFlowEP_sum_tendsto_one
 (Gaussian-saturation limit along the matched paths). Mirrors
 `csiszarLogRatioGap_tendsto_zero_atTop` (`EPICase1RatioLimit.lean:1178`).
 
-§1 (genuine reduction, sorry-free in this body). Using
+§1 (reduction, sorry-free in this body). Using
 `IsMatchedTimePath.matched_growth` (for `t ≥ 0`, `heatFlowEP A B P (s t) =
 heatFlowEP A B P 0 · eᵗ`) and `heatFlowEP A B P 0 = entropyPower (P.map A)` (the
 `√0 = 0` collapse), the matched-path denominator
@@ -518,14 +518,14 @@ heatFlowEP A B P 0 · eᵗ`) and `heatFlowEP A B P 0 = entropyPower (P.map A)` (
 `(eP X + eP Y)·eᵗ`, whence `log B t = log (eP X + eP Y) + t`. Therefore the gap
 reduces (for `t ≥ 0`) to `R t = log (A t) − log (B t)`, the log of the EPI
 saturation ratio `A t / B t` (`A t = sumHeatFlowEP …(s t)(r t)` is the numerator).
-The `−t` correction is absorbed by the `eᵗ` growth — established genuinely in the
+The `−t` correction is absorbed by the `eᵗ` growth — established in the
 body via `Real.log_mul`/`Real.log_exp`, no `sorry`.
 
 §2 (saturation core). The EPI saturation
 `A t / B t → 1` as `t → ∞`, isolated into `have h_ratio_tendsto`; from it
 `log (A t / B t) → log 1 = 0` (continuity of `log` at `1`) and
 `log (A/B) = log A − log B` (both positive) recover `R t → 0`. The saturation is
-reduced to a single genuine limit `A t / eᵗ → N(X) + N(Y)`:
+reduced to a single limit `A t / eᵗ → N(X) + N(Y)`:
 
 * `A t` (the matched-sum numerator) is identified with a single-noise heat flow of
 `X+Y` at `τ = s t + r t` via `matchedSum_law_eq` (`@audit:ok`), then split by
@@ -542,7 +542,7 @@ The §3 saturation machinery (`entropyPower_rescaled_path_tendsto`,
 matched path uses different times `s t ≠ r t`, so the re-keying is exactly the
 `matchedSum_law_eq` reduction above. No EPI/Stam conclusion is bundled; the
 added preconditions (noise laws/independences, path divergence `s,r → ∞`, per-σ
-scaling regularity, the three `IsRescaledPathRegular` bundles) are genuine
+scaling regularity, the three `IsRescaledPathRegular` bundles) are
 regularity — none of them encodes `A t / B t → 1`.
 @audit:ok -/
 theorem twoTimeLogRatioGap_tendsto_zero_atTop
@@ -550,7 +550,7 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
     (h_path_X : IsMatchedTimePath X Z_X P J_X s)
     (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r)
-    -- §2 saturation regularity (all genuine; none bundles the ratio→1 conclusion):
+    -- §2 saturation regularity (none bundles the ratio→1 conclusion):
     (Z : Ω → ℝ)
     (hX : Measurable X) (hY : Measurable Y)
     (hZX : Measurable Z_X) (hZY : Measurable Z_Y) (hZ : Measurable Z)
@@ -562,7 +562,7 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
     (hZX_ZY : IndepFun Z_X Z_Y P)
     (hZX_ac : (P.map Z_X) ≪ volume) (hZY_ac : (P.map Z_Y) ≪ volume)
     (hZ_ac : (P.map Z) ≪ volume)
-    -- path divergence (genuine property of the matched path; not the conclusion):
+    -- path divergence (a property of the matched path; not the conclusion):
     (hs_atTop : Filter.Tendsto s Filter.atTop Filter.atTop)
     (hr_atTop : Filter.Tendsto r Filter.atTop Filter.atTop)
     (hs_pos : ∀ t : ℝ, 0 < t → 0 < s t) (hr_pos : ∀ t : ℝ, 0 < t → 0 < r t)
@@ -595,7 +595,7 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
   -- (eP X + eP Y) is positive.
   have hXY_pos : (0 : ℝ) < entropyPower (P.map X) + entropyPower (P.map Y) :=
     add_pos (entropyPower_pos _) (entropyPower_pos _)
-  -- §1 (genuine reduction): for `t ≥ 0`, `R t = log (A t) − log (B t)` and
+  -- §1 (reduction): for `t ≥ 0`, `R t = log (A t) − log (B t)` and
   -- `B t = (eP X + eP Y)·eᵗ`.
   have hB_eq : ∀ t : ℝ, 0 ≤ t →
       B t = (entropyPower (P.map X) + entropyPower (P.map Y)) * Real.exp t := by

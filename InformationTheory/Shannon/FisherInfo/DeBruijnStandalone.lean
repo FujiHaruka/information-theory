@@ -17,15 +17,15 @@ import Mathlib.Analysis.SpecificLimits.Basic
 /-!
 # de Bruijn identity — standalone headlines (Cover–Thomas Theorem 17.7.2)
 
-This file assembles the genuine, sorry-free parts already present in the project into clean,
+This file assembles the sorry-free parts already present in the project into clean,
 self-contained statements of the **de Bruijn identity** along the Gaussian heat flow:
 
 * the per-time identity `(d/dt) h(X + √t·Z) = (1/2)·J(X + √t·Z)`, and
 * its integrated form `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt`.
 
-The per-time analytic core is the existing genuine assembly `debruijnIdentityV2_holds_assembled`
+The per-time analytic core is the existing assembly `debruijnIdentityV2_holds_assembled`
 (routed through `deBruijn_identity_v2`); the integrated form is the existing FTC assembly
-`debruijnIntegrationIdentity_holds`. The genuine content of this file is the **non-vacuity**
+`debruijnIntegrationIdentity_holds`. The content of this file is the **non-vacuity**
 witness for `IsDeBruijnPathRegular`: a Gaussian inhabitant, and a general absolutely-continuous
 producer.
 
@@ -217,7 +217,7 @@ The integrand is nonnegative and equals the derivative of the heat-flow entropy
 `f s = h(X + √s·Z)` at every `t > 0` (per-time de Bruijn). On each `[ε, T]` with `ε > 0` it is
 bounded (by `(1/2)/ε` via `gaussianConv_fisher_le_inv_var`) and measurable (it agrees with
 `deriv f`), hence interval-integrable; the subinterval integral equals `f T − f ε` by FTC. As
-`ε ↓ 0` the endpoint `f ε → f 0` by the genuine G2 continuity, so the subinterval integrals are
+`ε ↓ 0` the endpoint `f ε → f 0` by the G2 continuity, so the subinterval integrals are
 bounded uniformly, and the improper-integral criterion
 `integrableOn_Ioc_of_intervalIntegral_norm_bounded_left` upgrades to integrability on `(0, T)`.
 This routes only through the per-time identity, never the integrated form, so it is non-circular.
@@ -353,15 +353,15 @@ private lemma debruijnHeatPath_intervalIntegrable
 probability density `pX` of `X` with finite second moment and finite differential entropy
 (`hpX_ent`), the heat-flow path is regular on `[0, T]`. The per-time regularity (`reg_t`) is the
 density bundle `isRegularDeBruijnHypV2_of_density`; the heat-flow entropy continuity (`cont`)
-combines the genuine endpoint continuity
+combines the endpoint continuity
 `heatFlowDifferentialEntropy_continuousWithinAt_zero` (at `t = 0⁺`) with the interior continuity
 from the per-time de Bruijn `HasDerivAt`.
 
 The interval-integrability of the path integrand `(1/2)·J(X + √t·Z)` (`integrable`) is closed
-genuinely by `debruijnHeatPath_intervalIntegrable`: the integrand is nonnegative and, by the
+by `debruijnHeatPath_intervalIntegrable`: the integrand is nonnegative and, by the
 convolution bound `J(pX ∗ g_t) ≤ 1/t` (`gaussianConv_fisher_le_inv_var`), bounded on each
 `[ε, T]` (`ε > 0`); there it equals the derivative of the heat-flow entropy, so the FTC gives
-`∫_ε^T = h(X + √T·Z) − h(X + √ε·Z)`, and the genuine G2 endpoint continuity (`ε ↓ 0`) bounds
+`∫_ε^T = h(X + √T·Z) − h(X + √ε·Z)`, and the G2 endpoint continuity (`ε ↓ 0`) bounds
 these uniformly, upgrading to integrability on `(0, T)` via
 `integrableOn_Ioc_of_intervalIntegral_norm_bounded_left`. This routes only through the per-time
 de Bruijn identity, never its integrated form, so it is non-circular.
@@ -391,7 +391,7 @@ noncomputable def isDeBruijnPathRegular_of_heat_flow
   cont := by
     intro s hs
     rcases eq_or_lt_of_le hs.1 with h0 | hpos
-    · -- endpoint `s = 0`: genuine G2 continuity, lifted from `Ioi 0` to `Icc 0 T`.
+    · -- endpoint `s = 0`: G2 continuity, lifted from `Ioi 0` to `Icc 0 T`.
       have hG2 :
           ContinuousWithinAt
             (fun t : ℝ ↦ differentialEntropy (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)))
