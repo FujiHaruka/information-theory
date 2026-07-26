@@ -311,18 +311,6 @@ variable {α₁ α₂ β : Type*}
     [MeasurableSingletonClass β] [StandardBorelSpace β]
 variable {M₁ M₂ n : ℕ}
 
-/-- The uniform probability law `(card X)⁻¹ • count` on a nonempty finite type. -/
-instance uniformCount_isProbabilityMeasure {X : Type*}
-    [Fintype X] [Nonempty X] [MeasurableSpace X] [MeasurableSingletonClass X] :
-    IsProbabilityMeasure ((Fintype.card X : ℝ≥0∞)⁻¹ • Measure.count : Measure X) := by
-  constructor
-  have hcard : (Measure.count (Set.univ : Set X)) = (Fintype.card X : ℝ≥0∞) := by
-    rw [Measure.count_apply_finite Set.univ Set.finite_univ]
-    simp
-  rw [Measure.smul_apply, smul_eq_mul, hcard,
-    ENNReal.inv_mul_cancel (by exact_mod_cast Fintype.card_ne_zero)
-      (ENNReal.natCast_ne_top _)]
-
 /-- Uniform input law on the message pair: the product of the two uniform message laws. -/
 noncomputable def macConverseInput (M₁ M₂ : ℕ) : Measure (Fin M₁ × Fin M₂) :=
   ((Fintype.card (Fin M₁) : ℝ≥0∞)⁻¹ • Measure.count).prod

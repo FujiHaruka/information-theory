@@ -118,6 +118,7 @@ import InformationTheory.Shannon.BroadcastChannel.Operational
 import InformationTheory.Shannon.BroadcastChannel.OuterBound
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Gateway
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV
+import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Bridge
 import InformationTheory.Shannon.RelayCutset
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity

@@ -33,6 +33,20 @@ open MeasureTheory ProbabilityTheory InformationTheory
 open InformationTheory.Shannon.ChannelCodingConverseGeneral
 open scoped ENNReal
 
+/-! ### The uniform message law -/
+
+/-- The uniform probability law `(card X)⁻¹ • count` on a nonempty finite type. -/
+instance uniformCount_isProbabilityMeasure {X : Type*}
+    [Fintype X] [Nonempty X] [MeasurableSpace X] [MeasurableSingletonClass X] :
+    IsProbabilityMeasure ((Fintype.card X : ℝ≥0∞)⁻¹ • Measure.count : Measure X) := by
+  constructor
+  have hcard : (Measure.count (Set.univ : Set X)) = (Fintype.card X : ℝ≥0∞) := by
+    rw [Measure.count_apply_finite Set.univ Set.finite_univ]
+    simp
+  rw [Measure.smul_apply, smul_eq_mul, hcard,
+    ENNReal.inv_mul_cancel (by exact_mod_cast Fintype.card_ne_zero)
+      (ENNReal.natCast_ne_top _)]
+
 /-! ### Markov factorization of the ambient -/
 
 /-- Abstract Markov-chain factorization `M → g M → Y` for an ambient `ν ⊗ₘ κ` in which the
