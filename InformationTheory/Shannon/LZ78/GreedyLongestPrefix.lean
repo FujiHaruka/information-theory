@@ -14,15 +14,15 @@ A one-symbol-per-step parse (always feeding the dictionary the singleton
 the distinct-phrase invariant *false* (the same singleton recurs), so the
 sharp counting bound `c(n) · log c(n) ≤ K·n` cannot hold.
 
-This file establishes the genuine longest-prefix-match greedy parse
-together with the central invariant: the list of emitted phrase
-strings (the LZ78 dictionary entries) is `Nodup`.
+This file establishes the longest-prefix-match greedy parse together with
+the central invariant: the list of emitted phrase strings (the LZ78
+dictionary entries) is `Nodup`.
 
 ## Design (Mathlib-shape-driven)
 
 The dominant lemma for the distinct invariant is
 `List.Nodup.concat : a ∉ l → l.Nodup → (l.concat a).Nodup`
-(`Mathlib/Data/List/Nodup.lean:308`). To make its hypothesis `a ∉ l`
+(`Mathlib/Data/List/Nodup.lean`). To make its hypothesis `a ∉ l`
 *available by construction* rather than recovered from a "longest match"
 argument, the worker grows the current prefix symbol-by-symbol from the
 input and emits the prefix the moment it leaves the dictionary:
@@ -38,14 +38,13 @@ LZ78's behavior (match the longest dictionary prefix, append one new
 symbol), recorded in the cheapest shape for the invariant proof.
 
 We track only the phrase strings here — that is the object the
-counting bound reasons about. The back-pointer
-`LZ78Parsing`/`inRange` structure of `LZ78AsymptoticOptimality.lean` is left
-untouched.
+counting bound reasons about. The back-pointer `LZ78Parsing` / `inRange`
+structure of `LZ78/Basic.lean` is left untouched.
 
 ## File layout
 
 * §1. Longest-prefix worker — `lz78PhraseStringsAux` / `lz78PhraseStrings`:
-  the genuine greedy parse, returning the list of emitted phrase strings.
+  the greedy parse, returning the list of emitted phrase strings.
 * §2. Distinct-phrase invariant — `lz78PhraseStrings_nodup`: the list
   of emitted phrase strings is `Nodup`.
 * §3. Length conservation — `lz78PhraseStrings_total_length`: the
@@ -87,8 +86,8 @@ def lz78PhraseStringsAux :
       else
         lz78PhraseStringsAux fuel (dict.concat w) [] rest
 
-/-- `lz78PhraseStrings input` — the genuine longest-prefix greedy
-parse of `input`, returning the ordered list of emitted phrase strings. -/
+/-- `lz78PhraseStrings input` — the longest-prefix greedy parse of
+`input`, returning the ordered list of emitted phrase strings. -/
 def lz78PhraseStrings (input : List α) : List (List α) :=
   lz78PhraseStringsAux (input.length + 1) [] [] input
 
@@ -120,7 +119,7 @@ theorem lz78PhraseStringsAux_nodup :
           (List.Nodup.concat hmem hd)
 
 /-- The list of emitted phrase strings of
-the genuine longest-prefix greedy parse is `Nodup`. -/
+the longest-prefix greedy parse is `Nodup`. -/
 @[entry_point]
 theorem lz78PhraseStrings_nodup (input : List α) :
     (lz78PhraseStrings input).Nodup :=
@@ -242,13 +241,11 @@ theorem lz78PhraseStrings_total_length_le (input : List α) :
 /-- The worker conserves the flattened string: the concatenation
 (`List.flatten`) of all emitted phrase strings, followed by an unfinished
 tail, reproduces the symbols seen so far `dict.flatten ++ cur ++ input`. This
-is the genuine *reconstruction* invariant: the phrases tile a prefix of the
+is the *reconstruction* invariant: the phrases tile a prefix of the
 input by concatenation at their cumulative lengths, with the leftover `tail`
 being the un-emitted suffix (the `≤`-slack of `lz78PhraseStrings_total_length_le`).
-Proved by induction on `fuel`, tracking the `cur` accumulator across the
-keep-growing / emit branches.
-
-Genuine structural induction on `fuel`, no sorry / hypothesis bundling.
+Proved by structural induction on `fuel`, tracking the `cur` accumulator across
+the keep-growing / emit branches.
 
 @audit:ok -/
 theorem lz78PhraseStringsAux_flatten_conserve :
@@ -276,9 +273,8 @@ theorem lz78PhraseStringsAux_flatten_conserve :
 /-- The concatenation of all emitted phrase
 strings, followed by an unfinished tail, equals the input. The cumulative
 phrase lengths therefore furnish an absolute-position tiling of a prefix of
-the input, with the tail accounting for the `≤`-slack.
-
-Genuine instantiation of `lz78PhraseStringsAux_flatten_conserve`, no sorry.
+the input, with the tail accounting for the `≤`-slack. Instantiates
+`lz78PhraseStringsAux_flatten_conserve` at the top-level fuel.
 
 @audit:ok -/
 @[entry_point]
@@ -295,8 +291,7 @@ phrase list (or `[]`), bounding its length by the longest phrase. Proved by indu
 on `fuel`, threading the invariant `cur ∈ dict ∨ cur = []` (preserved on both the
 keep-growing and emit branches).
 
-@audit:ok (genuine fuel-induction establishing the tail ∈ dict ∪ {[]} invariant, no
-sorry). -/
+@audit:ok (fuel-induction establishing the tail ∈ dict ∪ {[]} invariant). -/
 theorem lz78PhraseStringsAux_tail_mem :
     ∀ (fuel : ℕ) (dict : List (List α)) (cur input : List α),
       input.length < fuel →
@@ -488,19 +483,18 @@ theorem lz78PhraseStringsAux_dropLast_earlier :
               rw [hget, htake, List.dropLast_concat]
               exact hcur
 
-/-- For the genuine longest-prefix
+/-- For the longest-prefix
 greedy parse, each emitted phrase's `dropLast` is either `[]` or an earlier
 emitted phrase.
 
-@audit:ok (NON-VACUOUS — the property is genuinely FALSE for an arbitrary list
-(e.g. `L = [[a,b]]`: `L[0].dropLast = [a] ∉ L.take 0 = []` and `≠ []`), so it
-genuinely captures the LZ78 dictionary structure (dictionaries grow only by
-appending `cur ++ [s]` with `cur` an earlier entry). The worker fuel-induction
-is honest: the base / `nil` cases return the accumulated dict unchanged and
-discharge via the threaded running invariant `hdict` (NOT a degenerate
-fuel-exhaustion shortcut), the `cons`-emit case proves
-`(cur ++ [s]).dropLast = cur ∈ dict` via `List.dropLast_concat`. Top-level uses
-the genuine sufficient fuel `input.length + 1`.) -/
+The property is specific to the LZ78 dictionary structure, not a general fact
+about lists of lists: it fails for `L = [[a, b]]`, where
+`L[0].dropLast = [a] ∉ L.take 0 = []` and `≠ []`. What makes it hold is that the
+dictionary grows only by appending `cur ++ [s]` with `cur` an earlier entry, so
+the emit branch has `(cur ++ [s]).dropLast = cur ∈ dict` by `List.dropLast_concat`.
+
+@audit:ok (non-vacuous; the fuel-induction discharges its base and `nil` cases
+through the threaded running invariant `hdict`, not by fuel exhaustion). -/
 theorem lz78PhraseStrings_dropLast_earlier (input : List α) :
     ∀ j, ∀ h : j < (lz78PhraseStrings input).length,
       ((lz78PhraseStrings input)[j]'h).dropLast ∈ (lz78PhraseStrings input).take j
@@ -580,7 +574,7 @@ theorem length_le_foldr_max_of_mem (l : List (List α)) (w : List α) (h : w ∈
       · exact Nat.le_trans (ih h) (Nat.le_max_right _ _)
 
 /-- The number of distinct
-phrases emitted by the genuine longest-prefix greedy parse is at most the
+phrases emitted by the longest-prefix greedy parse is at most the
 input length. Combined with `lz78PhraseStrings_nodup` (the strings are
 distinct), this is the count `c(n) ≤ n` feeding the Cover–Thomas
 counting bound `c(n) · log c(n) ≤ K·n`. -/
@@ -607,11 +601,11 @@ is `≤ k`), and the cumulative-position function `N : Fin (c + 1) → ℕ`.
 
 The partition `[b, e)` is strictly monotone (each phrase consumes `≥ 1` symbol),
 every phrase start `N j.castSucc` exceeds `k` (the leading `≤ k` phrases are
-absorbed), the count is anchored to the genuine parse via
+absorbed), the count is anchored to the parse via
 `c + bAbsorbed = (parse).length`, and `bAbsorbed ≤ k + 1` (the cumulative length
 increases by `≥ 1` each step, so at most `k + 1` phrases fit below position `k`).
 
-The boundary-length bounds (for the downstream W2 limsup discharge): with `Lmax` the
+The boundary-length bounds (for the downstream limsup discharge): with `Lmax` the
 longest phrase length, the leading boundary `b ≤ k + Lmax` (the last absorbed phrase
 extends one phrase past the `≤ k` cumulative prefix) and the trailing tail
 `input.length - e ≤ Lmax` (the un-emitted tail is one dictionary phrase or empty,
@@ -621,12 +615,11 @@ This is the pure list-combinatorial heart of the LZ78 threading tiling: it carri
 the phrase *lengths* only (the downstream threading reads phrase content directly
 off the process, never the parse strings' content).
 
-@audit:ok (pure list-combinatorial core, no hypothesis bundling; non-vacuity genuine —
-`c := parseCount - bAbsorbed` with `bAbsorbed = Nat.find` (least index with cumulative
-length `> k`), so `c > 0` whenever `parseCount > k+1`, not an empty tiling; `bAbsorbed ≤
-k+1` and the boundary bounds `n - e ≤ Lmax` / `b ≤ k + Lmax` are genuinely proved (tail
-∈ phrases-or-empty via `lz78PhraseStrings_flatten_tail_mem`, last-absorbed-phrase argument),
-not vacuous tautologies). -/
+@audit:ok (pure list-combinatorial core, no hypothesis bundling; non-vacuous because
+`c := parseCount - bAbsorbed` with `bAbsorbed = Nat.find` the least index whose
+cumulative length exceeds `k`, so `c > 0` whenever `parseCount > k+1`, and the boundary
+bounds come from `lz78PhraseStrings_flatten_tail_mem` plus the last-absorbed-phrase
+argument rather than from a vacuous tiling). -/
 theorem lz78_parse_tiling_positions (input : List α) (k : ℕ) :
     ∃ (b c e bAbsorbed Lmax : ℕ) (N : Fin (c + 1) → ℕ),
       N 0 = b ∧ N (Fin.last c) = e ∧ e ≤ input.length ∧

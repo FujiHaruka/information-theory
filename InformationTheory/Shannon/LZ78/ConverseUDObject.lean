@@ -7,18 +7,17 @@ import Mathlib.Data.Nat.Log
 /-!
 # LZ78 converse UD-object
 
-This file builds the uniquely-decodable LZ78 code object that
-`McMillanKraftBridge.lean` §3 Residual 1 flagged as "out of scope / not
-attempted", and applies Mathlib's McMillan inequality to it to obtain a
-genuine, sorry-free Kraft bound and source-coding converse for the *real*
-LZ78 per-phrase `(parent, symbol)` token code.
+This file builds the uniquely-decodable code object underlying LZ78 and
+applies Mathlib's McMillan inequality to it, obtaining a Kraft bound and an
+expectation-level source-coding converse for the LZ78 per-phrase
+`(parent, symbol)` token code.
 
-## What this delivers (genuine, unconditional)
+## What this delivers
 
 * §1 — `uniquelyDecodable_of_constantLength` (general, reusable; Mathlib
   has no such constructor): any set of lists all of the same positive
   constant length `K` is `UniquelyDecodable`. This is the classic
-  block-code fact and the genuine mathematical core here — it is exactly the
+  block-code fact and the mathematical core here — it is exactly the
   UD certificate the LZ78 token stream needs (`lz78PhraseStrings` itself is
   prefix-complete and *not* UD; the encoded fixed-width token set is).
 
@@ -34,21 +33,20 @@ LZ78 per-phrase `(parent, symbol)` token code.
   so McMillan (`McMillanKraftBridge`) gives `kraftSum 2 (fun _ => K) ≤ 1` and
   the Gibbs converse `entropyD 2 P ≤ E[L] = K` for the real LZ78 token code.
   `K` is exactly the per-phrase bit cost used in
-  `lz78DistinctEncodingLength = c · K` (`LZ78DistinctEncoding.lean`).
+  `lz78GreedyEncodingLength = c · K`
+  (`LZ78/AsymptoticOptimality/EncodingLength.lean`).
 
-## Honesty status (read before reusing)
+## Relation to the LZ78 block-rate converse
 
-* The §1 lemma is genuine new content (type ≠ conclusion, no `True`/`:= h`).
-* The §3 converse is the genuine expectation-level source-coding lower
-  bound for the LZ78 token code, now resting on a *real, explicitly
-  constructed* UD code rather than the abstract `UniquelyDecodable`
-  hypothesis carried by `McMillanKraftBridge.entropyD_le_expectedLength_of_uniquelyDecodable`.
-* What this does NOT close: the LZ78 *block-rate* converse
-  `IsLZ78ConverseCodingLowerBound` (`LZ78ConverseKraft.lean`, Cover–Thomas
-  Eq. 13.130) is an a.s.-eventual *per-realization* `liminf` bound. Getting
-  there from the token-level Kraft requires the averaged ⟶ a.s. lift
-  (Barron / competitive optimality), genuinely separate and
-  not attempted here. This file does not touch `IsLZ78ConverseCodingLowerBound`.
+The §3 converse is an expectation-level bound: it instantiates
+`McMillanKraftBridge.entropyD_le_expectedLength_of_uniquelyDecodable` at an
+explicitly constructed UD code rather than at an abstract `UniquelyDecodable`
+hypothesis. The LZ78 block-rate converse (Cover–Thomas Eq. 13.130,
+`lz78Greedy_converse_ae` in `LZ78/AsymptoticOptimality/ParentBridgeConverse.lean`)
+is instead an a.s.-eventual, per-realization `liminf` bound. Passing from the
+token-level Kraft bound to it needs the averaged ⟶ a.s. lift (Barron /
+competitive optimality), which runs through the polynomial block Kraft bound
+`lz78_block_kraft_poly` and Borel–Cantelli, not through this file.
 -/
 
 namespace InformationTheory
@@ -230,7 +228,7 @@ theorem injective_lz78TokenCode (c : ℕ) : Function.Injective (lz78TokenCode (�
 
 omit [DecidableEq α] in
 /-- The LZ78 token codeword set is uniquely decodable (constant length
-`K > 0`) — the genuine UD-object McMillanKraftBridge §3 Residual 1 lacked. -/
+`K > 0`). -/
 @[entry_point]
 theorem uniquelyDecodable_lz78TokenCode (c : ℕ) :
     UniquelyDecodable
@@ -239,19 +237,19 @@ theorem uniquelyDecodable_lz78TokenCode (c : ℕ) :
   uniquelyDecodable_finBoolCode (LZ78Phrase.bitLength_pos c (Fintype.card α))
 
 omit [DecidableEq α] in
-/-- The expectation-level source-coding converse for the real LZ78 token code
-(genuine, sorry-free). For any probability measure `P` (full support) on the
-LZ78 token alphabet, the binary entropy is bounded by the (constant) token
-code length:
+/-- The expectation-level source-coding converse for the LZ78 token code.
+
+For any probability measure `P` (full support) on the LZ78 token alphabet, the
+binary entropy is bounded by the (constant) token code length:
 
 ```
 entropyD 2 P ≤ E[L] = bitLength c |α|.
 ```
 
-This is the genuine Cover–Thomas 5.4 converse, instantiated at the *real*
-LZ78 `(parent, symbol)` token code via the McMillan bridge. The block-rate
-form (Cover–Thomas Eq. 13.130, `IsLZ78ConverseCodingLowerBound`) needs the
-averaged⟶a.s. lift and is not addressed here. -/
+This is the Cover–Thomas 5.4 converse, instantiated at the LZ78
+`(parent, symbol)` token code via the McMillan bridge. The block-rate form
+(Cover–Thomas Eq. 13.130, `lz78Greedy_converse_ae`) needs the averaged ⟶ a.s.
+lift and is not addressed here. -/
 @[entry_point]
 theorem lz78TokenCode_entropyD_le_expectedLength (c : ℕ)
     (P : Measure (Fin (c + 1) × α)) [IsProbabilityMeasure P]

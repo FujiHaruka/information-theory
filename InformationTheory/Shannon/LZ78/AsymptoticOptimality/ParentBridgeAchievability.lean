@@ -83,7 +83,7 @@ private theorem clog_div_le_two_mul_sqrt
     calc c * Real.log (Ntot / c) ≤ 2 * Real.sqrt (c * n) := le_trans hstep1 hstep2
       _ ≤ 2 * Real.sqrt (n * cp) := by linarith [hmono]
 
-/-- Reconcile term: with `cp = c + b`, `b ≤ K`, `1 ≤ c`, `cp ≤ n`, the genuine
+/-- Reconcile term: with `cp = c + b`, `b ≤ K`, `1 ≤ c`, `cp ≤ n`, the
 distinct-phrase product `cp · log cp` is bounded by the composition product
 `c · log c` plus the `o(n)` reconcile slack `K + K · log n`. Uses
 `log(1 + b/c) ≤ b/c`. -/
@@ -242,7 +242,7 @@ theorem ziv_aseventual_le_condEntropyTail_bits
   filter_upwards [negLogQk_div_tendsto_condEntropyTail μ p k,
       (MeasureTheory.ae_all_iff.2 (fun n ↦ ziv_achievability_composition μ q k n))]
     with ω h_aep h_comp
-  -- Abbreviations: the genuine distinct phrase count `cp n`, the LZ78 bit-rate
+  -- Abbreviations: the distinct phrase count `cp n`, the LZ78 bit-rate
   -- `T n`, and the deterministic error sequence `E n`.
   set cp : ℕ → ℝ :=
     fun n ↦ ((lz78PhraseStrings (List.ofFn (q.blockRV n ω))).length : ℝ) with hcp
@@ -429,18 +429,15 @@ bit-rate is asymptotically dominated by `blockLogAvg₂`. Stated as an
 `a.s.-eventual` limsup comparison (the per-block form is FALSE, counterexample
 `a^16`).
 
-The body is `sorry`-free (filter_upwards on `ziv_aseventual_le_entropyRate₂`
-+ `shannon_mcmillan_breiman₂`, `rw [h_smb.limsup_eq]`, `exact h_ziv`); `#print
-axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). The
-Ziv→AEP connection is supplied by the genuine composition
-`ziv_achievability_composition` (`c·log c ≤ negLogQk + o(n)`, sorryAx-free)
-plus the AEP `negLogQk_div_tendsto_condEntropyTail`, assembled in
+The Ziv→AEP connection is supplied by the composition
+`ziv_achievability_composition` (`c·log c ≤ negLogQk + o(n)`) plus the AEP
+`negLogQk_div_tendsto_condEntropyTail`, assembled in
 `ziv_aseventual_le_condEntropyTail_bits`.
 
 @audit:ok (non-circular, non-bundled (signature is `(μ, p)` +
-`[IsProbabilityMeasure μ]` regularity only), non-degenerate (genuine limsup
-inequality), sufficiency TRUE-as-framed (Cover–Thomas 13.5.5; per-block form
-correctly avoided; degenerate `entropyRate = 0` boundary stays alive)). -/
+`[IsProbabilityMeasure μ]` regularity only), non-degenerate, sufficiency
+TRUE-as-framed (Cover–Thomas 13.5.5; per-block form correctly avoided;
+degenerate `entropyRate = 0` boundary stays alive)). -/
 theorem ziv_aseventual_le_blockLogAvg₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
@@ -470,51 +467,32 @@ This is the achievability (upper-bound) half of LZ78 asymptotic optimality
 
 Units: the encoding length is a base-2 code length (`bitLength` uses
 `Nat.log 2`), so the per-symbol rate `lz/n` is in bits and the correct
-RHS is the bit entropy rate `entropyRate₂ = entropyRate / Real.log 2`,
-the unit-correction documented in `ZivEntropyBridge.lean` ("Base-2 (bit)
-layer") and `McMillanKraftBridge.lean`.
+RHS is the bit entropy rate `entropyRate₂ = entropyRate / Real.log 2`, the
+unit correction documented in `ZivEntropyBridge.lean` ("Base-2 (bit) layer").
+Against the nat-unit `entropyRate` the bound is false already on a uniform
+i.i.d. source on `A ≥ 2` symbols, where the LZ78-optimal bit-rate limit is
+`log₂ A = entropyRate₂` exactly, so against the bit target the inequality holds
+with equality in the limit; on the degenerate `entropyRate = 0` boundary it
+reads `limsup ≤ 0` with `entropyRate₂ = 0`.
 
-`lz78GreedyEncodingLength` charges `c · bitLength c |α|` against the
-genuine distinct phrase count `c = (lz78PhraseStrings (List.ofFn x)).length`,
-so this is a genuine proposition carrying real Ziv content.
+`lz78GreedyEncodingLength` charges `c · bitLength c |α|` against the distinct
+phrase count `c = (lz78PhraseStrings (List.ofFn x)).length`.
 
-The composition lemma. The body of this theorem is `sorry`-free: it is
-assembled from the two genuine halves of the achievability sandwich,
+The proof assembles the two halves of the achievability sandwich:
 
-* `shannon_mcmillan_breiman₂` (SMB in bits, sorryAx-free) — gives
+* `shannon_mcmillan_breiman₂` (SMB in bits) — gives
   `Tendsto blockLogAvg₂ → entropyRate₂` a.s., hence
   `limsup blockLogAvg₂ = entropyRate₂` (`Filter.Tendsto.limsup_eq`);
 * `ziv_aseventual_le_blockLogAvg₂` (the a.s.-eventual Ziv comparison) —
   gives `limsup (lz/n) ≤ limsup blockLogAvg₂` a.s.
 
-`ziv_aseventual_le_blockLogAvg₂` is itself sorryAx-free: the Ziv→AEP
-connection — variable-depth tree-node AEP linking the combinatorial
-`c · log c` to the probabilistic `-log Pₙ` — is supplied by the genuine
-composition
+Behind the second half, the Ziv→AEP connection — the variable-depth tree-node
+AEP linking the combinatorial `c · log c` to the probabilistic `-log Pₙ` — is
 `ziv_achievability_composition` (`c · log c ≤ negLogQk + o(n)`) plus the AEP
 `negLogQk_div_tendsto_condEntropyTail`, assembled per-`k` in
-`ziv_aseventual_le_condEntropyTail_bits` and diagonalized in
-`ziv_aseventual_le_entropyRate₂`. The combinatorial core
-(`c · log c ≤ K · n`, `c = O(n / log n)`) and the SMB AEP
-(`shannon_mcmillan_breiman`) are all sorryAx-free; the whole achievability
-chain depends only on `[propext, Classical.choice, Quot.sound]`.
-
-This statement is TRUE-as-framed against the bit target `entropyRate₂` (it is
-false on a uniform i.i.d. source when stated against the nat-unit
-`entropyRate`; the bit RHS is the correct unit). On a
-uniform i.i.d. source on A symbols the LZ78-optimal bit-rate limit is
-`log₂ A = entropyRate / Real.log 2 = entropyRate₂` exactly, so
-`limsup ≤ entropyRate₂` holds with equality in the limit (A=2: `1 ≤ 1`); on
-the degenerate `entropyRate = 0` boundary it reads `limsup ≤ 0` with
-`entropyRate₂ = 0`, again genuine. Signature takes only source data, no
-load-bearing hypothesis.
-
-The body is sorry-free (filter_upwards on `shannon_mcmillan_breiman₂` +
-`ziv_aseventual_le_blockLogAvg₂`, `exact h_ziv.trans h_smb.limsup_eq.le`);
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free).
-The bit RHS `entropyRate₂ = entropyRate / Real.log 2` is the correct unit (the
-nat-unit bound is false for A ≥ 2; the bit bound holds at equality, A=2:
-`1 ≤ 1`, A=3: `log₂ 3 ≤ log₂ 3`).
+`ziv_aseventual_le_condEntropyTail_bits` and taken over all `k` in
+`ziv_aseventual_le_entropyRate₂`, on top of the combinatorial core
+`c · log c ≤ K · n`, `c = O(n / log n)`.
 
 @audit:ok (non-circular, non-bundled (signature is `(μ, p)` +
 `[IsProbabilityMeasure μ]` regularity only), non-degenerate, sufficiency
@@ -557,7 +535,7 @@ exactly, and on the degenerate `entropyRate = 0` boundary the target is
 
 @audit:ok (non-circular, non-bundled (signature is `(μ, p)` + `[IsProbabilityMeasure μ]`
 only; both `IsBoundedUnder` witnesses + both sandwich halves are constructed internally),
-non-degenerate, sufficiency TRUE-as-framed (bit `entropyRate₂` target, genuine
+non-degenerate, sufficiency TRUE-as-framed (bit `entropyRate₂` target, closed by the
 `tendsto_of_le_liminf_of_limsup_le` squeeze via `lz78_asymptotic_optimality`)). -/
 @[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy

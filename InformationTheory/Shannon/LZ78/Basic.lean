@@ -27,70 +27,41 @@ This single file publishes:
 
 * §1. LZ78 phrase data structures (`LZ78Phrase α`, `LZ78Parsing α`)
   — the type-level encoding of an LZ78 dictionary parsing.
-* §2. Generic sandwich combinator — `lz78_asymptotic_optimality`
-  (and its alias / bundled forms), the LZ78-flavored wrapper of
-  `tendsto_of_le_liminf_of_limsup_le`. This is not the LZ78
-  optimality claim itself; it derives a.s. convergence from a
-  caller-supplied two-sided sandwich. The genuine optimality headline
-  (with the sandwich halves discharged as proven theorems, sorryAx-free)
-  is `lz78_asymptotic_optimality_with_greedy` in
-  `InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`.
+* §2. Generic sandwich combinator — `lz78_asymptotic_optimality` (and its
+  alias / bundled forms), the LZ78-flavored wrapper of
+  `tendsto_of_le_liminf_of_limsup_le`.
 
-## The asymptotic-optimality core
+## Scope of the §2 combinator
 
-The two halves of LZ78 asymptotic optimality — the achievability upper
-bound `∀ᵐ ω, limsup (lz/n) ≤ entropyRate₂`
-(Ziv's inequality, Cover–Thomas Lemma 13.5.5) and the converse lower
-bound `∀ᵐ ω, entropyRate₂ ≤ liminf (lz/n)` (Cover–Thomas Theorem 13.5.3
-lower bound) — are the single source of truth in the two proven
-theorems
-`lz78Greedy_achievability_ae` / `lz78Greedy_converse_ae`
-in `InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`
-(both sorryAx-free, `@audit:ok`). The SMB sandwich itself is fully
-discharged upstream (`shannon_mcmillan_breiman`).
+`lz78_asymptotic_optimality` is not the LZ78 optimality theorem. It takes a
+generic encoding-length function `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ`
+(the concrete greedy parse `lz78Encode : List α → LZ78Parsing α` is supplied
+externally), a generic limit `L : ℝ`, and a caller-supplied two-sided a.s.
+sandwich on the per-symbol rate — the liminf lower bound `L ≤ liminf (lz/n)`,
+the limsup upper bound `limsup (lz/n) ≤ L`, and two boundedness arguments —
+and derives a.s. convergence of `lz/n` to `L` by
+`tendsto_of_le_liminf_of_limsup_le` (the same combine pattern as
+`shannon_mcmillan_breiman_of_sandwich`). Its `h_lower` / `h_upper` are
+hypotheses on whatever encoding the caller supplies, not a claim that some
+encoding achieves the entropy rate.
 
-## Statement-level structure
-
-* The concrete `lz78Encode : List α → LZ78Parsing α` greedy
-  parsing implementation is supplied externally; the generic combinator
-  consumes a generic encoding-length function
-  `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` supplied as a parameter.
-* The generic combinator `lz78_asymptotic_optimality` is not an
-  identity wrap of its conclusion, and not the LZ78 optimality claim:
-  it takes a caller-supplied two-sided sandwich on `lz/n` — the liminf
-  lower bound `entropyRate ≤ liminf (lz/n)`, the limsup upper bound
-  `limsup (lz/n) ≤ entropyRate`, and the two boundedness arguments — and
-  *derives* the a.s. Tendsto via `tendsto_of_le_liminf_of_limsup_le`. Its
-  `h_lower`/`h_upper` are generic caller-supplied arguments, not a
-  built-in claim that any encoding achieves the entropy rate. For the
-  genuine greedy LZ78 parser those two halves are the Cover–Thomas
-  Eq. 13.124 / 13.130 substance of Thm 13.5.3, whose genuine discharge
-  (Ziv inequality + SMB) is proven (sorryAx-free)
-  in `lz78_asymptotic_optimality_with_greedy`
-  (`lz78Greedy_converse_ae` / `lz78Greedy_achievability_ae`).
+For the greedy LZ78 parser the two halves carry the substance of Theorem
+13.5.3: the achievability upper bound `∀ᵐ ω, limsup (lz/n) ≤ entropyRate₂`
+(Ziv's inequality, Cover–Thomas Lemma 13.5.5, Eq. 13.124) and the converse
+lower bound `∀ᵐ ω, entropyRate₂ ≤ liminf (lz/n)` (Eq. 13.130). They are
+`lz78Greedy_achievability_ae` (`AsymptoticOptimality/ParentBridgeAchievability.lean`)
+and `lz78Greedy_converse_ae` (`AsymptoticOptimality/ParentBridgeConverse.lean`);
+the headline instantiating the combinator with them at `L = entropyRate₂` is
+`lz78_asymptotic_optimality_with_greedy`.
 
 ## Re-use of existing infrastructure
 
-`InformationTheory/Shannon/Stationary/Basic.lean` (StationaryProcess / ErgodicProcess /
-blockRV), `InformationTheory/Shannon/EntropyRate.lean` (`entropyRate`,
-`entropyRate_exists_of_stationary`), and `InformationTheory/Shannon/
-ShannonMcMillanBreiman.lean` (`blockLogAvg`,
-`shannon_mcmillan_breiman_of_sandwich`, `tendsto_expected_blockLogAvg`)
-are imported and re-used as black boxes: the present file does not
-re-prove any of those results, it merely refers to them through the
-type-level signatures.
-
-## Derivation pattern
-
-The §2 combinator is a genuine two-sided-sandwich derivation via
-`tendsto_of_le_liminf_of_limsup_le` (the same combine pattern as
-`shannon_mcmillan_breiman_of_sandwich` in `ShannonMcMillanBreiman.lean`),
-*not* an identity-wrap pass-through, and *not* the LZ78 optimality claim
-(its sandwich arguments are generic and caller-supplied). The genuine
-two-sided sandwich on `lz/n` — the actual achievability / converse
-halves — is proven (sorryAx-free) in
-`AsymptoticOptimality.lean` (`lz78Greedy_achievability_ae` /
-`lz78Greedy_converse_ae`), the single source of truth.
+`InformationTheory/Shannon/Stationary/Basic.lean` (`StationaryProcess` /
+`ErgodicProcess` / `blockRV`), `InformationTheory/Shannon/EntropyRate.lean`
+(`entropyRate`, `entropyRate_exists_of_stationary`) and
+`InformationTheory/Shannon/SMB/McMillanBreiman.lean` (`blockLogAvg`,
+`shannon_mcmillan_breiman_of_sandwich`) are imported and used as black
+boxes; this file re-proves none of them.
 -/
 
 namespace InformationTheory.Shannon
@@ -205,26 +176,17 @@ omit [DecidableEq α] in
 /-- The generic two-sided sandwich-combine lemma for per-symbol coding
 rates (the LZ78-flavored wrapper of `tendsto_of_le_liminf_of_limsup_le`).
 
-This is NOT the LZ78 asymptotic-optimality claim itself. It is a
-generic combinator: given *any* encoding-length function
-`lz78EncodingLength`, *any* limit value `L : ℝ`, and a two-sided a.s.
-sandwich on the per-symbol rate (`L ≤ liminf` and `limsup ≤ L`, plus a.s.
-boundedness), it derives a.s. convergence of `lz/n` to `L` via
-`tendsto_of_le_liminf_of_limsup_le` (a 1-step squeeze). The hypotheses
-`h_lower` / `h_upper` are generic caller-supplied arguments, not a
-claim that any particular encoding achieves any particular limit — the
-caller is responsible for supplying them (for the concrete greedy LZ78
-parser, with `L = entropyRate₂` the bit-rate target, that supply is the
-genuine achievability / converse content, proven (sorryAx-free) in
-`lz78_asymptotic_optimality_with_greedy`).
+This is not the LZ78 asymptotic-optimality claim itself. It is a generic
+combinator: given *any* encoding-length function `lz78EncodingLength`, *any*
+limit value `L : ℝ`, and a two-sided a.s. sandwich on the per-symbol rate
+(`L ≤ liminf` and `limsup ≤ L`, plus a.s. boundedness), it derives a.s.
+convergence of `lz/n` to `L` via `tendsto_of_le_liminf_of_limsup_le` (a
+1-step squeeze). The hypotheses `h_lower` / `h_upper` are caller-supplied,
+not a claim that any particular encoding achieves any particular limit.
 
-The limit `L` is a generic parameter (not hard-wired to `entropyRate`):
-the genuine bit-rate headline `lz78_asymptotic_optimality_with_greedy`
-instantiates it with the bit-unit `entropyRate₂`.
-
-The body is a genuine application of the Mathlib squeeze, not an identity
-wrap of the conclusion (the sandwich bounds relate `lz/n` to `L` via `≤`,
-distinct from the `Tendsto … (𝓝 L)` conclusion). -/
+The limit `L` is left generic rather than hard-wired to `entropyRate`, so
+that the bit-rate headline `lz78_asymptotic_optimality_with_greedy` can
+instantiate it with the bit-unit `entropyRate₂`. -/
 theorem lz78_asymptotic_optimality
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -270,10 +232,9 @@ omit [DecidableEq α] in
 
 Alias for the generic combinator `lz78_asymptotic_optimality` with the
 same four arguments (liminf lower bound, limsup upper bound, two
-`Filter.IsBoundedUnder` boundedness arguments). Like its target this is
-not the LZ78 optimality claim — `h_lower` / `h_upper` are generic
-caller-supplied sandwich arguments. The body is a genuine forward, not an
-identity wrap of the conclusion. -/
+`Filter.IsBoundedUnder` boundedness arguments), specialized to
+`L = entropyRate μ p`. Like its target this is not the LZ78 optimality
+claim — `h_lower` / `h_upper` are caller-supplied sandwich arguments. -/
 theorem lz78_asymptotic_optimality_two_sided
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -316,12 +277,11 @@ theorem lz78_asymptotic_optimality_two_sided
 omit [DecidableEq α] in
 /-- The generic two-sided sandwich-combine, bundled-conjunction form.
 
-Bundles the four generic sandwich arguments into a single conjunction
-`h_combined` (lower / upper / above / below); the body destructures and
-forwards to `lz78_asymptotic_optimality_two_sided`, a genuine
-application, not an identity wrap. As with its target this is not the
-LZ78 optimality claim — the bundled `h_lower` / `h_upper` conjuncts are
-generic caller-supplied sandwich arguments. -/
+Bundles the four sandwich arguments into a single conjunction `h_combined`
+(lower / upper / above / below); the body destructures and forwards to
+`lz78_asymptotic_optimality_two_sided`. As with its target this is not the
+LZ78 optimality claim — the bundled lower / upper conjuncts are
+caller-supplied sandwich arguments. -/
 theorem lz78_asymptotic_optimality_of_bounds
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

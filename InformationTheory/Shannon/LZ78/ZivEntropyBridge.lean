@@ -8,8 +8,8 @@ import Mathlib.Analysis.Convex.Jensen
 # LZ78 Ziv-inequality entropy bridge — foundational lemmas
 
 This file hosts the foundational, mutually-independent lemmas of the LZ78
-Ziv-inequality entropy bridge (Cover–Thomas §13.5), built on top of the
-already-genuine SMB layer (`blockLogAvg`, `ShannonMcMillanBreiman.lean`).
+Ziv-inequality entropy bridge (Cover–Thomas §13.5), built on top of the SMB
+layer (`blockLogAvg`, `SMB/McMillanBreiman.lean`).
 
 ## Main statements
 
@@ -26,28 +26,27 @@ already-genuine SMB layer (`blockLogAvg`, `ShannonMcMillanBreiman.lean`).
 The Ziv chain (Cover–Thomas §13.5) needs the pushforward block probability
 `Pₙ{block ω}` bounded above by a product of per-phrase conditional
 probabilities along the LZ78 parse: `Pₙ ≤ ∏ⱼ qⱼ`. This inequality is
-unconditionally true by prefix monotonicity (proved genuinely in
-`StationaryKernel.lean`, `blockProb_le_prod_condPhraseProb`); the *equality*
-`Pₙ = ∏ⱼ qⱼ` is false for the longest-prefix parse (it leaves an
-unfinished tail, so `boundary c ≤ n` and the product equals
-`prefixBlockProb ω (boundary c) ≥ Pₙ`).
+unconditionally true by prefix monotonicity (`blockProb_le_prod_condPhraseProb`,
+`Stationary/Kernel.lean`); the *equality* `Pₙ = ∏ⱼ qⱼ` is false for the
+longest-prefix parse (it leaves an unfinished tail, so `boundary c ≤ n` and
+the product equals `prefixBlockProb ω (boundary c) ≥ Pₙ`).
 
 * `condPhraseProb` — the per-phrase conditional probability indexed by
   phrase position `j`, defined concretely as the ratio of successive
   parsing-prefix block probabilities (telescoping to
   `prefixBlockProb ω (boundary c)`).
 * `IsLZ78PerPathParsingFactorization` — the named `Prop` carrying the Ziv
-  inequality `Pₙ{block ω} ≤ ∏ⱼ condPhraseProb …` plus a positivity
-  field; genuinely constructible from positivity alone
-  (`isLZ78PerPathParsingFactorization_of_pos`, `StationaryKernel.lean`),
-  no longer a vacuous-premise hazard.
-* `blockProb_neg_log_ge_sum` — a *genuine* proof, from that factorization,
-  that `∑ⱼ -log (condPhraseProb …) ≤ -log Pₙ{block ω}` (the direction the
-  Ziv chain consumes), given `0 < Pₙ` (a.s. regularity).
+  inequality `Pₙ{block ω} ≤ ∏ⱼ condPhraseProb …` plus a positivity field;
+  constructible from positivity alone
+  (`isLZ78PerPathParsingFactorization_of_pos`, `Stationary/Kernel.lean`).
+* `blockProb_neg_log_ge_sum` — from that factorization,
+  `∑ⱼ -log (condPhraseProb …) ≤ -log Pₙ{block ω}` (the direction the Ziv
+  chain consumes), given `0 < Pₙ` (a.s. regularity).
 
-The intricate per-path Ziv inequality (the combinatorial `c·log c ≤
--log Pₙ` core) and the achievability / converse assembly are deferred; this
-file lays the clean base.
+The combinatorial `c·log c ≤ -log Pₙ` core of the per-path Ziv inequality is
+`ziv_achievability_composition` (`ZivAchievabilityComposition.lean`), and the
+achievability / converse assembly is in `AsymptoticOptimality/`; this file
+supplies the base they rest on.
 -/
 
 namespace InformationTheory.Shannon
@@ -162,7 +161,7 @@ the parse this product telescopes to `Pₙ{block ω}` — the content of
 `IsLZ78PerPathParsingFactorization`.
 
 This is `ℝ`-valued so that `Real.log_prod` applies directly in
-`blockProb_neg_log_eq_sum` (Mathlib-shape-driven: the dominant downstream
+`blockProb_neg_log_ge_sum` (Mathlib-shape-driven: the dominant downstream
 lemma is `Real.log_prod`). -/
 noncomputable def condPhraseProb
     (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) (j : ℕ) : ℝ :=
@@ -176,17 +175,16 @@ product of the LZ78 parse's per-phrase conditional probabilities,
 per-realization form of the entropy chain rule, in the inequality direction
 the Ziv chain consumes).
 
-This field was previously stated as the
-equality `Pₙ = ∏ⱼ qⱼ`, which is *genuinely false* in general: the
-longest-prefix greedy parse leaves an unfinished tail, so the phrase
-boundaries cover only `boundary c ≤ n` symbols and the telescoping product
-equals `prefixBlockProb ω (boundary c) ≥ Pₙ`. The equality therefore made
-`IsLZ78PerPathParsingFactorization` *unsatisfiable* for non-completing
-parses (a vacuous-premise hazard). The Ziv chain only needs the
-inequality `Pₙ ≤ ∏ⱼ qⱼ`, which is unconditionally true by prefix
-monotonicity of the cylinder block probability — and this is now a
-genuine theorem (`blockProb_le_prod_condPhraseProb` /
-`isLZ78PerPathParsingFactorization_of_pos`, `StationaryKernel.lean`),
+The factorization is stated as an inequality rather than the equality
+`Pₙ = ∏ⱼ qⱼ`, which is false in general: the longest-prefix greedy parse
+leaves an unfinished tail, so the phrase boundaries cover only
+`boundary c ≤ n` symbols and the telescoping product equals
+`prefixBlockProb ω (boundary c) ≥ Pₙ`; requiring the equality would make
+`IsLZ78PerPathParsingFactorization` unsatisfiable for non-completing parses.
+The inequality is all the Ziv chain needs and holds unconditionally by prefix
+monotonicity of the cylinder block probability
+(`blockProb_le_prod_condPhraseProb` /
+`isLZ78PerPathParsingFactorization_of_pos`, `Stationary/Kernel.lean`),
 constructed from positivity alone (a.s. regularity), not assumed.
 
 The `pos` field records strict positivity of each conditional factor over
@@ -196,8 +194,7 @@ positive mass) and discharges the side condition of `Real.log_prod` in
 structure IsLZ78PerPathParsingFactorization
     (μ : Measure Ω) (p : StationaryProcess μ α) : Prop where
   /-- The block probability is bounded above by the product of per-phrase
-  conditional probabilities over the parse (Ziv direction; genuine — the
-  former equality was false for incomplete parses). -/
+  conditional probabilities over the parse (the Ziv direction). -/
   factor : ∀ (n : ℕ) (ω : Ω),
     (μ.map (p.blockRV n)).real {p.blockRV n ω}
       ≤ ∏ j ∈ Finset.range
@@ -210,17 +207,16 @@ structure IsLZ78PerPathParsingFactorization
       0 < condPhraseProb μ p n ω j
 
 omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- The genuine backbone: factorization to additive log form.
+/-- The factorization in additive log form.
 
-From the genuine Ziv-direction factorization, the sum, over the phrase
-positions of the parse, of the negative logs of the per-phrase conditional
-probabilities is bounded above by the negative log block probability:
+From the Ziv-direction factorization, the sum, over the phrase positions of
+the parse, of the negative logs of the per-phrase conditional probabilities
+is bounded above by the negative log block probability:
 `∑ⱼ -log (condPhraseProb …) ≤ -log Pₙ{block ω}`.
 
-This is the inequality direction the per-path Ziv chain consumes (the
-former equality `=` rested on the false factorization equality; the
-genuine factorization is `Pₙ ≤ ∏ⱼ qⱼ`, so `-log` reverses to `≥`). Proved
-via `Real.log_prod` (positivity of each factor supplied by the `pos` field)
+This is the inequality direction the per-path Ziv chain consumes: the
+factorization is `Pₙ ≤ ∏ⱼ qⱼ`, so `-log` reverses it to `≥`. Proved via
+`Real.log_prod` (positivity of each factor supplied by the `pos` field)
 and monotonicity of `Real.log` (positivity of `Pₙ` is the a.s. regularity
 hypothesis `hPn` — the observed block has positive mass). Combined with
 `blockLogAvg_eq_neg_log_blockProb` it bounds the per-phrase sum by
@@ -247,7 +243,7 @@ theorem blockProb_neg_log_ge_sum
 The LZ78 encoding length `lz78DistinctEncodingLength` is measured in bits
 (`LZ78Phrase.bitLength` uses `Nat.log 2`, the binary code-length), whereas
 `blockLogAvg` / `entropyRate` are natural-log quantities (nats). The
-genuine Cover–Thomas Theorem 13.5.3 statement is bit-based:
+Cover–Thomas Theorem 13.5.3 statement is bit-based:
 
 ```
 (lz n x)/n → H₂   where  H₂ = (entropy rate in bits) = entropyRate / log 2.
@@ -257,7 +253,7 @@ We therefore introduce the base-2 (bit) versions `blockLogAvg₂` and
 `entropyRate₂` as the natural-log quantities divided by `Real.log 2`. These
 are *unit conversions*, not new content: `blockLogAvg₂ = blockLogAvg / log 2`
 converges to `entropyRate₂ = entropyRate / log 2` directly from SMB. The
-LZ78 achievability / converse bounds, being genuinely bit-based
+LZ78 achievability / converse bounds, being bit-based
 (`c·log₂c ≤ -log₂ Pₙ`), are stated against `blockLogAvg₂`. -/
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in

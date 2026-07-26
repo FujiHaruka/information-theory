@@ -32,7 +32,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 open MeasureTheory ProbabilityTheory
 open scoped ENNReal
 
-/-- The genuine greedy encoding length has the
+/-- The greedy encoding length has the
 right type to plug into the parent `lz78_asymptotic_optimality`
 `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` parameter slot. -/
 example : (∀ n, (Fin n → α) → ℕ) := @lz78GreedyEncodingLength α _ _
@@ -54,9 +54,9 @@ Obtained from `shannon_mcmillan_breiman` (nat units) by dividing the
 convergence through by `Real.log 2`: this is the unit rescaling
 `entropyRate / Real.log 2 = entropyRate₂`, not new ergodic content.
 
-The body is a genuine unit rescaling (`Tendsto.div_const (Real.log 2)` then
-`simpa [blockLogAvg₂, entropyRate₂]`); both defs unfold to `… / Real.log 2`,
-so no degenerate rewrite.
+Both defs unfold to `… / Real.log 2`, so the rescaling is
+`Tendsto.div_const (Real.log 2)` followed by `simpa [blockLogAvg₂, entropyRate₂]`.
+
 @audit:ok -/
 theorem shannon_mcmillan_breiman₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
@@ -486,13 +486,11 @@ Proved unconditionally in `lz78_phrase_count_fiber_card_le_nat` via
 `fintype_card_parentIdx` = `c!`, times `|α|^c`, times `c+1`), with the empty
 fiber for `c > n` handled by `lz78PhraseStrings_count_le`.
 
-@audit:ok (genuine counting bound — the injection `x ↦ (parent, sym, tailIdx)`
-in `lz78_phrase_count_fiber_card_le_nat` is really injective (strong induction
-reconstructs each phrase's `dropLast` from the parent index via the
-parent-extension invariant, recovers the last symbol from `sym`, reassembles
-the phrase, then recovers `x` via `flatten ++ tail` + `List.ofFn_injective`);
-no smuggling. Non-circular, non-degenerate; the `(c+1) ≤ (n+1)` cast upgrade
-+ empty-fiber-for-`c>n` are genuine.) -/
+@audit:ok (non-circular, non-degenerate; the injection `x ↦ (parent, sym, tailIdx)`
+in `lz78_phrase_count_fiber_card_le_nat` is injective by strong induction —
+reconstruct each phrase's `dropLast` from the parent index via the
+parent-extension invariant, recover the last symbol from `sym`, reassemble the
+phrase, then recover `x` via `flatten ++ tail` + `List.ofFn_injective`.) -/
 theorem lz78_phrase_count_fiber_card_le (n c : ℕ) :
     ((Finset.univ.filter
           (fun x : Fin n → α ↦ (lz78PhraseStrings (List.ofFn x)).length = c)).card : ℝ)
@@ -607,14 +605,14 @@ in `n`:
 ```
 
 Why a polynomial and not the exact Kraft `≤ 1`: the greedy
-longest-prefix-match parse is *not complete* — `lz78PhraseStrings_flatten` is a
-genuine *prefix* of the input, and the unfinished tail (`flatten ++ tail =
-input`, with `tail ≠ []` possible and `tail` a prefix of an existing phrase)
-is *not* charged a fresh `(parent, symbol)` token. Hence
+longest-prefix-match parse is *not complete* — the flattened phrase list is only
+a *prefix* of the input (`lz78PhraseStrings_flatten_prefix`), and the unfinished
+tail (`flatten ++ tail = input`, with `tail ≠ []` possible and `tail` a prefix of
+an existing phrase) is *not* charged a fresh `(parent, symbol)` token. Hence
 `lz78GreedyEncodingLength n x = c · bitLength c |α|` is the cost of only
 the `c` completed phrases and is not a lossless code length for `x`, so the
-exact Kraft inequality `∑ 2^{-L_n} ≤ 1` is FALSE. The polynomial bound is
-the honest statement: the number of distinct parse *structures* with `c`
+exact Kraft inequality `∑ 2^{-L_n} ≤ 1` is false. What holds instead is the
+polynomial bound: the number of distinct parse *structures* with `c`
 phrases is `≤ c! · |α|^c`, and `2^{-c·bitLength(c,|α|)} ≈ (c+1)^{-c}|α|^{-c}4^{-c}`,
 so the structure-Kraft sum `∑_c (#structures)·2^{-c·bitLength} = O(1)`; the
 unfinished tail contributes a multiplicity `≤ n + 1`, giving `O(n) ≤ (n+1)^2`.
@@ -626,7 +624,7 @@ Borel–Cantelli lift (`blockLogAvg₂_minus_error_le_rate_ae`).
 This is the combinatorial core of the LZ78 converse
 (Cover–Thomas Thm 13.5.3 lower bound, distinct-phrase counting).
 
-The proof structure (Parts A + B + C, all proven, sorryAx-free) is assembled from
+The proof is assembled from three parts:
 * Part A — fiberwise regrouping of the Kraft sum by the distinct-phrase
   count `c = φ x` (`Finset.sum_fiberwise_of_maps_to'`, `φ x ≤ n`);
 * Part B — the finite counting fact `lz78_phrase_count_fiber_card_le`
@@ -637,12 +635,7 @@ The proof structure (Parts A + B + C, all proven, sorryAx-free) is assembled fro
   (`#fiber(c)·2^{-c·bitLength} ≤ (n+1)·(1/2)^c`, built from the bit-length decay
   `two_pow_bitLength_ge` and the factorial-power decay
   `factorial_two_pow_le_succ_pow`), then `sum_geometric_two_le` and
-  `(n+1)·2 ≤ (n+1)²` (with the `n = 0` boundary `1 ≤ 1`).
-
-Part B, the combinatorial counting core, is proved, so this theorem is fully
-`sorryAx`-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`),
-carrying no `@residual`. The statement is TRUE-as-framed (numerically checked
-α=Bool, n≤6, with large slack; `n = 0` boundary exactly `1 ≤ 1`). -/
+  `(n+1)·2 ≤ (n+1)²` (with the `n = 0` boundary `1 ≤ 1`). -/
 theorem lz78_block_kraft_poly (n : ℕ) :
     ∑ x : Fin n → α, (1 / 2 : ℝ) ^ (lz78GreedyEncodingLength n x)
       ≤ ((n : ℝ) + 1) ^ 2 := by
@@ -885,12 +878,9 @@ summable, so first Borel–Cantelli gives `∀ᵐ ω, ∀ᶠ n, ω ∉ B_n`.
 
 Modeled on the Z-side `blockLogAvgZ_ge_negLogQInftyZ_minus_error`
 (`SMB/AlgoetCover/Liminf.lean`) — the same Markov + p-series + Borel–Cantelli
-template. The body is `sorry`-free: the Markov + Borel–Cantelli lift is proven
-outright, consuming the combinatorial polynomial Kraft bound
+template. It consumes the combinatorial polynomial Kraft bound
 `lz78_block_kraft_poly` through the per-`n` bad-set measure bound
-`lz78_converse_bad_set_measure_le`. That Kraft bound (and hence its counting
-lemma `lz78_phrase_count_fiber_card_le`) is itself proved, so this lemma is
-fully `sorryAx`-free. -/
+`lz78_converse_bad_set_measure_le`. -/
 theorem blockLogAvg₂_minus_error_le_rate_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) :
@@ -964,14 +954,16 @@ Units: the encoding length is a base-2 code length
 (`lz78GreedyEncodingLength = c · bitLength c |α|`, `bitLength` uses
 `Nat.log 2`), so the per-symbol rate `lz/n` is in bits, and the correct
 RHS is the bit entropy rate `entropyRate₂ = entropyRate / Real.log 2`
-(not the nat-unit `entropyRate`), exactly the unit-correction documented in
-`ZivEntropyBridge.lean` ("Base-2 (bit) layer") and
-`McMillanKraftBridge.lean` (converse target `blockLogAvg₂`).
+(not the nat-unit `entropyRate`), the unit correction documented in
+`ZivEntropyBridge.lean` ("Base-2 (bit) layer"). On a uniform i.i.d. source on
+`A` symbols the bit-rate limit is `log₂ A = entropyRate₂` exactly, so the
+converse holds with equality in the limit; on the degenerate `entropyRate = 0`
+boundary it reads `0 ≤ liminf`.
 
-The dependency shape (Barron reduction): the body is wired from two ingredients
-plus the bit SMB convergence,
+The Barron reduction: the body is wired from two ingredients plus the bit SMB
+convergence,
 
-* `shannon_mcmillan_breiman₂` (SMB in bits, sorryAx-free) — gives
+* `shannon_mcmillan_breiman₂` (SMB in bits) — gives
   `Tendsto blockLogAvg₂ → entropyRate₂` a.s.;
 * `blockLogAvg₂_minus_error_le_rate_ae` (the Barron a.s.-eventual lift) —
   gives `∀ᶠ n, blockLogAvg₂ n ω − err_n ≤ lz/n` a.s., with `err_n → 0`;
@@ -979,27 +971,15 @@ plus the bit SMB convergence,
 assembled by `Filter.liminf_le_liminf` between the lower sequence
 `Low n = blockLogAvg₂ n ω − err_n` (which `→ entropyRate₂`, so
 `liminf Low = entropyRate₂`) and `lz/n` (bounded above by
-`lz78_rate_le_const`, hence cobounded below). The converse content (the Barron
-competitive-optimality lift) sits in `blockLogAvg₂_minus_error_le_rate_ae`, which
-in turn consumes the combinatorial `lz78_block_kraft_poly` (the polynomial
-`n`-block Kraft bound). That bound's counting lemma
-`lz78_phrase_count_fiber_card_le` is proved, so this converse is fully
-`sorryAx`-free.
-
-This statement is TRUE-as-framed against the bit target `entropyRate₂` (the
-RHS is stated against `entropyRate₂` rather than the nat-unit `entropyRate`):
-on a uniform i.i.d. source on A symbols the bit-rate limit
-is `log₂ A = entropyRate / Real.log 2 = entropyRate₂` exactly, so the
-converse `entropyRate₂ ≤ liminf` is the genuine LZ78 converse (e.g. A=2:
-`entropyRate₂ = log₂ 2 = 1 ≤ liminf`, with equality in the limit); on the
-degenerate `entropyRate = 0` boundary it reads `0 ≤ liminf` (`entropyRate₂ =
-0`), again genuine. Signature takes only source data (`μ`, `p`), no
-load-bearing hypothesis.
+`lz78_rate_le_const`, hence cobounded below). The converse content — the Barron
+competitive-optimality lift — sits in `blockLogAvg₂_minus_error_le_rate_ae`,
+which in turn consumes the combinatorial `lz78_block_kraft_poly` (the polynomial
+`n`-block Kraft bound).
 
 @audit:ok (non-circular, non-bundled (signature `(μ, p)` +
 `[IsProbabilityMeasure μ]` only), non-degenerate, sufficiency TRUE-as-framed:
-the body genuinely wires SMB-in-bits (`Low n → entropyRate₂`) with the Barron
-a.s.-eventual lift (`Low n ≤ lz/n` eventually, `err_n → 0` proven) via
+the body wires SMB-in-bits (`Low n → entropyRate₂`) with the Barron
+a.s.-eventual lift (`Low n ≤ lz/n` eventually, `err_n → 0`) via
 `liminf_le_liminf`.) -/
 theorem lz78Greedy_converse_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]

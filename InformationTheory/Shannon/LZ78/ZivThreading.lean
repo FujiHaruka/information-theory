@@ -8,19 +8,19 @@ import Mathlib.Data.Fin.Tuple.Basic
 
 This file builds the threading foundation for the LZ78 achievability bound
 `ziv_aseventual_le_blockLogAvg₂`
-(`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
-slug `lz78-aseventual-ziv`).
+(`InformationTheory/Shannon/LZ78/AsymptoticOptimality/ParentBridgeAchievability.lean`).
 
-The genuine Ziv `(k-state, length)`-grouping (Cover-Thomas Lemma 13.5.5) needs to
+The Ziv `(k-state, length)`-grouping (Cover-Thomas Lemma 13.5.5) needs to
 identify the `k`-Markov negative log-likelihood of a block,
-`negLogQk μ p k n ω = ∑_{i<n} pmfLogCondMarkov μ p k i ω` (`Core.lean:200`),
-with a sum over the LZ phrases, where the contribution of a phrase is read off
-the per-`k`-state conditional product `condQkState μ p k s ℓ` (`Core.lean:490`).
+`negLogQk μ p k n ω = ∑_{i<n} pmfLogCondMarkov μ p k i ω`
+(`SMB/AlgoetCover/KMarkovApproximation.lean`), with a sum over the LZ phrases,
+where the contribution of a phrase is read off the per-`k`-state conditional
+product `condQkState μ p k s ℓ` (`SMB/AlgoetCover/MarkovLikelihoodRatio.lean`).
 
 ## Approach
 
 The decisive linchpin is position invariance of the per-step factor:
-`markovFactor_eq_of_window_eq` (`Core.lean:465`) says that, for positions `> k`,
+`markovFactor_eq_of_window_eq` (same file) says that, for positions `> k`,
 `markovFactor μ p k n y` depends only on the trailing `k+1` symbols of `y`. The
 factors entering `negLogQk` at absolute positions are
 `markovFactor μ p k i (blockRV (i+1) ω)`; the factors entering
@@ -33,17 +33,17 @@ boundary (`O(k)`).
 
 This file proves that factor-level correspondence, assembles the per-phrase
 `negLogQk`-segment identity, and assembles the full block threading decomposition
-`negLogQk_phrase_threading` (sorryAx-free, conditional on an explicit tiling +
-per-position positivity supplied as regularity hypotheses). The tiling itself —
-turning the `List (List α)` greedy parse into an absolute-position `Fin`-tiling of
-the block (materializing `N`, `c`, and the tiling hypotheses) — is supplied a.s. by
-the `lz78_block_tiling` atom, now sorryAx-free: the deterministic position
-tiling `lz78_parse_tiling_positions` (`GreedyLongestPrefix.lean`) supplies the
-length-only conjuncts and `markovFactor_blockRV_pos_ae` (`Core.lean`) supplies the
-a.s. per-position positivity. The remaining LZ78 achievability content
-(slug `lz78-aseventual-ziv`) is downstream: composing this a.s. threading
-identity with the Ziv `c·log c` counting and the SMB rate, plus the boundary-length
-sub-blocker (`b ≤ k + Lmax`, `n - e ≤ Lmax`) noted on `lz78_block_tiling`.
+`negLogQk_phrase_threading`, which takes an explicit tiling and per-position
+positivity as regularity hypotheses. The tiling itself — turning the
+`List (List α)` greedy parse into an absolute-position `Fin`-tiling of the block
+(materializing `N`, `c`, and the tiling hypotheses) — is supplied a.s. by
+`lz78_block_tiling`: the deterministic position tiling
+`lz78_parse_tiling_positions` (`GreedyLongestPrefix.lean`) supplies the
+length-only conjuncts and `markovFactor_blockRV_pos_ae`
+(`SMB/AlgoetCover/MarkovLikelihoodRatio.lean`) the a.s. per-position positivity.
+Downstream, the LZ78 achievability bound composes this a.s. threading identity
+with the Ziv `c·log c` counting and the SMB rate, using the boundary-length
+bounds `b ≤ k + Lmax`, `n - e ≤ Lmax` carried by `lz78_block_tiling`.
 -/
 
 namespace InformationTheory.Shannon
@@ -274,11 +274,9 @@ shape shared by `negLogQk` and `condQk` (both products / sums of the same
 `markovFactor`s).
 
 The positivity hypothesis `hposfac` (each per-position `markovFactor` is `> 0`) is
-the genuine regularity input: it is `cond_singleton_pos_ae` along the phrase
-positions, and is needed only to move `-log` through the product. It is a
-precondition, not the proof core (which is the deterministic factor correspondence
-already in `markovFactor_blockRV_eq_window`). Proved here (sorryAx-free) from the
-gateway atom + `condQk_eq_prod_markovFactor`; no residual. -/
+a regularity precondition: it is `cond_singleton_pos_ae` along the phrase
+positions, and is needed only to move `-log` through the product. Proved from
+`markovFactor_blockRV_eq_window` and `condQk_eq_prod_markovFactor`. -/
 lemma negLogQk_segment_eq_condQkState
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (k N ℓ : ℕ) (hkN : k < N) (ω : Ω)
@@ -336,7 +334,7 @@ lemma condQkState_pos_of_markovFactor_pos
   refine Finset.prod_pos (fun m hm ↦ ?_)
   exact hposfac m (Finset.mem_range.mp hm)
 
-/-! ## Threading decomposition (genuine blocker: List↔Fin tiling) -/
+/-! ## Threading decomposition -/
 
 /-- Telescoping of an `Ico` over a monotone partition. For a monotone
 `M : ℕ → ℕ` (`M i ≤ M (i+1)`) and any `g : ℕ → β` valued in an additive commutative
@@ -376,34 +374,28 @@ contributions `- log (condQkState μ p k sⱼ ℓⱼ Zⱼ).toReal` (supplied by
 
 The tiling hypotheses (`hNb` leading-boundary start, `hNe` parse-covered length, `hen`
 the `≤`-slack, `hmono` strict monotonicity giving a contiguous partition of `[b, e)`,
-`hstart` each phrase start `> k`) record the position bookkeeping as a *regularity* input
-describing the LZ parse — the plain combinatorial structure of `lz78PhraseStrings`, not
-the proof core (which is the factor-level correspondence already established in
-`markovFactor_blockRV_eq_window` / `negLogQk_segment_eq_condQkState`). The positivity
-input `hposfac` (each per-position `markovFactor` along a phrase is `> 0`) is the genuine
-regularity precondition of `negLogQk_segment_eq_condQkState`, needed only to move `-log`
-through the product; it is `cond_singleton_pos_ae` along the phrase positions, not the
-proof core.
+`hstart` each phrase start `> k`) record the position bookkeeping of the LZ parse: the
+plain combinatorial structure of `lz78PhraseStrings`. The positivity input `hposfac`
+(each per-position `markovFactor` along a phrase is `> 0`) is the regularity
+precondition of `negLogQk_segment_eq_condQkState`, needed only to move `-log` through
+the product; it is `cond_singleton_pos_ae` along the phrase positions.
 
-The body is filled (sorryAx-free under these tiling/positivity regularity hypotheses):
-the `negLogQk` sum over `[0, n)` is split into `[0, b) ∪ [b, e) ∪ [e, n)`; the middle
-`[b, e) = [N 0, N (last c))` is telescoped over the partition by
+Proof: the `negLogQk` sum over `[0, n)` is split into `[0, b) ∪ [b, e) ∪ [e, n)`; the
+middle `[b, e) = [N 0, N (last c))` is telescoped over the partition by
 `sum_Ico_telescope_of_monotone`, each piece is reindexed to a phrase-local sum by
 `Finset.sum_Ico_eq_sum_range`, and the per-phrase sum is discharged by
 `negLogQk_segment_eq_condQkState`. The trailing `[e, n)` remains as the unfinished-tail
 boundary term.
 
-The remaining genuine blocker is producing this tiling from the actual greedy parse;
-see `lz78_block_tiling` below. The reconstruction invariant
-`lz78PhraseStrings_flatten_prefix` (parse phrases concatenate to a prefix of the input,
-sorryAx-free) furnishes the cumulative-position function; the residual sub-blockers are
-the per-phrase substring coherence (read phrase `j` off `obs` at its cumulative position),
-the leading-`k` boundary absorption, and the trailing-tail length `n - e`.
+The tiling itself is produced from the greedy parse by `lz78_block_tiling` below, whose
+cumulative-position function rests on the reconstruction invariant
+`lz78PhraseStrings_flatten_prefix` (the parse phrases concatenate to a prefix of the
+input).
 
 The conclusion is an *exact equality* assembled by interval-split + telescope + the
-established factor correspondence — no hypothesis carries the conclusion (all of `hstart`,
-`hmono`, `hposfac`, and the trailing-boundary hypotheses are partition / positivity
-regularity, not the proof core). @audit:ok (non-circular, non-bundled, sorryAx-free). -/
+factor correspondence; `hstart`, `hmono`, `hposfac` and the trailing-boundary hypotheses
+are partition / positivity regularity.
+@audit:ok (non-circular, non-bundled, sorryAx-free). -/
 lemma negLogQk_phrase_threading
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (k n b c e : ℕ) (ω : Ω)
@@ -498,7 +490,7 @@ lemma negLogQk_phrase_threading
     (fun m hm ↦ hposfac j m hm)
   rw [← hseg]
 
-/-! ## Tiling materialization from the greedy parse (genuine blocker) -/
+/-! ## Tiling materialization from the greedy parse -/
 
 /-- Tiling materialization from the LZ parse (a.s. threading input). For the
 block `blockRV n ω`, the greedy longest-prefix parse
@@ -509,14 +501,14 @@ length `b`, a phrase count `c`, a parse-covered length `e ≤ n`, the absorbed-c
 `N (last c) = e`, the partition `[b, e)` strictly monotone (`hmono`), every phrase
 start `> k` (`hstart`, leading phrases below position `k` absorbed into the boundary),
 and the per-position positivity `hposfac`. Composing with `negLogQk_phrase_threading`
-threads `negLogQk` over the genuine parse.
+threads `negLogQk` over the parse.
 
-Three findings are pinned into this signature (vs. the prior per-ω skeleton):
+Three facts shape this signature:
 * A.s., not per-ω. The per-position positivity `hposfac` cannot hold for *all* `ω`
   — `markovFactor`'s positivity comes only from `cond_singleton_pos_ae`, an a.s.
   statement. So the whole tiling is an `∀ᵐ ω ∂μ, ∃ …`; positivity is then discharged
-  by `markovFactor_blockRV_pos_ae` (Core). The downstream limsup argument is a.s.
-  anyway, so an a.s. threading identity is the correct shape.
+  by `markovFactor_blockRV_pos_ae`. The downstream limsup argument is a.s. anyway, so
+  an a.s. threading identity is the correct shape.
 * `bAbsorbed ≤ k + 1`, not `≤ k`. When the leading phrases all have length `1`, the
   least index whose cumulative length exceeds `k` is `k + 1`; the cumulative length
   increases by `≥ 1` per phrase, so at most `k + 1` phrases fit below position `k`.
@@ -527,40 +519,36 @@ Three findings are pinned into this signature (vs. the prior per-ω skeleton):
   `List.flatten`-content-indexing chain.
 
 The deterministic position tiling (`lz78_parse_tiling_positions`,
-`GreedyLongestPrefix.lean`, sorryAx-free) supplies `b c e bAbsorbed N` and the
-length-only conjuncts (monotonicity, `hstart`, `e ≤ n`, the parse-anchored count, and
-`bAbsorbed ≤ k + 1`); `markovFactor_blockRV_pos_ae` (Core, sorryAx-free) supplies the
-a.s. per-position positivity. The body assembles these — there is no remaining sorry.
+`GreedyLongestPrefix.lean`) supplies `b c e bAbsorbed N` and the length-only conjuncts
+(monotonicity, `hstart`, `e ≤ n`, the parse-anchored count, and `bAbsorbed ≤ k + 1`);
+`markovFactor_blockRV_pos_ae` (`SMB/AlgoetCover/MarkovLikelihoodRatio.lean`) supplies
+the a.s. per-position positivity, and the body assembles the two.
 
 The non-vacuity anchor. The plain existence of *some* tiling is vacuously true (`c = 0`,
-empty partition), so the genuine content is encoded by anchoring the tiling to the
-*parse*: the phrase count `c` is the genuine distinct-phrase count of the parse minus the
-leading phrases absorbed below position `k`, pinned by `c + bAbsorbed = parseCount` with
-the absorbed-count `bAbsorbed ≤ k + 1`. For a long block whose parse has `parseCount > k`
+empty partition), so the content is encoded by anchoring the tiling to the *parse*: the
+phrase count `c` is the distinct-phrase count of the parse minus the leading phrases
+absorbed below position `k`, pinned by `c + bAbsorbed = parseCount` with the
+absorbed-count `bAbsorbed ≤ k + 1`. For a long block whose parse has `parseCount > k`
 phrases this forces `c > 0`, so the empty-tiling escape is unavailable.
 
 The boundary-length bounds (supplied, for the downstream limsup discharge). The threading
 identity (`negLogQk_phrase_threading`) leaves the leading-boundary sum over `[0, b)` and
 the trailing-tail sum over `[e, n)` as additive terms; the downstream limsup discharge
 needs `b / n → 0` and `(n - e) / n → 0` to vanish those boundary contributions. This
-signature now carries `b ≤ k + Lmax` and `n - e ≤ Lmax` with `Lmax` the longest phrase
-length (from `lz78_parse_tiling_positions`, sorryAx-free): the leading boundary is one
-phrase past the `≤ k` absorbed prefix, and the un-emitted trailing tail is one dictionary
-phrase or empty (`lz78PhraseStrings_flatten_tail_mem`). For those boundary terms to vanish,
-the closure still needs `Lmax = o(n)` a.s. (the longest LZ78 phrase grows sublinearly),
-which is part of the downstream achievability content, not of this tiling atom. The present
-lemma is the a.s. threading
-mechanism + non-vacuity anchor + boundary-length bounds (genuine, sorryAx-free).
+signature carries `b ≤ k + Lmax` and `n - e ≤ Lmax` with `Lmax` the longest phrase
+length (from `lz78_parse_tiling_positions`): the leading boundary is one phrase past the
+`≤ k` absorbed prefix, and the un-emitted trailing tail is one dictionary phrase or empty
+(`lz78PhraseStrings_flatten_tail_mem`). Making those boundary terms vanish additionally
+needs `Lmax = o(n)` a.s. (the longest LZ78 phrase grows sublinearly), which belongs to
+the downstream achievability argument rather than to this tiling atom; the present lemma
+supplies the a.s. threading mechanism, the non-vacuity anchor and the boundary-length
+bounds.
 
-@audit:ok (non-circular, non-bundled — only `[IsProbabilityMeasure μ]` regularity +
-produces the existential; the a.s. `∀ᵐ ω, ∃ …` shape is the genuinely-provable form
-(per-ω positivity is false — it comes only from `cond_singleton_pos_ae`); non-vacuity
-genuine: `c + bAbsorbed = parseCount ∧ bAbsorbed ≤ k+1` forces `c > 0` for
-`parseCount > k+1`; wall slug `lz78-aseventual-ziv` correctly NOT on this closed decl —
-it lives at `ziv_aseventual_le_blockLogAvg₂`. The existential output also carries one
-slice/content conjunct (`∀ j, (lz78PhraseStrings …)[bAbsorbed+j]? = some (slice)`,
-threaded from `lz78_parse_tiling_positions`'s slice conjunct) with no new
-input hypothesis / `*Hypothesis` predicate.) -/
+@audit:ok (non-circular, non-bundled — only `[IsProbabilityMeasure μ]` regularity, and
+the existential's conjuncts, including the slice/content one
+`∀ j, (lz78PhraseStrings …)[bAbsorbed+j]? = some (slice)`, are all discharged from
+`lz78_parse_tiling_positions` and `markovFactor_blockRV_pos_ae`, with no new input
+hypothesis or `*Hypothesis` predicate; sorryAx-free.) -/
 lemma lz78_block_tiling
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (k n : ℕ) :
@@ -573,7 +561,7 @@ lemma lz78_block_tiling
         0 < (markovFactor μ p k (N j.castSucc + m)
               (p.blockRV (N j.castSucc + m + 1) ω)).toReal) ∧
       -- non-vacuity: the tiling is the *parse* tiling (phrase count anchored to the
-      -- genuine distinct-phrase count, minus `bAbsorbed ≤ k + 1` leading phrases).
+      -- distinct-phrase count, minus `bAbsorbed ≤ k + 1` leading phrases).
       c + bAbsorbed
         = (lz78PhraseStrings (List.ofFn (fun i ↦ p.blockRV n ω i))).length ∧
       bAbsorbed ≤ k + 1 ∧
@@ -602,7 +590,7 @@ lemma lz78_block_tiling
     rwa [hlen] at htail
 
 /-- The tiling-hypothesis-free a.s. threading identity for `negLogQk`, with arguments
-`μ, p, k, n` only. It is obtained by feeding the genuine parse tiling produced a.s. by
+`μ, p, k, n` only. It is obtained by feeding the parse tiling produced a.s. by
 `lz78_block_tiling` into the per-phrase decomposition `negLogQk_phrase_threading`: the
 tiling supplies the partition `N`, the boundary lengths, the parse-anchored phrase count,
 and the per-position positivity, which `negLogQk_phrase_threading` consumes to yield the
@@ -619,7 +607,7 @@ bridge consumed by the `(k-state, length)` grouping / limsup discharge.
 
 @audit:ok (non-circular, non-bundled — only `[IsProbabilityMeasure μ]` regularity input
 + produces the existential, no `*Hypothesis` predicate; both the slice/content
-correspondence and per-phrase positivity conjuncts are discharged genuinely from
+correspondence and per-phrase positivity conjuncts are discharged from
 `lz78_block_tiling`'s `hslice` and the per-position `hposfac` respectively). -/
 lemma negLogQk_parse_threading
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
