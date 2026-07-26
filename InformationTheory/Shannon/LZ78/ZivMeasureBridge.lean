@@ -45,11 +45,13 @@ terms into negative-log marginal probabilities and aggregates:
    c · log c ≤ ∑_{phrases w} -log P_{|w|}(w) + c · log D.
    ```
 
-Connecting the marginal sum `∑_w -log P_{|w|}(w)` to the joint
-`-log Pₙ = n · blockLogAvg` with an `o(n)` slack is not discharged here; see the
-GATEWAY section at the end for the precise obstruction. That obstruction is why
-this route was abandoned — `ziv_aseventual_le_blockLogAvg₂` is instead reached
-through the conditional per-`k`-state route (`ZivCondGrouping.lean`).
+What step 3 does not supply is the link from the marginal sum
+`∑_w -log P_{|w|}(w)` to the joint `-log Pₙ = n · blockLogAvg` with an `o(n)`
+slack: the per-phrase marginals ignore the dependence between successive phrases,
+so for a source with memory `∑_w -log P_{|w|}(w) ≥ -log Pₙ`, the opposite of the
+direction the Ziv chain needs. `ziv_aseventual_le_blockLogAvg₂` is therefore
+reached through the conditional per-`k`-state route (`ZivCondGrouping.lean`),
+whose chain rule reaches `-log Pₙ` exactly.
 -/
 
 namespace InformationTheory.Shannon
@@ -178,7 +180,7 @@ mass of the cylinder of the string `w` (read as a `Fin |w| → α` vector). The
 positivity `P_{|w|}(w) > 0` over the (a.s.) observed phrases is a regularity
 precondition.
 
-The sub-distribution hypothesis is discharged genuinely from step 1
+The sub-distribution hypothesis is discharged from step 1
 (`sum_marginal_real_le_one`) via the length-fiber injection `toFinVec`; the
 positivity is the only precondition. -/
 theorem lz78PhraseStrings_mul_log_le_sum_neg_log_marginal_add_overhead
