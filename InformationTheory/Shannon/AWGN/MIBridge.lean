@@ -20,7 +20,7 @@ fundamental fact about the AWGN structure:
 2. `IsAwgnMIDecomp` — the channel MI splits as
    `I(X;Y).toReal = h(Y) − h(Y|X)` (`mutualInfoOfChannel` ↔ entropy bridge),
    where `h(Y|X) := ∫ h(awgnChannel N x) ∂(gaussianReal 0 P)` is the
-   integral of fibrewise differential entropies.
+   integral of fiberwise differential entropies.
 3. `IsAwgnCondEntropyEqNoise` — the conditional entropy equals the noise
    entropy: `∫ h(awgnChannel N x) ∂(gaussianReal 0 P) = h(𝒩(0, N))` (translation
    invariance of `differentialEntropy`, integrated against the input).
@@ -73,7 +73,7 @@ The mean-translation invariance of Gaussian differential entropy,
 `differentialEntropy (gaussianReal m v) = differentialEntropy (gaussianReal 0 v)`,
 follows from `differentialEntropy_map_add_const` and `gaussianReal_map_const_add`; it
 is published here as `differentialEntropy_gaussianReal_mean_invariant` and brings every
-channel fibre to the noise-only form.
+channel fiber to the noise-only form.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -98,7 +98,7 @@ theorem differentialEntropy_gaussianReal_mean_invariant
     InformationTheory.Shannon.differentialEntropy_gaussianReal 0 hv
   rw [h1, h2]
 
-/-- Each AWGN channel fibre has the same differential entropy as the noise alone:
+/-- Each AWGN channel fiber has the same differential entropy as the noise alone:
 `h(awgnChannel N x) = h(𝒩(0, N))`. -/
 theorem differentialEntropy_awgnChannel_apply_eq_noise
     (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N) (x : ℝ) :
@@ -117,7 +117,7 @@ def IsAwgnOutputGaussian (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurab
     = gaussianReal 0 (P.toNNReal + N)
 
 /-- The channel mutual information splits as `I(X;Y) = h(Y) − h(Y|X)`, where `h(Y|X)`
-is the integral of fibrewise differential entropies against the input law. This is the
+is the integral of fiberwise differential entropies against the input law. This is the
 continuous analogue of `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`. -/
 def IsAwgnMIDecomp (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
@@ -128,7 +128,7 @@ def IsAwgnMIDecomp (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) 
       - (∫ x, InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
             ∂(gaussianReal 0 P.toNNReal))
 
-/-- The integral of fibrewise differential entropies against the Gaussian input
+/-- The integral of fiberwise differential entropies against the Gaussian input
 collapses to the noise-only entropy `h(𝒩(0, N))`.
 
 By `differentialEntropy_awgnChannel_apply_eq_noise` the integrand is identically the
@@ -139,7 +139,7 @@ def IsAwgnCondEntropyEqNoise (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeas
         ∂(gaussianReal 0 P.toNNReal))
     = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N)
 
-/-- The integral of fibrewise differential entropies under Gaussian input collapses to
+/-- The integral of fiberwise differential entropies under Gaussian input collapses to
 `h(𝒩(0, N))`, discharging `IsAwgnCondEntropyEqNoise`. -/
 @[entry_point]
 theorem awgn_cond_entropy_eq_noise_entropy_of_const

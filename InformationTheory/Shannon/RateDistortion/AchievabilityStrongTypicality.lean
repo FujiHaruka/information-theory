@@ -149,7 +149,7 @@ theorem rate_distortion_achievability_strong
       ε_dist δ_typ hε_dist_pos hδ_typ_nn ε_X ε_join δ_kl
       hε_X_pos hε_join_pos hδ_kl_pos hε_X_lt_ε_join h_rate_gap h_dist_slack
       h_jts_subset_dts qZ_min hqZ_min_pos hqZ_min_le hδ_kl_dominates
-  -- Discharge via the partial discharge wrapper.
+  -- Delegate to the codebook-average failure wrapper.
   have h_codebook_avg_failure : ∀ {n : ℕ} (hn : 0 < n),
       ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
           (codebookMeasure

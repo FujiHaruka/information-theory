@@ -14,16 +14,16 @@ purely measure-theoretic fact that does not depend on the concrete form of the i
 ## Main statements
 
 * `bind_eq_conv_of_translation_kernel` — the generic translation-kernel ↔
-  additive-convolution bridge: for any kernel whose fibres are translation maps of a
+  additive-convolution bridge: for any kernel whose fibers are translation maps of a
   fixed measure `ν`, `κ ∘ₘ p = p ∗ ν`.
 * `isAwgnBindEqConv` — the AWGN specialization.
 
 ## Implementation notes
 
 The two sides are matched through their `lintegral` characterizations
-(`Measure.ext_of_lintegral`): the Giry-monad composition expands fibrewise via
+(`Measure.ext_of_lintegral`): the Giry-monad composition expands fiberwise via
 `Measure.lintegral_bind`, the convolution via `Measure.lintegral_conv`, and the
-fibres agree because each AWGN fibre is the translation map of the noise-only
+fibers agree because each AWGN fiber is the translation map of the noise-only
 Gaussian, `gaussianReal x N = (gaussianReal 0 N).map (x + ·)` (Mathlib
 `gaussianReal_map_const_add`). The AWGN-specific result is the one-line
 specialization of the generic translation-kernel lemma.
@@ -37,9 +37,9 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Fibre identity: translation map of a Gaussian -/
+/-! ## Fiber identity: translation map of a Gaussian -/
 
-/-- Each AWGN fibre is the translation map of the noise-only Gaussian:
+/-- Each AWGN fiber is the translation map of the noise-only Gaussian:
 `gaussianReal x N = (gaussianReal 0 N).map (x + ·)`. -/
 theorem gaussianReal_eq_map_const_add (N : ℝ≥0) (x : ℝ) :
     gaussianReal x N = (gaussianReal 0 N).map (x + ·) := by
@@ -47,7 +47,7 @@ theorem gaussianReal_eq_map_const_add (N : ℝ≥0) (x : ℝ) :
 
 /-! ## Generic translation-kernel ↔ convolution bridge -/
 
-/-- For any kernel `κ : Kernel ℝ ℝ` whose every fibre is the translation map of a
+/-- For any kernel `κ : Kernel ℝ ℝ` whose every fiber is the translation map of a
 fixed measure `ν` (`κ x = ν.map (x + ·)`), the Giry-monad composition with an
 s-finite input `p` coincides with the additive convolution `p ∗ ν`. -/
 @[entry_point]
@@ -56,11 +56,11 @@ theorem bind_eq_conv_of_translation_kernel
     (hκ : ∀ x, κ x = ν.map (x + ·)) :
     κ ∘ₘ p = p ∗ ν := by
   refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
-  -- LHS: Giry-monad bind expands fibrewise.
+  -- LHS: Giry-monad bind expands fiberwise.
   rw [Measure.lintegral_bind κ.aemeasurable hf.aemeasurable]
   -- RHS: convolution expands as a double lintegral over `p ∗ ν`.
   rw [Measure.lintegral_conv hf]
-  -- Match fibrewise: `∫⁻ y, f y ∂(κ x) = ∫⁻ y, f (x + y) ∂ν`.
+  -- Match fiberwise: `∫⁻ y, f y ∂(κ x) = ∫⁻ y, f (x + y) ∂ν`.
   refine lintegral_congr fun x ↦ ?_
   rw [hκ x, lintegral_map hf (measurable_const_add x)]
 

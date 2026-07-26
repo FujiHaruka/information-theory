@@ -9,14 +9,13 @@ import Mathlib.Algebra.BigOperators.Field
 /-!
 # Wyner–Ziv conditional-entropy-difference convexity
 
-This file discharges the irreducible Lemma-15.9 core
-`WynerZivCondEntDiffConvex` (`WynerZiv/ObjectiveConvexity.lean:212`)
-*unconditionally* (only `P_XY ≥ 0`, supplied at rate level by
-`P_XY ∈ stdSimplex`).
+This file proves the irreducible Lemma-15.9 core `WynerZivCondEntDiffConvex`
+(`WynerZiv/ObjectiveConvexity.lean`) from `P_XY ≥ 0` alone, which is supplied at
+rate level by `P_XY ∈ stdSimplex`.
 
 The core asserts convexity of `H(m_YU) − H(m_XU) = I(X;U|Y)` along convex
-combinations of factorisable joints.  The proof routes the whole content
-through the per-atom `log_sum_inequality_negMulLog` (`Fano/DPI.lean:44`):
+combinations of factorizable joints.  The proof routes the whole content
+through the per-atom `log_sum_inequality_negMulLog` (`Fano/DPI.lean`):
 
 * Step A — affine translation: the marginals of `a•q₁ + b•q₂` are the
   convex combinations of the marginals (`wzMarginalXU_smul_add`,
@@ -26,8 +25,8 @@ through the per-atom `log_sum_inequality_negMulLog` (`Fano/DPI.lean:44`):
   play the role of the log-sum "fiber".
 * Step C/D — `∑_u` aggregation and identification with `wzJointEntYU/XU`
   (`wzCondEntDiff_blockSum_eq_jointEntDiff`), then assembly into the main
-  theorem `wynerZivCondEntDiffConvex_holds`, finally re-publishing the
-  unconditional rate wrapper.
+  theorem `wynerZivCondEntDiffConvex_holds`, which the rate-level wrapper
+  `wynerZivRateFactorizable_convex_in_D` consumes.
 -/
 
 namespace InformationTheory.Shannon
@@ -207,7 +206,7 @@ lemma negMulLog_marginal_gap_le_joint_gap
   exact hgoal
 
 
-/-- Per-`u` block convexity.  For factorisable `q₁, q₂` and weights
+/-- Per-`u` block convexity.  For factorizable `q₁, q₂` and weights
 `a, b ≥ 0` with `a + b = 1`, the conditional-entropy-difference block at a
 fixed `u`,
 `(∑_y negMulLog m_YU(y,u)) − (∑_x negMulLog m_XU(x,u))`, is convex. -/
@@ -247,7 +246,7 @@ lemma wzCondEntDiff_block_convex
   have hYU₂ : ∀ y, wzMarginalYU U q₂ (y, u) = ∑ x, r₂ (x, y) := fun y ↦ rfl
   -- The refinement (DPI) inequality: (I)_u ≤ joint-gap.
   have hrefine := negMulLog_marginal_gap_le_joint_gap r₁ r₂ hr₁nn hr₂nn a b ha hb hab
-  -- Part 1 (factorisation): joint-gap (per x, summed over y) = XU-block-gap.
+  -- Part 1 (factorization): joint-gap (per x, summed over y) = XU-block-gap.
   -- For each x: ∑_y [neg(m(x,y)) - a·neg r₁ - b·neg r₂]
   --   = neg(m_XU(x,u)) - a·neg(q₁_XU(x,u)) - b·neg(q₂_XU(x,u)).
   have hpart1 : ∀ x,
@@ -347,10 +346,10 @@ lemma wzCondEntDiff_blockSum_eq_jointEntDiff (q : α × β × U → ℝ) :
       Finset.sum_comm
         (f := fun u x ↦ Real.negMulLog (wzMarginalXU U q (x, u)))]
 
-/-! ## Main theorem — unconditional discharge of the core -/
+/-! ## Main theorem — convexity of the conditional-entropy difference -/
 
-/-- Lemma-15.9 core, discharged.  `WynerZivCondEntDiffConvex` holds for
-every non-negative `P_XY`. -/
+/-- The Lemma-15.9 core: `WynerZivCondEntDiffConvex` holds for every
+non-negative `P_XY`. -/
 @[entry_point]
 theorem wynerZivCondEntDiffConvex_holds
     (P_XY : α × β → ℝ) (h_pmf_nn : ∀ p, 0 ≤ P_XY p) :
@@ -366,10 +365,11 @@ theorem wynerZivCondEntDiffConvex_holds
   refine Finset.sum_le_sum (fun u _ ↦ ?_)
   exact wzCondEntDiff_block_convex U P_XY h_pmf_nn hq₁ hq₂ a b ha hb hab u
 
-/-! ## Unconditional rate-level convexity wrapper -/
+/-! ## Rate-level convexity wrapper -/
 
 /-- Convexity of the factorizable rate function in `D`, with the
-objective-convexity hypothesis fully discharged. -/
+objective-convexity hypothesis supplied internally by
+`wynerZivCondEntDiffConvex_holds`. -/
 @[entry_point]
 theorem wynerZivRateFactorizable_convex_in_D
     {γ : Type*}

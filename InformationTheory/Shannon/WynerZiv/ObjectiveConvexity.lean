@@ -8,7 +8,7 @@ This file discharges the `h_obj_convex` hypothesis carried by
 `WynerZiv/FactorizableRate.lean` (`wynerZivRateFactorizable_convex`,
 `wynerZivRateFactorizable_convex_in_D_of_obj_convex`): the convexity of the Wyner–Ziv
 objective `I(X;U) − I(Y;U)` in the joint pmf `q`, along convex combinations
-of *factorisable* joints `q = κ(u|x)·P_XY(x,y)`.
+of *factorizable* joints `q = κ(u|x)·P_XY(x,y)`.
 
 ## Approach
 
@@ -20,14 +20,14 @@ the trivial parts:
 * `H(U)` cancellation (any `q`): the `U`-marginal of `wzMarginalXU U q`
   and of `wzMarginalYU U q` coincide — both equal `P_U(u) = ∑_{x,y} q(x,y,u)`
   — by Fubini.  Hence the `∑_u negMulLog(P_U u)` terms (the `H(U)` blocks)
-  cancel between `I(X;U)` and `I(Y;U)`.  This needs no factorisation.
+  cancel between `I(X;U)` and `I(Y;U)`.  This needs no factorization.
 
-* `H(X) − H(Y)` constancy (factorisable `q`): the `X`-marginal of
+* `H(X) − H(Y)` constancy (factorizable `q`): the `X`-marginal of
   `wzMarginalXU U q` equals `∑_y q(x,y,·)` summed over `u`, i.e. the
-  `(X)`-marginal of `wzMarginalXY U q`.  For factorisable `q` the latter is
+  `(X)`-marginal of `wzMarginalXY U q`.  For factorizable `q` the latter is
   `P_XY`, so this block is the constant `H(P_X)` — independent of the kernel
   `κ`.  Likewise the `Y`-block is the constant `H(P_Y)`.  Along a convex
-  combination of two factorisable joints these constants are *identical*, so
+  combination of two factorizable joints these constants are *identical*, so
   they cancel out of the convexity inequality.
 
 After both cancellations the objective reads
@@ -147,7 +147,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- Objective decomposition (any `q`).  After cancelling the shared
+/-- Objective decomposition (any `q`).  After canceling the shared
 `H(U)` block,
 `I(X;U) − I(Y;U)
   = [H(marginalFst m_XU) − H(marginalFst m_YU)] + [H(m_YU) − H(m_XU)]`,
@@ -166,7 +166,7 @@ lemma wzObjective_decomp (q : α × β × U → ℝ) :
 
 end Decomposition
 
-/-! ## §5 The marginal-block constant on factorisable joints -/
+/-! ## §5 The marginal-block constant on factorizable joints -/
 
 section MarginalConstant
 
@@ -175,7 +175,7 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- On a factorisable joint the `X`/`Y`-marginal blocks reduce to the
+/-- On a factorizable joint the `X`/`Y`-marginal blocks reduce to the
 source-only constant `H(P_X) − H(P_Y)`. -/
 lemma wzObjective_marginalBlock_factorisable
     (P_XY : α × β → ℝ) {q : α × β × U → ℝ}
@@ -205,7 +205,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
 /-- The irreducible Lemma-15.9 core.  Convexity of the conditional
 entropy difference `H(m_YU) − H(m_XU) = I(X;U|Y)` along convex combinations
-of factorisable joints.  This is the genuine analytic content of
+of factorizable joints.  This is the genuine analytic content of
 Cover–Thomas Lemma 15.9 (a joint-convexity-of-KL argument); it is *strictly
 more primitive* than `h_obj_convex` because both the `H(U)` cancellation and
 the `H(X)−H(Y)` constancy have been factored out. -/
@@ -231,7 +231,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
 /-- Objective convexity from the conditional-entropy-difference core.
 Given `WynerZivCondEntDiffConvex` (the Lemma-15.9 core), the Wyner–Ziv
-objective `I(X;U) − I(Y;U)` is convex along factorisable convex
+objective `I(X;U) − I(Y;U)` is convex along factorizable convex
 combinations — i.e. exactly the `h_obj_convex` hypothesis consumed by
 `WynerZiv/FactorizableRate.lean`.
 
@@ -247,7 +247,7 @@ theorem wzObjective_convex_of_condEntDiff
     wzMutualInfoXU U (a • q₁ + b • q₂) - wzMutualInfoYU U (a • q₁ + b • q₂)
       ≤ a * (wzMutualInfoXU U q₁ - wzMutualInfoYU U q₁)
         + b * (wzMutualInfoXU U q₂ - wzMutualInfoYU U q₂) := by
-  -- The mixed joint is itself factorisable.
+  -- The mixed joint is itself factorizable.
   have hmix : IsWynerZivFactorizable U P_XY (a • q₁ + b • q₂) :=
     IsWynerZivFactorizable_convex_combination U P_XY hq₁ hq₂ ha hb hab
   -- Abbreviation: the common source-only marginal-block constant.

@@ -394,7 +394,7 @@ theorem gaussianProductInput_compProd_parallelGaussianChannel_eq_pi {n : ℕ}
     rw [hpre]
     -- Apply general `compProd_apply`.
     rw [Measure.compProd_apply hpre_meas]
-    -- The kernel fibre value:
+    -- The kernel fiber value:
     -- `W x (Prod.mk x ⁻¹' preimage) = ∏ i, gaussianReal (x i) (N i) (slice i)`.
     have hslice : ∀ x : Fin n → ℝ,
         (W x) (Prod.mk x ⁻¹' {ω : (Fin n → ℝ) × (Fin n → ℝ) | ∀ i, (ω.1 i, ω.2 i) ∈ s i})
@@ -565,7 +565,7 @@ theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0) (hN : N ≠ 0)
   have h_out : InformationTheory.Shannon.AWGN.IsAwgnOutputGaussian Pr N h_meas :=
     InformationTheory.Shannon.AWGN.awgn_output_gaussian_of_bind_eq_conv Pr N h_meas
       (InformationTheory.Shannon.AWGN.isAwgnBindEqConv Pr N h_meas)
-  -- measurable PDF proxy `g := gaussianPDF` for the fibre volume-density (Route B)
+  -- measurable PDF proxy `g := gaussianPDF` for the fiber volume-density
   set g : ℝ × ℝ → ℝ≥0∞ := fun z ↦ gaussianPDF z.1 N z.2 with hg_def
   have hg_meas : Measurable g :=
     InformationTheory.Shannon.AWGN.measurable_gaussianPDF_uncurry N
@@ -584,7 +584,7 @@ theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0) (hN : N ≠ 0)
     rw [show p.prod q = p ⊗ₘ (Kernel.const ℝ q) from (Measure.compProd_const).symm]
     exact Measure.absolutelyContinuous_compProd_right_iff.mpr
       (Filter.Eventually.of_forall (fun x ↦ by simpa only [Kernel.const_apply] using hWx_q x))
-  -- llr split + fibre/output log-density integrabilities (analytic core, all existing)
+  -- llr split + fiber/output log-density integrabilities (analytic core, all existing)
   have h_llr_split := llr_compProd_prod_split (p := p) (W := W) q hWx_q hq_vol
     h_joint_ac g hg_meas hg_ae
   have h_int_fibre_joint :
@@ -605,7 +605,7 @@ theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0) (hN : N ≠ 0)
     refine (integrable_map_measure ?_ measurable_snd.aemeasurable).mp ?_
     · rw [← h_eq]; exact hg_aesm
     · rw [← h_eq]; exact h_int_out_marg
-  -- assemble `klDiv_ne_top`: AC + llr integrability (split into fibre − output).
+  -- assemble `klDiv_ne_top`: AC + llr integrability (split into fiber − output).
   rw [mutualInfoOfChannel_def, jointDistribution_def]
   refine klDiv_ne_top h_joint_ac ?_
   refine (h_int_fibre_joint.sub h_int_out_joint).congr ?_

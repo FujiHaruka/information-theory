@@ -38,7 +38,7 @@ final assembly into `log M ≤ n · (1/2) log(1 + P/N) + binEntropy(Pe) + Pe · 
   Gaussian maximum-entropy, and Jensen) rather than a per-letter power constraint, because
   the per-message power constraint does not yield a per-letter `E[Xᵢ²] ≤ P`.
 * `h_mi_bridge_per_letter` carries the bridge `I(Xᵢ; Yᵢ) = h(Yᵢ) − h(Z)` as an explicit
-  hypothesis; it is discharged elsewhere. -/
+  hypothesis; `awgn_per_letter_mi_bridge_genuine` (`AWGN/Converse.lean`) supplies it. -/
 
 namespace InformationTheory.Shannon.AWGN
 
@@ -685,7 +685,7 @@ log M ≤ I(W; Yⁿ).toReal + binEntropy(Pe) + Pe·log(M − 1)     (Fano)
       ≤ n · (1/2) log(1 + P/N) + binEntropy(Pe) + Pe·log(M − 1)  (capacity bound)
 ```
 The bridge `h_mi_bridge_per_letter` (per-letter `I(Xᵢ; Yᵢ) = h(Yᵢ) − h(Z)`) is taken as a
-hypothesis and discharged elsewhere. -/
+hypothesis; `awgn_per_letter_mi_bridge_genuine` (`AWGN/Converse.lean`) supplies it. -/
 @[entry_point]
 theorem awgn_converse_of_perLetterMI_eq_diffEntropy_sub_of_neZero
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

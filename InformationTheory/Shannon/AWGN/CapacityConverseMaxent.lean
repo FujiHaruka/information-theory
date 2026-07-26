@@ -30,7 +30,7 @@ The argument follows Cover–Thomas 9.1. `I(X;Y) = h(Y) − h(Y|X)` (chain rule
 max-entropy bound `differentialEntropy_le_gaussian_of_variance_le`:
 
 1. `MI = h(Y) − h(Y|X)` (chain rule, proxy form).
-2. `h(Y|X) = ∫ h(𝒩(x,N)) dp = (1/2) log(2πeN)` (fibre entropy constant).
+2. `h(Y|X) = ∫ h(𝒩(x,N)) dp = (1/2) log(2πeN)` (fiber entropy constant).
 3. `h(Y) ≤ (1/2) log(2πe·Var(Y))` (max-entropy, `m := E[Y]`).
 4. `Var(Y) ≤ E[X²] + N ≤ P + N`.
 5. arithmetic `(1/2)log(2πe(P+N)) − (1/2)log(2πeN) = (1/2)log(1+P/N)`.
@@ -157,9 +157,9 @@ theorem output_sq_sub_integrable
     Integrable (fun y ↦ (y - m) ^ 2)
       (ChannelCoding.outputDistribution p (awgnChannel N h_meas)) := by
   rw [outputDistribution_awgn_eq_conv h_meas p]
-  -- Use `integrable_conv_iff`: fibre integrability + outer integrability of fibre norm.
+  -- Use `integrable_conv_iff`: fiber integrability + outer integrability of fiber norm.
   refine (integrable_conv_iff (by fun_prop)).mpr ⟨?_, ?_⟩
-  · -- fibre: `(x + z - m)²` integrable against `𝒩(0,N)`.
+  · -- fiber: `(x + z - m)²` integrable against `𝒩(0,N)`.
     refine ae_of_all _ (fun x ↦ ?_)
     have : (fun z ↦ (x + z - m) ^ 2) = (fun z ↦ (z - (m - x)) ^ 2) := by
       funext z; ring_nf
@@ -191,7 +191,7 @@ theorem output_sq_sub_integrable
     exact (hp_2mom_int.sub (h_id.const_mul (2 * m))).add (integrable_const _)
 
 /-- Second moment of the mixture output: `∫ y² ∂(p ∗ 𝒩(0,N)) = ∫ x² ∂p + N`.
-Via `integral_conv` (the output is `(p.prod 𝒩).map (·+·)`) and the fibre identity
+Via `integral_conv` (the output is `(p.prod 𝒩).map (·+·)`) and the fiber identity
 `∫ z, (x + z)² ∂𝒩(0,N) = x² + N`. -/
 @[entry_point]
 theorem output_secondMoment_eq
@@ -206,7 +206,7 @@ theorem output_secondMoment_eq
     simpa using this
   rw [outputDistribution_awgn_eq_conv h_meas p] at h_int ⊢
   rw [integral_conv h_int]
-  -- fibre: `∫ z, (x + z)² ∂𝒩(0,N) = x² + N`
+  -- fiber: `∫ z, (x + z)² ∂𝒩(0,N) = x² + N`
   have h_fibre : (fun x ↦ ∫ z, (x + z) ^ 2 ∂(gaussianReal 0 N))
       = fun x ↦ x ^ 2 + (N : ℝ) := by
     funext x
@@ -242,9 +242,9 @@ theorem output_variance_le
   rw [hq_def, output_secondMoment_eq h_meas hN p hp_2mom_int]
   linarith
 
-/-! ## Fibre absolute continuity w.r.t. output -/
+/-! ## Fiber absolute continuity w.r.t. output -/
 
-/-- Each AWGN fibre is absolutely continuous w.r.t. the (mixture) output law:
+/-- Each AWGN fiber is absolutely continuous w.r.t. the (mixture) output law:
 `∀ x, awgnChannel N h_meas x ≪ outputDistribution p (awgnChannel N h_meas)`.
 The output `q = p ∗ 𝒩(0,N)` is full-support since `𝒩(0,N) ≪ volume`, so each
 `𝒩(x,N) ≪ q`. The in-tree `awgnChannel_apply_absolutelyContinuous_output` is
@@ -260,7 +260,7 @@ theorem fibre_absolutelyContinuous_output_general
   refine (gaussianReal_absolutelyContinuous x hN).trans ?_
   -- `volume ≪ p ∗ 𝒩(0,N)`: if `q(s) = 0` then `volume(s) = 0`.
   refine Measure.AbsolutelyContinuous.mk (fun s hs h ↦ ?_)
-  -- Expand `q(s) = ∫⁻ a, 𝒩(0,N)((-a + ·) ⁻¹' s) ∂p` and conclude each fibre is 0.
+  -- Expand `q(s) = ∫⁻ a, 𝒩(0,N)((-a + ·) ⁻¹' s) ∂p` and conclude each fiber is 0.
   rw [← lintegral_indicator_one hs, Measure.lintegral_conv (by measurability)] at h
   -- For `p`-a.e. `a`, the inner Gaussian integral vanishes.
   have h_inner_zero : ∀ᵐ a ∂p, ∫⁻ y, s.indicator 1 (a + y) ∂(gaussianReal 0 N) = 0 :=
@@ -282,11 +282,11 @@ theorem fibre_absolutelyContinuous_output_general
     (gaussianReal_absolutelyContinuous' 0 hN) h_gauss_pre
   rwa [← (measurePreserving_add_left volume a).measure_preimage hs.nullMeasurableSet]
 
-/-- Proxy-form joint integrability of the AWGN fibre log-density for an arbitrary
+/-- Proxy-form joint integrability of the AWGN fiber log-density for an arbitrary
 probability-measure input `p`: `fun z => Real.log (gaussianPDF z.1 N z.2).toReal` is
 integrable against the joint `p ⊗ₘ awgnChannel N`. The integrand decomposes everywhere
 as `c₀ + c₁·(z.2 − z.1)²`, and the `(z.2 − z.1)²` term is integrable against the joint
-via `Measure.integrable_compProd_iff` (per-fibre integrability + constant L¹-norm `N`).
+via `Measure.integrable_compProd_iff` (per-fiber integrability + constant L¹-norm `N`).
 The proof uses only that `p` is a probability measure, so it is the general-`p`
 counterpart of the Gaussian-input-only
 `ContChannelMIDecomp.integrable_log_proxy_fibre_compProd`. -/
@@ -714,7 +714,7 @@ theorem outputDistribution_logDensity_integrable_joint
 `(mutualInfoOfChannel p (awgnChannel N)).toReal ≤ (1/2) log(1 + P/N)`.
 
 Assembled from the chain rule (`mutualInfoOfChannel_toReal_eq_diffEntropy_sub`),
-the fibre entropy constant, the Gaussian max-entropy bound
+the fiber entropy constant, the Gaussian max-entropy bound
 (`differentialEntropy_le_gaussian_of_variance_le`), `Var(Y) ≤ P + N`, and the capacity
 log-algebra.
 
@@ -747,18 +747,18 @@ theorem awgn_per_input_mi_le_log
   have hq_vol : q ≪ volume := by
     rw [hq_conv]
     exact Measure.conv_absolutelyContinuous (gaussianReal_absolutelyContinuous 0 hN_NN)
-  -- proxy `g := gaussianPDF` for the fibre volume-density
+  -- proxy `g := gaussianPDF` for the fiber volume-density
   set g : ℝ × ℝ → ℝ≥0∞ := fun z ↦ gaussianPDF z.1 N z.2 with hg_def
   have hg_meas : Measurable g := measurable_gaussianPDF_uncurry N
-  -- per-fibre rnDeriv↔proxy bridge `(W x).rnDeriv vol =ᵐ[W x] g(x,·)`
+  -- per-fiber rnDeriv↔proxy bridge `(W x).rnDeriv vol =ᵐ[W x] g(x,·)`
   have hg_ae : ∀ x, (fun y ↦ (W x).rnDeriv volume y) =ᵐ[W x] fun y ↦ g (x, y) := by
     intro x
     rw [hW_def, awgnChannel_apply]
     exact (gaussianReal_absolutelyContinuous x hN_NN).ae_le (rnDeriv_gaussianReal x N)
-  -- fibre-vs-output absolute continuity `hWx_q`
+  -- fiber-vs-output absolute continuity `hWx_q`
   have hWx_q : ∀ x, W x ≪ q :=
     fun x ↦ fibre_absolutelyContinuous_output_general h_meas hN_NN p x
-  -- fibre ≪ volume (each fibre is a full-support Gaussian)
+  -- fiber ≪ volume (each fiber is a full-support Gaussian)
   have hW_ac : ∀ x, W x ≪ volume := by
     intro x; rw [hW_def, awgnChannel_apply]; exact gaussianReal_absolutelyContinuous x hN_NN
   -- joint absolute continuity `p ⊗ₘ W ≪ p.prod q` (general `p`, in-tree)
@@ -766,7 +766,7 @@ theorem awgn_per_input_mi_le_log
     rw [show p.prod q = p ⊗ₘ (Kernel.const ℝ q) from (Measure.compProd_const).symm]
     exact Measure.absolutelyContinuous_compProd_right_iff.mpr
       (Filter.Eventually.of_forall (fun x ↦ by simpa only [Kernel.const_apply] using hWx_q x))
-  -- fibre log-density joint integrability `h_int_fibre` (proxy form, in-tree)
+  -- fiber log-density joint integrability `h_int_fibre` (proxy form, in-tree)
   have h_int_fibre :
       Integrable (fun z : ℝ × ℝ ↦ Real.log (g z).toReal) (p ⊗ₘ W) :=
     integrable_log_proxy_fibre_compProd_general h_meas hN_NN p
@@ -782,7 +782,7 @@ theorem awgn_per_input_mi_le_log
           - ∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p :=
     ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub
       hW_ac hWx_q hq_vol h_joint_ac g hg_meas hg_ae h_int_fibre h_int_out
-  -- STEP 2: fibre entropy is the constant `(1/2) log(2πeN)`
+  -- STEP 2: fiber entropy is the constant `(1/2) log(2πeN)`
   have h_fibre_ent :
       ∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p
         = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by

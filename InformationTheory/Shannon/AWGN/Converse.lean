@@ -515,7 +515,7 @@ theorem awgn_per_letter_mi_bridge_genuine
   set W := awgnChannel N h_meas with hW_def
   set q := outputDistribution p W with hq_def
   have hq_eq : q = perLetterYLaw h_meas c i := outputDistribution_eq_perLetterYLaw h_meas c i
-  -- measurable PDF proxy `g := gaussianPDF` (Route B)
+  -- measurable PDF proxy `g := gaussianPDF`
   set g : ℝ × ℝ → ℝ≥0∞ := fun z ↦ gaussianPDF z.1 N z.2 with hg_def
   have hg_meas : Measurable g := by
     rw [hg_def]; simp only [gaussianPDF, gaussianPDFReal]; fun_prop

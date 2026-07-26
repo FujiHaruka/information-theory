@@ -448,8 +448,9 @@ lemma markovFactor_blockRV_pos_ae
     rwa [← measureReal_def]
 
 omit [DecidableEq α] in
-/-- M1 (bridge for L1): a.s., `qkSingleton μ p k n (blockRV n ω)` equals
-`ofReal (exp (-negLogQk μ p k n ω))`. -/
+/-- A.s., `qkSingleton μ p k n (blockRV n ω)` equals
+`ofReal (exp (-negLogQk μ p k n ω))`. This is the numerator half of
+`MRatioUp_eq_ofReal_exp`. -/
 lemma qkSingleton_blockRV_eq_ofReal_exp_negLogQk
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
     ∀ᵐ ω ∂μ,
@@ -470,7 +471,7 @@ lemma qkSingleton_blockRV_eq_ofReal_exp_negLogQk
       filter_upwards [ih, cond_singleton_pos_ae μ p n] with ω h_ih h_pos
       -- qkSingleton (n+1) (blockRV (n+1) ω)
       --   = qkSingleton n (init (blockRV (n+1) ω)) * markovFactor n (blockRV (n+1) ω)
-      --   = qkSingleton n (blockRV n ω) * (cd ...) {obs n ω}                [via M1 helpers]
+      --   = qkSingleton n (blockRV n ω) * (cd ...) {obs n ω}    [via markovFactor_blockRV_le]
       --   = ofReal(exp(-negLogQk n ω)) * ofReal(exp(-pmfLogCond μ p n ω))   [by IH and positivity]
       --   = ofReal(exp(-negLogQk n ω - pmfLogCond μ p n ω))
       --   = ofReal(exp(-(negLogQk n ω + pmfLogCond μ p n ω)))
@@ -566,7 +567,7 @@ lemma MRatioUp_eq_ofReal_exp
       qkSingleton μ p k n (p.blockRV n ω) / (μ.map (p.blockRV n)) {p.blockRV n ω}
         = ENNReal.ofReal (Real.exp (
             (n : ℝ) * blockLogAvg μ p n ω - negLogQk μ p k n ω)) := by
-  -- M1 handles the numerator; block_singleton_pos_ae_at handles the denominator.
+  -- Numerator: qkSingleton_blockRV_eq_ofReal_exp_negLogQk; denominator: block_singleton_pos_ae_at.
   filter_upwards [qkSingleton_blockRV_eq_ofReal_exp_negLogQk μ p k n,
                   block_singleton_pos_ae_at μ p n] with ω h_qk h_pos
   set P : ℝ≥0∞ := (μ.map (p.blockRV n)) {p.blockRV n ω} with hP_def
@@ -654,7 +655,7 @@ theorem integral_MRatioUp_le_one
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
     ∫⁻ ω, MRatioUp μ p k n ω ∂μ ≤ 1 := by
   classical
-  -- Step 1: rewrite MRatioUp as qkSingleton/Pn{block_n ω} (a.s.) via L1.
+  -- Step 1: rewrite MRatioUp as qkSingleton/Pn{block_n ω} (a.s.) via MRatioUp_eq_ofReal_exp.
   -- Step 2: push forward via blockRV n; get ∑ y, qk{y}/Pn{y} * Pn{y} ≤ ∑ y, qk{y}.
   -- Step 3: apply sum_qkSingleton_le_one.
   have h_block_meas : Measurable (p.blockRV n) := p.measurable_blockRV n

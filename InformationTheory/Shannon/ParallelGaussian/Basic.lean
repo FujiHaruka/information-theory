@@ -84,7 +84,7 @@ noncomputable def parallelGaussianChannel {n : ℕ}
     (parallelGaussianChannel N h_meas h_parallel_meas) x
       = Measure.pi (fun i ↦ gaussianReal (x i) (N i)) := rfl
 
-/-- `parallelGaussianChannel N` is a Markov kernel (each fibre is a product of
+/-- `parallelGaussianChannel N` is a Markov kernel (each fiber is a product of
 probability measures, hence itself a probability measure). -/
 instance parallelGaussianChannel.instIsMarkovKernel {n : ℕ}
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
