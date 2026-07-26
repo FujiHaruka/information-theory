@@ -213,7 +213,7 @@ the per-coordinate water-filling sum `∑_i (1/2) log(1 + max(0, ν - N_i) / N_i
 This predicate is the capacity equality itself, so it is intended to be *derived* (not
 taken as a hypothesis).
 
-See also `isParallelGaussianPerCoordReduction_discharged`. -/
+See also `isParallelGaussianPerCoordReduction_of_kkt`. -/
 def IsParallelGaussianPerCoordReduction {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) (ν : ℝ) : Prop :=

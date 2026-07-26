@@ -16,8 +16,8 @@ infinite-product change-of-measure machinery behind the Cramér lower bound.
 * `pi_tilted_sum_eq_pi_tilted_fintype` — the tilt of a finite product measure by
   the sum exponent factors as the product of per-coordinate tilts, generalized
   from `Fin n` to an arbitrary `Fintype` index.
-* `cramer_lower_phaseC_residual_discharge` — the end-to-end liminf lower bound
-  from the optimal-tilt inputs.
+* `cramer_lower_infinitePi'` — the end-to-end liminf lower bound from the
+  optimal-tilt inputs.
 * `tiltedWindow_eventually_large_of_cgfDeriv_interior` — the tilted-window mass
   is eventually `≥ 1/2` when the cgf derivative lands strictly inside the window.
 -/
@@ -120,7 +120,7 @@ theorem pi_tilted_sum_eq_pi_tilted_fintype {ι : Type*} [Fintype ι]
   refine Finset.prod_congr rfl (fun i _ ↦ ?_)
   rw [tilted_apply' _ _ (hs i)]
 
-/-! ## End-to-end Cramér lower bound from the residual predicate -/
+/-! ## End-to-end Cramér lower bound -/
 
 /-- The Cramér lower bound, end-to-end from the cgf-derivative and cobounded
 inputs: the liminf lower bound `-(lam·a − Λ(lam)) ≤ liminf (1/n) log P[S_n ≥ a·n]`
@@ -129,11 +129,13 @@ from the optimal-tilt inputs (`h_deriv : deriv (cgf …) lam = a`, non-degenerac
 `hVar` and `h_coboundedBelow` are regularity preconditions, not part of the proof
 core.
 
-See also `cramer_lower_phaseC_partial_discharge`.
+The prime marks a restatement: this is `cramer_lower_infinitePi` republished as the
+change-of-measure module's own entry point, with the identical statement, and the
+body delegates to it.
 
 @audit:ok -/
 @[entry_point]
-theorem cramer_lower_phaseC_residual_discharge
+theorem cramer_lower_infinitePi'
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a lam : ℝ) (hlam : 0 ≤ lam)
@@ -153,7 +155,7 @@ theorem cramer_lower_phaseC_residual_discharge
           (1 / (n : ℝ)) * Real.log
             ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
               {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop :=
-  cramer_lower_phaseC_partial_discharge hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
+  cramer_lower_infinitePi hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
 
 
 /-- Per-instance tilted window mass ≥ 1/2 (cgf-derivative interior case).

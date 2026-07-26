@@ -253,7 +253,7 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
 /-- The capacity equals the per-coordinate water-filling sum (the analytic regularity
 hypotheses bundled in `IsParallelGaussianPerCoordRegularity`). Inhabits
 `IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν`. -/
-theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
+theorem isParallelGaussianPerCoordReduction_of_kkt {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
@@ -306,7 +306,7 @@ theorem parallel_gaussian_capacity_formula {n : ℕ}
     parallelGaussianCapacity P N h_meas h_parallel_meas
       = ∑ i : Fin (n + 1), (1/2) *
           Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) :=
-  isParallelGaussianPerCoordReduction_discharged P hP N hN h_meas h_parallel_meas
+  isParallelGaussianPerCoordReduction_of_kkt P hP N hN h_meas h_parallel_meas
     ν h_kkt h_reg
 
 /-! ## Achiever mutual-information decomposition -/

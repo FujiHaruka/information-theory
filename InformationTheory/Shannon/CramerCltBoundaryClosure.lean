@@ -526,7 +526,7 @@ See also `cramer_lower_boundary`.
 `h_deriv` pins `a = m` (the true-as-framed constraint), `hVar` is the non-degeneracy
 precondition, `h_coboundedBelow` is the standard `liminf_le_liminf` side-condition
 (satisfiable: rate terms ≤ 0 since `P ≤ 1`, not vacuous); matches consumer root
-`cramer_lower_phaseC_partial_discharge` signature verbatim). -/
+`cramer_lower_infinitePi` signature verbatim). -/
 theorem cramer_lower_boundary_unconditional
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (a lam : ℝ) (hlam : 0 ≤ lam)

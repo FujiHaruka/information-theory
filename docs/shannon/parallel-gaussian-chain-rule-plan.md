@@ -84,7 +84,7 @@ per-coord water-filling sum に一致 (honest 解析仮定付き 🟢ʰ)。
 
 honest 仮定は per-coord Gaussian fibre の MI 分解 bridge + max-entropy が要求する
 正則性 (measurability + integrability)、AWGN(#5) と共有 (下記 §honest 仮定表)。 -/
-theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
+theorem isParallelGaussianPerCoordReduction_of_kkt {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
@@ -409,7 +409,7 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 
 ### Done 条件
 
-- `isParallelGaussianPerCoordReduction_discharged` (段 1) が genuine 🟢ʰ (`Fin (n+1)`)
+- `isParallelGaussianPerCoordReduction_of_kkt` (段 1) が genuine 🟢ʰ (`Fin (n+1)`)
 - 上界 (csSup_le) + 下界 (le_csSup) + antisymmetry が完結、`IsParallelGaussianPerCoordReduction` を返す
 
 ### 撤退条件
@@ -428,7 +428,7 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 
 段 2。`parallel_gaussian_capacity_formula_discharged`: 段 1 で L-PG1 を discharge し、
 headline `parallel_gaussian_capacity_formula` (`ParallelGaussian.lean:277`) の `h_per_coord`
-引数を `isParallelGaussianPerCoordReduction_discharged` で埋めた再 publish を `Fin (n+1)` で publish。
+引数を `isParallelGaussianPerCoordReduction_of_kkt` で埋めた再 publish を `Fin (n+1)` で publish。
 L-WF1/L-WF2 も既存 discharge で埋め、honest 仮定は `IsParallelGaussianPerCoordRegularity` のみ。
 
 ### Done 条件

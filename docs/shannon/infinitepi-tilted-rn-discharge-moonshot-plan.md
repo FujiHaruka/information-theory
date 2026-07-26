@@ -10,14 +10,14 @@
 > - Phase 2-3 cylinder lift + change-of-measure ✅ `InfinitePiTiltedChangeOfMeasure.lean`:
 >   `infinitePi_partialSum_event_eq_pi` (:139)、`change_of_measure_lower_bound_pi` (:189)。
 > - Phase 4 ✅ residual predicate `IsTiltedWindowEventuallyLarge` (:282) + reduction
->   `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge` (:293) + `cramer_lower_phaseC_residual_discharge`
+>   `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge` (:293) + `cramer_lower_infinitePi'`
 >   (:361)。interior ケースは `tiltedWindow_eventually_large_of_interior` (:463) で discharge。W-3 撤退
 >   (residual 縮約) どおり着地。**boundary ケースの CLT closure は ✅ 達成 (2026-06-11)**: 子
 >   `cramer-chernoff-clt-closure` plan が `InformationTheory/Shannon/CramerCltBoundaryClosure.lean`
 >   (0 sorry, sorryAx-free, 監査 PASS) に headline `cramer_lower_boundary_unconditional` を publish
 >   (内部最適 tilt `a = deriv cgf lam` で residual largeness hyp 除去)。子判断ログ #4 / `05ed225`。
 > - ✅ **配線完了 (2026-06-11, 判断ログ #26 / 子 `cramer-root-wiring-plan.md`)**: 上の closed-but-unwired
->   状態を解消。`cramer_lower_phaseC_partial_discharge` (root A) は 8 decl を新上流 `CramerBoundaryUpstream.lean`
+>   状態を解消。`cramer_lower_infinitePi` (root A) は 8 decl を新上流 `CramerBoundaryUpstream.lean`
 >   へ hoist して import cycle を解消 → `exact cramer_lower_boundary_unconditional` で discharge。一般 iid
 >   `cramer_lower` (root B) は新下流 `CramerGeneralLower.lean` へ移設 → iid joint law transport で headline へ
 >   落として discharge。両 root **sorryAx-free** (独立監査 `@audit:ok`、`8a8a001`)。project 実 sorry 17→15。
@@ -72,7 +72,7 @@
 
 ### Goal (最終定理)
 
-`CramerLC2PhaseC.IsMeasureInfinitePiTiltedEq μ₀ Y lam` を bounded measurable `Y` + `0 ≤ lam` で 0-sorry に満たし、`cramer_lower_phaseC_partial_discharge` 系の `h_pred` 引数を削除した完全形 wrapper を publish する。最低保証は Phase 1 の有限因子分解補題単独 publish。
+`CramerLC2PhaseC.IsMeasureInfinitePiTiltedEq μ₀ Y lam` を bounded measurable `Y` + `0 ≤ lam` で 0-sorry に満たし、`cramer_lower_infinitePi` 系の `h_pred` 引数を削除した完全形 wrapper を publish する。最低保証は Phase 1 の有限因子分解補題単独 publish。
 
 ### Approach (overall strategy / shape of solution)
 
@@ -374,7 +374,7 @@ Phase 1 (有限因子分解) + Phase 2 (cylinder lift) を結合し、un-tilted 
 ### スコープ
 
 Phase 1-3 を合成し `IsMeasureInfinitePiTiltedEq μ₀ Y lam` を `∀ a ε, ∃ C:=1/2, ∀ᶠ n` の形で 0-sorry 充足。
-`cramer_lower_phaseC_partial_discharge` 系の `h_pred` を内部供給して `h_pred` 引数なしの完全 wrapper を publish。
+`cramer_lower_infinitePi` 系の `h_pred` を内部供給して `h_pred` 引数なしの完全 wrapper を publish。
 
 **閉じない場合は sorry を残さず residual predicate へ縮約** (撤退ライン W-3、§撤退ライン)。
 
@@ -383,12 +383,12 @@ Phase 1-3 を合成し `IsMeasureInfinitePiTiltedEq μ₀ Y lam` を `∀ a ε, 
 ### Done 条件 (full discharge シナリオ)
 
 - `infinitePi_tilted_eq_discharge : IsMeasureInfinitePiTiltedEq μ₀ Y lam` (bounded measurable Y, `0 ≤ lam`)。
-- `cramer_lower_full_discharge` 等 = `cramer_lower_phaseC_partial_discharge` の `h_pred` を内部供給した wrapper。
+- `cramer_lower_full_discharge` 等 = `cramer_lower_infinitePi` の `h_pred` を内部供給した wrapper。
 
 ### ステップ
 
 - [ ] **4-1 述語の `∀ a ε, ∃ C, ∀ᶠ n` 形に Phase 3 を流し込む**: `C := 1/2`、Phase 3 の下界 + eventually `≥ 1/2` で `1/2 · exp(-n(λa-Λ+λε)) ≤ (infinitePi μ₀).real event` を出す。~30-50 行。
-- [ ] **4-2 完全 wrapper publish**: `cramer_lower_phaseC_partial_discharge` 系を `h_pred` 内部供給で再 publish。~15-30 行。
+- [ ] **4-2 完全 wrapper publish**: `cramer_lower_infinitePi` 系を `h_pred` 内部供給で再 publish。~15-30 行。
 - [ ] **4-3 verify + 親 plan 反映**: §Phase V。
 
 ### 工数感

@@ -515,12 +515,12 @@ theorem rate_distortion_achievability_witness_form_strong
         add_le_add h_slack h_failure_bound
     _ = D + ε' := by ring
 
-/-! ## Partial-discharge wrapper (strong-encoder variant) -/
+/-! ## Achievability from a codebook-average failure bound -/
 
-/-- Rate-distortion achievability — partial discharge form (strong-encoder variant).
-The strong-encoder analogue of `rate_distortion_achievability_partial_discharge`,
-with `jointStronglyTypicalLossyEncoder` as the encoder. -/
-theorem rate_distortion_achievability_partial_discharge_strong
+/-- Rate-distortion achievability with `jointStronglyTypicalLossyEncoder` as the
+encoder, from a codebook-averaged distortion-atypicality failure sequence
+`failure_seq` that tends to zero. -/
+theorem rate_distortion_achievability_strong_of_codebookAvgFailure
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
     (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)
     {R : ℝ} (hI_lt_R : mutualInfoPmf qStar < R)

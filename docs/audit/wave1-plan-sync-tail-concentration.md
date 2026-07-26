@@ -201,7 +201,7 @@
 
 | file | 件数 | 内容 |
 |---|---|---|
-| `CramerLC2PhaseC.lean` | 4 (L97,145,185,218) | `tilted_lower_from_predicate` + `cramer_lower_phaseC_partial_discharge` (Phase C partial) + `cramer_lower_legendre_phaseC_partial_discharge` + `cramer_tendsto_phaseC_partial_discharge` |
+| `CramerLC2PhaseC.lean` | 4 (L97,145,185,218) | `tilted_lower_from_predicate` + `cramer_lower_infinitePi` (Phase C partial) + `cramer_lower_legendre_infinitePi` + `cramer_tendsto_infinitePi` |
 
 **整合チェック**:
 - (a) **件数**: plan §進捗 で Phase B-C は L-D3 撤退で後続 plan へ defer 明記、`CramerLC2PhaseC.lean` の partial discharge 4 wrapper を残置 → 一致。
@@ -287,7 +287,7 @@
 
 **Plan Status** (header 注記): **DONE — Phase 1-4 全達成、当初の「最低保証」を大きく超過**。進捗ブロックと判断ログが起草時のまま (Phase 0-V 全 `[ ]`、判断ログは起草 2 件のみ) で **重度に陳腐化**。`pi_tilted_sum_eq_pi_tilted` + cylinder lift + change-of-measure + residual predicate `IsTiltedWindowEventuallyLarge` 全 publish。interior ケース discharge 済、boundary ケースは後継 `cramer-chernoff-clt-closure` plan で CLT closure 済。全関連 file 0 sorry。
 
-**File 別**: `InfinitePiTiltedChangeOfMeasure.lean:362` (1 件, `cramer_lower_phaseC_residual_discharge`)
+**File 別**: `InfinitePiTiltedChangeOfMeasure.lean:362` (1 件, `cramer_lower_infinitePi'`)
 
 **整合チェック**: in-plan orphan なし / drop 漏れ **あり (軽微、進捗ブロック陳腐化)** — plan body 進捗ブロックは Phase 0-V 全 `[ ]` のまま (header 注記で完了明記、本文未更新)。1 件 suspect 残置は residual predicate 経由の wrapper として妥当。
 

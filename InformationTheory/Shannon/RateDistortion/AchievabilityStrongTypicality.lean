@@ -45,8 +45,8 @@ encoder-agnostic — only `blockDistortion_le_distortionMax` and
 6. `codebookAvgFailureStrong` — `codebookAvgFailure` with the strong encoder.
 7. `codebookAvgFailureStrong_tendsto_zero` — main probabilistic content,
    assembled from (1)+(2)+(3) + `stronglyTypicalSet_prob_tendsto_one`.
-8. `rate_distortion_achievability_partial_discharge_strong` — verbatim mirror
-   of the weak partial-discharge wrapper.
+8. `rate_distortion_achievability_strong_of_codebookAvgFailure` — achievability
+   from a codebook-average failure bound.
 9. `rate_distortion_achievability` — final no-hypothesis theorem.
 
 ## Positivity caveat
@@ -167,7 +167,7 @@ theorem rate_distortion_achievability_strong
     show _ ≤ codebookAvgFailureStrong qStar d R n ε_join ε_dist δ_typ
     unfold codebookAvgFailureStrong
     exact le_refl _
-  exact rate_distortion_achievability_partial_discharge_strong
+  exact rate_distortion_achievability_strong_of_codebookAvgFailure
     (P_X_pmf := P_X_pmf) (d := d) (D := D)
     qStar hqStar_mem (R := R) hI_lt_R (ε' := ε') hε'
     (ε_join := ε_join) (ε_dist := ε_dist) (δ_typ := δ_typ) hδ_typ_nn

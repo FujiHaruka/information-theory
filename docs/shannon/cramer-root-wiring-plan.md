@@ -1,6 +1,6 @@
 # Cramér: root sorry 配線 サブ計画
 
-**Status**: CLOSED ✅ — Phase A/B 両 root (`cramer_lower_phaseC_partial_discharge` / `cramer_lower`) を sorryAx-free で discharge 完了 (`7e4f05a` 他)、配線残件なし。本文の `sorry @ :NN` 等は配線前 (planning 時) の歴史的状態で現在は解消済 (`#print axioms` で再検証可)。file:line は 2026-06-12 の Draft→topic 移設後パスに更新済。
+**Status**: CLOSED ✅ — Phase A/B 両 root (`cramer_lower_infinitePi` / `cramer_lower`) を sorryAx-free で discharge 完了 (`7e4f05a` 他)、配線残件なし。本文の `sorry @ :NN` 等は配線前 (planning 時) の歴史的状態で現在は解消済 (`#print axioms` で再検証可)。file:line は 2026-06-12 の Draft→topic 移設後パスに更新済。
 
 > **Parent**: [`cramer-chernoff-clt-closure-moonshot-plan.md`](cramer-chernoff-clt-closure-moonshot-plan.md) §判断ログ #4「残件 (未達でなく配線制約)」
 >
@@ -23,7 +23,7 @@
 内部最適 tilt `a = deriv cgf lam` で residual largeness hypothesis 除去済、`@audit:ok`)を使い、
 上流に残る **2 つの root sorry** を proof done (0 sorry / 0 @residual) で discharge する:
 
-- **root A** = `Cramer.Discharge.cramer_lower_phaseC_partial_discharge`
+- **root A** = `Cramer.TiltedLLN.cramer_lower_infinitePi`
   (`Shannon/Cramer/LC2PhaseC.lean:147`、sorry @ :165)。infinitePi 版、結論形が headline と
   **verbatim 一致**(un-tilted product, `Y ∘ eval 0`)。
 - **root B** = `Cramer.cramer_lower`(`Shannon/Cramer/Cramer.lean:469`、sorry @ :483)。一般 iid
@@ -132,7 +132,7 @@ proof-log: no(調査のみ)
 - [ ] **headline** `cramer_lower_boundary_unconditional`(`CramerCltBoundaryClosure.lean:588`)の
   引数順 = `hY, h_bdd, a, lam, hlam, h_deriv, hVar, h_coboundedBelow` と結論形を Read で固定。
   特に `hVar` の形 `0 < Var[fun ω => Y(ω 0); infinitePi (μ₀.tilted (fun ω => lam*Y ω))]`。
-- [ ] **root A** `cramer_lower_phaseC_partial_discharge`(`CramerLC2PhaseC.lean:147`、sorry @ :165)の
+- [ ] **root A** `cramer_lower_infinitePi`(`CramerLC2PhaseC.lean:147`、sorry @ :165)の
   現 signature(`hY_meas, h_bdd, a, lam, hlam, _h_deriv, h_coboundedBelow` = **`hVar` 無し**)と
   結論が headline と verbatim 一致することを Read で再確認。`_h_deriv` の underscore(現状 unused、
   配線後 headline へ渡すので active 化する)。
@@ -154,8 +154,8 @@ proof-log: no(調査のみ)
   `IdentDistrib.map_eq` / `infinitePi_partialSum_event_eq_pi` / `mgf_id_map`(:219)/ `mgf_map`(:214)/
   in-project 前例 `cgf_eval_eq_cgf_base`(`Cramer/LC2Discharge.lean:65`)。
 - [ ] **逆依存の実値**(`dep_consumers.sh` 実測、本 plan 起草時に確定):
-  - root A: **2 decl / 2 file** — `cramer_lower_legendre_phaseC_partial_discharge`
-    (`CramerLC2PhaseC.lean:167`)、`cramer_lower_phaseC_residual_discharge`
+  - root A: **2 decl / 2 file** — `cramer_lower_legendre_infinitePi`
+    (`CramerLC2PhaseC.lean:167`)、`cramer_lower_infinitePi'`
     (`InfinitePiTiltedChangeOfMeasure.lean:357`)。`hVar` thread 先。
   - root B: **1 decl / 1 file** — `cramer_lower_legendre`(`Cramer.lean:485`)。`hVar` thread 先。
     (在庫散文は「root B: 2」だが `dep_consumers.sh` 実測は 1。実値を採用。)
@@ -208,14 +208,14 @@ proof-log: yes(cycle-break の import 再配線で olean stale / 別 cycle 露�
 
 ### a3. root A signature に `hVar` 追加 + 逆依存 2 decl に thread
 
-- [ ] root A `cramer_lower_phaseC_partial_discharge` に headline と同形の `hVar` を precondition 追加:
+- [ ] root A `cramer_lower_infinitePi` に headline と同形の `hVar` を precondition 追加:
   `(hVar : 0 < Var[fun ω : ℕ → Ω₀ => Y (ω 0); infinitePi (fun _ => μ₀.tilted (fun ω => lam * Y ω))])`。
   既存 `_h_deriv` を `h_deriv`(active)化(headline に渡すため)。
 - [ ] 逆依存 **2 decl** に `hVar` を thread(M0 実測):
-  - `cramer_lower_legendre_phaseC_partial_discharge`(`CramerLC2PhaseC.lean:167`)— root A を呼ぶ箇所に
-    `hVar` を渡し、自 signature にも `hVar` 追加(さらにその下流 `cramer_tendsto_phaseC_partial_discharge`
+  - `cramer_lower_legendre_infinitePi`(`CramerLC2PhaseC.lean:167`)— root A を呼ぶ箇所に
+    `hVar` を渡し、自 signature にも `hVar` 追加(さらにその下流 `cramer_tendsto_infinitePi`
     が legendre 版を呼ぶなら entry_point まで連鎖、M0 の dep-chain で確認)。
-  - `cramer_lower_phaseC_residual_discharge`(`InfinitePiTiltedChangeOfMeasure.lean:357`)— 同様に thread。
+  - `cramer_lower_infinitePi'`(`InfinitePiTiltedChangeOfMeasure.lean:357`)— 同様に thread。
 - [ ] **honesty 確認**:`hVar` は precondition(非退化)で load-bearing core でない(§`hVar` の honesty)。
   hypothesis bundling になっていない(窓質量の核は headline が CLT で内部供給、root は `exact` のみ)。
 - [ ] **検証点**:`lake env lean InformationTheory/Shannon/Cramer/LC2PhaseC.lean` +
@@ -227,8 +227,8 @@ proof-log: yes(cycle-break の import 再配線で olean stale / 別 cycle 露�
   `exact cramer_lower_boundary_unconditional hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow`
   で埋める(結論 verbatim 一致なので `exact` 一発、引数順は M0 で固定済)。
 - [ ] **検証点**:`lake env lean InformationTheory/Shannon/Cramer/LC2PhaseC.lean` clean(0 sorry)。
-  `#print axioms cramer_lower_phaseC_partial_discharge` = `[propext, Classical.choice, Quot.sound]`
-  (sorryAx-free)。逆依存 2 decl + entry_point `cramer_tendsto_phaseC_partial_discharge` も transitive
+  `#print axioms cramer_lower_infinitePi` = `[propext, Classical.choice, Quot.sound]`
+  (sorryAx-free)。逆依存 2 decl + entry_point `cramer_tendsto_infinitePi` も transitive
   に sorry 消滅を `#print axioms` で確認。
 - [ ] cramer-facts.md の「root closed-but-unwired」行を更新候補としてマーク(facts.md 編集は別、本 plan は
   リンクのみ。配線完了後に facts 更新を別タスクで)。
@@ -339,7 +339,7 @@ precondition 追加は正当 → 続行。もし `hVar` が非退化点でも導
 **部分達成 = root A のみ closure、root B は sorry 据置**。root B body を
 `sorry + @residual(plan:cramer-root-wiring-plan)` で残し、transport の B-1〜B-4 を進めた範囲まで
 publish(joint-law 移送 lemma を別 helper として切り出せれば後続の足場)。root A closure 単独でも
-entry_point `cramer_tendsto_phaseC_partial_discharge` が sorryAx-free 化する価値があり後退ゼロ。
+entry_point `cramer_tendsto_infinitePi` が sorryAx-free 化する価値があり後退ゼロ。
 
 **最悪着地**(両 root とも閉じない):cycle-break の module 再配置(Phase A a1-a2)だけ publish し、
 両 root body は `sorry + @residual(plan:cramer-root-wiring-plan)` 据置。cycle 解消は後続配線の前提整備
@@ -362,7 +362,7 @@ cycle-break が割れたら即 Phase B(transport)へ。両方割れる前提で 
      precondition として追加 + 逆依存に thread が必須。これは regularity precondition で honesty OK
      (load-bearing core でない、headline 自身が同 hyp を持つ)。
    - **逆依存の実値**(`dep_consumers.sh` 実測):root A = **2 decl / 2 file**
-     (`cramer_lower_legendre_phaseC_partial_discharge` / `cramer_lower_phaseC_residual_discharge`)、
+     (`cramer_lower_legendre_infinitePi` / `cramer_lower_infinitePi'`)、
      root B = **1 decl / 1 file**(`cramer_lower_legendre`)。在庫散文「root B: 2」は実測 1 に訂正、
      実値を採用(`rg` でなく `dep_consumers.sh` の term-level)。
    - **行番号の注記**:在庫 / 親バナーは root A を `:147`(decl)/ `:165`(sorry)と記載(本 plan 起草時

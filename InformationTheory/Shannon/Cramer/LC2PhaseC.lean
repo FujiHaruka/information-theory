@@ -11,10 +11,10 @@ import Mathlib.MeasureTheory.Measure.Tilted
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Cramér lower bound: end-to-end discharge
+# Cramér lower bound on the canonical infinitePi product
 
-This file completes the Cramér lower bound for the canonical i.i.d. infinite
-product setting, discharging the change-of-measure step against the CLT-boundary
+This file states the Cramér lower bound for the canonical i.i.d. infinite
+product setting, reducing the change-of-measure step to the CLT-boundary
 headline `CramerCltBoundary.cramer_lower_boundary_unconditional`.
 
 The change-of-measure step relates the tilted infinite-product measure
@@ -25,10 +25,10 @@ on cylinders of width `n`, identified through the predicate
 
 ## Main statements
 
-* `cramer_lower_phaseC_partial_discharge` — the liminf lower bound at threshold
-  `a` and optimal tilt `lam`.
-* `cramer_lower_legendre_phaseC_partial_discharge` — its Legendre form.
-* `cramer_tendsto_phaseC_partial_discharge` — the two-sided `Tendsto` form.
+* `cramer_lower_infinitePi` — the liminf lower bound at threshold `a` and
+  optimal tilt `lam`.
+* `cramer_lower_legendre_infinitePi` — its Legendre form.
+* `cramer_tendsto_infinitePi` — the two-sided `Tendsto` form.
 -/
 
 namespace InformationTheory.Shannon.Cramer.TiltedLLN
@@ -38,7 +38,7 @@ open scoped Topology BigOperators ENNReal Function
 
 variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
-/-! ## Discharged wrappers -/
+/-! ## Cramér lower bound and the two-sided limit -/
 
 /-- The Cramér lower bound for the canonical i.i.d. product-measure setting
 `X i ω := Y (ω i)` with `Y : Ω₀ → ℝ` bounded and measurable, on the un-tilted
@@ -58,7 +58,7 @@ window-mass `≥ 1/4` core is derived inside the CLT of the headline, where `hVa
 is consumed only as the non-degeneracy input; at `Var = 0` the tilted sum is a.e.
 constant and the argument collapses, so granting `hVar` alone does not hand over
 the conclusion.) -/
-theorem cramer_lower_phaseC_partial_discharge
+theorem cramer_lower_infinitePi
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a lam : ℝ) (hlam : 0 ≤ lam)
@@ -81,8 +81,8 @@ theorem cramer_lower_phaseC_partial_discharge
   CramerCltBoundary.cramer_lower_boundary_unconditional
     hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
 
-/-- The Legendre form of `cramer_lower_phaseC_partial_discharge`, with the
-conclusion expressed as `-cramerRate a`. The Legendre-attainment hypothesis
+/-- The Legendre form of `cramer_lower_infinitePi`, with the conclusion
+expressed as `-cramerRate a`. The Legendre-attainment hypothesis
 `hlam_opt` bridges `lam·a − Λ(lam)` to `cramerRate a`; together with `h_deriv`
 (optimal tilt) and `hVar` (non-degeneracy) these are regularity preconditions,
 not part of the proof core.
@@ -90,7 +90,7 @@ not part of the proof core.
 @audit:ok (threads root preconditions through and rewrites the conclusion via the
 `hlam_opt` Legendre-attainment precondition. `hVar`, `h_deriv`, `hlam_opt` are all
 regularity preconditions, no load-bearing core.) -/
-theorem cramer_lower_legendre_phaseC_partial_discharge
+theorem cramer_lower_legendre_infinitePi
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a lam : ℝ) (hlam : 0 ≤ lam)
@@ -115,7 +115,7 @@ theorem cramer_lower_legendre_phaseC_partial_discharge
           (1 / (n : ℝ)) * Real.log
             ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
               {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop := by
-  have h := cramer_lower_phaseC_partial_discharge
+  have h := cramer_lower_infinitePi
     (μ₀ := μ₀) hY_meas h_bdd a lam hlam h_deriv hVar h_coboundedBelow
   rw [← hlam_opt]; exact h
 
@@ -123,13 +123,13 @@ theorem cramer_lower_legendre_phaseC_partial_discharge
 to `-cramerRate a`. All hypotheses are regularity preconditions or cobounded
 side-conditions.
 
-See also `cramer_upper_legendre` and `cramer_lower_legendre_phaseC_partial_discharge`.
+See also `cramer_upper_legendre` and `cramer_lower_legendre_infinitePi`.
 
 @audit:ok (genuine `le_antisymm`-style sandwich of `cramer_upper_legendre` and
-`cramer_lower_legendre_phaseC_partial_discharge`. All hypotheses are regularity
-preconditions / cobounded side-conditions.) -/
+`cramer_lower_legendre_infinitePi`. All hypotheses are regularity preconditions
+/ cobounded side-conditions.) -/
 @[entry_point]
-theorem cramer_tendsto_phaseC_partial_discharge
+theorem cramer_tendsto_infinitePi
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a lam : ℝ) (hlam : 0 ≤ lam)
@@ -196,7 +196,7 @@ theorem cramer_tendsto_phaseC_partial_discharge
             (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) a :=
     cramer_upper_legendre (μ := Measure.infinitePi (fun _ : ℕ ↦ μ₀))
       h_indep h_meas h_ident h_bdd_eval a lam hlam hlam_opt h_pos h_cobdd
-  -- Lower bound via cramer_lower_phaseC_partial_discharge.
+  -- Lower bound via cramer_lower_infinitePi.
   have h_lower :
       -cramerRate (fun ω : ℕ → Ω₀ ↦ Y (ω 0))
           (Measure.infinitePi (fun _ : ℕ ↦ μ₀)) a
@@ -204,7 +204,7 @@ theorem cramer_tendsto_phaseC_partial_discharge
             (1 / (n : ℝ)) * Real.log
               ((Measure.infinitePi (fun _ : ℕ ↦ μ₀)).real
                 {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop :=
-    cramer_lower_legendre_phaseC_partial_discharge
+    cramer_lower_legendre_infinitePi
       (μ₀ := μ₀) hY_meas h_bdd a lam hlam hlam_opt h_deriv hVar h_coboundedBelow
   exact tendsto_of_le_liminf_of_limsup_le h_lower h_upper h_bdd_above h_bdd_below
 

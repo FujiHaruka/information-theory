@@ -122,10 +122,9 @@ theorem deBruijn_deriv_nonneg (f : ℝ → ℝ) :
     0 ≤ (1 / 2 : ℝ) * fisherInfoOfDensityReal f :=
   mul_nonneg (by norm_num) (fisherInfoOfDensityReal_nonneg f)
 
-/-- The gap-monotonicity hypothesis is discharged outright for any density
-`f`. -/
+/-- The EPI gap-monotonicity predicate holds for every density `f`. -/
 @[entry_point]
-theorem isEPIGapMonotoneHyp_discharge (f : ℝ → ℝ) : IsEPIGapMonotoneHyp f :=
+theorem isEPIGapMonotoneHyp (f : ℝ → ℝ) : IsEPIGapMonotoneHyp f :=
   deBruijn_deriv_nonneg f
 
 /-- Gap-monotonicity from a de Bruijn V2 regularity witness. Given the
@@ -137,7 +136,7 @@ theorem isEPIGapMonotoneHyp_of_deBruijnV2
     {X Z : Ω → ℝ} {t : ℝ}
     (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
     IsEPIGapMonotoneHyp h_reg.density_t :=
-  isEPIGapMonotoneHyp_discharge h_reg.density_t
+  isEPIGapMonotoneHyp h_reg.density_t
 
 /-! ## §2 — Stam inequality from regularity -/
 
@@ -214,6 +213,6 @@ derivative `g'(t) = (1/2) · J(g_t)` is non-negative, so the gap function
 `g(t)` is monotone non-decreasing — packaged as the `IsEPIGapMonotoneHyp`
 predicate for the density witness. -/
 theorem isEPIGapMonotoneHyp_of_density (f : ℝ → ℝ) : IsEPIGapMonotoneHyp f :=
-  isEPIGapMonotoneHyp_discharge f
+  isEPIGapMonotoneHyp f
 
 end InformationTheory.Shannon.EPIStamDeBruijnConclusion

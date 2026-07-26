@@ -16,7 +16,7 @@
 
 | root | 完全修飾名 | file:line | body | generality |
 |---|---|---|---|---|
-| **A** | `InformationTheory.Shannon.Cramer.Discharge.cramer_lower_phaseC_partial_discharge` | `InformationTheory/Shannon/Cramer/LC2PhaseC.lean:147` | `sorry`(:165) | infinitePi 版・headline と同 generality |
+| **A** | `InformationTheory.Shannon.Cramer.TiltedLLN.cramer_lower_infinitePi` | `InformationTheory/Shannon/Cramer/LC2PhaseC.lean:147` | `sorry`(:165) | infinitePi 版・headline と同 generality |
 | **B** | `InformationTheory.Shannon.Cramer.cramer_lower` | `InformationTheory/Shannon/Cramer/Cramer.lean:469` | `sorry`(:483) | 一般 iid `X : ℕ → Ω → ℝ` on bounded `μ`・headline より一般 |
 
 headline(sorryAx-free, `@audit:ok`):
@@ -205,7 +205,7 @@ headline が sorryAx-free である以上、hoist 対象は root A に依存し�
 
 | 確認 | コマンド | 結果 |
 |---|---|---|
-| 各 hoist decl の forward graph に root A が出るか | `dep_graph.sh <decl>` → grep `cramer_lower_phaseC_partial_discharge` | **7 decl すべて 0 hit**(非依存) |
+| 各 hoist decl の forward graph に root A が出るか | `dep_graph.sh <decl>` → grep `cramer_lower_infinitePi` | **7 decl すべて 0 hit**(非依存) |
 | headline の forward graph に root A が出るか | `dep_graph.sh cramer_lower_boundary_unconditional` → grep | **0 hit** |
 | headline の forward graph に root B (`Cramer.cramer_lower`) が出るか | 同上 | **無し**(`Cramer.cramer_lower*` 不在) |
 | headline 自体の sorryAx | `#print axioms cramer_lower_boundary_unconditional` | `[propext, Classical.choice, Quot.sound]`(sorryAx 不在) |
@@ -214,7 +214,7 @@ headline が sorryAx-free である以上、hoist 対象は root A に依存し�
 > ```
 > lake build InformationTheory   # root olean refresh(必須: stale だと未知 decl 扱い)
 > bash scripts/dep_graph.sh InformationTheory.Shannon.CramerCltBoundary.cramer_lower_boundary_unconditional
-> rg -c "cramer_lower_phaseC_partial_discharge" dep_graph.dot   # → 0
+> rg -c "cramer_lower_infinitePi" dep_graph.dot   # → 0
 > ```
 
 ### `IsMeasureInfinitePiTiltedEq` / root A の消費者(逆依存、実測)
@@ -228,16 +228,16 @@ headline が sorryAx-free である以上、hoist 対象は root A に依存し�
 
 → def を上流に hoist すると、この 3 消費者の参照は新モジュール import で解決(うち 2 は移動先と同居 or 下流)。
 
-**root A `cramer_lower_phaseC_partial_discharge` — direct consumers 2 / 2 file**:
-- `InformationTheory/Shannon/Cramer/LC2PhaseC.lean:167` `cramer_lower_legendre_phaseC_partial_discharge`
-- `InformationTheory/Shannon/Cramer/InfinitePiTiltedChangeOfMeasure.lean:357` `cramer_lower_phaseC_residual_discharge`
+**root A `cramer_lower_infinitePi` — direct consumers 2 / 2 file**:
+- `InformationTheory/Shannon/Cramer/LC2PhaseC.lean:167` `cramer_lower_legendre_infinitePi`
+- `InformationTheory/Shannon/Cramer/InfinitePiTiltedChangeOfMeasure.lean:357` `cramer_lower_infinitePi'`
 
 → root A 本体は移動しない(現位置で埋める)。これら 2 消費者は root A を埋めれば自動的に sorryAx 消える(transitive)。
 
 > 再検証コマンド:
 > ```
 > bash scripts/dep_consumers.sh InformationTheory.Shannon.Cramer.Discharge.IsMeasureInfinitePiTiltedEq
-> bash scripts/dep_consumers.sh InformationTheory.Shannon.Cramer.Discharge.cramer_lower_phaseC_partial_discharge
+> bash scripts/dep_consumers.sh InformationTheory.Shannon.Cramer.TiltedLLN.cramer_lower_infinitePi
 > ```
 
 ### cycle-break の見立て
@@ -255,7 +255,7 @@ headline が sorryAx-free である以上、hoist 対象は root A に依存し�
 - headline は `hVar`(`0 < Var[…tilted…]`)を要求するが root A シグネチャに `hVar` が **無い**。
   → root A を `exact headline` で埋めるには `hVar` を root A シグネチャに追加するか、root A の `h_bdd`(boundedness)から非退化を導く補助が要る。後者は「bounded ⇒ 非退化」ではない(定数 Y は bounded かつ Var=0)ので、**`hVar` 相当の precondition 追加が現実的**。これは headline と同じ regularity precondition で、honesty 上 OK(load-bearing core ではない)。root A の def-fix #24(`h_deriv` 追加)と同型の signature 拡張。
   → この `hVar` 追加は root A の 2 消費者
-    (`cramer_lower_legendre_phaseC_partial_discharge`, `cramer_lower_phaseC_residual_discharge`)へ
+    (`cramer_lower_legendre_infinitePi`, `cramer_lower_infinitePi'`)へ
     thread が必要(逆依存 2 decl、上記実測)。
 
 ---

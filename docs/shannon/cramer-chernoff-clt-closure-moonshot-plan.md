@@ -8,7 +8,7 @@
 > で residual largeness hypothesis を除去した Cramér 下界) を含む 10 decl を publish。独立 honesty 監査
 > (`@audit:ok` 全 10 件、`h_coboundedBelow` 非 vacuous 性まで機械検証) **PASS**。判断ログ #4 / commit `05ed225`。
 > **未配線残件 = 配線完了 (2026-06-11)**: 子 plan [`cramer-root-wiring-plan.md`](cramer-root-wiring-plan.md) が
-> root A (`cramer_lower_phaseC_partial_discharge`、`7e4f05a` cycle-break + `hVar` thread) と root B
+> root A (`cramer_lower_infinitePi`、`7e4f05a` cycle-break + `hVar` thread) と root B
 > (`cramer_lower` / `cramer_lower_legendre` / `cramer_tendsto`、下流新モジュール `CramerGeneralLower.lean` 移設 +
 > transport) を **両方 sorryAx-free で discharge 完了**。両 root とも `#print axioms` =
 > `[propext, Classical.choice, Quot.sound]`。headline + consumer chain end-to-end で sorryAx-free。
@@ -30,8 +30,8 @@
 > `cramer_lower_at_cgfDeriv_unconditional` も **実在しない** (`find`/`grep` 0-hit)。Cramér CLT-boundary
 > closure は **未達**。現存する Cramér コードは `Shannon/Cramer/Cramer.lean` +
 > `Shannon/Cramer/LC2PhaseC.lean` の 2 file で、live `@[entry_point]`
-> `cramer_tendsto_phaseC_partial_discharge` (CramerLC2PhaseC.lean:208) は **sorryAx 依存** (Phase C
-> sorry `cramer_lower_phaseC_partial_discharge`, CramerLC2PhaseC.lean:167 にブロックされる)。
+> `cramer_tendsto_infinitePi` (CramerLC2PhaseC.lean:208) は **sorryAx 依存** (Phase C
+> sorry `cramer_lower_infinitePi`, CramerLC2PhaseC.lean:167 にブロックされる)。
 > **実態 (2026-06-10 独立壁再判定)**: Phase C sorry は壁ではなく配線。closure に必要な 0-sorry 資産
 > (`isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`, `tiltedWindow_eventually_large_of_cgfDeriv_interior`,
 > `pi_tilted_sum_eq_pi_tilted`) は `InfinitePiTiltedChangeOfMeasure.lean` 等に既存。`...:167` は
@@ -48,7 +48,7 @@
 > - `InformationTheory/Shannon/Cramer/InfinitePiTiltedChangeOfMeasure.lean` (0 sorry):
 >   `IsTiltedWindowEventuallyLarge`, `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`,
 >   `tiltedMean_eq_deriv_cgf`, `tiltedWindow_eventually_large_of_interior`,
->   `tiltedWindow_eventually_large_of_cgfDeriv_interior`, `cramer_lower_phaseC_residual_discharge`
+>   `tiltedWindow_eventually_large_of_cgfDeriv_interior`, `cramer_lower_infinitePi'`
 > - `InformationTheory/Shannon/Cramer/LC2Discharge.lean`: `iIndepFun_tilted_ambient`,
 >   `identDistrib_tilted_ambient`, `bounded_eval_family` (full name `InformationTheory.Shannon.Cramer.Discharge.bounded_eval_family`)
 > - `InformationTheory/Shannon/Cramer/LC2DischargeExt.lean`: `tilted_lln_in_probability_real`,
@@ -74,7 +74,7 @@
 
 | 子 plan | 担当 | 状態 |
 |---|---|---|
-| [`cramer-root-wiring-plan.md`](cramer-root-wiring-plan.md) | 未配線残件 = headline で上流 root sorry 2 件 (`cramer_lower_phaseC_partial_discharge` / `cramer_lower`) を discharge。cycle-break (8 decl hoist) + `hVar` precondition thread + root B 下流移設 (`CramerGeneralLower.lean`) + transport | ✅ Phase A (`7e4f05a`) + Phase B 完了、両 root sorryAx-free |
+| [`cramer-root-wiring-plan.md`](cramer-root-wiring-plan.md) | 未配線残件 = headline で上流 root sorry 2 件 (`cramer_lower_infinitePi` / `cramer_lower`) を discharge。cycle-break (8 decl hoist) + `hVar` precondition thread + root B 下流移設 (`CramerGeneralLower.lean`) + transport | ✅ Phase A (`7e4f05a`) + Phase B 完了、両 root sorryAx-free |
 
 ## ゴール / Approach
 
@@ -89,7 +89,7 @@
 3. residual predicate 緩和形 (`IsTiltedWindowEventuallyLargeC` or `1/2 → C` 一般化) +
    `IsMeasureInfinitePiTiltedEq` の境界 discharge。
 4. `cramer_lower_boundary_unconditional` (end-to-end): `a = deriv (cgf Y μ₀) lam` (内部点)
-   で `cramer_lower_phaseC_residual_discharge` の residual hypothesis を除去した形。
+   で `cramer_lower_infinitePi'` の residual hypothesis を除去した形。
 
 ### Approach (overall strategy / shape of solution)
 
@@ -141,7 +141,7 @@ v := Var[X 0; P]                            -- tilted variance (CLT の極限分
   を ⟨C,..⟩ に置換 ⇒ IsMeasureInfinitePiTiltedEq を a=m で discharge
 
 [Phase 6 Cramér end-to-end]
-  a := deriv (cgf Y μ₀) lam = m (tiltedMean_eq_deriv_cgf) ⇒ cramer_lower_phaseC_residual_discharge
+  a := deriv (cgf Y μ₀) lam = m (tiltedMean_eq_deriv_cgf) ⇒ cramer_lower_infinitePi'
   の h_res を内部で供給 ⇒ residual hypothesis なしの Cramér 下界
 ```
 
@@ -422,7 +422,7 @@ proof-log: no
 
 - [ ] `a := deriv (cgf Y μ₀) lam` が tilted mean `m` (`tiltedMean_eq_deriv_cgf`) なので、
   Phase 5 の boundary discharge を `a = m` インスタンスとして
-  `cramer_lower_phaseC_residual_discharge` の `h_res` 相当に供給
+  `cramer_lower_infinitePi'` の `h_res` 相当に供給
 - [ ] `cramer_lower_boundary_unconditional` (end-to-end): 内部点 `a = deriv (cgf Y μ₀) lam` で
   residual hypothesis を除去した Cramér 下界
   (`h_coboundedBelow` は据え置きか、これも内部 discharge できるか着手時判断 — できなければ
@@ -493,7 +493,7 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
    即回避する着手順を採用。
 
 2. **2026-06-11 consumer def-fix 完了 (前提整備、本 plan Phase 0-6 は未着手のまま)** (`f62be91`、判断ログ #24 / roadmap):
-   本 plan が closure する **下流 consumer 2 root** (`cramer_lower` / `cramer_lower_phaseC_partial_discharge`) は
+   本 plan が closure する **下流 consumer 2 root** (`cramer_lower` / `cramer_lower_infinitePi`) は
    #19 で false-statement (一般 `a` で偽) と判明していた。今回 `(h_deriv : deriv (cgf (X 0) μ) lam = a)` を
    signature に追加し true-as-stated 化 (`@audit:defect(false-statement)` → `@residual(plan:` 本 plan `)`、
    独立監査 PASS)。**効果**: 本 plan の closure target (Phase 6 `cramer_lower_boundary_unconditional`、
@@ -513,7 +513,7 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
    **撤退ライン L-CLT1 (最悪ケース) 回避済**。
    **plumbing 実在 再確認 (継続判断の前提)**: 実装 agent が「predecessor 3 file 不在」と 気づき を上げたが
    **誤報** — `fdd68a3` の昇格 refactor で `Shannon/CramerLC2Discharge.lean` → `Shannon/Cramer/LC2Discharge.lean`
-   等にパス移動しただけ。plan 依存 11 シンボル (`iIndepFun_tilted_ambient` … `cramer_lower_phaseC_residual_discharge`)
+   等にパス移動しただけ。plan 依存 11 シンボル (`iIndepFun_tilted_ambient` … `cramer_lower_infinitePi'`)
    を補題名 grep で全て実機確認 = **plumbing 健在**。stale パスは本 plan 上で訂正済 (上記 Predecessors / file 構成)。
    → 継続 GO。次 = Phase 2-6 full closure (CLT witness `.toNNReal` が残る二大難所、~70-180 行)。
 
@@ -535,7 +535,7 @@ Mathlib PR-candidate として価値があり、後退ゼロ。
    - **独立 honesty 監査 PASS** (honesty-auditor, `@audit:ok` 全 10): under-hyp / load-bearing / false-predicate 隔離 /
      degenerate 濫用 / consumer 字面一致 / sorryAx-free を機械裏取り。特に `h_coboundedBelow` の **非 vacuous 性**
      (`P≤1 ⇒ log≤0` で上有界 → `b=0` 充足) を別ファイルで検証。
-   - **残件 (未達でなく配線制約)**: consumer root `cramer_lower_phaseC_partial_discharge`
+   - **残件 (未達でなく配線制約)**: consumer root `cramer_lower_infinitePi`
      (`Shannon/Cramer/LC2PhaseC.lean:165`) は import cycle で in-place 書換不可。root の sorry は本 closure を指す
      live residual として残置 (冒頭バナー)。`InformationTheory.lean` import 済 (`lake build` 2972 jobs clean)。
    **moonshot CLOSED。** 後続候補: root residual の差し替え経路 (import cycle 解消 or 別 entry_point 化) は別 plan。
