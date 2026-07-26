@@ -6,50 +6,54 @@ import Mathlib.InformationTheory.Coding.UniquelyDecodable
 /-!
 # McMillan → Kraft → Gibbs converse bridge (symbol-code level)
 
-This file wires Mathlib's genuine `InformationTheory.kraft_mcmillan_inequality`
-(uniquely-decodable code `⟹ ∑ D^{-|w|} ≤ 1`, a fully-proved counting theorem
-in `Mathlib/InformationTheory/Coding/KraftMcMillan.lean`) into this project's
+This file wires Mathlib's `InformationTheory.kraft_mcmillan_inequality`
+(uniquely-decodable code `⟹ ∑ D^{-|w|} ≤ 1`, a counting theorem in
+`Mathlib/InformationTheory/Coding/KraftMcMillan.lean`) into this project's
 per-symbol Kraft / Gibbs framework (`InformationTheory/Shannon/ShannonCode/Basic.lean`).
+McMillan itself is not reproved here; this file is a bridge, not a
+re-derivation.
 
-The result is a genuine expectation-level source-coding converse: for any
-finite-alphabet source `P` whose codeword assignment `c : α → List β` is
-injective with a uniquely-decodable image, the entropy lower-bounds the
+The result is an expectation-level source-coding converse (Cover–Thomas 5.4):
+for any finite-alphabet source `P` whose codeword assignment `c : α → List β`
+is injective with a uniquely-decodable image, the entropy lower-bounds the
 expected code length,
 
 ```
 H_D(P) ≤ E[L]    where  D = |β|,  L a = |c a|.
 ```
 
-## Honesty status (read before reusing)
+Beyond McMillan and the project's Gibbs bound
+`entropyD_le_expectedLength_of_kraft`, the only hypotheses are the regularity
+preconditions of a code: full support of `P`, `1 < D`, injectivity of `c`, and
+unique decodability of its image.
 
-* McMillan itself is not reproved here. Mathlib ships a genuine,
-  unconditional `kraft_mcmillan_inequality`. This file is a *bridge*, not a
-  re-derivation.
+## Relation to the LZ78 converse
 
-* The bridge is genuine (`#print axioms` clean, type ≠ conclusion, no
-  `:= h` circularity, no `True` slot). The only inputs are:
-  - Mathlib's McMillan,
-  - this project's `entropyD_le_expectedLength_of_kraft` (genuine Gibbs),
-  - regularity hypotheses (full support, `D > 1`, injectivity, UD of the
-    image) — all genuine *preconditions of a code*, not load-bearing
-    discharges of the theorem's content.
+The phrase-string set `lz78PhraseStrings` is not a McMillan code: the LZ78
+dictionary is prefix-*complete* (`lz78PhraseStringsAux` extends `cur ++ [s]`
+only while `cur` is already an entry), so `[a]` and `[a, b]` can both be
+entries and the set is far from prefix-free. `lz78PhraseStrings_nodup` gives
+distinctness, which is necessary but not sufficient for `UniquelyDecodable`.
+The uniquely-decodable object in LZ78 is the *encoded* `(parent index, symbol)`
+token stream, constructed in `LZ78/ConverseUDObject.lean`, which feeds it back
+through §2 to obtain `kraftSum ≤ 1` and `entropyD 2 P ≤ E[L]` for the token
+code.
 
-* What this does not close for LZ78. The LZ78 converse target
-  `IsLZ78ConverseCodingLowerBound` (`LZ78ConverseKraft.lean`) is an
-  a.s.-eventual, per-realization lower bound
-  `blockLogAvg₂ n ω − slack ≤ lz/n`. McMillan supplies only an
-  expectation-level Kraft/Gibbs bound `H ≤ E[L]`. The gap is the
-  a.s. lift (averaged ⟶ pointwise eventual), which is the
-  Barron / competitive-optimality argument and is genuinely separate from
-  McMillan. See §3 for the precise statement of the residual gap. This file
-  therefore does not discharge `IsLZ78ConverseCodingLowerBound`, and does
-  not pretend to.
+That is still an expectation-level bound, whereas the LZ78 converse is the
+a.s.-eventual, per-realization inequality
 
-* Additionally, the raw LZ78 phrase-string set is not a McMillan code: the
-  LZ78 dictionary is prefix-*complete* (closed under prefixes), so the phrase
-  strings are not prefix-free / uniquely-decodable as a set. The
-  uniquely-decodable object in LZ78 is the *encoded* (index, symbol) stream,
-  a different structure than `lz78PhraseStrings`. See §3.
+```
+∀ᵐ ω, ∀ᶠ n,  blockLogAvg₂ μ p n ω − err n ≤ lz n (block_n ω) / n
+```
+
+with `err n → 0`. The averaged bound does not imply it: for a fixed
+realization an LZ78 codeword can be *shorter* than `−log₂ Pₙ{x}`, which is
+precisely the universality of LZ78. The lift is the Barron /
+competitive-optimality argument (a polynomial `n`-block Kraft bound plus
+Borel–Cantelli), and it does not run through this file; it lives in
+`LZ78/AsymptoticOptimality/ParentBridgeConverse.lean`
+(`lz78_block_kraft_poly`, `blockLogAvg₂_minus_error_le_rate_ae`,
+`lz78Greedy_converse_ae`).
 
 ## File layout
 
@@ -58,9 +62,7 @@ H_D(P) ≤ E[L]    where  D = |β|,  L a = |c a|.
 * §2 turns McMillan into the project's `kraftSum ≤ 1` via
   `kraftSum_le_one_of_uniquelyDecodable`, then
   `entropyD_le_expectedLength_of_uniquelyDecodable`
-  (genuine expectation-level converse `H_D(P) ≤ E[L]`).
-* §3 is an honest assessment of the LZ78 converse gap (documented residuals,
-  no false discharge).
+  (the expectation-level converse `H_D(P) ≤ E[L]`).
 -/
 
 namespace InformationTheory.Shannon.ShannonCode
@@ -125,7 +127,7 @@ theorem kraftSum_le_one_of_uniquelyDecodable
   exact hMcM
 
 omit [DecidableEq α] [Nonempty α] in
-/-- The expectation-level source-coding converse from McMillan (genuine).
+/-- The expectation-level source-coding converse from McMillan.
 
 For a finite-alphabet source `P` (full support) and an injective codeword
 assignment `c : α → List β` whose image is uniquely-decodable, the D-ary
@@ -135,10 +137,9 @@ entropy lower-bounds the expected code length:
 H_D(P) ≤ E[L],   D = |β|,  L a = |c a|.
 ```
 
-This is the genuine expectation-level converse: McMillan (Kraft) +
-`entropyD_le_expectedLength_of_kraft` (Gibbs). The full-support hypothesis is
-a regularity precondition (it makes the `logb` arguments positive), not a
-load-bearing discharge.
+It composes McMillan (Kraft) with `entropyD_le_expectedLength_of_kraft`
+(Gibbs). The full-support hypothesis is a regularity precondition: it makes
+the `logb` arguments positive.
 
 A note on `D > 1`: the Gibbs lemma needs `1 < D = |β|`, i.e. at least a
 binary alphabet. With a unary alphabet (`|β| = 1`) no uniquely-decodable code
@@ -155,73 +156,5 @@ theorem entropyD_le_expectedLength_of_uniquelyDecodable
     (kraftSum_le_one_of_uniquelyDecodable c hc hUD)
 
 end McMillan
-
-/-! ## §3. Honest assessment of the LZ78 converse gap
-
-This section is documentation only — it records, without any false
-discharge, exactly how far the genuine §2 results (and Mathlib's McMillan)
-get toward the LZ78 converse, and what residual remains.
-
-### What §2 genuinely gives
-
-For a *symbol code* `c : α → List β` (injective, UD image) over a finite
-source `P`, §2 closes the expectation-level converse
-
-```
-H_D(P) ≤ E[L]          (D = |β|,  L a = |c a|),
-```
-
-unconditionally (modulo full-support / `D > 1` regularity). This is the
-genuine Cover–Thomas 5.4 source-coding lower bound, now wired to Mathlib's
-McMillan rather than carrying a Kraft hypothesis.
-
-### Residual 1 — wrong code object for LZ78
-
-`IsLZ78ConverseCodingLowerBound` (`LZ78ConverseKraft.lean`) compares the LZ78
-block rate `lz n (block_n ω) / n` against the per-block negative
-log-likelihood. McMillan applies to a *fixed* uniquely-decodable codeword set
-`S : Finset (List β)`. The natural candidate `S = lz78PhraseStrings (...)`
-is not a McMillan code: the LZ78 dictionary is prefix-*complete* (closed
-under taking prefixes — `lz78PhraseStringsAux` grows `cur ++ [s]` only while
-`cur ∈ dict`), so e.g. both `[a]` and `[a,b]` are dictionary entries and the
-string set is far from prefix-free. `lz78PhraseStrings_nodup` gives
-distinctness, which is *necessary but not sufficient* for `UniquelyDecodable`.
-The uniquely-decodable object in LZ78 is the *encoded (parent-index, symbol)
-stream*, a different structure from the phrase strings.
-`LZ78ConverseUDObject.lean` constructs the
-fixed-width `(parent, symbol)` token code, proves its image
-`UniquelyDecodable` (`uniquelyDecodable_of_constantLength`), and feeds it back
-through §2 here to obtain a genuine `kraftSum ≤ 1` and `entropyD ≤ E[L]` for
-the real token code. Residual 2 below (averaged⟶a.s. block-rate lift) remains.
-
-### Residual 2 — averaged ⟶ a.s.-eventual lift
-
-Even granting a Kraft bound for the per-block LZ78 code, McMillan/Gibbs yields
-only the expectation-level statement `H(P_n) ≤ E[lz_n]` (or, per block,
-`H_D(P_n) ≤ E[L_n]`). The converse target is the a.s.-eventual,
-per-realization inequality
-
-```
-∀ᵐ ω, ∀ᶠ n,  blockLogAvg₂ μ p n ω − slack n ≤ (lz n (block_n ω)) / n.
-```
-
-This is strictly stronger than the averaged bound: per a fixed realization an
-LZ78 codeword can be *shorter* than `−log₂ Pₙ{x}` (that is the universality of
-LZ78). Closing this requires the Barron / competitive-optimality a.s. lift
-(averaged Kraft + a `2^{−lz}`-is-a-sub-probability / Borel–Cantelli argument),
-which is a separate, research-level ingredient that McMillan does not
-supply. It matches the load-bearing `IsLZ78ConverseCodingLowerBound`
-hypothesis already isolated in `LZ78ConverseKraft.lean`.
-
-### Conclusion
-
-* Standalone McMillan is genuine and present — *in Mathlib*
-  (`InformationTheory.kraft_mcmillan_inequality`); this file wires it into the
-  project's Kraft/Gibbs framework with a genuine expectation-level converse.
-* The LZ78 converse `IsLZ78ConverseCodingLowerBound` is not discharged by
-  McMillan. Two genuine residuals remain (the LZ78-block UD code, and the
-  averaged⟶a.s. lift); the latter is research-level. The honest named
-  hypothesis in `LZ78ConverseKraft.lean` correctly stands.
--/
 
 end InformationTheory.Shannon.ShannonCode
