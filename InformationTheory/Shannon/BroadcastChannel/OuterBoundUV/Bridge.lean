@@ -1,4 +1,5 @@
 import InformationTheory.Shannon.BroadcastChannel.Basic
+import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV
 import InformationTheory.Shannon.ChannelCoding.CodeToAmbient
 import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.MutualInfo
@@ -31,6 +32,12 @@ outputs are read off the resulting measure as coordinate projections.
   the current input letter.  The two same-letter outputs are never decoupled from each other.
 * `bcConverse_isMarkovChain₁`, `bcConverse_isMarkovChain₂` — the messages act on a receiver's
   output block only through the codeword: `(W₂, W₁) → (W₂, Xⁿ) → Y₁ⁿ` and its mirror.
+* `bcConverse_errorProb₁_eq`, `bcConverse_errorProb₂_eq` — the ambient decode error at a
+  receiver is the code's average error probability there.
+* `bc_uv_converse_from_code` — the UV outer bound at a bare broadcast code, with the rate pair
+  `(log M₁, log M₂)` and the Fano slack still symbolic.
+* `bc_uv_rate_extract` — the same bound with the rate pair `(n R₁, n R₂)` of a code whose
+  message counts satisfy `⌈exp (n Rₖ)⌉ ≤ Mₖ`.
 
 ## Implementation notes
 
@@ -40,9 +47,10 @@ of sequences.  With that choice the message-to-output kernel is literally
 structural lemmas and the same-letter pair `(Y_{1,i}, Y_{2,i})` is never split; the two
 per-receiver output sequences are recovered as further projections.
 
-Together with the uniformity and independence statements the four structural lemmas are exactly
-the preconditions of the message-level converse `bc_uv_converse`, so instantiating it at
-`bcConverseAmbient` needs no further hypotheses on the code.
+Together with the uniformity and independence statements the four structural lemmas discharge
+the structural preconditions of the message-level converse `bc_uv_converse`.  Instantiating it
+at `bcConverseAmbient` still asks the code for the measurability of the encoded letters and for
+the two message counts to be at least `2`.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -151,6 +159,23 @@ lemma bcConverseInput_map_snd [NeZero M₁] [NeZero M₂] :
       = (Fintype.card (Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count := by
   unfold bcConverseInput
   rw [Measure.map_snd_prod, measure_univ, one_smul]
+
+lemma bcConverseInput_eq :
+    bcConverseInput M₁ M₂ = (Fintype.card (Fin M₁ × Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count := by
+  refine Measure.ext_of_singleton (fun q ↦ ?_)
+  obtain ⟨a, b⟩ := q
+  have hsgl : ({(a, b)} : Set (Fin M₁ × Fin M₂)) = {a} ×ˢ {b} := by
+    ext ⟨x, y⟩; simp [Prod.ext_iff]
+  have hR : ((Fintype.card (Fin M₁ × Fin M₂) : ℝ≥0∞)⁻¹ • Measure.count) {(a, b)}
+      = (Fintype.card (Fin M₁ × Fin M₂) : ℝ≥0∞)⁻¹ := by
+    rw [Measure.smul_apply, smul_eq_mul, Measure.count_singleton, mul_one]
+  have hL : (bcConverseInput M₁ M₂) {(a, b)}
+      = (Fintype.card (Fin M₁) : ℝ≥0∞)⁻¹ * (Fintype.card (Fin M₂) : ℝ≥0∞)⁻¹ := by
+    unfold bcConverseInput
+    rw [hsgl, Measure.prod_prod, Measure.smul_apply, Measure.smul_apply, smul_eq_mul,
+      smul_eq_mul, Measure.count_singleton, Measure.count_singleton, mul_one, mul_one]
+  rw [hL, hR, Fintype.card_prod, Nat.cast_mul,
+    ENNReal.mul_inv (Or.inr (ENNReal.natCast_ne_top _)) (Or.inl (ENNReal.natCast_ne_top _))]
 
 omit [MeasurableSpace β₁] [MeasurableSpace β₂] in
 lemma bcConverse_msgPair_eq_fst :
@@ -386,5 +411,195 @@ lemma bcConverse_isMarkovChain₂
   exact isMarkovChain_swap (bcConverseAmbient c W) _ _ Prod.fst hY₂m hZm hfstm h₂
 
 end Structural
+
+/-! ### Code-level converse and rate extraction -/
+
+section CodeLevel
+
+variable [Fintype β₁] [MeasurableSingletonClass β₁]
+variable [Fintype β₂] [MeasurableSingletonClass β₂]
+
+lemma bcConverse_errorProb₁_eq
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+        (fun ω i ↦ bcConverseY₁s i ω) c.decoder₁
+      = (c.averageErrorProb₁ W).toReal := by
+  have hM : M₁ * M₂ ≠ 0 := Nat.mul_ne_zero (NeZero.ne M₁) (NeZero.ne M₂)
+  set S : Set ((Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) :=
+    {ω | bcConverseMsg₁ ω ≠ c.decoder₁ (fun i ↦ bcConverseY₁s i ω)} with hS_def
+  have hS_meas : MeasurableSet S := (Set.toFinite S).measurableSet
+  have h_err : MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+      (fun ω i ↦ bcConverseY₁s i ω) c.decoder₁ = (bcConverseAmbient c W).real S := rfl
+  have h_ker : ∀ m : Fin M₁ × Fin M₂,
+      (bcConverseKernel c W) m (Prod.mk m ⁻¹' S) = c.errorProbAt₁ W m := by
+    intro m
+    have h_sec : Prod.mk m ⁻¹' S = c.errorEvent₁ m := by
+      ext y
+      simp only [Set.mem_preimage, hS_def, Set.mem_setOf_eq, BroadcastCode.errorEvent₁,
+        bcConverseMsg₁, bcConverseY₁s]
+      exact ne_comm
+    rw [h_sec]
+    rfl
+  have h_measure : (bcConverseAmbient c W) S = c.averageErrorProb₁ W := by
+    rw [bcConverseAmbient, Measure.compProd_apply hS_meas]
+    simp_rw [h_ker]
+    rw [bcConverseInput_eq, lintegral_smul_measure, lintegral_count, tsum_fintype,
+      BroadcastCode.averageErrorProb₁, if_neg hM, smul_eq_mul]
+    congr 1
+    rw [Fintype.card_prod, Fintype.card_fin, Fintype.card_fin, Nat.cast_mul]
+  rw [h_err, measureReal_def, h_measure]
+
+lemma bcConverse_errorProb₂_eq
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+        (fun ω i ↦ bcConverseY₂s i ω) c.decoder₂
+      = (c.averageErrorProb₂ W).toReal := by
+  have hM : M₁ * M₂ ≠ 0 := Nat.mul_ne_zero (NeZero.ne M₁) (NeZero.ne M₂)
+  set S : Set ((Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) :=
+    {ω | bcConverseMsg₂ ω ≠ c.decoder₂ (fun i ↦ bcConverseY₂s i ω)} with hS_def
+  have hS_meas : MeasurableSet S := (Set.toFinite S).measurableSet
+  have h_err : MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+      (fun ω i ↦ bcConverseY₂s i ω) c.decoder₂ = (bcConverseAmbient c W).real S := rfl
+  have h_ker : ∀ m : Fin M₁ × Fin M₂,
+      (bcConverseKernel c W) m (Prod.mk m ⁻¹' S) = c.errorProbAt₂ W m := by
+    intro m
+    have h_sec : Prod.mk m ⁻¹' S = c.errorEvent₂ m := by
+      ext y
+      simp only [Set.mem_preimage, hS_def, Set.mem_setOf_eq, BroadcastCode.errorEvent₂,
+        bcConverseMsg₂, bcConverseY₂s]
+      exact ne_comm
+    rw [h_sec]
+    rfl
+  have h_measure : (bcConverseAmbient c W) S = c.averageErrorProb₂ W := by
+    rw [bcConverseAmbient, Measure.compProd_apply hS_meas]
+    simp_rw [h_ker]
+    rw [bcConverseInput_eq, lintegral_smul_measure, lintegral_count, tsum_fintype,
+      BroadcastCode.averageErrorProb₂, if_neg hM, smul_eq_mul]
+    congr 1
+    rw [Fintype.card_prod, Fintype.card_fin, Fintype.card_fin, Nat.cast_mul]
+  rw [h_err, measureReal_def, h_measure]
+
+section Converse
+
+variable [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
+variable [StandardBorelSpace β₁] [Nonempty β₁]
+variable [StandardBorelSpace β₂] [Nonempty β₂]
+
+/-- The UV outer bound instantiated at a bare broadcast code: for any two-receiver block code
+`c` and Markov channel `W`, the canonical ambient measure `bcConverseAmbient c W` discharges
+every hypothesis of the message-level converse `bc_uv_converse`, so the rate pair
+`(log M₁, log M₂)` lies in the Nair–El Gamal region determined by the per-letter auxiliaries.
+No degradedness is assumed.  The Fano slack is still carried here; it vanishes only in the
+`n → ∞` limit. -/
+@[entry_point]
+theorem bc_uv_converse_from_code
+    [NeZero M₁] [NeZero M₂]
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :
+    InBCOuterRegionUV (Real.log (M₁ : ℝ)) (Real.log (M₂ : ℝ))
+      ((∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
+            (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)).toReal
+        + Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+            (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
+        + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+            (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
+      ((∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
+            (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)).toReal
+        + Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+            (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
+        + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+            (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1))
+      ((∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
+              (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)
+            + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
+              (bcConverseY₁s i) (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i))).toReal
+        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
+            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
+        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
+            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1)))
+      ((∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
+              (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)
+            + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
+              (bcConverseY₂s i) (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i))).toReal
+        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
+            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
+        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
+            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1))) := by
+  have h := bc_uv_converse (bcConverseAmbient c W) bcConverseMsg₁ bcConverseMsg₂
+    (fun j ω ↦ c.encoder ω.1 j) bcConverseY₁s bcConverseY₂s c.decoder₁ c.decoder₂
+    measurable_bcConverseMsg₁ measurable_bcConverseMsg₂
+    (fun j ↦ (measurable_pi_apply j).comp
+      ((measurable_of_countable c.encoder).comp measurable_fst))
+    measurable_bcConverseY₁s measurable_bcConverseY₂s
+    (bcConverseMsg₁_uniform c W) (bcConverseMsg₂_uniform c W)
+    (by simpa only [Fintype.card_fin] using hcard₁)
+    (by simpa only [Fintype.card_fin] using hcard₂)
+    (bcConverse_mutualInfo_eq_zero c W)
+    (bcConverse_memoryless₁ c W) (bcConverse_memoryless₂ c W)
+    (bcConverse_isMarkovChain₁ c W) (bcConverse_isMarkovChain₂ c W)
+  simpa only [Fintype.card_fin] using h
+
+lemma bc_uv_rate_extract [NeZero M₁] [NeZero M₂]
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {R₁ R₂ : ℝ}
+    (hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
+    (hM₂ : Nat.ceil (Real.exp ((n : ℝ) * R₂)) ≤ M₂) :
+    InBCOuterRegionUV ((n : ℝ) * R₁) ((n : ℝ) * R₂)
+      ((∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
+            (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)).toReal
+        + Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+            (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
+        + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+            (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
+      ((∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
+            (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)).toReal
+        + Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+            (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
+        + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+            (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1))
+      ((∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
+              (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)
+            + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
+              (bcConverseY₁s i) (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i))).toReal
+        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
+            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
+        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
+            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1)))
+      ((∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
+              (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)
+            + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
+              (bcConverseY₂s i) (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i))).toReal
+        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
+            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
+        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
+            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1))) := by
+  have h := bc_uv_converse_from_code c W hcard₁ hcard₂
+  have hlog₁ : (n : ℝ) * R₁ ≤ Real.log (M₁ : ℝ) := le_log_of_ceil_exp_le hM₁
+  have hlog₂ : (n : ℝ) * R₂ ≤ Real.log (M₂ : ℝ) := le_log_of_ceil_exp_le hM₂
+  exact ⟨hlog₁.trans h.bound₁, hlog₂.trans h.bound₂,
+    (add_le_add hlog₁ hlog₂).trans h.sumBound₂,
+    (add_le_add hlog₁ hlog₂).trans h.sumBound₁⟩
+
+end Converse
+
+end CodeLevel
 
 end InformationTheory.Shannon.BroadcastChannel

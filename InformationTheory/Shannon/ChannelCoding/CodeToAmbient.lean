@@ -18,9 +18,10 @@ instantiates them by supplying its own encoder and channel.
   deterministic encoder `g` carries the Markov chain `M → g M → Y`.
 * `isMarkovChain_of_compProd_pi`: for a per-letter product kernel `∏ⱼ W (x m j)`, the output
   letter `Yᵢ` is conditionally independent of *any* variable that does not read the `i`-th output
-  coordinate, given the input letter `Xᵢ`.  The conditioner is an arbitrary measurable function of
-  the whole ambient point, constrained only by invariance under re-randomizing coordinate `i`, so
-  it may read the message as well as the other letters.
+  coordinate, given the input letter `Xᵢ`.  The conditioner is the input letter itself; the
+  variable decoupled from `Yᵢ` is an arbitrary measurable function of the whole ambient point,
+  constrained only by invariance under re-randomizing coordinate `i`, so it may read the message
+  as well as the other letters.
 * `isMemorylessChannel_of_compProd_pi`: if the kernel is the per-letter product `∏ⱼ W (x m j)`
   of a channel applied to a deterministic codeword, the ambient is a memoryless channel.
 * `compProd_pi_map_pair_eq`: the joint law of the `i`-th input-output pair is the channel joint
