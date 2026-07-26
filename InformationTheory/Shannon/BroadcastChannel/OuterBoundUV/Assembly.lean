@@ -863,7 +863,8 @@ instance bcUVLetterKernel_isMarkovKernel (c : BroadcastCode M₁ M₂ n α β₁
 
 /-- The time-shared five-tuple law of a broadcast code: the letter index is drawn uniformly and
 the letter-`i` five-tuple is read off the ambient measure.  The letter index survives inside both
-auxiliaries, which already carry it as their first component. -/
+auxiliaries, which already carry it as their first component.
+@audit:ok -/
 noncomputable def bcUVTimeShare (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) :
     Measure ((Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
       (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂) :=
@@ -1045,6 +1046,7 @@ lemma le_toReal_of_inv_mul_le {S J : ℝ≥0∞} {m : ℕ} (hm : 0 < m)
   have hkey : r ≤ S.toReal / (m : ℝ) := (le_div_iff₀ hm0).mpr (by linarith)
   linarith
 
+/-- @audit:ok -/
 theorem bc_uv_shrunk_point_mem
     [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
