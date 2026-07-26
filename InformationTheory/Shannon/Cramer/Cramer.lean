@@ -34,7 +34,8 @@ in `CramerGeneralLower.lean`.
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 11.4.1.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley,
+  2006. Theorem 11.4.1.
 -/
 
 namespace InformationTheory.Shannon.Cramer
@@ -371,7 +372,7 @@ lemma klDiv_tilted_eq [IsProbabilityMeasure μ] (X : Ω → ℝ) (hX_meas : Meas
     ∫ ω, Real.log ((μ.tilted (fun ω' ↦ lam * X ω')).rnDeriv μ ω).toReal
         ∂(μ.tilted (fun ω' ↦ lam * X ω'))
       = lam * ∫ ω, X ω ∂(μ.tilted (fun ω' ↦ lam * X ω')) - cgf X μ lam := by
-  -- The function `f` in `Measure.tilted` is `(fun ω => lam * X ω)`.
+  -- The function `f` in `Measure.tilted` is `(fun ω ↦ lam * X ω)`.
   set f : Ω → ℝ := fun ω ↦ lam * X ω with hf_def
   have h_int : Integrable (fun ω ↦ Real.exp (f ω)) μ :=
     integrable_exp_mul_of_bounded hX_meas h_bdd lam

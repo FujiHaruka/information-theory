@@ -8,6 +8,34 @@ import Mathlib.MeasureTheory.Integral.Lebesgue.Markov
 import Mathlib.Analysis.PSeries
 import Mathlib.Topology.Algebra.Order.LiminfLimsup
 
+/-!
+# Likelihood ratio of the `k`-Markov approximation
+
+The upward likelihood ratio comparing the `k`-Markov approximation of a stationary
+process against its true block law, and the almost-sure bound on that ratio used by
+the Algoet–Cover proof of the Shannon–McMillan–Breiman theorem.
+
+## Main definitions
+
+* `markovFactor` — the `k`-Markov conditional-kernel mass at the last index of a
+  `Fin (n+1)`-tuple: the full prefix is used while `n ≤ k`, the trailing window of `k`
+  symbols afterwards.
+* `qkSingleton` — the `k`-Markov joint mass of a path, the product of `markovFactor`s
+  along it.
+* `condQk` / `condQkState` — conditional forms of that mass, carrying the total-mass
+  bounds `∑ ≤ 1`.
+* `MRatioUp` — the upward ratio `exp (n · blockLogAvg − negLogQk)`, which is a.s. the
+  likelihood ratio `qₖ(Xⁿ) / Pₙ(Xⁿ)` (`MRatioUp_eq_ofReal_exp`).
+
+## Main statements
+
+* `sum_qkSingleton_le_one` — the `k`-Markov masses of the paths of length `n` sum to
+  at most `1`, so `qₖ` is a sub-probability on each block.
+* `integral_MRatioUp_le_one` — `∫⁻ MRatioUp ∂μ ≤ 1`, the input to Markov's inequality.
+* `MRatioUp_le_sq_eventually` — a.s. `MRatioUp k n ≤ n²` for all large `n`, by Markov's
+  inequality plus the first Borel–Cantelli lemma over the summable `∑ 1/n²`.
+-/
+
 namespace InformationTheory.Shannon
 
 open MeasureTheory ProbabilityTheory Filter
@@ -17,7 +45,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
-/-! ## D.3 — Likelihood ratio + Borel–Cantelli -/
+/-! ## Likelihood ratio and Borel–Cantelli -/
 
 /-- The `k`-Markov conditional-kernel mass at the last index of a `Fin (n+1)`-tuple.
 For `n ≤ k`: uses the full prefix `Fin.init y : Fin n → α` and the kernel
@@ -58,7 +86,7 @@ lemma markovFactor_sum_eq_one
     ∑ a : α, markovFactor μ p k n (Fin.snoc z a) = 1 := by
   -- markovFactor only depends on (Fin.init (snoc z a)) = z and (snoc z a) (last n) = a.
   -- For the prefix arg: either Fin.init (snoc z a) = z, or the window
-  -- `fun j => snoc z a ⟨n-k+j, _⟩`. Since n-k+j < n (when j < k ≤ n), these
+  -- `fun j ↦ snoc z a ⟨n-k+j, _⟩`. Since n-k+j < n (when j < k ≤ n), these
   -- indices fall in `castSucc` range, so `snoc z a` returns `z` at them.
   -- Either way, the prefix arg depends only on z (not a). So we get
   -- ∑_a, kernel(prefix(z)) {a} = (kernel(prefix(z))) univ = 1.
@@ -393,7 +421,7 @@ private lemma markovFactor_blockRV_gt
       Nat.sub_self]
     rfl
   · simp only [hnk, dif_neg, not_false_iff]
-    -- Window prefix: `fun j : Fin k => blockRV (n+1) ω ⟨n-k+j, _⟩
+    -- Window prefix: `fun j : Fin k ↦ blockRV (n+1) ω ⟨n-k+j, _⟩
     --              = blockRV k (T^[n-k] ω)`.
     have h_arg : (fun j : Fin k ↦ p.blockRV (n + 1) ω
           ⟨n - k + j.val, by have := j.isLt; omega⟩)

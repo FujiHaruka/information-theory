@@ -18,8 +18,8 @@ product setting, reducing the change-of-measure step to the CLT-boundary
 headline `CramerCltBoundary.cramer_lower_boundary`.
 
 The change-of-measure step relates the tilted infinite-product measure
-`Measure.infinitePi (fun _ : ℕ => μ₀.tilted (lam * Y ·))` to the cylinder tilt of
-the un-tilted product measure `(Measure.infinitePi (fun _ : ℕ => μ₀)).tilted (...)`
+`Measure.infinitePi (fun _ : ℕ ↦ μ₀.tilted (lam * Y ·))` to the cylinder tilt of
+the un-tilted product measure `(Measure.infinitePi (fun _ : ℕ ↦ μ₀)).tilted (...)`
 on cylinders of width `n`, identified through the predicate
 `IsMeasureInfinitePiTiltedEq` (defined upstream in `CramerBoundaryUpstream.lean`).
 
@@ -42,7 +42,7 @@ variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 
 /-- The Cramér lower bound for the canonical i.i.d. product-measure setting
 `X i ω := Y (ω i)` with `Y : Ω₀ → ℝ` bounded and measurable, on the un-tilted
-infinite product `μ := Measure.infinitePi (fun _ => μ₀)`: the asymptotic liminf
+infinite product `μ := Measure.infinitePi (fun _ ↦ μ₀)`: the asymptotic liminf
 lower bound at threshold `a` and tilt `lam`.
 
 The optimal-tilt hypothesis `h_deriv : deriv (cgf (Y∘·0) (infinitePi μ₀)) lam = a`
@@ -52,12 +52,11 @@ precisely at the optimal tilt, where `lam·a − Λ(lam) = cramerRate a`. The
 non-degeneracy hypothesis `hVar` and the cobounded-below hypothesis
 `h_coboundedBelow` are regularity preconditions, not part of the proof core.
 
-@audit:ok (body is a verbatim `exact` of the headline
-`cramer_lower_boundary`. `hVar` is non-load-bearing: the
-window-mass `≥ 1/4` core is derived inside the CLT of the headline, where `hVar`
-is consumed only as the non-degeneracy input; at `Var = 0` the tilted sum is a.e.
-constant and the argument collapses, so granting `hVar` alone does not hand over
-the conclusion.) -/
+@audit:ok (body is a verbatim `exact` of the headline `cramer_lower_boundary`.
+`hVar` is non-load-bearing: the window-mass `≥ 1/4` core is derived inside the CLT
+of the headline, where `hVar` is consumed only as the non-degeneracy input; at
+`Var = 0` the tilted sum is a.e. constant and the argument collapses, so granting
+`hVar` alone does not hand over the conclusion.) -/
 theorem cramer_lower_infinitePi
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -126,8 +125,8 @@ side-conditions.
 See also `cramer_upper_legendre` and `cramer_lower_legendre_infinitePi`.
 
 @audit:ok (genuine `le_antisymm`-style sandwich of `cramer_upper_legendre` and
-`cramer_lower_legendre_infinitePi`. All hypotheses are regularity preconditions
-/ cobounded side-conditions.) -/
+`cramer_lower_legendre_infinitePi`. All hypotheses are regularity preconditions or
+cobounded side-conditions.) -/
 @[entry_point]
 theorem cramer_tendsto_infinitePi
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]

@@ -45,7 +45,7 @@ monad, discharging the `IsAwgnChannelMeasurable N` predicate. -/
 @[entry_point]
 theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N := by
   unfold IsAwgnChannelMeasurable
-  -- Function equality `fun x => gaussianReal x N = fun x => (gaussianReal 0 N).map (x + ·)`.
+  -- Function equality `fun x ↦ gaussianReal x N = fun x ↦ (gaussianReal 0 N).map (x + ·)`.
   have h_fun_eq :
       (fun x : ℝ ↦ gaussianReal x N)
         = (fun x : ℝ ↦ (gaussianReal 0 N).map (x + ·)) := by

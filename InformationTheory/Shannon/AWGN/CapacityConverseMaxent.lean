@@ -147,7 +147,7 @@ theorem integral_sub_sq_gaussianReal (N : ℝ≥0) (hN : N ≠ 0) (c : ℝ) :
 /-- `(y − m)²` is integrable against the mixture output law `p ∗ 𝒩(0,N)` (for any `m`),
 given that the input second moment is integrable.
 
-`hp_2mom_int : Integrable (fun x => x²) p` is a regularity precondition: the bare
+`hp_2mom_int : Integrable (fun x ↦ x²) p` is a regularity precondition: the bare
 constraint `∫ x² ∂p ≤ P` does not imply integrability (a non-integrable `x²` gives the
 degenerate `∫ x² ∂p = 0 ≤ P`). -/
 theorem output_sq_sub_integrable
@@ -283,7 +283,7 @@ theorem fibre_absolutelyContinuous_output_general
   rwa [← (measurePreserving_add_left volume a).measure_preimage hs.nullMeasurableSet]
 
 /-- Proxy-form joint integrability of the AWGN fiber log-density for an arbitrary
-probability-measure input `p`: `fun z => Real.log (gaussianPDF z.1 N z.2).toReal` is
+probability-measure input `p`: `fun z ↦ Real.log (gaussianPDF z.1 N z.2).toReal` is
 integrable against the joint `p ⊗ₘ awgnChannel N`. The integrand decomposes everywhere
 as `c₀ + c₁·(z.2 − z.1)²`, and the `(z.2 − z.1)²` term is integrable against the joint
 via `Measure.integrable_compProd_iff` (per-fiber integrability + constant L¹-norm `N`).
@@ -338,7 +338,7 @@ theorem measurable_outputMixtureDensity (N : ℝ≥0) (p : Measure ℝ) [SFinite
     (measurable_gaussianPDF_uncurry N)
 
 /-- Measurability of the Gaussian pdf in the mean parameter (fixed argument `y`):
-`Measurable (fun x => gaussianPDF x N y)`. Isolated as its own declaration because the
+`Measurable (fun x ↦ gaussianPDF x N y)`. Isolated as its own declaration because the
 `(uncurry).comp` term, if elaborated with an expected type pushed in, makes `isDefEq`
 unfold `gaussianPDF`/`gaussianPDFReal` and hit a heartbeat timeout; the `have h := …; exact h`
 shape elaborates `comp` freely and matches cheaply. Consumers call this lemma (term reuse). -/
@@ -349,11 +349,11 @@ theorem measurable_gaussianPDF_fst (N : ℝ≥0) (y : ℝ) :
   exact h
 
 /-- The mixture output `q = p ∗ 𝒩(0,N)` is
-`volume.withDensity (fun y => ∫⁻ x, gaussianPDF x N y ∂p)`. Holds for any input `p`
+`volume.withDensity (fun y ↦ ∫⁻ x, gaussianPDF x N y ∂p)`. Holds for any input `p`
 (possibly discrete) since the noise is absolutely continuous, via `lintegral_conv`
 (Tonelli) and the translation `𝒩(x,N) = volume.withDensity (gaussianPDF x N)`.
 
-The Gaussian density is kept behind the opaque local `g := fun z => gaussianPDF z.1 N z.2`
+The Gaussian density is kept behind the opaque local `g := fun z ↦ gaussianPDF z.1 N z.2`
 to stop `isDefEq`/`whnf` from unfolding `gaussianReal`/`gaussianPDFReal` during the Fubini
 swap (which otherwise hits a heartbeat timeout).
 @audit:ok -/
@@ -421,7 +421,6 @@ theorem outputMixtureDensity_le_sup
     _ = ENNReal.ofReal (Real.sqrt (2 * Real.pi * N))⁻¹ := by
         rw [lintegral_const, measure_univ, mul_one]
 
-set_option maxHeartbeats 1000000 in
 /-- The mixture density admits a Gaussian lower bound `f_q(y) ≥ c·exp(−a·y²)` with
 `c, a > 0`, equivalently a quadratic upper bound on `−log f_q`: there exist `a, b : ℝ`
 with `−log (f_q y).toReal ≤ a · y² + b` for all `y`. Chebyshev concentrates `≥ 1/2`

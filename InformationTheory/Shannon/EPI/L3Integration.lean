@@ -410,7 +410,7 @@ direct consequence of Mathlib's bounded FTC and the family lift above. Stated as
 standalone identity (not via `IsDeBruijnIntegrationHyp`, which carries the
 `∃ fPath` shape). -/
 
-/-- The heat-flow entropy derivative (Gaussian, on an `s > 0` neighbourhood).
+/-- The heat-flow entropy derivative (Gaussian, on an `s > 0` neighborhood).
 
 For Gaussian `X` and `s > 0`, the derivative of `s' ↦ differentialEntropy(P.map
 (X + √s' · Z))` at `s` equals `1/(2(v+s))`. This is the per-point statement

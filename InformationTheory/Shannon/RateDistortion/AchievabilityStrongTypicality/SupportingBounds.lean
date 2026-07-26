@@ -131,7 +131,7 @@ theorem encoder_strong_failure_prob_le
   set q : ℝ := p.real { y | (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε } with hq_def
   have hq_nn : 0 ≤ q := measureReal_nonneg
   have hq_le : q ≤ 1 := measureReal_le_one
-  -- Equation: (Measure.pi (fun _ => p)).real Smiss = (1 - q)^M.
+  -- Equation: (Measure.pi (fun _ ↦ p)).real Smiss = (1 - q)^M.
   have h_set_eq : Smiss = Set.univ.pi
       (fun _ : Fin M ↦ {y : Fin n → β | (x, y) ∉ jointStronglyTypicalSet μ Xs Ys n ε}) := by
     ext c

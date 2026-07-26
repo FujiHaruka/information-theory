@@ -120,7 +120,7 @@ lemma gaussianProductInput_mem_constraintSet {n : ℕ} (P : ℝ) (Q : Fin n → 
     intro i
     have h_int_i : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal 0 (Q i)) :=
       (memLp_id_gaussianReal (μ := 0) (v := Q i) 2).integrable_sq
-    -- `gaussianProductInput Q = Measure.pi (fun j => gaussianReal 0 (Q j))`
+    -- `gaussianProductInput Q = Measure.pi (fun j ↦ gaussianReal 0 (Q j))`
     show Integrable (fun x : Fin n → ℝ ↦ (x i) ^ 2)
       (Measure.pi (fun j ↦ gaussianReal 0 (Q j)))
     exact MeasureTheory.integrable_comp_eval (μ := fun j ↦ gaussianReal 0 (Q j))
@@ -250,9 +250,10 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
 
 /-! ## Per-coordinate reduction -/
 
-/-- The capacity equals the per-coordinate water-filling sum (the analytic regularity
-hypotheses bundled in `IsParallelGaussianPerCoordRegularity`). Inhabits
-`IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν`. -/
+/-- At a KKT water level `ν` (`h_kkt`) the capacity equals the per-coordinate
+water-filling sum, i.e. `IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν`
+holds. The analytic regularity hypotheses are bundled in
+`IsParallelGaussianPerCoordRegularity`. -/
 theorem isParallelGaussianPerCoordReduction_of_kkt {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -460,7 +461,7 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel_enn {n : ℕ}
     (measurable_pi_apply i).comp measurable_fst
   have hYmeas : ∀ i, Measurable (Ys i) := fun i ↦
     (measurable_pi_apply i).comp measurable_snd
-  -- `Prod.fst = fun ω i => Xs i ω` and `Prod.snd = fun ω i => Ys i ω`.
+  -- `Prod.fst = fun ω i ↦ Xs i ω` and `Prod.snd = fun ω i ↦ Ys i ω`.
   have hfst : (Prod.fst : (Fin n → ℝ) × (Fin n → ℝ) → (Fin n → ℝ))
       = fun ω i ↦ Xs i ω := rfl
   have hsnd : (Prod.snd : (Fin n → ℝ) × (Fin n → ℝ) → (Fin n → ℝ))
@@ -474,7 +475,7 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel_enn {n : ℕ}
   haveI : ∀ i, IsProbabilityMeasure (joints i) := by
     rw [hjoints]; intro i; infer_instance
   set e := MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n) with he
-  -- `(fun ω => (Xs i ω, Ys i ω)) ∘ e = Function.eval i` on `Fin n → ℝ × ℝ`.
+  -- `(fun ω ↦ (Xs i ω, Ys i ω)) ∘ e = Function.eval i` on `Fin n → ℝ × ℝ`.
   have hpair_eval : ∀ i, (fun ω : (Fin n → ℝ) × (Fin n → ℝ) ↦ (Xs i ω, Ys i ω)) ∘ e
       = Function.eval i := by
     intro i; funext h; rfl

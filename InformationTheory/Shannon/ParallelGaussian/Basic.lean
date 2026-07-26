@@ -31,7 +31,7 @@ solution (Cover–Thomas, Theorem 9.4.1).
 
 ## Implementation notes
 
-* `parallelGaussianChannel` is defined directly as `toFun x := Measure.pi (fun i =>
+* `parallelGaussianChannel` is defined directly as `toFun x := Measure.pi (fun i ↦
   gaussianReal (x i) (N i))`, matching the conclusion form of `Measure.pi_pi`; its
   measurability is supplied as the hypothesis `IsParallelGaussianKernelMeasurable N`.
 * `waterFillingPower` uses `max 0 (ν - N_i)`, matching `max_eq_left` / `max_eq_right` /
@@ -61,14 +61,14 @@ open scoped ENNReal NNReal BigOperators Topology
 def IsParallelAwgnChannelMeasurable {n : ℕ} (N : Fin n → ℝ≥0) : Prop :=
   ∀ i, InformationTheory.Shannon.AWGN.IsAwgnChannelMeasurable (N i)
 
-/-- Measurability of the parallel kernel map `x : Fin n → ℝ ↦ Measure.pi (fun i =>
+/-- Measurability of the parallel kernel map `x : Fin n → ℝ ↦ Measure.pi (fun i ↦
 gaussianReal (x i) (N i))`, supplied as a hypothesis. -/
 def IsParallelGaussianKernelMeasurable {n : ℕ} (N : Fin n → ℝ≥0) : Prop :=
   Measurable (fun x : Fin n → ℝ ↦ Measure.pi (fun i ↦ gaussianReal (x i) (N i)))
 
 /-- The parallel Gaussian channel kernel: on input `x : Fin n → ℝ` the output
 `y : Fin n → ℝ` has `y i = x i + z i` with `z i ∼ 𝒩(0, N i)` independent across
-coordinates. The output law is the product measure `Measure.pi (fun i =>
+coordinates. The output law is the product measure `Measure.pi (fun i ↦
 gaussianReal (x i) (N i))`. -/
 noncomputable def parallelGaussianChannel {n : ℕ}
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -135,7 +135,7 @@ def parallelGaussianPowerConstraintSet {n : ℕ} (P : ℝ) : Set (Measure (Fin n
 the genuine per-coordinate integrability of `(x i)²` and the Bochner total
 second-moment bound `∑_i ∫ (x i)² ∂p ≤ P`. Multivariate analogue of
 `AWGN.awgnPowerConstraintSet_mem_iff_integrable`; the lintegral constraint carries the
-regularity (`Integrable (fun x => (x i)²) p`) the Bochner form alone cannot supply.
+regularity (`Integrable (fun x ↦ (x i)²) p`) the Bochner form alone cannot supply.
 @audit:ok -/
 theorem parallelGaussianPowerConstraintSet_mem_iff_integrable {n : ℕ}
     (P : ℝ) (hP : 0 ≤ P) (p : Measure (Fin n → ℝ))

@@ -98,8 +98,9 @@ theorem stam_coupling_saturates {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
 
 /-! ## §6 — EPI pipeline integration -/
 
-/-- For Gaussian `X, Y` with non-zero variance, EPI holds unconditionally: the Gaussian saturation
-bridge `StamEPIBridge.epi_via_stam_gaussian` re-exported into the Fisher-coupling module. -/
+/-- For Gaussian `X, Y` with non-zero variance, EPI holds with no Stam-predicate hypothesis:
+the Gaussian saturation bridge `StamEPIBridge.epi_via_stam_gaussian`, re-exported into the
+Fisher-coupling module. -/
 @[entry_point]
 theorem entropyPower_add_ge_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -110,9 +111,5 @@ theorem entropyPower_add_ge_of_gaussian
     entropyPower (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
   epi_via_stam_gaussian P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
-
-/-! ## §7 — Step 3 manipulation lemmas + intermediate calc -/
-
-/-! ## §8 — Sanity check / regression theorems -/
 
 end InformationTheory.Shannon.StamFisherCoupling

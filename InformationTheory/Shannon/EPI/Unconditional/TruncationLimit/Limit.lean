@@ -23,8 +23,8 @@ unconditional gateway monotonicity together with its `entropyPower` lift.
 * `differentialEntropyExt_truncW_tendsto_top` — `h(W) = ⊤ ⟹ h(W_n) → ⊤` along the truncations.
 * `differentialEntropyExt_top_of_indep_add` — the unconditional `⊤`-branch
   `h(W) = ⊤ ⟹ h(W+V) = ⊤`.
-* `differentialEntropyExt_mono_add` — unconditional gateway monotonicity
-  `W` a.c. and `W ⊥ V ⟹ h(W) ≤ h(W+V)`.
+* `differentialEntropyExt_mono_add` — unconditional gateway monotonicity: `W` a.c. and
+  `W ⊥ V ⟹ h(W) ≤ h(W+V)`.
 * `entropyPowerExt_mono_add` — its `entropyPowerExt` lift.
 
 Depends on the `Core` and `Mono` parts; re-exported by the umbrella
@@ -754,7 +754,7 @@ theorem differentialEntropyExt_top_of_indep_add
 /-! ## Unconditional gateway monotonicity
 
 Gateway monotonicity is assembled unconditionally from three pieces: the `⊥` branch (`bot_le`), the
-finite branch (`differentialEntropyExt_mono_add_of_integrable`, per-fibre Gibbs), and the `⊤` branch
+finite branch (`differentialEntropyExt_mono_add_of_integrable`, per-fiber Gibbs), and the `⊤` branch
 (`differentialEntropyExt_top_of_indep_add`). The finite branch goes through the
 finiteness-to-integrability bridge `differentialEntropyExt_integrable_of_finite`. -/
 
@@ -813,7 +813,7 @@ theorem differentialEntropyExt_mono_add
     by_cases htop : differentialEntropyExt (P.map W) = ⊤
     · -- The `⊤` branch: route β' gives `h(W+V) = ⊤`, so `⊤ ≤ ⊤`.
       rw [htop, differentialEntropyExt_top_of_indep_add W V P hW hV hWV hW_ac htop]
-    · -- The finite branch: bridge finiteness → integrability, then per-fibre Gibbs.
+    · -- The finite branch: bridge finiteness → integrability, then per-fiber Gibbs.
       exact differentialEntropyExt_mono_add_of_integrable W V P hW hV hWV hW_ac
         (differentialEntropyExt_integrable_of_finite hW_ac htop hne_bot)
 

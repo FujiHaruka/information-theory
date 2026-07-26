@@ -6,7 +6,7 @@ import InformationTheory.Shannon.Cramer.Cramer
 
 The Cramér lower-bound chain (`cramer_lower` / `cramer_lower_legendre` /
 `cramer_tendsto`) for the general i.i.d. statement on an arbitrary bounded
-`μ : Measure Ω`, `X : ℕ → Ω → ℝ`, discharged against the CLT-boundary headline
+`μ : Measure Ω`, `X : ℕ → Ω → ℝ`, reduced to the CLT-boundary headline
 `cramer_lower_boundary`.
 
 ## Main statements
@@ -30,7 +30,8 @@ breaks (Gaussian median `1/2` / window mass `1/4` lower bounds collapse).
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 11.4.1.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley,
+  2006. Theorem 11.4.1.
 -/
 
 namespace InformationTheory.Shannon.Cramer
@@ -81,7 +82,7 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   -- Marginal `ν := μ.map (X 0)`; both joint laws factor through `infinitePi ν`.
   set ν : Measure ℝ := μ.map (X 0) with hν
   haveI : IsProbabilityMeasure ν := Measure.isProbabilityMeasure_map (h_meas 0).aemeasurable
-  -- (a) Root B side: joint map `g ω := fun i => X i ω`.
+  -- (a) Root B side: joint map `g ω := fun i ↦ X i ω`.
   set g : Ω → (ℕ → ℝ) := fun ω i ↦ X i ω with hg
   have hg_meas : Measurable g := measurable_pi_lambda _ (fun i ↦ h_meas i)
   have hjointB : μ.map g = Measure.infinitePi (fun _ : ℕ ↦ ν) := by
@@ -90,7 +91,7 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     have h2 : (fun i ↦ μ.map (X i)) = (fun _ : ℕ ↦ ν) := by
       funext i; exact (h_ident i).map_eq
     rw [h1, h2]
-  -- (b) Canonical side: joint map `g₀ ω := fun i => X 0 (ω i)` on `infinitePi μ`.
+  -- (b) Canonical side: joint map `g₀ ω := fun i ↦ X 0 (ω i)` on `infinitePi μ`.
   set P : Measure (ℕ → Ω) := Measure.infinitePi (fun _ : ℕ ↦ μ) with hP
   haveI : IsProbabilityMeasure P := by rw [hP]; infer_instance
   set X0 : ℕ → (ℕ → Ω) → ℝ := fun i ω ↦ X 0 (ω i) with hX0

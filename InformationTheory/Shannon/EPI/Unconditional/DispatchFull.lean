@@ -10,15 +10,15 @@ The fully unconditional entropy power inequality `entropyPowerExt_add_ge`, takin
 ## Main statements
 
 * `entropyPowerExt_add_ge` — the unconditional `ℝ≥0∞` entropy power inequality.
-* `entropyPowerExt_mixed_add_ge` / `_symm` — the mixed cases (one factor a.c., the
-  other singular), via gateway monotonicity.
+* `entropyPowerExt_mixed_add_ge` / `_symm` — the mixed cases (one factor a.c., the other
+  singular), via gateway monotonicity.
 * `entropyPowerExt_add_ge_case1` — case 1 (both a.c.), splitting on `⊤`/`⊥`/finite of the
   three differential entropies and delegating to `entropyPowerExt_add_ge_finite_ac`.
 
 ## Implementation notes
 
-* The earlier 21-precondition dispatch `entropyPowerExt_add_ge_dispatch_skeleton` is left unchanged;
-  this file builds the gateway-based unconditional version separately.
+* The 21-precondition dispatch `entropyPowerExt_add_ge_dispatch_skeleton` is a separate
+  route; this file builds the gateway-based unconditional version independently of it.
 * Every declaration delegates to an existing gateway lemma or bridge; the only work is plumbing
   (order lemmas, `EReal.exp` expansion, `add_comm` reshaping).
 -/
@@ -130,10 +130,11 @@ theorem entropyPowerExt_add_ge_case1
     have hW_ent := differentialEntropyExt_integrable_of_finite hW_ac hWtop hWbot
     exact entropyPowerExt_add_ge_finite_ac X Y P hX hY hXY hX_ac hY_ac hX_ent hY_ent hW_ent
 
-/-- The fully unconditional extended-real **entropy power inequality** `N(X+Y) ≥ N(X) + N(Y)`, taking
-only `hX hY hXY`. The four-case split on absolute continuity of `P.map X` and `P.map Y` delegates to
-`entropyPowerExt_add_ge_case1` (both a.c.), `entropyPowerExt_mixed_add_ge` /
-`_symm` (mixed), and `entropyPowerExt_singular_add_ge` (both singular).
+/-- The fully unconditional extended-real **entropy power inequality**
+`N(X+Y) ≥ N(X) + N(Y)`, taking only `hX hY hXY`. The four-case split on absolute continuity
+of `P.map X` and `P.map Y` delegates to `entropyPowerExt_add_ge_case1` (both a.c.),
+`entropyPowerExt_mixed_add_ge` / `_symm` (mixed), and `entropyPowerExt_singular_add_ge`
+(both singular).
 
 @audit:ok -/
 @[entry_point]

@@ -19,7 +19,7 @@ case 3 (both push-forwards singular) and case 2 (`X` a.c., `Y` singular).
 ## Implementation notes
 
 * The integrability hypotheses of the mixed-case lemmas are regularity preconditions (a.c. density
-  of `X+Y` and fibre regularity), passed explicitly rather than bundled into a predicate.
+  of `X+Y` and fiber regularity), passed explicitly rather than bundled into a predicate.
 * In case 3, `RHS = 0` is the genuine value: the entropy power of a singular measure is `0`.
 -/
 
@@ -57,10 +57,10 @@ theorem map_add_absolutelyContinuous
     hXY.map_add_eq_map_conv_map hX hY, Measure.conv_comm]
   exact Measure.conv_absolutelyContinuous hX_ac
 
-/-- The real core of case 2: `h(X) ≤ h(X+Y)`. Combines the fibre identification
+/-- The real core of case 2: `h(X) ≤ h(X+Y)`. Combines the fiber identification
 `condDifferentialEntropy (X+Y) Y P = h(X)` (`condDifferentialEntropy_indep_add_eq` at `c = 1`) with
 the conditioning bound `h(X+Y | Y) ≤ h(X+Y)` (`condDifferentialEntropy_le`). The integrability
-hypotheses are regularity preconditions (a.c. density of `X+Y` and fibre regularity).
+hypotheses are regularity preconditions (a.c. density of `X+Y` and fiber regularity).
 
 @audit:ok -/
 theorem differentialEntropy_add_ge_of_indep
@@ -94,7 +94,7 @@ theorem differentialEntropy_add_ge_of_indep
       ≤ differentialEntropy (P.map (fun ω ↦ X ω + Y ω)) := by
   set W : Ω → ℝ := fun ω ↦ X ω + Y ω with hW
   have hW_meas : Measurable W := hX.add hY
-  -- Fibre identification (c=1): `h(X + 1·Y | Y) = h(X)`, and `1·Y = Y`.
+  -- Fiber identification (c=1): `h(X + 1·Y | Y) = h(X)`, and `1·Y = Y`.
   have h_fibre : condDifferentialEntropy W Y P = differentialEntropy (P.map X) := by
     have h := condDifferentialEntropy_indep_add_eq X Y P 1 hX hY hXY hX_ac
     simpa only [one_mul] using h

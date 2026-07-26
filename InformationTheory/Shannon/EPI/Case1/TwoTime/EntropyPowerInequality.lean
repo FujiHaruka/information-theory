@@ -156,8 +156,8 @@ theorem heatFlowEP_tendsto_atTop
     Filter.Tendsto.atTop_mul_pos hν_pos Filter.tendsto_id hNr_lim
   exact h_prod.congr' (h_eq.mono (fun s hs ↦ hs.symm))
 
-/-- TT case-1 EPI terminal (two-time analog of the single-`t`
-`entropyPower_add_ge_case1_of_regular`, `EPI/Case1/RatioLimit/Assembly.lean`).
+/-- The case-1 entropy power inequality in two-time form, the two-time analog of the
+single-`t` `entropyPower_add_ge_case1_of_regular` (`EPI/Case1/RatioLimit/Assembly.lean`).
 
 `N(X+Y) ≥ N(X) + N(Y)`, assembled from the three GENUINE two-time pillars
 (`twoTimeLogRatioGap_antitoneOn_Ici_zero`, `twoTimeLogRatioGap_tendsto_zero_atTop`,
@@ -178,8 +178,8 @@ representative escape is structurally impossible — the same honest mechanism a
 `twoTimeLogRatioGap_hasDerivAt`.
 
 Preconditions are the union of `matchedTimePath_exists` (×2) + Pillar B + Pillar C
-regularity, deduplicated. None encode the EPI conclusion (mirrors the single-`t`
-terminal's `@audit:ok` union, `EPI/Case1/RatioLimit/Assembly.lean`):
+regularity, deduplicated. None encode the EPI conclusion (the same precondition union
+as the single-`t` form in `EPI/Case1/RatioLimit/Assembly.lean`, itself `@audit:ok`):
 * `h_endpt_X`/`h_endpt_Y` (path-producer endpoint continuity), `h_endpt_sum` (Pillar B);
 * `h_reg_X`/`h_reg_Y`/`h_reg_sum : IsDeBruijnRegularityHyp` (de Bruijn + J pin);
 * `h_scale_*` per-σ a.c.+integrability (consumed by `entropyPower_path_scaling`,

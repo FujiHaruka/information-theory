@@ -138,8 +138,8 @@ private lemma perLetterYLaw_eq_mixture
   congr 1
   refine Finset.sum_congr rfl ?_
   intro m _
-  -- ((dirac m).prod ν).map (fun ω => ω.2 i)
-  --   = (ν.map (fun y => y i))                 -- via map_snd_prod ∘ map_eval composition
+  -- ((dirac m).prod ν).map (fun ω ↦ ω.2 i)
+  --   = (ν.map (fun y ↦ y i))                  -- via map_snd_prod ∘ map_eval composition
   --   = gaussianReal (c.encoder m i) N
   have h_meas_snd :
       Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) := measurable_snd
@@ -525,7 +525,7 @@ theorem awgn_per_letter_mi_le_log_var
 `∑ᵢ (1/2) log(1 + xᵢ/N) ≤ n · (1/2) log(1 + (∑ᵢ xᵢ / n) / N)` for `xᵢ ≥ 0`.
 
 `Real.log` is concave on `Ioi 0` (`Mathlib.Analysis.Convex.SpecificFunctions.Basic.
-strictConcaveOn_log_Ioi`) ⇒ `fun x => Real.log (1 + x/N)` concave on `Ici 0` (composition
+strictConcaveOn_log_Ioi`) ⇒ `fun x ↦ Real.log (1 + x/N)` concave on `Ici 0` (composition
 with affine increasing map, packaged as `concaveOn_log_one_add_div` in
 `DifferentialEntropy.lean`). Apply `ConcaveOn.le_map_sum` with uniform weights
 `wᵢ := 1/n`. -/

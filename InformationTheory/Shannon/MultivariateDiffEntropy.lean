@@ -33,7 +33,8 @@ Subadditivity follows from `KL ≥ 0` + the bridge
 `(klDiv(joint ‖ ∏ marginals)).toReal = ∑ h(marginalᵢ) − h(joint)`.
 The Bayes density split is established via Mathlib's `prod_withDensity₀` +
 `rnDeriv_mul_rnDeriv`. The 2-variable `*_of_llr_split` variants, which take that
-split as an explicit hypothesis instead, are retained for backward compatibility.
+split as an explicit hypothesis instead, are retained for backward compatibility and
+carry `@audit:superseded-by(...)`.
 
 `pi_withDensity` (joint density = ∏ marginal densities on `Fin n → ℝ`) is absent
 from Mathlib, so it is built in-tree as `pi_withDensity_fin` by

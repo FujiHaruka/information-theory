@@ -15,7 +15,7 @@ refinement, supplied here.
 
 ## Main statements
 
-* `gaussianReal_Ici_eq_half` — the centred Gaussian assigns mass `1/2` to the
+* `gaussianReal_Ici_eq_half` — the centered Gaussian assigns mass `1/2` to the
   closed half-line.
 * `tiltedWindow_eventually_large_of_boundary` — at the boundary `a = m`, the
   tilted window mass is eventually `≥ 1/4`.
@@ -39,7 +39,7 @@ namespace InformationTheory.Shannon.CramerCltBoundary
 open MeasureTheory ProbabilityTheory Filter
 open scoped ENNReal NNReal Topology BigOperators
 
-/-- The centred Gaussian `𝒩(0, v)` (with `v ≠ 0`) assigns mass exactly `1/2` to the
+/-- The centered Gaussian `𝒩(0, v)` (with `v ≠ 0`) assigns mass exactly `1/2` to the
 half-line `{x | 0 ≤ x}`.
 
 @audit:ok (symmetry-by-map). -/
@@ -514,8 +514,8 @@ theorem cramer_lower_boundary_at_tilted_mean
     exact h
 
 /-- **Cramér's theorem** (lower bound, boundary closure, consumer form). The
-infinitePi-side restatement of `cramer_lower_boundary_at_tilted_mean` with the cgf written on the
-coordinate-eval family `Y ∘ eval 0` under the un-tilted product, at the optimal
+infinitePi-side restatement of `cramer_lower_boundary_at_tilted_mean` with the cgf
+written on the coordinate-eval family `Y ∘ eval 0` under the un-tilted product, at the optimal
 tilt `a = deriv (cgf (Y∘eval 0) (infinitePi μ₀)) lam`. The optimal-tilt hypothesis
 `h_deriv` pins `a = m = ∫ Y ∂tilted`, so the residual largeness hypothesis is
 removed: the boundary window mass is supplied internally by the CLT.

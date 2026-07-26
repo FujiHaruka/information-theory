@@ -212,8 +212,8 @@ Gaussian laws + a.c. (`hZX_law`/`hZY_law`/`hZXZY_indep`/`hZX_ac`/`hZY_ac`/`hZXZY
 the per-`t` scaling regularity (`h_scale_X/Y/sum`), and the per-path variance data +
 three `IsRescaledPathRegular` bundles (§4 side). None is load-bearing: the EPI /
 Stam core is supplied inside the two pillars; the conclusion
-`N(X+Y) ≥ N(X)+N(Y)` is not encoded in any hypothesis. The name
-(`_of_regular`, not bare `_unconditional`) reflects this: the regularity preconditions are real.
+`N(X+Y) ≥ N(X)+N(Y)` is not encoded in any hypothesis. The `_of_regular` suffix
+records that those regularity preconditions are real and not removable here.
 
 @audit:ok
 @audit:superseded-by(entropyPowerExt_add_ge) Superseded by the
@@ -419,33 +419,23 @@ theorem rescaledPath_ac_and_negMulLog_integrable
 regularity (a.c. inputs + finite second moments + standard-normal `𝒩(0,1)`
 noise laws + 4-tuple independence) plus de Bruijn per-time regularity.
 
-On the unit-noise restatement: the noise
-laws were generalized `gaussianReal 0 v_X`/`gaussianReal 0 v_Y` (`v_X v_Y` arbitrary
-nonzero). Since the conclusion `N(X+Y) ≥ N(X)+N(Y)` does not mention the noise, the noise
-is an auxiliary variable and fixing it to `𝒩(0,1)` loses no generality. This is required
-so the de Bruijn producers (`isDeBruijnRegularityHyp_of_methodX_unitnoise`) — whose
-`IsRegularDeBruijnHypV2.Z_law` hardcodes `gaussianReal 0 1` — can actually supply the
-threaded `IsDeBruijnRegularityHyp` group (previously vacuous for `v_X ≠ 1`). The body
-re-introduces `v_X v_Y := (1 : ℝ≥0)` existentially to keep the `_of_regular` plumbing
-(general `v_B` on the §4 saturation side) unchanged.
-
-Non-vacuity: the unit-noise restate resolves a latent vacuity defect. The old signature
-took arbitrary nonzero `v_X v_Y` while threading `IsDeBruijnRegularityHyp X Z_X P`, whose
-`reg_at t ht .Z_law` (= `IsRegularDeBruijnHypV2.Z_law`, `FisherInfo/DeBruijn.lean`)
-hardcodes `P.map Z_X = gaussianReal 0 1` — so for `v_X ≠ 1` the hypotheses `hZX_law` and
-`Z_law` were mutually unsatisfiable, making the theorem vacuously true (premises never
-jointly inhabitable). Fixing `hZX_law : P.map Z_X = gaussianReal 0 1` removes the
-contradiction. The body's `obtain ⟨v_X, hv_X, hZX_law⟩ : ∃ v, v≠0 ∧ … := ⟨1, one_ne_zero,
-hZX_law⟩` is HONEST (not circular `:= h`, not `:True`): it locally re-derives the
-`∃ v ≠ 0` shape the `_of_regular` plumbing expects, instantiated at the witness
-`v = 1` carried by the unit hypothesis. The conclusion `N(X+Y) ≥ N(X)+N(Y)` is unchanged and
-not weakened; the noise is auxiliary (absent from the conclusion) so the unit
-restriction loses no generality. The
-threaded `IsDeBruijnRegularityHyp` / `h_reg_*` are preconditions (residuals live in
-the producer's `integrable_deriv`, see `isDeBruijnRegularityHyp_of_methodX_unitnoise`). Not
+On the unit-noise restriction and non-vacuity: the conclusion `N(X+Y) ≥ N(X)+N(Y)` does
+not mention the noise, so the noise is an auxiliary variable and fixing its law to
+`𝒩(0,1)` loses no generality. Unit variance is what makes the threaded
+`IsDeBruijnRegularityHyp` group supplyable at all: its `reg_at t ht .Z_law`
+(= `IsRegularDeBruijnHypV2.Z_law`, `FisherInfo/DeBruijn.lean`) hardcodes
+`P.map Z_X = gaussianReal 0 1`, so under any other noise variance that field and
+`hZX_law` are mutually unsatisfiable and the premises are never jointly inhabitable.
+The body re-introduces `v_X v_Y := (1 : ℝ≥0)` existentially to keep the `_of_regular`
+plumbing (general `v_B` on the §4 saturation side) unchanged, and that step is honest
+(not circular `:= h`, not `:True`): the `obtain` supplying
+`∃ v : ℝ≥0, v ≠ 0 ∧ P.map Z_X = gaussianReal 0 v` re-derives that shape at the witness
+`v = 1` carried by the unit hypothesis. The threaded
+`IsDeBruijnRegularityHyp` / `h_reg_*` are preconditions (residuals live in the
+producer's `integrable_deriv`, see `isDeBruijnRegularityHyp_of_methodX_unitnoise`). Not
 `@audit:ok` only because it threads residual-carrying regularity hyps.
 
-This wrapper discharges the supply-able preconditions of
+This wrapper supplies the derivable preconditions of
 `entropyPower_add_ge_case1_of_regular` from clean method-X data:
 * noise a.c. (`hZX_ac`/`hZY_ac`/`hZXZY_ac`) via `gaussianReal_absolutelyContinuous`
   + `map_add_absolutelyContinuous`;
@@ -460,12 +450,12 @@ This wrapper discharges the supply-able preconditions of
   variance scaling, which hold with equality.
 
 The de Bruijn per-time regularity group (`h_reg_*'` / `h_endpt_*` / `h_pos_stam`)
-is not supplied from method-X (it depends on the moonshot
-`epi-debruijn-pertime-closure`) and is threaded as a precondition.
+is not supplied from method-X (it depends on `epi-debruijn-pertime-closure`) and is
+threaded as a precondition.
 
-@audit:superseded-by(entropyPowerExt_add_ge) Has 0 consumers, carries an
-unresolved de Bruijn per-time wall (`@residual` below). Superseded by the unconditional EPI.
-The de Bruijn closure plan `epi-debruijn-pertime-closure` remains a valid standalone goal
+@audit:superseded-by(entropyPowerExt_add_ge) No consumers, and the de Bruijn per-time
+regularity group is still open (`@residual` below). Superseded by the unconditional EPI.
+The de Bruijn closure `epi-debruijn-pertime-closure` remains a valid standalone goal
 independently of this supersession.
 @residual(plan:epi-debruijn-pertime-closure) -/
 theorem entropyPower_add_ge_case1_of_methodX
@@ -478,8 +468,8 @@ theorem entropyPower_add_ge_case1_of_methodX
     (hXY_ac : (P.map (fun ω ↦ X ω + Y ω)) ≪ volume)
     (h_mom_X : Integrable (fun ω ↦ (X ω)^2) P)
     (h_mom_Y : Integrable (fun ω ↦ (Y ω)^2) P)
-    -- method-X: noise standard-normal law (unit variance, PB-1 restate — the noise is an
-    -- auxiliary variable absent from the conclusion, so fixing it to `𝒩(0,1)` loses no
+    -- method-X: noise standard-normal law (unit variance — the noise is an auxiliary
+    -- variable absent from the conclusion, so fixing it to `𝒩(0,1)` loses no
     -- generality and aligns with the de Bruijn group's unit-variance requirement)
     (hZX_law : P.map Z_X = gaussianReal 0 1)
     (hZY_law : P.map Z_Y = gaussianReal 0 1)
@@ -521,7 +511,7 @@ theorem entropyPower_add_ge_case1_of_methodX
     entropyPower (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
   classical
-  -- PB-1: unit-noise restate. The noise variances are fixed to `1`; the §4 saturation
+  -- Unit noise: the noise variances are fixed to `1`; the §4 saturation
   -- side (`entropyPower_rescaled_path_tendsto`) takes a general `v_B`, so `v_X = v_Y = 1`
   -- and `v_sum = 1 + 1 = 2` flow through `_of_regular` unchanged. We rebind the unit laws
   -- to the `gaussianReal 0 v_X` shape the body expects (defeq `v_X := (1 : ℝ≥0)`).
