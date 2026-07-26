@@ -21,11 +21,11 @@ unconditional gateway monotonicity together with its `entropyPower` lift.
 ## Main statements
 
 * `differentialEntropyExt_truncW_tendsto_top` — `h(W) = ⊤ ⟹ h(W_n) → ⊤` along the truncations.
-* `differentialEntropyExt_top_of_indep_add_unconditional` — the unconditional `⊤`-branch
+* `differentialEntropyExt_top_of_indep_add` — the unconditional `⊤`-branch
   `h(W) = ⊤ ⟹ h(W+V) = ⊤`.
-* `differentialEntropyExt_mono_add_unconditional` — unconditional gateway monotonicity
+* `differentialEntropyExt_mono_add` — unconditional gateway monotonicity
   `W` a.c. and `W ⊥ V ⟹ h(W) ≤ h(W+V)`.
-* `entropyPowerExt_mono_add_unconditional` — its `entropyPowerExt` lift.
+* `entropyPowerExt_mono_add` — its `entropyPowerExt` lift.
 
 Depends on the `Core` and `Mono` parts; re-exported by the umbrella
 `InformationTheory.Shannon.EPI.Unconditional.TruncationLimit`.
@@ -629,7 +629,7 @@ monotonicity `h(W_n) ≤ h(W_n + V)` (`differentialEntropyExt_mono_add_truncW`) 
 preconditions `hW`/`hV`/`hWV`/`hW_ac` together with the case condition `hW_top`.
 
 @audit:ok -/
-theorem differentialEntropyExt_top_of_indep_add_unconditional
+theorem differentialEntropyExt_top_of_indep_add
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
     (hW_ac : (P.map W) ≪ volume)
@@ -755,7 +755,7 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
 
 Gateway monotonicity is assembled unconditionally from three pieces: the `⊥` branch (`bot_le`), the
 finite branch (`differentialEntropyExt_mono_add_of_integrable`, per-fibre Gibbs), and the `⊤` branch
-(`differentialEntropyExt_top_of_indep_add_unconditional`). The finite branch goes through the
+(`differentialEntropyExt_top_of_indep_add`). The finite branch goes through the
 finiteness-to-integrability bridge `differentialEntropyExt_integrable_of_finite`. -/
 
 /-- Finite differential entropy implies integrability of `negMulLog ∘ density` (the converse of
@@ -798,10 +798,10 @@ theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ
 /-- Unconditional gateway monotonicity: `W` a.c. and `W ⊥ V ⟹ h(W) ≤ h(W+V)`. The proof splits into
 the `⊥` branch (`bot_le`), the finite branch (`differentialEntropyExt_mono_add_of_integrable`
 via the finiteness-to-integrability bridge), and the `⊤` branch
-(`differentialEntropyExt_top_of_indep_add_unconditional`).
+(`differentialEntropyExt_top_of_indep_add`).
 
 @audit:ok -/
-theorem differentialEntropyExt_mono_add_unconditional
+theorem differentialEntropyExt_mono_add
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
     (hW_ac : (P.map W) ≪ volume) :
@@ -812,16 +812,16 @@ theorem differentialEntropyExt_mono_add_unconditional
   · have hne_bot : differentialEntropyExt (P.map W) ≠ ⊥ := hpos.ne'
     by_cases htop : differentialEntropyExt (P.map W) = ⊤
     · -- The `⊤` branch: route β' gives `h(W+V) = ⊤`, so `⊤ ≤ ⊤`.
-      rw [htop, differentialEntropyExt_top_of_indep_add_unconditional W V P hW hV hWV hW_ac htop]
+      rw [htop, differentialEntropyExt_top_of_indep_add W V P hW hV hWV hW_ac htop]
     · -- The finite branch: bridge finiteness → integrability, then per-fibre Gibbs.
       exact differentialEntropyExt_mono_add_of_integrable W V P hW hV hWV hW_ac
         (differentialEntropyExt_integrable_of_finite hW_ac htop hne_bot)
 
 /-- Unconditional gateway atom: `W` a.c. and `W ⊥ V ⟹ N(W+V) ≥ N(W)`. Lifts
-`differentialEntropyExt_mono_add_unconditional` along `EReal.exp_monotone` to `entropyPowerExt`.
+`differentialEntropyExt_mono_add` along `EReal.exp_monotone` to `entropyPowerExt`.
 
 @audit:ok -/
-theorem entropyPowerExt_mono_add_unconditional
+theorem entropyPowerExt_mono_add
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
     (hW_ac : (P.map W) ≪ volume) :
@@ -829,7 +829,7 @@ theorem entropyPowerExt_mono_add_unconditional
   unfold entropyPowerExt
   apply EReal.exp_monotone
   exact mul_le_mul_of_nonneg_left
-    (differentialEntropyExt_mono_add_unconditional W V P hW hV hWV hW_ac) (by norm_num)
+    (differentialEntropyExt_mono_add W V P hW hV hWV hW_ac) (by norm_num)
 
 
 end InformationTheory.Shannon

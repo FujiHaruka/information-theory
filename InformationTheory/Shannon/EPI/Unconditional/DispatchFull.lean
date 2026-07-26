@@ -4,15 +4,15 @@ import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit
 /-!
 # Entropy power inequality — fully unconditional dispatch
 
-The fully unconditional entropy power inequality `entropyPowerExt_add_ge_unconditional`, taking only
+The fully unconditional entropy power inequality `entropyPowerExt_add_ge`, taking only
 `(hX hY : Measurable) (hXY : IndepFun X Y P)`, built from the unconditional gateway lemmas.
 
 ## Main statements
 
-* `entropyPowerExt_add_ge_unconditional` — the unconditional `ℝ≥0∞` entropy power inequality.
+* `entropyPowerExt_add_ge` — the unconditional `ℝ≥0∞` entropy power inequality.
 * `entropyPowerExt_mixed_add_ge_uncond` / `_symm_uncond` — the mixed cases (one factor a.c., the
   other singular), via gateway monotonicity.
-* `entropyPowerExt_add_ge_case1_uncond` — case 1 (both a.c.), splitting on `⊤`/`⊥`/finite of the
+* `entropyPowerExt_add_ge_case1` — case 1 (both a.c.), splitting on `⊤`/`⊥`/finite of the
   three differential entropies and delegating to `entropyPowerExt_add_ge_finite_ac`.
 
 ## Implementation notes
@@ -51,7 +51,7 @@ theorem entropyPowerExt_mixed_add_ge_uncond
     entropyPowerExt (P.map (fun ω ↦ X ω + Y ω))
       ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y) := by
   rw [entropyPowerExt_singular hY_sing, add_zero]
-  exact entropyPowerExt_mono_add_unconditional X Y P hX hY hXY hX_ac
+  exact entropyPowerExt_mono_add X Y P hX hY hXY hX_ac
 
 /-- Case 2 symmetric (Y a.c., X singular): since `N(X) = 0`, the RHS is `N(Y)`, and gateway
 monotonicity (`W = Y`, `V = X`) gives `N(Y+X) ≥ N(Y)`, reshaped to `X+Y` by `add_comm`. The only
@@ -67,7 +67,7 @@ theorem entropyPowerExt_mixed_add_ge_symm_uncond
   have hcomm : P.map (fun ω ↦ X ω + Y ω) = P.map (fun ω ↦ Y ω + X ω) :=
     congrArg (P.map ·) (funext fun ω ↦ add_comm _ _)
   rw [hcomm, entropyPowerExt_singular hX_sing, zero_add]
-  exact entropyPowerExt_mono_add_unconditional Y X P hY hX hXY.symm hY_ac
+  exact entropyPowerExt_mono_add Y X P hY hX hXY.symm hY_ac
 
 /-- Case 1 (both a.c.), with no finite-entropy hypotheses. Splits on `⊤`/`⊥`/finite of `h(X+Y)`,
 `h(X)`, `h(Y)`: the `⊤`/`⊥` branches collapse one RHS term via gateway monotonicity, and the
@@ -76,7 +76,7 @@ all-finite branch supplies the three integrability hypotheses through the bridge
 The only hypotheses are `hX hY hXY hX_ac hY_ac`.
 
 @audit:ok -/
-theorem entropyPowerExt_add_ge_case1_uncond
+theorem entropyPowerExt_add_ge_case1
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) :
@@ -89,7 +89,7 @@ theorem entropyPowerExt_add_ge_case1_uncond
   by_cases hXtop : differentialEntropyExt (P.map X) = ⊤
   · have hNX : entropyPowerExt (P.map X) = ⊤ := entropyPowerExt_eq_top_of_diffEntExt_top hXtop
     have hge : entropyPowerExt (P.map (fun ω ↦ X ω + Y ω)) ≥ entropyPowerExt (P.map X) :=
-      entropyPowerExt_mono_add_unconditional X Y P hX hY hXY hX_ac
+      entropyPowerExt_mono_add X Y P hX hY hXY hX_ac
     have hWval : entropyPowerExt (P.map (fun ω ↦ X ω + Y ω)) = ⊤ :=
       top_le_iff.mp (hNX ▸ hge)
     rw [hWval]; exact le_top
@@ -99,7 +99,7 @@ theorem entropyPowerExt_add_ge_case1_uncond
       congrArg (P.map ·) (funext fun ω ↦ add_comm _ _)
     have hNY : entropyPowerExt (P.map Y) = ⊤ := entropyPowerExt_eq_top_of_diffEntExt_top hYtop
     have hge : entropyPowerExt (P.map (fun ω ↦ Y ω + X ω)) ≥ entropyPowerExt (P.map Y) :=
-      entropyPowerExt_mono_add_unconditional Y X P hY hX hXY.symm hY_ac
+      entropyPowerExt_mono_add Y X P hY hX hXY.symm hY_ac
     have hWval : entropyPowerExt (P.map (fun ω ↦ X ω + Y ω)) = ⊤ := by
       rw [hcomm]; exact top_le_iff.mp (hNY ▸ hge)
     rw [hWval]; exact le_top
@@ -108,11 +108,11 @@ theorem entropyPowerExt_add_ge_case1_uncond
   · have hcomm : P.map (fun ω ↦ X ω + Y ω) = P.map (fun ω ↦ Y ω + X ω) :=
       congrArg (P.map ·) (funext fun ω ↦ add_comm _ _)
     rw [entropyPowerExt_eq_zero_of_diffEntExt_bot hXbot, zero_add, hcomm]
-    exact entropyPowerExt_mono_add_unconditional Y X P hY hX hXY.symm hY_ac
+    exact entropyPowerExt_mono_add Y X P hY hX hXY.symm hY_ac
   -- 5. h(Y) = ⊥ ⟹ N(Y) = 0, RHS = N(X); the gateway gives N(X+Y) ≥ N(X).
   by_cases hYbot : differentialEntropyExt (P.map Y) = ⊥
   · rw [entropyPowerExt_eq_zero_of_diffEntExt_bot hYbot, add_zero]
-    exact entropyPowerExt_mono_add_unconditional X Y P hX hY hXY hX_ac
+    exact entropyPowerExt_mono_add X Y P hX hY hXY hX_ac
   -- 6. Remaining branch (h(X), h(Y), h(X+Y) all finite): supply 3 integrabilities via the bridge.
   · -- h(X+Y) is a.c. (both a.c. + independence preserves convolution).
     have hW_ac : P.map (fun ω ↦ X ω + Y ω) ≪ volume :=
@@ -120,7 +120,7 @@ theorem entropyPowerExt_add_ge_case1_uncond
     -- h(X) ≤ h(X+Y) (gateway monotone); since h(X) ≠ ⊥, also h(X+Y) ≠ ⊥.
     have hmono : differentialEntropyExt (P.map X)
         ≤ differentialEntropyExt (P.map (fun ω ↦ X ω + Y ω)) :=
-      differentialEntropyExt_mono_add_unconditional X Y P hX hY hXY hX_ac
+      differentialEntropyExt_mono_add X Y P hX hY hXY hX_ac
     have hWbot : differentialEntropyExt (P.map (fun ω ↦ X ω + Y ω)) ≠ ⊥ := by
       intro hbot
       exact hXbot (le_bot_iff.mp (hbot ▸ hmono))
@@ -132,12 +132,12 @@ theorem entropyPowerExt_add_ge_case1_uncond
 
 /-- The fully unconditional extended-real **entropy power inequality** `N(X+Y) ≥ N(X) + N(Y)`, taking
 only `hX hY hXY`. The four-case split on absolute continuity of `P.map X` and `P.map Y` delegates to
-`entropyPowerExt_add_ge_case1_uncond` (both a.c.), `entropyPowerExt_mixed_add_ge_uncond` /
+`entropyPowerExt_add_ge_case1` (both a.c.), `entropyPowerExt_mixed_add_ge_uncond` /
 `_symm_uncond` (mixed), and `entropyPowerExt_singular_add_ge` (both singular).
 
 @audit:ok -/
 @[entry_point]
-theorem entropyPowerExt_add_ge_unconditional
+theorem entropyPowerExt_add_ge
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) :
     entropyPowerExt (P.map (fun ω ↦ X ω + Y ω))
@@ -145,7 +145,7 @@ theorem entropyPowerExt_add_ge_unconditional
   by_cases hX_ac : (P.map X) ≪ volume
   · by_cases hY_ac : (P.map Y) ≪ volume
     · -- Both a.c. → case 1.
-      exact entropyPowerExt_add_ge_case1_uncond X Y P hX hY hXY hX_ac hY_ac
+      exact entropyPowerExt_add_ge_case1 X Y P hX hY hXY hX_ac hY_ac
     · -- X a.c., Y singular → case 2.
       exact entropyPowerExt_mixed_add_ge_uncond X Y P hX hY hXY hX_ac hY_ac
   · by_cases hY_ac : (P.map Y) ≪ volume

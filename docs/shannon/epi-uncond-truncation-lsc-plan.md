@@ -1,6 +1,6 @@
 # EPI 無条件化 W-Y2 — route β' (truncation + monotone-limit) サブ計画
 
-**Status**: CLOSED ✅ — route β' (truncation + monotone-limit、weak-conv LSC 非経由) で method-Y full gateway 完了 (proof-done + 独立監査 all-OK)。gateway ⊤ 枝 + full 無条件単調性 `differentialEntropyExt_mono_add_unconditional` / `entropyPowerExt_mono_add_unconditional` が無条件版② (i-a) 非継承で着地。残 = headline wire のみ (親 Phase 5/S4)。
+**Status**: CLOSED ✅ — route β' (truncation + monotone-limit、weak-conv LSC 非経由) で method-Y full gateway 完了 (proof-done + 独立監査 all-OK)。gateway ⊤ 枝 + full 無条件単調性 `differentialEntropyExt_mono_add` / `entropyPowerExt_mono_add` が無条件版② (i-a) 非継承で着地。残 = headline wire のみ (親 Phase 5/S4)。
 **SoT**: `docs/shannon/ch17-inequalities-status.md` + `docs/shannon/epi-facts.md` + `docs/textbook-roadmap.md` Ch.17。詳細履歴は git。
 
 > **Parent**: [`epi-unconditional-moonshot-plan.md`](epi-unconditional-moonshot-plan.md) §Sub-plan 一覧 S5 (W-Y2)

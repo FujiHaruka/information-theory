@@ -1,6 +1,6 @@
 # EPI Stam → EPI conclusion — B-wire honest discharge plan
 
-**Status**: CLOSED ✅ — 一般 EPI は親 moonshot が無条件 dispatch + route T で別ルート closure 済 (`entropyPowerExt_add_ge_unconditional`)。本 plan の Phase B (legacy 実数 `entropy_power_inequality` の Stam-bridge 経由 closure) は textbook goal に不要となり SUPERSEDED。closure 対象だった legacy Stam-bridge + 露出 decl は物理削除済。Phase A (`entropy_power_inequality_of_density`、`EPIDensityForm.lean`) は CLOSED のまま生存。(Stam Step 2: re-scope candidate — see 要点)
+**Status**: CLOSED ✅ — 一般 EPI は親 moonshot が無条件 dispatch + route T で別ルート closure 済 (`entropyPowerExt_add_ge`)。本 plan の Phase B (legacy 実数 `entropy_power_inequality` の Stam-bridge 経由 closure) は textbook goal に不要となり SUPERSEDED。closure 対象だった legacy Stam-bridge + 露出 decl は物理削除済。Phase A (`entropy_power_inequality_of_density`、`EPIDensityForm.lean`) は CLOSED のまま生存。(Stam Step 2: re-scope candidate — see 要点)
 **SoT**: `docs/shannon/ch17-inequalities-status.md` + `docs/shannon/epi-facts.md` + `docs/textbook-roadmap.md` Ch.17。詳細履歴は git。
 
 - 親: [`epi-unconditional-moonshot-plan.md`](epi-unconditional-moonshot-plan.md) (無条件 EPI moonshot、B-wire = 最終 wall)

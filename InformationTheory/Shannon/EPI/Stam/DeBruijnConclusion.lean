@@ -56,7 +56,7 @@ proceeds two ways:
 The EPI conclusion (§3) is landed from regularity by deriving the Stam inequality
 from `stamCauchySchwarzOptimal_of_indepFun` and feeding it through the monolithic
 `IsEPIL3IntegratedPipeline`. The Gaussian EPI (§5) is obtained directly
-from Gaussian saturation (`entropy_power_inequality_gaussian_full'`), with no Stam
+from Gaussian saturation (`entropy_power_inequality_gaussian'`), with no Stam
 claim.
 
 ## Main statements
@@ -64,7 +64,7 @@ claim.
 * `IsEPIGapMonotoneHyp` — de Bruijn gap-monotonicity sub-predicate (§1)
 * `deBruijn_deriv_nonneg` / `isEPIGapMonotoneHyp_of_deBruijnV2` — `g'(t) ≥ 0` (§1)
 * `isStamInequalityHyp_of_primitives` — Stam from regularity (§2)
-* `entropy_power_inequality_gaussian_full'` — Gaussian EPI via saturation (§5)
+* `entropy_power_inequality_gaussian'` — Gaussian EPI via saturation (§5)
 * `deBruijn_gap_deriv_nonneg_gaussian` — composed Gaussian gap monotonicity (§6)
 
 ## Implementation notes
@@ -167,16 +167,16 @@ content is localized to `stamCauchySchwarzOptimal_of_indepFun`. -/
 
 /-! ## §5 — Gaussian EPI (via saturation)
 
-The Gaussian EPI is `entropy_power_inequality_gaussian_full'` below (direct from
+The Gaussian EPI is `entropy_power_inequality_gaussian'` below (direct from
 `entropyPower_gaussian_additivity`), which carries no Stam claim: the inequality
 comes entirely from Gaussian saturation.
 -/
 
 /-- Gaussian EPI fully hypothesis-free
-(`EPIL3Integration.entropy_power_inequality_gaussian_full`). The saturation case
+(`EPIL3Integration.entropy_power_inequality_gaussian`). The saturation case
 gives equality, hence `≥`; *no* pipeline hypothesis at all is required. -/
 @[entry_point]
-theorem entropy_power_inequality_gaussian_full'
+theorem entropy_power_inequality_gaussian'
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)

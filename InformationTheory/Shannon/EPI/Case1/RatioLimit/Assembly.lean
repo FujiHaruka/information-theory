@@ -216,7 +216,7 @@ Stam core is supplied inside the two pillars; the conclusion
 (`_of_regular`, not bare `_unconditional`) reflects this: the regularity preconditions are real.
 
 @audit:ok
-@audit:superseded-by(entropyPowerExt_add_ge_unconditional) Superseded by the
+@audit:superseded-by(entropyPowerExt_add_ge) Superseded by the
 unconditional EPI; the sole consumer `entropyPower_add_ge_case1_of_methodX` is a dead leaf.
 Retained as proof-done. The two-time variant `entropyPower_add_ge_case1_of_regular_twotime` is
 separate and live. -/
@@ -463,7 +463,7 @@ The de Bruijn per-time regularity group (`h_reg_*'` / `h_endpt_*` / `h_pos_stam`
 is not supplied from method-X (it depends on the moonshot
 `epi-debruijn-pertime-closure`) and is threaded as a precondition.
 
-@audit:superseded-by(entropyPowerExt_add_ge_unconditional) Has 0 consumers, carries an
+@audit:superseded-by(entropyPowerExt_add_ge) Has 0 consumers, carries an
 unresolved de Bruijn per-time wall (`@residual` below). Superseded by the unconditional EPI.
 The de Bruijn closure plan `epi-debruijn-pertime-closure` remains a valid standalone goal
 independently of this supersession.

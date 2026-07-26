@@ -96,7 +96,7 @@ theorems are presented as the Gaussian instance of a real result.
 > and its pipeline witness `isEPIStamDeBruijnPipeline_of_gaussian` were
 > **removed** (the Stam half was discharged vacuously via the V1-zero artefact, so
 > the Stam/de Bruijn machinery was non-load-bearing). No genuine result is lost:
-> the honest Gaussian EPI is `entropy_power_inequality_gaussian_full'`
+> the honest Gaussian EPI is `entropy_power_inequality_gaussian'`
 > (`EPIStamDeBruijnConclusion.lean`, direct from
 > `entropy_power_inequality_gaussian_saturation`, no Stam mention).
 
@@ -131,7 +131,7 @@ except the Gaussian-saturation special case, where the Stam half is vacuous.
 obtained through the Stam-inequality / de Bruijn-integration machinery (the actual
 Cover-Thomas 17.7 proof). It was not. The only genuine content is the Gaussian
 saturation *equality*, which is already and honestly available as
-`entropy_power_inequality_gaussian_full'` (`:285`) and
+`entropy_power_inequality_gaussian'` (`:285`) and
 `entropy_power_inequality_gaussian_saturation` with no Stam mention.
 
 ---

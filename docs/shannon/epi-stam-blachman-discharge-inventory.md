@@ -122,7 +122,7 @@ entropy_power_inequality (EntropyPowerInequality.lean:188)
                      └─ scaling : IsStamToEPIScalingHyp   ← _of_gaussian のみ (EPI 密輸)
        │
    [経路 B: Gaussian saturation] (現状 unconditional に閉じている唯一の経路)
-   entropy_power_inequality_gaussian_full' (DeBruijnConclusion.lean:285)
+   entropy_power_inequality_gaussian' (DeBruijnConclusion.lean:285)
      └─ entropy_power_inequality_gaussian_saturation (EntropyPowerInequality.lean:226)
           └─ gaussianReal_add_gaussianReal_of_indepFun (Mathlib) + closed-form entropy
              → 真に unconditional だが **Gaussian 専用** (general case 未達)
@@ -336,7 +336,7 @@ theorem hasDerivAt_integral_of_dominated_loc_of_deriv_le (hs : s ∈ 𝓝 x₀)
 **判定: 本調査では新規撤退ラインの発動は不要 (調査のみ、実装せず)。** ただし
 **unconditional EPI を目指す全 primitive が既に最深の撤退ライン (L-S12-C 未採用 = full
 measure-theoretic discharge) の手前で着地している**。これ以上の縮退余地は乏しく、唯一
-unconditional に閉じている経路は Gaussian saturation (`entropy_power_inequality_gaussian_full'`,
+unconditional に閉じている経路は Gaussian saturation (`entropy_power_inequality_gaussian'`,
 `DeBruijnConclusion.lean:285`)。
 
 **新規撤退ライン提案 (もし unconditional 着手するなら)**:

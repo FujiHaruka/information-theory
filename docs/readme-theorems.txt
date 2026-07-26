@@ -47,7 +47,7 @@ seqLogWealth_tendsto_atTop_of_pos_doublingRate | exponential wealth growth: W*>0
 seqLogWealth_tendsto_atBot_of_neg_doublingRate | ruin: W*<0 ⟹ log Sₙ→−∞ a.s. (CT 6.3)
 
 @ 7 | Channel capacity
-shannon_noisy_channel_coding_theorem_general_full
+shannon_noisy_channel_coding_theorem_general
 channel_coding_feedback_converse
 shannon_converse_single_shot
 channelCoding_strong_converse_asymptotic | Wolfowitz strong converse (asymptotic)

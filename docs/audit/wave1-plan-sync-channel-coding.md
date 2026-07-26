@@ -217,7 +217,10 @@
 ### `channel-coding-shannon-theorem-full-plan` (3 件)
 
 - **plan path**: `docs/shannon/channel-coding-shannon-theorem-full-plan.md` (290 行)
-- **plan 最終 Phase status**: Phase D.0–D.4 全件 `[x]`、主定理 `shannon_noisy_channel_coding_theorem_general_full` (`ChannelCodingShannonTheoremFullDischarge.lean:1588`、0 sorry) で **`hW_pos` も `h_passthrough` も無し** の完全無条件 publish 済。MVP file の `shannon_noisy_channel_coding_theorem_general` は依然 `h_passthrough` 形で残存と明記。
+- **注 (本節の宣言名について)**: 監査当時の `_full` 版は現在 `shannon_noisy_channel_coding_theorem_general`
+  に改名済。当時この素名を持っていた `h_passthrough` 形 MVP は宣言・ファイルとも削除済であり、
+  以下で MVP を指す同名参照はすべてその削除済宣言を指す。
+- **plan 最終 Phase status**: Phase D.0–D.4 全件 `[x]`、主定理 `shannon_noisy_channel_coding_theorem_general` (`ChannelCodingShannonTheoremFullDischarge.lean:1588`、0 sorry) で **`hW_pos` も `h_passthrough` も無し** の完全無条件 publish 済。MVP file の `shannon_noisy_channel_coding_theorem_general` は依然 `h_passthrough` 形で残存と明記。
 - **code suspect 件数 (実測)**: 3
 - **個別 suspect**:
 

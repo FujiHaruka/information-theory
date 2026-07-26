@@ -111,7 +111,7 @@ RHS is `N(X)`; both `X` and `X+Y` are a.c. with finite differential entropy, so
 `h(X) ≤ h(X+Y)` lifts via `Real.exp_le_exp`. The integrability and finite-entropy hypotheses are
 regularity preconditions.
 
-@audit:superseded-by(entropyPowerExt_add_ge_unconditional) Replaced by the unconditional
+@audit:superseded-by(entropyPowerExt_add_ge) Replaced by the unconditional
 `entropyPowerExt_mixed_add_ge_uncond`; retained as a proof-done leaf reachable only from the dead
 dispatch skeleton.
 @audit:ok -/
@@ -166,7 +166,7 @@ theorem entropyPowerExt_mixed_add_ge
 `hWyx_ent` into the `X`-role positions. The integrability and finite-entropy hypotheses are
 regularity preconditions for the `Y+X` path.
 
-@audit:superseded-by(entropyPowerExt_add_ge_unconditional) Replaced by the unconditional
+@audit:superseded-by(entropyPowerExt_add_ge) Replaced by the unconditional
 `entropyPowerExt_mixed_add_ge_symm_uncond`; retained as a proof-done leaf reachable only from the
 dead dispatch skeleton.
 @audit:ok -/

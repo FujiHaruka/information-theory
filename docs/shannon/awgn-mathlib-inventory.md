@@ -8,7 +8,7 @@
 
 ## 一行サマリ
 
-**Gaussian の closed-form 補題（密度・平均・分散・畳み込み・rnDeriv）はほぼ 100 % Mathlib に既存（10/10）。InformationTheory 側に `differentialEntropy`／Gaussian max-entropy／`mutualInfo`／`capacity`／discrete `shannon_noisy_channel_coding_theorem_general_full` まで揃っている。**  
+**Gaussian の closed-form 補題（密度・平均・分散・畳み込み・rnDeriv）はほぼ 100 % Mathlib に既存（10/10）。InformationTheory 側に `differentialEntropy`／Gaussian max-entropy／`mutualInfo`／`capacity`／discrete `shannon_noisy_channel_coding_theorem_general` まで揃っている。**  
 **ただし「(a) continuous channel kernel = `Kernel ℝ ℝ` の AWGN 具体化」「(b) power constraint `𝔼[X²] ≤ P` を input 分布側で書いた `awgnCapacity P N` 定義」「(c) joint typical set / sphere packing on `ℝⁿ`」「(d) Pinsker / Fano + chain rule の continuous 版」の 4 ピースは Mathlib 不在 + InformationTheory 不在で、いずれも自作必須。**  
 撤退ラインは 2 本（後述）うち少なくとも 1 本（achievability 連続版を hypothesis pass-through 化）に触れる蓋然性が高い。
 
@@ -135,7 +135,7 @@ have h_I := mutualInfo_le_of_gaussian_input  -- I(X;Y) = (1/2) log(1+P/N) when X
 | **`Code M n α β`** | `structure Code (M n : ℕ) (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] where encoder : Fin M → (Fin n → α); decoder : (Fin n → β) → Fin M` | `ChannelCoding.lean:151` | ✅ 既存・**要拡張** | discrete 想定: encoder/decoder に measurability 不要 (finite α）。**AWGN では `α := ℝ` で `measurable encoder` が自動で出ない**。bundle に measurability 追加 or `AwgnCode` 新規構造 |
 | `Code.errorProbAt`, `averageErrorProb` | `ChannelCoding.lean:204, 210` | ✅ 既存 | そのまま再利用可能 |
 | **`capacity W`** | `noncomputable def capacity (W : Channel α β) : ℝ := sSup ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) '' stdSimplex ℝ α)` | `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean:102` | ✅ 既存・**要 specialize** | **discrete 想定 (`stdSimplex ℝ α` は `α : Fintype` 前提)**。AWGN では `α := ℝ` で `stdSimplex ℝ ℝ` は無意味なので**新規 `awgnCapacity P N : ℝ` を立てる**必要あり |
-| `shannon_noisy_channel_coding_theorem_general_full` | `theorem shannon_noisy_channel_coding_theorem_general_full (W : Channel α β) [IsMarkovKernel W] {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W) {ε : ℝ} (hε : 0 < ε) : ∃ N : ℕ, ∀ n, N ≤ n → ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (c : Code M n α β), ∀ m, (c.errorProbAt W m).toReal < ε` 前提 `[Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]` + `β` 同様 | `InformationTheory/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588` | ✅ 既存・**型クラス壁** | **`[Fintype α]` 必須。AWGN では `α := ℝ` で適用不可。** 連続版を別途証明する必要あり |
+| `shannon_noisy_channel_coding_theorem_general` | `theorem shannon_noisy_channel_coding_theorem_general (W : Channel α β) [IsMarkovKernel W] {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W) {ε : ℝ} (hε : 0 < ε) : ∃ N : ℕ, ∀ n, N ≤ n → ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (c : Code M n α β), ∀ m, (c.errorProbAt W m).toReal < ε` 前提 `[Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]` + `β` 同様 | `InformationTheory/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588` | ✅ 既存・**型クラス壁** | **`[Fintype α]` 必須。AWGN では `α := ℝ` で適用不可。** 連続版を別途証明する必要あり |
 
 ### B.3 — `BlockwiseChannel` 抽象（I-2 General DMC capacity）
 

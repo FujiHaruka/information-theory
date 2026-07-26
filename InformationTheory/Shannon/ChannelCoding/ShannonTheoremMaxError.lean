@@ -26,7 +26,7 @@ Supporting lemmas are split into part files:
   and smooth achievability.
 
 This file contains only the main theorem
-`shannon_noisy_channel_coding_theorem_general_full`.
+`shannon_noisy_channel_coding_theorem_general`.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -45,7 +45,7 @@ omit [DecidableEq α] [DecidableEq β] in
 and any `ε > 0`, there exists `N` such that for all `n ≥ N` there is a code with
 `M ≥ ⌈exp(nR)⌉` codewords achieving max-error less than `ε`. -/
 @[entry_point]
-theorem shannon_noisy_channel_coding_theorem_general_full
+theorem shannon_noisy_channel_coding_theorem_general
     (W : Channel α β) [IsMarkovKernel W]
     {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W)
     {ε : ℝ} (hε : 0 < ε) :

@@ -1,6 +1,6 @@
 # D-1'' Phase D parent surgery — `h_passthrough` discharge ムーンショット計画 🌙
 
-**Status**: CLOSED ✅ (UNCONDITIONAL) — `hW_pos` 完全除去版 `shannon_noisy_channel_coding_theorem_general_full` を publish: `R < capacity W` のみ (full-support 仮説も `h_passthrough` も無し、完全無条件) で max-error 達成形を結論。MVP 形 (`_general`、`h_passthrough` 形) は `@audit:retract-candidate(superseded-by-full-discharge)` に再分類済。
+**Status**: CLOSED ✅ (UNCONDITIONAL) — `hW_pos` 完全除去版 `shannon_noisy_channel_coding_theorem_general` を publish: `R < capacity W` のみ (full-support 仮説も `h_passthrough` も無し、完全無条件) で max-error 達成形を結論。かつて同名を持っていた `h_passthrough` 形 MVP は宣言・ファイルとも削除済。
 **SoT**: `docs/textbook-roadmap.md` Ch.7。詳細履歴は git。
 親 plan (D-1' Phase A-C): [`channel-coding-shannon-theorem-general-plan.md`](./channel-coding-shannon-theorem-general-plan.md)
 親 plan (D-1 full-support 形): [`channel-coding-shannon-theorem-plan.md`](./channel-coding-shannon-theorem-plan.md)

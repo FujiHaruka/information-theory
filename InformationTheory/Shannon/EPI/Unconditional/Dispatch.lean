@@ -71,8 +71,8 @@ the mixed cases to `entropyPowerExt_mixed_add_ge` / `_symm`, and the doubly-sing
 path-dependent
 regularity preconditions threaded into the mixed-case lemmas.
 
-@audit:superseded-by(entropyPowerExt_add_ge_unconditional) The fully unconditional version
-`entropyPowerExt_add_ge_unconditional` (in `EPIUncondDispatchFull`, taking only `hX hY hXY`) is the
+@audit:superseded-by(entropyPowerExt_add_ge) The fully unconditional version
+`entropyPowerExt_add_ge` (in `EPI.Unconditional.DispatchFull`, taking only `hX hY hXY`) is the
 canonical headline; this skeleton is retained as a proof-done leaf with no consumers.
 @audit:ok -/
 theorem entropyPowerExt_add_ge_dispatch_skeleton

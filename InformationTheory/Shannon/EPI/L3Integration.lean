@@ -32,7 +32,7 @@ derive the entropy power inequality.
 
 - `isEPIL3IntegratedPipeline_of_gaussian`: Gaussian pipeline witness from a
   Stam hypothesis.
-- `entropy_power_inequality_gaussian_full`: Gaussian EPI, hypothesis-free.
+- `entropy_power_inequality_gaussian`: Gaussian EPI, hypothesis-free.
 - `isEPIL3IntegratedPipeline_symm`: symmetry of the integrated pipeline.
 - `isEPIL3IntegratedPipeline_of_stam`: pipeline from a Stam hypothesis.
 - `integrated_pipeline_roundtrip`: round-trip sanity check.
@@ -46,7 +46,7 @@ follows:
   `FisherInfo.deBruijn_identity_v2_gaussian` for the Gaussian case.
 - The Stam-to-EPI coupling is not a field of the pipeline: consumers supply
   `IsStamToEPIBridgeHyp` separately (`epi_via_stam`). The Gaussian saturation
-  case needs no bridge at all (`entropy_power_inequality_gaussian_full`).
+  case needs no bridge at all (`entropy_power_inequality_gaussian`).
 -/
 
 namespace InformationTheory.Shannon.EPIL3Integration
@@ -83,7 +83,7 @@ structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
 For independent Gaussians `X, Y` with non-zero variance, the *Stam* field is supplied
 as an `IsStamInequalityHyp X Y P` argument, not discharged. The
 hypothesis-free Gaussian EPI (no Stam claim at all) is
-`entropy_power_inequality_gaussian_full`. -/
+`entropy_power_inequality_gaussian`. -/
 @[entry_point]
 theorem isEPIL3IntegratedPipeline_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -123,7 +123,7 @@ theorem isEPIL3IntegratedPipeline_of_stam
 
 /-! ## Concrete Gaussian EPI via saturation
 
-The Gaussian EPI is `entropy_power_inequality_gaussian_full` below (direct from
+The Gaussian EPI is `entropy_power_inequality_gaussian` below (direct from
 `entropyPower_gaussian_additivity`); the integrated-pipeline form takes a real
 `IsStamInequalityHyp` argument. -/
 
@@ -131,7 +131,7 @@ The Gaussian EPI is `entropy_power_inequality_gaussian_full` below (direct from
 directly (no Stam predicate needed for the inequality itself; the predicate
 is only needed for the integrated pipeline form). -/
 @[entry_point]
-theorem entropy_power_inequality_gaussian_full
+theorem entropy_power_inequality_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)

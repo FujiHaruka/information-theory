@@ -30,7 +30,7 @@ channel 入力 `Fin n_c → α'` に橋渡しする mechanism は完全不在で
   **未閉**。stationary ergodic な achievability 自前構築 = **+150 行**。
 - **Source side converse** (`source_coding_converse`, `entropy_le_of_mem_achievableRates`):
   iid + finite alphabet で **完成** (`AEP.lean:704, :1207`)。出力 `liminf log M_n / n ≥ H`。
-- **Channel side achievability** (`shannon_noisy_channel_coding_theorem_general_full`):
+- **Channel side achievability** (`shannon_noisy_channel_coding_theorem_general`):
   memoryless DMC + finite alphabet で **完成** (`ChannelCodingShannonTheoremFullDischarge.lean:1588`)。
   出力: max-error < ε with `M ≥ ⌈exp(nR)⌉`。
 - **Channel side converse** (`channel_coding_converse_general_memoryless_pure`):
@@ -84,7 +84,7 @@ obtain ⟨M_src, _, c_src, d_src, h_rate_src, h_err_src⟩ :=
 -- Step 2: from h_rate_src `log M_src n / n → R`, pick N_src so that for n ≥ N_src,
 --   ⌈exp((n_c) · R)⌉ ≥ M_src n for some block length n_c (linear scaling).
 -- Step 3: apply channel achievability at this n_c.
-obtain ⟨N_ch, hN_ch⟩ := shannon_noisy_channel_coding_theorem_general_full
+obtain ⟨N_ch, hN_ch⟩ := shannon_noisy_channel_coding_theorem_general
   W (R := R) hR_pos hRC hε_half
 -- Step 4: compose c_src + c_ch and d_ch + d_src; error rate splits by union bound.
 -- Total error ≤ err_src + err_ch ≤ ε/2 + ε/2 = ε.
@@ -216,12 +216,12 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ## B. Channel coding theorem の現状
 
-### B-1. `shannon_noisy_channel_coding_theorem_general_full` (channel achievability, fully general)
+### B-1. `shannon_noisy_channel_coding_theorem_general` (channel achievability, fully general)
 
 - **file:line**: `InformationTheory/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588`
 - **完全 signature verbatim**:
   ```lean
-  theorem shannon_noisy_channel_coding_theorem_general_full
+  theorem shannon_noisy_channel_coding_theorem_general
       (W : Channel α β) [IsMarkovKernel W]
       {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W)
       {ε : ℝ} (hε : 0 < ε) :
@@ -256,9 +256,10 @@ sorry  -- composition error bound is the main novel 100–200 LoC
   ```
 - **Phase mapping (T3-E)**: B-1 で十分。本 lemma は **使わない**。
 
-### B-3. `shannon_noisy_channel_coding_theorem_general` (hypothesis pass-through 形)
+### B-3. hypothesis pass-through 形 MVP (削除済)
 
-- **file:line**: `InformationTheory/Shannon/ChannelCodingShannonTheoremFull.lean:52`
+- **file:line**: 不在。かつて `ChannelCodingShannonTheoremFull.lean` にあり B-1 の素名を持っていたが、
+  宣言・ファイルとも削除済 (素名は現在 B-1 が持つ)。
 - **Phase mapping (T3-E)**: B-1 が discharged 完全形のため **使わない**。
 
 ### B-4. `channel_coding_converse_general_memoryless_pure` (channel converse, semi-pure)
@@ -351,7 +352,7 @@ errorProb measured on:
   = μ.real { ω | jointRV Xs n ω ≠ d n (c n (jointRV Xs n ω)) }
 ```
 
-**Channel coding 側 (B-1)** の出力 (`shannon_noisy_channel_coding_theorem_general_full`):
+**Channel coding 側 (B-1)** の出力 (`shannon_noisy_channel_coding_theorem_general`):
 
 ```
 c_ch : Code M n_c α_ch β                     -- bundle: encoder Fin M → Fin n_c → α_ch
@@ -588,7 +589,7 @@ errorProb measured per-message on:
   - 仮定: `hM_bdd : ∃ R, ∀ n, Real.log (M n : ℝ) / n ≤ R` — **bounded rate** が要 (super-exponential
     growth を排除)
   - 仮定: `hPe_to_zero : Tendsto (Pe_n) atTop (𝓝 0)` (error rate vanishes)
-- **`shannon_noisy_channel_coding_theorem_general_full` (B-1)**:
+- **`shannon_noisy_channel_coding_theorem_general` (B-1)**:
   - 必須: `[Fintype α/β] [DecidableEq α/β] [Nonempty α/β] [MeasurableSpace α/β] [MeasurableSingletonClass α/β]`
   - 必須: `[IsMarkovKernel W]`
   - 仮定: `0 < R`, `R < capacity W`, `0 < ε`
@@ -689,7 +690,7 @@ IID source `Xs : ℕ → Ω → α_src` (撤退ライン: stationary ergodic 一
 
 主部品:
 - Source side achievability: `source_coding_achievability` (AEP.lean:1138)
-- Channel side achievability: `shannon_noisy_channel_coding_theorem_general_full`
+- Channel side achievability: `shannon_noisy_channel_coding_theorem_general`
   (ChannelCodingShannonTheoremFullDischarge.lean:1588)
 - Source side converse: `source_coding_converse` (AEP.lean:704)
 - Channel side converse: `channel_coding_converse_general_memoryless_pure`
@@ -764,7 +765,7 @@ end InformationTheory.Shannon.JointSourceChannel
 | Component | 既存率 | 内訳 |
 |---|---|---|
 | Source achievability | **100 %** | `source_coding_achievability` 直呼出し |
-| Channel achievability | **100 %** | `shannon_noisy_channel_coding_theorem_general_full` 直呼出し |
+| Channel achievability | **100 %** | `shannon_noisy_channel_coding_theorem_general` 直呼出し |
 | Source converse | **100 %** | `source_coding_converse` + `entropy_le_of_mem_achievableRates` |
 | Channel converse | **100 %** | `channel_coding_converse_general_memoryless_pure` |
 | Capacity / entropy / MI 基盤 | **100 %** | `capacity`, `mutualInfo`, `entropy` etc. 全て publish 済 |

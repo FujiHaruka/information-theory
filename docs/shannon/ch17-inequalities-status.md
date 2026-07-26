@@ -16,7 +16,7 @@ path-integrability (`IsDeBruijnPathRegular` の inhabitant 構成) は per-time 
 `wall:fisher-finiteness` 系の de Bruijn 積分側 gap も解消済 (下記履歴テーブルの per-time 残記述は obsolete)。
 **一般 EPI は 2026-06-08 に完成** (`epi-unconditional-moonshot-plan` 完了、roadmap 判断ログ #18):
 
-- **完全無条件版** `entropyPowerExt_add_ge_unconditional` (`EPI/Unconditional/DispatchFull.lean`、
+- **完全無条件版** `entropyPowerExt_add_ge` (`EPI/Unconditional/DispatchFull.lean`、
   ℝ≥0∞ 値 `entropyPowerExt`、precondition = 可測+独立のみ、**sorryAx-free**、`@audit:ok`)。
   **3-case dispatch** (両 a.c. / 混合 / 両特異) で組み、case-1 a.c. 枝の無限分散部は 2026-06-07 に
   「無限分散 a.c. 壁」を FALSE WALL と判定 → **route T (truncation+Gibbs+DCT)** で closure。
@@ -29,7 +29,7 @@ path-integrability (`IsDeBruijnPathRegular` の inhabitant 構成) は per-time 
 > ⚠ **2026-06-11 注記 (legacy route 物理削除)**: `stamToEPIBridge_holds` (唯一の EPI sorry) + legacy
 > Cover-Thomas Stam-bridge 露出 (`entropy_power_inequality` / log・exp form / `epi_via_stam_main` 系 /
 > L3Integration integrated pipeline 等、計 28 decl) を **物理削除済**。blast radius は EPI family 内に完全
-> 隔離されており (route-T 後継 = `entropyPowerExt_add_ge_unconditional` / `entropy_power_inequality_of_ac` /
+> 隔離されており (route-T 後継 = `entropyPowerExt_add_ge` / `entropy_power_inequality_of_ac` /
 > `_of_density` は非依存)、削除後 full build clean (3480 jobs) + route-T headline は `[propext, Classical.choice,
 > Quot.sound]` 維持。**EPI family の実 sorry = 0**。`IsStamInequalityResidual` は consumer 0 で co-delete、
 > `IsEntropyPowerInequalityHypothesis` (Gaussian-saturation 系 16 consumer) は KEEP。下記「Route A/B」「active

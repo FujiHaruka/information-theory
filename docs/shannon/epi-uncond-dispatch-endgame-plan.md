@@ -14,11 +14,11 @@ prose にキャッシュせず `#print axioms` で都度確認 (CLAUDE.md「re-d
 
 - [x] Phase 0 — 在庫 gate ✅ (EReal exp 境界値 in-tree 確認、h=⊥⟹N=0 helper は `entropyPowerExt_singular` 末尾 verbatim と確定)
 - [x] Phase 1 — 柱 A: singular-case rewire ✅ (`entropyPowerExt_mixed_add_ge_uncond` + 対称版、gateway で 16 integrability + 4 finite-entropy 除去、`@audit:ok`)
-- [x] Phase 2 — 柱 B: case-1 split ✅ (`entropyPowerExt_add_ge_case1_uncond`、6-way ⊤/⊥/有限 split、bridge で integrability 供給、own sorry 0、`@audit:ok`)
-- [x] Phase 3 — 柱 C: assembly ✅ (`entropyPowerExt_add_ge_unconditional` = `hX hY hXY` のみ、`#print axioms` = `[propext, Classical.choice, Quot.sound]` 機械確認、5 declaration 独立 honesty-auditor all-OK、commit f767105)
+- [x] Phase 2 — 柱 B: case-1 split ✅ (`entropyPowerExt_add_ge_case1`、6-way ⊤/⊥/有限 split、bridge で integrability 供給、own sorry 0、`@audit:ok`)
+- [x] Phase 3 — 柱 C: assembly ✅ (`entropyPowerExt_add_ge` = `hX hY hXY` のみ、`#print axioms` = `[propext, Classical.choice, Quot.sound]` 機械確認、5 declaration 独立 honesty-auditor all-OK、commit f767105)
 - [x] Phase 4 — 柱 D: headline 命名 + 同期 ✅ (真の無条件 headline = ℝ≥0∞ 版のみ確定、facts 台帳 + 親 Phase 5 同期)
 
-**✅ 全 Phase 完了 (2026-06-08)**: 完全無条件 EPI dispatch `entropyPowerExt_add_ge_unconditional` proof-done (sorryAx-free、precondition 0、独立監査 all-OK)。
+**✅ 全 Phase 完了 (2026-06-08)**: 完全無条件 EPI dispatch `entropyPowerExt_add_ge` proof-done (sorryAx-free、precondition 0、独立監査 all-OK)。
 
 proof-log: Phase 0 = no (調査のみ)。Phase 1–4 = yes (`docs/shannon/proof-log-epi-uncond-dispatch-endgame-*.md`)。
 
@@ -41,7 +41,7 @@ proof-done ゆえ**改変せず残す** (consumer 0 の leaf、機械確認済)�
 
 ### Approach (解の全体形 — 4 つの柱)
 
-無条件 gateway `entropyPowerExt_mono_add_unconditional` (= `N(W+V) ≥ N(W)`、integrability/有限性
+無条件 gateway `entropyPowerExt_mono_add` (= `N(W+V) ≥ N(W)`、integrability/有限性
 仮説ゼロ、regularity のみ、`@audit:ok`) を core engine とする。RHS = `N(X)+N(Y)` の各項を
 gateway 単調性で `N(X+Y)` の下界に潰すか、有限 sub-case で既存 case-1 genuine EPI に落とす。
 
@@ -62,7 +62,7 @@ gateway 単調性で `N(X+Y)` の下界に潰すか、有限 sub-case で既存 
 
 | # | 名前 | file:line | 仮説 (verbatim 抜粋) | 結論 | 状態 |
 |---|---|---|---|---|---|
-| 1 | `entropyPowerExt_mono_add_unconditional` | `EPIUncondTruncationLimit.lean:2423` | `(W V) (P) [IsProbabilityMeasure P] (hW hV : Measurable) (hWV : IndepFun W V P) (hW_ac : (P.map W) ≪ volume)` | `entropyPowerExt (P.map (W+V)) ≥ entropyPowerExt (P.map W)` | proof-done `@audit:ok` |
+| 1 | `entropyPowerExt_mono_add` | `EPIUncondTruncationLimit.lean:2423` | `(W V) (P) [IsProbabilityMeasure P] (hW hV : Measurable) (hWV : IndepFun W V P) (hW_ac : (P.map W) ≪ volume)` | `entropyPowerExt (P.map (W+V)) ≥ entropyPowerExt (P.map W)` | proof-done `@audit:ok` |
 | 2 | `differentialEntropyExt_integrable_of_finite` | `EPIUncondTruncationLimit.lean:2350` | `{μ} (hac : μ ≪ volume) (hne_top : differentialEntropyExt μ ≠ ⊤) (hne_bot : differentialEntropyExt μ ≠ ⊥)` | `Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume` | proof-done `@audit:ok` |
 | 3 | `entropyPowerExt_add_ge_finite_ac` | `EPIUncondDispatch.lean:88` | `(X Y) (P) [IsProb] (hX hY : Measurable) (hXY : IndepFun) (hX_ac hY_ac : ≪ volume) (hX_ent hY_ent hW_ent : Integrable (negMulLog∘density) volume)` | `N(X+Y) ≥ N(X) + N(Y)` | proof-done |
 | 4 | `entropyPowerExt_singular_add_ge` | `EPIUncondMixedCase.lean:41` | `(X Y) (P) (hX_sing hY_sing : ¬ ≪ volume)` | `N(X+Y) ≥ N(X)+N(Y)` (RHS=0) | proof-done `@audit:ok` |
@@ -109,9 +109,9 @@ proof-log: no (調査のみ)。**この Phase が柱 B (case-1 split) の GO/NO-
     (`differentialEntropyExt_integrable_of_finite`、`:2350`)。**確認済、自作不要**。
 - [ ] **case-1 split の `h(X+Y) ≠ ⊥` 導出ルートの在庫** (撤退ライン L-Endgame-2-α の事前確認):
   有限 sub-case (h(X),h(Y),h(X+Y) 全有限) で `h(X+Y) ≠ ⊥` を bridge #2 に渡すために要する。候補ルート:
-  (a) gateway 単調性 `differentialEntropyExt_mono_add_unconditional` (`:2399`、`h(X) ≤ h(X+Y)`) +
+  (a) gateway 単調性 `differentialEntropyExt_mono_add` (`:2399`、`h(X) ≤ h(X+Y)`) +
   `h(X) ≠ ⊥` (sub-case 仮定) で `h(X+Y) ≥ h(X) > ⊥`、(b) 直接 by_cases。**在庫項**: gateway 単調性の
-  EReal 版 `differentialEntropyExt_mono_add_unconditional` の signature を verbatim 抽出し、(a) が
+  EReal 版 `differentialEntropyExt_mono_add` の signature を verbatim 抽出し、(a) が
   `lt_of_lt_of_le` で立つか確認 (`hX_ac` が前提に要る点 — case 1 で X a.c. ゆえ充足)。
 - [ ] **finite_ac (#3) の 3 finite-entropy precondition を bridge #2 で全供給できるか** の verbatim 検算:
   #3 は `hX_ent hY_ent hW_ent` を取る。有限 sub-case (3 項全有限) では各々 #2 で供給 (`hX_ac`/`hY_ac`/
@@ -128,7 +128,7 @@ proof-log: no (調査のみ)。**この Phase が柱 B (case-1 split) の GO/NO-
 - **L-Endgame-0-β** (在庫 NO-GO 兆候): gateway 単調性が `differentialEntropyExt` (EReal) でなく
   `entropyPowerExt` (ℝ≥0∞) 版しか公開されておらず、`h(X+Y) ≠ ⊥` の EReal-level 導出に使えない →
   `entropyPowerExt` 版から `differentialEntropyExt` の不等式を逆算する経路を再評価 (EReal.exp 単射性
-  `EReal.exp_lt_exp` 等の在庫を追加調査)。**確認済**: EReal 版 `differentialEntropyExt_mono_add_unconditional`
+  `EReal.exp_lt_exp` 等の在庫を追加調査)。**確認済**: EReal 版 `differentialEntropyExt_mono_add`
   (`:2399`) は公開済ゆえ本撤退ライン不発の見込み (Phase 0 で verbatim 再確認)。
 
 ---
@@ -144,7 +144,7 @@ Real ProbabilityTheory` + `EntropyPowerInequality`) に以下を立てる。
   - signature: `(X Y) (P) [IsProbabilityMeasure P] (hX hY : Measurable) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_sing : ¬ (P.map Y) ≪ volume)`、結論 `N(X+Y) ≥ N(X)+N(Y)`。
   - proof: `entropyPowerExt_singular hY_sing` で `N(Y)=0` → `RHS = N(X) + 0 = N(X)` (`add_zero`)。
-    gateway #1 `entropyPowerExt_mono_add_unconditional X Y P hX hY hXY hX_ac` で `N(X+Y) ≥ N(X)` を出し
+    gateway #1 `entropyPowerExt_mono_add X Y P hX hY hXY hX_ac` で `N(X+Y) ≥ N(X)` を出し
     closure。**integrability 8 本 + finite-entropy 2 本除去**、仮説は `hX hY hXY hX_ac hY_sing` のみ。
 - [ ] **`entropyPowerExt_mixed_add_ge_symm_uncond`** (case 2 対称: Y a.c. ∧ X 特異)。
   - signature: `... (hY_ac : (P.map Y) ≪ volume) (hX_sing : ¬ (P.map X) ≪ volume)`、結論同上。
@@ -170,7 +170,7 @@ Real ProbabilityTheory` + `EntropyPowerInequality`) に以下を立てる。
 proof-log: yes。**endgame 本体**。case 1 (両 a.c.) を `h(X+Y)` / `h(X)` / `h(Y)` の値で split。
 RHS = `N(X)+N(Y)`、`N = EReal.exp(2·h)` ゆえ `h=⊤⟹N=⊤`、`h=⊥⟹N=0`。
 
-- [ ] **`entropyPowerExt_add_ge_case1_uncond`** (両 a.c.、finite-entropy 前提なし)。
+- [ ] **`entropyPowerExt_add_ge_case1`** (両 a.c.、finite-entropy 前提なし)。
   - signature: `(X Y) (P) [IsProbabilityMeasure P] (hX hY : Measurable) (hXY : IndepFun X Y P)
     (hX_ac hY_ac : (P.map X / P.map Y) ≪ volume)`、結論 `N(X+Y) ≥ N(X)+N(Y)`。
   - proof skeleton (各 sub-case を `:= by sorry` で立て typecheck → fill):
@@ -194,7 +194,7 @@ RHS = `N(X)+N(Y)`、`N = EReal.exp(2·h)` ゆえ `h=⊤⟹N=⊤`、`h=⊥⟹N=0`
 ### Phase 2 撤退ライン
 
 - **L-Endgame-2-α** (有限 sub-case で `h(X+Y) ≠ ⊥` 導出が詰まる): gateway 単調性
-  `differentialEntropyExt_mono_add_unconditional` (`h(X) ≤ h(X+Y)`) を使った `h(X)≠⊥ ⟹ h(X+Y)≠⊥` が
+  `differentialEntropyExt_mono_add` (`h(X) ≤ h(X+Y)`) を使った `h(X)≠⊥ ⟹ h(X+Y)≠⊥` が
   `lt_of_lt_of_le`/`bot_lt_iff_ne_bot` の order 補題で fire しない → `h(X+Y)=⊥ ⟹ h(X)=⊥` の対偶を直接
   立てる helper を新規 (~5 行)。**それでも詰まれば該当 sub-case を `sorry` +
   `@residual(plan:epi-uncond-dispatch-endgame-plan)` で park** し、他 sub-case を先に proof-done に。
@@ -213,16 +213,16 @@ RHS = `N(X)+N(Y)`、`N = EReal.exp(2·h)` ゆえ `h=⊤⟹N=⊤`、`h=⊥⟹N=0`
 
 proof-log: yes。
 
-- [ ] **`entropyPowerExt_add_ge_unconditional`** (完全無条件、`hX hY hXY` のみ)。
+- [ ] **`entropyPowerExt_add_ge`** (完全無条件、`hX hY hXY` のみ)。
   - signature: `(X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] (hX hY : Measurable)
     (hXY : IndepFun X Y P)`、結論 `entropyPowerExt (P.map (X+Y)) ≥ entropyPowerExt (P.map X) +
     entropyPowerExt (P.map Y)`。**precondition 21 → 0**。
   - proof: 4 枝 `by_cases (P.map X ≪ volume)` × `by_cases (P.map Y ≪ volume)`:
-    - 両 a.c. → 柱 B `entropyPowerExt_add_ge_case1_uncond`。
+    - 両 a.c. → 柱 B `entropyPowerExt_add_ge_case1`。
     - X a.c. ∧ Y 特異 → 柱 A `entropyPowerExt_mixed_add_ge_uncond`。
     - Y a.c. ∧ X 特異 → 柱 A 対称 `entropyPowerExt_mixed_add_ge_symm_uncond`。
     - 両特異 → #4 `entropyPowerExt_singular_add_ge`。
-- [ ] **`#print axioms entropyPowerExt_add_ge_unconditional`** = `[propext, Classical.choice,
+- [ ] **`#print axioms entropyPowerExt_add_ge`** = `[propext, Classical.choice,
   Quot.sound]` (sorryAx-free) を機械確認。`by_cases (≪ volume)` の `Classical.dec` は `Classical.choice`
   と同列で許容 (sorryAx ではない、L-Endgame-3-α)。
 - [ ] `InformationTheory.lean` に `import InformationTheory.Shannon.EPIUncondDispatchFull` を
@@ -240,7 +240,7 @@ proof-log: yes。
   Quot.sound]` ゆえ問題なし。
 - **L-Endgame-3-β** (柱 B 未完で transitive sorry 残存): 柱 B の有限 sub-case が L-Endgame-2-α で
   park された場合、assembly は transitive sorry を消費 → **honest 部分達成として commit**
-  (`entropyPowerExt_add_ge_unconditional` の docstring に「case-1 有限 sub-case は本 plan で closure
+  (`entropyPowerExt_add_ge` の docstring に「case-1 有限 sub-case は本 plan で closure
   予定、他 3 枝は genuine」明示、`@residual(plan:epi-uncond-dispatch-endgame-plan)`)。無条件構造
   (4 枝 dispatch) は達成、完全 sorryAx-free は柱 B closure 後。
 
@@ -250,7 +250,7 @@ proof-log: yes。
 
 proof-log: yes。
 
-- [ ] **拡張版 headline 命名**: 柱 C の `entropyPowerExt_add_ge_unconditional` が**真の無条件 EPI**
+- [ ] **拡張版 headline 命名**: 柱 C の `entropyPowerExt_add_ge` が**真の無条件 EPI**
   (ℝ≥0∞ 版、`hX hY hXY` のみ)。`_unconditional` 命名は precondition 21→0 ゆえ name-laundering で
   **ない** (CLAUDE.md)。
 - [ ] **実数版 headline の論点確定 (⚠ 重要)**: 親 Phase 5 の方針は新名
@@ -262,11 +262,11 @@ proof-log: yes。
   (`entropy_power_inequality_of_ac`、`EPIUncondDispatch.lean:249`、proof-done) に**留まる**。
   - 本 plan は実数版を `_unconditional` と**命名しない** (a.c.+有限 precondition を持つため name
     laundering)。既存 `entropy_power_inequality_of_ac` が実数版の honest 到達点で、本 plan は
-    新規実数版 headline を作らず ℝ≥0∞ 版 `entropyPowerExt_add_ge_unconditional` で締める。
+    新規実数版 headline を作らず ℝ≥0∞ 版 `entropyPowerExt_add_ge` で締める。
 - [ ] **親 Phase 5 / sub-plan 表 / DAG を本 plan に同期** (子 SoT、同コミット対象): 親 Phase 5 を
   「gateway 経由 dispatch endgame」へ改稿、sub-plan 表に S4-endgame 行追加、DAG 末尾を本子接続へ。
 - [ ] **facts 台帳 `epi-facts.md` 同期**: 「無条件 dispatch headline は 21 precondition」行を、本 plan
-  完成後に「`entropyPowerExt_add_ge_unconditional` が `hX hY hXY` のみで sorryAx-free」へ訂正
+  完成後に「`entropyPowerExt_add_ge` が `hX hY hXY` のみで sorryAx-free」へ訂正
   (`#print axioms` 再導出コマンド付き、commit hash 更新)。
 
 ### Phase 4 撤退ライン
@@ -297,13 +297,13 @@ reshape) のみで、いずれも壁でなく self-build で閉じる見込み (
 書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。決着済 entry は削除。
 
 1. **2026-06-08 起草**: parent Phase 5 (S4 = assembly) の headline wire endgame として起草。
-   S5 (method-Y full gateway) が 2026-06-08 全 proof-done (`entropyPowerExt_mono_add_unconditional`
-   / `differentialEntropyExt_mono_add_unconditional` / bridge `differentialEntropyExt_integrable_of_finite`、
+   S5 (method-Y full gateway) が 2026-06-08 全 proof-done (`entropyPowerExt_mono_add`
+   / `differentialEntropyExt_mono_add` / bridge `differentialEntropyExt_integrable_of_finite`、
    全 sorryAx-free + (i-a) 非継承、`epi-facts.md` 達成表) を受け、残務 = headline wire を本 plan に集約。
    - **設計**: 既存 21-precondition dispatch skeleton (proof-done、consumer 0 leaf) は**改変せず残し**、
      gateway 経由の完全無条件版を新 file `EPIUncondDispatchFull.lean` に**別建て**。柱 A (singular
      rewire) + 柱 B (case-1 split) + 柱 C (assembly) + 柱 D (命名)。
-   - **verbatim 確認済 (予測でなく実コード)**: gateway #1 `entropyPowerExt_mono_add_unconditional`
+   - **verbatim 確認済 (予測でなく実コード)**: gateway #1 `entropyPowerExt_mono_add`
      (`:2423`、regularity のみ)、bridge #2 `differentialEntropyExt_integrable_of_finite` (`:2350`)、
      case-1 #3 `entropyPowerExt_add_ge_finite_ac` (`:88`、3 finite-entropy)、singular #4/#5。RHS 確定
      補助 #6 `entropyPowerExt_eq_top_of_diffEntExt_top` (`:129`、h=⊤⟹N=⊤) 既存。
