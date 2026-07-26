@@ -16,9 +16,10 @@ outputs are read off the resulting measure as coordinate projections.
 Read off that measure are the structural hypotheses of the message-level bound
 `bc_uv_converse` — memorylessness and the two Markov chains — together with the identification
 of the ambient decode error with the code's average error probability; instantiating
-`bc_uv_converse` there gives the headline `bc_uv_converse_from_code`.  A final section, stated
-for an arbitrary ambient measure, re-encodes the per-letter auxiliary variable onto a single
-alphabet.
+`bc_uv_converse` there gives the headline `bc_uv_converse_from_code`.  Two further sections
+re-encode the per-letter auxiliary variable onto a single alphabet, for an arbitrary ambient
+measure, and then read the letter-`i` five-tuple law off the ambient of a code and identify
+each summand of the bound with an information slot of that law.
 
 ## Main definitions
 
@@ -35,7 +36,9 @@ alphabet.
   fixed one, and its left inverse.
 * `uvAuxPad` — the letter-`i` auxiliary variable read in that fixed alphabet.
 * `uvInfo₁`, `uvInfo₂`, `uvInfoSum₂`, `uvInfoSum₁` — the four information slots of the outer
-  bound, as functionals of a five-tuple law `(U, V, X, Y₁, Y₂)`.
+  bound, as functionals of a five-tuple law `(U, V, X, Y₁, Y₂)`.  The subscript of a sum-rate
+  slot names the corner slot it extends, so `uvInfoSum₂` leads with `uvInfo₂` and `uvInfoSum₁`
+  with `uvInfo₁`.
 * `bcUVTuple` — the letter-`i` five-tuple of the two padded auxiliaries, the input letter and
   the two output letters.
 * `bcUVJointDistribution` — the law of that five-tuple under the ambient.
@@ -86,7 +89,9 @@ measurable for free because the message pair ranges over a finite type, so the o
 The five-tuple carries *both* auxiliaries, because the four information slots split two and
 two between them; keeping them in one law is what lets a single distribution witness all four
 inequalities.  `uvInfoSum₂` and `uvInfoSum₁` take `[IsFiniteMeasure ν]` since
-`condMutualInfo` does, while the two corner slots need nothing beyond measurability.
+`condMutualInfo` does, while the two corner slots need nothing beyond measurability.  The four
+are declared in the field order of `InBCOuterRegionUV` (`bound₁`, `bound₂`, `sumBound₂`,
+`sumBound₁`) rather than by subscript, so that an instantiation reads down the structure.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -522,7 +527,8 @@ lemma bcConverse_errorProb₂_eq
 /-- Receiver-1 Fano slack of a broadcast code: the binary entropy of the ambient decode error
 at receiver 1 together with that error probability scaled by `log (M₁ - 1)`.  This is the
 additive term by which the message-level converse exceeds the per-letter information sum, and
-it tends to zero with the error probability. -/
+it tends to zero with the error probability.
+@audit:ok -/
 noncomputable def bcConverseFanoSlack₁
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) : ℝ :=
   Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
@@ -530,7 +536,8 @@ noncomputable def bcConverseFanoSlack₁
     + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
         (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1)
 
-/-- Receiver-2 Fano slack of a broadcast code, the mirror of `bcConverseFanoSlack₁`. -/
+/-- Receiver-2 Fano slack of a broadcast code, the mirror of `bcConverseFanoSlack₁`.
+@audit:ok -/
 noncomputable def bcConverseFanoSlack₂
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) : ℝ :=
   Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
@@ -549,7 +556,8 @@ variable [StandardBorelSpace β₂] [Nonempty β₂]
 every hypothesis of the message-level converse `bc_uv_converse`, so the rate pair
 `(log M₁, log M₂)` lies in the Nair–El Gamal region determined by the per-letter auxiliaries.
 No degradedness is assumed.  The Fano slack is still carried here; it vanishes only in the
-`n → ∞` limit. -/
+`n → ∞` limit.
+@audit:ok -/
 @[entry_point]
 theorem bc_uv_converse_from_code
     [NeZero M₁] [NeZero M₂]
@@ -590,6 +598,7 @@ theorem bc_uv_converse_from_code
     by simpa only [bcConverseFanoSlack₁, bcConverseFanoSlack₂, add_assoc] using h.sumBound₂,
     by simpa only [bcConverseFanoSlack₁, bcConverseFanoSlack₂, add_assoc] using h.sumBound₁⟩
 
+/-- @audit:ok -/
 lemma bc_uv_rate_extract [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {R₁ R₂ : ℝ}
@@ -779,19 +788,23 @@ variable [StandardBorelSpace α] [Nonempty α]
 variable [StandardBorelSpace β₁] [Nonempty β₁]
 variable [StandardBorelSpace β₂] [Nonempty β₂]
 
-/-- Receiver-1 corner information `I(V; Y₁)` of a five-tuple law `(U, V, X, Y₁, Y₂)`. -/
+/-- Receiver-1 corner information `I(V; Y₁)` of a five-tuple law `(U, V, X, Y₁, Y₂)`.
+@audit:ok -/
 noncomputable def uvInfo₁ (ν : Measure (U × V × α × β₁ × β₂)) : ℝ≥0∞ :=
   mutualInfo ν (fun q ↦ q.2.1) (fun q ↦ q.2.2.2.1)
 
-/-- Receiver-2 corner information `I(U; Y₂)` of a five-tuple law `(U, V, X, Y₁, Y₂)`. -/
+/-- Receiver-2 corner information `I(U; Y₂)` of a five-tuple law `(U, V, X, Y₁, Y₂)`.
+@audit:ok -/
 noncomputable def uvInfo₂ (ν : Measure (U × V × α × β₁ × β₂)) : ℝ≥0∞ :=
   mutualInfo ν (fun q ↦ q.1) (fun q ↦ q.2.2.2.2)
 
-/-- Sum-rate information `I(U; Y₂) + I(X; Y₁ | U)` with the receiver-2 auxiliary leading. -/
+/-- Sum-rate information `I(U; Y₂) + I(X; Y₁ | U)` with the receiver-2 auxiliary leading.
+@audit:ok -/
 noncomputable def uvInfoSum₂ (ν : Measure (U × V × α × β₁ × β₂)) [IsFiniteMeasure ν] : ℝ≥0∞ :=
   uvInfo₂ ν + condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
 
-/-- Sum-rate information `I(V; Y₁) + I(X; Y₂ | V)` with the receiver-1 auxiliary leading. -/
+/-- Sum-rate information `I(V; Y₁) + I(X; Y₂ | V)` with the receiver-1 auxiliary leading.
+@audit:ok -/
 noncomputable def uvInfoSum₁ (ν : Measure (U × V × α × β₁ × β₂)) [IsFiniteMeasure ν] : ℝ≥0∞ :=
   uvInfo₁ ν + condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.2.1)
 
@@ -807,7 +820,8 @@ variable [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β
 
 /-- The letter-`i` five-tuple of the UV outer bound, read off the ambient: the receiver-2
 auxiliary, the receiver-1 auxiliary — both in the fixed alphabet of `uvAuxPad` — the input
-letter and the two output letters. -/
+letter and the two output letters.
+@audit:ok -/
 noncomputable def bcUVTuple (c : BroadcastCode M₁ M₂ n α β₁ β₂) (i : Fin n) :
     ((Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) →
       (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
@@ -830,7 +844,8 @@ lemma measurable_bcUVTuple (c : BroadcastCode M₁ M₂ n α β₁ β₂) (i : F
 
 /-- The joint law of the letter-`i` five-tuple under the ambient measure of a broadcast code:
 the two auxiliaries, the input letter and the two output letters, all pushed forward from
-`bcConverseAmbient`. -/
+`bcConverseAmbient`.
+@audit:ok -/
 noncomputable def bcUVJointDistribution
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) (i : Fin n) :
     Measure ((Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
@@ -846,6 +861,7 @@ instance bcUVJointDistribution_isProbabilityMeasure
 
 omit [StandardBorelSpace α] [Nonempty α] [Fintype β₁] [MeasurableSingletonClass β₁]
   [StandardBorelSpace β₁] [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] in
+/-- @audit:ok -/
 lemma bc_uv_mutualInfo_eq_uvInfo₁_at
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] (i : Fin n) :
@@ -863,6 +879,7 @@ lemma bc_uv_mutualInfo_eq_uvInfo₁_at
 
 omit [StandardBorelSpace α] [Nonempty α] [Fintype β₁] [MeasurableSingletonClass β₁]
   [StandardBorelSpace β₁] [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] in
+/-- @audit:ok -/
 lemma bc_uv_mutualInfo_eq_uvInfo₂_at
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] (i : Fin n) :
@@ -879,6 +896,7 @@ lemma bc_uv_mutualInfo_eq_uvInfo₂_at
     measurable_bcConverseY₂s (measurable_bcConverseY₂s i) i).symm.trans hmap.symm
 
 omit [StandardBorelSpace β₂] in
+/-- @audit:ok -/
 lemma bc_uv_sum_eq_uvInfoSum₂_at
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] (i : Fin n) :
@@ -903,6 +921,7 @@ lemma bc_uv_sum_eq_uvInfoSum₂_at
   rfl
 
 omit [StandardBorelSpace β₁] in
+/-- @audit:ok -/
 lemma bc_uv_sum_eq_uvInfoSum₁_at
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] (i : Fin n) :
