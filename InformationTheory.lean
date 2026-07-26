@@ -68,6 +68,7 @@ import InformationTheory.Shannon.ChannelCoding.Achievability
 import InformationTheory.Shannon.ChannelCoding.Converse
 import InformationTheory.Shannon.ChannelCoding.ConverseGeneral
 import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule
+import InformationTheory.Shannon.ChannelCoding.CodeToAmbient
 import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessMarkov
 import InformationTheory.Shannon.ChannelCoding.ConverseMemoryless
