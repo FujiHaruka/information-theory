@@ -5,8 +5,8 @@ import InformationTheory.Shannon.BroadcastChannel.Marton.Achievability
 
 The operational capacity region of a general two-receiver broadcast channel, following the
 multiple-access template of `InformationTheory.Shannon.MAC.macCapacityRegion`: an operational
-achievability predicate on rate pairs, closed up to a subset of the plane, so that inner and
-outer bounds can be compared as sets.
+achievability predicate on rate pairs, whose closure is taken as a subset of the plane, so that
+inner and outer bounds can be compared as sets.
 
 Marton's inner bound, stated pointwise by `InMartonRegion`, is lifted to a subset of the plane
 here and shown to sit inside the operational region.
@@ -44,7 +44,12 @@ variable {α β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [
 target error `ε' > 0` there is a block length `N` such that for all `n ≥ N` there is a length-`n`
 broadcast code with at least `⌈exp (n R₁)⌉` / `⌈exp (n R₂)⌉` messages per receiver whose two
 average error probabilities are both below `ε'`.  This is the `∀ ε'`-abstraction of the
-conclusion of `marton_achievability`. -/
+conclusion of `marton_achievability`.
+
+Both message counts are at least one, since `1 ≤ ⌈exp (n R)⌉₊` at every real rate, so the
+degenerate `M₁ * M₂ = 0` branch of `averageErrorProb₁` — which reports an error probability of
+`0` — is out of reach: an empty code cannot witness achievability.
+@audit:ok -/
 def BCAchievable (W : BCChannel α β₁ β₂) (R₁ R₂ : ℝ) : Prop :=
   ∀ ε' : ℝ, 0 < ε' → ∃ N : ℕ, ∀ n, N ≤ n →
     ∃ (M₁ M₂ : ℕ) (_ : ⌈Real.exp ((n : ℝ) * R₁)⌉₊ ≤ M₁) (_ : ⌈Real.exp ((n : ℝ) * R₂)⌉₊ ≤ M₂)
@@ -53,7 +58,13 @@ def BCAchievable (W : BCChannel α β₁ β₂) (R₁ R₂ : ℝ) : Prop :=
 
 /-- The operational broadcast capacity region: the topological closure of the achievable set.
 The achievable set is cut out by strict inequalities and is not closed (boundary faces enter only
-in the closure), so the capacity region is defined as its closure. -/
+in the closure), so the capacity region is defined as its closure.
+
+The region is a down-set of the whole plane rather than of the first quadrant, since a
+nonpositive rate asks only for a single message and is achievable.  An outer bound should
+therefore be stated without a sign constraint, or compared after intersecting with the first
+quadrant.
+@audit:ok -/
 def bcCapacityRegion (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure {p | BCAchievable W p.1 p.2}
 
@@ -105,7 +116,8 @@ variable {V₁ V₂ α β₁ β₂ : Type*}
 /-- Marton's inner bound as a subset of the plane: the rate pairs in the first quadrant that
 satisfy the three inequalities of `InMartonRegion` for the informations `martonInfo₁`,
 `martonInfo₂` and `martonInfoV₁V₂` of the auxiliary law `pV`, input kernel `K` and channel `W`.
-Only the auxiliary law is varied here; the union over auxiliary alphabets is not taken. -/
+This is the region of one fixed choice of `pV`, `K` and `W`; the union over auxiliary alphabets
+is not taken. -/
 def martonRegion (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) :
     Set (ℝ × ℝ) :=
   {p | 0 ≤ p.1 ∧ 0 ≤ p.2 ∧
@@ -131,7 +143,8 @@ pair in the closure.
 
 The hypotheses `hpV`, `hK` and `hW` are the full-support regularity preconditions of
 `marton_achievability` and carry no part of the coding argument.  The shrunk pair may leave the
-first quadrant, which costs nothing: a nonpositive rate asks only for a single message. -/
+first quadrant, which costs nothing: a nonpositive rate asks only for a single message.
+@audit:ok -/
 @[entry_point]
 theorem marton_region_subset_capacity
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
