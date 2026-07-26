@@ -224,6 +224,12 @@ variable [StandardBorelSpace β₁] [Nonempty β₁]
 variable [StandardBorelSpace β₂] [Nonempty β₂]
 
 omit [Fintype α] [MeasurableSingletonClass α] in
+/-- Joint-output memorylessness at receiver 1, read off the ambient: the letter-`i` output of
+receiver 1 is conditionally independent of message 2, of the other input letters and of all the
+other output letters of both receivers, given the input letter `encoder m i`.  The same-letter
+pair of outputs is never decoupled, so the two receivers stay arbitrarily correlated within a
+letter.  This is the hypothesis `h_memo₁` of `bc_uv_converse` at `bcConverseAmbient`.
+@audit:ok -/
 lemma bcConverse_memoryless₁
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] (i : Fin n) :
@@ -266,6 +272,11 @@ lemma bcConverse_memoryless₁
   exact isMarkovChain_swap (bcConverseAmbient c W) _ _ F (measurable_bcConverseY₁s i) hZc hF h₂
 
 omit [Fintype α] [MeasurableSingletonClass α] in
+/-- Joint-output memorylessness at receiver 2, the mirror of `bcConverse_memoryless₁`: the
+letter-`i` output of receiver 2 is conditionally independent of message 1, of the other input
+letters and of all the other output letters of both receivers, given the input letter
+`encoder m i`.  This is the hypothesis `h_memo₂` of `bc_uv_converse` at `bcConverseAmbient`.
+@audit:ok -/
 lemma bcConverse_memoryless₂
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] (i : Fin n) :
@@ -308,6 +319,10 @@ lemma bcConverse_memoryless₂
   exact isMarkovChain_swap (bcConverseAmbient c W) _ _ F (measurable_bcConverseY₂s i) hZc hF h₂
 
 omit [StandardBorelSpace α] [Nonempty α] in
+/-- The messages act on receiver 1's output block only through the codeword: `(W₂, W₁) →
+(W₂, Xⁿ) → Y₁ⁿ` under the ambient.  This is the hypothesis `hmarkov₁` of `bc_uv_converse` at
+`bcConverseAmbient`.
+@audit:ok -/
 lemma bcConverse_isMarkovChain₁
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] :
@@ -339,6 +354,9 @@ lemma bcConverse_isMarkovChain₁
     measurable_swap h₃
 
 omit [StandardBorelSpace α] [Nonempty α] in
+/-- The mirror of `bcConverse_isMarkovChain₁` at receiver 2: `(W₁, W₂) → (W₁, Xⁿ) → Y₂ⁿ` under
+the ambient.  This is the hypothesis `hmarkov₂` of `bc_uv_converse` at `bcConverseAmbient`.
+@audit:ok -/
 lemma bcConverse_isMarkovChain₂
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] :

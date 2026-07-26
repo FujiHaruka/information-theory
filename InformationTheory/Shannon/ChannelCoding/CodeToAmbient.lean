@@ -192,6 +192,13 @@ lemma lintegral_pi_eval {γ : Type*} [MeasurableSpace γ]
 
 /-! ### Per-letter conditional independence, memorylessness and the joint law -/
 
+/-- Per-letter conditional independence for a product-channel ambient: if the message-to-output
+kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)`, then at every letter `i` the
+output `ω.2 i` is conditionally independent of `F` given the input letter `x ω.1 i`, for any
+measurable `F` that does not read output coordinate `i`.  Not reading that coordinate is what
+`hFupd` says — re-randomizing it leaves `F` unchanged — so `F` may read the message, hence every
+input letter, together with all the other output letters.
+@audit:ok -/
 lemma isMarkovChain_of_compProd_pi
     {M A B C : Type*}
     [MeasurableSpace M] [StandardBorelSpace M] [Nonempty M]
