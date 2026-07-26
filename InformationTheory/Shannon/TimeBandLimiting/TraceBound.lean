@@ -746,9 +746,9 @@ Non-vacuity is machine-checked rather than assumed: for `0 < T`, `0 < W`,
 `exists_pos_hasEigenvalue` yields an eigenvalue `μ > 0`, so `prolateCount T W (μ/2) ≥ 1` and the
 bound bites (`μ/2 ≤ 2WT`) instead of holding by `0 ≤ 2WT`.
 @audit:ok
-@audit:retract-candidate(superseded by `prolateCount_le` for the family's purpose; 0 consumers as of
-2026-07-17, machine-checked via `scripts/dep_consumers.sh`. Caveat for the owner making the call:
-this is *asymptotic* supersession, not pointwise — `2WT/c` is strictly tighter than
+@audit:retract-candidate(superseded by `prolateCount_le` for the family's purpose; 0 consumers,
+machine-checked via `scripts/dep_consumers.sh`. This is *asymptotic* supersession, not pointwise —
+`2WT/c` is strictly tighter than
 `2WT + (2+log(1+2WT))/c` for small `WT` (e.g. `2WT ≤ 8` at `c = 1/2`), so the two are incomparable
 as bounds. What makes it retractable is that the family's figure of merit is the `T → ∞` density,
 where this bound gives `2W/c` and `prolateCount_le` gives `2W`.) -/

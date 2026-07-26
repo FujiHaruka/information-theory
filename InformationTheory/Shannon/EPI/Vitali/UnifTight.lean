@@ -6,20 +6,18 @@ import InformationTheory.Shannon.EPI.Conv.DensityAssoc
 import InformationTheory.Shannon.FisherConvBound
 
 /-!
-# EPI G2 Vitali witness — UnifTight (UT)
+# EPI G2 Vitali witness — second-moment helpers for the retired UnifTight (UT) route
 
-Genuine standalone implementation of the `hut` input for the layer-2 Vitali
-machinery (`differentialEntropy_convDensity_integral_tendsto`). The main lemma
-`negMulLog_convDensity_unifTight` has the *exact same signature* as the parked
-`EPIG2HeatFlowContinuity.negMulLog_convDensity_unifTight` (`:161`), to which the parked
-version delegates.
-
-The strategy (inventory `epi-g2-vitali-witness-inventory.md`, category C):
-`f_n := convDensityAdd pX g_{u n} = pX ∗ g_{u n}`. Take `s = Icc (-R) R`; on the tail
-`{|x| > R}` the negMulLog of the smoothed density is controlled by the second moment
-`∫ x² f_n = ∫ x² pX + u n` (additivity of variance for the independent sum). The tail
-mass is driven via the measure-independent Markov inequality
-`mul_meas_ge_le_lintegral` (works on `volume`, no `[IsFiniteMeasure]`).
+This file supplies the second-moment bounds for a Gaussian-convolved density
+`f_n := convDensityAdd pX g_{u n} = pX ∗ g_{u n}`: `convDensityAdd_second_moment` computes
+`∫ x² f_n = ∫ x² pX + u n` (additivity of variance for the independent sum, via the
+measure-independent Markov inequality `mul_meas_ge_le_lintegral`, which works on `volume`
+with no `[IsFiniteMeasure]`), and `convDensityAdd_second_moment_unif_bdd` bounds it
+uniformly over a bounded positive variance sequence `u`. The UnifTight witness these bounds
+originally fed (the tail control for the layer-2 Vitali machinery
+`differentialEntropy_convDensity_integral_tendsto`) has since been superseded and removed
+(see below); `convDensityAdd_second_moment` remains consumed by the Fatou-LSC route
+(`EPIG2KLFatouLSC.lean`) and `EPIVitaliUI`.
 -/
 
 namespace InformationTheory.Shannon
@@ -267,8 +265,8 @@ theorem convDensityAdd_second_moment_unif_bdd
 
 /-! ## UT witness removed
 
-The Vitali UnifTight witness `negMulLog_convDensity_unifTight` (parked under
-`wall:approx-identity-L1`) was the layer-2 (`differentialEntropy_convDensity_integral_tendsto`)
+The Vitali UnifTight witness `negMulLog_convDensity_unifTight` (the approximate-identity
+L¹-convergence route) was the layer-2 (`differentialEntropy_convDensity_integral_tendsto`)
 input on the Vitali route. The layer-2 body has been re-derived genuinely via the
 two-sided sandwich (Fatou-LSC `(α)` limsup upper bound + conditioning
 `(β)` per-`n` lower bound, both `@audit:ok`), so the Vitali UI/UT witnesses are no

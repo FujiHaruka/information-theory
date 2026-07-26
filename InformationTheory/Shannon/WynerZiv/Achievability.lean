@@ -75,7 +75,8 @@ Umbrella of the `Shannon/WynerZiv/Achievability/` family, re-exporting (in depen
 
 * `Achievability.Covering` — the gateway atoms, the covering + binning construction skeleton and
   its leaf atoms, the two-ambient regularity section, and the hoisted Markov-core helpers.
-* `Achievability.Concentration` — the Leg F inner concentration sub-lemmas (L0–L5).
+* `Achievability.Concentration` — the band-concentration sub-lemmas for the Markov-lemma
+  covering bound.
 * `Achievability.MarkovCore` — the Markov core and Gateway atom 3 (covering side-information
   acceptance).
 * `Achievability.ChosenWord` — covering chosen-word side-information typicality and the joint
@@ -83,7 +84,7 @@ Umbrella of the `Shannon/WynerZiv/Achievability/` family, re-exporting (in depen
 * `Achievability.Decomposition` — the Steps 3–7 distortion decomposition and the pmf-side
   product bounds.
 * `Achievability.SourceTransport` — the source-measure change of variables and the
-  distortion-decomposition bridge (Legs A–D).
+  distortion-decomposition bridge.
 * `Achievability.MassBound` — the source→ambient AEP mass transport and the entropy helpers.
 * `Achievability.Headline` — the per-slack good codes and the operational achievability headline
   `wyner_ziv_achievability`.

@@ -138,7 +138,7 @@ theorem fourierCoeff_eq_wsSignal (F : Lp ℂ 2 (AddCircle.haarAddCircle (T := 1)
 
 /-- **Whittaker–Shannon**, per-`t` `HasSum` on an L² spectrum (unconditional core).
 
-@audit:ok — independent honesty audit PASS (2026-07-13). Unconditional: signature is
+@audit:ok. Unconditional: signature is
 `(F : Lp ℂ 2 haarAddCircle) (t : ℝ)` with no load-bearing hypothesis and the conclusion is
 not assumed among the inputs; `#print axioms` = `[propext, Classical.choice, Quot.sound]`
 (sorryAx-free). Genuinely captures the sampling theorem (`wsSignal F t = ⟪wsExp t, F⟫` is the

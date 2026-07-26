@@ -19,8 +19,9 @@ the proof is short and reduces to `MeasureTheory.unifIntegrable_of` — cruciall
 gateway does not require `[IsFiniteMeasure μ]`, so the criterion applies to
 infinite measures such as `volume`.
 
-The intended downstream consumer is the EPI G2 Vitali witness chain
-(`wall:approx-identity-L1`), where `μ = volume` and `f n = negMulLog (pX ∗ g_{u n})`.
+The intended downstream consumer is the EPI G2 Vitali witness chain for the approximate-identity
+L¹ convergence of a density under vanishing-variance Gaussian convolution, where `μ = volume` and
+`f n = negMulLog (pX ∗ g_{u n})`.
 
 `@audit:ok`
 -/

@@ -59,7 +59,7 @@ open InformationTheory.Shannon.FisherInfo
 `int_fisherX` shape. Reconstructed from the public Fisher-finiteness bound
 `gaussianConv_fisher_le_inv_var` (`J(p_t) ≤ 1/t < ⊤`), exactly mirroring the private
 `convDensityAdd_fisher_integrable` body.
-@audit:ok — independent honesty audit (2026-06-01): hypotheses are all regularity
+@audit:ok. Hypotheses are all regularity
 (nonneg / Measurable / Integrable / mass `= 1` normalization); the Fisher-integrand
 integrability follows genuinely from the existing `@audit:ok` bound
 `gaussianConv_fisher_le_inv_var` (`J(p_t) < ⊤`) + `lintegral_ofReal_ne_top_iff_integrable`.
