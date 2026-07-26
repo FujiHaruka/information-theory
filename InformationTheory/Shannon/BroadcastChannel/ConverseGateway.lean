@@ -34,6 +34,30 @@ open MeasureTheory ProbabilityTheory InformationTheory InformationTheory.Shannon
 open scoped ENNReal NNReal BigOperators
 
 variable {Ω : Type*} [MeasurableSpace Ω]
+
+-- Typed analogue of `mutualInfo_chain_rule_Y_fin`: the left variable `W` may live in a
+-- different alphabet from the sequence.
+lemma mutualInfo_chain_rule_Y_fin' {m : ℕ} {δ γ : Type*}
+    [MeasurableSpace δ] [StandardBorelSpace δ] [Nonempty δ]
+    [Fintype γ] [MeasurableSpace γ] [MeasurableSingletonClass γ]
+    [StandardBorelSpace γ] [Nonempty γ]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (W : Ω → δ) (Bs : Fin m → Ω → γ)
+    (hW : Measurable W) (hBs : ∀ i, Measurable (Bs i)) :
+    mutualInfo μ W (fun ω j ↦ Bs j ω)
+      = ∑ i : Fin m,
+          condMutualInfo μ W (Bs i)
+            (fun ω (j : Fin i.val) ↦ Bs ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
+  classical
+  have hBpi : Measurable (fun ω j ↦ Bs j ω) := measurable_pi_iff.mpr hBs
+  rw [mutualInfo_comm μ W (fun ω j ↦ Bs j ω) hW hBpi,
+      mutualInfo_chain_rule_fin μ Bs hBs W hW]
+  refine Finset.sum_congr rfl fun i _ ↦ ?_
+  have hpref : Measurable
+      (fun ω (j : Fin i.val) ↦ Bs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
+    measurable_pi_iff.mpr fun j ↦ hBs _
+  exact condMutualInfo_comm μ (Bs i) W _ (hBs i) hW hpref
+
 variable {γ : Type*} [Fintype γ] [Nonempty γ]
   [MeasurableSpace γ] [MeasurableSingletonClass γ] [StandardBorelSpace γ]
 variable {n : ℕ}

@@ -48,33 +48,6 @@ variable {β₂ : Type*}
   [StandardBorelSpace β₂] [Nonempty β₂]
 variable {M₁ M₂ n : ℕ}
 
-/-! ## Typed Y-axis chain rule (helper for bound (a)) -/
-
-/-- Chain rule for mutual information expanded along the sequence argument, with the left
-variable `W` of a different type from the sequence: `I(W; Bⁿ) = ∑ᵢ I(W; Bᵢ | B^{<i})`. Typed
-analogue of `mutualInfo_chain_rule_Y_fin`, which requires `W` and the `Bᵢ` to share one
-alphabet. -/
-lemma mutualInfo_chain_rule_Y_fin' {δ γ : Type*}
-    [MeasurableSpace δ] [StandardBorelSpace δ] [Nonempty δ]
-    [Fintype γ] [MeasurableSpace γ] [MeasurableSingletonClass γ]
-    [StandardBorelSpace γ] [Nonempty γ]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (W : Ω → δ) (Bs : Fin n → Ω → γ)
-    (hW : Measurable W) (hBs : ∀ i, Measurable (Bs i)) :
-    mutualInfo μ W (fun ω j ↦ Bs j ω)
-      = ∑ i : Fin n,
-          condMutualInfo μ W (Bs i)
-            (fun ω (j : Fin i.val) ↦ Bs ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
-  classical
-  have hBpi : Measurable (fun ω j ↦ Bs j ω) := measurable_pi_iff.mpr hBs
-  rw [mutualInfo_comm μ W (fun ω j ↦ Bs j ω) hW hBpi,
-      mutualInfo_chain_rule_fin μ Bs hBs W hW]
-  refine Finset.sum_congr rfl fun i _ ↦ ?_
-  have hpref : Measurable
-      (fun ω (j : Fin i.val) ↦ Bs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
-    measurable_pi_iff.mpr fun j ↦ hBs _
-  exact condMutualInfo_comm μ (Bs i) W _ (hBs i) hW hpref
-
 /-! ## Receiver-2 single-letterization (the easy chain-rule half, bound (a)) -/
 
 /-- Receiver-2 single-letterization for the BC converse: with `Uᵢ = (W₂, Y₂^{i-1})`, the

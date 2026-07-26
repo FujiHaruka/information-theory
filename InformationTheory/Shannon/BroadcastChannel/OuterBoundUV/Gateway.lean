@@ -90,7 +90,7 @@ lemma mutualInfo_chain_rule_Y_fin_suffix
         (fun (a : Fin k.val) ↦ Bs (Fin.rev ⟨a.val, a.isLt.trans k.isLt⟩) ω))
       = fun ω (j : {j : Fin n // (Fin.rev k).val < j.val}) ↦ Bs j.val ω := by
     funext ω j
-    show Bs (Fin.rev ⟨(τ.symm j).val, (τ.symm j).isLt.trans k.isLt⟩) ω = Bs j.val ω
+    change Bs (Fin.rev ⟨(τ.symm j).val, (τ.symm j).isLt.trans k.isLt⟩) ω = Bs j.val ω
     exact congrArg (fun m : Fin n ↦ Bs m ω) (congrArg Subtype.val (τ.apply_symm_apply j))
   rw [← condMutualInfo_map_cond_measurableEquiv μ W (fun ω ↦ Bs (Fin.rev k) ω)
     (fun ω (a : Fin k.val) ↦ Bs (Fin.rev ⟨a.val, a.isLt.trans k.isLt⟩) ω)
@@ -153,7 +153,7 @@ theorem condMutualInfo_suffix_chain_rule_full
     funext ω
     refine Prod.ext rfl ?_
     funext j
-    show Bs (Fin.rev ⟨(τ.symm j).val, (τ.symm j).isLt.trans k.isLt⟩) ω = Bs j.val ω
+    change Bs (Fin.rev ⟨(τ.symm j).val, (τ.symm j).isLt.trans k.isLt⟩) ω = Bs j.val ω
     exact congrArg (fun m : Fin n ↦ Bs m ω) (congrArg Subtype.val (τ.apply_symm_apply j))
   rw [← condMutualInfo_map_cond_measurableEquiv μ (fun ω ↦ Bs (Fin.rev k) ω) C
     (fun ω ↦ (Z ω, fun (a : Fin k.val) ↦ Bs (Fin.rev ⟨a.val, a.isLt.trans k.isLt⟩) ω))
