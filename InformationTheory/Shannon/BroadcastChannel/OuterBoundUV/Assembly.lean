@@ -1,6 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.BroadcastChannel.Operational
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Bridge
+import InformationTheory.Shannon.CondKLIntegral
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 
 /-!
@@ -26,6 +27,9 @@ product identity, `IsUVChannelLaw`.
   which witnesses that the union is indexed by a nonempty family.
 * `uvOutputCopiesInputLaw`, `uvAuxCopiesOutputLaw` — two five-tuple laws that the channel
   constraint rejects, over the channels `uvBlindChannel` and `uvFairBitChannel`.
+* `uvRelabel` — re-encoding of the two auxiliary alphabets of a five-tuple.
+* `bcUVLetterKernel`, `bcUVLetterIndexLaw`, `bcUVTimeShare` — the letter laws of a code read as a
+  Markov kernel from the letter index, the uniform law of that index, and the resulting mixture.
 
 ## Main statements
 
@@ -46,8 +50,15 @@ product identity, `IsUVChannelLaw`.
   law a channel law, which is how a law on the auxiliaries of a code reaches the fixed ones.
 * `bcUVJointDistribution_isUVChannelLaw` — the letter-`i` law of a broadcast code is a channel
   law, so the letter laws of a code index the union.
+* `condMutualInfo_compProd_fst_eq_lintegral` and `condMutualInfo_compProd_snd_eq_lintegral` — the
+  tag-conditioned mutual information of a mixture is the tag average of the components, in the
+  unconditional and in the conditional form.
+* `bcUVTimeShare_uvInfo₁_ge` and its three companions — each information slot of the time-shared
+  law dominates the average of the letter slots.
 * `bc_uv_shrunk_point_mem` — the rate pair of a code, shrunk by the Fano slack per letter, lies
-  in the region.
+  in the region.  The letter index is absorbed into the auxiliaries, which already carry it, so
+  the average of the letter laws is again a channel law and dominates the per-letter averages of
+  all four information slots.
 
 ## Implementation notes
 
@@ -179,6 +190,20 @@ lemma IsUVChannelLaw.add {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
   unfold IsUVChannelLaw at h₁ h₂ ⊢
   rw [Measure.map_add _ _ measurable_uvSplit, Measure.map_add _ _ measurable_uvFirstThree,
     h₁, h₂, Measure.compProd_add_left]
+
+lemma IsUVChannelLaw.finsetSum {ι : Type*} {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
+    {ν : ι → Measure (U × V × α × β₁ × β₂)} [∀ i, IsFiniteMeasure (ν i)]
+    (h : ∀ i, IsUVChannelLaw W (ν i)) (s : Finset ι) :
+    IsUVChannelLaw W (∑ i ∈ s, ν i) := by
+  classical
+  induction s using Finset.induction with
+  | empty =>
+    simp only [Finset.sum_empty]
+    unfold IsUVChannelLaw
+    simp
+  | insert a s ha ih =>
+    rw [Finset.sum_insert ha]
+    exact (h a).add ih
 
 /-- @audit:ok -/
 lemma IsUVChannelLaw.map_auxiliaries {U' V' : Type*} [MeasurableSpace U'] [MeasurableSpace V']
@@ -559,6 +584,246 @@ theorem not_isUVChannelLaw_uvAuxCopiesOutputLaw :
 
 end NotVacuous
 
+/-! ## Averaging an information slot over a countable mixture
+
+A mixture of laws indexed by a countable tag is a composition product of the tag law with the
+kernel of the components, so the tag-conditioned mutual information of the mixture is the tag
+average of the mutual informations of the components.  Adding back the tag term of the chain rule
+turns that into an identity for the mutual information of the mixture itself, whenever the
+variable in question recovers the tag; dropping the tag term leaves the averaging inequality. -/
+
+section Averaging
+
+lemma mutualInfo_congr_ae {Ω A B : Type*} [MeasurableSpace Ω] [MeasurableSpace A]
+    [MeasurableSpace B] (μ : Measure Ω) {Xs Xs' : Ω → A} (Yo : Ω → B) (h : Xs =ᵐ[μ] Xs') :
+    mutualInfo μ Xs Yo = mutualInfo μ Xs' Yo := by
+  have hpair : μ.map (fun ω ↦ (Xs ω, Yo ω)) = μ.map (fun ω ↦ (Xs' ω, Yo ω)) := by
+    refine Measure.map_congr ?_
+    filter_upwards [h] with ω hω
+    rw [hω]
+  rw [mutualInfo, mutualInfo, hpair, Measure.map_congr h]
+
+lemma condMutualInfo_eq_of_leftInverse_cond {Ω A B C C' : Type*} [MeasurableSpace Ω]
+    [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
+    [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]
+    [MeasurableSpace C] [MeasurableSpace C']
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Ω → A) (Yo : Ω → B) (Zc : Ω → C)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc)
+    {f : C → C'} {g : C' → C} (hf : Measurable f) (hg : Measurable g) (hgf : ∀ c, g (f c) = c)
+    (hfin : mutualInfo μ Zc Yo ≠ ∞) :
+    condMutualInfo μ Xs Yo (fun ω ↦ f (Zc ω)) = condMutualInfo μ Xs Yo Zc := by
+  have hpair : mutualInfo μ (fun ω ↦ (f (Zc ω), Xs ω)) Yo
+      = mutualInfo μ (fun ω ↦ (Zc ω, Xs ω)) Yo :=
+    mutualInfo_eq_of_leftInverse μ (fun ω ↦ (Zc ω, Xs ω)) Yo (hZc.prodMk hXs) hYo
+      (f := fun p ↦ (f p.1, p.2)) (g := fun p ↦ (g p.1, p.2))
+      ((hf.comp measurable_fst).prodMk measurable_snd)
+      ((hg.comp measurable_fst).prodMk measurable_snd) (fun p ↦ by rw [hgf p.1])
+  have hz : mutualInfo μ (fun ω ↦ f (Zc ω)) Yo = mutualInfo μ Zc Yo :=
+    mutualInfo_eq_of_leftInverse μ Zc Yo hZc hYo hf hg hgf
+  rw [mutualInfo_chain_rule μ Xs Yo (fun ω ↦ f (Zc ω)) hXs hYo (hf.comp hZc),
+    mutualInfo_chain_rule μ Xs Yo Zc hXs hYo hZc, hz] at hpair
+  exact (ENNReal.add_right_inj hfin).mp hpair
+
+variable {T S A B : Type*} [MeasurableSpace T] [MeasurableSpace S]
+variable [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
+variable [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]
+
+private lemma condDistrib_compProd_fst_ae_eq {C : Type*} [MeasurableSpace C]
+    [StandardBorelSpace C] [Nonempty C] (μ : Measure T) [IsProbabilityMeasure μ]
+    (κ : Kernel T S) [IsMarkovKernel κ] {h : S → C} (hh : Measurable h) :
+    condDistrib (fun p : T × S ↦ h p.2) Prod.fst (μ ⊗ₘ κ) =ᵐ[μ] κ.map h := by
+  haveI : IsMarkovKernel (κ.map h) := Kernel.IsMarkovKernel.map _ hh
+  have hbase : (μ ⊗ₘ κ).map Prod.fst = μ := Measure.fst_compProd μ κ
+  have hkey := condDistrib_ae_eq_of_measure_eq_compProd (μ := μ ⊗ₘ κ) Prod.fst
+    (hh.comp measurable_snd).aemeasurable (κ := κ.map h)
+    (by rw [hbase, Measure.compProd_map hh]; rfl)
+  rwa [hbase] at hkey
+
+lemma condMutualInfo_compProd_fst_eq_lintegral [Countable T] [MeasurableSingletonClass T]
+    (μ : Measure T) [IsProbabilityMeasure μ] (κ : Kernel T S) [IsMarkovKernel κ]
+    {f : S → A} {g : S → B} (hf : Measurable f) (hg : Measurable g) :
+    condMutualInfo (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) Prod.fst
+      = ∫⁻ t, mutualInfo (κ t) f g ∂μ := by
+  have hbase : (μ ⊗ₘ κ).map Prod.fst = μ := Measure.fst_compProd μ κ
+  haveI : IsMarkovKernel (κ.map fun s ↦ (f s, g s)) := Kernel.IsMarkovKernel.map _ (hf.prodMk hg)
+  haveI : IsMarkovKernel (κ.map f) := Kernel.IsMarkovKernel.map _ hf
+  haveI : IsMarkovKernel (κ.map g) := Kernel.IsMarkovKernel.map _ hg
+  have hslice : ∀ t, mutualInfo (κ t) f g
+      = klDiv ((κ.map fun s ↦ (f s, g s)) t) (((κ.map f) ×ₖ (κ.map g)) t) := by
+    intro t
+    rw [Kernel.map_apply _ (hf.prodMk hg), Kernel.prod_apply, Kernel.map_apply _ hf,
+      Kernel.map_apply _ hg]
+    rfl
+  have hJ := condDistrib_compProd_fst_ae_eq μ κ (hf.prodMk hg)
+  have hF := condDistrib_compProd_fst_ae_eq μ κ hf
+  have hG := condDistrib_compProd_fst_ae_eq μ κ hg
+  have hP : (condDistrib (fun p : T × S ↦ f p.2) Prod.fst (μ ⊗ₘ κ) ×ₖ
+      condDistrib (fun p : T × S ↦ g p.2) Prod.fst (μ ⊗ₘ κ)) =ᵐ[μ] (κ.map f) ×ₖ (κ.map g) := by
+    filter_upwards [hF, hG] with t htF htG
+    rw [Kernel.prod_apply, Kernel.prod_apply, htF, htG]
+  rw [condMutualInfo, hbase, Measure.compProd_congr hJ, Measure.compProd_congr hP]
+  by_cases hac : μ ⊗ₘ (κ.map fun s ↦ (f s, g s)) ≪ μ ⊗ₘ ((κ.map f) ×ₖ (κ.map g))
+  · rw [klDiv_compProd_lintegral hac]
+    exact lintegral_congr fun t ↦ (hslice t).symm
+  · rw [klDiv_of_not_ac hac]
+    simp_rw [hslice]
+    refine (lintegral_eq_top_of_measure_eq_top_ne_zero
+      (measurable_of_countable _).aemeasurable ?_).symm
+    intro hzero
+    refine hac (Measure.absolutelyContinuous_compProd_right_iff.mpr ?_)
+    have hne : ∀ᵐ t ∂μ, klDiv ((κ.map fun s ↦ (f s, g s)) t)
+        (((κ.map f) ×ₖ (κ.map g)) t) ≠ ∞ := by
+      rw [MeasureTheory.ae_iff]
+      simpa using hzero
+    filter_upwards [hne] with t ht
+    by_contra hnot
+    exact ht (klDiv_of_not_ac hnot)
+
+lemma mutualInfo_compProd_eq_add_lintegral [Countable T] [MeasurableSingletonClass T]
+    (μ : Measure T) [IsProbabilityMeasure μ] (κ : Kernel T S) [IsMarkovKernel κ]
+    {f : S → A} {g : S → B} (hf : Measurable f) (hg : Measurable g)
+    {tag : A → T} (htag : Measurable tag) (hrec : ∀ᵐ p ∂(μ ⊗ₘ κ), tag (f p.2) = p.1) :
+    mutualInfo (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2)
+      = mutualInfo (μ ⊗ₘ κ) Prod.fst (fun p ↦ g p.2)
+        + ∫⁻ t, mutualInfo (κ t) f g ∂μ := by
+  have hfsnd : Measurable (fun p : T × S ↦ f p.2) := hf.comp measurable_snd
+  have hgsnd : Measurable (fun p : T × S ↦ g p.2) := hg.comp measurable_snd
+  have hpad : mutualInfo (μ ⊗ₘ κ) (fun p : T × S ↦ (tag (f p.2), f p.2)) (fun p ↦ g p.2)
+      = mutualInfo (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) :=
+    mutualInfo_eq_of_leftInverse (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) hfsnd hgsnd
+      (f := fun a ↦ (tag a, a)) (g := Prod.snd) (htag.prodMk measurable_id) measurable_snd
+      (fun _ ↦ rfl)
+  have hae : (fun p : T × S ↦ (tag (f p.2), f p.2)) =ᵐ[μ ⊗ₘ κ] fun p ↦ (p.1, f p.2) := by
+    filter_upwards [hrec] with p hp
+    rw [hp]
+  rw [← hpad, mutualInfo_congr_ae (μ ⊗ₘ κ) (fun p ↦ g p.2) hae,
+    mutualInfo_chain_rule (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) Prod.fst hfsnd hgsnd
+      measurable_fst,
+    condMutualInfo_compProd_fst_eq_lintegral μ κ hf hg]
+
+lemma condMutualInfo_compProd_snd_eq_lintegral [Countable T] [MeasurableSingletonClass T]
+    {C : Type*} [MeasurableSpace C] [StandardBorelSpace C] [Nonempty C]
+    (μ : Measure T) [IsProbabilityMeasure μ] (κ : Kernel T S) [IsMarkovKernel κ]
+    {f : S → A} {g : S → B} {h : S → C} (hf : Measurable f) (hg : Measurable g)
+    (hh : Measurable h) {tag : C → T} (htag : Measurable tag)
+    (hrec : ∀ᵐ p ∂(μ ⊗ₘ κ), tag (h p.2) = p.1)
+    (htagfin : mutualInfo (μ ⊗ₘ κ) Prod.fst (fun p ↦ g p.2) ≠ ∞)
+    (hmargfin : (∫⁻ t, mutualInfo (κ t) h g ∂μ) ≠ ∞) :
+    condMutualInfo (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) (fun p ↦ h p.2)
+      = ∫⁻ t, condMutualInfo (κ t) f g h ∂μ := by
+  have hb := mutualInfo_chain_rule (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) (fun p ↦ h p.2)
+    (hf.comp measurable_snd) (hg.comp measurable_snd) (hh.comp measurable_snd)
+  have hc := mutualInfo_compProd_eq_add_lintegral μ κ (hh.prodMk hf) hg
+    (tag := fun w ↦ tag w.1) (htag.comp measurable_fst)
+    (by filter_upwards [hrec] with p hp using hp)
+  have hd := mutualInfo_compProd_eq_add_lintegral μ κ hh hg htag hrec
+  have hsplit : ∫⁻ t, mutualInfo (κ t) (fun q ↦ (h q, f q)) g ∂μ
+      = (∫⁻ t, mutualInfo (κ t) h g ∂μ) + ∫⁻ t, condMutualInfo (κ t) f g h ∂μ := by
+    have he : ∀ t, mutualInfo (κ t) (fun q ↦ (h q, f q)) g
+        = mutualInfo (κ t) h g + condMutualInfo (κ t) f g h :=
+      fun t ↦ mutualInfo_chain_rule (κ t) f g h hf hg hh
+    simp_rw [he]
+    exact lintegral_add_left (measurable_of_countable _) _
+  have hfin : mutualInfo (μ ⊗ₘ κ) Prod.fst (fun p ↦ g p.2) + ∫⁻ t, mutualInfo (κ t) h g ∂μ ≠ ∞ :=
+    ENNReal.add_ne_top.mpr ⟨htagfin, hmargfin⟩
+  refine (((ENNReal.add_right_inj hfin).mp ?_).symm)
+  conv_lhs => rw [add_assoc, ← hsplit, ← hc]
+  rw [hb, hd]
+
+end Averaging
+
+/-! ## Re-encoding the auxiliary alphabets -/
+
+section AuxRelabel
+
+variable {U V U' V' : Type*}
+variable [MeasurableSpace U] [MeasurableSpace V] [MeasurableSpace U'] [MeasurableSpace V']
+
+/-- Re-encoding of the two auxiliary alphabets of a five-tuple, leaving the input letter and the
+two output letters alone. -/
+def uvRelabel (e₁ : U → U') (e₂ : V → V') :
+    U × V × α × β₁ × β₂ → U' × V' × α × β₁ × β₂ :=
+  fun q ↦ (e₁ q.1, e₂ q.2.1, q.2.2)
+
+lemma measurable_uvRelabel {e₁ : U → U'} {e₂ : V → V'} (he₁ : Measurable e₁)
+    (he₂ : Measurable e₂) : Measurable (uvRelabel (α := α) (β₁ := β₁) (β₂ := β₂) e₁ e₂) :=
+  (he₁.comp measurable_fst).prodMk
+    ((he₂.comp (measurable_fst.comp measurable_snd)).prodMk (measurable_snd.comp measurable_snd))
+
+lemma uvInfo₁_map_uvRelabel (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
+    {e₁ : U → U'} {e₂ : V → V'} {d₂ : V' → V} (he₁ : Measurable e₁) (he₂ : Measurable e₂)
+    (hd₂ : Measurable d₂) (h₂ : ∀ v, d₂ (e₂ v) = v) :
+    uvInfo₁ (ν.map (uvRelabel e₁ e₂)) = uvInfo₁ ν := by
+  rw [uvInfo₁, uvInfo₁, mutualInfo_map_comp ν (uvRelabel e₁ e₂) (measurable_uvRelabel he₁ he₂)
+    (fun q ↦ q.2.1) (measurable_fst.comp measurable_snd) (fun q ↦ q.2.2.2.1)
+    (measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))]
+  exact mutualInfo_eq_of_leftInverse ν (fun q ↦ q.2.1) (fun q ↦ q.2.2.2.1)
+    (measurable_fst.comp measurable_snd)
+    (measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+    he₂ hd₂ h₂
+
+lemma uvInfo₂_map_uvRelabel (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
+    {e₁ : U → U'} {e₂ : V → V'} {d₁ : U' → U} (he₁ : Measurable e₁) (he₂ : Measurable e₂)
+    (hd₁ : Measurable d₁) (h₁ : ∀ u, d₁ (e₁ u) = u) :
+    uvInfo₂ (ν.map (uvRelabel e₁ e₂)) = uvInfo₂ ν := by
+  rw [uvInfo₂, uvInfo₂, mutualInfo_map_comp ν (uvRelabel e₁ e₂) (measurable_uvRelabel he₁ he₂)
+    (fun q ↦ q.1) measurable_fst (fun q ↦ q.2.2.2.2)
+    (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))]
+  exact mutualInfo_eq_of_leftInverse ν (fun q ↦ q.1) (fun q ↦ q.2.2.2.2) measurable_fst
+    (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+    he₁ hd₁ h₁
+
+section Sum
+
+variable [StandardBorelSpace α] [Nonempty α]
+variable [Fintype β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Nonempty β₁]
+variable [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] [Nonempty β₂]
+variable [Fintype U] [MeasurableSingletonClass U] [Fintype V] [MeasurableSingletonClass V]
+
+omit [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] [Nonempty β₂]
+  [Fintype V] [MeasurableSingletonClass V] in
+lemma uvInfoSum₂_map_uvRelabel (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
+    {e₁ : U → U'} {e₂ : V → V'} {d₁ : U' → U} (he₁ : Measurable e₁) (he₂ : Measurable e₂)
+    (hd₁ : Measurable d₁) (h₁ : ∀ u, d₁ (e₁ u) = u) :
+    uvInfoSum₂ (ν.map (uvRelabel e₁ e₂)) = uvInfoSum₂ ν := by
+  rw [uvInfoSum₂, uvInfoSum₂, uvInfo₂_map_uvRelabel ν he₁ he₂ hd₁ h₁]
+  congr 1
+  rw [condMutualInfo_map_comp ν (uvRelabel e₁ e₂) (measurable_uvRelabel he₁ he₂)
+    (fun q ↦ q.2.2.1) (measurable_fst.comp (measurable_snd.comp measurable_snd))
+    (fun q ↦ q.2.2.2.1)
+    (measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+    (fun q ↦ q.1) measurable_fst]
+  exact condMutualInfo_eq_of_leftInverse_cond ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
+    (fun q ↦ q.1) (measurable_fst.comp (measurable_snd.comp measurable_snd))
+    (measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+    measurable_fst he₁ hd₁ h₁
+    (mutualInfo_ne_top ν (fun q ↦ q.1) (fun q ↦ q.2.2.2.1) measurable_fst
+      (measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd))))
+
+omit [Fintype β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Nonempty β₁]
+  [Fintype U] [MeasurableSingletonClass U] in
+lemma uvInfoSum₁_map_uvRelabel (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
+    {e₁ : U → U'} {e₂ : V → V'} {d₂ : V' → V} (he₁ : Measurable e₁) (he₂ : Measurable e₂)
+    (hd₂ : Measurable d₂) (h₂ : ∀ v, d₂ (e₂ v) = v) :
+    uvInfoSum₁ (ν.map (uvRelabel e₁ e₂)) = uvInfoSum₁ ν := by
+  rw [uvInfoSum₁, uvInfoSum₁, uvInfo₁_map_uvRelabel ν he₁ he₂ hd₂ h₂]
+  congr 1
+  rw [condMutualInfo_map_comp ν (uvRelabel e₁ e₂) (measurable_uvRelabel he₁ he₂)
+    (fun q ↦ q.2.2.1) (measurable_fst.comp (measurable_snd.comp measurable_snd))
+    (fun q ↦ q.2.2.2.2)
+    (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+    (fun q ↦ q.2.1) (measurable_fst.comp measurable_snd)]
+  exact condMutualInfo_eq_of_leftInverse_cond ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2)
+    (fun q ↦ q.2.1) (measurable_fst.comp (measurable_snd.comp measurable_snd))
+    (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+    (measurable_fst.comp measurable_snd) he₂ hd₂ h₂
+    (mutualInfo_ne_top ν (fun q ↦ q.2.1) (fun q ↦ q.2.2.2.2) (measurable_fst.comp measurable_snd)
+      (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd))))
+
+end Sum
+
+end AuxRelabel
+
 /-! ## Time sharing -/
 
 section TimeSharing
@@ -567,11 +832,219 @@ variable [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Non
 variable [Fintype β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Nonempty β₁]
 variable [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] [Nonempty β₂]
 
-/-- The rate pair of a broadcast code, shrunk by the per-letter Fano slack, lies in the UV outer
-region.  The letter index is absorbed into the auxiliaries, which already carry it, so the
-average of the letter laws is again a channel law and dominates the per-letter averages of all
-four information slots.
-@residual(plan:bc-general-region-plan) -/
+/-! ### The time-shared five-tuple law -/
+
+/-- The letter laws of a broadcast code, read as a Markov kernel from the letter index. -/
+noncomputable def bcUVLetterKernel (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) :
+    Kernel (Fin n) ((Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂) :=
+  Kernel.ofFunOfCountable (bcUVJointDistribution c W)
+
+/-- The uniform law of the letter index of a length-`n` block code. -/
+noncomputable def bcUVLetterIndexLaw (n : ℕ) : Measure (Fin n) :=
+  (Fintype.card (Fin n) : ℝ≥0∞)⁻¹ • Measure.count
+
+instance bcUVLetterIndexLaw_isProbabilityMeasure [NeZero n] :
+    IsProbabilityMeasure (bcUVLetterIndexLaw n) := by
+  unfold bcUVLetterIndexLaw; infer_instance
+
+omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α] [Fintype β₁]
+  [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Fintype β₂]
+  [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] in
+lemma bcUVLetterKernel_apply (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂)
+    (i : Fin n) : bcUVLetterKernel c W i = bcUVJointDistribution c W i := rfl
+
+instance bcUVLetterKernel_isMarkovKernel (c : BroadcastCode M₁ M₂ n α β₁ β₂)
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] :
+    IsMarkovKernel (bcUVLetterKernel c W) := by
+  refine ⟨fun i ↦ ?_⟩
+  change IsProbabilityMeasure (bcUVJointDistribution c W i)
+  infer_instance
+
+/-- The time-shared five-tuple law of a broadcast code: the letter index is drawn uniformly and
+the letter-`i` five-tuple is read off the ambient measure.  The letter index survives inside both
+auxiliaries, which already carry it as their first component. -/
+noncomputable def bcUVTimeShare (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) :
+    Measure ((Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂) :=
+  ((bcUVLetterIndexLaw n) ⊗ₘ bcUVLetterKernel c W).map Prod.snd
+
+instance bcUVTimeShare_isProbabilityMeasure (c : BroadcastCode M₁ M₂ n α β₁ β₂)
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
+    IsProbabilityMeasure (bcUVTimeShare c W) := by
+  unfold bcUVTimeShare
+  exact Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+
+omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α] [Fintype β₁]
+  [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Fintype β₂]
+  [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] in
+lemma bcUVTimeShare_eq_sum (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
+    bcUVTimeShare c W = ∑ i : Fin n, (n : ℝ≥0∞)⁻¹ • bcUVJointDistribution c W i := by
+  ext s hs
+  rw [bcUVTimeShare, ← Measure.snd, Measure.snd_compProd,
+    Measure.bind_apply hs (Kernel.aemeasurable _), bcUVLetterIndexLaw, lintegral_smul_measure,
+    lintegral_count, tsum_fintype, smul_eq_mul, Fintype.card_fin, Measure.finsetSum_apply]
+  simp [bcUVLetterKernel_apply, Finset.mul_sum]
+
+omit [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
+  [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [MeasurableSingletonClass β₂]
+  [StandardBorelSpace β₂] in
+lemma bcUVTimeShare_isUVChannelLaw (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
+    IsUVChannelLaw W (bcUVTimeShare c W) := by
+  have hne : ((n : ℝ≥0∞))⁻¹ ≠ ∞ :=
+    ENNReal.inv_ne_top.mpr (Nat.cast_ne_zero.mpr (NeZero.ne n))
+  haveI : ∀ i : Fin n, IsFiniteMeasure ((n : ℝ≥0∞)⁻¹ • bcUVJointDistribution c W i) := fun i ↦
+    Measure.smul_finite _ hne
+  rw [bcUVTimeShare_eq_sum]
+  exact IsUVChannelLaw.finsetSum
+    (fun i ↦ (bcUVJointDistribution_isUVChannelLaw c W i).smul _) Finset.univ
+
+omit [StandardBorelSpace α] [Nonempty α] [StandardBorelSpace β₁] [StandardBorelSpace β₂] in
+lemma bcUVLetterKernel_ae_tag (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
+    ∀ᵐ p ∂((bcUVLetterIndexLaw n) ⊗ₘ bcUVLetterKernel c W),
+      p.2.1.1 = p.1 ∧ p.2.2.1.1 = p.1 := by
+  rw [Measure.ae_compProd_iff (Set.toFinite _).measurableSet]
+  filter_upwards with i
+  rw [bcUVLetterKernel_apply, bcUVJointDistribution,
+    ae_map_iff (measurable_bcUVTuple c i).aemeasurable (Set.toFinite _).measurableSet]
+  filter_upwards with ω
+  exact ⟨rfl, rfl⟩
+
+/-! ### The four slots of the time-shared law dominate the letter averages -/
+
+lemma lintegral_bcUVLetterIndexLaw [NeZero n] (F : Fin n → ℝ≥0∞) :
+    ∫⁻ i, F i ∂(bcUVLetterIndexLaw n) = (n : ℝ≥0∞)⁻¹ * ∑ i, F i := by
+  rw [bcUVLetterIndexLaw, lintegral_smul_measure, lintegral_count, tsum_fintype, smul_eq_mul,
+    Fintype.card_fin]
+
+omit [StandardBorelSpace α] [Nonempty α] in
+lemma bcUVTimeShare_uvInfo₁_ge (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
+    (n : ℝ≥0∞)⁻¹ * ∑ i : Fin n, uvInfo₁ (bcUVJointDistribution c W i)
+      ≤ uvInfo₁ (bcUVTimeShare c W) := by
+  have hV : Measurable (fun q : (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ ↦ q.2.1) :=
+    measurable_fst.comp measurable_snd
+  have hY₁ : Measurable (fun q : (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ ↦ q.2.2.2.1) :=
+    measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd))
+  rw [uvInfo₁, bcUVTimeShare, mutualInfo_map_comp _ Prod.snd measurable_snd _ hV _ hY₁,
+    mutualInfo_compProd_eq_add_lintegral _ _ hV hY₁ (tag := fun a ↦ a.1) measurable_fst
+      (by filter_upwards [bcUVLetterKernel_ae_tag c W] with p hp using hp.2),
+    lintegral_bcUVLetterIndexLaw]
+  simp only [uvInfo₁, bcUVLetterKernel_apply]
+  exact le_add_self
+
+omit [StandardBorelSpace α] [Nonempty α] in
+lemma bcUVTimeShare_uvInfo₂_ge (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
+    (n : ℝ≥0∞)⁻¹ * ∑ i : Fin n, uvInfo₂ (bcUVJointDistribution c W i)
+      ≤ uvInfo₂ (bcUVTimeShare c W) := by
+  have hU : Measurable (fun q : (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ ↦ q.1) := measurable_fst
+  have hY₂ : Measurable (fun q : (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ ↦ q.2.2.2.2) :=
+    measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd))
+  rw [uvInfo₂, bcUVTimeShare, mutualInfo_map_comp _ Prod.snd measurable_snd _ hU _ hY₂,
+    mutualInfo_compProd_eq_add_lintegral _ _ hU hY₂ (tag := fun a ↦ a.1) measurable_fst
+      (by filter_upwards [bcUVLetterKernel_ae_tag c W] with p hp using hp.1),
+    lintegral_bcUVLetterIndexLaw]
+  simp only [uvInfo₂, bcUVLetterKernel_apply]
+  exact le_add_self
+
+lemma bcUVTimeShare_condMutualInfo₁_eq (c : BroadcastCode M₁ M₂ n α β₁ β₂)
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
+    condMutualInfo (bcUVTimeShare c W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
+      = (n : ℝ≥0∞)⁻¹ * ∑ i : Fin n, condMutualInfo (bcUVJointDistribution c W i)
+          (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) := by
+  have hne : ((n : ℝ≥0∞))⁻¹ ≠ ∞ :=
+    ENNReal.inv_ne_top.mpr (Nat.cast_ne_zero.mpr (NeZero.ne n))
+  have hX : Measurable (fun q : (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ ↦ q.2.2.1) :=
+    measurable_fst.comp (measurable_snd.comp measurable_snd)
+  have hY₁ : Measurable (fun q : (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ ↦ q.2.2.2.1) :=
+    measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd))
+  have hU : Measurable (fun q : (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ ↦ q.1) := measurable_fst
+  have hmarg : (∫⁻ t, mutualInfo (bcUVLetterKernel c W t) (fun q ↦ q.1) (fun q ↦ q.2.2.2.1)
+      ∂(bcUVLetterIndexLaw n)) ≠ ∞ := by
+    rw [lintegral_bcUVLetterIndexLaw]
+    exact ENNReal.mul_ne_top hne (ne_of_lt (ENNReal.sum_lt_top.mpr fun i _ ↦
+      lt_top_iff_ne_top.mpr (mutualInfo_ne_top _ _ _ hU hY₁)))
+  have h1 := condMutualInfo_map_comp' ((bcUVLetterIndexLaw n) ⊗ₘ bcUVLetterKernel c W) Prod.snd
+    measurable_snd (bcUVTimeShare c W) rfl (fun q ↦ q.2.2.1) hX (fun q ↦ q.2.2.2.1) hY₁
+    (fun q ↦ q.1) hU
+  have h2 := condMutualInfo_compProd_snd_eq_lintegral (bcUVLetterIndexLaw n)
+    (bcUVLetterKernel c W) hX hY₁ hU (tag := fun a ↦ a.1) measurable_fst
+    (by filter_upwards [bcUVLetterKernel_ae_tag c W] with p hp using hp.1)
+    (mutualInfo_ne_top _ _ _ measurable_fst (hY₁.comp measurable_snd)) hmarg
+  rw [h1, h2, lintegral_bcUVLetterIndexLaw]
+  simp only [bcUVLetterKernel_apply]
+
+lemma bcUVTimeShare_condMutualInfo₂_eq (c : BroadcastCode M₁ M₂ n α β₁ β₂)
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
+    condMutualInfo (bcUVTimeShare c W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.2.1)
+      = (n : ℝ≥0∞)⁻¹ * ∑ i : Fin n, condMutualInfo (bcUVJointDistribution c W i)
+          (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.2.1) := by
+  have hne : ((n : ℝ≥0∞))⁻¹ ≠ ∞ :=
+    ENNReal.inv_ne_top.mpr (Nat.cast_ne_zero.mpr (NeZero.ne n))
+  have hX : Measurable (fun q : (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ ↦ q.2.2.1) :=
+    measurable_fst.comp (measurable_snd.comp measurable_snd)
+  have hY₂ : Measurable (fun q : (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ ↦ q.2.2.2.2) :=
+    measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd))
+  have hV : Measurable (fun q : (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ ↦ q.2.1) :=
+    measurable_fst.comp measurable_snd
+  have hmarg : (∫⁻ t, mutualInfo (bcUVLetterKernel c W t) (fun q ↦ q.2.1) (fun q ↦ q.2.2.2.2)
+      ∂(bcUVLetterIndexLaw n)) ≠ ∞ := by
+    rw [lintegral_bcUVLetterIndexLaw]
+    exact ENNReal.mul_ne_top hne (ne_of_lt (ENNReal.sum_lt_top.mpr fun i _ ↦
+      lt_top_iff_ne_top.mpr (mutualInfo_ne_top _ _ _ hV hY₂)))
+  have h1 := condMutualInfo_map_comp' ((bcUVLetterIndexLaw n) ⊗ₘ bcUVLetterKernel c W) Prod.snd
+    measurable_snd (bcUVTimeShare c W) rfl (fun q ↦ q.2.2.1) hX (fun q ↦ q.2.2.2.2) hY₂
+    (fun q ↦ q.2.1) hV
+  have h2 := condMutualInfo_compProd_snd_eq_lintegral (bcUVLetterIndexLaw n)
+    (bcUVLetterKernel c W) hX hY₂ hV (tag := fun a ↦ a.1) measurable_fst
+    (by filter_upwards [bcUVLetterKernel_ae_tag c W] with p hp using hp.2)
+    (mutualInfo_ne_top _ _ _ measurable_fst (hY₂.comp measurable_snd)) hmarg
+  rw [h1, h2, lintegral_bcUVLetterIndexLaw]
+  simp only [bcUVLetterKernel_apply]
+
+lemma bcUVTimeShare_uvInfoSum₂_ge (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
+    (n : ℝ≥0∞)⁻¹ * ∑ i : Fin n, uvInfoSum₂ (bcUVJointDistribution c W i)
+      ≤ uvInfoSum₂ (bcUVTimeShare c W) := by
+  simp only [uvInfoSum₂]
+  rw [Finset.sum_add_distrib, mul_add, bcUVTimeShare_condMutualInfo₁_eq]
+  exact add_le_add (bcUVTimeShare_uvInfo₂_ge c W) le_rfl
+
+lemma bcUVTimeShare_uvInfoSum₁_ge (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
+    (n : ℝ≥0∞)⁻¹ * ∑ i : Fin n, uvInfoSum₁ (bcUVJointDistribution c W i)
+      ≤ uvInfoSum₁ (bcUVTimeShare c W) := by
+  simp only [uvInfoSum₁]
+  rw [Finset.sum_add_distrib, mul_add, bcUVTimeShare_condMutualInfo₂_eq]
+  exact add_le_add (bcUVTimeShare_uvInfo₁_ge c W) le_rfl
+
+/-! ### The shrunk rate point -/
+
+lemma le_toReal_of_inv_mul_le {S J : ℝ≥0∞} {m : ℕ} (hm : 0 < m)
+    (hSJ : (m : ℝ≥0∞)⁻¹ * S ≤ J) (hJ : J ≠ ∞) {r : ℝ} (hr : (m : ℝ) * r ≤ S.toReal) :
+    r ≤ J.toReal := by
+  have hm0 : (0 : ℝ) < (m : ℝ) := by exact_mod_cast hm
+  have hminv : ((m : ℝ≥0∞))⁻¹ ≠ 0 :=
+    ENNReal.inv_ne_zero.mpr (ENNReal.natCast_ne_top m)
+  have hmono := ENNReal.toReal_mono hJ hSJ
+  rw [ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast, inv_mul_eq_div] at hmono
+  have hkey : r ≤ S.toReal / (m : ℝ) := (le_div_iff₀ hm0).mpr (by linarith)
+  linarith
+
 theorem bc_uv_shrunk_point_mem
     [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
@@ -581,7 +1054,121 @@ theorem bc_uv_shrunk_point_mem
     (R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ),
       R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
       ∈ bcOuterRegionUV W := by
-  sorry
+  haveI : NeZero n := ⟨hn.ne'⟩
+  have hn' : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hnne : (n : ℝ) ≠ 0 := ne_of_gt hn'
+  have hM₁R : (2 : ℝ) ≤ (M₁ : ℝ) := by exact_mod_cast hcard₁
+  have hM₂R : (2 : ℝ) ≤ (M₂ : ℝ) := by exact_mod_cast hcard₂
+  -- both Fano slacks are nonnegative, so shrinking by their sum only weakens the bounds
+  have hF₁ : 0 ≤ bcConverseFanoSlack₁ c W := by
+    unfold bcConverseFanoSlack₁
+    exact add_nonneg (Real.binEntropy_nonneg measureReal_nonneg measureReal_le_one)
+      (mul_nonneg measureReal_nonneg (Real.log_nonneg (by linarith)))
+  have hF₂ : 0 ≤ bcConverseFanoSlack₂ c W := by
+    unfold bcConverseFanoSlack₂
+    exact add_nonneg (Real.binEntropy_nonneg measureReal_nonneg measureReal_le_one)
+      (mul_nonneg measureReal_nonneg (Real.log_nonneg (by linarith)))
+  -- the code-level converse, with the four per-letter sums identified as slot sums
+  have hext := bc_uv_rate_extract c W hcard₁ hcard₂ hM₁ hM₂
+  rw [show (∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
+        (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i))
+      = ∑ i : Fin n, uvInfo₁ (bcUVJointDistribution c W i) from
+      Finset.sum_congr rfl fun i _ ↦ bc_uv_mutualInfo_eq_uvInfo₁_at c W i,
+    show (∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
+        (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i))
+      = ∑ i : Fin n, uvInfo₂ (bcUVJointDistribution c W i) from
+      Finset.sum_congr rfl fun i _ ↦ bc_uv_mutualInfo_eq_uvInfo₂_at c W i,
+    show (∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
+          (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)
+        + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
+          (bcConverseY₁s i) (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i)))
+      = ∑ i : Fin n, uvInfoSum₂ (bcUVJointDistribution c W i) from
+      Finset.sum_congr rfl fun i _ ↦ bc_uv_sum_eq_uvInfoSum₂_at c W i,
+    show (∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
+          (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)
+        + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
+          (bcConverseY₂s i) (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i)))
+      = ∑ i : Fin n, uvInfoSum₁ (bcUVJointDistribution c W i) from
+      Finset.sum_congr rfl fun i _ ↦ bc_uv_sum_eq_uvInfoSum₁_at c W i] at hext
+  -- re-encode the two auxiliary alphabets of the time-shared law into `ℕ`
+  obtain ⟨e₁, hinj₁⟩ := exists_injective_nat (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂))
+  obtain ⟨e₂, hinj₂⟩ := exists_injective_nat (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂))
+  have hme₁ : Measurable e₁ := measurable_of_countable e₁
+  have hme₂ : Measurable e₂ := measurable_of_countable e₂
+  have hd₁ : ∀ u, Function.invFun e₁ (e₁ u) = u := Function.leftInverse_invFun hinj₁
+  have hd₂ : ∀ v, Function.invFun e₂ (e₂ v) = v := Function.leftInverse_invFun hinj₂
+  haveI : IsProbabilityMeasure ((bcUVTimeShare c W).map (uvRelabel e₁ e₂)) :=
+    Measure.isProbabilityMeasure_map (measurable_uvRelabel hme₁ hme₂).aemeasurable
+  have hchan : IsUVChannelLaw W ((bcUVTimeShare c W).map (uvRelabel e₁ e₂)) :=
+    (bcUVTimeShare_isUVChannelLaw c W).map_auxiliaries hme₁ hme₂
+  -- the four slots are unchanged by the re-encoding
+  have hs₁ : uvInfo₁ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂)) = uvInfo₁ (bcUVTimeShare c W) :=
+    uvInfo₁_map_uvRelabel _ hme₁ hme₂ (measurable_of_countable _) hd₂
+  have hs₂ : uvInfo₂ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂)) = uvInfo₂ (bcUVTimeShare c W) :=
+    uvInfo₂_map_uvRelabel _ hme₁ hme₂ (measurable_of_countable _) hd₁
+  have hs₃ : uvInfoSum₂ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))
+      = uvInfoSum₂ (bcUVTimeShare c W) :=
+    uvInfoSum₂_map_uvRelabel _ hme₁ hme₂ (measurable_of_countable _) hd₁
+  have hs₄ : uvInfoSum₁ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))
+      = uvInfoSum₁ (bcUVTimeShare c W) :=
+    uvInfoSum₁_map_uvRelabel _ hme₁ hme₂ (measurable_of_countable _) hd₂
+  -- finiteness of the four slots of the time-shared law
+  have hfin₁ : uvInfo₁ (bcUVTimeShare c W) ≠ ∞ :=
+    mutualInfo_ne_top _ _ _ (measurable_fst.comp measurable_snd)
+      (measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+  have hfin₂ : uvInfo₂ (bcUVTimeShare c W) ≠ ∞ :=
+    mutualInfo_ne_top _ _ _ measurable_fst
+      (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+  have hfin₃ : uvInfoSum₂ (bcUVTimeShare c W) ≠ ∞ :=
+    ENNReal.add_ne_top.mpr ⟨hfin₂, condMutualInfo_ne_top _ _ _ _
+      (measurable_fst.comp (measurable_snd.comp measurable_snd))
+      (measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+      measurable_fst⟩
+  have hfin₄ : uvInfoSum₁ (bcUVTimeShare c W) ≠ ∞ :=
+    ENNReal.add_ne_top.mpr ⟨hfin₁, condMutualInfo_ne_top _ _ _ _
+      (measurable_fst.comp (measurable_snd.comp measurable_snd))
+      (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+      (measurable_fst.comp measurable_snd)⟩
+  -- the four bounds at the re-encoded time-shared law
+  have hcorner : ∀ r : ℝ, (n : ℝ) * (r - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W)
+      / (n : ℝ)) = (n : ℝ) * r - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) := by
+    intro r
+    field_simp
+  have g₁ : R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ)
+      ≤ (uvInfo₁ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal := by
+    refine le_toReal_of_inv_mul_le hn (by rw [hs₁]; exact bcUVTimeShare_uvInfo₁_ge c W)
+      (by rw [hs₁]; exact hfin₁) ?_
+    rw [hcorner]
+    linarith [hext.bound₁, hF₂]
+  have g₂ : R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ)
+      ≤ (uvInfo₂ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal := by
+    refine le_toReal_of_inv_mul_le hn (by rw [hs₂]; exact bcUVTimeShare_uvInfo₂_ge c W)
+      (by rw [hs₂]; exact hfin₂) ?_
+    rw [hcorner]
+    linarith [hext.bound₂, hF₁]
+  have hsumr : (n : ℝ) * ((R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
+        + (R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ)))
+      = (n : ℝ) * R₁ + (n : ℝ) * R₂
+        - 2 * (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) := by
+    field_simp
+    ring
+  have g₃ : (R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
+        + (R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
+      ≤ (uvInfoSum₂ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal := by
+    refine le_toReal_of_inv_mul_le hn (by rw [hs₃]; exact bcUVTimeShare_uvInfoSum₂_ge c W)
+      (by rw [hs₃]; exact hfin₃) ?_
+    rw [hsumr]
+    linarith [hext.sumBound₂, hF₁, hF₂]
+  have g₄ : (R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
+        + (R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
+      ≤ (uvInfoSum₁ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal := by
+    refine le_toReal_of_inv_mul_le hn (by rw [hs₄]; exact bcUVTimeShare_uvInfoSum₁_ge c W)
+      (by rw [hs₄]; exact hfin₄) ?_
+    rw [hsumr]
+    linarith [hext.sumBound₁, hF₁, hF₂]
+  exact subset_closure (Set.mem_iUnion.mpr
+    ⟨⟨(bcUVTimeShare c W).map (uvRelabel e₁ e₂), inferInstance⟩,
+      Set.mem_iUnion.mpr ⟨hchan, g₁, g₂, g₃, g₄⟩⟩)
 
 end TimeSharing
 
