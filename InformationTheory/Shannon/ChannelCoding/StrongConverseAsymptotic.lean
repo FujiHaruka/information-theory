@@ -702,6 +702,8 @@ theorem channelCoding_highLLR_tendsto_zero
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hg
     (Filter.Eventually.of_forall hlow) hupp
 
+/-! ## The strong converse and its operational form -/
+
 /-- **Wolfowitz strong converse (asymptotic)**: for a memoryless channel `W` over finite
 alphabets, if the rate `log (M n) / n` eventually exceeds `capacity W + δ` (with `δ > 0`), then
 the average error probability tends to `1`.
@@ -797,7 +799,8 @@ This is the contrapositive of `channelCoding_strong_converse_asymptotic`: were `
 the codes would have rate eventually above `capacity W + (R - capacity W)`, forcing their average
 error to tend to `1` and contradicting the `ε`-small errors.  The capacity achiever `p` and the
 full-support output `hq_pos` are the preconditions of the strong converse, passed through
-unchanged. -/
+unchanged.
+@audit:ok -/
 @[entry_point]
 theorem channelCoding_operational_rate_le_capacity
     [Nonempty α]

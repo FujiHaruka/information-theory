@@ -5,10 +5,10 @@ import InformationTheory.Shannon.ChannelCoding.StrongConverseAsymptotic
 /-!
 # Broadcast channel — cooperative outer bound
 
-The first outer bound on the operational capacity region of a general two-receiver broadcast
-channel.  Each receiver alone, and the two receivers pooling their outputs, form single-user
-channels, so the single-user converse applies three times and bounds the two individual rates
-and their sum by the corresponding capacities.
+An outer bound on the operational capacity region of a general two-receiver broadcast channel,
+obtained by letting the two receivers cooperate.  Each receiver alone, and the two receivers
+pooling their outputs, form single-user channels, so the single-user converse applies three
+times and bounds the two individual rates and their sum by the corresponding capacities.
 
 The reductions are code transformations: freezing one message index turns a broadcast code into
 a single-user code for the other receiver over the marginal channel, and pairing the two message
@@ -371,7 +371,12 @@ read with the output pair as a single output.
 
 No sign constraint is imposed.  The operational region genuinely contains nonpositive rate
 pairs, which a single-message code achieves, so a first-quadrant outer region would not contain
-it; the three capacities are nonnegative, so the nonpositive part causes no loss. -/
+it; the three capacities are nonnegative, so the nonpositive part causes no loss.
+
+The region is proper rather than the whole plane: each capacity is the supremum of a nonempty
+family of mutual informations bounded by `log |α| + log |β|`, so the three half planes cut at
+finite heights.
+@audit:ok -/
 def bcOuterRegionCoop (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   {p | p.1 ≤ capacity (Kernel.fst W) ∧ p.2 ≤ capacity (Kernel.snd W) ∧
     p.1 + p.2 ≤ capacity W}
@@ -396,7 +401,9 @@ of achievable rate pairs, and the resulting single-user converses bound each rat
 
 The three capacity achievers and their full-support output preconditions are those of
 `channelCoding_operational_rate_le_capacity`, one set per single-user channel; none of them
-carries a part of the converse argument. -/
+carries a part of the converse argument.  The achievers cost nothing, since
+`exists_capacity_achiever` produces one for each of the three channels.
+@audit:ok -/
 @[entry_point]
 theorem bc_capacity_subset_coop
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
