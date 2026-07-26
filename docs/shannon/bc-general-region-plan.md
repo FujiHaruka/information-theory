@@ -13,7 +13,7 @@ Lean の 1 本の定理列として持つこと。
 - [ ] Phase 2 補助変数 union (独立・park 可) 📋
 - [x] Phase 3 協調外界 (安い外界) ✅ `e9222d0a` `b9ba272a`
 - [x] Phase 4a UV 単一文字化 (floating 形) ✅ `5bf64adf` `f7023332` `bff554c2` `33ec3522` `54705cb3`
-- [ ] Phase 4b UV 外界の集合化 + 操作的包含 📋 ★現在の本線
+- [ ] Phase 4b UV 外界の集合化 + 操作的包含 🚧 ★現在の本線 (M0 在庫 ✅ → [`bc-uv-operational-inventory.md`](bc-uv-operational-inventory.md))
 - [ ] Phase 5 一致クラスの拡張 📋
 
 ## 在庫
@@ -36,8 +36,9 @@ Lean の 1 本の定理列として持つこと。
 | `marton_achievability` | `Marton/Achievability.lean:767` | 一般 BC 内界 (EGK Thm 8.3、private message のみ) |
 | `InMartonRegion` | `Marton/Basic.lean:40` | 3 不等式バンドル (点ごと述語) |
 | `MACAchievable` / `macPentagon` / `macCapacityRegion` | `MultipleAccess/TimeSharing.lean:49` / `:58` / `:66` | 操作的述語 → closure で集合化のパターン |
-| **MAC の符号→ambient 橋** | `MultipleAccess/TimeSharingConverse/Bridge.lean` (1238 行 / 48 decl) | **Phase 4b の唯一の雛形**。`macConverseAmbient:348` → `mac_converse_from_code:777` → `mac_converse_rate_extract:854` → per-letter 情報量の同定 `:1109`–`:1214` |
-| `mac_avgPentagon_mem_convexHull` | `Bridge.lean:94` | n 文字平均を単一文字分布の凸包へ落とす先例 |
+| **MAC の符号→ambient 橋** | `MultipleAccess/TimeSharingConverse/Bridge.lean` (1238 行 / 48 decl) | **Phase 4b の雛形 (前半)**。`macConverseAmbient:348` → `mac_converse_from_code:777` → `mac_converse_rate_extract:854` → per-letter 情報量の同定 `:1109`–`:1214` |
+| **MAC の集合化 + 極限** | `MultipleAccess/TimeSharingConverse/Assembly.lean` (953 行 / 12 decl) | **Phase 4b の雛形 (後半)**。`bc_capacity_subset_uv` の直接の対応物は `mac_timesharing_converse:817` / `mac_timesharing_capacity_region:908`。退化レート被覆に `:397`–`:817` で約 450 行 |
+| `mac_avgPentagon_mem_convexHull` | `Bridge.lean:94` | n 文字平均を単一文字分布の凸包へ落とす先例。**4b では不採用** (判断ログ 5) |
 | `mac_capacity_region_reconciliation` | `MultipleAccess/Reconciliation.lean:292` | 内外を同じ言語に揃える先例 |
 
 **存在しないもの**: `bcOuterRegionUV` (UV 外界の集合版) と `bc_capacity_subset_uv`。BC 符号から
@@ -60,7 +61,7 @@ Approach は **「主語 → 安い外界で挟み込みの骨格 → 本命の�
 - **情報量レベル (4a)** — 補助変数の identification と単一文字化。難所は Csiszár 和恒等式の
   適用形。ambient 測度 `μ` を「与えられたもの」として受け取る floating 形で完結する。
 - **操作的レベル (4b)** — `bcCapacityRegion ⊆ bcOuterRegionUV`。難所は符号から ambient 測度を
-  構成する橋と、n 文字の平均を単一文字分布へ落とす凸化。情報量の議論は一切増えない。
+  構成する橋と、n 文字の平均を単一文字補助変数の分布へ落とす還元。情報量の議論は一切増えない。
 
 Phase 3 がこの分割を要求しなかったのは、Wolfowitz strong converse の対偶を使うことで **ambient
 の構成を丸ごと迂回できた**から。Fano ベースの UV 外界では同じ手が使えず、橋が不可避になる。
@@ -107,44 +108,55 @@ proof-log: no。
 二重の一般化)。headline `bc_uv_converse` は **degradedness 前提なし**、構造前提は memoryless 2 本 +
 encoder Markov 2 本のみ。proof-log: no (単一文字化の機構は docstring に収まった)。
 
-### Phase 4b — UV 外界の集合化 + 操作的包含 📋 ★本命・最重量
+### Phase 4b — UV 外界の集合化 + 操作的包含 🚧 ★本命・最重量
 
 到達目標は `bcOuterRegionUV W : Set (ℝ × ℝ)` と
 **`bc_capacity_subset_uv : bcCapacityRegion W ⊆ bcOuterRegionUV W`**。
 
-- [ ] **M0 在庫**: MAC の `Bridge.lean` を `CodeToAmbient` / `RateExtract` / `PerLetterInfo` の 3 節に
-      分けて読み、BC への読み替え対応表を作る (1 出力 → 2 出力、2 送信者 → 1 送信者 2 メッセージ)。
-      **ここで初めて 4b の行数が読める**。現時点の見積りは「MAC 実績 1238 行 / 48 decl と同等以上」
-      という外挿しか無い
-- [ ] **符号 → ambient**: 独立一様 2 メッセージ → encoder → BC カーネルの compProd で `μ` を構成
-      (`macConverseAmbient` 相当)。`IsProbabilityMeasure` インスタンス群まで
-- [ ] **構造前提の導出**: `bc_uv_converse` が要求する `h_memo₁` / `h_memo₂` / `hmarkov₁` / `hmarkov₂` /
-      `h_indep` / 一様性 2 本を、構成した `μ` から導く (`macConverse_memorylessChannel` /
-      `macConverse_mutualInfo_eq_zero` / `macConverse_isMarkovChain` 相当)。**下記「結合 Markov」の
-      申し送りが効くのはここ**
-- [ ] **レート抽出**: `Real.log (Fintype.card ξₖ)` を `n · Rₖ` の下界に変換 (`le_log_of_ceil_exp_le` /
-      `mac_converse_rate_extract` 相当) し、Fano slack を誤り確率 → 0 の列に沿って消す
-- [ ] **単一文字分布への還元**: n 文字の平均を単一文字補助変数の分布に落とす。MAC は
-      `mac_avgPentagon_mem_convexHull` で凸包へ逃がした。**4b の第二の難所**で、時間共有変数を
-      補助変数に吸収する標準手法を Lean 化する必要がある
-- [ ] **集合定義**: `bcOuterRegionUV W : Set (ℝ × ℝ)` を単一文字補助変数分布についての union +
-      closure で定義。**第一象限制約は入れない** (下記 判断ログ 1)
-- [ ] `bc_capacity_subset_uv` の組み立て + `bcOuterRegionUV_isClosed`
+- [x] **M0 在庫** ✅ → [`bc-uv-operational-inventory.md`](bc-uv-operational-inventory.md)。MAC 橋の全 decl を
+      `reuse` / `mirror` / `restructure` / `absent` に分類し、逐語署名 + 行数を実測。全体 **≈ 1370 行**
+      (MAC 実績 2191 行の 6 割強)。**Mathlib 側に自作が要る穴はゼロ** = `@residual(wall:…)` 候補なし。
+      4b で書くものはすべて既存資産の配線か in-project 補題の一般化
+
+**実装 step** — 在庫 §「step の推奨分割」が詳細の SoT。1 dispatch = 1 step、依存順は
+`S1 → S2 → S3 → S4 → S6 → S7 → S8`、**`S5` は `S1` 直後に並行着手可**。
+
+- [ ] **S1 共有化** — MAC `Bridge.lean` の汎用補題 10 本 (BC 固有要素ゼロ、238 行) を
+      `ChannelCoding/CodeToAmbient.lean` (新設、MAC/BC 共有) へ移設して public 化。
+      **MAC 側の既存ファイルを編集する唯一の step**。着手前に `scripts/dep_consumers.sh`、
+      着手後に `lake build InformationTheory.Shannon.MultipleAccess.TimeSharingConverse` で回帰確認
+- [ ] **S2 BC ambient 構成** — `bcConverseInput` / `bcConverseKernel` / `bcConverseAmbient` +
+      射影 (Msg 2 / Y 3) + 可測性 + instance + メッセージ一様性 + 独立性。
+      **出力空間の固定が効くのはここ** (下記)
+- [ ] **S3 構造前提の導出** — `isMemorylessChannel_of_compProd_pi` の conditioner 一般化 (+25 行) →
+      `h_memo₁/₂` と `hmarkov₁/₂` を構成した `μ` から導く。対出力から片方の座標へ落とすのは
+      swap → `isMarkovChain_map_left` → swap の既存資産だけで済む
+- [ ] **S4 符号レベル converse** — `bc_uv_converse_from_code` + 受信機別の誤り確率同定 2 本 +
+      `bc_uv_rate_extract` (`Real.log (Fintype.card ξₖ)` → `n · Rₖ`)
+- [ ] **S5 補助変数の型統一** (~100 行、**当初 checklist に無かった層**) — `uvAuxPad` +
+      相互情報量 / 条件付き相互情報量の不変性。`uvAux … i` の**型が `i` に依存する**
+      (`OuterBoundUV.lean:71`) ため、単一文字分布の集合を作るには共通アルファベットへの載せ替えが
+      必須。**MAC に対応物ゼロ**。攻略路は在庫で確定 (mutualInfo は `mutualInfo_le_of_postprocess`
+      (`DPI.lean:123`) の両向き適用で等式、conditioner は `mutualInfo_chain_rule`
+      (`CondMutualInfo.lean:214`) で分解 → `ENNReal.add_right_inj` で消去)
+- [ ] **S6 per-letter 同定** — `bcUVJointDistribution` + 5 つ組 map + `uvInfo₁/₂/Sum₁/Sum₂` の定義 +
+      同定 4 本。定義は `bc_uv_converse` の結論形に合わせて決める (Mathlib-shape-driven)
+- [ ] **S7 集合化** — `bcOuterRegionUV` + 閉性 + 時間共有変数の補助変数への吸収 (案 A、判断ログ 5)。
+      **第一象限制約は入れない** (判断ログ 1)
+- [ ] **S8 極限と組み立て** — Fano slack → 0 + **退化レートの被覆** + `bc_capacity_subset_uv`。
+      `bc_uv_converse` は `hcard₁ : 2 ≤ Fintype.card ξ₁` を要求するが、`R₁ ≤ 0` では `BCAchievable` が
+      `M₁ = 1` の符号しか保証しない (**当初 checklist に無かった層**、MAC は同じ箇所に約 450 行)。
+      **2 dispatch に割れる可能性あり**
 - [ ] `bcOuterRegionUV ⊆ bcOuterRegionCoop` を示せれば「UV は協調外界より狭い」が機械可読になる
       (**任意**。示せなくても挟み込みは 2 本並立で成立する)
 
-**4b への申し送り (Phase 4a の独立監査が特定)**: `h_memo₁` / `h_memo₂` は各出力を**個別に**条件付き
-独立にするだけで、出力**対**についての結合 Markov 連鎖を含意しない (座標ごとの条件付き独立は結合の
-条件付き独立を導かない)。`bcOuterRegionUV` を単一文字分布上の集合として定義する段では結合形が要る
-ので、(a) 構造前提を結合形に強めるか、(b) 操作的 wrapper 側で `μ` の構成から導くか、の判断が発生
-する。**操作的構成では成立するので数学的障害ではなく仮説の形の問題**であり、(b) が既定。
+**ファイル構成**: `BroadcastChannel/OuterBoundUV/Bridge.lean` (S2–S6、≈ 800 行) と
+`.../OuterBoundUV/Assembly.lean` (S7–S8、≈ 530 行) に分割。S1 の成果物のみ
+`ChannelCoding/CodeToAmbient.lean` (MAC/BC 共有)。
 
-**(a) を選んだ場合の波及 (`scripts/dep_consumers.sh` で機械確認)**: `h_memo` を仮説に取る decl は
-6 本 (`uvAux_markov_of_memo` / `bc_uv_input_step` / `bc_uv_input_step'` /
-`bc_uv_singleletterize_sum₂` / `bc_uv_singleletterize_sum₁` / `bc_uv_converse`)。`bc_uv_converse` の
-direct consumer は 0 decl、単一文字化 4 本の direct consumer は各 1 decl (= `bc_uv_converse`)、
-`uvAux` の direct consumer は 11 decl。**すべて `OuterBoundUV.lean` 1 ファイル内**なので、
-署名変更の blast radius は他家系に漏れない。
+**実装時に効く唯一の制約**: `bcConverseAmbient` の出力空間を **`Fin n → β₁ × β₂` (対の列)** で固定する。
+`(Fin n → β₁) × (Fin n → β₂)` (列の対) に取ると `Measure.pi` の構造が壊れ、S3 の結合 Markov が
+構成側から出なくなる (判断ログ 3)。**署名変更は不要** — `OuterBoundUV.lean` は無改変で済む。
 
 proof-log: **yes** (`docs/proof-logs/proof-log-bc-uv-operational.md`)。橋の構成は再利用先が
 degraded 側にもあり、MAC からの読み替えで何が効かなかったかを残す価値がある。
@@ -179,9 +191,8 @@ proof-log: 未定 (クラス定義段は no、等号が閉じたら yes)。
 ## 設計上の未決事項
 
 1. **補助変数 union の射程** (Phase 2) — 濃度固定で止めるか Carathéodory を自作するか
-2. **単一文字還元の形** (Phase 4b) — 時間共有変数を補助変数に吸収するか、MAC のように凸包へ
-   逃がすか。前者は `bcOuterRegionUV` が単一の union で書けて後者は凸包演算が残る
-3. **結合 memoryless を仮説側と構成側のどちらで持つか** (Phase 4b、上記申し送り)
+
+Phase 4b の 2 件 (単一文字還元の形 / 結合 memoryless の持ち方) は M0 在庫で決着 → 判断ログ 3・5。
 
 ## 撤退ライン (frozen slug)
 
@@ -190,7 +201,9 @@ proof-log: 未定 (クラス定義段は no、等号が閉じたら yes)。
 | **L-BCO1** | Phase 4 の補助変数 identification が閉じない | **不発動** — Phase 4a で `uvAux` 1 本の 2 通り instantiation により閉じたため、Körner–Marton / Sato への後退は不要になった |
 | **L-BCO2** | Phase 2 の型量化 union が universe 問題で詰む | 濃度固定版で止め、union は取らない (Phase 3–5 は影響を受けない) |
 | **L-BCO3** | Phase 5 の等号が Phase 4 の外界の形と噛み合わない | クラス定義だけ入れて等号は defer |
-| **L-BCO4** | Phase 4b の符号→ambient 橋または単一文字還元が閉じない | `bcOuterRegionUV` の集合定義までは入れ、`bc_capacity_subset_uv` を `sorry` + `@residual(plan:bc-general-region-plan)` で残す。橋を別 plan に切り出す場合は新 plan の filename を slug に合わせて `@residual(plan:<新 stem>)` に張り替える。**4a の floating 形 headline は無傷で残るので、退避しても到達済の成果は減らない** |
+| **L-BCO4** | Phase 4b の符号→ambient 橋または単一文字還元が閉じない | **不発動見込み** (M0 在庫 §撤退ラインとの距離: 橋は MAC の抽象補題が BC 固有要素ゼロで再利用でき、単一文字還元は案 A で凸幾何を回避できる)。発動時の退避先は据置 — `bcOuterRegionUV` の集合定義までは入れ、`bc_capacity_subset_uv` を `sorry` + `@residual(plan:bc-general-region-plan)` で残す。橋を別 plan に切り出す場合は新 plan の filename を slug に合わせて `@residual(plan:<新 stem>)` に張り替える。**4a の floating 形 headline は無傷で残るので、退避しても到達済の成果は減らない** |
+| **L-BCO5** | S5 の補助変数の型統一が `mutualInfo_chain_rule` 経由でも閉じない | `bcOuterRegionUV` を補助変数の型についての union ではなく **`n` を露出した族 `bcOuterRegionUVAt W n`** として定義し、`bc_capacity_subset_uv` は `⋂ n` 版で述べる。閉じない部分の退避出口は `sorry` + `@residual(plan:bc-general-region-plan)` |
+| **L-BCO6** | S8 の退化レート被覆が MAC 同様 450 行級に膨らむ | `bc_capacity_subset_uv` を第一象限交差版 `bcCapacityRegion W ∩ {p \| 0 ≤ p.1 ∧ 0 ≤ p.2} ⊆ bcOuterRegionUV W` で先に閉じ、全平面版は後続 leg へ送る (MAC `mac_timesharing_capacity_region` と同じ形)。未達部分の退避出口は `sorry` + `@residual(plan:bc-general-region-plan)` |
 
 **禁止事項**: どの撤退でも「外界が成立する」「補助変数が取れる」「符号から ambient が取れる」等を
 `*Hypothesis` 述語に束ねて仮説として渡す形は取らない (CLAUDE.md 検証の誠実性 tier 5)。退避は
@@ -214,9 +227,18 @@ honest でありうる**が、`bcCapacityRegion ⊆ …` の左辺が符号を�
    の対偶で ambient 構成を迂回できたが、Fano ベースの UV 外界では同じ手が使えない。難所が「Csiszár
    の適用形」と「符号→ambient の橋 + 凸化」で別物であり、前者だけでも独立した到達点になる。
    degraded 版 `bc_converse` も floating 形なので、4b の橋は 2 箇所に効く共有資産。
-3. **座標ごと条件付き独立は結合の条件付き独立を導かない** (Phase 4a 独立監査): `h_memo₁` / `h_memo₂`
-   は各出力を個別に条件付き独立にするだけ。4b で単一文字分布上の集合を定義する段では結合形が要る。
-   既定は「操作的 wrapper 側で `μ` の構成から導く」で、仮説強化は代替案。
+3. **結合 memoryless は構成側で持つ (既定 (b) を確定、M0 在庫)**: 座標ごとの条件付き独立は結合の
+   条件付き独立を導かない (Phase 4a 独立監査) が、MAC の `isMemorylessChannel_of_compProd_pi` が
+   `Full` について使うのは可測性と座標 update 不変性だけであることを実測確認し、**仮説を結合形に
+   強める案 (a) は不要**と判定。`OuterBoundUV.lean` の署名は無改変で、想定していた 6 decl の
+   署名変更は発動しない。ただし成立は `bcConverseAmbient` の出力空間を `Fin n → β₁ × β₂` に取ることに
+   依存する (列の対に取ると `Measure.pi` の構造が壊れる) → Phase 4b の「実装時に効く唯一の制約」。
 4. **Phase 5 の等号は Phase 4b が事実上の前提**: semi-deterministic BC の等号は内界と外界を同じ言語
    で比較する必要があり、4a の floating 形では `martonRegion` と並べられない。ただしクラス定義の
    新設 (less noisy / more capable / semi-deterministic) は 4b と独立に進む。
+5. **単一文字還元は案 A (時間共有変数を補助変数に吸収) を採る (M0 在庫 表 3)**: MAC 式の凸包ルート
+   (案 B) は `mac_avgPentagon_mem_convexHull` が必須で要求する `a i ≤ c i` の UV 対応が
+   `I(Uᵢ;Y₁ᵢ) ≤ I(Uᵢ;Y₂ᵢ)` = less noisy 相当になり、**Phase 4a が獲得した「degradedness 前提なし」を
+   失う** (在庫が反例で必須性を確認済)。加えて凸包はつねに第一象限に閉じるので判断ログ 1 と衝突し、
+   到達目標が交差版に弱まる (MAC `mac_timesharing_capacity_region` が実際にその形)。案 A は union
+   1 本で凸幾何が不要になる代わりに S5 の型統一層 (~100 行) を要求する。
