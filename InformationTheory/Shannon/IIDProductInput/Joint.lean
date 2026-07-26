@@ -4,7 +4,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # i.i.d. ambient `(μ, Xs, Ys)` from a joint distribution (rate-distortion variant)
 
-This file mirrors `IIDProductInput.lean` (the channel-coding variant built from a
+This file mirrors `IIDProductInput/Basic.lean` (the channel-coding variant built from a
 source pmf `p` and channel `W`), but takes a joint distribution
 `joint : Measure (α × β)` directly as input. This is the shape required by the
 rate-distortion achievability proof, where the ambient law is specified jointly

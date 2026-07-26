@@ -15,7 +15,7 @@ flow at `σ + τ`.
 The same-time route leaves the sum conjuncts unreachable, because a shared noise gives
 the sum the law `𝒩(0, 2)`. Here the two addends are smoothed at separate times
 `σ ≠ τ` and the sum is perturbed by its own unit noise `Z`. The asymmetric
-variance-add bridge `EPIConvDensityAssoc.convDensityAdd_convGaussian_interchange_asym`
+variance-add bridge `convDensityAdd_convGaussian_interchange_asym` (`EPI/Conv/DensityAssoc.lean`)
 then closes the conv-pin seam at the sum-time `σ + τ` (no `𝒩(0,2)` reparam).
 
 The structure `IsRegularDeBruijnHypV2` exposes a smooth density witness `density_t`

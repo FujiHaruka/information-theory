@@ -473,7 +473,8 @@ theorem awgn_per_letter_mi_le_log_var
       Integrable (fun x : ℝ ↦ (x - m) ^ 2) (perLetterYLaw h_meas c i) :=
     perLetterYLaw_var_integrable hN h_meas c i m
   -- Per-letter log-density integrability via `awgnPerLetterIntegrability_holds`
-  -- (`AwgnWalls.lean`); `perLetterYLaw h_meas c i` matches by definitional equality.
+  -- (`AWGN/ConverseMIChainRule/PerLetterIntegrability.lean`); `perLetterYLaw h_meas c i`
+  -- matches by definitional equality.
   have h_ent_int :
       Integrable (fun y : ℝ ↦
           Real.negMulLog

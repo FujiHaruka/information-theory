@@ -5,7 +5,7 @@ import Mathlib.Analysis.Subadditive
 /-!
 # General DMC capacity (limit form) — publish layer
 
-This file is a thin publish layer on top of `BlockwiseChannel.lean`. It
+This file is a thin publish layer on top of `BlockwiseChannel/`. It
 re-exports the limit-form capacity definition and four publish-surface
 theorems under a dedicated `GeneralDMC` namespace so that downstream modules
 (`AWGN`, `MAC`, `BC`, `RelayCutset`, …) can refer to

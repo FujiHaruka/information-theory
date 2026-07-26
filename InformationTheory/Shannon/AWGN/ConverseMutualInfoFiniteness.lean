@@ -985,8 +985,9 @@ theorem awgn_converse_single_shot_call
 /-! ## Data-processing and chain rule
 
 The data-processing side derives `I(W; Yⁿ) ≤ I(Xⁿ; Yⁿ)` from `mutualInfo_le_of_markov`,
-with the Markov factorization supplied by `awgnConverseMarkov_holds` (`AwgnWalls.lean`). The
-chain-rule side connects to `awgnContinuousMIChainRule_holds` (`AwgnWalls.lean`) by
+with the Markov factorization supplied by `awgnConverseMarkov_holds`
+(`AWGN/ConverseMIChainRule/Markov.lean`). The chain-rule side connects to
+`awgnContinuousMIChainRule_holds` (`AWGN/ConverseMIChainRule/PerLetterMI.lean`) by
 definitional equality. -/
 
 /-- Data-processing inequality: the Markov chain `W → encoder ∘ W → Yⁿ` yields

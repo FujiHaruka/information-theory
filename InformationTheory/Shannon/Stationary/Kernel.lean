@@ -9,7 +9,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 This file derives the algebraic telescoping backbone of the LZ78
 per-path parsing factorization `Pₙ{block ω} = ∏ⱼ condPhraseProb …`
-(`IsLZ78PerPathParsingFactorization`, `LZ78ZivEntropyBridge.lean`).
+(`IsLZ78PerPathParsingFactorization`, `LZ78/ZivEntropyBridge.lean`).
 
 `condPhraseProb μ p n ω j` is *defined* as the ratio of successive
 parsing-prefix block probabilities
@@ -104,7 +104,7 @@ is the Cover–Thomas "last partial phrase" content. -/
 /-! ## Ziv-direction factorization (parse-completeness defect fix)
 
 The `factor` field of `IsLZ78PerPathParsingFactorization`
-(`LZ78ZivEntropyBridge.lean`) was originally stated as the equality
+(`LZ78/ZivEntropyBridge.lean`) was originally stated as the equality
 `Pₙ{block ω} = ∏ⱼ condPhraseProb …`. That equality is *genuinely false*
 in general: the longest-prefix greedy parse `lz78PhraseStrings` leaves an
 unfinished tail, so the phrase boundaries cover only

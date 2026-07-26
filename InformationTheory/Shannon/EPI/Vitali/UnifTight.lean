@@ -17,7 +17,7 @@ uniformly over a bounded positive variance sequence `u`. The UnifTight witness t
 originally fed (the tail control for the layer-2 Vitali machinery
 `differentialEntropy_convDensity_integral_tendsto`) has since been superseded and removed
 (see below); `convDensityAdd_second_moment` remains consumed by the Fatou-LSC route
-(`EPI/G2/KLFatouLSC.lean`) and `EPIVitaliUI`.
+(`EPI/G2/KLFatouLSC.lean`) and `EPI/Vitali/UI.lean`.
 -/
 
 namespace InformationTheory.Shannon
@@ -272,6 +272,6 @@ two-sided sandwich (Fatou-LSC `(α)` limsup upper bound + conditioning
 `(β)` per-`n` lower bound, both `@audit:ok`), so the Vitali UI/UT witnesses are no
 longer consumed and the orphan UT witness is deleted. The genuine helpers
 `convDensityAdd_second_moment` (still consumed by the `(α)` machinery and
-`EPIVitaliUI`) and `convDensityAdd_second_moment_unif_bdd` are retained. -/
+`EPI/Vitali/UI.lean`) and `convDensityAdd_second_moment_unif_bdd` are retained. -/
 
 end InformationTheory.Shannon

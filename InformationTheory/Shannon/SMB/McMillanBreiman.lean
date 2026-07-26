@@ -113,7 +113,7 @@ omit [DecidableEq α] [Nonempty α] in
 /-- The expected per-symbol negative log-likelihood equals `blockEntropy / n`.
 
 This is the discrete-alphabet analogue of `integral_logLikelihood_zero` in
-`AEP.lean`: push forward via `blockRV n`, collapse the integral over a
+`AEP/Basic/Core.lean`: push forward via `blockRV n`, collapse the integral over a
 finite alphabet to a sum, and recognize the resulting sum as the entropy
 times `-(1/n)`. -/
 @[entry_point]

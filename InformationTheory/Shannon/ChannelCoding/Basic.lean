@@ -245,7 +245,7 @@ directly from the AEP single-axis theorems (`typicalSet_prob_tendsto_one` and
 "independent-pair" bound (c) is the genuinely new ingredient.
 
 The "marginal sequence" formulation `Xs : ℕ → Ω → α`, `Ys : ℕ → Ω → β` matches the
-AEP plumbing in `AEP.lean`. The joint sequence is `Zs i ω := (Xs i ω, Ys i ω)`. -/
+AEP plumbing in `AEP/Basic/Core.lean`. The joint sequence is `Zs i ω := (Xs i ω, Ys i ω)`. -/
 
 section JointlyTypical
 

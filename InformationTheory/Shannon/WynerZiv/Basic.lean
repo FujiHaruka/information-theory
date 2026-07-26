@@ -18,8 +18,8 @@ constraint `𝔼 d(X, f(U, Y)) ≤ D`.
 This file defines the `WynerZivCode` structure, the joint pmf marginals, the
 `WynerZivConstraint` feasible set, the `wynerZivRatePmf` rate function, the
 slice-attainment lemma, and the rate-equality wrapper `wyner_ziv_tendsto`. The
-achievability and converse legs are developed in `WynerZivAchievability.lean` and
-`WynerZivConverse.lean`.
+achievability and converse legs are developed in `WynerZiv/Achievability.lean` and
+`WynerZiv/Converse.lean`.
 
 ## Main definitions
 
@@ -357,7 +357,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 /-- **Wyner–Ziv theorem** (rate-equality form): from achievability
 `R ≥ wynerZivRatePmf(D)` and converse `R ≤ wynerZivRatePmf(D)`,
 `R = wynerZivRatePmf(D)`. The two-sided hypotheses are discharged in
-`WynerZivAchievability.lean` and `WynerZivConverse.lean`. -/
+`WynerZiv/Achievability.lean` and `WynerZiv/Converse.lean`. -/
 @[entry_point]
 theorem wyner_ziv_tendsto
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)

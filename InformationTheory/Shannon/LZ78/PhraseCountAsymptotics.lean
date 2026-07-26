@@ -55,7 +55,7 @@ the `IsBigO` bound with constant `C`.
 * §3 — `IsZivCountingMulLogBound`, the primitive `(★)` predicate, plus
   the discharge `IsLZ78PhraseCountAsymptotic` from it.
 * §4 — re-published wrappers `lz78_phrase_count_asymptotic_of_mul_log`
-  on top of `LZ78ConverseAsymptotic.lean`'s envelope.
+  on top of `LZ78/ConverseAsymptotic.lean`'s envelope.
 -/
 
 namespace InformationTheory.Shannon

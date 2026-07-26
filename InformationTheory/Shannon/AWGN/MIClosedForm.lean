@@ -8,7 +8,7 @@ The hypothesis-free Gaussian-input mutual-information closed form
 `I = (1/2)·log(1 + P/N)` (no opaque `h_bridge` hypothesis for the textbook identity
 `I = h(P+N) − h(N)`), assembled from the MI decomposition
 (`mutualInfoOfChannel_toReal_eq_diffEntropy_sub`, `ContChannelMIDecomp.lean`) and the
-output-Gaussian bind/conv bridge (`AWGNBindConvolution.lean`).
+output-Gaussian bind/conv bridge (`AWGN/BindConvolution.lean`).
 
 `ContChannelMIDecomp.lean`'s own closed-form producer `awgn_mi_gaussian_closed_form_of_out`
 still leaves `IsAwgnOutputGaussian` standing as a hypothesis; this file discharges it inline

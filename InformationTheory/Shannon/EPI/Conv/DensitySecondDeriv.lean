@@ -24,7 +24,7 @@ The conclusion is an equality (not a `HasDerivAt`) so that the triangle bound
 in GAP② can `rw` it directly. We reach it by applying the parametric-integral
 gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le` twice (1st then 2nd
 spatial derivative), mirroring the genuine STEP D code in
-`FisherInfoDeBruijnPerTime.heatFlow_density_heat_equation`. The Gaussian-tail
+`heatFlow_density_heat_equation` (`FisherInfo/DeBruijnPerTime.lean`). The Gaussian-tail
 domination of the polynomial×Gaussian integrand is supplied as honest
 regularity preconditions in the exact shape the gateway consumes — NOT a
 load-bearing bundling of the second-derivative conclusion, which is *derived*.

@@ -41,7 +41,7 @@ power-constrained capacity has the closed form `C = (1/2) log(1 + P/N)`.
   inputs with infinite second moment and falsify the converse bound; the lower
   integral forces genuine integrability of `x²`.
 * `awgnCapacity P N` is written as a bare `sSup`: the `stdSimplex` form in
-  `ChannelCodingShannonTheorem.lean` assumes a `Fintype` alphabet and does not apply
+  `ChannelCoding/ShannonTheorem.lean` assumes a `Fintype` alphabet and does not apply
   to the continuous AWGN input.
 -/
 

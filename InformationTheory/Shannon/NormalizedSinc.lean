@@ -6,7 +6,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Whittaker-Shannon sampling (partial, Cover-Thomas Ch.9.6)
 
-Companion to `ShannonHartley.lean`. Mathlib does not ship the Whittaker-Shannon
+Companion to `ShannonHartley/Main.lean`. Mathlib does not ship the Whittaker-Shannon
 sampling theorem `f(t) = Σ_{n ∈ ℤ} f(n/(2W)) · sincN(2W·t - n)` for
 `f ∈ L²(ℝ)` bandlimited to `[-W, W]`.
 

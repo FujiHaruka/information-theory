@@ -177,12 +177,12 @@ open InformationTheory.Shannon
 open InformationTheory.Shannon.EPIConvDensity
 
 /-- W4, density-level a.e. subsequence convergence (the negMulLog-free
-companion of `EPIVitaliAE.negMulLog_convDensity_tendsto_ae_subseq`). Along any sequence
-`u → 0⁺`, the smoothed densities `convDensityAdd pX g_{u n}` converge to `pX`
+companion of `negMulLog_convDensity_tendsto_ae_subseq` in `EPI/Vitali/AE.lean`). Along any
+sequence `u → 0⁺`, the smoothed densities `convDensityAdd pX g_{u n}` converge to `pX`
 a.e. along a subsequence `n ↦ u (ns n)` (`StrictMono ns`), *before* composing with
 any continuous map.
 
-Same route as `EPIVitaliAE` but cut before the `negMulLog` composition:
+Same route as `EPI/Vitali/AE.lean` but cut before the `negMulLog` composition:
 layer-1 L¹ convergence `convDensityAdd_tendsto_L1_zero` (`@audit:ok`, sorryAx-free) →
 `tendstoInMeasure_of_tendsto_eLpNorm` (Lp → measure) →
 `TendstoInMeasure.exists_seq_tendsto_ae` (measure → a.e. subsequence). No own `sorry`.

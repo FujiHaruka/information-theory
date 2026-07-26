@@ -32,7 +32,7 @@ product alphabet `α × β`, with the joint sequence
 ## Implementation notes
 
 * The joint-sequence i.i.d. infrastructure (`iidAmbientJoint_iIndepFun_joint`,
-  `iidAmbientJoint_identDistrib_joint`) lives in `IIDProductInputJoint.lean`;
+  `iidAmbientJoint_identDistrib_joint`) lives in `IIDProductInput/Joint.lean`;
   pairwise / ident-distrib of the joint sequence are taken at the statement
   level to keep the development abstract.
 -/
