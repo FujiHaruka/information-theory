@@ -905,9 +905,9 @@ theorem marton_mutual_covering
 
 /-- Mutual covering with independent auxiliary variables, where the covering threshold
 `I(V₁; V₂)` vanishes and every pair of positive rates therefore qualifies.  The typicality
-parameter is again produced below any prescribed bound `ε₀`.  This is the degenerate regime of
-Marton's inner bound, and it certifies that the hypotheses of `marton_mutual_covering` are
-jointly satisfiable.
+parameter is again produced below any prescribed bound `ε₀`, uniformly in the failure level.
+This is the degenerate regime of Marton's inner bound, and it certifies that the hypotheses of
+`marton_mutual_covering` are jointly satisfiable.
 
 @audit:ok -/
 theorem marton_mutual_covering_of_indepAux
@@ -1056,9 +1056,9 @@ theorem marton_strong_mutual_covering
 
 /-- Strongly typical mutual covering with independent auxiliary variables, where the covering
 threshold `I(V₁; V₂)` vanishes and every pair of positive rates therefore qualifies.  The
-typicality parameter is again produced below any prescribed bound `ε₀`.  This is the degenerate
-regime of Marton's inner bound, and it certifies that the hypotheses of
-`marton_strong_mutual_covering` are jointly satisfiable.
+typicality parameter is again produced below any prescribed bound `ε₀`, uniformly in the failure
+level.  This is the degenerate regime of Marton's inner bound, and it certifies that the
+hypotheses of `marton_strong_mutual_covering` are jointly satisfiable.
 
 @audit:ok -/
 theorem marton_strong_mutual_covering_of_indepAux
