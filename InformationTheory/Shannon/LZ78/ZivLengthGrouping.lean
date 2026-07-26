@@ -9,10 +9,9 @@ import Mathlib.Data.Finset.Card
 # LZ78 length-grouping Jensen inequality
 
 This file supplies the abstract grouping inequality at the heart of the
-length-grouping route for the LZ78 achievability wall
+length-grouping route for the LZ78 achievability bound
 `ziv_aseventual_le_blockLogAvg₂`
-(`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
-slug `lz78-aseventual-ziv`).
+(`LZ78/AsymptoticOptimality/ParentBridgeAchievability.lean`).
 
 ## Approach
 

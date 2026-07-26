@@ -8,10 +8,9 @@ import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 # LZ78 length-grouping measure bridge — per-length sub-distribution + log-sum
 
 This file supplies the measure-theoretic + log-sum layer of the
-length-grouping route for the LZ78 achievability wall
+length-grouping route for the LZ78 achievability bound
 `ziv_aseventual_le_blockLogAvg₂`
-(`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
-slug `lz78-aseventual-ziv`).
+(`LZ78/AsymptoticOptimality/ParentBridgeAchievability.lean`).
 
 ## Approach
 
@@ -46,10 +45,11 @@ terms into negative-log marginal probabilities and aggregates:
    c · log c ≤ ∑_{phrases w} -log P_{|w|}(w) + c · log D.
    ```
 
-The remaining crux — connecting the marginal sum `∑_w -log P_{|w|}(w)` to the
-joint `-log Pₙ = n · blockLogAvg` with an `o(n)` slack — is a genuine wall
-(`ziv_aseventual_le_blockLogAvg₂`) and is NOT discharged here; see the GATEWAY
-section at the end for the precise obstruction.
+Connecting the marginal sum `∑_w -log P_{|w|}(w)` to the joint
+`-log Pₙ = n · blockLogAvg` with an `o(n)` slack is not discharged here; see the
+GATEWAY section at the end for the precise obstruction. That obstruction is why
+this route was abandoned — `ziv_aseventual_le_blockLogAvg₂` is instead reached
+through the conditional per-`k`-state route (`ZivCondGrouping.lean`).
 -/
 
 namespace InformationTheory.Shannon

@@ -5,10 +5,9 @@ import InformationTheory.Shannon.LZ78.ZivCondGrouping
 /-!
 # LZ78 achievability composition: threading + `(k-state, length)` grouping
 
-This file composes the two sorryAx-free upstream bricks of the LZ78 achievability
-wall `ziv_aseventual_le_blockLogAvg₂`
-(`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
-slug `lz78-aseventual-ziv`):
+This file composes the two upstream bricks of the LZ78 achievability bound
+`ziv_aseventual_le_blockLogAvg₂`
+(`LZ78/AsymptoticOptimality/ParentBridgeAchievability.lean`):
 
 * `negLogQk_parse_threading` (`ZivThreading.lean`): the a.s. threading identity
   `negLogQk μ p k n ω = (leading boundary) + (per-phrase sum) + (trailing tail)`,
@@ -322,19 +321,18 @@ bridge from the position-indexed threading sum (`∑ j : Fin c`) onto the distin
   condQkState (st w) |w| (toFinVec |w| w)` with `st` the trailing `k`-state read off the
   parse inverse, plus the per-phrase positivity `condQkState_pos_of_markovFactor_pos`.
 
-The `c = 0` boundary degenerates honestly to `0 ≤ 0`. The broader achievability wall
-(slug `lz78-aseventual-ziv`, the variable-depth length-grouping AEP + the limsup
-discharge connecting to `entropyRate₂`) lives downstream at
-`ziv_aseventual_le_blockLogAvg₂` / `lz78Greedy_achievability_ae`; this brick
-(`c·log c ≤ negLogQk + o(n)`) is no longer part of it.
+The `c = 0` boundary degenerates honestly to `0 ≤ 0`. The rest of the achievability
+argument — the variable-depth length-grouping AEP and the limsup discharge connecting
+to `entropyRate₂` — lives downstream at `ziv_aseventual_le_blockLogAvg₂` /
+`lz78Greedy_achievability_ae`, not in this brick (`c·log c ≤ negLogQk + o(n)`).
 
 @audit:ok (non-circular, non-bundled: conclusion is the unchanged inequality
 (`c·log c ≤ negLogQk + (c·log(Ntot/c) + c + c·log((card α)^k))`), no input hypothesis added.
 The two sub-bounds are PROVEN (`hA = phraseSum_le_negLogQk`, `hB` from the genuine reindex
 onto the distinct-phrase `Finset` + `condState_grouping_bound_mean`), combined by `linarith`
-— sufficiency holds, nothing is asserted as a hypothesis. The wall slug
-(`lz78-aseventual-ziv`) correctly no longer sits here; it remains only on the downstream
-decls). -/
+— sufficiency holds, nothing is asserted as a hypothesis. Non-vacuous: the phrase count
+`c` is anchored to the parse by `c + bAbsorbed = (lz78PhraseStrings …).length` with
+`bAbsorbed ≤ k + 1`, so the existential cannot escape through `c = 0` for a long block). -/
 theorem ziv_achievability_composition
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
     ∀ᵐ ω ∂μ, ∃ (c bAbsorbed Ntot : ℕ),

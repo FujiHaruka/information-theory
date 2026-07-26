@@ -9,9 +9,9 @@ import Mathlib.Data.ENNReal.BigOperators
 # LZ78 conditional (k-state, length) grouping bridge
 
 This file supplies the conditional analogue of the length-grouping measure
-bridge for the LZ78 achievability wall `ziv_aseventual_le_blockLogAvg₂`
-(`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
-slug `lz78-aseventual-ziv`), via the `markovFactor` route.
+bridge for the LZ78 achievability bound `ziv_aseventual_le_blockLogAvg₂`
+(`LZ78/AsymptoticOptimality/ParentBridgeAchievability.lean`), via the
+`markovFactor` route.
 
 ## Approach
 

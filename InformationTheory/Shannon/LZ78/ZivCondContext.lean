@@ -8,9 +8,8 @@ import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 # LZ78 conditional-context sub-distribution (node-context route)
 
 This file supplies the first measure-theoretic atom of the conditional-context
-route for the LZ78 achievability wall `ziv_aseventual_le_blockLogAvg₂`
-(`InformationTheory/Shannon/LZ78/AsymptoticOptimality.lean`,
-slug `lz78-aseventual-ziv`).
+route for the LZ78 achievability bound `ziv_aseventual_le_blockLogAvg₂`
+(`LZ78/AsymptoticOptimality/ParentBridgeAchievability.lean`).
 
 ## Background
 

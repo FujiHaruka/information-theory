@@ -240,7 +240,8 @@ theorem blockProb_neg_log_ge_sum
 
 /-! ## Base-2 (bit) layer — unit correction for the LZ78 headline
 
-The LZ78 encoding length `lz78DistinctEncodingLength` is measured in bits
+The LZ78 encoding length `lz78GreedyEncodingLength`
+(`LZ78/AsymptoticOptimality/EncodingLength.lean`) is measured in bits
 (`LZ78Phrase.bitLength` uses `Nat.log 2`, the binary code-length), whereas
 `blockLogAvg` / `entropyRate` are natural-log quantities (nats). The
 Cover–Thomas Theorem 13.5.3 statement is bit-based:
