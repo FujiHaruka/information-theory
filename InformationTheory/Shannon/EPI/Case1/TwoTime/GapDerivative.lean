@@ -414,7 +414,7 @@ theorem twoTimeLogRatioGap_hasDerivAt
 
 From harmonic Stam `1/J_S ≥ 1/J_X + 1/J_Y` (J_S > 0), the value
 `J_S·(1/J_X + 1/J_Y) − 1 ≤ 0`. The harmonic Stam supply is the existing
-producer `isStamInequalityHyp_via_step3` / `isStamInequalityHyp_via_body`
+producer `isStamInequalityHyp_of_indepFun` / `isStamInequalityHyp_via_body`
 (sorryAx-free).
 
 Signature-honest: free `J_S`/`J_X`/`J_Y` are here OK because

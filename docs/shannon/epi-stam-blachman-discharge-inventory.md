@@ -60,7 +60,7 @@
 > **⚠ 2026-05-30 drift 注記 (pivot 後)**: 下表の `IsStamCauchySchwarzOptimal` / `IsStamCondExpCSHyp` /
 > `IsStamInequalityResidual` の行は **pivot 前の古い版** (V1 `fisherInfo` 参照・`fXY` 無制約・行番号も旧値)。
 > 現コードは Phase 3-pre signature pivot 済 = **V2 `fisherInfoOfMeasureV2` + `hconv : fXY =ᵐ convDensityAdd fX fY`
-> 制約 + `IsRegularDensityV2` + 正規化注入** (4 述語 `@audit:ok`、`stam_step2_density_wall` →
+> 制約 + `IsRegularDensityV2` + 正規化注入** (4 述語 `@audit:ok`、`stamCauchySchwarzOptimal_of_indepFun` →
 > `@residual(wall:stam-blachman)`)。V1→V2 張替・畳み込み制約注入は**完了済** — 表の `(V1)` 表記を信じて未了と
 > 誤認しないこと。pivot 詳細 → `epi-wall-reattack-plan.md` 判断ログ #2、Phase 3 真壁確定 → 同 #3。
 
@@ -95,11 +95,11 @@ theorem isStamInequalityHyp_of_primitives
     (h_conv : IsStamScoreConvolution X Y P)        -- = True (中身ゼロ)
     (h_te : IsStamTotalExpectation X Y P) :          -- 実 Prop (V1 fisherInfo)
     IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_via_step3 h_conv h_te
+  isStamInequalityHyp_of_indepFun h_conv h_te
 ```
 
 → 消費する primitive は実質 **`IsStamTotalExpectation` 1 本**
-(`h_conv` は `True` で何も運ばない)。`isStamInequalityHyp_via_step3`
+(`h_conv` は `True` で何も運ばない)。`isStamInequalityHyp_of_indepFun`
 (`EPIStamStep3Body.lean:258`) は `h_conv` を捨て `h_te` だけで
 `isStamCauchySchwarzOptimal_of_coupling h_te` → harmonic mean → Stam 真 signature を出す。
 Step 2 (Cauchy-Schwarz) と Step 4 (λ最適化) は**純算術で既に完済** (`stam_lambda_min` 等)。

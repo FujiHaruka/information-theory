@@ -23,17 +23,17 @@ the symmetric Fisher coupling and bridging into the optimization — explicit.
 
 ## Main statements
 
-* `isStamInequalityHyp_via_step3` — the full chain to the `IsStamInequalityHyp` signature,
-  from regularity alone via `stam_step2_density_wall`.
+* `isStamInequalityHyp_of_indepFun` — the full chain to the `IsStamInequalityHyp` signature,
+  from regularity alone via `stamCauchySchwarzOptimal_of_indepFun`.
 * `stam_optimal_lambda_mem_unit` — membership of the optimal `λ` in the unit interval.
 * `stam_coupling_saturates` — the Gaussian saturation arithmetic kernel.
-* `epi_via_stam_step3_gaussian` — pipeline integration via Gaussian saturation.
+* `entropyPower_add_ge_of_gaussian` — pipeline integration via Gaussian saturation.
 
 ## Implementation notes
 
 The analytic content of Steps 2-3 — the conditional Cauchy–Schwarz integrated against `p_Z`
 giving the convex Fisher bound and its `λ`-optimum — is localized to the single lemma
-`StamInequality.stam_step2_density_wall`, which takes regularity preconditions only.
+`StamInequality.stamCauchySchwarzOptimal_of_indepFun`, which takes regularity preconditions only.
 
 ## References
 
@@ -67,21 +67,21 @@ theorem stam_optimal_lambda_mem_unit {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
 
 /-- The full Step 1 → 4 chain to the Stam signature: produces `IsStamInequalityHyp`
 (Cover–Thomas Lemma 17.7.2) from regularity preconditions alone. The Step 2-3 convex Fisher bound
-is supplied internally by `stam_step2_density_wall`, and the remaining steps are discharged
-arithmetically by `isStamInequalityHyp_via_body`. The hypotheses are only measurability,
+is supplied internally by `stamCauchySchwarzOptimal_of_indepFun`, and the remaining steps are
+discharged arithmetically by `isStamInequalityHyp_via_body`. The hypotheses are only measurability,
 independence, and the probability-measure instance.
 @audit:ok -/
 @[entry_point]
-theorem isStamInequalityHyp_via_step3 {Ω : Type*} {mΩ : MeasurableSpace Ω}
+theorem isStamInequalityHyp_of_indepFun {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) :
     IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_via_body (stam_step2_density_wall P X Y hX hY hXY)
+  isStamInequalityHyp_via_body (stamCauchySchwarzOptimal_of_indepFun P X Y hX hY hXY)
 
 /-! ## §5 — Gaussian saturation: Step 3 holds with equality at the optimum
 
 The Gaussian entropy power inequality runs via `entropyPower_gaussian_additivity`
-(see `epi_via_stam_step3_gaussian` below); `stam_coupling_saturates` is the
+(see `entropyPower_add_ge_of_gaussian` below); `stam_coupling_saturates` is the
 arithmetic saturation kernel.
 -/
 
@@ -96,12 +96,12 @@ theorem stam_coupling_saturates {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
   field_simp
   ring
 
-/-! ## §6 — EPI pipeline integration via Step 3 -/
+/-! ## §6 — EPI pipeline integration -/
 
-/-- For Gaussian `X, Y` with non-zero variance, EPI follows end-to-end through the
-Step-3 body discharge and the Gaussian saturation bridge. -/
+/-- For Gaussian `X, Y` with non-zero variance, EPI holds unconditionally: the Gaussian saturation
+bridge `StamEPIBridge.epi_via_stam_gaussian` re-exported into the Fisher-coupling module. -/
 @[entry_point]
-theorem epi_via_stam_step3_gaussian
+theorem entropyPower_add_ge_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)

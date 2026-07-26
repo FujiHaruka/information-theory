@@ -55,7 +55,7 @@ predicates, with the surrounding algebra discharged in full:
   - the quadratic-discriminant form `(E g)² ≤ E (g²)` lower bound chain,
   - the reduction Step 2 (∀λ bound) ⇒ optimal bound via `stam_lambda_min`.
 
-* Integration (`stamCauchySchwarzOptimal_of_step12`): Step 1 + Step 2 typed
+* Integration (`stamCauchySchwarzOptimal_of_scoreConvHyp_of_condExpCSHyp`): Step 1 + Step 2 typed
   predicates ⇒ `IsStamCauchySchwarzOptimal` ⇒ `IsStamInequalityHyp`,
   closing the chain to the published Stam signature.
 
@@ -68,8 +68,10 @@ predicates, with the surrounding algebra discharged in full:
 
 * `stam_two_point_cs`, `stam_convex_cs`, `stam_jensen_sq_le` (§1) — the fully discharged
   Cauchy–Schwarz / Jensen algebra the `λ`-optimization consumes.
-* `stamCauchySchwarzOptimal_of_step12` (§4) — Steps 1+2 imply the optimal Cauchy–Schwarz form.
-* `isStamInequalityHyp_of_step12` (§4) — full chain to the published Stam signature.
+* `stamCauchySchwarzOptimal_of_scoreConvHyp_of_condExpCSHyp` (§4) — Steps 1+2 imply the optimal
+  Cauchy–Schwarz form.
+* `isStamInequalityHyp_of_scoreConvHyp_of_condExpCSHyp` (§4) — full chain to the published Stam
+  signature.
 
 ## Implementation notes
 
@@ -171,8 +173,8 @@ a typed field; §4 derives the optimal bound from it via the `λ`-optimization.
 The injected hypotheses (`IsRegularDensityV2 fX/fY`, the normalizations, the pointwise convolution
 identity, and the `IsBlachmanConvReady fX fY` bundle) are regularity preconditions, not the
 inequality core. The `∀λ` bound is supplied by `convex_fisher_bound_of_ready`
-(`EPIBlachmanDensity`) through the producer `stam_step2_density_wall`, so the predicate is an
-intermediate API `Prop` discharged from regularity alone.
+(`EPIBlachmanDensity`) through the producer `stamCauchySchwarzOptimal_of_indepFun`, so the
+predicate is an intermediate API `Prop` discharged from regularity alone.
 
 @audit:ok -/
 def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
@@ -275,7 +277,7 @@ is consumed inside Step 2's instantiation; we keep both arguments to document th
 
 `@audit:ok` -/
 @[entry_point]
-theorem stamCauchySchwarzOptimal_of_step12 {Ω : Type*} [MeasurableSpace Ω]
+theorem stamCauchySchwarzOptimal_of_scoreConvHyp_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)
     (h_cs : IsStamCondExpCSHyp X Y P) :
@@ -290,13 +292,13 @@ chain from the conditional Cauchy–Schwarz body to the Cover–Thomas Lemma 17.
 
 @audit:ok -/
 @[entry_point]
-theorem isStamInequalityHyp_of_step12 {Ω : Type*} [MeasurableSpace Ω]
+theorem isStamInequalityHyp_of_scoreConvHyp_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)
     (h_cs : IsStamCondExpCSHyp X Y P) :
     IsStamInequalityHyp X Y P :=
   isStamInequalityHyp_via_body
-    (stamCauchySchwarzOptimal_of_step12 h_conv h_cs)
+    (stamCauchySchwarzOptimal_of_scoreConvHyp_of_condExpCSHyp h_conv h_cs)
 
 /-- Step 1 and Step 2 together yield the existential Cauchy-Schwarz form (`IsStamCauchySchwarz`),
 the weaker witness form. Provided for callers that consume the existential
@@ -304,7 +306,7 @@ predicate directly.
 
 `@audit:ok` -/
 @[entry_point]
-theorem isStamCauchySchwarz_of_step12 {Ω : Type*} [MeasurableSpace Ω]
+theorem isStamCauchySchwarz_of_scoreConvHyp_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)
     (h_cs : IsStamCondExpCSHyp X Y P) :

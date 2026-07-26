@@ -63,8 +63,9 @@ The quantification block carries regularity preconditions (`IsRegularDensityV2 f
 normalizations `∫ fX = 1`, `∫ fY = 1`, the pointwise convolution identity
 `∀ x, fXY x = convDensityAdd fX fY x`, and the `IsBlachmanConvReady fX fY` bundle). These are not
 the inequality core: the bound is produced from regularity alone by
-`stam_step2_density_wall` via `convex_fisher_bound_of_ready`. They are jointly satisfiable (a
-Gaussian witness inhabits the `IsBlachmanConvReady` bundle), so the predicate is non-vacuous.
+`stamCauchySchwarzOptimal_of_indepFun` via `convex_fisher_bound_of_ready`. They are jointly
+satisfiable (a Gaussian witness inhabits the `IsBlachmanConvReady` bundle), so the predicate is
+non-vacuous.
 
 @audit:ok -/
 def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]

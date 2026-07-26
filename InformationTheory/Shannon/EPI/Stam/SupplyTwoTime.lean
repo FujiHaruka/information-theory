@@ -741,8 +741,8 @@ The conv-pin seam `indepSum_density_ae`
 
 @audit:ok. Five checks confirm honesty:
 (1) Core genuinely produced, not assumed: the inverse-Stam `1/J_S ≥ 1/J_X+1/J_Y` is
-CONSTRUCTED by `isStamInequalityHyp_via_step3 P A B` (a regularity-only construction via
-`stam_step2_density_wall`, `@audit:ok`) then APPLIED at
+CONSTRUCTED by `isStamInequalityHyp_of_indepFun P A B` (a regularity-only construction via
+`stamCauchySchwarzOptimal_of_indepFun`, `@audit:ok`) then APPLIED at
 `density_t`. The three `IsDeBruijnRegularityHyp` inputs are consumed only as regularity
 (`.pX`/`.pX_law`/`.pX_nn`/`.pX_meas` density witnesses + `.density_t_eq` pointwise pins),
 never as a bundled inequality core. No `:= h` circularity, no `:True`, no degenerate
@@ -849,7 +849,7 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
     exact this
   -- Stam hyp via step3
   have hStam : StamEPIBridge.IsStamInequalityHyp A B P :=
-    StamFisherCoupling.isStamInequalityHyp_via_step3 P A B hA_meas hB_meas hAB_indep
+    StamFisherCoupling.isStamInequalityHyp_of_indepFun P A B hA_meas hB_meas hAB_indep
   -- per-time regularity of the three `density_t`s (= conv-Gaussian densities)
   have hregX : IsRegularDensityV2 RX.density_t := by
     rw [hpinX]

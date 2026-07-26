@@ -23,9 +23,9 @@ The EPI proof pieces:
   `EPI/Stam/Inequality.lean` (`stam_lambda_min`, `stam_lambda_lower_bound`,
   `stam_inverse_form_of_harmonic_mean`). The Step 2-3 analytic core (the
   conditional Cauchy-Schwarz + convex Fisher bound) is localized to the single
-  lemma `StamInequality.stam_step2_density_wall`, via
+  lemma `StamInequality.stamCauchySchwarzOptimal_of_indepFun`, via
   `convex_fisher_bound_of_ready` (regularity preconditions only).
-  The chain `isStamInequalityHyp_via_step3` discharges `IsStamInequalityHyp` from
+  The chain `isStamInequalityHyp_of_indepFun` discharges `IsStamInequalityHyp` from
   regularity alone via that lemma.
 * The de Bruijn identity (V2). `deBruijn_identity_v2` gives, from
   `IsRegularDeBruijnHypV2`, the heat-flow derivative
@@ -43,7 +43,7 @@ conclusion, with no intermediate scaling-decomposition structure. The wiring
 proceeds two ways:
 
 1. Stam from regularity (§2). The
-   Step 2-3 analytic core is localized to `stam_step2_density_wall`;
+   Step 2-3 analytic core is localized to `stamCauchySchwarzOptimal_of_indepFun`;
    `isStamInequalityHyp_of_primitives`
    derives `IsStamInequalityHyp` from regularity preconditions alone (no
    load-bearing analytic hypothesis).
@@ -54,7 +54,7 @@ proceeds two ways:
    `g'(t) ≥ 0` outright from the de Bruijn V2 witness.
 
 The EPI conclusion (§3) is landed from regularity by deriving the Stam inequality
-from `stam_step2_density_wall` and feeding it through the monolithic
+from `stamCauchySchwarzOptimal_of_indepFun` and feeding it through the monolithic
 `IsEPIL3IntegratedPipeline`. The Gaussian EPI (§5) is obtained directly
 from Gaussian saturation (`entropy_power_inequality_gaussian_full'`), with no Stam
 claim.
@@ -70,7 +70,7 @@ claim.
 ## Implementation notes
 
 The conditional Cauchy-Schwarz plus convex Fisher bound (Cover-Thomas 17.7.2's
-deepest analytic content) is localized to `stam_step2_density_wall`, which
+deepest analytic content) is localized to `stamCauchySchwarzOptimal_of_indepFun`, which
 produces it from regularity preconditions alone via
 `convex_fisher_bound_of_ready`; `isStamInequalityHyp_via_body`
 (`EPI/Stam/Inequality.lean`) reshapes that harmonic-mean bound into the published
@@ -144,8 +144,8 @@ theorem isEPIGapMonotoneHyp_of_deBruijnV2
 
 Produces `IsStamInequalityHyp` from measurability / independence /
 probability measure alone, delegating the Step 2-3 analytic core to the
-lemma `stam_step2_density_wall` via
-`isStamInequalityHyp_via_step3`. The signature carries no
+lemma `stamCauchySchwarzOptimal_of_indepFun` via
+`isStamInequalityHyp_of_indepFun`. The signature carries no
 load-bearing analytic hypothesis.
 
 The published `IsStamInequalityHyp` carries the pointwise convolution constraint +
@@ -156,14 +156,14 @@ theorem isStamInequalityHyp_of_primitives
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) :
     IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_via_step3 P X Y hX hY hXY
+  isStamInequalityHyp_of_indepFun P X Y hX hY hXY
 
 /-! ## §3 — Main EPI from regularity
 
 `isStamInequalityHyp_of_primitives` above supplies `IsStamInequalityHyp` from
 regularity alone; combined with an `IsStamToEPIBridgeHyp` witness through
 `epi_via_stam` this yields `IsEntropyPowerInequalityHypothesis`. The analytic
-content is localized to `stam_step2_density_wall`. -/
+content is localized to `stamCauchySchwarzOptimal_of_indepFun`. -/
 
 /-! ## §5 — Gaussian EPI (via saturation)
 

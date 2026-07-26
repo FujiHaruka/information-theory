@@ -127,7 +127,7 @@ genuine 機構が揃った」段階で、Route B probe が次の実測ポイン�
 
 - **当初 (Rioul 2011 §II-C)**: Stam Step 2 を「~100 行 density 計算」と見積もり。
 - **2026-05-30 scope-out 確定**: 「Fisher/score/density 計算が Mathlib 全不在の (a)+(b) 混合壁 ~300 行
-  PR 級」と判定し scope-out。`IsStamCauchySchwarzOptimal` を shared sorry `stam_step2_density_wall`
+  PR 級」と判定し scope-out。`IsStamCauchySchwarzOptimal` を shared sorry `stamCauchySchwarzOptimal_of_indepFun`
   (`@residual(wall:stam-step2-density)`) に降格。
 - **2026-05-30 wall 集約**: load-bearing predicate `IsStamTotalExpectation` / `IsStamScoreConvolution`
   を全廃、孤立 island (predicate 2 + structure + theorem ~12) 削除、残 sorry を単一 wall に収束。

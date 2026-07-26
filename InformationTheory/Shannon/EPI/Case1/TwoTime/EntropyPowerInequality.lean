@@ -187,7 +187,7 @@ used both for the path-producer `hN_tendsto` and Pillar C);
 * `h_rescale_*` (`IsRescaledPathRegular`) + `varX`/`varY`/`varS` (Pillar C squeeze
 and the path-producer divergence);
 * `h_stam_supply` the per-time harmonic-Stam + positivity supply (genuine producer
-`isStamInequalityHyp_via_step3`, NOT a bundled conclusion — `1/J_S ≥ 1/J_X+1/J_Y`
+`isStamInequalityHyp_of_indepFun`, NOT a bundled conclusion — `1/J_S ≥ 1/J_X+1/J_Y`
 is the Fisher form, a different statement from the EPI inequality).
 @audit:ok -/
 theorem entropyPower_add_ge_case1_of_regular_twotime
@@ -235,7 +235,7 @@ theorem entropyPower_add_ge_case1_of_regular_twotime
     (h_rescale_S : IsRescaledPathRegular (fun ω ↦ X ω + Y ω) Z P varS 1)
     -- harmonic-Stam + positivity supply at independent matched times σ (X side) and
     -- τ (Y side); `J_S` is pinned to the single-noise sum heat flow at `σ + τ`.
-    -- This is the GENUINE producer output (`isStamInequalityHyp_via_step3`), the
+    -- This is the GENUINE producer output (`isStamInequalityHyp_of_indepFun`), the
     -- Fisher form `1/J_S ≥ 1/J_X+1/J_Y` — NOT the EPI conclusion.
     (h_stam_supply : ∀ (σ τ : ℝ) (hσ : 0 < σ) (hτ : 0 < τ),
       0 < InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal

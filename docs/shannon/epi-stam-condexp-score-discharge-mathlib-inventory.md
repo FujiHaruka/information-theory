@@ -163,7 +163,7 @@ noncomputable def mconv (μ : Measure M) (ν : Measure M) : Measure M :=
 | V2 Gaussian closed form `= 1/v` | `fisherInfoOfDensity_gaussianPDFReal` `FisherInfoV2.lean:296` | ✅ 既証明 | Gaussian 限定 scope なら decisive |
 | Step3 total-expectation 述語 | `IsStamTotalExpectation` `EPIStamStep3Body.lean:152` | ⚠ pass-through | 同型(`fisherInfo.toReal` のみ)。同じねじれ |
 
-**消費形(下流が要求する signature)**: `IsStamCondExpCSHyp` を満たせば `stamCauchySchwarzOptimal_of_condExpCSHyp`(`:262`)→ `isStamInequalityHyp_of_step12`(`:292`)→ published `IsStamInequalityHyp` まで**既に繋がっている**。つまり下流は **`∀λ, J_sum ≤ λ²J_X+(1-λ)²J_Y`(実数不等式)だけ**を要求し、measure-theoretic 恒等式を要求しない。**割るべきは「この実数不等式を本物の積分から導く」部分のみ**だが、それには `fisherInfo.toReal = ∫ score² dP` という橋が前提となり、その橋自体が `fisherInfo` V1 の退化で**現状破綻している**。
+**消費形(下流が要求する signature)**: `IsStamCondExpCSHyp` を満たせば `stamCauchySchwarzOptimal_of_condExpCSHyp`(`:262`)→ `isStamInequalityHyp_of_scoreConvHyp_of_condExpCSHyp`(`:292`)→ published `IsStamInequalityHyp` まで**既に繋がっている**。つまり下流は **`∀λ, J_sum ≤ λ²J_X+(1-λ)²J_Y`(実数不等式)だけ**を要求し、measure-theoretic 恒等式を要求しない。**割るべきは「この実数不等式を本物の積分から導く」部分のみ**だが、それには `fisherInfo.toReal = ∫ score² dP` という橋が前提となり、その橋自体が `fisherInfo` V1 の退化で**現状破綻している**。
 
 ---
 

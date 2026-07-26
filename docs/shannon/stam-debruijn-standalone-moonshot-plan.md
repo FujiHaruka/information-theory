@@ -33,7 +33,7 @@ Cover-Thomas Ch.17.7 の 3 主結果を、**規則性バンドルを呼出側に
 
 | 役割 | decl（file:line） | 入力 | 結論 |
 |---|---|---|---|
-| Stam 解析核 | `StamInequality.stam_step2_density_wall`（`EPI/Stam/Inequality.lean:247`） | `Measurable X/Y`, `IndepFun X Y P`, `[IsProbabilityMeasure P]` のみ | `IsStamCauchySchwarzOptimal X Y P` |
+| Stam 解析核 | `StamInequality.stamCauchySchwarzOptimal_of_indepFun`（`EPI/Stam/Inequality.lean:247`） | `Measurable X/Y`, `IndepFun X Y P`, `[IsProbabilityMeasure P]` のみ | `IsStamCauchySchwarzOptimal X Y P` |
 | Stam（primitives 版） | `FisherInfo.isStamInequalityHyp_of_primitives`（`EPI/Stam/DeBruijnConclusion.lean:158`） | 同上 | `IsStamInequalityHyp X Y P`（sorryAx-free、ch17-status §54） |
 | 凸 Fisher 上界 | `EPIBlachmanDensity.convex_fisher_bound_of_ready`（`EPI/Blachman/Density.lean:833`） | regularity + `IsBlachmanConvReady fX fY` | `J(p_Z).toReal ≤ λ²J(fX)+(1-λ)²J(fY)` |
 | λ 最適化 | `StamInequality.stam_lambda_min`（`Inequality.lean:161`） | — | 調和平均 RHS |
@@ -57,7 +57,7 @@ Cover-Thomas Ch.17.7 の 3 主結果を、**規則性バンドルを呼出側に
 
 **(B') load-bearing 判定（honesty）**
 
-- `IsStamCauchySchwarzOptimal` / `IsStamInequalityHyp` は **load-bearing でない**: `stam_step2_density_wall` / `isStamInequalityHyp_of_primitives` が primitives だけから genuine に証明（sorryAx-free、ch17-status §54 機械確認）。バンドルは precondition であって結論の核を encode していない。
+- `IsStamCauchySchwarzOptimal` / `IsStamInequalityHyp` は **load-bearing でない**: `stamCauchySchwarzOptimal_of_indepFun` / `isStamInequalityHyp_of_primitives` が primitives だけから genuine に証明（sorryAx-free、ch17-status §54 機械確認）。バンドルは precondition であって結論の核を encode していない。
 - `IsBlachmanConvReady` / `IsRegularDensityV2` / `IsRegularDeBruijnHypV2` / `IsDeBruijnPathRegular` は regularity precondition（genuine producer 既存 or Phase 4 で生成）。
 - ⚠ **スコープ外だが flag**: `IsDeBruijnRegularityHyp`（`EPI/Stam/EPIBridge.lean:123`、`@audit:retract-candidate(load-bearing-predicate)`、genuine `HasDerivAt` content を抱える tier-4）は **本 plan の headline chain では使わない**（EPI Case1 two-time 路の述語）。本 plan の de Bruijn は `IsRegularDeBruijnHypV2` / `IsDeBruijnPathRegular`（regularity 形）を使い、この load-bearing 述語を継承しない。混同しないこと。
 
@@ -123,7 +123,7 @@ theorem stam_inequality_smoothed_density
   2. `integral_convDensityAdd_gaussian_eq_one` で `∫ fX = ∫ fY = 1`。
   3. `isBlachmanConvReady_convDensityAdd_gaussian` で `IsBlachmanConvReady fX fY`。
   4. Phase 1 正値性で `0 < J(fX)`, `0 < J(fY)`, `0 < J(convDensityAdd fX fY)`。
-  5. `convex_fisher_bound_of_ready` + `stam_lambda_min` + `stam_inverse_form_of_harmonic_mean`（または `stam_step2_density_wall` 経由）で結論。
+  5. `convex_fisher_bound_of_ready` + `stam_lambda_min` + `stam_inverse_form_of_harmonic_mean`（または `stamCauchySchwarzOptimal_of_indepFun` 経由）で結論。
 - [ ] **measure-level corollary（optional、H1'）**: `P.map X = volume.withDensity (ofReal ∘ fX)` 形の law-density bridge が安価なら、確率変数 X, Y 版 `1/J(P.map(X+Y)) ≥ 1/J(P.map X) + 1/J(P.map Y)` を追加。bridge が重ければ scope 外（密度版で headline は十分）。
 - [ ] **非空虚 demo**: Gaussian 入力 `pX = gaussianPDFReal mX vX` で具体値が出る（smoothed = `𝒩(mX, vX+t)`、`J = 1/(vX+t)`）ことをコメント or 補題で明示。
 - 撤退ライン: 5 の配線で型不整合が出たら、当該 `have` を `sorry` + `@residual(plan:stam-debruijn-standalone-moonshot-plan)` で残す（**バンドル化禁止** — `IsStam*Optimal` を仮説に取り直す形に逃げない。核は既に genuine なので逃げる必要は無いはず）。
@@ -194,7 +194,7 @@ proof-log: no。
 ## 撤退ライン（plan 全体）
 
 - 各 Phase の撤退は **`sorry` + `@residual(plan:stam-debruijn-standalone-moonshot-plan)`**（filename stem。`docs/audit/audit-tags.md` placement 規約）。
-- **禁止**: `IsStam*Optimal` / `IsBlachmanConvReady` 等を「核を抱える仮説」として headline の前提に取り直す形（load-bearing bundling）。Stam 核は既に genuine（`stam_step2_density_wall` sorryAx-free）なので、honest な道は常に「producer を呼んで discharge」。
+- **禁止**: `IsStam*Optimal` / `IsBlachmanConvReady` 等を「核を抱える仮説」として headline の前提に取り直す形（load-bearing bundling）。Stam 核は既に genuine（`stamCauchySchwarzOptimal_of_indepFun` sorryAx-free）なので、honest な道は常に「producer を呼んで discharge」。
 - **非空虚性が崩れた場合の扱い**: もし producer のどれかが実は Gaussian 限定だった（M0 で反証）なら、それは honesty 上の最重要事項として即 flag し、当該 headline を「Gaussian-smoothed クラス限定」と明示名（`_gaussian` 接尾）にする — 一般を偽装しない。
 
 ## 判断ログ

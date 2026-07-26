@@ -1,6 +1,6 @@
 # EPI Stam wall consolidation — load-bearing predicate 全廃計画
 
-**Status**: CLOSED ✅ — Stam chain の load-bearing predicate を単一 shared wall (`stam_step2_density_wall`) 委任に集約し全廃、Step3Body の孤立 island (predicate 2 + structure + theorem 群) を削除。残壁は後継 `epi-wall-reattack-plan` が density route で解体 (`IsStamCauchySchwarzOptimal` の false-statement defect 是正)。EPI family の実 sorry は route-T 後継で 0。(Stam Step 2: re-scope candidate — see 要点)
+**Status**: CLOSED ✅ — Stam chain の load-bearing predicate を単一 shared wall (`stamCauchySchwarzOptimal_of_indepFun`) 委任に集約し全廃、Step3Body の孤立 island (predicate 2 + structure + theorem 群) を削除。残壁は後継 `epi-wall-reattack-plan` が density route で解体 (`IsStamCauchySchwarzOptimal` の false-statement defect 是正)。EPI family の実 sorry は route-T 後継で 0。(Stam Step 2: re-scope candidate — see 要点)
 **SoT**: `docs/shannon/ch17-inequalities-status.md` + `docs/shannon/epi-facts.md` + `docs/textbook-roadmap.md` Ch.17。詳細履歴は git。
 
 > **Parent**: [`epi-moonshot-plan.md`](./epi-moonshot-plan.md)

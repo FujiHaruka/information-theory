@@ -29,7 +29,7 @@ This file builds the body of the Stam inequality `1 / J(X + Y) ≥ 1 / J(X) + 1 
 
 ## Main statements
 
-* `stam_step2_density_wall` — the Step 2-3 analytic core, producing the optimal
+* `stamCauchySchwarzOptimal_of_indepFun` — the Step 2-3 analytic core, producing the optimal
   Cauchy–Schwarz bound from regularity alone.
 * `isStamInequalityHyp_via_body` — bridge from the optimal Cauchy–Schwarz form to the published
   Stam signature `IsStamInequalityHyp`.
@@ -42,7 +42,8 @@ The standard 1-dimensional Stam inequality proof (Cover–Thomas Lemma 17.7.2) f
 score representation of the convolution (Blachman 1965), conditional Cauchy–Schwarz, total
 expectation giving `J(Z) ≤ λ² J(X) + (1 - λ)² J(Y)`, and optimization over `λ` at
 `λ = J(Y) / (J(X) + J(Y))`. The analytic core (Steps 2-3) is localized to
-`stam_step2_density_wall`; the `λ`-optimization is the pure arithmetic `stam_lambda_min`.
+`stamCauchySchwarzOptimal_of_indepFun`; the `λ`-optimization is the pure arithmetic
+`stam_lambda_min`.
 
 ## References
 
@@ -213,8 +214,8 @@ theorem stam_inverse_form_of_harmonic_mean
 `λ = J_Y / (J_X + J_Y)`, giving the harmonic-mean bound `J_sum ≤ J_X · J_Y / (J_X + J_Y)`. The
 quantification block carries regularity preconditions (`IsRegularDensityV2 fX/fY`, the
 normalizations, the pointwise convolution identity, and the `IsBlachmanConvReady fX fY` bundle),
-not the inequality core; the bound is produced from regularity by `stam_step2_density_wall` via
-`convex_fisher_bound_of_ready`.
+not the inequality core; the bound is produced from regularity by
+`stamCauchySchwarzOptimal_of_indepFun` via `convex_fisher_bound_of_ready`.
 @audit:ok -/
 def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
@@ -244,7 +245,7 @@ The convex Fisher bound is supplied by `convex_fisher_bound_of_ready`
 `fisherInfoOfDensity (convDensityAdd fX fY)` by `funext`; the added hypotheses are regularity
 preconditions, not the inequality core.
 @audit:ok -/
-theorem stam_step2_density_wall
+theorem stamCauchySchwarzOptimal_of_indepFun
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) :
@@ -306,8 +307,8 @@ theorem stam_inequality_via_predicate_optimal
 matching hypotheses, applies `h_cs_opt` to get the harmonic-mean bound
 `J_sum ≤ J_X · J_Y / (J_X + J_Y)`, and reshapes to the inverse form via
 `stam_inverse_form_of_harmonic_mean`. The
-inequality core lives upstream in `stam_step2_density_wall`; the antecedent's extra hypotheses are
-regularity preconditions.
+inequality core lives upstream in `stamCauchySchwarzOptimal_of_indepFun`; the antecedent's extra
+hypotheses are regularity preconditions.
 @audit:ok -/
 @[entry_point]
 theorem isStamInequalityHyp_via_body

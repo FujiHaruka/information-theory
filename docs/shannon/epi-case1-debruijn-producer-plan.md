@@ -64,7 +64,7 @@ ratio core `csiszarLogRatioGap_deriv_le_zero` (harmonic-Stam arith) が項毎 v_
    factor は producer 内 `density_t` (`convDensityAdd pX_sum g_{s·2}`、Phase 1b v_Z=2) に閉じ ratio core に
    到達しない (B-0 系)。
 4. **PB-5 `h_pos_stam` + PB-6 wrapper 結線**: Stam/Blachman conjunct は genuine 既存
-   (`isStamInequalityHyp_via_step3` `EPIStamStep3Body.lean:119` / `isBlachmanConvReady_convDensityAdd_gaussian`)
+   (`isStamInequalityHyp_of_indepFun` `EPIStamStep3Body.lean:119` / `isBlachmanConvReady_convDensityAdd_gaussian`)
    を配線。`IsHeatFlowEndpointRegular` は既に一般 variance (`EPIG2HeatFlowContinuity.lean:488`、`@audit:ok`) で
    v=1/v=1/v=2 を渡すだけ (障害なし、`EPIStamToBridge.lean:1435-1452` の既存 producer pattern)。
 
@@ -137,7 +137,7 @@ proof done を目指す (PB-4 sum が park の場合は X/Y 系 proof done + sum
 - `EPIStamDischarge.lean:251-288` — `IsDeBruijnRegularityHyp` (producer 構成対象)
 - `EPIG2HeatFlowContinuity.lean:488` / `EPIStamToBridge.lean:1435-1452` — `IsHeatFlowEndpointRegular` (一般 v_Z) + producer pattern
 - `EPIStamToBridge.lean:1346,1352-1353` — `isStamToEPIScalingHyp_of_stam_debruijn` (unit-noise 要求 = PB-1 根拠)
-- `EPIStamStep3Body.lean:119` — `isStamInequalityHyp_via_step3` (Stam conjunct、genuine)
+- `EPIStamStep3Body.lean:119` — `isStamInequalityHyp_of_indepFun` (Stam conjunct、genuine)
 - `FisherConvBound.lean:385` — `gaussianConv_fisher_le_inv_var` (`integrable_deriv` Fisher 有界、fisher-finiteness 壁は CLOSED、ホスト `FisherConvBound.lean` は legacy Stam route 削除で消滅済)
 - `FisherInfoV2DeBruijnBody.lean:209` — `IsIBPHypothesis` (PB-7 retract 対象)
 - `Mathlib/Data/Real/Sqrt.lean:352` — `Real.sqrt_mul` (PB-2)

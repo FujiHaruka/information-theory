@@ -11,7 +11,7 @@
 > **API 部品** (積分 CS / Tonelli / IBP の `[...]` 前提 verbatim) のみ消費し、S1/S3/S4 の condExp 戦略記述は
 > 無視すること。atom 分解 (A/B/C → Phase 3a-d) は plan §Phase 3 が SoT。
 
-> 調査対象: `stam_step2_density_wall` (`InformationTheory/Shannon/EPIStamInequalityBody.lean:376`,
+> 調査対象: `stamCauchySchwarzOptimal_of_indepFun` (`InformationTheory/Shannon/EPIStamInequalityBody.lean:376`,
 > `@residual(wall:stam-blachman)`) を **密度レベルで条件付き密度を Bochner ∫ 明示書き下す経路**
 > で closure するのに必要な Mathlib API の在庫を取る。
 >
@@ -33,7 +33,7 @@
 
 ### 密度レベル経路 5 step の Mathlib 充足表
 
-`stam_step2_density_wall` の真壁 = `IsStamCauchySchwarzOptimal X Y P` の結論
+`stamCauchySchwarzOptimal_of_indepFun` の真壁 = `IsStamCauchySchwarzOptimal X Y P` の結論
 `J_sum ≤ J_X·J_Y/(J_X+J_Y)`、`hconv : fXY =ᵐ[volume] convDensityAdd fX fY` 制約下で。
 `J(f) := (fisherInfoOfMeasureV2 μ f).toReal = (∫⁻ (logDeriv f x)²·f x dx).toReal`
 (`FisherInfoV2DeBruijn.lean:77` で `fisherInfoOfMeasureV2 _μ f := fisherInfoOfDensity f`, 測度引数は phantom)。
@@ -69,11 +69,11 @@
 
 ## 主定理の最終形 (再掲)
 
-`stam_step2_density_wall` (`EPIStamInequalityBody.lean:376`、wall body):
+`stamCauchySchwarzOptimal_of_indepFun` (`EPIStamInequalityBody.lean:376`、wall body):
 
 ```lean
 @residual(wall:stam-blachman)
-theorem stam_step2_density_wall
+theorem stamCauchySchwarzOptimal_of_indepFun
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) :
@@ -349,14 +349,14 @@ theorem condExp_ae_eq_integral_condDistrib_id [NormedSpace ℝ F] [CompleteSpace
 
 | 壁 | loogle 確認 | shared sorry 補題化 |
 |---|---|---|
-| Blachman score-of-convolution 恒等式 (S1 の核) | `"Blachman"` → **Found 0** | **`stam_step2_density_wall` (`EPIStamInequalityBody.lean:376`, `@residual(wall:stam-blachman)`) に集約済 (推奨維持)**。S2-S5 を ship しても S1 が closure できなければ同 wall の `sorry` に残す |
+| Blachman score-of-convolution 恒等式 (S1 の核) | `"Blachman"` → **Found 0** | **`stamCauchySchwarzOptimal_of_indepFun` (`EPIStamInequalityBody.lean:376`, `@residual(wall:stam-blachman)`) に集約済 (推奨維持)**。S2-S5 を ship しても S1 が closure できなければ同 wall の `sorry` に残す |
 | Stam 不等式 (Mathlib 側) | `"_Stam"` → **Found 0** | 同上 wall に集約 |
 | Fisher information (Mathlib 側定義) | `"fisherInformation"` → Found 0, `"fisherInfo"`(前任) → unknown identifier | InformationTheory 自前 `fisherInfoOfDensity` で代替 (壁ではない) |
 | 畳み込みの導関数 (`deriv_convolution`) | `"deriv_convolution"` → **Found 0** | gateway `convDensityAddDeriv`/`convDensityAdd_hasDerivAt` で**回避済** (壁ではない) |
 | `lconvolution` 微分可能性 | `"lconvolution"`+`Differentiable` → **Found 0** | `convDensityAdd` (∫ 形) を gateway で別途微分可能化済、本経路で**回避** (壁ではない) |
 | `condExp ∧ convolution density` 同時補題 | `condExp`(171 lemmas) / `condDistrib`(51 lemmas) は在だが convolution 密度と結ぶ hook 不在 | S1 self-build に内包 (`wall:stam-blachman` に集約) |
 
-**唯一の真壁 = `wall:stam-blachman` (S1 disintegration 橋)。** 既に `stam_step2_density_wall` 1 本の
+**唯一の真壁 = `wall:stam-blachman` (S1 disintegration 橋)。** 既に `stamCauchySchwarzOptimal_of_indepFun` 1 本の
 `sorry` に集約されており (shared sorry 補題パターン、`docs/audit/audit-tags.md`「共有 Mathlib 壁」)、
 S2-S5 を独立 file で ship しても**この集約を維持**するのが honesty 規律 (S1 を `Is...Hyp` predicate に
 bundle するのは tier 5 load-bearing で禁止 — `epi-wall-reattack-plan.md:498`)。
@@ -368,7 +368,7 @@ bundle するのは tier 5 load-bearing で禁止 — `epi-wall-reattack-plan.md
 親計画 [`epi-wall-reattack-plan.md`](epi-wall-reattack-plan.md) Phase 3 の撤退ライン:
 
 - **L-EPIW-3-α**: Blachman 条件付き score 表現 (S1) の disintegration self-build が PR 級
-  → `stam_step2_density_wall` body `sorry` + `@residual(wall:stam-blachman)` 据置 (regularity hyp 維持)。
+  → `stamCauchySchwarzOptimal_of_indepFun` body `sorry` + `@residual(wall:stam-blachman)` 据置 (regularity hyp 維持)。
 - **L-EPIW-3-β**: λ 最適化 (S5) の algebraic transform が `linarith` 吸収不可で >50 行
   → step 4 のみ `sorry`、step 1-3 ship。
 
@@ -381,7 +381,7 @@ bundle するのは tier 5 load-bearing で禁止 — `epi-wall-reattack-plan.md
 - **L-EPIW-3-密度-α** (L-EPIW-3-α の精緻化): S1 橋で `condExp_ae_eq_integral_condDistrib_id` の
   `[StandardBorelSpace]` / score `Integrable f μ` 前提が `IsStamCauchySchwarzOptimal` signature に
   漏れ qualitatively 後退する場合 → S2-S5 (Mathlib 部品揃いパート) を独立 file
-  `EPIBlachmanConvScore.lean` に genuine ship し、S1 のみ `stam_step2_density_wall` の `sorry` +
+  `EPIBlachmanConvScore.lean` に genuine ship し、S1 のみ `stamCauchySchwarzOptimal_of_indepFun` の `sorry` +
   `@residual(wall:stam-blachman)` に据置 (現状形を維持、撤退口 = sorry、仮説束化禁止)。
 - 縮退案: smoothed/Gaussian-mollified 密度クラスに限定した `IsStamCauchySchwarzOptimalSmooth` を別 def
   として publish し、general density は撤退 (sorry なし、足場のみ)。ただし signature pivot 級なので
@@ -404,7 +404,7 @@ import Mathlib.MeasureTheory.Measure.Prod         -- lintegral_lintegral_swap (S
 import Mathlib.MeasureTheory.Integral.IntegralEqImproper  -- integral_mul_deriv_eq_deriv_mul_of_integrable (S2)
 
 /-!
-# Blachman density-route: explicit-integral path toward `stam_step2_density_wall`
+# Blachman density-route: explicit-integral path toward `stamCauchySchwarzOptimal_of_indepFun`
 
 別経路 (抽象 condDistrib 回避): `convDensityAdd pX pY z := ∫ x, pX x · pY (z-x) ∂volume`
 を出発点に、S1 (Blachman 条件付き score 表現) のみ真壁 (`wall:stam-blachman`)、S2-S5 は
