@@ -22,16 +22,21 @@ product identity, `IsUVChannelLaw`.
 * `uvRegion ν` — the quadrilateral cut out by the four information slots of a five-tuple law.
 * `bcOuterRegionUV W` — the UV outer region: the closure of the union of `uvRegion ν` over the
   channel laws `ν` on a fixed pair of countable auxiliary alphabets.
+* `uvConstLaw W x₀` — the channel law with constant auxiliaries and constant input letter `x₀`,
+  which witnesses that the union is indexed by a nonempty family.
+* `uvOutputCopiesInputLaw`, `uvAuxCopiesOutputLaw` — two five-tuple laws that the channel
+  constraint rejects, over the channels `uvBlindChannel` and `uvFairBitChannel`.
 
 ## Main statements
 
 * `bcOuterRegionUV_isClosed` — the region is closed.
-* `bcOuterRegionUV_nonempty` — the region is nonempty, so the union is indexed by a nonempty
-  family of channel laws.
+* `bcOuterRegionUV_nonempty` — the region is nonempty, witnessed by `uvConstLaw`, so the union
+  is indexed by a nonempty family of channel laws.
 * `isUVChannelLaw_iff` — a law is a channel law exactly when it is a law of the auxiliaries and
   the input letter pushed through the channel, which describes the index of the union directly.
 * `IsUVChannelLaw.map_input_output` — a channel law has the channel joint `(ν.map X) ⊗ₘ W` as
-  its input-output pair law, which is what a law copying the input into the output fails.
+  its input-output pair law, which is the constraint a law copying the input letter into the
+  outputs violates.
 * `not_isUVChannelLaw_uvOutputCopiesInputLaw` and `not_isUVChannelLaw_uvAuxCopiesOutputLaw` — the
   constraint rejects two structurally different degenerate laws, one whose outputs copy the input
   letter and one whose auxiliary copies an output over a one-letter input alphabet.
@@ -43,6 +48,31 @@ product identity, `IsUVChannelLaw`.
   law, so the letter laws of a code index the union.
 * `bc_uv_shrunk_point_mem` — the rate pair of a code, shrunk by the Fano slack per letter, lies
   in the region.
+
+## Implementation notes
+
+`IsUVChannelLaw` is one composition-product identity between two pushforwards of `ν`, rather
+than a conjunction of "the output pair is distributed by the channel" and "the auxiliaries are
+conditionally independent of the output pair given the input letter".  A single identity is the
+shape the `Measure.map` and `Measure.compProd` lemmas consume, so the mixture, re-encoding and
+marginalization lemmas are each a rewrite chain; the first conjunct is recovered from it as
+`IsUVChannelLaw.map_input_output`, and the second is the statement that the conditional law is
+read at the input coordinate only.
+
+Both auxiliary alphabets of `bcOuterRegionUV` are fixed to `ℕ` instead of being quantified over
+countable types, so the union ranges over measures rather than over types.  The closure is taken
+because a union of intersections of closed half-planes need not be closed, and because the
+operational region is itself a closure.
+
+`uvRegion` imposes no sign constraint on the rate pair, matching the operational region, which
+contains nonpositive pairs; imposing one would exclude pairs the operational region contains.
+
+`compProd_comap_map_prodMap` and `compProd_pi_map_pair_eq_of_update_invariant` speak about a
+composition product of an arbitrary measure with an arbitrary Markov kernel and mention no
+broadcast-specific data.  The second generalizes `compProd_pi_map_pair_eq`: in place of the
+input letter `x · i`, the first component may be any map that is invariant under updating the
+`i`-th output coordinate and that retracts onto the input letter, which is what lets a padded
+auxiliary variable sit there.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -60,6 +90,8 @@ variable {M₁ M₂ n : ℕ}
 section ChannelLaw
 
 variable {U V : Type*} [MeasurableSpace U] [MeasurableSpace V]
+
+/-! ### The constraint and its characterization -/
 
 /-- A five-tuple law `(U, V, X, Y₁, Y₂)` is a channel law for `W` when the conditional law of the
 output pair given the two auxiliaries and the input letter is `W X`: pushing the law forward to
@@ -129,6 +161,8 @@ lemma isUVChannelLaw_iff (W : BCChannel α β₁ β₂) (ν : Measure (U × V ×
     unfold IsUVChannelLaw
     conv_lhs => rw [h]
     rw [Measure.map_map measurable_uvSplit measurable_uvUnsplit, hid₂, Measure.map_id]
+
+/-! ### Mixtures, re-encodings and marginals -/
 
 /-- @audit:ok -/
 lemma IsUVChannelLaw.smul {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
