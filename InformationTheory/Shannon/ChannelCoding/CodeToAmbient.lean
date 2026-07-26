@@ -190,7 +190,7 @@ lemma lintegral_pi_eval {γ : Type*} [MeasurableSpace γ]
   simp only [Function.update_self]
   rw [lintegral_const, measure_univ, mul_one]
 
-/-! ### Memorylessness and the per-letter joint law -/
+/-! ### Per-letter conditional independence, memorylessness and the joint law -/
 
 lemma isMarkovChain_of_compProd_pi
     {M A B C : Type*}
@@ -301,7 +301,8 @@ lemma isMarkovChain_of_compProd_pi
 /-- A product-channel ambient is a memoryless channel: if the message-to-output kernel
 factors as the per-letter product `κ m = ∏ⱼ W (x m j)` of a channel `W` applied to a
 deterministic codeword `x m`, then `ν ⊗ₘ κ` is a memoryless channel with per-letter
-inputs `x ω.1 i` and per-letter outputs `ω.2 i`.
+inputs `x ω.1 i` and per-letter outputs `ω.2 i`.  This is `isMarkovChain_of_compProd_pi` read
+at the conditioner that collects every input and output letter other than the `i`-th.
 @audit:ok -/
 lemma isMemorylessChannel_of_compProd_pi
     {M A B : Type*}
@@ -329,8 +330,8 @@ lemma isMemorylessChannel_of_compProd_pi
 /-- Per-letter joint pushforward of a product-channel `compProd`: for an ambient `ν ⊗ₘ κ`
 whose message-to-output kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)`, the
 joint law of the `i`-th input-output pair `(x ω.1 i, ω.2 i)` is the channel joint
-`(ν.map fun m ↦ x m i) ⊗ₘ W`.  Stated separately from `isMemorylessChannel_of_compProd_pi`,
-which establishes the same identity internally, because it is what identifies a per-letter
+`(ν.map fun m ↦ x m i) ⊗ₘ W`.  Stated separately from `isMarkovChain_of_compProd_pi`, which
+establishes the same identity internally, because it is what identifies a per-letter
 information quantity of the ambient with the corresponding channel quantity. -/
 lemma compProd_pi_map_pair_eq
     {M A B : Type*} [MeasurableSpace M] [MeasurableSpace A] [MeasurableSpace B]

@@ -10,12 +10,6 @@ The canonical ambient probability measure attached to a broadcast block code: a 
 pair is passed through the per-letter product channel, and the messages and the two receiver
 outputs are read off the resulting measure as coordinate projections.
 
-The output block lives on `Fin n → β₁ × β₂`, a sequence of output *pairs*, rather than on a pair
-of sequences.  With that choice the message-to-output kernel is literally
-`BroadcastCode.blockOutputLaw`, so the product structure over letters is available to the
-structural lemmas and the same-letter pair `(Y_{1,i}, Y_{2,i})` is never split; the two
-per-receiver output sequences are recovered as further projections.
-
 ## Main definitions
 
 * `bcConverseInput` — the uniform law on the message pair.
@@ -38,8 +32,16 @@ per-receiver output sequences are recovered as further projections.
 * `bcConverse_isMarkovChain₁`, `bcConverse_isMarkovChain₂` — the messages act on a receiver's
   output block only through the codeword: `(W₂, W₁) → (W₂, Xⁿ) → Y₁ⁿ` and its mirror.
 
-Together with the uniformity and independence statements these are exactly the structural
-preconditions of the message-level converse `bc_uv_converse`, so instantiating it at
+## Implementation notes
+
+The output block lives on `Fin n → β₁ × β₂`, a sequence of output *pairs*, rather than on a pair
+of sequences.  With that choice the message-to-output kernel is literally
+`BroadcastCode.blockOutputLaw`, so the product structure over letters is available to the
+structural lemmas and the same-letter pair `(Y_{1,i}, Y_{2,i})` is never split; the two
+per-receiver output sequences are recovered as further projections.
+
+Together with the uniformity and independence statements the four structural lemmas are exactly
+the preconditions of the message-level converse `bc_uv_converse`, so instantiating it at
 `bcConverseAmbient` needs no further hypotheses on the code.
 -/
 
@@ -218,11 +220,10 @@ end CodeKernel
 section Structural
 
 variable [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
-variable [Fintype β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Nonempty β₁]
-variable [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] [Nonempty β₂]
+variable [StandardBorelSpace β₁] [Nonempty β₁]
+variable [StandardBorelSpace β₂] [Nonempty β₂]
 
-omit [Fintype α] [MeasurableSingletonClass α] [Fintype β₁] [MeasurableSingletonClass β₁]
-  [Fintype β₂] [MeasurableSingletonClass β₂] in
+omit [Fintype α] [MeasurableSingletonClass α] in
 lemma bcConverse_memoryless₁
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] (i : Fin n) :
@@ -264,8 +265,7 @@ lemma bcConverse_memoryless₁
     measurable_fst h₁
   exact isMarkovChain_swap (bcConverseAmbient c W) _ _ F (measurable_bcConverseY₁s i) hZc hF h₂
 
-omit [Fintype α] [MeasurableSingletonClass α] [Fintype β₁] [MeasurableSingletonClass β₁]
-  [Fintype β₂] [MeasurableSingletonClass β₂] in
+omit [Fintype α] [MeasurableSingletonClass α] in
 lemma bcConverse_memoryless₂
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] (i : Fin n) :
@@ -307,8 +307,7 @@ lemma bcConverse_memoryless₂
     measurable_snd h₁
   exact isMarkovChain_swap (bcConverseAmbient c W) _ _ F (measurable_bcConverseY₂s i) hZc hF h₂
 
-omit [StandardBorelSpace α] [Nonempty α] [Fintype β₁] [MeasurableSingletonClass β₁]
-  [Fintype β₂] [MeasurableSingletonClass β₂] in
+omit [StandardBorelSpace α] [Nonempty α] in
 lemma bcConverse_isMarkovChain₁
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] :
@@ -339,8 +338,7 @@ lemma bcConverse_isMarkovChain₁
   exact isMarkovChain_map_left (bcConverseAmbient c W) Prod.fst _ _ hfstm hZm hY₁m
     measurable_swap h₃
 
-omit [StandardBorelSpace α] [Nonempty α] [Fintype β₁] [MeasurableSingletonClass β₁]
-  [Fintype β₂] [MeasurableSingletonClass β₂] in
+omit [StandardBorelSpace α] [Nonempty α] in
 lemma bcConverse_isMarkovChain₂
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] :
