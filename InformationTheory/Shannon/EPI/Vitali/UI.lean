@@ -12,42 +12,30 @@ import InformationTheory.Shannon.EPI.Vitali.UnifTight
 import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly
 
 /-!
-# EPI G2 Vitali witness — UnifIntegrable (UI), standalone genuine attempt
+# EPI G2 Gaussian max-entropy bound for the convolution density
 
-**HISTORICAL (2026-06-05): the UI witness `negMulLog_convDensity_unifIntegrable`
-and its de la Vallée-Poussin core have been DELETED.** The layer-2 endpoint
-continuity (`differentialEntropy_convDensity_integral_tendsto`) no longer uses the
-Vitali route — it was reassembled from the genuine `(α)` upper bound + `(β)` lower
-bound sandwich, and `wall:approx-identity-L1` is CLOSED (no active residual). What
-this file still provides is the genuine maxent upper bound
-`negMulLog_convDensityAdd_gaussian_entropy_upper` (`@audit:ok`), which the sandwich
-layer-2 now consumes to discharge the `IsBoundedUnder` premise of
-`tendsto_of_le_liminf_of_limsup_le`. The Strategy note below is retained only as a
-record of the abandoned Vitali approach.
+The file provides the Gaussian max-entropy upper bound
+`negMulLog_convDensityAdd_gaussian_entropy_upper` (`@audit:ok`): for the
+convolution density `f_t = convDensityAdd pX g_t = pX ∗ g_{u n}` (`pX` an L¹ input
+density with finite second moment, `g_t` a centered Gaussian), the entropy integral
+`∫ negMulLog f_t` is bounded above by `(1/2) log(2πe·V)` for any `V ≥ (∫ x² pX) + t`.
+This bound is consumed by the layer-2 two-sided sandwich
+(`differentialEntropy_convDensity_integral_tendsto`,
+`EPIG2HeatFlowContinuity.lean`) to discharge the `IsBoundedUnder` premise of
+`tendsto_of_le_liminf_of_limsup_le`.
 
-## Strategy (inventory `epi-g2-ui-bridge-inventory.md`, 4 steps)
+The name (`Vitali/UI`) reflects this file's origin as the home of the Vitali
+`UnifIntegrable` route to the same endpoint-continuity result; that route is
+superseded by the Fatou-LSC / conditioning sandwich above, and only the Gaussian
+max-entropy framing below survives.
 
-`f_n := convDensityAdd pX g_{u n} = pX ∗ g_{u n}`.
+## Genuine framing helpers (probability-measure framing of `f_t`)
 
-* Step 1 (Mathlib in): `unifIntegrable_of` reduces UI to a *uniform* indicator-tail
-  estimate
-  `∀ ε>0, ∃ C, ∀ n, eLpNorm ({C ≤ |negMulLog (f_n)|}.indicator (negMulLog∘f_n)) 1 volume`
-  ` ≤ ofReal ε`.
-* Step 2 (probability-measure framing, genuine, option b = `withDensity` direct):
-  `μ_n := volume.withDensity (ofReal∘f_n)` is a probability measure (`∫ f_n = 1` via
-  `integral_convDensityAdd_gaussian_eq_one`), `≪ volume`, and `rnDeriv = ofReal∘f_n`.
-  Hence `differentialEntropy μ_n = ∫ negMulLog f_n`.
-* Step 3 (maxent upper bound, in-tree `@entry_point`):
-  `differentialEntropy_le_gaussian_of_variance_le` applied to `μ_n` gives
-  `∫ negMulLog f_n ≤ (1/2) log(2πe V_n)` with `V_n = (∫ x² pX) + u n` `n`-uniform.
-  Combined with `negMulLog_le_one_sub_self` (positive part) this gives a uniform
-  bound `M` on `∫ |negMulLog f_n|`.
-* Step 4 (★ de la Vallée-Poussin bridge core, Mathlib-absent): "`∫|negMulLog f_n|`
-  uniformly bounded → `∫⁻_{C≤|negMulLog f_n|}|negMulLog f_n| ≤ ε` uniformly (C large)".
-  This was the genuine de la Vallée-Poussin content (superlinear moment) with no
-  Mathlib lemma. It was the `wall:approx-identity-L1` content, now obsolete: the
-  sandwich route bypassed it entirely (the (α) upper bound uses klFun-Fatou KL
-  lower-semicontinuity, no uniform-integrability / de la Vallée-Poussin needed).
+`f_t := convDensityAdd pX g_t` is measurable and nonnegative; the smoothed-density
+measure `μ_t := volume.withDensity (ofReal ∘ f_t)` is a probability measure with
+`differentialEntropy μ_t = ∫ negMulLog f_t`, and `f_t` has finite first and second
+moments — the mean/variance/integrability data consumed by
+`differentialEntropy_le_gaussian_of_variance_le` in the max-entropy bound.
 -/
 
 namespace InformationTheory.Shannon
@@ -444,19 +432,5 @@ theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
   rw [hent_eq, hf_def] at hmaxent
   rw [hf_def]
   exact hmaxent
-
-/-! ## Vitali UI witness removed (2026-06-05)
-
-The Vitali UnifIntegrable witness `negMulLog_convDensity_unifIntegrable` and its
-sole hard dependency, the de la Vallée-Poussin bridge core
-`negMulLog_convDensity_indicatorTail_uniform` (the actual `wall:approx-identity-L1`
-sorry), were the layer-2 (`differentialEntropy_convDensity_integral_tendsto`) inputs
-on the Vitali route. The layer-2 body is now re-derived genuinely via the two-sided
-sandwich (Fatou-LSC `(α)` limsup upper bound + conditioning `(β)` per-`n` lower
-bound, both `@audit:ok`), so these Vitali witnesses are no longer consumed and are
-deleted. The genuine framing/maxent helpers above
-(`negMulLog_convDensityAdd_gaussian_entropy_upper` etc.) are retained — the maxent
-upper bound is now consumed directly by the layer-2 sandwich for its uniform
-upper-boundedness witness. -/
 
 end InformationTheory.Shannon

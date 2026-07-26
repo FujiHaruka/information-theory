@@ -55,7 +55,7 @@ left endpoint `t = 0` (within `Ioi 0`).
 
 The `log N(s(t),r(t))` term is continuous via the matched-path continuity
 (`IsMatchedTimePath.cont`) + heat-flow endpoint continuity
-(`heatFlowEntropyPower_continuousWithinAt_zero`, CLOSED 2026-06-05); the
+(`heatFlowEntropyPower_continuousWithinAt_zero`); the
 `−t` term is continuous. Mirrors `csiszarLogRatioGap_continuousWithinAt_zero`
 (`EPIStamToBridge.lean:1098`).
 
@@ -65,8 +65,8 @@ heat flow of `X + Y` at `τ = s t + r t`: `sumHeatFlowEP X Y Z_X Z_Y P (s t)(r t
 heatFlowEP (X+Y) Z P (s t + r t)`. This eventual equality (on a neighborhood of
 `0` within `Ioi 0`) lets us transfer the continuity via
 `ContinuousWithinAt.congr`. The reduced single-noise heat flow is the composition
-of the genuine endpoint atom `heatFlowEntropyPower_continuousWithinAt_zero`
-(`wall:heatflow-continuity` CLOSED) with the continuous matched reparameterisation
+of the endpoint continuity atom `heatFlowEntropyPower_continuousWithinAt_zero`
+with the continuous matched reparameterization
 `τ(t) = s t + r t` (`IsMatchedTimePath.cont`).
 
 Added preconditions are genuine regularity:
@@ -95,15 +95,14 @@ theorem twoTimeLogRatioGap_continuousWithinAt_zero
     (h_endpt_sum : IsHeatFlowEndpointRegular (fun ω ↦ X ω + Y ω) Z P) :
     ContinuousWithinAt (fun t : ℝ ↦ twoTimeLogRatioGap X Y Z_X Z_Y P s r t)
       (Set.Ioi (0 : ℝ)) 0 := by
-  -- The single-noise endpoint heat-flow continuity atom (`wall:heatflow-continuity`
-  -- CLOSED), continuous within `Ioi 0` at `0`.
+  -- The single-noise endpoint heat-flow continuity atom, continuous within `Ioi 0` at `0`.
   have h_endpt :
       ContinuousWithinAt
         (fun u : ℝ ↦ entropyPower (P.map (fun ω ↦ (X ω + Y ω) + Real.sqrt u * Z ω)))
         (Set.Ioi (0 : ℝ)) 0 :=
     heatFlowEntropyPower_continuousWithinAt_zero
       (fun ω ↦ X ω + Y ω) Z P h_endpt_sum
-  -- The matched reparameterisation `τ(t) = s t + r t`, continuous within `Ioi 0`
+  -- The matched reparameterization `τ(t) = s t + r t`, continuous within `Ioi 0`
   -- at `0` (from `IsMatchedTimePath.cont` on `Ici 0`, restricted), with `τ 0 = 0`.
   have hs0 : s 0 = 0 := h_path_X.start_zero
   have hr0 : r 0 = 0 := h_path_Y.start_zero
@@ -522,7 +521,7 @@ saturation ratio `A t / B t` (`A t = sumHeatFlowEP …(s t)(r t)` is the numerat
 The `−t` correction is absorbed by the `eᵗ` growth — established genuinely in the
 body via `Real.log_mul`/`Real.log_exp`, no `sorry`.
 
-§2 (saturation core, genuinely closed 2026-06-06). The EPI saturation
+§2 (saturation core). The EPI saturation
 `A t / B t → 1` as `t → ∞`, isolated into `have h_ratio_tendsto`; from it
 `log (A t / B t) → log 1 = 0` (continuity of `log` at `1`) and
 `log (A/B) = log A − log B` (both positive) recover `R t → 0`. The saturation is

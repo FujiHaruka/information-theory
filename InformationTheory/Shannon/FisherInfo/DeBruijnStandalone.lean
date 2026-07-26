@@ -417,7 +417,7 @@ noncomputable def isDeBruijnPathRegular_of_heat_flow
 /-- **Integrated de Bruijn identity (general a.c., Cover–Thomas Theorem 17.7.2).** The integrated
 form `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt` for a general absolutely-continuous
 `X`, obtained by applying `debruijnIntegrationIdentity_holds` to the general path-regularity
-producer `isDeBruijnPathRegular_of_heat_flow` (now fully genuine).
+producer `isDeBruijnPathRegular_of_heat_flow`.
 
 References: [CoverThomas2006] Theorem 17.7.2.
 

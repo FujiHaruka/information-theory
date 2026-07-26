@@ -112,8 +112,8 @@ conclusion `Tendsto … N(B)` nor either envelope inequality — those are deriv
 `entropyPower_rescaled_path_tendsto` by calling the genuine lemmas with these
 preconditions.
 
-Independent honesty audit: non-load-bearing AFFIRMED. Each conjunct was
-matched verbatim to a regularity precondition of `differentialEntropy_add_ge_of_indep`
+Not load-bearing: each conjunct matches a regularity precondition of
+`differentialEntropy_add_ge_of_indep`
 (lower bundle, X:=B Y:=A/√t) or `differentialEntropy_le_gaussian_of_variance_le`
 (upper bundle). The variance-bound conjunct `∫(x-m)² ≤ varA/t + v_B` is the standard
 `h_var` max-entropy input (not the squeeze core): `varA` is pinned `≥ Var A` by the
@@ -541,8 +541,8 @@ theorem rescaledPath_variance_regular
     rw [hexp]
     exact (hW_sq_int.sub ((hW_int.const_mul (2 * m)))).add
       (integrable_const _)
-  · -- negMulLog (path rnDeriv) integrable (path entropy finiteness; entropy-finiteness
-    -- CLOSED asset via convDensityAdd identification bridge for the a.c. path law).
+  · -- negMulLog (path rnDeriv) integrable (path entropy finiteness, via the
+    -- convDensityAdd identification bridge for the a.c. path law).
     have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
     -- Density witness for `Zt = A/√t` + path density identification (`B + Zt = W` reordered).
     obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom, h_path_rnDeriv0⟩ :=
