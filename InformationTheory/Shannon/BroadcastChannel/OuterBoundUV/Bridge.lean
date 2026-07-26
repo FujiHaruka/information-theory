@@ -30,9 +30,15 @@ alphabet.
 * `bcConverseYs`, `bcConverseY₁s`, `bcConverseY₂s` — the output-pair projection and its two
   per-receiver components.
 * `bcConverseCodeKernel` — the codeword → output-block kernel.
+* `bcConverseFanoSlack₁`, `bcConverseFanoSlack₂` — the per-receiver Fano slack of the code.
 * `uvPadMap`, `uvUnpadMap` — the re-encoding of the letter-`i` auxiliary alphabet into a
   fixed one, and its left inverse.
 * `uvAuxPad` — the letter-`i` auxiliary variable read in that fixed alphabet.
+* `uvInfo₁`, `uvInfo₂`, `uvInfoSum₂`, `uvInfoSum₁` — the four information slots of the outer
+  bound, as functionals of a five-tuple law `(U, V, X, Y₁, Y₂)`.
+* `bcUVTuple` — the letter-`i` five-tuple of the two padded auxiliaries, the input letter and
+  the two output letters.
+* `bcUVJointDistribution` — the law of that five-tuple under the ambient.
 
 ## Main statements
 
@@ -53,6 +59,10 @@ alphabet.
 * `uvAux_pad_mutualInfo_eq`, `uvAux_pad_condMutualInfo_eq` — re-encoding the auxiliary
   variable into the fixed alphabet changes neither the mutual information it carries about
   an output nor the conditional mutual information it conditions.
+* `bc_uv_mutualInfo_eq_uvInfo₁_at`, `bc_uv_mutualInfo_eq_uvInfo₂_at`,
+  `bc_uv_sum_eq_uvInfoSum₂_at`, `bc_uv_sum_eq_uvInfoSum₁_at` — each summand of the four
+  information slots of the code-level bound is the corresponding information slot of the
+  letter's five-tuple law, so the `n`-letter bound is a sum of single-letter quantities.
 
 ## Implementation notes
 
@@ -72,6 +82,11 @@ Together with the uniformity and independence statements the four structural lem
 the structural preconditions of the message-level converse `bc_uv_converse`.  The encoder is
 measurable for free because the message pair ranges over a finite type, so the only hypotheses
 `bc_uv_converse_from_code` keeps are `2 ≤ M₁` and `2 ≤ M₂`.
+
+The five-tuple carries *both* auxiliaries, because the four information slots split two and
+two between them; keeping them in one law is what lets a single distribution witness all four
+inequalities.  `uvInfoSum₂` and `uvInfoSum₁` take `[IsFiniteMeasure ν]` since
+`condMutualInfo` does, while the two corner slots need nothing beyond measurability.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -504,6 +519,25 @@ lemma bcConverse_errorProb₂_eq
     rw [Fintype.card_prod, Fintype.card_fin, Fintype.card_fin, Nat.cast_mul]
   rw [h_err, measureReal_def, h_measure]
 
+/-- Receiver-1 Fano slack of a broadcast code: the binary entropy of the ambient decode error
+at receiver 1 together with that error probability scaled by `log (M₁ - 1)`.  This is the
+additive term by which the message-level converse exceeds the per-letter information sum, and
+it tends to zero with the error probability. -/
+noncomputable def bcConverseFanoSlack₁
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) : ℝ :=
+  Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+      (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
+    + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
+        (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1)
+
+/-- Receiver-2 Fano slack of a broadcast code, the mirror of `bcConverseFanoSlack₁`. -/
+noncomputable def bcConverseFanoSlack₂
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) : ℝ :=
+  Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+      (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
+    + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
+        (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1)
+
 section Converse
 
 variable [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
@@ -524,40 +558,20 @@ theorem bc_uv_converse_from_code
     InBCOuterRegionUV (Real.log (M₁ : ℝ)) (Real.log (M₂ : ℝ))
       ((∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
             (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)).toReal
-        + Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-            (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
-        + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-            (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
+        + bcConverseFanoSlack₁ c W)
       ((∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
             (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)).toReal
-        + Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-            (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
-        + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-            (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1))
+        + bcConverseFanoSlack₂ c W)
       ((∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
               (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)
             + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
               (bcConverseY₁s i) (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i))).toReal
-        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
-            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
-        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
-            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1)))
+        + bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W)
       ((∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
               (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)
             + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
               (bcConverseY₂s i) (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i))).toReal
-        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
-            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
-        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
-            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1))) := by
+        + bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) := by
   have h := bc_uv_converse (bcConverseAmbient c W) bcConverseMsg₁ bcConverseMsg₂
     (fun j ω ↦ c.encoder ω.1 j) bcConverseY₁s bcConverseY₂s c.decoder₁ c.decoder₂
     measurable_bcConverseMsg₁ measurable_bcConverseMsg₂
@@ -570,7 +584,11 @@ theorem bc_uv_converse_from_code
     (bcConverse_mutualInfo_eq_zero c W)
     (bcConverse_memoryless₁ c W) (bcConverse_memoryless₂ c W)
     (bcConverse_isMarkovChain₁ c W) (bcConverse_isMarkovChain₂ c W)
-  simpa only [Fintype.card_fin] using h
+  simp only [Fintype.card_fin] at h
+  exact ⟨by simpa only [bcConverseFanoSlack₁, add_assoc] using h.bound₁,
+    by simpa only [bcConverseFanoSlack₂, add_assoc] using h.bound₂,
+    by simpa only [bcConverseFanoSlack₁, bcConverseFanoSlack₂, add_assoc] using h.sumBound₂,
+    by simpa only [bcConverseFanoSlack₁, bcConverseFanoSlack₂, add_assoc] using h.sumBound₁⟩
 
 lemma bc_uv_rate_extract [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
@@ -580,40 +598,20 @@ lemma bc_uv_rate_extract [NeZero M₁] [NeZero M₂]
     InBCOuterRegionUV ((n : ℝ) * R₁) ((n : ℝ) * R₂)
       ((∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
             (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)).toReal
-        + Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-            (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
-        + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-            (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
+        + bcConverseFanoSlack₁ c W)
       ((∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
             (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)).toReal
-        + Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-            (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
-        + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-            (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1))
+        + bcConverseFanoSlack₂ c W)
       ((∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
               (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)
             + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
               (bcConverseY₁s i) (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i))).toReal
-        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
-            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
-        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
-            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1)))
+        + bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W)
       ((∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
               (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)
             + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
               (bcConverseY₂s i) (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i))).toReal
-        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁)
-            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₁
-              (fun ω j ↦ bcConverseY₁s j ω) c.decoder₁ * Real.log ((M₁ : ℝ) - 1))
-        + (Real.binEntropy (MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂)
-            + MeasureFano.errorProb (bcConverseAmbient c W) bcConverseMsg₂
-              (fun ω j ↦ bcConverseY₂s j ω) c.decoder₂ * Real.log ((M₂ : ℝ) - 1))) := by
+        + bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) := by
   have h := bc_uv_converse_from_code c W hcard₁ hcard₂
   have hlog₁ : (n : ℝ) * R₁ ≤ Real.log (M₁ : ℝ) := le_log_of_ceil_exp_le hM₁
   have hlog₂ : (n : ℝ) * R₂ ≤ Real.log (M₂ : ℝ) := le_log_of_ceil_exp_le hM₂
@@ -767,5 +765,169 @@ lemma uvAux_pad_condMutualInfo_eq [Nonempty β₁] [Nonempty β₂]
   exact (ENNReal.add_right_inj (mutualInfo_ne_top μ _ Yo hAux hYo)).mp hpair
 
 end Pad
+
+/-! ## Per-letter joint law and its information slots -/
+
+section PerLetterInfo
+
+/-! ### The four information slots of a five-tuple law -/
+
+section Slots
+
+variable {U V : Type*} [MeasurableSpace U] [MeasurableSpace V]
+variable [StandardBorelSpace α] [Nonempty α]
+variable [StandardBorelSpace β₁] [Nonempty β₁]
+variable [StandardBorelSpace β₂] [Nonempty β₂]
+
+/-- Receiver-1 corner information `I(V; Y₁)` of a five-tuple law `(U, V, X, Y₁, Y₂)`. -/
+noncomputable def uvInfo₁ (ν : Measure (U × V × α × β₁ × β₂)) : ℝ≥0∞ :=
+  mutualInfo ν (fun q ↦ q.2.1) (fun q ↦ q.2.2.2.1)
+
+/-- Receiver-2 corner information `I(U; Y₂)` of a five-tuple law `(U, V, X, Y₁, Y₂)`. -/
+noncomputable def uvInfo₂ (ν : Measure (U × V × α × β₁ × β₂)) : ℝ≥0∞ :=
+  mutualInfo ν (fun q ↦ q.1) (fun q ↦ q.2.2.2.2)
+
+/-- Sum-rate information `I(U; Y₂) + I(X; Y₁ | U)` with the receiver-2 auxiliary leading. -/
+noncomputable def uvInfoSum₂ (ν : Measure (U × V × α × β₁ × β₂)) [IsFiniteMeasure ν] : ℝ≥0∞ :=
+  uvInfo₂ ν + condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
+
+/-- Sum-rate information `I(V; Y₁) + I(X; Y₂ | V)` with the receiver-1 auxiliary leading. -/
+noncomputable def uvInfoSum₁ (ν : Measure (U × V × α × β₁ × β₂)) [IsFiniteMeasure ν] : ℝ≥0∞ :=
+  uvInfo₁ ν + condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.2.1)
+
+end Slots
+
+/-! ### The per-letter law read off the ambient -/
+
+section Ambient
+
+variable [StandardBorelSpace α] [Nonempty α]
+variable [Fintype β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Nonempty β₁]
+variable [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] [Nonempty β₂]
+
+/-- The letter-`i` five-tuple of the UV outer bound, read off the ambient: the receiver-2
+auxiliary, the receiver-1 auxiliary — both in the fixed alphabet of `uvAuxPad` — the input
+letter and the two output letters. -/
+noncomputable def bcUVTuple (c : BroadcastCode M₁ M₂ n α β₁ β₂) (i : Fin n) :
+    ((Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) →
+      (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+        (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂ :=
+  fun ω ↦ (uvAuxPad bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i ω,
+    uvAuxPad bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i ω,
+    c.encoder ω.1 i, bcConverseY₁s i ω, bcConverseY₂s i ω)
+
+omit [StandardBorelSpace α] [Nonempty α] [Fintype β₁] [MeasurableSingletonClass β₁]
+  [StandardBorelSpace β₁] [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] in
+lemma measurable_bcUVTuple (c : BroadcastCode M₁ M₂ n α β₁ β₂) (i : Fin n) :
+    Measurable (bcUVTuple c i) :=
+  (measurable_uvAuxPad bcConverseMsg₂ bcConverseY₁s bcConverseY₂s measurable_bcConverseMsg₂
+      measurable_bcConverseY₁s measurable_bcConverseY₂s i).prodMk
+    ((measurable_uvAuxPad bcConverseMsg₁ bcConverseY₁s bcConverseY₂s measurable_bcConverseMsg₁
+        measurable_bcConverseY₁s measurable_bcConverseY₂s i).prodMk
+      (((measurable_pi_apply i).comp
+            ((measurable_of_countable c.encoder).comp measurable_fst)).prodMk
+        ((measurable_bcConverseY₁s i).prodMk (measurable_bcConverseY₂s i))))
+
+/-- The joint law of the letter-`i` five-tuple under the ambient measure of a broadcast code:
+the two auxiliaries, the input letter and the two output letters, all pushed forward from
+`bcConverseAmbient`. -/
+noncomputable def bcUVJointDistribution
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) (i : Fin n) :
+    Measure ((Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂)) ×
+      (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂)) × α × β₁ × β₂) :=
+  (bcConverseAmbient c W).map (bcUVTuple c i)
+
+instance bcUVJointDistribution_isProbabilityMeasure
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    IsProbabilityMeasure (bcUVJointDistribution c W i) := by
+  unfold bcUVJointDistribution
+  exact Measure.isProbabilityMeasure_map (measurable_bcUVTuple c i).aemeasurable
+
+omit [StandardBorelSpace α] [Nonempty α] [Fintype β₁] [MeasurableSingletonClass β₁]
+  [StandardBorelSpace β₁] [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] in
+lemma bc_uv_mutualInfo_eq_uvInfo₁_at
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    mutualInfo (bcConverseAmbient c W)
+        (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)
+      = uvInfo₁ (bcUVJointDistribution c W i) := by
+  have hmap := mutualInfo_map_comp (bcConverseAmbient c W) (bcUVTuple c i)
+    (measurable_bcUVTuple c i)
+    (fun q ↦ q.2.1) (measurable_fst.comp measurable_snd)
+    (fun q ↦ q.2.2.2.1)
+    (measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+  exact (uvAux_pad_mutualInfo_eq (bcConverseAmbient c W) bcConverseMsg₁ bcConverseY₁s
+    bcConverseY₂s (bcConverseY₁s i) measurable_bcConverseMsg₁ measurable_bcConverseY₁s
+    measurable_bcConverseY₂s (measurable_bcConverseY₁s i) i).symm.trans hmap.symm
+
+omit [StandardBorelSpace α] [Nonempty α] [Fintype β₁] [MeasurableSingletonClass β₁]
+  [StandardBorelSpace β₁] [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] in
+lemma bc_uv_mutualInfo_eq_uvInfo₂_at
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    mutualInfo (bcConverseAmbient c W)
+        (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)
+      = uvInfo₂ (bcUVJointDistribution c W i) := by
+  have hmap := mutualInfo_map_comp (bcConverseAmbient c W) (bcUVTuple c i)
+    (measurable_bcUVTuple c i)
+    (fun q ↦ q.1) measurable_fst
+    (fun q ↦ q.2.2.2.2)
+    (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+  exact (uvAux_pad_mutualInfo_eq (bcConverseAmbient c W) bcConverseMsg₂ bcConverseY₁s
+    bcConverseY₂s (bcConverseY₂s i) measurable_bcConverseMsg₂ measurable_bcConverseY₁s
+    measurable_bcConverseY₂s (measurable_bcConverseY₂s i) i).symm.trans hmap.symm
+
+omit [StandardBorelSpace β₂] in
+lemma bc_uv_sum_eq_uvInfoSum₂_at
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    mutualInfo (bcConverseAmbient c W)
+          (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)
+        + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
+          (bcConverseY₁s i) (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i)
+      = uvInfoSum₂ (bcUVJointDistribution c W i) := by
+  have hX : Measurable (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂) ↦ c.encoder ω.1 i) :=
+    (measurable_pi_apply i).comp ((measurable_of_countable c.encoder).comp measurable_fst)
+  have hmap := condMutualInfo_map_comp (bcConverseAmbient c W) (bcUVTuple c i)
+    (measurable_bcUVTuple c i)
+    (fun q ↦ q.2.2.1) (measurable_fst.comp (measurable_snd.comp measurable_snd))
+    (fun q ↦ q.2.2.2.1)
+    (measurable_fst.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+    (fun q ↦ q.1) measurable_fst
+  have hcmi := (uvAux_pad_condMutualInfo_eq (bcConverseAmbient c W) bcConverseMsg₂
+    bcConverseY₁s bcConverseY₂s (fun ω ↦ c.encoder ω.1 i) (bcConverseY₁s i)
+    measurable_bcConverseMsg₂ measurable_bcConverseY₁s measurable_bcConverseY₂s hX
+    (measurable_bcConverseY₁s i) i).symm.trans hmap.symm
+  rw [bc_uv_mutualInfo_eq_uvInfo₂_at c W i, hcmi]
+  rfl
+
+omit [StandardBorelSpace β₁] in
+lemma bc_uv_sum_eq_uvInfoSum₁_at
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    mutualInfo (bcConverseAmbient c W)
+          (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)
+        + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
+          (bcConverseY₂s i) (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i)
+      = uvInfoSum₁ (bcUVJointDistribution c W i) := by
+  have hX : Measurable (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂) ↦ c.encoder ω.1 i) :=
+    (measurable_pi_apply i).comp ((measurable_of_countable c.encoder).comp measurable_fst)
+  have hmap := condMutualInfo_map_comp (bcConverseAmbient c W) (bcUVTuple c i)
+    (measurable_bcUVTuple c i)
+    (fun q ↦ q.2.2.1) (measurable_fst.comp (measurable_snd.comp measurable_snd))
+    (fun q ↦ q.2.2.2.2)
+    (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
+    (fun q ↦ q.2.1) (measurable_fst.comp measurable_snd)
+  have hcmi := (uvAux_pad_condMutualInfo_eq (bcConverseAmbient c W) bcConverseMsg₁
+    bcConverseY₁s bcConverseY₂s (fun ω ↦ c.encoder ω.1 i) (bcConverseY₂s i)
+    measurable_bcConverseMsg₁ measurable_bcConverseY₁s measurable_bcConverseY₂s hX
+    (measurable_bcConverseY₂s i) i).symm.trans hmap.symm
+  rw [bc_uv_mutualInfo_eq_uvInfo₁_at c W i, hcmi]
+  rfl
+
+end Ambient
+
+end PerLetterInfo
 
 end InformationTheory.Shannon.BroadcastChannel
