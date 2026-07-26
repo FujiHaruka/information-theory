@@ -29,8 +29,8 @@ final assembly into `log M ≤ n · (1/2) log(1 + P/N) + binEntropy(Pe) + Pe · 
 
 * `awgn_per_letter_mi_le_log_var` — the per-letter Gaussian maximum-entropy bound.
 * `awgn_sum_per_letter_mi_le_n_capacity` — `∑ᵢ I(Xᵢ; Yᵢ) ≤ n · (1/2) log(1 + P/N)`.
-* `isAwgnConverseFeasible_discharger` / `awgn_converse_F3_discharged` — the assembled
-  converse inequality.
+* `awgn_converse_of_perLetterMI_eq_diffEntropy_sub` — the assembled converse
+  inequality.
 
 ## Implementation notes
 
@@ -677,7 +677,7 @@ theorem awgn_sum_per_letter_mi_le_n_capacity
 
 /-! ## Converse assembly -/
 
-/-- Converse discharger: the assembled chain
+/-- The assembled converse chain
 ```
 log M ≤ I(W; Yⁿ).toReal + binEntropy(Pe) + Pe·log(M − 1)     (Fano)
       ≤ I(Xⁿ; Yⁿ).toReal + binEntropy(Pe) + Pe·log(M − 1)    (data-processing)
@@ -687,7 +687,7 @@ log M ≤ I(W; Yⁿ).toReal + binEntropy(Pe) + Pe·log(M − 1)     (Fano)
 The bridge `h_mi_bridge_per_letter` (per-letter `I(Xᵢ; Yᵢ) = h(Yᵢ) − h(Z)`) is taken as a
 hypothesis and discharged elsewhere. -/
 @[entry_point]
-theorem isAwgnConverseFeasible_discharger
+theorem awgn_converse_of_perLetterMI_eq_diffEntropy_sub_of_neZero
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     (h_mi_bridge_per_letter :
@@ -719,10 +719,11 @@ theorem isAwgnConverseFeasible_discharger
   -- Add `binEntropy(Pe) + Pe · log(M-1)` (constants on both sides).
   linarith [h_fano, h_lhs_chain]
 
-/-- Thin wrapper over `isAwgnConverseFeasible_discharger`: derives the `NeZero M` instance
-from `2 ≤ M` and delegates. The bridge `h_mi_bridge_per_letter` is taken as a hypothesis. -/
+/-- Thin wrapper over `awgn_converse_of_perLetterMI_eq_diffEntropy_sub_of_neZero`: derives
+the `NeZero M` instance from `2 ≤ M` and delegates. The per-letter identity
+`h_mi_bridge_per_letter` is taken as a hypothesis. -/
 @[entry_point]
-theorem awgn_converse_F3_discharged
+theorem awgn_converse_of_perLetterMI_eq_diffEntropy_sub
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     (h_mi_bridge_per_letter :
@@ -738,7 +739,7 @@ theorem awgn_converse_F3_discharged
       ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
         + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
   haveI : NeZero M := ⟨by omega⟩
-  exact isAwgnConverseFeasible_discharger P hP N hN h_meas
+  exact awgn_converse_of_perLetterMI_eq_diffEntropy_sub_of_neZero P hP N hN h_meas
     h_mi_bridge_per_letter hM hn_pos c Pe hPe
 
 

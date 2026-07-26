@@ -564,7 +564,7 @@ theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0) (hN : N ≠ 0)
   -- output Gaussian fact `q = gaussianReal 0 (P+N)`, discharged unconditionally.
   have h_out : InformationTheory.Shannon.AWGN.IsAwgnOutputGaussian Pr N h_meas :=
     InformationTheory.Shannon.AWGN.awgn_output_gaussian_of_bind_eq_conv Pr N h_meas
-      (InformationTheory.Shannon.AWGN.isAwgnBindEqConv_discharged Pr N h_meas)
+      (InformationTheory.Shannon.AWGN.isAwgnBindEqConv Pr N h_meas)
   -- measurable PDF proxy `g := gaussianPDF` for the fibre volume-density (Route B)
   set g : ℝ × ℝ → ℝ≥0∞ := fun z ↦ gaussianPDF z.1 N z.2 with hg_def
   have hg_meas : Measurable g :=

@@ -16,7 +16,7 @@ purely measure-theoretic fact that does not depend on the concrete form of the i
 * `bind_eq_conv_of_translation_kernel` — the generic translation-kernel ↔
   additive-convolution bridge: for any kernel whose fibres are translation maps of a
   fixed measure `ν`, `κ ∘ₘ p = p ∗ ν`.
-* `isAwgnBindEqConv_discharged` — the AWGN specialization.
+* `isAwgnBindEqConv` — the AWGN specialization.
 
 ## Implementation notes
 
@@ -71,7 +71,7 @@ with the noise law:
 `(awgnChannel N h_meas) ∘ₘ (gaussianReal 0 P.toNNReal)
 = (gaussianReal 0 P.toNNReal) ∗ (gaussianReal 0 N)`. -/
 @[entry_point]
-theorem isAwgnBindEqConv_discharged
+theorem isAwgnBindEqConv
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) :
     IsAwgnBindEqConv P N h_meas := by
   unfold IsAwgnBindEqConv
@@ -88,7 +88,7 @@ taken as hypotheses.
 
 `@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
-theorem awgn_capacity_closed_form_of_maxent_bindconv_discharged
+theorem awgn_capacity_closed_form_of_maxent_miDecomp
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
     (h_bdd :
@@ -104,7 +104,7 @@ theorem awgn_capacity_closed_form_of_maxent_bindconv_discharged
     awgnCapacity P N (isAwgnChannelMeasurable N)
       = (1/2) * Real.log (1 + P / (N : ℝ)) := by
   have h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N) :=
-    isAwgnBindEqConv_discharged P N (isAwgnChannelMeasurable N)
+    isAwgnBindEqConv P N (isAwgnChannelMeasurable N)
   exact awgn_capacity_closed_form_of_maxent_bindconv P hP N hN
     h_bridge h_decomp h_bdd h_max_ent
 

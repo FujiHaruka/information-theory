@@ -13,10 +13,11 @@ the kernel-measurability side hypothesis.
 
 * `isAwgnChannelMeasurable` — the AWGN kernel `fun x ↦ gaussianReal x N` is
   measurable.
-* `awgn_theorem_F1_discharged` — the AWGN channel coding theorem, with the kernel
-  measurability hypothesis discharged by `isAwgnChannelMeasurable`.
-* `awgn_capacity_closed_form_F1_discharged` — the AWGN capacity closed form, with
-  the kernel measurability hypothesis discharged.
+* `awgn_channel_coding_theorem_of_isAwgnChannelMeasurable` — the AWGN channel coding
+  theorem, with the kernel measurability hypothesis discharged by
+  `isAwgnChannelMeasurable`.
+* `awgn_capacity_closed_form_of_isAwgnChannelMeasurable` — the AWGN capacity closed
+  form, with the kernel measurability hypothesis discharged.
 
 ## Implementation notes
 
@@ -78,7 +79,7 @@ the signature. The body delegates to `awgn_channel_coding_theorem`.
 
 @audit:ok -/
 @[entry_point]
-theorem awgn_theorem_F1_discharged
+theorem awgn_channel_coding_theorem_of_isAwgnChannelMeasurable
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
@@ -96,7 +97,7 @@ hypothesis discharged by `isAwgnChannelMeasurable N`. The remaining hypotheses
 
 `@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
-theorem awgn_capacity_closed_form_F1_discharged
+theorem awgn_capacity_closed_form_of_isAwgnChannelMeasurable
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge_gauss :
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel

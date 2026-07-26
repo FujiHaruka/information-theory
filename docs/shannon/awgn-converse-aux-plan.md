@@ -1,6 +1,6 @@
 # AWGN Converse aux — F-3 analytic discharge ムーンショット計画 🌙
 
-**Status**: CLOSED ✅ — Cover-Thomas 9.1.2 converse (Fano + DPI + memoryless chain + per-letter Gaussian max-entropy) を `AWGNConverseDischarge.lean` に publish。`awgn_converse` body は `awgn_converse_F3_discharged` への 1 行 `exact` で discharge、file scope proof done。残存 sorry は子 mini-plan (c1b / c1c / c5) で回収。
+**Status**: CLOSED ✅ — Cover-Thomas 9.1.2 converse (Fano + DPI + memoryless chain + per-letter Gaussian max-entropy) を `AWGNConverseDischarge.lean` に publish。`awgn_converse` body は `awgn_converse_of_perLetterMI_eq_diffEntropy_sub` への 1 行 `exact` で discharge、file scope proof done。残存 sorry は子 mini-plan (c1b / c1c / c5) で回収。
 **SoT**: `docs/shannon/awgn-facts.md` (achievement table) + `docs/textbook-roadmap.md` Ch.9。詳細履歴は git。
 
 > **Parent**: [`awgn-moonshot-plan.md`](awgn-moonshot-plan.md) §「撤退ライン F-3」。

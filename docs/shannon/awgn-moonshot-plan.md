@@ -167,8 +167,8 @@ append-only。
 6. **F-4 (kernel measurability) discharge 完了** → `awgn-f1-discharge-moonshot-plan.md` /
    `AWGNF1Discharge.lean` (148 行) で `Measurable (fun x => gaussianReal x N)` を
    `gaussianReal_map_const_add` + Giry monad + `measurable_measure_prodMk_left` で完全証明
-   (`isAwgnChannelMeasurable`)。`awgn_theorem_F1_discharged` / `awgn_capacity_closed_form_F1_discharged`
-   で h_meas 引数なし形再 publish。seed では「F-1 (kernel measurability)」と呼ぶ点に注意。
+   (`isAwgnChannelMeasurable`)。`awgn_channel_coding_theorem_of_isAwgnChannelMeasurable` /
+   `awgn_capacity_closed_form_of_isAwgnChannelMeasurable` で h_meas 引数なし形再 publish。seed では「F-1 (kernel measurability)」と呼ぶ点に注意。
 
 ### 確定済 (2026-05-19, Phase A-D 一括実装)
 

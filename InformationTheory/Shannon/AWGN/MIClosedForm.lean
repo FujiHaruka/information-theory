@@ -12,7 +12,7 @@ output-Gaussian bind/conv bridge (`AWGN/BindConvolution.lean`).
 
 `ContChannelMIDecomp.lean`'s own closed-form producer `awgn_mi_gaussian_closed_form_of_out`
 still leaves `IsAwgnOutputGaussian` standing as a hypothesis; this file discharges it inline
-from the AWGN-specialized, hypothesis-free bind/conv fact `isAwgnBindEqConv_discharged`
+from the AWGN-specialized, hypothesis-free bind/conv fact `isAwgnBindEqConv`
 (`BindConvolution.lean`), so it is the join point where the fully hypothesis-free wrapper is
 assembled.
 -/
@@ -33,7 +33,7 @@ theorem mutualInfoOfChannel_gaussianInput_closed_form'
         (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
       = (1/2) * Real.log (1 + P / (N : ℝ)) := by
   -- `h_out` via the bind/conv bridge.
-  have h_conv := isAwgnBindEqConv_discharged P N h_meas
+  have h_conv := isAwgnBindEqConv P N h_meas
   have h_out : IsAwgnOutputGaussian P N h_meas :=
     awgn_output_gaussian_of_bind_eq_conv P N h_meas h_conv
   -- Delegate to the assembled producer (MI decomposition + cond-entropy + log-algebra).

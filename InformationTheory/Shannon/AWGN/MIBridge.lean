@@ -42,7 +42,7 @@ mutual-information identity.
   primitives.
 * `awgn_mi_gaussian_closed_form_of_primitives` — the `(1/2) log(1 + P/N)` value of the
   Gaussian-input mutual information.
-* `awgn_capacity_closed_form_F2_discharged` — the AWGN capacity closed form with the
+* `awgn_capacity_closed_form_of_primitives` — the AWGN capacity closed form with the
   Gaussian MI fact reduced to two primitives.
 
 ## Approach
@@ -251,7 +251,7 @@ remaining hypotheses (`h_bdd`, `h_max_ent`) are unchanged.
 
 `@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]
-theorem awgn_capacity_closed_form_F2_discharged
+theorem awgn_capacity_closed_form_of_primitives
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N))
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
@@ -270,7 +270,7 @@ theorem awgn_capacity_closed_form_F2_discharged
   have h_bridge_gauss :=
     awgn_mi_gaussian_closed_form_of_primitives P hP N hN
       (isAwgnChannelMeasurable N) h_out h_decomp
-  exact awgn_capacity_closed_form_F1_discharged P hP.le N hN
+  exact awgn_capacity_closed_form_of_isAwgnChannelMeasurable P hP.le N hN
     h_bridge_gauss h_bdd h_max_ent
 
 end InformationTheory.Shannon.AWGN

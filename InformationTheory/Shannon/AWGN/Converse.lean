@@ -603,7 +603,7 @@ probability `Pe`, the rate satisfies
 
 The per-letter mutual-information bridge is supplied by
 `awgn_per_letter_mi_bridge_genuine`, and the rate bound is assembled by
-`awgn_converse_F3_discharged`. -/
+`awgn_converse_of_perLetterMI_eq_diffEntropy_sub`. -/
 @[entry_point]
 theorem awgn_converse
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -625,7 +625,7 @@ theorem awgn_converse
             - InformationTheory.Shannon.differentialEntropy
                 (ProbabilityTheory.gaussianReal 0 N) :=
     fun {M n} _ _ c i ↦ awgn_per_letter_mi_bridge_genuine hN h_meas c i
-  exact awgn_converse_F3_discharged P hP N hN h_meas
+  exact awgn_converse_of_perLetterMI_eq_diffEntropy_sub P hP N hN h_meas
     h_mi_bridge_per_letter hM hn_pos c Pe hPe
 
 end InformationTheory.Shannon.AWGN

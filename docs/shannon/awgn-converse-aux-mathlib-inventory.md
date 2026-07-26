@@ -24,7 +24,7 @@ rule + uniform W 在庫」は **完全在庫 (genuine 化可)**、判断 #3 (DPI
 ## 主定理の最終形 (再掲、parent plan より)
 
 ```lean
-theorem isAwgnConverseFeasible_discharger
+theorem awgn_converse_of_perLetterMI_eq_diffEntropy_sub_of_neZero
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     (h_feasible : IsAwgnConverseFeasible P N h_meas)
@@ -347,7 +347,7 @@ def IsAwgnConverseFeasible (P : ℝ) (N : ℝ≥0)
     MarkovChainForConverse P N h_meas c
 
 @[entry_point]
-theorem isAwgnConverseFeasible_discharger
+theorem awgn_converse_of_perLetterMI_eq_diffEntropy_sub_of_neZero
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     (h_feasible : IsAwgnConverseFeasible P N h_meas)

@@ -1,6 +1,6 @@
 # AWGN F-1 (kernel measurability) discharge ムーンショット計画 🌙
 
-**Status**: CLOSED ✅ — `isAwgnChannelMeasurable N` を genuine closure、`awgn_theorem_F1_discharged` を `h_meas` 引数なし形で再 publish。機械検証状態は SoT 参照。
+**Status**: CLOSED ✅ — `isAwgnChannelMeasurable N` を genuine closure、`awgn_channel_coding_theorem_of_isAwgnChannelMeasurable` を `h_meas` 引数なし形で再 publish。機械検証状態は SoT 参照。
 **SoT**: `docs/shannon/awgn-facts.md` (achievement table) + `docs/textbook-roadmap.md` Ch.9。詳細履歴は git。
 
 > **Parent**: [`awgn-moonshot-plan.md`](awgn-moonshot-plan.md) §「撤退ライン F-4 (kernel measurability)」 + 判断ログ #1。Seed プロンプト側では同じ箇所を「F-1」と呼ぶ (どちらも `Measurable (fun x : ℝ => gaussianReal x N)`)。

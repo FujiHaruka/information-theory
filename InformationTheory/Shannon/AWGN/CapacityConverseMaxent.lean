@@ -853,7 +853,7 @@ theorem awgn_capacity_closed_form_genuine
   -- Output-Gaussian fact, via the translation-kernel bind/conv bridge.
   have h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N) :=
     awgn_output_gaussian_of_bind_eq_conv P N (isAwgnChannelMeasurable N)
-      (isAwgnBindEqConv_discharged P N (isAwgnChannelMeasurable N))
+      (isAwgnBindEqConv P N (isAwgnChannelMeasurable N))
   -- MI decomposition via the continuous-channel MI chain rule.
   have h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N) :=
     isAwgnMIDecomp_of_densitySplit P N hN_NN hPN (isAwgnChannelMeasurable N) h_out
@@ -872,7 +872,7 @@ theorem awgn_capacity_closed_form_genuine
         awgnPowerConstraintSet P) :=
     ⟨(1/2) * Real.log (1 + P / (N : ℝ)), by
       rintro y ⟨p, hp, rfl⟩; exact h_max_ent p hp⟩
-  exact awgn_capacity_closed_form_of_maxent_bindconv_discharged
+  exact awgn_capacity_closed_form_of_maxent_miDecomp
     P hP N hN h_decomp h_bdd h_max_ent
 
 end InformationTheory.Shannon.AWGN

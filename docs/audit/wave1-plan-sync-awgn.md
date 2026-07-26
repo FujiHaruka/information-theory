@@ -45,7 +45,7 @@ plan と実 residual の位置がズレている) を 2 件検出 (Recommendatio
   | 4 | `InformationTheory/Shannon/AWGNMain.lean:59` | `theorem awgn_channel_coding_theorem` | `h_meas` ✅ done, `h_typicality` F-1, `h_mi_bridge` F-2, `h_converse` F-3 | plan §Goal L114-121 + §撤退ライン F-1-F-3 | low (3 hyp 残) |
   | 5 | `InformationTheory/Shannon/AWGNMain.lean:88` | `theorem awgn_capacity_closed_form` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2) | plan §Goal L88-91 + §撤退ライン F-2 | low |
   | 6 | `InformationTheory/Shannon/AWGNBindConvBody.lean:139` | `theorem awgn_theorem_of_typicality_converse_bindconv_discharged` | `h_typicality` F-1, `h_decomp` F-2', `h_converse` F-3 (bind/conv 部分済) | plan 内記述なし (post-plan 派生 wrapper、§撤退ライン F-2 sub-layer) | low |
-  | 7 | `InformationTheory/Shannon/AWGNBindConvBody.lean:166` | `theorem awgn_capacity_closed_form_of_maxent_bindconv_discharged` | `h_decomp`, `h_bdd`, `h_max_ent` (F-2 ↓ + max-ent) | plan 内記述なし (post-plan 派生 wrapper) | low |
+  | 7 | `InformationTheory/Shannon/AWGNBindConvBody.lean:166` | `theorem awgn_capacity_closed_form_of_maxent_miDecomp` | `h_decomp`, `h_bdd`, `h_max_ent` (F-2 ↓ + max-ent) | plan 内記述なし (post-plan 派生 wrapper) | low |
   | 8 | `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean:581` | `theorem awgn_avg_error_union_bound` | `h_aep : IsContinuousAEPGaussian`, `h_rand : IsAwgnRandomCodingBound` (2 staged) | plan 内記述なし (post-pivot Phase 3 派生、6ec2064 で suspect 化) | low (Mathlib 壁 (b) AEP + chi² SLLN) |
   | 9 | `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean:960` | `theorem isAwgnTypicalityHypothesis` | `h_feasible : IsAwgnRandomCodingFeasible` (bundled 1-hyp) | plan 内記述なし (Phase 2 pivot 派生、bundle 3→1 hyp) | low |
   | 10 | `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean:1586` | `theorem awgn_achievability_F1_via_staged_hyps` | `h_feasible` (bundle) | plan 内記述なし (post-pivot wrapper) | low |
@@ -89,7 +89,7 @@ plan と実 residual の位置がズレている) を 2 件検出 (Recommendatio
   | 2 | `InformationTheory/Shannon/AWGNMIBridge.lean:191` | `theorem awgn_mi_bridge_of_primitives` | `h_out`, `h_decomp`, `h_cond` (3 primitive、`h_cond` は post-discharge) | plan 関連 (上流 primitive `IsAwgnMIDecomp` の chain) | medium |
   | 3 | `InformationTheory/Shannon/AWGNMIBridge.lean:223` | `theorem awgn_theorem_F2_discharged` | `h_typicality` F-1, `h_out`, `h_decomp` (2 primitive), `h_converse` F-3 | plan 関連 (F-2 中間段) | low |
   | 4 | `InformationTheory/Shannon/AWGNMIBridge.lean:256` | `theorem awgn_mi_gaussian_closed_form_of_primitives` | `h_out`, `h_decomp` | plan 関連 | medium |
-  | 5 | `InformationTheory/Shannon/AWGNMIBridge.lean:290` | `theorem awgn_capacity_closed_form_F2_discharged` | `h_out`, `h_decomp`, `h_bdd`, `h_max_ent` | plan 関連 (F-2 中間段) | low |
+  | 5 | `InformationTheory/Shannon/AWGNMIBridge.lean:290` | `theorem awgn_capacity_closed_form_of_primitives` | `h_out`, `h_decomp`, `h_bdd`, `h_max_ent` | plan 関連 (F-2 中間段) | low |
   | 6 | `InformationTheory/Shannon/AWGNMIBridgeDischarge.lean:133` | `theorem awgn_theorem_of_typicality_converse_bindconv` | `h_typicality`, `h_bridge : IsAwgnBindEqConv`, `h_decomp`, `h_converse` | plan §依存関係 `IsContChannelMIDecompHyp` 経由 | low |
   | 7 | `InformationTheory/Shannon/AWGNMIBridgeDischarge.lean:161` | `theorem awgn_capacity_closed_form_of_maxent_bindconv` | `h_bridge`, `h_decomp`, `h_bdd`, `h_max_ent` | plan §依存関係 | low |
   | 8 | `InformationTheory/Shannon/ContChannelMIDecomp.lean:247` | `theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub` | `hW_ac`, `hq_ac`, `h_joint_ac`, `g`, `hg_ae`, `h_llr_split`, `h_int_fibre_joint`, `h_int_out_joint`, `h_int_out_marg` (honest #1-#6, 段 1 一般 body) | plan §Goal 段 1 (L43-66) + Phase 1-6 全体 | medium (Phase 6 着地済? 要確認、tag が残るなら未) |
@@ -125,8 +125,8 @@ plan と実 residual の位置がズレている) を 2 件検出 (Recommendatio
 - **code suspect 一覧**:
   | # | file:line | declaration | load-bearing hyp | plan 内対応 | close ROI |
   |---|---|---|---|---|---|
-  | 1 | `InformationTheory/Shannon/AWGNF1Discharge.lean:101` | `theorem awgn_theorem_F1_discharged` | `h_typicality` F-1 (achievability), `h_mi_bridge` F-2, `h_converse` F-3 (= F-1 plan 外の残 hyp) | plan §Goal L41-65 (再 publish wrapper) | low (F-1 plan は閉、残 hyp は他 plan) |
-  | 2 | `InformationTheory/Shannon/AWGNF1Discharge.lean:129` | `theorem awgn_capacity_closed_form_F1_discharged` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2 系) | plan §Goal L67 (副産物 capacity 再 publish) | low |
+  | 1 | `InformationTheory/Shannon/AWGNF1Discharge.lean:101` | `theorem awgn_channel_coding_theorem_of_isAwgnChannelMeasurable` | `h_typicality` F-1 (achievability), `h_mi_bridge` F-2, `h_converse` F-3 (= F-1 plan 外の残 hyp) | plan §Goal L41-65 (再 publish wrapper) | low (F-1 plan は閉、残 hyp は他 plan) |
+  | 2 | `InformationTheory/Shannon/AWGNF1Discharge.lean:129` | `theorem awgn_capacity_closed_form_of_isAwgnChannelMeasurable` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2 系) | plan §Goal L67 (副産物 capacity 再 publish) | low |
   | 3 | `InformationTheory/Shannon/AWGNF2F3Discharge.lean:273` | `theorem awgn_theorem_of_F2F3_hypotheses` | `h_F2 : IsAwgnF2DecodingHypothesis`, `h_F3_per_letter`, `h_F3_chain`, `h_mi_bridge` (F-2 + F-3 残) | plan 内記述なし (post-plan 派生 wrapper) | low |
   | 4 | `InformationTheory/Shannon/AWGNF2F3Discharge.lean:311` | `theorem awgn_capacity_closed_form_of_maxent_hypotheses` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2 系) | plan 内記述なし | low |
 - **整合性 a (件数)**: **mismatch**。plan は F-1 layer (kernel measurability)
@@ -145,7 +145,8 @@ plan と実 residual の位置がズレている) を 2 件検出 (Recommendatio
   (F-2/F-3 系) に張り替えるべき。前者 (plan 統廃合) は重い、後者 (tag rename)
   が筋。recommended slug:
   - rows 1, 3: 主成分が F-1 typicality + F-2 + F-3 ⇒ 個別 wrapper が支配的に
-    block している plan は session 別。row 1 (`awgn_theorem_F1_discharged`) は
+    block している plan は session 別。row 1
+    (`awgn_channel_coding_theorem_of_isAwgnChannelMeasurable`) は
     moonshot Goal 直系なので `awgn-moonshot-plan` が筋。row 3
     (`awgn_theorem_of_F2F3_hypotheses`) は F-2/F-3 sub-layer 直系。
   - rows 2, 4: F-2 + max-ent ⇒ `awgn-mi-bridge-plan` または
@@ -225,10 +226,10 @@ medium ROI 候補 (近 session で着手検討):
 
 1. **`awgn-f1-discharge-moonshot-plan` の 4 件 suspect tag 再分類 (mismatch 修正)**:
    F-1 plan は閉じているのに 4 wrapper が tag を継承している。retag 案:
-   - `AWGNF1Discharge.lean:101` `awgn_theorem_F1_discharged` → 残 hyp は F-1
+   - `AWGNF1Discharge.lean:101` `awgn_channel_coding_theorem_of_isAwgnChannelMeasurable` → 残 hyp は F-1
      achievability typicality + F-2 + F-3、moonshot Goal 直系 ⇒
      `awgn-moonshot-plan` に retag。
-   - `AWGNF1Discharge.lean:129` `awgn_capacity_closed_form_F1_discharged` →
+   - `AWGNF1Discharge.lean:129` `awgn_capacity_closed_form_of_isAwgnChannelMeasurable` →
      残 hyp F-2 系、`awgn-mi-bridge-plan` に retag (または moonshot)。
    - `AWGNF2F3Discharge.lean:273, 311` → `awgn-achievability-typicality-plan` +
      `awgn-converse-aux-plan` (それぞれ F-2/F-3 sub-layer の直系 plan)。

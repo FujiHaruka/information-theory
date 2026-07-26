@@ -118,7 +118,7 @@ theorem awgn_capacity_closed_form_of_maxent_bindconv
       = (1/2) * Real.log (1 + P / (N : ℝ)) := by
   have h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N) :=
     awgn_output_gaussian_of_bind_eq_conv P N (isAwgnChannelMeasurable N) h_bridge
-  exact awgn_capacity_closed_form_F2_discharged P hP N hN
+  exact awgn_capacity_closed_form_of_primitives P hP N hN
     h_out h_decomp h_bdd h_max_ent
 
 end InformationTheory.Shannon.AWGN
