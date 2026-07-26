@@ -56,9 +56,7 @@ product identity, `IsUVChannelLaw`.
 * `bcUVTimeShare_uvInfo₁_ge` and its three companions — each information slot of the time-shared
   law dominates the average of the letter slots.
 * `bc_uv_shrunk_point_mem` — the rate pair of a code, shrunk by the Fano slack per letter, lies
-  in the region.  The letter index is absorbed into the auxiliaries, which already carry it, so
-  the average of the letter laws is again a channel law and dominates the per-letter averages of
-  all four information slots.
+  in the region.
 
 ## Implementation notes
 
@@ -1046,7 +1044,11 @@ lemma le_toReal_of_inv_mul_le {S J : ℝ≥0∞} {m : ℕ} (hm : 0 < m)
   have hkey : r ≤ S.toReal / (m : ℝ) := (le_div_iff₀ hm0).mpr (by linarith)
   linarith
 
-/-- @audit:ok -/
+/-- The rate pair of a broadcast code, shrunk by the per-letter Fano slack, lies in the UV outer
+region.  The letter index is absorbed into the auxiliaries, which already carry it, so the
+average of the letter laws is again a channel law and dominates the per-letter averages of all
+four information slots.
+@audit:ok -/
 theorem bc_uv_shrunk_point_mem
     [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
