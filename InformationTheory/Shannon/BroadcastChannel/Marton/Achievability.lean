@@ -754,8 +754,8 @@ rate region is the same either way.
 
 The hypotheses `hpV`, `hK` and `hW` are full-support regularity preconditions, shared with
 `marton_strong_mutual_covering` and with `bc_achievability`, and carry no part of the coding
-argument.  The positivity hypotheses `_hR₁` and `_hR₂` are not used in the proof either; they are
-kept so that the signature lines up with `bc_achievability`.
+argument.  No positivity of the rates is assumed: a nonpositive rate only asks for a single
+message, `⌈exp (n R)⌉₊ = 1`, which the construction supplies as well.
 
 No typicality radius appears in the statement, and the construction uses three nested ones rather
 than a single shared one: the two decoders test weak joint typicality at a radius `ε`, the
@@ -770,7 +770,7 @@ theorem marton_achievability
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hpV : ∀ v : V₁ × V₂, 0 < pV.real {v}) (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {R₁ R₂ : ℝ} (_hR₁ : 0 < R₁) (_hR₂ : 0 < R₂)
+    {R₁ R₂ : ℝ}
     (hR₁lt : R₁ < martonInfo₁ pV K W) (hR₂lt : R₂ < martonInfo₂ pV K W)
     (hRsum : R₁ + R₂ < martonInfo₁ pV K W + martonInfo₂ pV K W - martonInfoV₁V₂ pV K W)
     {ε' : ℝ} (hε' : 0 < ε') :
