@@ -22,8 +22,8 @@ cut reuses the conditional one, with the joint input `(Xᵢ, X₁ᵢ)` and joint
 
 The memoryless structure is a *precondition* (regularity); the per-letter inequality (the
 genuine content) is proven, not assumed. The operational outer bound
-`relay_cutset_outer_bound` (Fano + data processing + the `min` combination) lives in a
-separate file.
+`relay_cutset_outer_bound` (Fano + data processing + the `min` combination) is assembled below,
+in the `CutsetHeadline` section, from the two per-cut outer bounds.
 
 ## Main statements
 

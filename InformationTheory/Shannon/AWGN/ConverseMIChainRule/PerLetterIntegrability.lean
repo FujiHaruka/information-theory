@@ -72,9 +72,10 @@ law `Y_i` is a finite mixture of shifted 1-D Gaussians `(1/M) ∑ₘ 𝒩(encode
 its `rnDeriv volume` is the finite Gaussian-mixture density
 `(1/M) ∑ₘ gaussianPDF (encoder m i) N`. `negMulLog` of that density is dominated by a
 Gaussian moment integrand — pure 1-D measure-theoretic domination. The proof mirrors the
-continuous-input analogue `AwgnCapacityConverseMaxent.outputDistribution_logDensity_integrable`
-(not importable here, due to the import cycle), but is simpler: the finite mixture needs no
-Chebyshev concentration (the lower bound comes from a single component). -/
+continuous-input analogue `outputDistribution_logDensity_integrable` in
+`CapacityConverseMaxent.lean` (not importable here, due to the import cycle), but is
+simpler: the finite mixture needs no Chebyshev concentration (the lower bound comes from a
+single component). -/
 
 /-- The finite per-letter Gaussian-mixture density at coordinate `i`:
 `(1/M) ∑ₘ gaussianPDF (encoder m i) N y` (`ℝ≥0∞`-valued). For `M ≥ 1` and `N ≠ 0` this is

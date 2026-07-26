@@ -138,7 +138,7 @@ theorem integrable_log_gaussianPDFReal_gaussianReal
 /-- Log of the Gaussian rnDeriv (toReal) is integrable against the Gaussian law.
 For `v ≠ 0`, `fun y => Real.log ((gaussianReal m v).rnDeriv volume y).toReal` is
 integrable against `gaussianReal m v`. Bridges the literal `Measure.rnDeriv` form
-appearing in the honest hypotheses to `gaussianPDFReal` via the a.e. identity
+appearing in the hypotheses to `gaussianPDFReal` via the a.e. identity
 `rnDeriv_gaussianReal`, then `integrable_log_gaussianPDFReal_gaussianReal`. -/
 theorem integrable_log_rnDeriv_gaussianReal
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
@@ -356,8 +356,8 @@ theorem awgn_mi_gaussian_closed_form_of_out
 /-! AWGN capacity closed form — hosted downstream.
 
 This file cannot host the closed form `awgnCapacity P N = (1/2) log(1 + P/N)`, since the
-converse depends on `AwgnCapacityConverseMaxent`, which imports this file; wiring it here
-would create an import cycle. The closed form is therefore stated in its successor
-`AwgnCapacityConverseMaxent.awgn_capacity_closed_form_genuine`. -/
+converse depends on `CapacityConverseMaxent.lean`, which imports this file; wiring it here
+would create an import cycle. The closed form is therefore stated in its successor,
+`awgn_capacity_closed_form_genuine` in `CapacityConverseMaxent.lean`. -/
 
 end InformationTheory.Shannon.AWGN

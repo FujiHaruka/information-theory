@@ -232,7 +232,7 @@ theorem awgnCapacity_le_gaussian
 power-constrained inputs equals `(1/2) log(1 + P/N)`, obtained as the sandwich of
 the Gaussian-achievable lower bound and the max-entropy upper bound. The hypotheses
 `h_bridge_gauss`, `h_max_ent`, `h_bdd` carry the closed-form mutual information and
-boundedness inputs whose discharge is deferred to follow-up plans.
+boundedness inputs as explicit hypotheses.
 
 `@audit:superseded-by(awgn_capacity_closed_form_genuine)` -/
 @[entry_point]

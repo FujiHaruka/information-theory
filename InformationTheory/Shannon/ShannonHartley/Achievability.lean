@@ -20,12 +20,13 @@ The `≥` half of the operational Shannon-Hartley sandwich,
 `contAwgnMaxMessages_bddAbove` that the operational `sSup` needs in order not to collapse to
 junk-`0`.
 
-The two have different characters, and the split is the point. Boundedness is *wall-independent*:
-Bessel's inequality against the orthonormal `ContAwgnCode.testFn` caps the observed energy by
-`T·P` uniformly in the observation count, which is enough for `BddAbove` but only enough for the
-crude rate `P/N₀`. Achievability at the *exact* constant is not wall-independent: it needs the
-`≈ 2WT` degrees-of-freedom count (the `nyquist-2w-dof` wall), because the test family must
-recover near-unit gain on `≈ 2WT` dimensions. See the two declarations for detail.
+The two have different characters, and the split is the point. Boundedness holds
+unconditionally: Bessel's inequality against the orthonormal `ContAwgnCode.testFn` caps the
+observed energy by `T·P` uniformly in the observation count, which is enough for `BddAbove` but
+only enough for the crude rate `P/N₀`. Achievability at the *exact* constant needs more: the
+`≈ 2WT` degrees-of-freedom count — the time–band-limiting operator's eigenvalue concentration
+(Landau–Pollak–Slepian) — because the test family must recover near-unit gain on `≈ 2WT`
+dimensions. See the two declarations for detail.
 
 ## The synthesis bridge
 
@@ -531,9 +532,10 @@ private theorem contAwgn_averageError_toReal {T W P : ℝ} {M : ℕ} (hM : 0 < M
     ENNReal.toReal_sum (fun m _ => contAwgn_errorProbAt_ne_top c N₀ m)]
   simp [one_div]
 
-/-- The crude wall-free rate bound, for codes with at least one observation: `log M` is capped by
-`(T·P + 1)/N₀` plus the Fano terms, **uniformly in the observation count `k`**. This is where
-Bessel meets `awgn_converse`, and where `ln(1+x) ≤ x` discards the `k`-dependence. -/
+/-- The crude rate bound via Bessel's inequality alone, for codes with at least one observation:
+`log M` is capped by `(T·P + 1)/N₀` plus the Fano terms, **uniformly in the observation count
+`k`**. This is where Bessel meets `awgn_converse`, and where `ln(1+x) ≤ x` discards the
+`k`-dependence. -/
 theorem contAwgn_log_le_of_pos_k {T W N₀ P ε : ℝ} {M : ℕ}
     (hN₀ : 0 < N₀) (hP : 0 ≤ P) (hT : 0 < T) (hε0 : 0 < ε) (hε1 : ε < 1)
     (hM : 2 ≤ M) (c : ContAwgnCode T W P M) (hk : 0 < c.k)
@@ -618,8 +620,8 @@ theorem contAwgn_averageError_of_k_eq_zero {T W P : ℝ} {M : ℕ} (hM : 0 < M)
 /-- The message-count set is bounded above — the `BddAbove` obligation needed to lower-bound
 `contAwgnMaxMessages` via `le_csSup`.
 
-This is wall-independent: it closes by Bessel's inequality alone, without the `≈ 2WT`
-degrees-of-freedom count. The test family `testFn` is orthonormal, so for every codeword
+It closes by Bessel's inequality alone, without the `≈ 2WT` degrees-of-freedom count. The test
+family `testFn` is orthonormal, so for every codeword
 
     `∑ᵢ (observation m i)² = ∑ᵢ ⟨encoder m, testFn i⟩² ≤ ‖encoder m‖₂² ≤ T·P`,
 

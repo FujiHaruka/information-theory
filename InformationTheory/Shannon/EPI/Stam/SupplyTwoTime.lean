@@ -739,15 +739,15 @@ The conv-pin seam `indepSum_density_ae`
 + `withDensity` a.e.-uniqueness + the lconvolution-Bochner a.e. bridge
 (Tonelli finiteness + a.e.-`z` `ofReal_integral_eq_lintegral_ofReal`).
 
-@audit:ok — independent honesty audit (2026-06-06), all 5 priority checks PASS:
+@audit:ok. Five checks confirm honesty:
 (1) Core genuinely produced, not assumed: the inverse-Stam `1/J_S ≥ 1/J_X+1/J_Y` is
-CONSTRUCTED by `isStamInequalityHyp_via_step3 P A B` (regularity-only → genuine
-`stam_step2_density_wall`, `wall:stam-step2-density` CLOSED, `@audit:ok`) then APPLIED at
+CONSTRUCTED by `isStamInequalityHyp_via_step3 P A B` (a regularity-only construction via
+`stam_step2_density_wall`, `@audit:ok`) then APPLIED at
 `density_t`. The three `IsDeBruijnRegularityHyp` inputs are consumed only as regularity
 (`.pX`/`.pX_law`/`.pX_nn`/`.pX_meas` density witnesses + `.density_t_eq` pointwise pins),
 never as a bundled inequality core. No `:= h` circularity, no `:True`, no degenerate
 exploitation, no `*Hypothesis`-core bundling, no name laundering.
-(2) a.e.→pointwise wash honest: the object `IsStamInequalityHyp` consumes is the
+(2) a.e.→pointwise wash: the object `IsStamInequalityHyp` consumes is the
 POINTWISE-pinned smooth `density_t` (`density_t_eq` pins to the explicit smooth
 `convDensityAdd pX g_t`, not an a.e. rnDeriv class); the a.e. seam sits only at the
 un-smoothed input (`pXY =ᵐ convDensityAdd pX pY`) and is washed through `convDensityAdd · g`

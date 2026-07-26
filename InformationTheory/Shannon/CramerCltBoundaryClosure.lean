@@ -42,7 +42,7 @@ open scoped ENNReal NNReal Topology BigOperators
 /-- The centred Gaussian `𝒩(0, v)` (with `v ≠ 0`) assigns mass exactly `1/2` to the
 half-line `{x | 0 ≤ x}`.
 
-@audit:ok (genuine symmetry-by-map). -/
+@audit:ok (symmetry-by-map). -/
 theorem gaussianReal_Ici_eq_half {v : ℝ≥0} (hv : v ≠ 0) :
     gaussianReal 0 v {x : ℝ | (0 : ℝ) ≤ x} = 1 / 2 := by
   set μ : Measure ℝ := gaussianReal 0 v with hμ
@@ -95,7 +95,7 @@ theorem gaussianReal_hasLaw_id {w : ℝ≥0} :
 `m = ∫ Y ∂tilted`) converges to the Gaussian mass
 `gaussianReal 0 v.toNNReal (Ici 0)`.
 
-@audit:ok (genuine CLT + portmanteau + scaling assembly). -/
+@audit:ok (CLT + portmanteau + scaling assembly). -/
 theorem tilted_halfline_tendsto_gaussian
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)
@@ -228,7 +228,7 @@ theorem tilted_halfline_tendsto_half
 /-- Boundary window largeness. At the boundary `a = m` (= tilted mean),
 the tilted infinite-product window mass `{ω | m·n ≤ ∑Y < (m+ε)·n}` is eventually `≥ 1/4`.
 
-@audit:ok (genuine CLT + LLN assembly; `hVar : 0 < Var` is the non-degeneracy precondition
+@audit:ok (CLT + LLN assembly; `hVar : 0 < Var` is the non-degeneracy precondition
 required by the Gaussian median `gaussianReal_Ici_eq_half` (v=0 degeneracy is correctly
 excluded by spec). -/
 theorem tiltedWindow_eventually_large_of_boundary
@@ -315,7 +315,7 @@ theorem tiltedWindow_eventually_large_of_boundary
 threshold `a` and `ε > 0`, eventual largeness `C ≤ tilted-window mass` lifts to
 the un-tilted half-line lower bound `C·exp(-n(λa - Λ + λε)) ≤ P{a·n ≤ ∑Y}`.
 
-@audit:ok (genuine change-of-measure lift via `change_of_measure_lower_bound_pi` (real
+@audit:ok (change-of-measure lift via `change_of_measure_lower_bound_pi` (real
 density bound, not vacuous) + cylinder lift; no C=0/exp=0 vacuity — at the call site
 `C = 1/4 > 0`, `exp(...) > 0` always). -/
 theorem tilted_window_lower_to_halfline
@@ -469,7 +469,7 @@ window mass is supplied internally by the CLT. Only the regularity preconditions
 remain: boundedness, non-degeneracy `0 < Var`, and the cobounded hypothesis on the
 rate sequence (a precondition shared with `cramer_lower`).
 
-@audit:ok (`ε→0⁺` collapse via `le_of_forall_sub_le` is genuine; the CLT supplies the
+@audit:ok (`ε→0⁺` collapse via `le_of_forall_sub_le`; the CLT supplies the
 boundary window mass internally — no residual largeness hypothesis). -/
 theorem cramer_lower_boundary
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]

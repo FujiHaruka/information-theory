@@ -79,8 +79,8 @@ private lemma perLetterXLaw_eq_mixture
   congr 1
   refine Finset.sum_congr rfl ?_
   intro m _
-  -- `((dirac m).prod ν).map (fun ω => c.encoder ω.1 i) = dirac (c.encoder m i)`
-  -- via `(fun ω => c.encoder ω.1 i) = (fun a => c.encoder a i) ∘ Prod.fst`.
+  -- `((dirac m).prod ν).map (fun ω ↦ c.encoder ω.1 i) = dirac (c.encoder m i)`
+  -- via `(fun ω ↦ c.encoder ω.1 i) = (fun a ↦ c.encoder a i) ∘ Prod.fst`.
   have h_decomp : (fun ω : Fin M × (Fin n → ℝ) ↦ c.encoder ω.1 i)
       = (fun a : Fin M ↦ c.encoder a i) ∘ Prod.fst := rfl
   rw [h_decomp,
@@ -144,13 +144,13 @@ private lemma awgnConverseJoint_map_pair_eq_compProd
     -- map of `(δ_m).prod (pi μ_m)` under `ω ↦ (encoder m i, ω.2 i)`
     -- equals `(δ(encoder m i)).prod (gaussianReal (encoder m i) N)`.
     rw [Measure.dirac_prod, Measure.map_map hf_meas measurable_prodMk_left]
-    -- `(fun ω => (encoder ω.1 i, ω.2 i)) ∘ (Prod.mk m)` on `pi μ_m`
+    -- `(fun ω ↦ (encoder ω.1 i, ω.2 i)) ∘ (Prod.mk m)` on `pi μ_m`
     have h_comp : (fun ω : Fin M × (Fin n → ℝ) ↦ (c.encoder ω.1 i, ω.2 i))
           ∘ (Prod.mk m : (Fin n → ℝ) → Fin M × (Fin n → ℝ))
         = fun y : Fin n → ℝ ↦ (c.encoder m i, y i) := rfl
     rw [h_comp]
-    -- `(pi μ_m).map (fun y => (encoder m i, y i))`
-    -- `= ((pi μ_m).map (Function.eval i)).map (fun z => (encoder m i, z))`.
+    -- `(pi μ_m).map (fun y ↦ (encoder m i, y i))`
+    -- `= ((pi μ_m).map (Function.eval i)).map (fun z ↦ (encoder m i, z))`.
     have h_pair : (fun y : Fin n → ℝ ↦ (c.encoder m i, y i))
         = (fun z : ℝ ↦ (c.encoder m i, z)) ∘ (Function.eval i : (Fin n → ℝ) → ℝ) := rfl
     have h_eval_meas : Measurable (Function.eval i : (Fin n → ℝ) → ℝ) :=
@@ -163,7 +163,7 @@ private lemma awgnConverseJoint_map_pair_eq_compProd
       refine Finset.prod_eq_one (fun j _ ↦ ?_)
       rw [awgnChannel_apply]; exact measure_univ
     rw [h_prod_one, one_smul]
-    -- `(awgnChannel (encoder m i)).map (fun z => (encoder m i, z)) = (δ).prod (awgnChannel ...)`
+    -- `(awgnChannel (encoder m i)).map (fun z ↦ (encoder m i, z)) = (δ).prod (awgnChannel ...)`
     rw [Measure.dirac_prod]
   rw [h_lhs, h_rhs]
 
@@ -551,7 +551,7 @@ theorem awgn_per_letter_mi_bridge_genuine
         ((measurable_snd.sub measurable_fst).pow_const 2).aestronglyMeasurable
       rw [Measure.integrable_compProd_iff h_aesm]
       refine ⟨Filter.Eventually.of_forall (fun x ↦ ?_), ?_⟩
-      · -- per-fiber `Integrable (fun y => (y − x)²) (W x = gaussianReal x N)`
+      · -- per-fiber `Integrable (fun y ↦ (y − x)²) (W x = gaussianReal x N)`
         have h_id : Integrable (fun y : ℝ ↦ y) (gaussianReal x N) := by
           exact (memLp_id_gaussianReal (μ := x) (v := N) 1).integrable (by norm_num)
         have h_sq2 : Integrable (fun y : ℝ ↦ y ^ 2) (gaussianReal x N) :=
@@ -615,7 +615,7 @@ theorem awgn_converse
     Real.log M
       ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
         + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
-  -- per-letter MI bridge (`I(X_i; Y_i) = h(Y_i) - h(Z)`), now genuinely closed by
+  -- per-letter MI bridge (`I(X_i; Y_i) = h(Y_i) - h(Z)`) is supplied by
   -- `awgn_per_letter_mi_bridge_genuine` (mixture→compProd factorization + the generic
   -- continuous-channel MI chain rule asset).
   have h_mi_bridge_per_letter :

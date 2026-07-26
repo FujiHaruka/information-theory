@@ -26,9 +26,9 @@ import InformationTheory.Meta.EntryPoint
 
 This file isolates the single analytic atom used by the EPI continuity consumer in
 `EPIStamToBridge.lean`: the continuity of
-`t ↦ entropyPower (P.map (fun ω => X ω + √t · Z ω))` at the endpoint `t = 0⁺` along
-the heat-flow ray. The interior `t > 0` continuity is supplied separately and
-genuinely by `csiszarLogRatioGap_differentiableOn_interior`.
+`t ↦ entropyPower (P.map (fun ω ↦ X ω + √t · Z ω))` at the endpoint `t = 0⁺` along
+the heat-flow ray. The interior `t > 0` continuity is supplied separately by
+`csiszarLogRatioGap_differentiableOn_interior`.
 
 The endpoint atom is `heatFlowEntropyPower_continuousWithinAt_zero`, claiming only
 `ContinuousWithinAt (Set.Ioi 0) 0` (the single endpoint limit `t → 0⁺`). The endpoint
@@ -336,7 +336,8 @@ theorem _root_.AntitoneOn.insert_of_continuousWithinAt
     continuous_toDual.continuousWithinAt.comp h'x (Set.mapsTo_univ _ _)
   exact (hmono.insert_of_continuousWithinAt hx hcont).dual_right
 
-/-- The heat-flow endpoint regularity bundle (precondition for the G2 wall lemma).
+/-- The heat-flow endpoint regularity bundle (a precondition consumed by the EPI
+continuity assembly in `EPI/Stam/ToBridge.lean`).
 
 Carries exactly the regularity / input-distribution data the density-identification
 bridge (`pPath_eq_convDensityAdd`) and the entropy-integral machinery
@@ -378,11 +379,11 @@ structure IsHeatFlowEndpointRegular {Ω : Type*} [MeasurableSpace Ω]
 
 /-- Heat-flow entropy-power endpoint continuity.
 
-`t ↦ entropyPower (P.map (fun ω => X ω + √t · Z ω))` is `ContinuousWithinAt
+`t ↦ entropyPower (P.map (fun ω ↦ X ω + √t · Z ω))` is `ContinuousWithinAt
 (Set.Ioi 0) 0` (the limit `t → 0⁺`). The consumer
 (`csiszarLogRatioGap_continuousWithinAt_zero`) reduces to three instances of this
-single endpoint term; the interior `t > 0` continuity is supplied separately and
-genuinely from `csiszarLogRatioGap_differentiableOn_interior` (`.continuousOn`).
+single endpoint term; the interior `t > 0` continuity is supplied separately from
+`csiszarLogRatioGap_differentiableOn_interior` (`.continuousOn`).
 
 The endpoint is discharged via the inner differential-entropy continuity
 `heatFlowDifferentialEntropy_continuousWithinAt_zero` (density identification
