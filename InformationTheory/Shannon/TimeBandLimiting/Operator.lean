@@ -147,7 +147,7 @@ Hilbert–Schmidt: its integral kernel
 lies in `L²(ℝ × ℝ)` (the `t`-indicator confines the mass to `[0,T]`, and Plancherel of the ideal
 low-pass gives `∫_ℝ (2W sincN(2W u))² du = 2W`, so `‖k‖₂² = 2WT < ∞`), and an `L²` kernel yields a
 compact operator because the kernels with compact operator form a closed submodule containing the
-rectangle indicators, which generate `L²(ℝ × ℝ)`. The genuinely analytic content lives in four
+rectangle indicators, which generate `L²(ℝ × ℝ)`. The analytic content lives in four
 leaves:
 
 * `timeLimitProj_apply_ae` — `Q_T` acts as multiplication by `𝟙_[0,T]` (proven, as the instance
@@ -164,7 +164,7 @@ leaves:
   Hilbert–Schmidt build, `l2KernelOp` and friends).
 
 The remaining declarations (`timeBandLimitingComp_apply_ae`,
-`timeBandLimitingComp_isCompact`, `timeBandLimitingOp_isCompact`) are genuine reductions that
+`timeBandLimitingComp_isCompact`, `timeBandLimitingOp_isCompact`) are reductions that
 compose the four leaves, so the headline `timeBandLimitingOp_isCompact` is unconditional.
 
 Note the sign asymmetry: the kernel representation needs `0 ≤ W` (`sincN` is even, so a negative `W`
@@ -496,7 +496,7 @@ The proof factors through the spectral cutoff `bandLimitSpec W f = 𝟙_[-W,W]·
 `fourier_bandLimitProj_apply_ae` identifies `𝓕(P_W f)` with it, and since it is supported in a
 bounded interval it lies in `L¹ ∩ L²`, so the Fourier bridge
 `ShannonHartley.l2FourierInv_eq_fourierIntegralInv` evaluates `P_W f = 𝓕⁻¹(bandLimitSpec W f)`
-pointwise as an honest integral (`bandLimitProj_coeFn_ae_eq_fourierInv`). That integral is then
+pointwise as an integral (`bandLimitProj_coeFn_ae_eq_fourierInv`). That integral is then
 identified with the sinc convolution by Plancherel against the spectral boxcar, whose inverse
 transform is already known to be a shifted sinc (`ShannonHartley.fourier_shiftSinc_toLp`).
 The degenerate `W = 0` band is a null set, where both sides vanish.
@@ -549,8 +549,9 @@ theorem star_smul_Lp (c : ℂ) (f : E) : star (c • f) = (starRingEnd ℂ) c �
     starRingEnd_apply]
 
 /-- Complex conjugation on `L²(ℝ;ℂ)` as a conjugate-linear map. Mathlib equips `Lp` with a bare
-`Star` instance only (no `StarAddMonoid` / `StarModule`), so the additivity and conjugate-homogeneity
-that bundle it into a semilinear map are supplied here by `star_add_Lp` / `star_smul_Lp`. -/
+`Star` instance only (no `StarAddMonoid` / `StarModule`), so the additivity and
+conjugate-homogeneity that bundle it into a semilinear map are supplied here by `star_add_Lp` /
+`star_smul_Lp`. -/
 noncomputable def starₗE : E →ₛₗ[starRingEnd ℂ] E where
   toFun := star
   map_add' := star_add_Lp
@@ -589,8 +590,8 @@ theorem bandLimitProj_star (W : ℝ) (f : E) :
 
 /-- `A = P_W ∘ Q_T ∘ P_W` commutes with complex conjugation: each factor does, since the
 time window `[0,T]` and the symmetric band `[-W,W]` are conjugation-invariant. Stated for all
-`W`; for `W < 0` the band is empty and both sides collapse to `0`. Independently audited
-2026-07-17: sorryAx-free, no hypotheses (no `hW`) so the statement is universal, not weakened.
+`W`; for `W < 0` the band is empty and both sides collapse to `0`. sorryAx-free, no
+hypotheses (no `hW`) so the statement is universal, not weakened.
 @audit:ok -/
 theorem timeBandLimitingOp_star_comm (T W : ℝ) (f : E) :
     timeBandLimitingOp T W (star f) = star (timeBandLimitingOp T W f) := by
@@ -641,11 +642,12 @@ theorem sincN_memLp_two :
 /-- `sincConvKernel` is square-integrable on `ℝ × ℝ`: the
 `t`-indicator confines the mass to `[0,T]` and the inner mass `∫_ℝ (2W sincN(2W(t−s)))² ds` is a
 finite constant `C` (independent of `t`, by translation invariance of Lebesgue measure), so
-`‖k‖₂² ≤ C · vol[0,T] < ∞`. The finite `L²` mass of the ideal low-pass `2W sincN(2W·)` is obtained by
-rescaling the 1-D crux `sincN ∈ L²` (`sincN_memLp_two`) through `integrable_comp_mul_left_iff`, and
-the 2-D lift is a Tonelli (`lintegral_prod_le`) + `lintegral_sub_left_eq_self` computation.
+`‖k‖₂² ≤ C · vol[0,T] < ∞`. The finite `L²` mass of the ideal low-pass `2W sincN(2W·)` is obtained
+by rescaling the 1-D crux `sincN ∈ L²` (`sincN_memLp_two`) through
+`integrable_comp_mul_left_iff`, and the 2-D lift is a Tonelli (`lintegral_prod_le`) +
+`lintegral_sub_left_eq_self` computation.
 Hypothesis-free in `T` and `W`: the degenerate `T < 0` (empty `[0,T]`, zero mass) and `2W = 0`
-(zero kernel) cases are both genuinely covered.
+(zero kernel) cases are both covered.
 @audit:ok -/
 theorem sincConvKernel_memLp (T W : ℝ) :
     MemLp (fun p : ℝ × ℝ => sincConvKernel T W p.1 p.2) 2 (volume.prod volume) := by
@@ -928,7 +930,7 @@ theorem l2KernelOp_apply_ae (κ : L2Kernel) (f : E) :
 
 /-- A rectangle kernel `c · 𝟙_{A×B}` induces a rank-one operator, hence a compact one. The
 degenerate branch (`vol A * vol B = 0`, which by `0 * ∞ = 0` in `ℝ≥0∞` also covers a null side
-paired with an infinite one) is not an escape: `Measure.prod_prod` makes the rectangle genuinely
+paired with an infinite one) is not an escape: `Measure.prod_prod` makes the rectangle
 product-null, so the kernel is the zero element of `L²(ℝ × ℝ)` and the induced operator really is
 `0`.
 @audit:ok -/
@@ -1235,7 +1237,7 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
 /-- An integral operator on `L²(ℝ;ℂ)` whose kernel is `L²` on `ℝ × ℝ` is a compact operator; it
 is realized a.e. as `f ↦ ∫ k(·,s) f(s) ds`.
 Built via the reusable `l2KernelOp` Hilbert–Schmidt machinery above (Mathlib has no Hilbert–Schmidt
-API). Stated existentially so the operator object is genuinely constructed together with its
+API). Stated existentially so the operator object is constructed together with its
 compactness rather than assumed; the a.e.-representation clause pins `Op` uniquely (an `Lp` element
 is an a.e. class), so the existential is not weakened by it.
 @audit:ok -/
@@ -1253,7 +1255,7 @@ theorem l2KernelOperator_isCompact {k : ℝ → ℝ → ℂ}
   exact integral_congr_ae (by filter_upwards [h2] with s hs using by rw [hs])
 
 /-- The sinc integral operator `C = Q_T ∘ P_W` acts a.e. as the integral operator of
-`sincConvKernel`. Genuine composition of `timeLimitProj_apply_ae` and `bandLimitProj_apply_ae`.
+`sincConvKernel`. Composition of `timeLimitProj_apply_ae` and `bandLimitProj_apply_ae`.
 The `0 ≤ W` hypothesis is inherited from the latter as a parameter precondition and is discharged
 by the caller's case split.
 @audit:ok -/
@@ -1273,7 +1275,7 @@ theorem timeBandLimitingComp_apply_ae (T W : ℝ) (hW : 0 ≤ W) (f : E) :
   simp only [sincConvKernel]
   ring
 
-/-- The sinc integral operator `C = Q_T ∘ P_W` is compact. Genuine reduction: the operator built by
+/-- The sinc integral operator `C = Q_T ∘ P_W` is compact. Reduction: the operator built by
 `l2KernelOperator_isCompact` for `sincConvKernel` coincides with `C` (both have the same a.e.
 representative, hence are equal in `Lp`). No sign restriction on `W`: for `W < 0` the kernel
 representation is unavailable (and false), but there `P_W = 0`, so `C = 0` is compact outright.
@@ -1304,7 +1306,7 @@ theorem timeBandLimitingComp_isCompact (T W : ℝ) :
 Unconditional: the signature carries no hypothesis on `T` or `W`, and both degenerate parameter
 ranges are discharged by real proofs rather than assumed away — `W < 0` via
 `bandLimitSubspace_eq_bot_of_nonpos` (`P_W = 0`, so `C = 0`), `T < 0` via the empty `[0,T]`
-(`Q_T = 0`), and `W = 0` inside `bandLimitProj_apply_ae` as a genuine null-band case.
+(`Q_T = 0`), and `W = 0` inside `bandLimitProj_apply_ae` as a null-band case.
 @audit:ok -/
 theorem timeBandLimitingOp_isCompact (T W : ℝ) :
     IsCompactOperator (timeBandLimitingOp T W) := by

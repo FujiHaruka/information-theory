@@ -50,7 +50,7 @@ theorem inner_timeBandLimitingOp_eq_inner_timeLimit_bandLimit (T W : ℝ) (x y :
 
 Mathlib has Cauchy-Schwarz for an inner product (`norm_inner_le_norm`) but not for the semi-inner
 product of a general positive operator, which would need a positive square root. Here the square
-root is unnecessary: `A` is *concretely* `C* C`, so its form is an honest inner product pulled back
+root is unnecessary: `A` is *concretely* `C* C`, so its form is an inner product pulled back
 along `C` and Mathlib's Cauchy-Schwarz applies verbatim.
 @audit:ok -/
 theorem norm_inner_timeBandLimitingOp_sq_le (T W : ℝ) (x y : E) :
@@ -89,7 +89,7 @@ The proof needs no positive square root and no restricted operator. Cauchy-Schwa
 spectral gap `inner_timeBandLimitingOp_le_of_mem_orthogonal` caps the second factor by `c ‖A v‖²`,
 and dividing by `‖A v‖²` finishes.
 
-Audited 2026-07-17 (independent). `hc : 0 < c` and `hv` are regularity/scoping, not load-bearing:
+`hc : 0 < c` and `hv` are regularity/scoping, not load-bearing:
 the operator inequality is *derived* from Cauchy-Schwarz + the gap lemma, not assumed. sorryAx-free.
 @audit:ok -/
 theorem norm_timeBandLimitingOp_sq_le_of_mem_orthogonal (T W c : ℝ) (hc : 0 < c)
@@ -126,13 +126,12 @@ theorem norm_timeBandLimitingOp_sq_le_of_mem_orthogonal (T W c : ℝ) (hc : 0 < 
 `Fin (prolateCount T W c)`, with every eigenvalue exceeding `c`, spanning `V` back in `E`.
 
 This is the finite-dimensional spectral theorem applied to `A|_V`; it needs no complete eigenbasis
-of `A` on `E`. Previously this construction was inlined in the body of `prolateCount_mul_le` and
-exported nowhere, so it could not be reused; it is extracted here.
+of `A` on `E`.
 
 The index type is `Fin (prolateCount T W c)` *definitionally* (`prolateCount` is the `finrank` of
 `V`), which is why no separate multiplicity bridge is needed to match the count.
 
-Audited 2026-07-17 (independent). The definitional claim is machine-confirmed, not prose: the body's
+The definitional claim is machine-confirmed, not prose: the body's
 `have hn : Module.finrank ℂ (prolateEigenspaceSup T W c) = d := rfl` type-checks, and
 `prolateCount T W c := Module.finrank ℂ (prolateEigenspaceSup T W c)` verbatim. sorryAx-free.
 @audit:ok -/
@@ -200,10 +199,11 @@ an eigenbasis: no complete eigenbasis of `A` is constructed anywhere. Completene
 family comes from `V` being spanned by the finite eigenbasis and `Vᗮ` by its own Hilbert basis, so
 a vector orthogonal to all of them lies in `Vᗮ` with vanishing `Vᗮ`-coordinates, hence is zero.
 
-Audited 2026-07-17 (independent). The "no complete eigenbasis of `A` on `E`" claim is machine-confirmed
+The "no complete eigenbasis of `A` on `E`" claim is machine-confirmed
 by a constant-graph walk (validated against a positive control): this decl's closure does **not**
 contain `ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot`, the infinite-dimensional
-totality lemma. It *does* contain `LinearMap.IsSymmetric.orthogonalComplement_iSup_eigenspaces_eq_bot`
+totality lemma. It *does* contain
+`LinearMap.IsSymmetric.orthogonalComplement_iSup_eigenspaces_eq_bot`
 and `IsCompactOperator` — both via the finite-dimensional spectral theorem for `A|_V` and
 `prolateEigenspaceSup_finiteDimensional`, i.e. about `V`, not about a complete eigenbasis on `E`.
 sorryAx-free.
@@ -356,15 +356,13 @@ its members span `V` but need not be single-eigenvalue eigenfunctions, so a down
 normalization requires first refining `u` into an eigenbasis — the same real-form bridge applied
 eigenspace-by-eigenspace — which this theorem does not perform.
 
-Audited 2026-07-18 (independent). `#print axioms` = `[propext, Classical.choice, Quot.sound]`,
-sorryAx-free, validated against the positive control `tsum_prolateEigenvalues_eq` (which does
-show `sorryAx`) after refreshing the module olean. Signature is a plain existence: `hc : 0 < c`
-is a regularity precondition (it makes `V` finite-dimensional via
+`#print axioms` = `[propext, Classical.choice, Quot.sound]`, sorryAx-free. Signature is a plain
+existence: `hc : 0 < c` is a regularity precondition (it makes `V` finite-dimensional via
 `prolateEigenspaceSup_finiteDimensional`, otherwise `prolateCount` is a junk `0`), with no
 `:= h` circularity, no `:True` slot, no load-bearing hypothesis. Body proves all three conjuncts
 (`ℂ`-orthonormal, star-fixed, span `= V`); the count is *derived* (`finrank_span_eq_card` on the
 `ℂ`-independent star-fixed family, `= prolateCount`), and the `prolateCount = 0` case is the
-honest empty family with span `⊥ = V`, not a degenerate trick. No overclaim on
+empty family with span `⊥ = V`, not a degenerate trick. No overclaim on
 `ℝ → ℝ` / `[0,T]`-support.
 @audit:ok -/
 theorem exists_real_orthonormalBasis_prolateEigenspaceSup (T W : ℝ) {c : ℝ} (hc : 0 < c) :
@@ -461,16 +459,14 @@ is not used either (machine-checked: this half's constant closure contains neith
 `ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot`).
 
 Degenerate boundaries: at `T = 0` both sides collapse to `0 ≤ D/c`; at `c ≥ 1` the count is `0`
-(`prolateCount_one_eq_zero` and antitonicity) and the bound is slack. Neither refutes it.
+(`prolateCount_one_eq_zero` and antitonicity) and the bound is slack.
 
-Audited 2026-07-17 (independent). All four hypotheses are regularity on scalars; nothing of the
+All four hypotheses are regularity on scalars; nothing of the
 form "`A` has a complete eigenbasis" / "`S² ≤ cS`" / "an adapted basis exists" is assumed — each is
 *derived* (`exists_hilbertBasis_prolateSplit`, `norm_timeBandLimitingOp_sq_le_of_mem_orthogonal`).
-sorryAx-free. The "not Markov" claim was re-adjudicated against the consumer docstrings rather than
-the plan: the consumers' figure of merit is the DOF density `n(T)/T` as `T → ∞`, where Markov gives
-`2W/c` (wrong constant, diverging as `c → 0`) and this bound gives exactly `2W` for every fixed
-`c > 0`. The pointwise incomparability at small `WT` is real but is not the figure of merit.
-The closure claim above was re-run with a probe validated against a positive control.
+sorryAx-free. The consumers' figure of merit is the DOF density `n(T)/T` as `T → ∞`, where Markov
+gives `2W/c` (wrong constant, diverging as `c → 0`) and this bound gives exactly `2W` for every
+fixed `c > 0`. The pointwise incomparability at small `WT` is real but is not the figure of merit.
 @audit:ok -/
 theorem prolateCount_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (hc : 0 < c) :
     (prolateCount T W c : ℝ) ≤ 2 * W * T + (2 + Real.log (1 + 2 * W * T)) / c := by
@@ -548,16 +544,16 @@ operator inequality `A² ≤ cA` (`norm_timeBandLimitingOp_sq_le_of_mem_orthogon
 deficit `aⱼ − ‖A bⱼ‖² ≥ (1 − c) aⱼ`, and the second-moment bound `tr A − tr A² ≤ D` caps the sum of
 deficits, so `∑_{Vᗮ} aⱼ ≤ D/(1 − c)`.
 
-`hc1 : c < 1` is a genuine precondition, not padding: at `c = 1` Lean's `x/0 = 0` convention would
+`hc1 : c < 1` is a precondition, not padding: at `c = 1` Lean's `x/0 = 0` convention would
 read the claim as `2WT ≤ #{λ > 1} = 0` (`prolateCount_one_eq_zero`), which is false for `WT > 0`.
 As `c ↑ 1` the bound degrades to `−∞`, consistently. At `T = 0` it reads `−D/(1−c) ≤ 0`, true.
 The bound has content rather than holding vacuously: at `c = 1/2` it bites once `2WT ≳ 8`.
 
-Audited 2026-07-17 (independent). sorryAx-free; hypotheses are regularity only. Two claims above
-were machine-checked rather than accepted: (a) `hc1` is genuinely load-bearing as a *precondition* —
+sorryAx-free; hypotheses are regularity only. Two claims above
+were machine-checked rather than accepted: (a) `hc1` is load-bearing as a *precondition* —
 the `c = 1` instance of this conclusion was **proved false** at `T = W = 1` (via
-`prolateCount_one_eq_zero` + `x/0 = 0`), so dropping `hc1` would make the statement false, not merely
-weaker; (b) the `2WT ≳ 8` crossover is accurate (numerically, the bound turns positive at
+`prolateCount_one_eq_zero` + `x/0 = 0`), so dropping `hc1` would make the statement false, not
+merely weaker; (b) the `2WT ≳ 8` crossover is accurate (numerically, the bound turns positive at
 `2WT ≈ 8.5`). Markov (`prolateCount_mul_le`) cannot substitute here at any `c`: it is an upper bound
 only and supplies no lower half at all. Density `n(T)/T → 2W` for every fixed `c < 1`, which is what
 the achievability consumer's iterated limit (`T → ∞`, then `c → 1`) needs.
@@ -641,7 +637,7 @@ end EigenvalueCount
 section Achievability
 
 /-!
-### Operator-level bricks for the achievability pre-equalizer (route ii)
+### Operator-level bricks for the achievability pre-equalizer
 
 The continuous-time AWGN achievability receiver sees a band-limited codeword `v ∈ V =
 `prolateEigenspaceSup T W c`` through the time-limiting filter `Q_T`. The core operator fact is the
@@ -650,9 +646,9 @@ fraction `c` of the total energy `‖v‖²`. These three bricks package that in
 pre-equalizer consumes: the concentration inequality itself, the injectivity of `Q_T|_V` it implies,
 and the Gram lower bound `G ≥ c·I` on a `V`-ONB used to bound the pre-equalizer gain `G⁻¹ ≤ (1/c)I`.
 
-Sizing memo for the next leg (A2 `testFn` construction): the dominant cost of the `testFn`
-construction is the `Lp`-class → pointwise `ℝ → ℝ` representative lift (route-independent); the
-`testFn` themselves are the `[0,T]`-supported real ONB of `Q_T(V)`.
+The dominant cost of the eventual `testFn` construction is the `Lp`-class → pointwise `ℝ → ℝ`
+representative lift (route-independent); the `testFn` themselves are the `[0,T]`-supported real
+ONB of `Q_T(V)`.
 -/
 
 /-- Members of `V = prolateEigenspaceSup T W c` are band-limited: `V ≤ bandLimitSubspace W`.
@@ -679,10 +675,12 @@ theorem prolateEigenspaceSup_le_bandLimitSubspace (T W : ℝ) {c : ℝ} (hc : 0 
 time-limited energy retains at least the fraction `c` of the total energy:
 `c ‖v‖² ≤ ‖Q_T v‖²`, where `Q_T = (timeLimitSubspace T).starProjection`.
 
-This is the prolate-spheroidal concentration statement the achievability receiver relies on. It comes
-straight from `le_inner_timeBandLimitingOp_of_mem` (the Rayleigh lower bound `c‖v‖² ≤ ⟪A v, v⟫`) once
-the polarization identity `inner_timeBandLimitingOp_eq_inner_timeLimit_bandLimit` collapses
-`⟪A v, v⟫` to `‖Q_T P_W v‖²` and `prolateEigenspaceSup_le_bandLimitSubspace` removes `P_W` on `V`. -/
+This is the prolate-spheroidal concentration statement the achievability receiver relies on. It
+comes straight from `le_inner_timeBandLimitingOp_of_mem` (the Rayleigh lower bound
+`c‖v‖² ≤ ⟪A v, v⟫`) once the polarization identity
+`inner_timeBandLimitingOp_eq_inner_timeLimit_bandLimit` collapses
+`⟪A v, v⟫` to `‖Q_T P_W v‖²` and `prolateEigenspaceSup_le_bandLimitSubspace` removes `P_W` on `V`.
+-/
 theorem le_norm_timeLimitProj_sq_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
     (hv : v ∈ prolateEigenspaceSup T W c) :
     c * ‖v‖ ^ 2 ≤ ‖(timeLimitSubspace T).starProjection v‖ ^ 2 := by
@@ -756,17 +754,17 @@ theorem le_re_inner_timeBandLimitingOp_sum_smul (T W c : ℝ) (hc : 0 < c)
 
 /-- Pointwise `ℝ → ℝ` lift of an `Lp` class supported in the window. A star-fixed `L²(ℝ;ℂ)`
 element that is a.e.-supported in `[0,T]` — the shape `Q_T ψ` takes for a star-fixed `ψ ∈ V` — has
-a genuine pointwise real representative supported in `[0,T]`: a function `f : ℝ → ℝ` with `f` in
+a pointwise real representative supported in `[0,T]`: a function `f : ℝ → ℝ` with `f` in
 `L²`, `Function.support f ⊆ [0,T]` *pointwise*, and `(f : ℝ → ℂ)` a.e. equal to the given class.
 
 This is what the `ContAwgnCode.testFn` construction costs: it
-converts an a.e. equivalence class into the honest pointwise `ℝ → ℝ` function the structure field
-`testFn` demands, pinning both the pointwise support (`testFn_support`) and the real-valuedness. Once
-the a.e. identity `(f : ℝ → ℂ) =ᵐ u` is in hand, every integral/inner-product fact about the family
-(orthonormality, energy) transfers from the `Lp` inner product for free, so a single lift lemma
-sizes the whole conversion. The representative is `𝟙_[0,T] · Re(u)`; the indicator pins the support
-pointwise while staying in the same class because `u` already vanishes a.e. off `[0,T]`, and `Re`
-recovers a real representative because `u` is star-fixed (a.e. real). -/
+converts an a.e. equivalence class into the pointwise `ℝ → ℝ` function the structure field
+`testFn` demands, pinning both the pointwise support (`testFn_support`) and the real-valuedness.
+Once the a.e. identity `(f : ℝ → ℂ) =ᵐ u` is in hand, every integral/inner-product fact about
+the family (orthonormality, energy) transfers from the `Lp` inner product for free, so a single
+lift lemma sizes the whole conversion. The representative is `𝟙_[0,T] · Re(u)`; the indicator
+pins the support pointwise while staying in the same class because `u` already vanishes a.e. off
+`[0,T]`, and `Re` recovers a real representative because `u` is star-fixed (a.e. real). -/
 theorem exists_pointwise_repr_of_mem_timeLimit_star_fixed (T : ℝ) {u : E}
     (hmem : u ∈ timeLimitSubspace T) (hstar : star u = u) :
     ∃ f : ℝ → ℝ, MemLp f 2 volume ∧ Function.support f ⊆ Set.Icc 0 T ∧
@@ -807,12 +805,12 @@ theorem exists_pointwise_repr_of_mem_timeLimit_star_fixed (T : ℝ) {u : E}
       exact (htoff htc).symm
 
 /-- Pointwise `ℝ → ℝ` lift of an `Lp` class, without a support constraint. A star-fixed `L²(ℝ;ℂ)`
-element has a genuine pointwise real representative: a function `f : ℝ → ℝ` in `L²` with
+element has a pointwise real representative: a function `f : ℝ → ℝ` in `L²` with
 `(f : ℝ → ℂ)` a.e. equal to the given class. This is the support-free sibling of
-`exists_pointwise_repr_of_mem_timeLimit_star_fixed`, needed for the band-limited encoder family whose
-members are not `[0,T]`-supported. The representative is `Re ∘ u`: it is `L²` because `Re` is a norm-1
-Lipschitz image, and it recovers a representative of `u` because star-fixedness (`star u = u`) makes
-`u` a.e. real. -/
+`exists_pointwise_repr_of_mem_timeLimit_star_fixed`, needed for the band-limited encoder family
+whose members are not `[0,T]`-supported. The representative is `Re ∘ u`: it is `L²` because `Re`
+is a norm-1 Lipschitz image, and it recovers a representative of `u` because star-fixedness
+(`star u = u`) makes `u` a.e. real. -/
 theorem exists_pointwise_repr_of_star_fixed {u : E} (hstar : star u = u) :
     ∃ f : ℝ → ℝ, MemLp f 2 volume ∧
       (fun t => ((f t : ℝ) : ℂ)) =ᵐ[volume] (u : ℝ → ℂ) := by

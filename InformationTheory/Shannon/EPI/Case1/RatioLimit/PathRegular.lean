@@ -31,7 +31,7 @@ the entropy power inequality holds.
 
 `R 0 ≥ R t` for every `t ≥ 0` (antitonicity); since `R t → 0` and the tail predicate
 `R 0 ≥ R t` holds eventually, `ge_of_tendsto` gives `R 0 ≥ 0`. The final EPI step is
-`epi_of_csiszarLogRatioGap_zero_nonneg` (bridge).
+`epi_of_csiszarLogRatioGap_zero_nonneg`.
 @audit:ok -/
 theorem epi_of_csiszarLogRatioGap_tendsto
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)

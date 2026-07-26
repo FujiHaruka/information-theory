@@ -16,7 +16,7 @@ eigenvector images `gramEig`), where the operator-side Bessel domination
 `frame_form_le_op_form` supplies the Rayleigh bound feeding
 `finrank_le_prolateCount_of_form_gt` (the abstract min-max half of Cauchy interlacing).
 
-It is genuinely non-circular: it does not assume codewords = prolate basis.
+It is non-circular: it does not assume codewords = prolate basis.
 -/
 
 namespace InformationTheory.Shannon
@@ -28,9 +28,9 @@ open TimeBandLimiting Matrix MeasureTheory
 `φ : Fin k → E`. These are the per-coordinate channel gains consumed by the water-filling
 converse.
 
-Audited 2026-07-18 (independent): non-degenerate. This is the spectrum of the *band-limited* Gram
+Non-degenerate: this is the spectrum of the *band-limited* Gram
 (`Matrix.gram ℂ` on `v i = P_W φᵢ`, so `Gᵢⱼ = ⟪P_W φᵢ, P_W φⱼ⟫`), not the raw `⟪φᵢ,φⱼ⟫ = δᵢⱼ` (which
-would force every gain `= 1`), nor a constant/zero. It genuinely pins the fine per-coordinate
+would force every gain `= 1`), nor a constant/zero. It pins the fine per-coordinate
 band-limited gain structure the water-filling converse consumes.
 @audit:ok -/
 noncomputable def bandGramEigenvalues (W : ℝ) {k : ℕ} (φ : Fin k → E) : Fin k → ℝ :=
@@ -91,19 +91,15 @@ eigenvalues of an orthonormal, time-limited test family `φ` that exceed `c` is 
 `prolateCount T W c`. Dominates the arbitrary code's Gram spectrum by the operator spectrum of
 `A = timeBandLimitingOp T W`.
 
-Audited 2026-07-18 (independent): sorryAx-free (`#print axioms`
-= `[propext, Classical.choice, Quot.sound]`, machine-verified against commit `c2d31b84`; the
-consumed `frame_form_le_op_form` and `finrank_le_prolateCount_of_form_gt` are transitively confirmed
-sorry-free too). Honest count-domination, not false-as-framed: (1) `bandGramEigenvalues W φ` is the
-non-degenerate band-limited-Gram spectrum (see its docstring), so the count pins the fine structure
-water-filling needs. (2) `h_on`/`h_tl` are pure structural preconditions (orthonormal signals
-confined to `[0,T]`); neither bundles a count/eigenvalue/prolate claim — no `:True` slot, no
-circular `:= h`, no
-`*Hypothesis`. (3) Genuine reduction: the eigenimages realize the high-`ν` Gram eigenspace as
-`S ⊆ bandLimitSubspace W` with `finrank S = #{νⱼ > c}` and A-Rayleigh `> c` on `S` (honest Bessel
-`frame_form_le_op_form` giving `∑ᵢ‖⟪g,φᵢ⟫‖² ≤ Re⟪Ag,g⟫`, then the `νⱼ > c` strict comparison
-`c∑‖aⱼ‖²νⱼ < ∑‖aⱼ‖²νⱼ²`), so the min-max bound applies. Non-circular: no
-"codewords = prolate basis" assumption.
+sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). Count-domination, not
+false-as-framed: (1) `bandGramEigenvalues W φ` is the non-degenerate band-limited-Gram spectrum
+(see its docstring), so the count pins the fine structure water-filling needs. (2) `h_on`/`h_tl`
+are pure structural preconditions (orthonormal signals confined to `[0,T]`); neither bundles a
+count/eigenvalue/prolate claim — no `:True` slot, no circular `:= h`, no `*Hypothesis`. (3) The
+eigenimages realize the high-`ν` Gram eigenspace as `S ⊆ bandLimitSubspace W` with
+`finrank S = #{νⱼ > c}` and A-Rayleigh `> c` on `S` (Bessel `frame_form_le_op_form` giving
+`∑ᵢ‖⟪g,φᵢ⟫‖² ≤ Re⟪Ag,g⟫`, then the `νⱼ > c` strict comparison `c∑‖aⱼ‖²νⱼ < ∑‖aⱼ‖²νⱼ²`), so the
+min-max bound applies. Non-circular: no "codewords = prolate basis" assumption.
 @audit:ok -/
 theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < c)
     {k : ℕ} (φ : Fin k → E) (h_on : Orthonormal ℂ φ)
@@ -272,9 +268,9 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
 element. This bridges a real code's `testFn : Fin k → ℝ → ℝ` to the operator-theoretic `E`-space,
 feeding the count domination `gram_high_eigen_finrank_le_prolateCount`.
 
-Audited 2026-07-18 (independent): honest lift, non-degenerate. `MemLp.coeFn_toLp` (via `hcoe` in the
-wrapper) machine-confirms its coercion is `=ᵐ fun t => (φ i t : ℂ)`, i.e. the genuine complex
-embedding of the real `φ i`, not the zero/constant class.
+Non-degenerate: `MemLp.coeFn_toLp` (via `hcoe` in the wrapper) confirms its coercion is
+`=ᵐ fun t => (φ i t : ℂ)`, i.e. the complex embedding of the real `φ i`, not the zero/constant
+class.
 @audit:ok -/
 noncomputable def testFnLift {k : ℕ} (φ : Fin k → ℝ → ℝ) (hmem : ∀ i, MemLp (φ i) 2 volume) :
     Fin k → E :=
@@ -285,14 +281,14 @@ family `φ`, the number of band-limited Gram eigenvalues of its complex lift exc
 `prolateCount T W c`. Real-`ℝ → ℝ` façade of `gram_high_eigen_finrank_le_prolateCount`, consumed by
 the continuous-time AWGN code's `testFn`.
 
-Audited 2026-07-18 (independent): sorryAx-free (`#print axioms` = `[propext, Classical.choice,
-Quot.sound]`, commit `26466bb3`). Thin honest façade — the count core is done by the already-audited
-E-level `gram_high_eigen_finrank_le_prolateCount`; the body only transfers hypotheses (`h_on` →
-complex `Orthonormal`, `h_supp` → `timeLimitSubspace`). `hmem : ∀ i, MemLp (φ i) 2` is pure
-regularity, NOT load-bearing and NOT derivable from `h_on`/`h_supp`: a family
-`φ₀ = 𝟙_A - 𝟙_{[0,1]\A}` for a non-measurable `A ⊆ [0,1]` satisfies `∫ φ₀² = ∫ 𝟙_[0,1] = 1` (`h_on`)
-and support `⊆ [0,T]` (`h_supp`) yet is not `AEStronglyMeasurable`, so `hmem` fails — confirming it is
-a genuine, non-vacuous measurability/L² precondition threaded from the code side. No laundering.
+sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). Thin façade — the
+count core is done by the already-audited E-level `gram_high_eigen_finrank_le_prolateCount`; the
+body only transfers hypotheses (`h_on` → complex `Orthonormal`, `h_supp` → `timeLimitSubspace`).
+`hmem : ∀ i, MemLp (φ i) 2` is pure regularity, NOT load-bearing and NOT derivable from
+`h_on`/`h_supp`: a family `φ₀ = 𝟙_A - 𝟙_{[0,1]\A}` for a non-measurable `A ⊆ [0,1]` satisfies
+`∫ φ₀² = ∫ 𝟙_[0,1] = 1` (`h_on`) and support `⊆ [0,T]` (`h_supp`) yet is not
+`AEStronglyMeasurable`, so `hmem` fails — confirming it is a non-vacuous measurability/L²
+precondition threaded from the code side. No laundering.
 @audit:ok -/
 theorem gram_high_eigen_finrank_le_prolateCount_real (T W : ℝ) {c : ℝ} (hc : 0 < c)
     {k : ℕ} (φ : Fin k → ℝ → ℝ) (hmem : ∀ i, MemLp (φ i) 2 volume)

@@ -121,24 +121,22 @@ at time `τ`, which lets `J_S` be pinned by the existing single-noise
 
 The hypotheses are regularity preconditions only (measurability, the unit-noise
 laws of `Z_X`, `Z_Y`, `Z`, and the relevant independences). The conclusion is a
-pure measure equality (an honest math fact); no derivative value or EPI content
-is bundled. Body: Gaussian convolution additivity (`gaussianReal` add of the
-independent noise variances) + reassociation of the `map`.
+pure measure equality; no derivative value or EPI content is bundled.
+Body: Gaussian convolution additivity (`gaussianReal` add of the independent
+noise variances) + reassociation of the `map`.
 
-Honesty (2026-06-06 independence strengthening). The original `hXY_ZXZY :
-IndepFun (X+Y) (Z_X+Z_Y) P` was insufficient: it gives independence of `X+Y`
-from the *unscaled* sum `Z_X+Z_Y`, but the matched-sum noise is the *scaled*
-combination `√s_t·Z_X + √r_t·Z_Y` (a different linear functional when
-`s_t ≠ r_t`), whose independence from `X+Y` does not follow. The honest
-precondition is joint independence of `X+Y` from the pair `(Z_X, Z_Y)`
-(`hXY_ZXZY_pair`), from which the scaled-noise independence is recovered by
-`IndepFun.comp` with the measurable map `(z₁, z₂) ↦ √s_t·z₁ + √r_t·z₂`. This is
-a refinement of a regularity precondition, not a bundling of the conclusion.
+The precondition is joint independence of `X+Y` from the pair `(Z_X, Z_Y)`
+(`hXY_ZXZY_pair`) rather than from the unscaled sum `Z_X+Z_Y`: the matched-sum
+noise is the *scaled* combination `√s_t·Z_X + √r_t·Z_Y` (a different linear
+functional from `Z_X+Z_Y` when `s_t ≠ r_t`), and its independence from `X+Y`
+is recovered by `IndepFun.comp` with the measurable map
+`(z₁, z₂) ↦ √s_t·z₁ + √r_t·z₂`. This is a regularity precondition, not a
+bundling of the conclusion.
 
-Proof done (2026-06-06): genuinely closed via `gaussianReal_map_const_mul`
-(scaled-noise law `√c·W ∼ 𝒩(0,c)`), `gaussianReal_add_gaussianReal_of_indepFun`
-(LHS noise additivity), and `IndepFun.map_add_eq_map_conv_map` (split both sides
-as `(P.map (X+Y)) ∗ 𝒩(0, s_t+r_t)`). `#print axioms` = sorryAx-free. -/
+Closed via `gaussianReal_map_const_mul` (scaled-noise law `√c·W ∼ 𝒩(0,c)`),
+`gaussianReal_add_gaussianReal_of_indepFun` (LHS noise additivity), and
+`IndepFun.map_add_eq_map_conv_map` (split both sides as
+`(P.map (X+Y)) ∗ 𝒩(0, s_t+r_t)`). `#print axioms` = sorryAx-free. -/
 theorem matchedSum_law_eq
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y)
@@ -254,28 +252,24 @@ structurally identical to the existing sum version (no new asset).
 The de Bruijn regularity is `IsDeBruijnRegularityHyp` for each component; the
 `J_* > 0` positivity is threaded as in `csiszarLogRatioGap_deriv_le_zero`.
 
-Honesty (2026-06-06 STRUCTURAL fix — all three Fisher infos density-pinned, the
-old a.e.-pin `J_S` escape is structurally removed). All three Fisher infos in
-the conclusion are now pinned to a pointwise-smooth representative, so a skeptic
-cannot choose their values:
+All three Fisher infos in the conclusion are pinned to a pointwise-smooth
+representative, so none is a free, skeptic-choosable variable:
 
 * `J_X (s t)` / `J_Y (r t)`: density-pinned. `hJX_eq`/`hJY_eq` fix them to
 `fisherInfoOfDensityReal ((h_reg_*.reg_at (s t) hst).density_t)`, and that
 `density_t` is pointwise pinned to the smooth representative via
 `IsRegularDeBruijnHypV2.density_t_eq`, with the real `X`/`Y`-density fixed by
-`pX_law` (same mechanism as the honest single-time
+`pX_law` (same mechanism as the single-time
 `csiszarLogRatioGap_hasDerivAt`).
-* `J_S`: directly embedded, no free variable. At the single time `t`, the
+* `J_S`: embedded directly, no free variable. At the single time `t`, the
 matched sum `X_{s t} + Y_{r t} = (X+Y) + (√(s t)·Z_X + √(r t)·Z_Y)`, and the
 noise has law `𝒩(0, s t + r t)` independent of `X+Y`, so the matched-sum law
 equals that of `(X+Y) + √τ·Z` (`τ = s t + r t`, `Z` unit Gaussian) — a
 single-noise heat flow of `X+Y` at time `τ` (proved by `matchedSum_law_eq`).
 Hence `J_S` is embedded directly into the conclusion as
 `fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t + r t) hτ).density_t)` by
-threading the EXISTING single-noise `IsDeBruijnRegularityHyp (X+Y) Z P`. Its
-`density_t_eq` supplies the smooth pointwise pin for free, so the old
-`withDensity` a.e.-pin (representative-escapable via the documented
-`fisherInfoOfDensityReal` pointwise `logDeriv`) is gone. No free Fisher-info
+threading the single-noise `IsDeBruijnRegularityHyp (X+Y) Z P`. Its
+`density_t_eq` supplies the smooth pointwise pin, so no free Fisher-info
 variable remains.
 @audit:ok -/
 theorem twoTimeLogRatioGap_hasDerivAt
@@ -296,7 +290,7 @@ theorem twoTimeLogRatioGap_hasDerivAt
     (hZ : Measurable Z) (hZ_law : P.map Z = gaussianReal 0 1)
     (hXYZ : IndepFun (fun ω ↦ X ω + Y ω) Z P)
     -- unit-noise laws + joint independences for the matched-sum law
-    -- (`matchedSum_law_eq` regularity preconditions; honest noise-distribution
+    -- (`matchedSum_law_eq` regularity preconditions; noise-distribution
     -- facts, not bundled derivative content)
     (hZX_law : P.map Z_X = gaussianReal 0 1)
     (hZY_law : P.map Z_Y = gaussianReal 0 1)
@@ -310,7 +304,7 @@ theorem twoTimeLogRatioGap_hasDerivAt
     -- `τ = s t + r t > 0` (derivable from `add_pos hst hrt`, threaded explicitly)
     (hτ : 0 < s t + r t)
     -- `J_X (s t) / J_Y (r t)` density-pinned to the real perturbed-density
-    -- Fisher info at the matched time (same pin as the honest single-time
+    -- Fisher info at the matched time (same pin as the single-time
     -- `csiszarLogRatioGap_hasDerivAt`, evaluated at `s t` / `r t`)
     (_hJX_eq : J_X (s t)
         = InformationTheory.Shannon.FisherInfo.fisherInfoOfDensityReal
@@ -418,17 +412,15 @@ theorem twoTimeLogRatioGap_hasDerivAt
 (the analytic core).
 
 From harmonic Stam `1/J_S ≥ 1/J_X + 1/J_Y` (J_S > 0), the value
-`J_S·(1/J_X + 1/J_Y) − 1 ≤ 0` (proof-log §Two-time object `twotime_reduced` /
-`twotime_full`, mechanically verified). The harmonic Stam supply is the
-existing genuine producer `isStamInequalityHyp_via_step3` /
-`isStamInequalityHyp_via_body` (sorryAx-free).
+`J_S·(1/J_X + 1/J_Y) − 1 ≤ 0`. The harmonic Stam supply is the existing
+producer `isStamInequalityHyp_via_step3` / `isStamInequalityHyp_via_body`
+(sorryAx-free).
 
-Audit 2026-06-06 (skeleton): signature-honest. Free `J_S`/`J_X`/`J_Y` are here
-genuinely OK because `h_stam : 1/J_S ≥ 1/J_X(s t)+1/J_Y(r t)` + `hJS_pos` CONSTRAIN
+Signature-honest: free `J_S`/`J_X`/`J_Y` are here OK because
+`h_stam : 1/J_S ≥ 1/J_X(s t)+1/J_Y(r t)` + `hJS_pos` constrain
 them — the conclusion is pure abstract arith (`J_S·(1/J_X+1/J_Y) ≤ J_S·(1/J_S) = 1`)
-that follows for ANY reals satisfying the hypotheses. Same shape as the honest
-`csiszar_ratio_deriv_le_zero_arith`. Contrast `_hasDerivAt` above, where the free
-`J_S` has NO constraining hypothesis (false-as-framed).
+that follows for any reals satisfying the hypotheses. Same shape as
+`csiszar_ratio_deriv_le_zero_arith`.
 @audit:ok -/
 theorem twoTimeLogRatioGap_deriv_le_zero
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -438,7 +430,7 @@ theorem twoTimeLogRatioGap_deriv_le_zero
     {t : ℝ} (_ht : 0 < t)
     (J_S : ℝ)
     (_hJX_pos : 0 < J_X (s t)) (_hJY_pos : 0 < J_Y (r t)) (hJS_pos : 0 < J_S)
-    -- harmonic Stam for the matched-time sum (supplied by the genuine producer)
+    -- harmonic Stam for the matched-time sum (supplied by the existing producer)
     (h_stam : 1 / J_S ≥ 1 / J_X (s t) + 1 / J_Y (r t)) :
     J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 1 ≤ 0 := by
   have h : 1 / J_X (s t) + 1 / J_Y (r t) ≤ 1 / J_S := h_stam

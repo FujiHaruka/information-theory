@@ -628,11 +628,12 @@ This is the `∀`-clean form needed by the operational converse: the
 single-letterization auxiliary lands directly as a feasible point (see
 `wynerZivRate_le_of_feasible`), with no Carathéodory cardinality reduction.
 
-@audit:ok (independent honesty audit 2026-07-05, non-degeneracy check PASS): the
-union-of-images form `wzRateValueSet` genuinely avoids the junk `sInf ∅ = 0`
+The
+union-of-images form `wzRateValueSet` avoids the junk `sInf ∅ = 0`
 collapse — an empty-constraint index `k` (e.g. `Fin 0`) contributes the *empty*
 image to the `⋃`, injecting no `0`, so `wynerZivRate ≤ R` is a substantive claim
-(NOT the degenerate `⨅ k, sInf(image_k)` form that would inject `0`s). -/
+(NOT the degenerate `⨅ k, sInf(image_k)` form that would inject `0`s).
+@audit:ok -/
 noncomputable def wynerZivRate
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) : ℝ :=
   sInf (wzRateValueSet P_XY d D)
@@ -671,10 +672,10 @@ reduction. The `BddBelow` side condition is discharged (via the objective's
 data-processing non-negativity) in `Converse.lean` by
 `wzRateValueSet_bddBelow_of_pmf`.
 
-@audit:ok (independent honesty audit 2026-07-05: sorryAx-free, verified by
-`#print axioms`). `hbdd : BddBelow …` is a genuine regularity precondition (the
+sorryAx-free (`#print axioms`). `hbdd : BddBelow …` is a regularity precondition (the
 exact hypothesis of `csInf_le`), mirroring `wynerZivRatePmf_le_of_feasible`; it
-does NOT smuggle the proof core — the body is the standard `csInf_le` shape. -/
+does NOT smuggle the proof core — the body is the standard `csInf_le` shape.
+@audit:ok -/
 theorem wynerZivRate_le_of_feasible
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ}
     (hbdd : BddBelow (wzRateValueSet P_XY d D))
@@ -691,9 +692,10 @@ factorizable point at budget `D` remains feasible at `D' ≥ D`
 (`WynerZivFactorizableConstraint_mono_in_D`, applied at each auxiliary alphabet
 `Fin k`).
 
-@audit:ok (independent honesty audit 2026-07-05: sorryAx-free, `#print axioms` =
-[propext, Classical.choice, Quot.sound]; genuine subset body via
-`WynerZivFactorizableConstraint_mono_in_D`, no load-bearing hyp / vacuity). -/
+sorryAx-free, `#print axioms` =
+[propext, Classical.choice, Quot.sound]; subset body via
+`WynerZivFactorizableConstraint_mono_in_D`, no load-bearing hyp / vacuity.
+@audit:ok -/
 lemma wzRateValueSet_mono_in_D
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D D' : ℝ} (hD : D ≤ D') :
     wzRateValueSet P_XY d D ⊆ wzRateValueSet P_XY d D' := by
@@ -708,10 +710,11 @@ The `BddBelow` at `D'` and non-emptiness at `D` are the standard `csInf_le_csInf
 side conditions — both discharged in `Converse.lean` (via
 `wzRateValueSet_bddBelow_of_pmf` and a feasible witness).
 
-@audit:ok (independent honesty audit 2026-07-05: sorryAx-free, `#print axioms` =
-[propext, Classical.choice, Quot.sound]; genuine `csInf_le_csInf` body. `h_bdd` /
+sorryAx-free, `#print axioms` =
+[propext, Classical.choice, Quot.sound]; `csInf_le_csInf` body. `h_bdd` /
 `h_ne` are its standard regularity side conditions, not load-bearing core, and the
-antitone direction `D ≤ D' ⟹ rate(D') ≤ rate(D)` is the correct one). -/
+antitone direction `D ≤ D' ⟹ rate(D') ≤ rate(D)` is the correct one.
+@audit:ok -/
 theorem wynerZivRate_antitone
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D D' : ℝ} (hD : D ≤ D')
     (h_bdd : BddBelow (wzRateValueSet P_XY d D'))
@@ -768,12 +771,11 @@ term; the shared-first-marginal hypothesis is what kills the `H(X)`-side
 contribution. This is the reusable engine for Wyner–Ziv time-sharing (both the
 value-set closure and the operational converse feasible-point step).
 
-@audit:ok (independent honesty audit 2026-07-05, auditor-verified not self-reported:
-sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]). Signature
+@audit:ok sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]. Signature
 honest: `h₁sum`/`h₂sum` are pmf total-mass-1 regularity, `hmix₁`/`hmix₂` merely
 *define* the disjoint-union mixture (not the conclusion), `hab` is the weight
-normalization. `h_marg` (shared first marginal) is a genuine precondition ON THE
-INPUTS — verified load-bearing for TRUTH (dropping it makes the identity false,
+normalization. `h_marg` (shared first marginal) is a precondition ON THE
+INPUTS — load-bearing for TRUTH (dropping it makes the identity false,
 since `H(X)` is concave not affine) yet NOT bundling the conclusion (the affine
 identity is a claim about the mixture's `mutualInfoPmf`, proven in-body via the
 `H(a,b)` branch-entropy cancellation). Coefficients `a`,`b` verified correct
@@ -932,18 +934,17 @@ The witness is the disjoint-union auxiliary kernel `κ(x, inl u) = a·κ₁(x, u
 row-stochastic, its distortion splits as `a·dist₁ + b·dist₂`, and its objective
 is affine by `mutualInfoPmf_mixture_affine`.
 
-@audit:ok (independent honesty audit 2026-07-05, auditor-verified not self-reported:
-sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]). All
-hypotheses are genuine convex-combination preconditions: `h_pmf` (P_XY a pmf,
+@audit:ok sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]. All
+hypotheses are convex-combination preconditions: `h_pmf` (P_XY a pmf,
 supplies total-mass-1 for the affine engine), `hv₁`/`hv₂` (the input value-set
 memberships of a closure statement), `ha`/`hb` (weight non-negativity, feeds
 kernel non-negativity + distortion bound), `hab` (weight normalization, feeds
 row-stochasticity). NONE bundles the conclusion — the mixture kernel, its
 feasibility (row-stochastic + distortion budget), and the affine objective are all
-CONSTRUCTED/PROVEN in-body (~150 lines). The combined point lands at a genuine
+CONSTRUCTED/PROVEN in-body (~150 lines). The combined point lands at a
 `Fin (k₁+k₂)` index via `wzRateValueSet_reindex_mem` (not empty/degenerate).
 Stated over the reshaped ⋃-over-`Fin k` value set. Break attempts: `a=0` reduces
-to `hv₂` (alive, non-vacuous); `D₁=D₂` gives genuine midpoint time-sharing. -/
+to `hv₂` (alive, non-vacuous); `D₁=D₂` gives midpoint time-sharing. -/
 theorem wzRateValueSet_timeShare_mem
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     {d : α → γ → ℝ} {D₁ D₂ : ℝ} {v₁ v₂ : ℝ}
@@ -1109,8 +1110,7 @@ bound. The `Nonempty` side conditions feed `le_csInf` (via `le_mul_csInf`) and
 `BddBelow` at the mixed budget feeds `csInf_le`; both are standard regularity
 preconditions, not load-bearing core.
 
-@audit:ok (independent honesty audit 2026-07-05, auditor-verified not self-reported:
-sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]). Signature
+@audit:ok sorryAx-free, `#print axioms` = [propext, Classical.choice, Quot.sound]. Signature
 honest: `h_ne₁`/`h_ne₂` are the `Nonempty` side conditions of `le_csInf` (via
 `le_mul_csInf`), `h_bdd_mix` is the `BddBelow` side condition of `csInf_le` — both
 standard infimum regularity (side conditions of the sInf lemmas, NOT the theorem's

@@ -37,7 +37,7 @@ hence conditionally independent of `C`). -/
 independent of `Ws`, and the target `U ω := g (As ω) (Ws ω)` depends only on `As`
 and `Ws`, then `U − As − Cs` is a Markov chain (`IsMarkovChain μ U As Cs`).
 
-Genuine measure-theoretic utility: `Q := condDistrib Cs As μ` is the conditioner-only
+Measure-theoretic utility: `Q := condDistrib Cs As μ` is the conditioner-only
 kernel, and the append identity
 `μ.map ((As, U), Cs) = (μ.map (As, U)) ⊗ₘ prodMkRight K Q` is verified by pushing
 everything through the product law `μ.map ((As, Cs), Ws) = ρ.prod π` (from `hindep`),
@@ -136,7 +136,7 @@ side-information symbols `Y_{\i} = (Yⱼ)_{j≠i}` — satisfies the Markov chai
 `Uᵢ − Xᵢ − Yᵢ` (`IsMarkovChain μ Uᵢ (Xs i) (Ys i)`).
 
 This is the deepest step of the converse single-letterization. `hindep` (memoryless
-source) is a genuine regularity precondition: the chain is false for a source with
+source) is a regularity precondition: the chain is false for a source with
 memory. Proof: `Uᵢ` is a measurable function `g (Xᵢ) (Y_{\i}, X_{\i})` of `Xᵢ` and
 the *rest* of the block, and by memorylessness the `i`-th pair `(Xᵢ, Yᵢ)` is
 independent of the rest — so `wz_isMarkovChain_of_indepFun_side` applies. -/
@@ -226,10 +226,10 @@ memoryless source `(Xⁿ, Yⁿ)` and time index `i`, the empirical joint law of
 `P_XY.real`, with the conditioner-only kernel `κ(u|x) := (condDistrib Uᵢ Xᵢ μ x).real {u}`.
 The factorization `q(x,y,u) = κ(u|x)·P_XY(x,y)` is read off the per-letter Markov chain
 `Uᵢ − Xᵢ − Yᵢ` (`wz_perletter_markov`) by singleton evaluation of the joint law.
-@audit:ok (the witness `κ(u|x) = (condDistrib Uᵢ Xᵢ μ x).real {u}` is genuinely
+@audit:ok (the witness `κ(u|x) = (condDistrib Uᵢ Xᵢ μ x).real {u}` is
 row-stochastic — the `∑_u κ x u = 1` conjunct is discharged via `probReal_univ` off the
 Markov kernel's `IsProbabilityMeasure`, ruling out the vacuous `κ ≡ 0` / `q ≡ 0` escape;
-the factorization conjunct genuinely uses the per-letter Markov structure `hmarkov_eq`
+the factorization conjunct uses the per-letter Markov structure `hmarkov_eq`
 (⟸ `hindep`), so dropping `hindep` breaks `Uᵢ − Xᵢ − Yᵢ` and `q` need not factor.) -/
 private theorem wz_perletter_empirical_factorizable
     {Ω : Type*} [MeasurableSpace Ω]
@@ -517,7 +517,7 @@ For a memoryless source `(Xⁿ, Yⁿ)` (mutual independence `hindep`) and a fixe
 `X^{<i} = (Xⱼ)_{j<i}` given the full side-information block `Yⁿ`:
 `I(Xᵢ; X^{<i} | Yⁿ) = 0`.
 
-This is the input analogue of the memoryless collapse. `hindep` is a genuine
+This is the input analogue of the memoryless collapse. `hindep` is a
 regularity precondition (false for a source with memory). Proof (chain-rule route, no
 disintegration): the pair `(Xᵢ, Yᵢ)` is independent of `(X^{<i}, Y_{\i})`, hence
 `I((Xᵢ, Yᵢ); (X^{<i}, Y_{\i})) = 0`; expanding the joint MI by the chain rule bounds the
@@ -874,7 +874,7 @@ The body is split into four parts:
 `hindep` is load-bearing (both `hstep2` and `hsum` are false without memorylessness); it is a
 memoryless-source regularity precondition, not a bundled proof core. The chain is the standard
 Wyner–Ziv converse (Cover–Thomas §15.9).
-@audit:ok (`hstep2` (memoryless collapse) and `hsum` (super-additivity) are closed by genuine
+@audit:ok (`hstep2` (memoryless collapse) and `hsum` (super-additivity) are closed by
 lemma applications — `condMutualInfo_chain_rule_Y_2var`, `condMutualInfo_prefix_chain_rule`,
 `wz_inputs_cond_indep`, deterministic-encoder Markov — not a load-bearing `*Hypothesis` bundle;
 underscoring the unused `_hn` / `_hdecoder` strengthens the claim (the conclusion holds even at
@@ -999,9 +999,9 @@ witnesses (`wzRateValueSet_avg_mem`).
 The conclusion is an *existential witness* (per-letter budgets + values with the
 three bounds), not a hypothesis bundle: it does not encode the outcome it is used to
 prove. `hindep` (memoryless source) / `hlaw` (identical marginals `= P_XY`) / `hD`
-(distortion budget) are genuine source-regularity preconditions — the per-letter
+(distortion budget) are source-regularity preconditions — the per-letter
 Markov feasibility and the budget bound `(1/n) ∑ Dᵢ ≤ D` are false without them.
-@audit:ok (a genuine existential decomposition: `Dv`/`w` are explicitly constructed and
+@audit:ok (an existential decomposition: `Dv`/`w` are explicitly constructed and
 the three conjuncts discharged by `wz_perletter_factorizable` / `wz_perletter_distortion_avg`
 / `wz_singleletter_rate_le`; the conclusion asserts existence of per-letter budgets/values,
 not the outcome it proves, and all hypotheses are source-regularity preconditions.) -/
@@ -1066,14 +1066,14 @@ objective `(1/n) ∑ᵢ [I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)]`.
 Landing this point via `wynerZivRate_le_of_feasible` (with `BddBelow` supplied by
 `wzRateValueSet_bddBelow_of_pmf`) yields the converse bound in
 `wyner_ziv_converse_n_letter_singleLetter`; that outer landing is discharged
-genuinely (sorry-free) from this existence.
+(sorry-free) from this existence.
 
 `hindep` (memoryless source) / `hlaw` (identical marginals `= P_XY`) / `hD`
-(distortion budget) are genuine regularity preconditions — the construction
+(distortion budget) are regularity preconditions — the construction
 (Markov `Uᵢ − Xᵢ − Yᵢ`, distortion budget `(1/n)∑Dᵢ ≤ D`) is false without them.
 The conclusion is the *existence* of a feasible witness realizing the objective
 bound; it is strictly weaker than the outer infimum bound (`wynerZivRate ≤ …`,
-recovered by landing), so this is a genuine decomposition of the single-letterized
+recovered by landing), so this is a decomposition of the single-letterized
 core, not a restatement of it and not a hypothesis bundle.
 
 The feasible-point existence is discharged by landing the
@@ -1083,7 +1083,7 @@ values `(1/n) ∑ w i` into a value of `wzRateValueSet … ((1/n) ∑ Dv i)`,
 `wzRateValueSet_mono_in_D` (with `(1/n) ∑ Dv i ≤ D`) relaxes it to budget `D`, and
 `mem_wzRateValueSet_iff` unpacks the resulting membership into the feasible factorizable
 point at some `Fin k`.
-@audit:ok (the conclusion is a genuine existential witness (feasible factorizable point +
+@audit:ok (the conclusion is an existential witness (feasible factorizable point +
 objective bound), not a hypothesis bundle; `hindep`/`hlaw`/`hD` are source-regularity
 preconditions, and the Carathéodory support reduction is not on this single-letterization
 route.) -/
@@ -1148,7 +1148,7 @@ sizing precondition `hU_card : |α| + 1 ≤ |U|` that the fixed-`U`
 feasible point of the reshaped infimum via `wynerZivRate_le_of_feasible`, with no
 cardinality bound.
 
-The independence / i.i.d. preconditions (`hindep` + `hlaw`) are genuine regularity
+The independence / i.i.d. preconditions (`hindep` + `hlaw`) are regularity
 preconditions (the conclusion is false without them, mirroring
 `rate_distortion_converse_n_letter_singleLetter`).
 
@@ -1165,7 +1165,7 @@ Dropping `hU_card` is sound: `wynerZivRate` is the infimum over the union of ima
 converse claim — the single-letterization auxiliary lands directly, so no sizing
 precondition is needed and no false-statement is introduced. Non-vacuous: `wynerZivRate ≥ 0`
 via the DPI residual, and `M ≥ 1 ⟹ log M ≥ 0`, so `R_WZ(D) ≤ (1/n) log M` is a substantive
-bound. `hindep` / `hlaw` are genuine i.i.d. regularity preconditions (conclusion false
+bound. `hindep` / `hlaw` are i.i.d. regularity preconditions (conclusion false
 without them), not a bundled core.
 @audit:ok (`hindep`/`hlaw`/`hD` + measurability are operational-regularity preconditions and
 the converse core is proved in the body, not bundled; dropping `hU_card` is a strengthening

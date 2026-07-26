@@ -8,11 +8,11 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Order.Filter.AtTopBot.Basic
 
 /-!
-# LZ78 phrase-count asymptotic envelope — genuine `IsBigO` bound
+# LZ78 phrase-count asymptotic envelope (`IsBigO` bound)
 
 This file discharges the predicate `IsLZ78PhraseCountAsymptotic p B`
 (published in `InformationTheory/Shannon/LZ78/ConverseAsymptotic.lean`) with
-genuine real-analysis content rather than a hypothesis pass-through.
+real-analysis content rather than a hypothesis pass-through.
 
 The target predicate unfolds to
 `(fun n => ((p n).count : ℝ)) =O[atTop] (fun n => (n : ℝ) / Real.log n)`,
@@ -28,14 +28,14 @@ length-`n` string over a `b`-symbol alphabet, the *primitive* bound
 c(n) · log c(n) ≤ K · n          (K = log b, large n)        (★)
 ```
 
-We take `(★)` as the genuine more-primitive hypothesis and prove the
+We take `(★)` as the more-primitive hypothesis and prove the
 real-analysis lemma
 
 ```
 (★) + (c n → handled pointwise)  ⟹  c(n) = O(n / log n).
 ```
 
-The proof is an honest two-case argument at the threshold `√n = n^(1/2)`:
+The proof is a two-case argument at the threshold `√n = n^(1/2)`:
 
 * Large branch `c(n) > √n`:  then `log c(n) > ½ log n`, so `(★)`
   gives `c(n) · ½ log n < K n`, hence `c(n) · log n ≤ 2K n`.
@@ -51,7 +51,7 @@ the `IsBigO` bound with constant `C`.
 
 * §1 — the threshold algebra helpers (`√n · √n = n`, `log √n`, the
   `log n ≤ 2√n` envelope).
-* §2 — the genuine inversion lemma `isBigO_natCast_div_log_of_mul_log_le`.
+* §2 — the inversion lemma `isBigO_natCast_div_log_of_mul_log_le`.
 * §3 — `IsZivCountingMulLogBound`, the primitive `(★)` predicate, plus
   the discharge `IsLZ78PhraseCountAsymptotic` from it.
 * §4 — re-published wrappers `lz78_phrase_count_asymptotic_of_mul_log`
@@ -94,7 +94,7 @@ theorem rpow_half_nonneg (n : ℕ) : (0 : ℝ) ≤ (n : ℝ) ^ (1 / 2 : ℝ) :=
 
 end ThresholdAlgebra
 
-/-! ## §2. The genuine inversion lemma -/
+/-! ## §2. The inversion lemma -/
 
 section Inversion
 
@@ -194,9 +194,9 @@ inversion lemma of §2. -/
 def IsZivCountingMulLogBound (p : ℕ → LZ78Parsing α) (K : ℝ) : Prop :=
   ∀ᶠ n in atTop, ((p n).count : ℝ) * Real.log ((p n).count : ℝ) ≤ K * (n : ℝ)
 
-/-- Genuine discharge of `IsLZ78PhraseCountAsymptotic` from the
+/-- Discharge of `IsLZ78PhraseCountAsymptotic` from the
 primitive `c·log c ≤ Kn` product bound: the
-asymptotic envelope predicate holds with genuine `IsBigO` content. -/
+asymptotic envelope predicate holds with `IsBigO` content. -/
 theorem IsLZ78PhraseCountAsymptotic.of_mul_log_bound
     {p : ℕ → LZ78Parsing α} {K : ℝ} (_hK : 0 ≤ K)
     (h : IsZivCountingMulLogBound p K) :
@@ -216,7 +216,7 @@ variable {α : Type*}
 
 /-- The re-published main statement: the LZ78 phrase-count is
 `O(n / log n)` whenever the primitive product bound holds. Mirrors the
-shape of `lz78_phrase_count_asymptotic_n_div_log` but with the genuine
+shape of `lz78_phrase_count_asymptotic_n_div_log` but with the
 `IsBigO` content supplied (no eventual-`≤` hypothesis needed). -/
 @[entry_point]
 theorem lz78_phrase_count_asymptotic_of_mul_log
@@ -225,7 +225,7 @@ theorem lz78_phrase_count_asymptotic_of_mul_log
     IsLZ78PhraseCountAsymptotic p (fun n ↦ (n : ℝ) / Real.log (n : ℝ)) :=
   IsLZ78PhraseCountAsymptotic.of_mul_log_bound hK h
 
-/-- Combine the genuine upper envelope with the
+/-- Combine the upper envelope with the
 reflexive lower envelope into a phrase-count sandwich. -/
 @[entry_point]
 theorem IsLZ78PhraseCountSandwich.of_mul_log_bound

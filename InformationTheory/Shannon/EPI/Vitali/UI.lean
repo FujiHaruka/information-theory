@@ -19,10 +19,9 @@ The file provides the Gaussian max-entropy upper bound
 convolution density `f_t = convDensityAdd pX g_t = pX ∗ g_{u n}` (`pX` an L¹ input
 density with finite second moment, `g_t` a centered Gaussian), the entropy integral
 `∫ negMulLog f_t` is bounded above by `(1/2) log(2πe·V)` for any `V ≥ (∫ x² pX) + t`.
-This bound is consumed by the layer-2 two-sided sandwich
-(`differentialEntropy_convDensity_integral_tendsto`,
-`EPIG2HeatFlowContinuity.lean`) to discharge the `IsBoundedUnder` premise of
-`tendsto_of_le_liminf_of_limsup_le`.
+This bound is consumed by the layer-2 two-sided sandwich to discharge the
+`IsBoundedUnder` premise of `tendsto_of_le_liminf_of_limsup_le`
+(`differentialEntropy_convDensity_integral_tendsto`).
 
 The name (`Vitali/UI`) reflects this file's origin as the home of the Vitali
 `UnifIntegrable` route to the same endpoint-continuity result; that route is
@@ -105,7 +104,7 @@ theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
   filter_upwards [hrn] with x hx
   rw [hx, ENNReal.toReal_ofReal (hf_nn x)]
 
-/-- Second-moment integrability of `f_t` (a closed helper).
+/-- Second-moment integrability of `f_t`.
 `x ↦ x² · f_t(x)` is `volume`-integrable.
 @audit:ok -/
 theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
@@ -259,7 +258,7 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
   rw [houter]
   exact ENNReal.ofReal_lt_top
 
-/-- First-moment integrability of `f_t` (a closed helper).
+/-- First-moment integrability of `f_t`.
 `x ↦ x · f_t(x)` is `volume`-integrable.
 @audit:ok -/
 theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}

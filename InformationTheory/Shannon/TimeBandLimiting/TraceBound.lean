@@ -187,10 +187,10 @@ Fubini; Bessel's inequality then caps the integrand by the constant `‖k_t‖²
 theory is involved — only a finite orthonormal family — so Mathlib's lack of Schatten API does not
 block this bound.
 
-Scope (audited 2026-07-17): this is the *trace* bound, not the Landau–Pollak–Slepian
+Scope: this is the *trace* bound, not the Landau–Pollak–Slepian
 degrees-of-freedom count. It is the same Bessel argument that already closes
 `contAwgnMaxMessages_bddAbove` wall-free, and like that bound it yields the crude constant only.
-It does **not** bear on `wall:nyquist-2w-dof`, whose content is the eigenvalue *concentration*
+It does **not** bear on the Landau–Pollak–Slepian eigenvalue *concentration*
 (`≈2WT` eigenvalues near `1`, the rest near `0`); Bessel is one-directional and cannot reach it.
 @audit:ok -/
 theorem sum_inner_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
@@ -229,8 +229,9 @@ theorem sum_inner_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
 
 Distinct members sit at distance `√2`, so the open balls of radius `1/2` around them are pairwise
 disjoint, and a separable space admits only countably many pairwise-disjoint nonempty open sets
-(`Pairwise.countable_of_isOpen_disjoint`). Mathlib has no such lemma (loogle `Orthonormal, Countable`
-= `Found 0`, 2026-07-17), so it is built here; it is what lets `tsum_inner_timeBandLimitingOp_eq`
+(`Pairwise.countable_of_isOpen_disjoint`). Mathlib has no such lemma
+(loogle `Orthonormal, Countable` = `Found 0`), so it is built here; it is what lets
+`tsum_inner_timeBandLimitingOp_eq`
 *derive* the countability its Tonelli step needs instead of assuming it.
 @audit:ok -/
 theorem orthonormal_countable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
@@ -286,9 +287,9 @@ step's only structural need — is *derived* from separability of `L²(ℝ;ℂ)`
 `orthonormal_countable`, not assumed. `exists_hilbertBasis_tsum_inner_timeBandLimitingOp_eq`
 witnesses in-tree that such a basis exists, so the statement is not vacuous.
 
-Scope (the question that matters, asked before reporting): this is an *exact first moment*
-`∑ λₙ = 2WT`, which is **not** what `wall:nyquist-2w-dof` names. The wall's content is the
-Landau–Pollak–Slepian *concentration* `#{n | λₙ > c} = 2WT + O(log WT)`, and the first moment does
+Scope: this is an *exact first moment*
+`∑ λₙ = 2WT`, which is **not** the Landau–Pollak–Slepian *concentration*
+`#{n | λₙ > c} = 2WT + O(log WT)`, and the first moment does
 not reach it in either direction. Upward it feeds only Markov (`prolateCount_mul_le`), which uses
 just the `≤` half and overcounts by `1/c`; the exactness buys nothing there. Downward it is
 strictly insufficient: a spectrum with `∑ λₙ = 2WT` and every `λₙ ≤ c` has `#{λₙ > c} = 0`, so no
@@ -361,13 +362,13 @@ theorem star_mem_eigenspace {T W : ℝ} {μ : ℝ} {v : E}
     timeBandLimitingOp_star_comm T W v
   rw [h1, hv, star_smul_Lp, Complex.conj_ofReal]
 
-/-- Complex conjugation preserves the span of the high eigenspaces. The operator `A` commutes with
-`star` (`timeBandLimitingOp_star_comm`) and its eigenvalues are real, so each eigenspace above `c` is
-`star`-invariant; the span inherits it. This is the `ℂ/ℝ` bridge that lets the achievability path
-choose real-valued prolate eigenfunctions — it proves the *span is star-invariant*, not that any
-individual eigenfunction is real (the latter is the downstream real-basis extraction, not claimed
-here). Independently audited 2026-07-17: sorryAx-free, the `hv` hypothesis is the antecedent of a
-closure property (not load-bearing), and the prose does not overclaim.
+/-- Complex conjugation preserves the span of the high eigenspaces. The operator `A` commutes
+with `star` (`timeBandLimitingOp_star_comm`) and its eigenvalues are real, so each eigenspace
+above `c` is `star`-invariant; the span inherits it. This is the `ℂ/ℝ` bridge that lets the
+achievability path choose real-valued prolate eigenfunctions — it proves the *span is
+star-invariant*, not that any individual eigenfunction is real (the latter is the downstream
+real-basis extraction, not claimed here). sorryAx-free, the `hv` hypothesis is the antecedent of
+a closure property (not load-bearing), and the prose does not overclaim.
 @audit:ok -/
 theorem star_mem_prolateEigenspaceSup {T W c : ℝ} {v : E}
     (hv : v ∈ prolateEigenspaceSup T W c) :
@@ -405,8 +406,7 @@ theorem prolateEigenspaceSup_orthogonal_invariant (T W c : ℝ) :
 
 /-- `A` restricted to the orthogonal complement of the span of the eigenspaces above `c`.
 
-Audited 2026-07-17 (independent). Checked for degenerate-definition abuse rather than assumed
-genuine: this is the honest restriction of `A`, not a disguised `0`. The machine says so — the
+This is the restriction of `A`, not a disguised `0`: the
 `rfl` step in `inner_timeBandLimitingOp_le_of_mem_orthogonal` proves
 `(prolateRestrict T W c ⟨v, hv⟩ : E) = timeBandLimitingOp T W v` definitionally, which no zero map
 could satisfy for a nonzero `A` (`timeBandLimitingOp_ne_zero`).
@@ -460,11 +460,11 @@ theorem prolateRestrict_hasEigenvalue_le (T W : ℝ) {c : ℝ} {μ : ℂ}
 
 /-- The restriction of `A` to `Vᗮ` is a contraction by `c`: `‖S‖ ≤ c`.
 
-Audited 2026-07-17 (independent). `hc : 0 < c` is regularity, not load-bearing: it is consumed only
+`hc : 0 < c` is regularity, not load-bearing: it is consumed only
 to place the spectral point `0` below the bound and to invert `ENNReal.ofReal`, never to supply
 spectral content. The route was machine-confirmed by walking the transitive constant graph rather
 than read off the prose — `ContinuousLinearMap.spectralRadius_eq_nnnorm` (Rayleigh) and
-`IsCompactOperator.hasEigenvalue_iff_mem_spectrum` are both genuinely consumed, and
+`IsCompactOperator.hasEigenvalue_iff_mem_spectrum` are both consumed, and
 `ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot` is *not*.
 @audit:ok -/
 theorem prolateRestrict_norm_le (T W : ℝ) {c : ℝ} (hc : 0 < c) :
@@ -512,9 +512,6 @@ Unconditional in `T` and `W`: compactness, symmetry and positivity of `A` all ho
 parameter value, so no window or band nondegeneracy is assumed. Only `0 < c` is needed, and only to
 place the point `0` of the spectrum below the bound.
 
-Audited 2026-07-17 (independent), on the two questions this family keeps failing: is a hypothesis
-doing the work, and is this the planned object or a weaker relative?
-
 *No hypothesis carries the core.* The bundle is `hc : 0 < c` (positivity of a free threshold) and
 `hv : v ∈ Vᗮ` (membership in a submodule defined outright, not asserted). Granting both hands over
 no spectral fact: the substance — that compactness collapses the spectrum onto eigenvalues, and
@@ -522,18 +519,18 @@ self-adjointness turns the spectral radius back into the norm — is all dischar
 specific risk was an input amounting to *"A has a complete eigenbasis"* or *"the spectrum below `c`
 is discrete"*; no such hypothesis is present, and the transitive constant graph confirms
 mechanically that `orthogonalComplement_iSup_eigenspaces_eq_bot`, `HilbertBasis.mkOfOrthogonalEqBot`
-and `finite_dimensional_eigenspace` are all consumed *zero* times. The docstring's claim to need no
-eigenbasis is therefore machine-backed, not asserted.
+and `finite_dimensional_eigenspace` are all consumed *zero* times: the claim to need no eigenbasis
+is machine-confirmed, not asserted.
 
-*It is the planned object, `c` free.* The statement is character-for-character the plan's target,
-less `hT : 0 ≤ T` and `hW : 0 < W`, which are dropped as unused — strictly stronger, nothing added.
+*No redundant hypotheses.* The statement drops `hT : 0 ≤ T` and `hW : 0 < W` as unused — strictly
+stronger, nothing added.
 
 *Sufficiency, re-derived.* Symmetry forces every eigenvalue real (`conj_eigenvalue_eq_self`), so
 spanning only the *real* eigenvalues above `c` leaves no complex eigenvalue hiding in `Vᗮ` — the
 gap this shape could plausibly have had, and it is closed. Two structurally different degenerate
-boundaries were checked live rather than one: at `T ≤ 0` the operator collapses (`A = 0`, `V = ⊥`,
+boundaries were checked, not just one: at `T ≤ 0` the operator collapses (`A = 0`, `V = ⊥`,
 `Vᗮ = ⊤`) and the claim reads `0 ≤ c‖v‖²`, true; at `c ≥ 1` we again get `V = ⊥`
-(`prolateEigenvalueSet_one_eq_empty`) and the claim reduces to `‖A‖ ≤ 1`, true. Neither refutes it.
+(`prolateEigenvalueSet_one_eq_empty`) and the claim reduces to `‖A‖ ≤ 1`, true.
 The invariant the hypotheses pin — `v ⊥ every eigenspace above c` — is exactly the granularity the
 conclusion needs, not coarser: it is what forces `spectrum (A|Vᗮ) ⊆ [0, c]`.
 
@@ -541,13 +538,6 @@ conclusion needs, not coarser: it is what forces `spectrum (A|Vᗮ) ⊆ [0, c]`.
 (`prolateEigenspaceSup_finiteDimensional`) while `E = L²(ℝ;ℂ)` is not, so `Vᗮ ≠ ⊥` and the bound
 speaks about real vectors. Unlike its siblings in this file the non-vacuity is argued, not
 machine-checked by an in-tree witness lemma; nothing downstream currently depends on that witness.
-
-*Scope — read the name with care.* This closes the plan's decisive atom, **not** leg R1 as planned.
-R1 is *eigenbasis + multiplicity bridge*, and this route deliberately bypasses it: the eigenbasis
-obligation stands untouched at `tsum_prolateEigenvalues_eq`. What this does deliver is the `Vᗮ`
-half of the Chebyshev split (R2). The gate's premise — "the atom consumes `Spectrum.lean:443`, so
-its passing certifies the count leg" — is false, so its passing certifies nothing about the
-eigenbasis machinery either way.
 @audit:ok -/
 theorem inner_timeBandLimitingOp_le_of_mem_orthogonal
     (T W c : ℝ) (hc : 0 < c)
@@ -575,15 +565,15 @@ above `c`, the Rayleigh quotient of `A` is at least `c`. This is the matched pai
 orthonormal eigenbasis `b` of `V` with every eigenvalue exceeding `c`. Expanding `v` along `b`,
 `⟪A v, v⟫ = ∑ᵢ νᵢ ‖⟪bᵢ, v⟫‖² ≥ c ∑ᵢ ‖⟪bᵢ, v⟫‖² = c ‖v‖²` by Parseval, since every `νᵢ > c`.
 
-Audited 2026-07-18 (independent): sorryAx-free (`#print axioms` = `[propext, Classical.choice,
-Quot.sound]`, validated against the positive control `tsum_prolateEigenvalues_eq` which does show
-`sorryAx`). Both hypotheses are preconditions, not core: `hc : 0 < c` gives finite-dimensionality of
-`V` (so the spectral theorem applies) and `hv : v ∈ V` scopes the claim; neither is `:= h` circular,
-a `:True` slot, or a load-bearing bundle. The body proves the stated bound `c‖v‖² ≤ Re⟪Av,v⟫`, not a
-weaker `0`-bound: the `hνgt` block earns `νᵢ > c` from the orthogonality argument (an eigenvector for
-an eigenvalue `≤ c` would be `⊥` to every eigenspace above `c`, hence to `V ∋ bᵢ`, hence zero,
-contradicting unit norm), then Parseval closes it. Not vacuous where it bites (V non-trivial below the
-top eigenvalue via `exists_unit_eigenvector`); at the boundaries it degenerates to `0 ≤ c‖v‖²`, true.
+sorryAx-free (`#print axioms` = `[propext, Classical.choice,
+Quot.sound]`). Both hypotheses are preconditions, not core: `hc : 0 < c` gives
+finite-dimensionality of `V` (so the spectral theorem applies) and `hv : v ∈ V` scopes the claim;
+neither is `:= h` circular, a `:True` slot, or a load-bearing bundle. The body proves the stated
+bound `c‖v‖² ≤ Re⟪Av,v⟫`, not a weaker `0`-bound: the `hνgt` block earns `νᵢ > c` from the
+orthogonality argument (an eigenvector for an eigenvalue `≤ c` would be `⊥` to every eigenspace
+above `c`, hence to `V ∋ bᵢ`, hence zero, contradicting unit norm), then Parseval closes it. Not
+vacuous where it bites (V non-trivial below the top eigenvalue via `exists_unit_eigenvector`); at
+the boundaries it degenerates to `0 ≤ c‖v‖²`, true.
 @audit:ok -/
 theorem le_inner_timeBandLimitingOp_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
     (hv : v ∈ prolateEigenspaceSup T W c) :
@@ -653,13 +643,14 @@ quotient of `A = timeBandLimitingOp T W` strictly exceeds `c` has dimension at m
 eigenvalues above `c`. Finite-dimensional min-max half of Cauchy interlacing; converse companion
 to the achievability count.
 
-Audited 2026-07-18 (independent): sorryAx-free (`#print axioms` = `[propext, Classical.choice,
-Quot.sound]`; its crux `inner_timeBandLimitingOp_le_of_mem_orthogonal` re-verified sorryAx-free too).
-The hypothesis `hS` is a genuine min-max precondition — it constrains only the Rayleigh-quotient
+sorryAx-free (`#print axioms` = `[propext, Classical.choice,
+Quot.sound]`; its crux `inner_timeBandLimitingOp_le_of_mem_orthogonal` re-verified sorryAx-free
+too).
+The hypothesis `hS` is a min-max precondition — it constrains only the Rayleigh-quotient
 form `c‖x‖² < Re⟪Ax,x⟫` on `S` and names no count/eigenvalue/prolate object, so it does not bundle
 the conclusion `finrank S ≤ prolateCount`. The body does real work: the strict form on `S` collides
 with the `≤ c` bound on `Vᗮ` (crux) to force `S ∩ Vᗮ = {0}`, whence orthogonal projection injects
-`S ↪ V` and `finrank S ≤ finrank V = prolateCount`. Not vacuous (a genuine `≤` on `finrank S`, not
+`S ↪ V` and `finrank S ≤ finrank V = prolateCount`. Not vacuous (a `≤` on `finrank S`, not
 `0 ≤ _` or `finrank ⊥`).
 @audit:ok -/
 theorem finrank_le_prolateCount_of_form_gt (T W : ℝ) {c : ℝ} (hc : 0 < c)
@@ -673,7 +664,8 @@ theorem finrank_le_prolateCount_of_form_gt (T W : ℝ) {c : ℝ} (hc : 0 < c)
     by_contra hx0
     exact absurd (inner_timeBandLimitingOp_le_of_mem_orthogonal T W c hc hxV)
       (not_le.mpr (hS x hxS hx0))
-  -- The orthogonal projection `E → V`, restricted to `S`, has trivial kernel, hence injects `S ↪ V`.
+  -- The orthogonal projection `E → V`, restricted to `S`, has trivial kernel, hence
+  -- injects `S ↪ V`.
   set f : ↥S →ₗ[ℂ] ↥V := (V.orthogonalProjectionOnto : E →L[ℂ] ↥V).toLinearMap ∘ₗ S.subtype with hf
   have hinj : Function.Injective f := by
     rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
@@ -743,10 +735,10 @@ it; every one of its eigenvalues exceeds `c` (an eigenvector for an eigenvalue `
 orthogonal to every eigenspace above `c`, hence to the span containing it, hence zero). Feeding that
 basis to `sum_inner_timeBandLimitingOp_le` gives `c · #{λ > c} ≤ ∑ λᵢ ≤ 2WT`.
 
-Scope (audited 2026-07-17): read as a count this says `#{λ > c} ≤ 2WT/c`, which *overcounts* by the
+Scope: read as a count this says `#{λ > c} ≤ 2WT/c`, which *overcounts* by the
 factor `1/c` and has no vanishing relative error. It is therefore weaker than the sharp upper half
-`#{λ > c} ≤ 2WT + O(log WT)`, and weaker still than the two-sided concentration that
-`wall:nyquist-2w-dof` names. Neither wall consumer is unblocked by it:
+`#{λ > c} ≤ 2WT + O(log WT)`, and weaker still than the two-sided Landau–Pollak–Slepian
+concentration. Neither downstream consumer is unblocked by it:
 `contAwgn_ge_shannonHartley` needs the *lower* half, and `contAwgn_eq_shannonHartley`, being an
 equality, needs both halves sharply.
 
@@ -841,10 +833,11 @@ Collating a Hilbert basis of each eigenspace (`exists_hilbertBasis`, uniform in 
 with real nonnegative eigenvalues, whose vectors with eigenvalue above `c` span the high eigenspace
 `prolateEigenspaceSup T W c`.
 
-Independent honesty audit 2026-07-18 (`7a08b9c2`): no hypotheses; the whole construction is in the
-body. All three conjuncts are genuinely proven — the eigen-relation and nonnegativity pointwise, and
-the span identity by a real two-sided `le_antisymm` (not `:True`). The third conjunct is non-vacuous:
-were `{i | c < lam i}` empty for all `c > 0`, nonnegativity would force `lam ≡ 0`, contradicting
+No hypotheses; the whole construction is in the
+body. All three conjuncts are proven — the eigen-relation and nonnegativity pointwise, and
+the span identity by a real two-sided `le_antisymm` (not `:True`). The third conjunct is
+non-vacuous: were `{i | c < lam i}` empty for all `c > 0`, nonnegativity would force `lam ≡ 0`,
+contradicting
 `tsum_eigen_eq_two_mul`'s `∑ lam = 2WT ≠ 0` for `0 < W`, `0 < T`. sorryAx-free (`#print axioms` =
 `[propext, Classical.choice, Quot.sound]`).
 @audit:ok -/
@@ -924,7 +917,7 @@ theorem exists_eigen_hilbertBasis (T W : ℝ) :
     have h := (timeBandLimitingOp_isPositive T W).inner_nonneg_right x
     have := (Complex.le_def.mp h).1
     simpa using this
-  -- Every glued vector is a genuine eigenvector, so it spans a genuine eigenvalue's eigenspace.
+  -- Every glued vector is an eigenvector, so it spans its eigenvalue's eigenspace.
   have hev : ∀ i : (Σ μ : ℂ, ↥(w μ)), (prolateEnd T W).HasEigenvalue i.1 := by
     intro i
     have hne : b i ≠ 0 := by
@@ -1088,14 +1081,15 @@ counts `#{· > c} = prolateCount T W c` (the eigenbasis vectors above `c` span
 enumeration exceeds `c` on the initial segment `{0, …, prolateCount T W c − 1}` —
 `setOf_lt_prolateEigenvalues_eq_Iio`), transported through the layer-cake identity
 `lintegral_eq_lintegral_meas_lt`: both `ℝ≥0∞` sums equal `∫⁻ t ∈ Ioi 0, prolateCount T W t`.
-Summability of both families (`summable_of_sum_le` from the Bessel bound, then `ENNReal.summable_toReal`)
-converts the `ℝ≥0∞` equality back to `ℝ`.
+Summability of both families (`summable_of_sum_le` from the Bessel bound, then
+`ENNReal.summable_toReal`) converts the `ℝ≥0∞` equality back to `ℝ`.
 
-Independent honesty audit 2026-07-18 (`7a08b9c2`): `heig`/`hnn`/`hspan` are structural preconditions
-describing an abstract eigenbasis, not the conclusion in disguise — the multiplicity core (layer-cake
-`lintegral_eq_lintegral_meas_lt`, Bessel summability, the `Measure.count` distribution functions) is
-carried by the body. They are discharged by feeding `exists_eigen_hilbertBasis`'s output at the
-headline `tsum_prolateEigenvalues_eq`, which therefore assumes none of them (no load-bearing bundle).
+`heig`/`hnn`/`hspan` are structural preconditions
+describing an abstract eigenbasis, not the conclusion in disguise — the multiplicity core
+(layer-cake `lintegral_eq_lintegral_meas_lt`, Bessel summability, the `Measure.count` distribution
+functions) is carried by the body. They are discharged by feeding `exists_eigen_hilbertBasis`'s
+output at the headline `tsum_prolateEigenvalues_eq`, which therefore assumes none of them (no
+load-bearing bundle).
 sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`).
 @audit:ok -/
 theorem tsum_eigen_eq_tsum_prolateEigenvalues (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
@@ -1175,11 +1169,12 @@ theorem tsum_eigen_eq_tsum_prolateEigenvalues (T W : ℝ) (hT : 0 ≤ T) (hW : 0
 /-- The trace identity `tsum_inner_timeBandLimitingOp_eq`, transported onto the decreasing
 eigenvalue enumeration: `∑ₙ λₙ = 2WT` (the exact first spectral moment of `A = timeBandLimitingOp`).
 
-Proof-done, sorryAx-free, and independent of the `wall:nyquist-2w-dof` concentration. It composes
+sorryAx-free, and independent of the Landau–Pollak–Slepian concentration. It composes
 three pieces, each proved from assets already in Mathlib / this file:
 
 1. `exists_eigen_hilbertBasis` — a complete orthonormal *eigen*basis of `A`. The compact
-   self-adjoint spectral theorem (`ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot`:
+   self-adjoint spectral theorem
+   (`ContinuousLinearMap.orthogonalComplement_iSup_eigenspaces_eq_bot`:
    the eigenspaces are total) glues per-eigenspace Hilbert bases (`exists_hilbertBasis`, uniform in
    `μ`) into one orthonormal family via `HilbertBasis.mkOfOrthogonalEqBot`, with real nonnegative
    eigenvalues whose above-`c` vectors span `prolateEigenspaceSup T W c`.
@@ -1190,12 +1185,13 @@ three pieces, each proved from assets already in Mathlib / this file:
    equates their sums.
 
 None of this is the Landau-Pollak-Slepian asymptotics in `WT`; it is `c`-by-`c` structure for a
-compact positive operator. This exact first moment is off the Shannon-Hartley converse path (a bonus:
-the converse lands via count domination `bandGramReal_high_count_le`, not this identity).
+compact positive operator. This exact first moment is off the Shannon-Hartley converse path
+(a bonus: the converse lands via count domination `bandGramReal_high_count_le`, not this identity).
 
-Independent honesty audit 2026-07-18 (`7a08b9c2`): unconditional — the body `obtain`s the eigenbasis
-data `heig`/`hnn`/`hspan` from the hypothesis-free `exists_eigen_hilbertBasis`, so it discharges (does
-not assume) the eigenbasis preconditions. The only hypotheses `hT : 0 ≤ T`, `hW : 0 < W` are domain
+Unconditional — the body `obtain`s the eigenbasis
+data `heig`/`hnn`/`hspan` from the hypothesis-free `exists_eigen_hilbertBasis`, so it
+discharges (does not assume) the eigenbasis preconditions. The only hypotheses `hT : 0 ≤ T`,
+`hW : 0 < W` are domain
 regularity (matching the already-audited `tsum_inner_timeBandLimitingOp_eq`), fixing the nonnegative
 value `2WT`. No load-bearing hypothesis, no circularity. sorryAx-free (`#print axioms` = `[propext,
 Classical.choice, Quot.sound]`).
