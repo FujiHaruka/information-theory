@@ -21,7 +21,7 @@ and builds, without any `condExp`/`condDistrib`/disintegration:
 * `condDensityX_integral_eq_one` — normalization `∫ x, p_{X|Z}(x|z) dx = 1`.
 * `symm_deriv_integral_eq` (S2) — symmetric derivative identity
   `∫ x, deriv fX x · fY (z - x) = ∫ x, fX x · deriv fY (z - x)` (both `= p_Z'(z)`),
-  obtained from the genuine gateway applied in both factor orders +
+  obtained from the gateway applied in both factor orders +
   `convDensityAdd_comm` + the reflection substitution.
 * `score_conv_eq_weighted_integral` (S3, the Blachman core) — for any `λ`,
   with `W_λ(x,z) := λ · logDeriv fX x + (1-λ) · logDeriv fY (z-x)`,
@@ -205,7 +205,7 @@ for `0 ≤ lam ≤ 1`, via:
 
 * atom A (`fisherInfoOfDensity_toReal_eq_integral`) — the lintegral↔Bochner
   bridge `(fisherInfoOfDensity f).toReal = ∫ x, (logDeriv f x)² · f x ∂volume`
-  (genuine, `integral_eq_lintegral_of_nonneg_ae` + `ENNReal.ofReal_mul`).
+  (`integral_eq_lintegral_of_nonneg_ae` + `ENNReal.ofReal_mul`).
 * S4 pointwise Cauchy-Schwarz (`score_sq_le_weighted_integral`) — probability
   weighted CS: `(logDeriv p_Z z)² ≤ ∫ x, (W_λ x z)² · p_{X|Z}(x|z) dx`.
 * the Tonelli swap + 3-term evaluation (`λ²·J_X + (1-λ)²·J_Y`, cross-term `= 0`).
@@ -222,7 +222,7 @@ for `0 ≤ lam ≤ 1`, via:
 `integral_eq_lintegral_of_nonneg_ae` applies.
 
 `hpos` (`f ≥ 0`) and `hint` (Bochner-integrability of the squared-score density)
-are regularity preconditions, satisfied by any genuine probability density with
+are regularity preconditions, satisfied by any probability density with
 finite Fisher information; neither bundles the Fisher-info value.
 @audit:ok -/
 theorem fisherInfoOfDensity_toReal_eq_integral (f : ℝ → ℝ)
@@ -251,7 +251,7 @@ With `W_λ(x,z) := scoreWeight fX fY lam z x` and `p_{X|Z}(x|z) := condDensityX 
 integrability `hint_Wsq` is a regularity precondition on admissible densities.
 None of the hyps bundles the conclusion inequality.
 
-Genuine (0 sorry): with the probability measure
+With the probability measure
 `μ := volume.withDensity (fun x => ENNReal.ofReal (condDensityX fX fY z x))`
 (`IsProbabilityMeasure` from 3b `condDensityX_integral_eq_one` via
 `ofReal_integral_eq_lintegral_ofReal`), S4 is exactly Jensen for the convex `(·)²`:
@@ -261,7 +261,7 @@ Genuine (0 sorry): with the probability measure
 `integral_withDensity_eq_integral_toReal_smul₀`
 (`Bochner/ContinuousLinearMap.lean:310`) to rewrite `∫ · ∂μ = ∫ condDensityX·· ∂volume`,
 and S3 `score_conv_eq_weighted_integral` to identify `∫ scoreWeight ∂μ` with
-`logDeriv p_Z z`. condExp/condDistrib/disintegration absent (density route honest).
+`logDeriv p_Z z`. condExp/condDistrib/disintegration absent (density route).
 
 `hcond_int` (integrability of the conditional density), `hint_W` (integrability of
 the score weight against `condDensityX`) and `hint_Wsq` are regularity preconditions
@@ -454,7 +454,7 @@ boundedness, integrability side-conditions, normalization `∫ = 1`, positivity 
 `p_Z`, and the three product-measure `Integrable (uncurry …)` Tonelli
 preconditions); none bundles the inequality core.
 
-Assembly (all genuine, no `sorry`):
+Assembly:
 * atom A `fisherInfoOfDensity_toReal_eq_integral` rewrites all three Fisher
 informations to Bochner integrals;
 * S4 `score_sq_le_weighted_integral` (`@audit:ok`, Jensen on a `withDensity`
@@ -682,7 +682,7 @@ structure IsBlachmanConvReady (fX fY : ℝ → ℝ) : Prop where
 
 /-- Symmetry of the regularity bundle under the `X ↔ Y` swap.
 
-`IsBlachmanConvReady` is genuinely symmetric: `convDensityAdd` is commutative
+`IsBlachmanConvReady` is symmetric: `convDensityAdd` is commutative
 (`convDensityAdd_comm`) and each integrability / boundedness field transports across
 the reflection substitution `x ↦ z - x` (volume-preserving) together with the marginal
 swap on the product-measure fields. All 19 fields are constructed:

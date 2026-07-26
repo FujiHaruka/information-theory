@@ -186,8 +186,8 @@ genuinely collapses and the enumeration really is `≡ 0` (`prolateEigenvalues_e
 two collapse lemmas are exactly what make its hypotheses tight.
 
 Still open (a strictly larger obligation, not attempted here): `λ n ≠ 0` for *all* `n`, which needs
-`A` to have infinite rank. Neither that nor the above is the `wall:nyquist-2w-dof` eigenvalue-
-concentration wall.
+`A` to have infinite rank. Neither that nor the above is the Landau–Pollak–Slepian eigenvalue-
+concentration asymptotics (the `≈2WT`-eigenvalue count) consumed downstream.
 @audit:ok -/
 noncomputable def prolateEigenvalues (T W : ℝ) (n : ℕ) : ℝ :=
   sInf {c : ℝ | 0 < c ∧ prolateCount T W c ≤ n}

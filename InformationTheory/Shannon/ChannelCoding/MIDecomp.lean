@@ -21,7 +21,7 @@ chain (`AWGN.Converse`) so that the per-letter MI bridge
 `InformationTheory/Shannon/AWGN/ContChannelMIDecomp.lean` imports this file and
 re-exports these declarations under their unchanged fully-qualified names
 (`InformationTheory.Shannon.ChannelCoding.*`), so downstream consumers (ParallelGaussian,
-AwgnCapacityConverseMaxent) are unaffected.
+`AWGN/CapacityConverseMaxent.lean`) are unaffected.
 
 ## Approach
 
@@ -55,7 +55,7 @@ open scoped ENNReal NNReal BigOperators Topology
 variable {p : Measure ℝ} [IsProbabilityMeasure p]
 variable {W : Channel ℝ ℝ} [IsMarkovKernel W]
 
-/-- Marginal identification (genuine). For a bounded-density observable
+/-- Marginal identification. For a bounded-density observable
 `g : ℝ → ℝ`, the joint integral of `g ∘ snd` against `p ⊗ₘ W` equals the integral
 of `g` against the output marginal `outputDistribution p W = (p ⊗ₘ W).snd`. -/
 theorem integral_snd_outputDistribution
@@ -66,7 +66,7 @@ theorem integral_snd_outputDistribution
     rw [← h_eq]; exact hg.aestronglyMeasurable
   rw [h_eq, MeasureTheory.integral_map measurable_snd.aemeasurable hg']
 
-/-- General log-density entropy identification (genuine). For any `μ : Measure ℝ`
+/-- General log-density entropy identification. For any `μ : Measure ℝ`
 with `μ ≪ volume` and measurable density `f := μ.rnDeriv volume`, the integral of
 `log f` against `μ` is `−differentialEntropy μ`. This is the generalization of
 `integral_log_density_fibre` to an arbitrary `≪ volume` measure (the proof never used
@@ -95,7 +95,7 @@ theorem integral_log_rnDeriv_eq_neg_diffEntropy
         rw [Real.negMulLog_def]
         ring
 
-/-- Fibre differential-entropy identification (genuine). For an `≪ volume`
+/-- Fibre differential-entropy identification. For an `≪ volume`
 fibre `W x` with measurable density `f := (W x).rnDeriv volume`, the inner integral
 of `log f` against `W x` is `−differentialEntropy (W x)`. Thin wrapper around the
 general `integral_log_rnDeriv_eq_neg_diffEntropy`. -/
@@ -153,7 +153,7 @@ theorem rnDeriv_compProd_fibre
   rw [h_cp]
   exact Measure.rnDeriv_withDensity (μ ⊗ₘ η) (by fun_prop)
 
-/-- Per-measure log-density split (Bayes step, genuine). For `ν ≪ q ≪ volume`
+/-- Per-measure log-density split (Bayes step). For `ν ≪ q ≪ volume`
 all `σ`-finite, the log of the relative density `dν/dq` splits as the difference of
 the two `volume`-log-densities:
 `log (dν/dq y) = log (dν/dvol y) − log (dq/dvol y)`, `ν`-a.e. Built from the rnDeriv
@@ -187,7 +187,7 @@ theorem log_rnDeriv_split
   rw [← hy, ENNReal.toReal_mul, Real.log_mul hne1 hne2]
   ring
 
-/-- ★ General Bayes density split of the joint llr (genuine, modulo named ac
+/-- ★ General Bayes density split of the joint llr (modulo named ac
 hyps). For input law `p`, Markov channel `W`, output `q := outputDistribution p W`,
 with each fibre `≪ q ≪ volume` and joint `≪ p.prod q`, the log-likelihood ratio of
 the joint against the product factorizes into fibre/output log-densities. This is
@@ -249,7 +249,7 @@ theorem llr_compProd_prod_split
     rw [hz1]
   exact h_llr_eq.trans h_split
 
-/-- ★ Continuous-channel MI chain rule body (AWGN-independent, genuine).
+/-- ★ Continuous-channel MI chain rule body (AWGN-independent).
 
 `(mutualInfoOfChannel p W).toReal = h(Y) − ∫ h(Y|X=x) dp(x)`, the density-level
 analogue of the discrete `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`.

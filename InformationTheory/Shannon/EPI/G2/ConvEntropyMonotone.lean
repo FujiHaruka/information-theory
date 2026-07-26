@@ -41,7 +41,7 @@ conditional differential entropy is defined Mathlib-shape:
 
 This is a reusable, EPI-line-wide asset. Continuous conditional differential
 entropy + conditioning-reduces-entropy are absent from Mathlib (genuine gap, not a
-wall), but the `condDistrib` machinery exists, so a genuine construction is possible.
+wall), but the `condDistrib` machinery exists, so a construction is possible.
 
 ## Assembly of the bridge
 
@@ -51,9 +51,9 @@ from three components:
 * (a) `InformationTheory.klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`)
   turns the joint KL `toReal` into
   the `μ_Z`-average of fiberwise KL `∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`;
-* (b) `klDiv_toReal_eq_neg_differentialEntropy_sub_cross` (`EPIG2BridgeDensityHelpers.lean`)
+* (b) `klDiv_toReal_eq_neg_differentialEntropy_sub_cross` (`BridgeDensityHelpers.lean`)
   expands each fiber into `−h(κ z) − ∫ p_z · log q_X`;
-* (c) `integral_condDistrib_density_marginal_eq` (`EPIG2BridgeDensityHelpers.lean`)
+* (c) `integral_condDistrib_density_marginal_eq` (`BridgeDensityHelpers.lean`)
   identifies the `μ_Z`-average of the cross term with `∫ q_X · log q_X = −h(μ_X)` (Fubini
   marginal).
 
@@ -105,9 +105,9 @@ as honest preconditions:
   turns the joint KL `toReal` into the
   `μ_Z`-average of the fiberwise KL `∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`;
 * (b) `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`
-  (`EPIG2BridgeDensityHelpers.lean`) expands each fiber into
+  (`BridgeDensityHelpers.lean`) expands each fiber into
   `−h(κ z) − ∫ p_z · log q_X`;
-* (c) `integral_condDistrib_density_marginal_eq` (`EPIG2BridgeDensityHelpers.lean`)
+* (c) `integral_condDistrib_density_marginal_eq` (`BridgeDensityHelpers.lean`)
   identifies `∫_z ∫ p_z log q_X ∂μ_Z = ∫ q_X log q_X = −h(μ_X)` (Fubini marginal).
 
 Assembling: `RHS = −h(X|Z) − (−h(X)) = h(X) − h(X|Z)`. The classical continuous
@@ -247,7 +247,7 @@ theorem condDifferentialEntropy_le
     rw [hbridge]; exact ENNReal.toReal_nonneg
   linarith
 
-/-- The z-dependent affine-shift kernel `κ z := νX.map (· + c·z)`, built as a genuine
+/-- The z-dependent affine-shift kernel `κ z := νX.map (· + c·z)`, built as a
 `Kernel ℝ ℝ`. Construction: push the parametrized pairing `z ↦ νX.map (Prod.mk z)`
 (measurable by `Measurable.map_prodMk_left`) through the measurable affine map
 `(z, x) ↦ x + c·z`.
@@ -312,7 +312,7 @@ via:
    `μ.map (fun ω ↦ (Z ω, X ω)) = (μ.map Z).prod (μ.map X)` (independence).
 2. Push the product through the affine map `g (z, x) = (z, x + c·z)` and identify it
    with `(μ.map Z) ⊗ₘ (affineShiftKernel (μ.map X) c)` (`prod_map_affine_eq_compProd`,
-   the z-dependent affine-shift kernel built genuinely above).
+   the z-dependent affine-shift kernel built above).
 3. `condDistrib_ae_eq_of_measure_eq_compProd` then gives the fiber identification, and
    `differentialEntropy_map_add_const` discharges each fiber to `h(μ.map X)`.
 

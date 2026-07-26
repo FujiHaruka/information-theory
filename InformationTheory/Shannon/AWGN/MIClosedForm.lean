@@ -10,9 +10,11 @@ The hypothesis-free Gaussian-input mutual-information closed form
 (`mutualInfoOfChannel_toReal_eq_diffEntropy_sub`, `ContChannelMIDecomp.lean`) and the
 output-Gaussian bind/conv bridge (`AWGNBindConvolution.lean`).
 
-`AWGNBindConvolution` and `ContChannelMIDecomp` are non-importing siblings (both sit
-directly under `MIBridge.lean`), so this file imports both and is the join point where the
-hypothesis-free wrapper is assembled.
+`ContChannelMIDecomp.lean`'s own closed-form producer `awgn_mi_gaussian_closed_form_of_out`
+still leaves `IsAwgnOutputGaussian` standing as a hypothesis; this file discharges it inline
+from the AWGN-specialized, hypothesis-free bind/conv fact `isAwgnBindEqConv_discharged`
+(`BindConvolution.lean`), so it is the join point where the fully hypothesis-free wrapper is
+assembled.
 -/
 
 namespace InformationTheory.Shannon.AWGN

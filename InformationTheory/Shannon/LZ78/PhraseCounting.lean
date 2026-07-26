@@ -13,12 +13,12 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 # LZ78 distinct-phrase counting bound — `c · log c ≤ K·n`
 
 `InformationTheory/Shannon/LZ78/GreedyLongestPrefix.lean` establishes
-the genuine longest-prefix greedy parse `lz78PhraseStrings` together with
+the longest-prefix greedy parse `lz78PhraseStrings` together with
 its distinct invariant `lz78PhraseStrings_nodup` and the
 total-length conservation `lz78PhraseStrings_total_length_le`.
 
 This file supplies the Cover–Thomas Lemma 13.5.2 counting bound as a
-genuine combinatorial inequality on any `Nodup` list of non-empty strings
+combinatorial inequality on any `Nodup` list of non-empty strings
 over a finite alphabet:
 
 ```
@@ -33,7 +33,7 @@ inversion `isBigO_natCast_div_log_of_mul_log_le`
 ## Approach
 
 The substantive content is the shortest-first packing lower bound on
-the total length `T` of `c` distinct non-empty strings. Two genuine
+the total length `T` of `c` distinct non-empty strings. Two
 ingredients:
 
 1. Geometric stratification (`card_short_le`) — the number of
@@ -60,7 +60,7 @@ yielding `c·log c ≤ 4·log(b+1)·T`.
   injectivity on length-`≤L` strings.
 * §2. Geometric stratification — `card_short_le`.
 * §3. Shortest-first packing — `total_length_ge_count_mul_log`.
-* §4. Ziv product bound — `lz78PhraseStrings_mul_log_le`, the genuine
+* §4. Ziv product bound — `lz78PhraseStrings_mul_log_le`, the
   `c·log c ≤ K·T` on `lz78PhraseStrings`.
 -/
 
@@ -239,7 +239,7 @@ theorem total_length_ge_count_mul_log
       _ ≤ 8 * Real.log (b1 : ℝ) * (T : ℝ) := by
           apply mul_le_mul_of_nonneg_left hTcR
           positivity
-  · -- Large `c > b1^4 ≥ 16`: the genuine packing argument.
+  · -- Large `c > b1^4 ≥ 16`: the packing argument.
     -- Choose `j = Nat.log b1 (c/2)`; then `b1^j ≤ c/2` and `b1^{j+1} > c/2`.
     have hb1_4 : 16 ≤ b1 ^ 4 := by
       calc (16 : ℕ) = 2 ^ 4 := by norm_num
@@ -347,9 +347,9 @@ theorem foldr_length_eq_map_sum (ws : List (List α)) :
   | nil => simp
   | cons hd tl ih => simp only [List.foldr_cons, List.map_cons, List.sum_cons, ih]
 
-/-- The Ziv product bound `c·log c ≤ K·n` on the genuine greedy parse: the
+/-- The Ziv product bound `c·log c ≤ K·n` on the greedy parse: the
 distinct phrase count `c = (lz78PhraseStrings input).length` satisfies
-`c · log c ≤ 8·log(|α|+1) · input.length`. This is the genuine
+`c · log c ≤ 8·log(|α|+1) · input.length`. This is the
 Cover–Thomas `(★)` for the longest-prefix greedy parse, combining the
 invariants `lz78PhraseStrings_nodup` / `lz78PhraseStrings_forall_ne_nil`
 / `lz78PhraseStrings_total_length_le` with the §3 packing core. -/
@@ -386,7 +386,7 @@ open Filter Asymptotics
 
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
-/-- The genuine `c·log c ≤ K·n` bound for a length-`n` input family: for any
+/-- The `c·log c ≤ K·n` bound for a length-`n` input family: for any
 family `input : ℕ → List α` with `(input n).length = n`, the distinct
 phrase count `c(n) = (lz78PhraseStrings (input n)).length` satisfies the
 Cover–Thomas product bound `(★)` with `K = 8·log(|α|+1)`. -/

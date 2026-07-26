@@ -16,7 +16,7 @@ import InformationTheory.Shannon.AWGN.ContChannelMIDecomp
 The single-letter capacity converse: for any input law `p : Measure ℝ` with second
 moment `≤ P`, `(mutualInfoOfChannel p (awgnChannel N)).toReal ≤ (1/2) log(1 + P/N)`.
 This discharges the `h_max_ent` hypothesis of
-`ContChannelMIDecomp.awgn_capacity_closed_form_of_out`.
+`awgnCapacity_eq` (`AWGN/Basic.lean`).
 
 ## Main statements
 
@@ -709,7 +709,7 @@ theorem outputDistribution_logDensity_integrable_joint
 /-! ## Per-input mutual-information bound -/
 
 /-- Final converse conclusion (supplies the `h_max_ent` of
-`awgn_capacity_closed_form_of_out`). For any input law `p ∈ awgnPowerConstraintSet P`
+`awgnCapacity_eq`). For any input law `p ∈ awgnPowerConstraintSet P`
 (lintegral second moment `≤ P`),
 `(mutualInfoOfChannel p (awgnChannel N)).toReal ≤ (1/2) log(1 + P/N)`.
 
@@ -831,11 +831,11 @@ theorem awgn_per_input_mi_le_log
 /-! ## Capacity closed form -/
 
 open InformationTheory.Shannon.ChannelCoding in
-/-- AWGN capacity closed form (Cover-Thomas 9.1), genuine assembly.
+/-- AWGN capacity closed form (Cover-Thomas 9.1).
 
 `awgnCapacity P N = (1/2) log(1 + P/N)`. This supersedes
-`ContChannelMIDecomp.awgn_capacity_closed_form_of_out`: there the converse
-max-entropy bound `h_max_ent` was a body `sorry`; here it is supplied genuinely by
+`awgnCapacity_eq` (`AWGN/Basic.lean`): there the converse
+max-entropy bound `h_max_ent` was an explicit hypothesis; here it is discharged by
 `awgn_per_input_mi_le_log`. The achievability bridge (`awgn_mi_gaussian_closed_form_of_out`),
 the MI decomposition (`isAwgnMIDecomp_of_densitySplit`) and the bind/conv
 output-Gaussian fact are all wired upstream.
@@ -850,7 +850,7 @@ theorem awgn_capacity_closed_form_genuine
   have hP_toNN_pos : (0 : ℝ≥0) < P.toNNReal := Real.toNNReal_pos.mpr hP
   have hPN : P.toNNReal + N ≠ 0 :=
     (add_pos_of_pos_of_nonneg hP_toNN_pos (zero_le' (a := N))).ne'
-  -- Output-Gaussian fact, genuine via the translation-kernel bind/conv bridge.
+  -- Output-Gaussian fact, via the translation-kernel bind/conv bridge.
   have h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N) :=
     awgn_output_gaussian_of_bind_eq_conv P N (isAwgnChannelMeasurable N)
       (isAwgnBindEqConv_discharged P N (isAwgnChannelMeasurable N))

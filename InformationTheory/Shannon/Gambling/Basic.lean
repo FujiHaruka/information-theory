@@ -116,10 +116,10 @@ lemma doublingRate_gap_eq_klDivPmf (p b o : α → ℝ)
 
 /-- Proportional (Kelly) betting maximizes the doubling rate: for any full-support bet `b`
 and positive odds `o`, `W(b, o, p) ≤ W(p, o, p)`. This is Cover–Thomas Theorem 6.1.2.
-@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
+@audit:ok — sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`); `hb_pos` is a genuine correctness precondition (counterexample without it:
 `p=(1/2,1/2)`, `o=(2,2)`, `b=(1,0)` gives `W(b,o,p)=(1/2)log 2 > 0 = W(p,o,p)` since
-`log 0 = 0` erases ruin), not load-bearing; gap = `klDivPmf p b ≥ 0` genuine. -/
+`log 0 = 0` erases ruin), not load-bearing; gap = `klDivPmf p b ≥ 0`. -/
 @[entry_point]
 theorem doublingRate_le_proportional (p b o : α → ℝ)
     (hp : p ∈ stdSimplex ℝ α) (hb : b ∈ stdSimplex ℝ α)
@@ -131,8 +131,8 @@ theorem doublingRate_le_proportional (p b o : α → ℝ)
 
 /-- The doubling rate is maximized by `b` iff `b` is the proportional (Kelly) bet
 `b = p`.
-@audit:ok — independent audit 2026-07-04: sorryAx-free (`[propext, Classical.choice,
-Quot.sound]`); equality direction genuine via `klDivPmf_eq_zero_iff_pmf hp hb hb_pos`
+@audit:ok — sorryAx-free (`[propext, Classical.choice,
+Quot.sound]`); equality direction via `klDivPmf_eq_zero_iff_pmf hp hb hb_pos`
 (`klDivPmf p b = 0 ↔ p = b`) flipped by `eq_comm`, non-circular. -/
 @[entry_point]
 theorem doublingRate_eq_proportional_iff (p b o : α → ℝ)

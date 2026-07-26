@@ -117,7 +117,7 @@ def awgnPowerConstraintSet (P : ℝ) : Set (Measure ℝ) :=
 
 /-- Membership in `awgnPowerConstraintSet P` (lintegral form) yields both the genuine
 integrability of `x²` and the Bochner second-moment bound `∫ x² ∂p ≤ P`. This is the
-bridge the converse phases (`AwgnCapacityConverseMaxent.lean`) consume: the lintegral
+bridge the converse phases (`AWGN/CapacityConverseMaxent.lean`) consume: the lintegral
 constraint carries the regularity (`Integrable (fun x => x²) p`) the Bochner form alone
 cannot supply.
 @audit:ok -/

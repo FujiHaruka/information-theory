@@ -23,9 +23,9 @@ Let `R(t) = csiszarLogRatioGap X Y Z_X Z_Y P t
           = log N(law(X+Y+√t·(Z_X+Z_Y))) − log (N(law(X+√t·Z_X)) + N(law(Y+√t·Z_Y)))`,
 the log-ratio gap (`EPIL3Integration.csiszarLogRatioGap`).
 
-* `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1085`, genuine,
+* `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1085`,
   sorryAx-free) gives `AntitoneOn R (Set.Ici 0)`.
-* `epi_of_csiszarLogRatioGap_zero_nonneg` (`EPIStamToBridge.lean:985`, genuine)
+* `epi_of_csiszarLogRatioGap_zero_nonneg` (`EPIStamToBridge.lean:985`)
   gives `0 ≤ R 0 ⟹ EPI`.
 
 So if `R t → 0` as `t → ∞`, then by antitonicity `R 0 ≥ lim_{t→∞} R t = 0`, hence
