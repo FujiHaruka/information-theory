@@ -5,22 +5,26 @@ import Mathlib.MeasureTheory.Integral.Marginal
 # From a block code to its ambient law
 
 Model-independent infrastructure for the operational converses: a block code together with a
-uniform message law and a per-letter product channel determines an ambient probability measure
-on `message × output block`, and the structural hypotheses of the single-letter converses
-(Markov factorization, memorylessness, per-letter joint laws) are read off that measure.  None of
-the statements below mention a particular channel model, so the multiple-access and broadcast
-converses instantiate the same lemmas.
+message law and a per-letter product channel determines an ambient probability measure on
+`message × output block`, and the structural hypotheses of the single-letter converses (Markov
+factorization, memorylessness, per-letter joint laws) are read off that measure.  None of the
+statements below mention a particular channel model — the encoder enters only through the
+factorization hypotheses `κ m = Wcode (g m)` and `κ m = ∏ⱼ W (x m j)` — so a multi-user converse
+instantiates them by supplying its own encoder and channel.
 
 ## Main statements
 
-* `isMarkovChain_of_compProd_encoder`: an ambient `nu compProd kappa` whose kernel factors through
-  a deterministic encoder carries the Markov chain `message -> codeword -> output`.
-* `isMemorylessChannel_of_compProd_pi`: if the kernel is the per-letter product of a channel
-  applied to a deterministic codeword, the ambient is a memoryless channel.
-* `compProd_pi_map_pair_eq`: the joint law of the `i`-th input-output pair is the channel joint.
-* `mutualInfo_map_comp`, `condMutualInfo_map_comp`: information quantities are invariant under a
-  shared pushforward of all their arguments.
-* `le_log_of_ceil_exp_le`: the message-count to rate step.
+* `isMarkovChain_of_compProd_encoder`: an ambient `ν ⊗ₘ κ` whose kernel factors through a
+  deterministic encoder `g` carries the Markov chain `M → g M → Y`.
+* `isMemorylessChannel_of_compProd_pi`: if the kernel is the per-letter product `∏ⱼ W (x m j)`
+  of a channel applied to a deterministic codeword, the ambient is a memoryless channel.
+* `compProd_pi_map_pair_eq`: the joint law of the `i`-th input-output pair is the channel joint
+  `(ν.map fun m ↦ x m i) ⊗ₘ W`.
+* `mutualInfo_map_comp`, `condDistrib_map_comp`, `condMutualInfo_map_comp`: information
+  quantities and conditional distributions are invariant under a shared pushforward of all their
+  arguments.
+* `le_log_of_ceil_exp_le`: `⌈exp x⌉₊ ≤ M` implies `x ≤ log M`, turning a message count into a
+  rate bound.
 -/
 
 namespace InformationTheory.Shannon
@@ -29,11 +33,13 @@ open MeasureTheory ProbabilityTheory InformationTheory
 open InformationTheory.Shannon.ChannelCodingConverseGeneral
 open scoped ENNReal
 
+/-! ### Markov factorization of the ambient -/
+
 /-- Abstract Markov-chain factorization `M → g M → Y` for an ambient `ν ⊗ₘ κ` in which the
 message-to-output kernel `κ` factors through a deterministic encoder `g : M → Z` and a
 codeword kernel `Wcode : Z → Y` (i.e. `κ m = Wcode (g m)`).  This is the general shape behind
-the concrete MAC-converse Markov chain; it needs no product/pi structure, only the
-factorization `hκ`.
+the message-to-codeword-to-output chain of a multi-user converse; it needs no product/pi
+structure, only the factorization `hκ`.
 @audit:ok -/
 lemma isMarkovChain_of_compProd_encoder
     {M Z Y : Type*}
@@ -130,6 +136,8 @@ lemma isMarkovChain_of_compProd_encoder
     funext y; show G (g m, m) = _; rw [hG_def]
   rw [hRHSconst, lintegral_const, measure_univ, mul_one]
 
+/-! ### Marginalizing a product measure at one coordinate -/
+
 /-- Re-randomizing a single coordinate of a product of probability measures leaves the
 `Measure.pi`-integral unchanged.  Used to peel the `i`-th output letter off the block channel
 `∏ⱼ W (xⱼ)` in the memoryless-channel derivation.
@@ -162,6 +170,8 @@ lemma lintegral_pi_eval {γ : Type*} [MeasurableSpace γ]
   rw [lintegral_pi_reRandomize ζ i (fun y ↦ g (y i)) (hg.comp (measurable_pi_apply i))]
   simp only [Function.update_self]
   rw [lintegral_const, measure_univ, mul_one]
+
+/-! ### Memorylessness and the per-letter joint law -/
 
 /-- A product-channel ambient is a memoryless channel: if the message-to-output kernel
 factors as the per-letter product `κ m = ∏ⱼ W (x m j)` of a channel `W` applied to a
@@ -287,22 +297,12 @@ lemma isMemorylessChannel_of_compProd_pi
   · funext j; exact Function.update_of_ne j.2 b y
   · exact Function.update_self i b y
 
-/-- If `⌈exp x⌉₊ ≤ M` then `x ≤ log M`, the step from a message count to a rate.  From
-`exp x ≤ ⌈exp x⌉₊ ≤ M`, taking logs (both sides positive) gives `x = log (exp x) ≤ log M`. -/
-lemma le_log_of_ceil_exp_le {x : ℝ} {M : ℕ}
-    (hM : Nat.ceil (Real.exp x) ≤ M) : x ≤ Real.log (M : ℝ) := by
-  have h1 : Real.exp x ≤ (Nat.ceil (Real.exp x) : ℝ) := Nat.le_ceil _
-  have h2 : ((Nat.ceil (Real.exp x) : ℕ) : ℝ) ≤ (M : ℝ) := Nat.cast_le.mpr hM
-  have h3 : Real.exp x ≤ (M : ℝ) := h1.trans h2
-  calc x = Real.log (Real.exp x) := (Real.log_exp x).symm
-    _ ≤ Real.log (M : ℝ) := Real.log_le_log (Real.exp_pos x) h3
-
 /-- Per-letter joint pushforward of a product-channel `compProd`: for an ambient `ν ⊗ₘ κ`
 whose message-to-output kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)`, the
 joint law of the `i`-th input-output pair `(x ω.1 i, ω.2 i)` is the channel joint
-`(ν.map (· i ∘ x)) ⊗ₘ W`.  This is the `h_pair_eq` core of
-`isMemorylessChannel_of_compProd_pi`, isolated as the measure identity underlying the
-per-letter identifications below. -/
+`(ν.map fun m ↦ x m i) ⊗ₘ W`.  Stated separately from `isMemorylessChannel_of_compProd_pi`,
+which establishes the same identity internally, because it is what identifies a per-letter
+information quantity of the ambient with the corresponding channel quantity. -/
 lemma compProd_pi_map_pair_eq
     {M A B : Type*} [MeasurableSpace M] [MeasurableSpace A] [MeasurableSpace B]
     {k : ℕ} (ν : Measure M) [IsProbabilityMeasure ν]
@@ -332,6 +332,8 @@ lemma compProd_pi_map_pair_eq
   exact lintegral_pi_eval (fun j ↦ W (x m j)) i (fun b ↦ f (x m i, b))
     (hf.comp (measurable_const.prodMk measurable_id))
 
+/-! ### Information transport under a shared pushforward -/
+
 /-- Mutual information is invariant under a shared pushforward of both random variables:
 `I(f; g) = I(f ∘ T; g ∘ T)` when the pair law on `μ.map T` matches the pair law of the composed
 variables on `μ`. -/
@@ -346,8 +348,8 @@ lemma mutualInfo_map_comp
   rfl
 
 /-- `condDistrib` is stable under a shared pushforward of the conditioning and conditioned
-variables: `condDistrib f h (μ.map T) =ᵃ condDistrib (f ∘ T) (h ∘ T) μ` on the conditioning
-marginal. -/
+variables: `condDistrib f h (μ.map T) =ᵐ condDistrib (f ∘ T) (h ∘ T) μ` on the conditioning
+marginal `(μ.map T).map h`. -/
 lemma condDistrib_map_comp
     {Ω Ω' A C : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω']
     [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
@@ -413,5 +415,17 @@ lemma condMutualInfo_map_comp'
       = condMutualInfo μ (fun ω ↦ f (T ω)) (fun ω ↦ g (T ω)) (fun ω ↦ h (T ω)) := by
   subst hρ
   exact condMutualInfo_map_comp μ T hT f hf g hg h hh
+
+/-! ### From a message count to a rate -/
+
+/-- If `⌈exp x⌉₊ ≤ M` then `x ≤ log M`, converting a message count into a rate bound.  From
+`exp x ≤ ⌈exp x⌉₊ ≤ M`, taking logs (both sides positive) gives `x = log (exp x) ≤ log M`. -/
+lemma le_log_of_ceil_exp_le {x : ℝ} {M : ℕ}
+    (hM : Nat.ceil (Real.exp x) ≤ M) : x ≤ Real.log (M : ℝ) := by
+  have h1 : Real.exp x ≤ (Nat.ceil (Real.exp x) : ℝ) := Nat.le_ceil _
+  have h2 : ((Nat.ceil (Real.exp x) : ℕ) : ℝ) ≤ (M : ℝ) := Nat.cast_le.mpr hM
+  have h3 : Real.exp x ≤ (M : ℝ) := h1.trans h2
+  calc x = Real.log (Real.exp x) := (Real.log_exp x).symm
+    _ ≤ Real.log (M : ℝ) := Real.log_le_log (Real.exp_pos x) h3
 
 end InformationTheory.Shannon

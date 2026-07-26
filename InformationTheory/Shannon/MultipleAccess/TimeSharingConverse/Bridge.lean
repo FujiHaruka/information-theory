@@ -13,6 +13,10 @@ coordinate-wise by time averages of per-letter pentagons lies in the convex hull
 together with the measure-theoretic bridge feeding it: pentagon well-formedness for the product
 input, the code → ambient reduction, rate extraction, and the per-letter information
 transport under coordinate maps.
+
+The model-independent half of that bridge — the Markov, memorylessness and
+pushforward-invariance lemmas, which mention no MAC structure — lives in
+`ChannelCoding/CodeToAmbient.lean`; what remains here is the MAC instantiation.
 -/
 
 namespace InformationTheory.Shannon.MAC
@@ -329,8 +333,9 @@ instance macConverseInput_isProbabilityMeasure [NeZero M₁] [NeZero M₂] :
   unfold macConverseInput; infer_instance
 
 /-- Per-letter product-channel kernel: given the message pair `m`, the output law is the product
-over the `n` letters of the channel `W` applied to the encoded pair `(encoder₁ m₁ i, encoder₂ m₂ i)`.
-The channel input is deterministic in the messages (through the encoders). -/
+over the `n` letters of the channel `W` applied to the encoded pair
+`(encoder₁ m₁ i, encoder₂ m₂ i)`.  The channel input is deterministic in the messages (through
+the encoders). -/
 noncomputable def macConverseKernel
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) :
     Kernel (Fin M₁ × Fin M₂) (Fin n → β) :=
