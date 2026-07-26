@@ -64,12 +64,18 @@ the pair `((U, V, X), (Y₁, Y₂))` gives the composition product of the `(U, V
 The identity carries both constraints that keep the region proper.  Taking the `(U, V)` component
 of the first factor away leaves the input-output pair law `(ν.map X) ⊗ₘ W`, so the outputs are
 distributed by the channel; keeping it says that the conditional law does not depend on the
-auxiliaries, so they act on the outputs only through the input letter. -/
+auxiliaries, so they act on the outputs only through the input letter.
+
+The identity pins the law exactly: it holds if and only if `ν` is the composition product of its
+own `(U, V, X)` marginal with the channel read at the input letter, so the union is indexed by
+the laws obtained from an arbitrary law of `(U, V, X)` through the channel and by nothing else.
+@audit:ok -/
 def IsUVChannelLaw (W : BCChannel α β₁ β₂) (ν : Measure (U × V × α × β₁ × β₂)) : Prop :=
   ν.map (fun q ↦ ((q.1, q.2.1, q.2.2.1), q.2.2.2))
     = (ν.map fun q ↦ (q.1, q.2.1, q.2.2.1)) ⊗ₘ
         W.comap (fun r : U × V × α ↦ r.2.2) (measurable_snd.comp measurable_snd)
 
+/-- @audit:ok -/
 lemma compProd_comap_map_prodMap {A A' B : Type*} [MeasurableSpace A] [MeasurableSpace A']
     [MeasurableSpace B] (μ : Measure A) [SFinite μ] (κ : Kernel A' B) [IsMarkovKernel κ]
     {g : A → A'} (hg : Measurable g) :
@@ -93,12 +99,14 @@ private lemma measurable_uvSplit :
     Measurable (fun q : U × V × α × β₁ × β₂ ↦ ((q.1, q.2.1, q.2.2.1), q.2.2.2)) :=
   measurable_uvFirstThree.prodMk (measurable_snd.comp (measurable_snd.comp measurable_snd))
 
+/-- @audit:ok -/
 lemma IsUVChannelLaw.smul {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
     {ν : Measure (U × V × α × β₁ × β₂)}
     [SFinite ν] (h : IsUVChannelLaw W ν) (a : ℝ≥0∞) : IsUVChannelLaw W (a • ν) := by
   unfold IsUVChannelLaw at h ⊢
   rw [Measure.map_smul, Measure.map_smul, h, Measure.compProd_smul_left]
 
+/-- @audit:ok -/
 lemma IsUVChannelLaw.add {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
     {ν₁ ν₂ : Measure (U × V × α × β₁ × β₂)}
     [SFinite ν₁] [SFinite ν₂] (h₁ : IsUVChannelLaw W ν₁) (h₂ : IsUVChannelLaw W ν₂) :
@@ -107,6 +115,7 @@ lemma IsUVChannelLaw.add {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
   rw [Measure.map_add _ _ measurable_uvSplit, Measure.map_add _ _ measurable_uvFirstThree,
     h₁, h₂, Measure.compProd_add_left]
 
+/-- @audit:ok -/
 lemma IsUVChannelLaw.map_auxiliaries {U' V' : Type*} [MeasurableSpace U'] [MeasurableSpace V']
     {W : BCChannel α β₁ β₂} [IsMarkovKernel W] {ν : Measure (U × V × α × β₁ × β₂)} [SFinite ν]
     (h : IsUVChannelLaw W ν) {f : U → U'} {g : V → V'} (hf : Measurable f) (hg : Measurable g) :
@@ -133,6 +142,7 @@ lemma IsUVChannelLaw.map_auxiliaries {U' V' : Type*} [MeasurableSpace U'] [Measu
     Measure.map_map hφ measurable_uvFirstThree] at hcong
   exact hcong
 
+/-- @audit:ok -/
 lemma IsUVChannelLaw.map_input_output {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
     {ν : Measure (U × V × α × β₁ × β₂)} [SFinite ν] (h : IsUVChannelLaw W ν) :
     ν.map (fun q ↦ (q.2.2.1, q.2.2.2)) = (ν.map fun q ↦ q.2.2.1) ⊗ₘ W := by
@@ -162,7 +172,8 @@ variable [StandardBorelSpace β₂] [Nonempty β₂]
 
 /-- The quadrilateral of a five-tuple law: the rate pairs satisfying the two corner bounds and
 the two sum-rate bounds of `InBCOuterRegionUV` at the four information slots of the law.  No sign
-constraint is imposed, matching the operational region, which contains nonpositive rate pairs. -/
+constraint is imposed, matching the operational region, which contains nonpositive rate pairs.
+@audit:ok -/
 def uvRegion {U V : Type*} [MeasurableSpace U] [MeasurableSpace V]
     (ν : Measure (U × V × α × β₁ × β₂)) [IsFiniteMeasure ν] : Set (ℝ × ℝ) :=
   {p | InBCOuterRegionUV p.1 p.2 (uvInfo₁ ν).toReal (uvInfo₂ ν).toReal
@@ -173,17 +184,20 @@ quadrilaterals `uvRegion ν` over the channel laws `ν` of `W`.
 
 Both auxiliary alphabets are fixed to `ℕ`, which quantifies over every countable auxiliary
 without quantifying over types.  The closure is taken because a union of closed half-plane
-intersections need not be closed, and because the operational region is itself a closure. -/
+intersections need not be closed, and because the operational region is itself a closure.
+@audit:ok -/
 def bcOuterRegionUV (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (ν : ProbabilityMeasure (ℕ × ℕ × α × β₁ × β₂))
     (_ : IsUVChannelLaw W (ν : Measure (ℕ × ℕ × α × β₁ × β₂))),
       uvRegion (ν : Measure (ℕ × ℕ × α × β₁ × β₂)))
 
+/-- @audit:ok -/
 theorem bcOuterRegionUV_isClosed (W : BCChannel α β₁ β₂) : IsClosed (bcOuterRegionUV W) :=
   isClosed_closure
 
 /-- The five-tuple law with constant auxiliaries and a constant input letter `x₀`, whose output
-pair is drawn from `W x₀`. -/
+pair is drawn from `W x₀`.
+@audit:ok -/
 noncomputable def uvConstLaw (W : BCChannel α β₁ β₂) (x₀ : α) :
     Measure (ℕ × ℕ × α × β₁ × β₂) :=
   ((Measure.dirac ((0 : ℕ), (0 : ℕ), x₀)) ⊗ₘ
@@ -206,6 +220,7 @@ instance uvConstLaw_isProbabilityMeasure (W : BCChannel α β₁ β₂) [IsMarko
 
 omit [StandardBorelSpace α] [Nonempty α] [StandardBorelSpace β₁] [Nonempty β₁]
   [StandardBorelSpace β₂] [Nonempty β₂] in
+/-- @audit:ok -/
 lemma uvConstLaw_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W] (x₀ : α) :
     IsUVChannelLaw W (uvConstLaw W x₀) := by
   have hg : Measurable (fun r : ℕ × ℕ × α ↦ r.2.2) := measurable_snd.comp measurable_snd
@@ -226,6 +241,7 @@ lemma uvConstLaw_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W
         W.comap (fun r : ℕ × ℕ × α ↦ r.2.2) hg).map Prod.fst
       = Measure.dirac ((0 : ℕ), (0 : ℕ), x₀) from Measure.fst_compProd _ _]
 
+/-- @audit:ok -/
 theorem bcOuterRegionUV_nonempty (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     (bcOuterRegionUV W).Nonempty := by
   obtain ⟨x₀⟩ := (inferInstance : Nonempty α)
@@ -239,6 +255,7 @@ end Region
 
 section CodeLaw
 
+/-- @audit:ok -/
 lemma compProd_pi_map_pair_eq_of_update_invariant
     {M A B C : Type*} [MeasurableSpace M] [MeasurableSpace A] [MeasurableSpace B]
     [MeasurableSpace C] {k : ℕ}
@@ -275,6 +292,7 @@ lemma compProd_pi_map_pair_eq_of_update_invariant
 
 variable [Nonempty β₁] [Nonempty β₂]
 
+/-- @audit:ok -/
 theorem bcUVJointDistribution_isUVChannelLaw
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     [NeZero M₁] [NeZero M₂] (i : Fin n) :
