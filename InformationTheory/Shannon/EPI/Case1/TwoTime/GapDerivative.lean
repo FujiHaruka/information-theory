@@ -27,8 +27,9 @@ closed form), its value at the left endpoint `twoTimeLogRatioGap_at_zero`, the
 matched-sum law `matchedSum_law_eq` (the matched-sum perturbation reduces to a
 single-noise heat flow of `X + Y`), and the derivative
 `twoTimeLogRatioGap_hasDerivAt` / `twoTimeLogRatioGap_deriv_le_zero`. Verbatim
-split of `TwoTime.lean` §2–§3; proofs unchanged. Builds on `TwoTimeCore.lean`
-(§0) + `TwoTimePaths.lean` (§1). Umbrella: `TwoTime.lean`.
+split of `EPI/Case1/TwoTime.lean` §2–§3; proofs unchanged. Builds on
+`TwoTime/Core.lean` (§0) + `TwoTime/Paths.lean` (§1). Umbrella:
+`EPI/Case1/TwoTime.lean`.
 -/
 
 open MeasureTheory ProbabilityTheory Real
@@ -69,7 +70,7 @@ noncomputable def sumHeatFlowEP (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (s r
 
 This is a plain `def` (no `sorry`): the paths `s, r` are inputs (constructed by
 `matchedTimePath_exists`), not load-bearing hypotheses. Mirrors the structure of
-`csiszarLogRatioGap` (`EPIL3Integration.lean:1380`) with the independent
+`csiszarLogRatioGap` (`EPI/L3Integration.lean`) with the independent
 two-time perturbation and the `e^t` reparametrization. -/
 noncomputable def twoTimeLogRatioGap (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
     (s r : ℝ → ℝ) (t : ℝ) : ℝ :=
@@ -242,7 +243,7 @@ theorem matchedSum_law_eq
 `J_S·(1/J_X + 1/J_Y) − 1` at `t > 0` along the matched path.
 
 Reuses the per-component de Bruijn building blocks of
-`csiszarLogRatioGap_hasDerivAt` (`EPIStamToBridge.lean:744`, the
+`csiszarLogRatioGap_hasDerivAt` (`EPI/Stam/ToBridge.lean`, the
 `entropyPower(X_s)·J_X` form `hN_X`) composed via the chain rule with the
 matched velocities `s'(t) = 1/J_X(s(t))`, `r'(t) = 1/J_Y(r(t))`
 (`IsMatchedTimePath.deriv_at`). The bivariate de Bruijn for the sum is

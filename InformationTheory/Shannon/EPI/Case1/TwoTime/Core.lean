@@ -21,8 +21,10 @@ import Mathlib.Order.Monotone.Basic
 # EPI case-1 two-time object — Core (§0)
 
 Matched-time path abbreviations shared across the two-time object split
-(`TwoTimePaths.lean` = §1 path existence, `TwoTimeObject.lean` = §2–§4).
-Verbatim split of `TwoTime.lean` §0; proofs unchanged. Umbrella: `TwoTime.lean`.
+(`TwoTime/Paths.lean` = §1 path existence, `TwoTime/GapDerivative.lean` +
+`TwoTime/MonotonicityAndSaturation.lean` + `TwoTime/EntropyPowerInequality.lean` = §2–§4).
+Verbatim split of `EPI/Case1/TwoTime.lean` §0; proofs unchanged. Umbrella:
+`EPI/Case1/TwoTime.lean`.
 -/
 
 open MeasureTheory ProbabilityTheory Real

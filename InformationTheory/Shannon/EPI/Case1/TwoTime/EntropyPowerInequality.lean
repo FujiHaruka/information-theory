@@ -55,7 +55,7 @@ variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
 `twoTimeLogRatioGap_at_zero` rewrites `R 0` to the EPI bridge form, so
 `R 0 ≥ 0 ⟺ entropyPower (X+Y) ≥ entropyPower X + entropyPower Y`. Mirrors
-`epi_of_csiszarLogRatioGap_zero_nonneg` (`EPIStamToBridge.lean:1030`).
+`epi_of_csiszarLogRatioGap_zero_nonneg` (`EPI/Stam/ToBridge.lean`).
 @audit:ok -/
 theorem epi_of_twoTimeLogRatioGap_zero_nonneg
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
@@ -81,7 +81,7 @@ theorem epi_of_twoTimeLogRatioGap_zero_nonneg
 
 Order-limit bridge (`le_of_tendsto`) over `twoTimeLogRatioGap_antitoneOn_Ici_zero`
 + `twoTimeLogRatioGap_tendsto_zero_atTop`, then `epi_of_twoTimeLogRatioGap_zero_nonneg`.
-Mirrors `epi_of_csiszarLogRatioGap_tendsto` (`EPICase1RatioLimit.lean:103`).
+Mirrors `epi_of_csiszarLogRatioGap_tendsto` (`EPI/Case1/RatioLimit/PathRegular.lean`).
 @audit:ok -/
 theorem epi_of_twoTimeLogRatioGap_tendsto
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
@@ -157,7 +157,7 @@ theorem heatFlowEP_tendsto_atTop
   exact h_prod.congr' (h_eq.mono (fun s hs ↦ hs.symm))
 
 /-- TT case-1 EPI terminal (two-time analog of the single-`t`
-`entropyPower_add_ge_case1_of_regular`, `EPICase1RatioLimit.lean:1343`).
+`entropyPower_add_ge_case1_of_regular`, `EPI/Case1/RatioLimit/Assembly.lean`).
 
 `N(X+Y) ≥ N(X) + N(Y)`, assembled from the three GENUINE two-time pillars
 (`twoTimeLogRatioGap_antitoneOn_Ici_zero`, `twoTimeLogRatioGap_tendsto_zero_atTop`,
@@ -179,7 +179,7 @@ representative escape is structurally impossible — the same honest mechanism a
 
 Preconditions are the union of `matchedTimePath_exists` (×2) + Pillar B + Pillar C
 regularity, deduplicated. None encode the EPI conclusion (mirrors the single-`t`
-terminal's `@audit:ok` union, `EPICase1RatioLimit.lean:1336-1342`):
+terminal's `@audit:ok` union, `EPI/Case1/RatioLimit/Assembly.lean`):
 * `h_endpt_X`/`h_endpt_Y` (path-producer endpoint continuity), `h_endpt_sum` (Pillar B);
 * `h_reg_X`/`h_reg_Y`/`h_reg_sum : IsDeBruijnRegularityHyp` (de Bruijn + J pin);
 * `h_scale_*` per-σ a.c.+integrability (consumed by `entropyPower_path_scaling`,

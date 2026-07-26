@@ -22,8 +22,8 @@ import InformationTheory.Shannon.EPI.Case1.TwoTime.Core
 # EPI case-1 two-time object — matched-time path existence (§1)
 
 The inverse-function subproject: construct `s(t) = N_A⁻¹(N_A(0)·eᵗ)`. Five private
-sub-lemmas (i)–(v) + `matchedTimePath_exists`. Lives in `TwoTime.lean` §1,
-building on `TwoTimeCore.lean` (§0). Umbrella: `TwoTime.lean`.
+sub-lemmas (i)–(v) + `matchedTimePath_exists`. Lives in `EPI/Case1/TwoTime.lean` §1,
+building on `TwoTime/Core.lean` (§0). Umbrella: `EPI/Case1/TwoTime.lean`.
 -/
 
 open MeasureTheory ProbabilityTheory Real

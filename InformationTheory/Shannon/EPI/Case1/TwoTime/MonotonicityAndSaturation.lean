@@ -57,7 +57,7 @@ The `log N(s(t),r(t))` term is continuous via the matched-path continuity
 (`IsMatchedTimePath.cont`) + heat-flow endpoint continuity
 (`heatFlowEntropyPower_continuousWithinAt_zero`); the
 `−t` term is continuous. Mirrors `csiszarLogRatioGap_continuousWithinAt_zero`
-(`EPIStamToBridge.lean:1098`).
+(`EPI/Stam/ToBridge.lean`).
 
 Mechanism. On `Set.Ioi 0` (where the matched velocities give `s t, r t > 0`),
 `matchedSum_law_eq` rewrites the two-time sum heat flow into the single-noise
@@ -176,7 +176,7 @@ theorem twoTimeLogRatioGap_continuousWithinAt_zero
 `antitoneOn_of_deriv_nonpos` (convex `Set.Ici 0`) with continuity
 (`twoTimeLogRatioGap_continuousWithinAt_zero`), differentiability + per-`t`
 `deriv ≤ 0` (`twoTimeLogRatioGap_hasDerivAt.deriv` + `_deriv_le_zero`).
-Mirrors `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1130`).
+Mirrors `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPI/Stam/ToBridge.lean`).
 
 Surface structure (matched to the single-time model). On the interior `Set.Ioi 0`
 `AntitoneOn` holds: continuity there is the interior differentiability
@@ -508,7 +508,7 @@ theorem sumHeatFlowEP_div_heatFlowEP_sum_tendsto_one
 
 /-- TT-`_tendsto_zero_atTop` — the two-time gap tends to `0` as `t → ∞`
 (Gaussian-saturation limit along the matched paths). Mirrors
-`csiszarLogRatioGap_tendsto_zero_atTop` (`EPICase1RatioLimit.lean:1178`).
+`csiszarLogRatioGap_tendsto_zero_atTop` (`EPI/Case1/RatioLimit/Assembly.lean`).
 
 §1 (reduction, sorry-free in this body). Using
 `IsMatchedTimePath.matched_growth` (for `t ≥ 0`, `heatFlowEP A B P (s t) =

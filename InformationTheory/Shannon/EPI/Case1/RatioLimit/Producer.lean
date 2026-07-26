@@ -58,7 +58,7 @@ theorem map_gaussianConvolution_rescale_eq {α : Type*} [MeasurableSpace α]
 The Stam-side input to closing `integrable_deriv`: convolution with a regular
 density only *decreases* Fisher information, `J(pX ∗ fY) ≤ J(pX)`. This is the `lam = 1`
 specialization of the convex Fisher bound `convex_fisher_bound_of_ready`
-(`EPIBlachmanDensity.lean:932`, `@audit:ok`):
+(`EPI/Blachman/Density.lean`, `@audit:ok`):
 
     `J(conv) ≤ lam²·J(fX) + (1-lam)²·J(fY)`  →  (`lam = 1`)  →  `J(conv) ≤ J(fX)`.
 
@@ -109,7 +109,7 @@ input regularity. Since PB-1 fixes the noise to `𝒩(0,1)`, the unit-variance `
 required by `IsRegularDeBruijnHypV2` is satisfied directly (no reparametrization needed for
 the X / Y singletons; the sum-instance `𝒩(0,2)` is the only reparam case, deferred to a
 later wave). The `pX`-witness fields are the same plumbing as `IsRegularDeBruijnHypV2.ofHeatFlow`
-(`FisherInfoDeBruijnHeatFlow.lean`); the conv-pin `density_path` reuses the density
+(`FisherInfo/DeBruijnHeatFlow.lean`); the conv-pin `density_path` reuses the density
 of `P.map (X + √t·Z)`. -/
 
 /-- From method-X input regularity (`X`

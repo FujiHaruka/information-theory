@@ -316,7 +316,7 @@ joint-≪-product / squared-deviation / both path-entropy log-integrabilities + 
 conditional-KL cross-entropy integrabilities) are closed using `hA_ac` + the
 `convDensityAdd` path-density identification + the extracted cross-entropy lemmas
 (`convCrossEntropy_perFibre_integrable` / `convCrossEntropy_zAvg_integrable` /
-`convJointLlr_integrable`, `EPIG2ConvEntropyDensity.lean`). -/
+`convJointLlr_integrable`, `EPI/G2/ConvEntropyDensity.lean`). -/
 
 /-- Scaling preserves absolute continuity: if `P.map A ≪ volume` then `P.map (A/√t) ≪ volume`
 for `t > 0` (the map `(·/√t)` is a Lebesgue-a.c. linear isomorphism). -/
@@ -1109,7 +1109,7 @@ The bundle being constructed is itself regularity (audited non-load-bearing at i
 site §3).
 
 All 9 integrability conjuncts are supplied. The 3 conditional-KL integrabilities are
-supplied via the extracted standalone lemmas in `EPIG2ConvEntropyDensity.lean`
+supplied via the extracted standalone lemmas in `EPI/G2/ConvEntropyDensity.lean`
 (`convCrossEntropy_perFibre_integrable` / `convCrossEntropy_zAvg_integrable` /
 `convJointLlr_integrable`), instantiated here with the
 Gaussian fibre `q := gaussianPDFReal 0 v_B` (translated by `z`) and the target

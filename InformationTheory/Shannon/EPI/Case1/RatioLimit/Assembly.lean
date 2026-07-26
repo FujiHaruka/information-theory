@@ -185,7 +185,7 @@ theorem csiszarLogRatioGap_tendsto_zero_atTop
 /-! ## §5 — End-to-end case-1 assembly (with-noise)
 
 `entropyPower_add_ge_case1_of_regular`: combine the ratio antitonicity
-(`csiszarLogRatioGap_antitoneOn_Ici_zero`, `EPIStamToBridge.lean:1085`) and the
+(`csiszarLogRatioGap_antitoneOn_Ici_zero`, `EPI/Stam/ToBridge.lean`) and the
 saturation (`csiszarLogRatioGap_tendsto_zero_atTop`, §4) through the
 order-limit bridge (§1 `epi_of_csiszarLogRatioGap_tendsto`) to obtain the
 classical (case-1, a.c. inputs) entropy power inequality. Pure assembly — no new
@@ -196,7 +196,7 @@ absolutely continuous inputs, proved with auxiliary Gaussian noise and without a
 CLT, under heat-flow and scaling regularity preconditions. It is assembled from the two
 pillars:
 
-* `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1085`):
+* `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPI/Stam/ToBridge.lean`):
   the log-ratio gap `R = csiszarLogRatioGap X Y Z_X Z_Y P` is `AntitoneOn (Set.Ici 0)`.
 * `csiszarLogRatioGap_tendsto_zero_atTop` (§4): `R t → 0` as `t → ∞`.
 
@@ -431,7 +431,7 @@ re-introduces `v_X v_Y := (1 : ℝ≥0)` existentially to keep the `_of_regular`
 
 Non-vacuity: the unit-noise restate resolves a latent vacuity defect. The old signature
 took arbitrary nonzero `v_X v_Y` while threading `IsDeBruijnRegularityHyp X Z_X P`, whose
-`reg_at t ht .Z_law` (= `IsRegularDeBruijnHypV2.Z_law`, `FisherInfoDeBruijn.lean:210`)
+`reg_at t ht .Z_law` (= `IsRegularDeBruijnHypV2.Z_law`, `FisherInfo/DeBruijn.lean`)
 hardcodes `P.map Z_X = gaussianReal 0 1` — so for `v_X ≠ 1` the hypotheses `hZX_law` and
 `Z_law` were mutually unsatisfiable, making the theorem vacuously true (premises never
 jointly inhabitable). Fixing `hZX_law : P.map Z_X = gaussianReal 0 1` removes the

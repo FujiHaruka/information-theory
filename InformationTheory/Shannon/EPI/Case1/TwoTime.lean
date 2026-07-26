@@ -7,7 +7,7 @@ import InformationTheory.Shannon.EPI.Case1.TwoTime.EntropyPowerInequality
 /-!
 # EPI case-1 sum frontier — two-time object skeleton
 
-The single-time log-ratio object `csiszarLogRatioGap` (`EPIL3Integration.lean`)
+The single-time log-ratio object `csiszarLogRatioGap` (`EPI/L3Integration.lean`)
 perturbs `X` and `Y` at the same time `t`, forcing `s = r = t`. Its sum
 derivative is the variance-2 quantity `2·J_sum`, which does not close from
 the harmonic Stam inequality.

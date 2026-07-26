@@ -23,9 +23,9 @@ Let `R(t) = csiszarLogRatioGap X Y Z_X Z_Y P t
           = log N(law(X+Y+√t·(Z_X+Z_Y))) − log (N(law(X+√t·Z_X)) + N(law(Y+√t·Z_Y)))`,
 the log-ratio gap (`EPIL3Integration.csiszarLogRatioGap`).
 
-* `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1085`,
+* `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPI/Stam/ToBridge.lean`,
   sorryAx-free) gives `AntitoneOn R (Set.Ici 0)`.
-* `epi_of_csiszarLogRatioGap_zero_nonneg` (`EPIStamToBridge.lean:985`)
+* `epi_of_csiszarLogRatioGap_zero_nonneg` (`EPI/Stam/ToBridge.lean`)
   gives `0 ≤ R 0 ⟹ EPI`.
 
 So if `R t → 0` as `t → ∞`, then by antitonicity `R 0 ≥ lim_{t→∞} R t = 0`, hence
@@ -34,7 +34,7 @@ EPI. No entropic CLT is needed: `R t → 0` follows from a *scaling squeeze*.
 ### Scaling cancellation
 
 `X + √t·Z_X = √t·(X/√t + Z_X)`, so by `entropyPower_map_mul_const`
-(`EPIPlumbing.lean:136`, `N(μ.map(·*c)) = c²·N(μ)`, `c = √t`):
+(`EPI/Plumbing.lean`, `N(μ.map(·*c)) = c²·N(μ)`, `c = √t`):
 `N(law(X+√t·Z_X)) = t · N(law(X/√t + Z_X))`. Applying this to all three paths, the
 `t` factor cancels inside the `log`s (`Real.log_mul`, `t > 0`, `N > 0`):
 `R t = log N(W_sum t) − log (N(W_X t) + N(W_Y t))`,

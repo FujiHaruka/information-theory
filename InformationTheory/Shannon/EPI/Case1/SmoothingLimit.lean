@@ -1113,7 +1113,7 @@ theorem entropyPowerExt_add_ge_of_finite_variance
 /-! ## Infinite-variance a.c. classical EPI
 
 The infinite-variance case `entropyPowerExt_add_ge_infinite_variance` is established
-in `EPIInfiniteVarianceCapstone.lean` (compact-support truncation + finite-variance
+in `EPI/InfiniteVariance/Capstone.lean` (compact-support truncation + finite-variance
 EPI + Gibbs + DCT). It cannot reside here because this file is upstream of the
 truncation module (import cycle). -/
 
