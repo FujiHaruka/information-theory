@@ -114,6 +114,7 @@ import InformationTheory.Shannon.BroadcastChannel.Marton.MarkovCore.Receiver2
 import InformationTheory.Shannon.BroadcastChannel.Marton.MarkovCore
 import InformationTheory.Shannon.BroadcastChannel.Marton.Achievability
 import InformationTheory.Shannon.BroadcastChannel.Operational
+import InformationTheory.Shannon.BroadcastChannel.OuterBound
 import InformationTheory.Shannon.RelayCutset
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity

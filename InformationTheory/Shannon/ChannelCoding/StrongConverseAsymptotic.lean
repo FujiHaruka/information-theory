@@ -28,6 +28,8 @@ term and the high-information-density tail term to `0`.
 * `channelCoding_highLLR_tendsto_zero` — the average high-LLR tail mass tends to `0`, by
   non-i.i.d. Chebyshev concentration.
 * `channelCoding_strong_converse_asymptotic` — the Wolfowitz strong converse headline.
+* `channelCoding_operational_rate_le_capacity` — an operationally achievable rate is at most
+  the capacity, the contrapositive form of the strong converse.
 
 ## References
 
@@ -786,5 +788,59 @@ theorem channelCoding_strong_converse_asymptotic
   have hgoal : Tendsto (fun n : ℕ ↦ 1 - (1 - ((c n).averageErrorProb W).toReal)) atTop
       (𝓝 (1 - 0)) := tendsto_const_nhds.sub hsq
   simpa using hgoal
+
+/-- An operationally achievable rate is at most the capacity: if for every target error `ε > 0`
+all large enough block lengths carry a code with at least `exp (n R)` messages and average error
+below `ε`, then `R ≤ capacity W`.
+
+This is the contrapositive of `channelCoding_strong_converse_asymptotic`: were `capacity W < R`,
+the codes would have rate eventually above `capacity W + (R - capacity W)`, forcing their average
+error to tend to `1` and contradicting the `ε`-small errors.  The capacity achiever `p` and the
+full-support output `hq_pos` are the preconditions of the strong converse, passed through
+unchanged. -/
+@[entry_point]
+theorem channelCoding_operational_rate_le_capacity
+    [Nonempty α]
+    (W : Channel α β) [IsMarkovKernel W]
+    (p : α → ℝ) (hp : p ∈ stdSimplex ℝ α)
+    (hp_max : IsMaxOn (fun p : α → ℝ ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
+      (stdSimplex ℝ α) p)
+    (hq_pos : ∀ b : β, 0 < (outputDistribution (pmfToMeasure p) W).real {b})
+    {R : ℝ}
+    (hach : ∀ ε : ℝ, 0 < ε → ∃ N : ℕ, ∀ n, N ≤ n → ∃ (M : ℕ) (c : Code M n α β),
+      Real.exp ((n : ℝ) * R) ≤ (M : ℝ) ∧ ((c.averageErrorProb W).toReal) < ε) :
+    R ≤ capacity W := by
+  classical
+  by_contra hcon
+  have hδ : 0 < R - capacity W := sub_pos.mpr (not_le.mp hcon)
+  obtain ⟨N, hN⟩ := hach (1 / 2) (by norm_num)
+  -- Extend the codes to every block length, padding the short ones by a single-message code.
+  have hall : ∀ n : ℕ, ∃ (M : ℕ) (c : Code M n α β), 0 < M ∧
+      (N ≤ n → Real.exp ((n : ℝ) * R) ≤ (M : ℝ) ∧ ((c.averageErrorProb W).toReal) < 1 / 2) := by
+    intro n
+    by_cases hn : N ≤ n
+    · obtain ⟨M, c, hMR, hce⟩ := hN n hn
+      have hMpos : 0 < M := by
+        have h0 : (0 : ℝ) < (M : ℝ) := lt_of_lt_of_le (Real.exp_pos _) hMR
+        exact_mod_cast h0
+      exact ⟨M, c, hMpos, fun _ ↦ ⟨hMR, hce⟩⟩
+    · exact ⟨1, ⟨fun _ _ ↦ Classical.arbitrary α, fun _ ↦ 0⟩, one_pos, fun h ↦ absurd h hn⟩
+  choose M c hMpos hkey using hall
+  have hrate : ∀ᶠ n in atTop, capacity W + (R - capacity W) ≤ Real.log (M n) / n := by
+    filter_upwards [eventually_ge_atTop N, eventually_ge_atTop 1] with n hn hn1
+    obtain ⟨hMR, -⟩ := hkey n hn
+    have hnpos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn1
+    have hlog : (n : ℝ) * R ≤ Real.log (M n) := by
+      have h := Real.log_le_log (Real.exp_pos ((n : ℝ) * R)) hMR
+      rwa [Real.log_exp] at h
+    have heq : capacity W + (R - capacity W) = R := by ring
+    rw [heq, le_div_iff₀ hnpos, mul_comm]
+    exact hlog
+  have htend := channelCoding_strong_converse_asymptotic W M hMpos c hδ p hp hp_max hq_pos hrate
+  have hle : ∀ᶠ n in atTop, ((c n).averageErrorProb W).toReal ≤ 1 / 2 := by
+    filter_upwards [eventually_ge_atTop N] with n hn
+    exact ((hkey n hn).2).le
+  have hcontra : (1 : ℝ) ≤ 1 / 2 := le_of_tendsto htend hle
+  linarith
 
 end InformationTheory.Shannon.ChannelCoding
