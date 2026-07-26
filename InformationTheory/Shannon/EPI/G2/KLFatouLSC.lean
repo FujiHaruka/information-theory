@@ -29,12 +29,12 @@ The route:
   (W4) plug in,
 - assembly turns the KL liminf bound into the differential-entropy limsup bound (α)
   through `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`
-  (`EPIG2BridgeDensityHelpers.lean`, `@audit:ok`).
+  (`EPI/G2/BridgeDensityHelpers.lean`, `@audit:ok`).
 
 The two missing facts (KL-LSC, withDensity rnDeriv quotient) are assemblies of existing
 Mathlib parts. The final boundedness step of the (α) assembly is supplied by the
 pX-only (β) lower bound `negMulLog_convDensity_entropy_ge_density`
-(`EPIG2ConvEntropyDensity.lean`).
+(`EPI/G2/ConvEntropyDensity.lean`).
 -/
 
 namespace InformationTheory.EPIG2KLFatou
@@ -643,7 +643,7 @@ ROUTE (the pieces all live in this file):
 
 BOUNDEDNESS (the `hKL_limsup` step): the boundedness that the
 ℝ≥0∞ → `toReal` transfer of W1 requires is supplied by the pX-only (β) lower bound
-`negMulLog_convDensity_entropy_ge_density` (`EPIG2ConvEntropyDensity.lean`, `@audit:ok`,
+`negMulLog_convDensity_entropy_ge_density` (`EPI/G2/ConvEntropyDensity.lean`, `@audit:ok`,
 via the `cond-diff-entropy` route): each `h(μ_n) ≥ h(pX)`, so
 `KLr n = −h(μ_n) − cross_n ≤ −cross_n − h(pX)`, which converges (W3) and hence bounds
 `KLr` above. KL finiteness `klDiv μ_n γ ≠ ∞` (and `klDiv μ γ ≠ ∞`) is the

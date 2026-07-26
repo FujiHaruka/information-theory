@@ -12,7 +12,7 @@ import Mathlib.Analysis.Convex.Mul
 /-!
 # EPI Blachman — explicit density route (S2 + S3, condExp-free)
 
-Consumes the gateway `convDensityAdd_hasDerivAt_of_regular` (`EPIConvDensity.lean`)
+Consumes the gateway `convDensityAdd_hasDerivAt_of_regular` (`EPI/Conv/Density.lean`)
 and builds, without any `condExp`/`condDistrib`/disintegration:
 
 * `condDensityX fX fY z x := fX x * fY (z - x) / convDensityAdd fX fY z`

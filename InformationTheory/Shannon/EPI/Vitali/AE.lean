@@ -12,14 +12,14 @@ import InformationTheory.Shannon.EPI.ApproxIdentityL1
 
 This file supplies the genuine a.e.-convergence building block consumed by the
 layer-2 machinery `differentialEntropy_convDensity_integral_tendsto` in
-`EPIG2HeatFlowContinuity.lean`. Along any sequence `u → 0⁺`, the entropy
+`EPI/G2/HeatFlowContinuity.lean`. Along any sequence `u → 0⁺`, the entropy
 integrands `negMulLog (convDensityAdd pX g_{u n})` converge to `negMulLog pX`
 a.e. along a subsequence `n ↦ u (ns n)` (`StrictMono ns`).
 
 ## Why a subsequence (and why that is enough)
 
 The genuine scaffolding is the layer-1 L¹ convergence
-`convDensityAdd_tendsto_L1_zero` (`EPIApproxIdentityL1.lean`, `@audit:ok`).
+`convDensityAdd_tendsto_L1_zero` (`EPI/ApproxIdentityL1.lean`, `@audit:ok`).
 Composing it with `hu_lim` and feeding it through
 `tendstoInMeasure_of_tendsto_eLpNorm` (Lp → measure) and
 `TendstoInMeasure.exists_seq_tendsto_ae` (measure → a.e.) yields a.e. convergence

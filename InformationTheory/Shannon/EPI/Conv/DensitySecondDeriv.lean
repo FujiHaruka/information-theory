@@ -31,7 +31,7 @@ load-bearing bundling of the second-derivative conclusion, which is *derived*.
 
 The per-`y` kernel derivative closed forms are the `@audit:ok` atoms
 `heatFlow_density_heat_equation_kernel_x_deriv1` / `_x_deriv2`
-(`FisherInfoDeBruijnPerTime.lean`), and `heatFlow_density_heat_equation_kernel_eq`
+(`FisherInfo/DeBruijnPerTime.lean`), and `heatFlow_density_heat_equation_kernel_eq`
 bridges them to `gaussianPDFReal`.
 -/
 

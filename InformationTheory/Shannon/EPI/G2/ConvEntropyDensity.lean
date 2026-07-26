@@ -14,7 +14,7 @@ import InformationTheory.Meta.EntryPoint
 # EPI G2 — (β) density-only lower bound
 
 This file packages the Ω-level (β) lower bound
-`negMulLog_convDensity_entropy_ge` (`EPIG2ConvEntropyMonotone.lean`) into a
+`negMulLog_convDensity_entropy_ge` (`EPI/G2/ConvEntropyMonotone.lean`) into a
 density-only wrapper: given just a probability density `pX` (plus minimal
 regularity), no abstract independent pair is required.
 

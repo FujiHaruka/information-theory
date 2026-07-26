@@ -25,7 +25,7 @@ import InformationTheory.Meta.EntryPoint
 # Heat-flow entropy-power continuity at the endpoint `t = 0⁺`
 
 This file isolates the single analytic atom used by the EPI continuity consumer in
-`EPIStamToBridge.lean`: the continuity of
+`EPI/Stam/ToBridge.lean`: the continuity of
 `t ↦ entropyPower (P.map (fun ω ↦ X ω + √t · Z ω))` at the endpoint `t = 0⁺` along
 the heat-flow ray. The interior `t > 0` continuity is supplied separately by
 `csiszarLogRatioGap_differentiableOn_interior`.

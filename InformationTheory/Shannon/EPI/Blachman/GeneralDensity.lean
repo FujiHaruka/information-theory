@@ -31,13 +31,13 @@ conv-with-Gaussian densities. All 19 `IsBlachmanConvReady` fields are closed gen
   shifted/sheared copies of `int_fisherX/int_fisherY`.
 * The `int_fisherZ` field is closed genuinely from Fisher integrability of the
   conv-of-conv `convDensityAdd fX fY`. The 4-fold interchange bridge
-  `convDensityAdd_convGaussian_interchange` (`EPIConvDensityAssoc.lean`) identifies it with
+  `convDensityAdd_convGaussian_interchange` (`EPI/Conv/DensityAssoc.lean`) identifies it with
   `convDensityAdd (convDensityAdd pX pY) g_{2t}` (convolution associativity via Mathlib
   `convolution_assoc` + `convDensityAdd_comm` + variance-doubling `g_t ∗ g_t = g_{2t}`),
   which is conv-with-Gaussian (variance `2t`) and closes via
   `convDensityAdd_fisher_integrand_integrable (pX∗pY) … (2t)`. The `pX∗pY` arm needs
   `pX∗pY` to be a normalized probability density (nonneg / measurable / integrable / mass 1),
-  supplied by the `convDensityAdd_pXpY_*` helpers in `EPIConvDensityAssoc.lean`.
+  supplied by the `convDensityAdd_pXpY_*` helpers in `EPI/Conv/DensityAssoc.lean`.
 
 `hpX_norm : ∫ pX = 1` / `hpY_norm` are added beyond the bare `hpX_mass` of the brief
 target signature: they are A-5-suppliable regularity (from `pX_law`'s probability

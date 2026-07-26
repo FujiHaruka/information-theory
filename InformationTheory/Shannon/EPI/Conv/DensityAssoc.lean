@@ -8,7 +8,7 @@ import Mathlib.MeasureTheory.Group.Prod
 /-!
 # Convolution-density associativity + 4-fold interchange bridge (EPI A-5 precondition (3))
 
-Closes the `int_fisherZ` retreat of `EPIBlachmanGeneralDensity.lean`: the conv-of-conv
+Closes the `int_fisherZ` retreat of `EPI/Blachman/GeneralDensity.lean`: the conv-of-conv
 `convDensityAdd (convDensityAdd pX g_t) (convDensityAdd pY g_t)` equals
 `convDensityAdd (convDensityAdd pX pY) g_{2t}` (variance-2t conv-with-Gaussian), which
 then closes Fisher integrability via `convDensityAdd_fisher_integrand_integrable`.

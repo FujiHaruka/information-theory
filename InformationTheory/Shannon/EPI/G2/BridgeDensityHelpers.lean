@@ -12,7 +12,7 @@ import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 
 Two standalone identities feeding the assembly of the EPI G2 bridge lemma
 `differentialEntropy (μ.map X) − condDifferentialEntropy X Z μ = (klDiv joint product).toReal`
-(`EPIG2ConvEntropyMonotone.lean`). Both are independent of sub-gap (a), the conditional-KL
+(`EPI/G2/ConvEntropyMonotone.lean`). Both are independent of sub-gap (a), the conditional-KL
 integral form `klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`).
 
 ## sub-gap (b) — per-fiber density expansion
