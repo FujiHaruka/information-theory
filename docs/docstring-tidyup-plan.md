@@ -1,6 +1,6 @@
 # docstring tidy-up plan — Mathlib スタイルへの寄せ込み（英語化含む）
 
-**Status**: Phase 0–5 + 2.5 DONE (2026-06-22、CJK 0 / プロセス語彙 0 / full build green)。**Phase 5 DONE** (per-theorem 散文スタイル → Mathlib テンプレ、全ファミリ完遂。最終 = EPI honesty-dense light-touch `ea1490b0`)。**Phase 6 DONE** (2026-07-26、Phase 4 後に再発した先頭太字 topic ラベルの再スイープ)。**Phase 7 DONE** (2026-07-26、監査プロセスのナラティブ除去 + 陳腐化した虚偽記述の張り替え)。**Parent**: なし (standalone) /
+**Status**: Phase 0–5 + 2.5 DONE (2026-06-22、CJK 0 / プロセス語彙 0 / full build green)。**Phase 5 DONE** (per-theorem 散文スタイル → Mathlib テンプレ、全ファミリ完遂。最終 = EPI honesty-dense light-touch `ea1490b0`)。**Phase 6 DONE** (2026-07-26、Phase 4 後に再発した先頭太字 topic ラベルの再スイープ)。**Phase 7 DONE** (2026-07-26、監査プロセスのナラティブ除去 + 陳腐化した虚偽記述の張り替え)。**Phase 8 DONE** (2026-07-26、機械強制 — 規約違反を編集直後に落とす `scripts/lean_doc_lint.ts` を 3 点に配線)。**Parent**: なし (standalone) /
 **関連**: 規約 SoT [`rules/docstrings.md`](rules/docstrings.md) ・実測 [`mathlib-conventions-gap.md`](mathlib-conventions-gap.md) ・honesty タグ SoT [`audit/audit-tags.md`](audit/audit-tags.md)
 
 分割リファクタ (footprint の裾を named lemma に割る) に着手する**前に**、既存 docstring を Mathlib スタイルへ整える。
@@ -347,6 +347,31 @@ style-auditor に触らせない (根拠か冗長語かの区別自体が honest
 **残タスク** (scope 外として切り出し、TaskList 登録済): #25 旧フラットモジュール名の docstring 散文参照
 (`docs/rules/module-structure.md` 別タスク③、件数未計測)。#26 宣言名に含まれるプロセス語彙/`genuine`
 のリネーム検討 (`awgn_capacity_closed_form_genuine` は README 定理表掲載 headline のため波及大)。
+
+### Phase 8 — 規約の機械強制 (再発機構そのものを止める)
+
+Phase 4 → Phase 6 と Phase 7 が同じ形の再発を記録している: 一括移行は一度きりでは効かず、規約を
+知らない新規宣言が書き戻す。原因は「書かれた瞬間」に効く強制点が無かったこと (git フックはコミット時、
+CI はさらに後 — どちらも溜まってから一括スイープに戻る)。そこで機械判定できる規則を
+`scripts/lean_doc_lint.ts` 1 本に実装し、3 点から呼ぶ (設計と規則一覧 → [`rules/README.md`](rules/README.md)
+「機械強制の層」・[`rules/docstrings.md`](rules/docstrings.md)「機械強制」):
+
+- **編集直後** `.claude/hooks/lean-doc-lint.sh` (Claude Code `PostToolUse`) が exit 2 + stderr で差し戻す
+- **コミット時** `.githooks/pre-commit` が WARN 表示
+- **push/PR** CI job `doc-lint` が strict > 0 / ratchet 超過で fail
+
+2 クラスに分けたのが要点。**strict** = 個別違反が機械判定でき tree 全体で 0 を達成済。**ratchet** =
+個別違反が機械判定できない軸 (先頭太字が named theorem か topic ラベルか / 補助補題の name-adequacy /
+行の折り返し位置 / 既存宣言名のプロセス語彙) は、Phase 6 の教訓「compliant な床を超えた分だけを
+仕分ける」を床の固定 (`scripts/lean_doc_lint.baseline.json`) で自動化し、**件数の増加だけ**を落とす。
+
+**Phase 7 の知見を規則化**: 「散文が参照する宣言名 / file が HEAD に実在するか」を strict 規則に
+入れた。Phase 7 で見つかった実在しない参照 9 件は、これがあれば書かれた瞬間に落ちていた。精度は
+plan_lint.ts と同じ設計 — 引退宣言名索引 (git 履歴に宣言されて HEAD に無い名前) に載っている
+token だけを報告するので、Mathlib 補題名 / tactic 名 / 未実装の予定名は構造的に除外される。
+
+**fun 矢印の一掃**: strict 規則を 0 にするため `fun … =>` → `fun … ↦` を `--fix` で機械置換
+(match alternative の `=>` は Lean 構文上必須なので除外)。full `lake build` で検証。
 
 ## DoD
 

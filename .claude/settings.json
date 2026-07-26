@@ -12,6 +12,17 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/lean-doc-lint.sh\""
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "clear",

@@ -101,3 +101,20 @@ lemma DotEq.mul … := by sorry
 ```
 
 固有タグの語彙・分類・honesty 階層は `docs/audit/audit-tags.md`、ワークフロー上の意味は `CLAUDE.md`「Verification honesty」を見る。
+
+## 機械強制
+
+上の規則のうち機械判定できる分は [`scripts/lean_doc_lint.ts`](../../scripts/lean_doc_lint.ts) が強制する（強制点 3 点と 2 クラスの設計 → [`README.md`](README.md)「機械強制の層」）。乖離表の「再計測コマンド」を手で引く運用はこの linter が引き継いだ:
+
+| 規則 | クラス | 乖離表の対応行 |
+|---|---|---|
+| 散文が英語（CJK 混入なし） | strict | 「散文が日本語」 |
+| 日付 / 監査プロセス実況 / `Phase`・`Leg`・`判断`・`撤退` / `@residual` タグ外の `wall:` slug | strict | 「docstring / module doc にプロセス語彙」 |
+| module doc 見出しが `## Main statements` / 空 docstring なし | strict | item 3 / item 9 |
+| 散文が参照する宣言名・file が HEAD に実在する | strict | — （Phase 7 の知見から追加） |
+| 先頭太字の件数 | ratchet | 「ほぼ全 docstring を `**ラベル**:` で太字始まり」 |
+| 補助補題に散文 docstring を付けた件数 | ratchet | 「補助補題までほぼ全部 docstring」 |
+
+先頭太字と補助補題 docstring が ratchet なのは、**個別に正しいか機械判定できない**から（item 5 が named theorem の太字を明示的に許し、name-adequacy gate は名前が statement を語れているかという人の判断を含む）。乖離表が言う「compliant な床を超えた分だけを仕分ける」を、床を `scripts/lean_doc_lint.baseline.json` に固定して自動化したもの。
+
+**散文が参照する宣言名の実在確認**は乖離表に対応行を持たない後付けの規則で、Phase 7 の知見（除去より張り替えの方が価値が高かった — 監査ナラティブは冗長なだけでなく陳腐化して虚偽に化けており、実在しない宣言への参照が 9 件あった）から入れた。docstring に書いてよいのは自身の数学的内容であって他所の進捗ではない、という境界の機械側の担保。

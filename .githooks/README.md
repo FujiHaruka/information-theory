@@ -25,6 +25,7 @@ git config core.hooksPath .githooks
 | WARN | `@residual(<class>:...)` の class が `plan` / `wall` / `defect` 以外 |
 | WARN | deprecated tag (`@audit:suspect` / `staged` / `defer` / 散文 `🟢ʰ`) を新規追加 |
 | WARN | 新規 `InformationTheory/X.lean` が aggregator `InformationTheory.lean` に未 import |
+| WARN | コード表面規約 (`docs/rules/`) 違反 — 判定は `scripts/lean_doc_lint.ts --staged` に委譲 |
 
 `sorry` / `@residual` の計数は **Lean コメント (行 `--` / ブロック `/- -/` / docstring `/-- -/`) を
 除去した実 token のみ** を数える。docstring 散文の "sorry" (「0 sorry」「shared sorry 補題」
@@ -33,6 +34,11 @@ git config core.hooksPath .githooks
 
 docs-only コミットは対象ファイルが無いので即通過。意味的 honesty defect (核 bundling / 循環 `:= h` /
 退化定義悪用) は grep 不能なので **対象外** — そこは `honesty-auditor` の領域 (線引きは意図的)。
+
+コード表面規約 (docstring / 命名 / レイアウト) の判定は `scripts/lean_doc_lint.ts` が持ち、ここは
+その **WARN 表示だけ**を担う。BLOCK は 1 段手前 = 編集直後の Claude Code フック
+(`.claude/hooks/lean-doc-lint.sh`) が行う — 規約違反は「書かれた瞬間」に止めないと溜まってから
+一括スイープになるため (背景 → `docs/rules/README.md`「機械強制の層」)。
 
 ## Bypass
 

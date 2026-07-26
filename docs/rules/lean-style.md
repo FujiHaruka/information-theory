@@ -23,7 +23,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 ## 行・空白
 
-- **1 行 100 文字以内。1 ファイル 1500 行以内。**
+- **1 行 100 文字以内。1 ファイル 1500 行以内。** 行長は `scripts/lean_doc_lint.ts` が ratchet で見張る（折り返し位置に判断が要るので既存分は残し、増加だけを落とす → [`README.md`](README.md)「機械強制の層」）。
 - **1 証明本体 200 行以内（目安）。** 超えたら意味のあるまとまり（`have` / `let` ブロック、独立したケース）を `private` 補助補題へ切り出す。厳格な上限ではなく「分割を検討せよ」のシグナル（Mathlib に機械 linter は無いが、長大な証明を補題へ分けるのは慣習）。切り出した補助補題は internal supporting lemma なので bare（docstring 不要、名前に意味を持たせる → [`docstrings.md`](docstrings.md) / [`naming.md`](naming.md)）。
 - `:` `:=` および中置演算子の **両側にスペース**。binder の後にスペース。
 - 演算子は **行末に置いて改行**する（次行頭に演算子を置かない）。
@@ -49,7 +49,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 ## 関数・binder
 
 - **`λ` ではなく `fun`**。`fun (x : α) ↦ …` のように binder 型を明示。
-- **`=>` ではなく `↦`**（`\mapsto`）。
+- **`=>` ではなく `↦`**（`\mapsto`）。`scripts/lean_doc_lint.ts --fix` が機械置換する（match alternative の `=>` は Lean 構文上必須なので対象外）。
 - 超単純関数は中黒 `·`: 二乗は `(· ^ 2)`。
 
 ## タクティク (`by` ブロック)

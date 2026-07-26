@@ -29,3 +29,19 @@ jobs:
         with:
           deno-version: v2.x
       - run: deno run -A scripts/gen_readme_table.ts --check
+
+  doc-lint:
+    # Fast, lean-free: enforce the code-surface conventions in docs/rules/ over InformationTheory/.
+    # strict rules must stay at 0; ratchet rules (bold-start / long-line / internal-doc / decl-vocab
+    # — where a single occurrence cannot be judged mechanically) must not exceed the recorded
+    # baseline. Refresh the baseline with `deno run -A scripts/lean_doc_lint.ts --baseline` only
+    # when a count legitimately goes down.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno run -A scripts/lean_doc_lint.ts --check

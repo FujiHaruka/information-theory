@@ -7,7 +7,8 @@
 #
 # 対象: staged な InformationTheory/**.lean (docs-only コミットは即通過)。
 # BLOCK: bare `import Mathlib` 追加 / 実 `sorry` 追加なのに @residual タグ皆無。
-# WARN : 実 sorry>residual の undercount / @residual class 語彙外 / deprecated tag / 新規 file の import 未登録。
+# WARN : 実 sorry>residual の undercount / @residual class 語彙外 / deprecated tag / 新規 file の import 未登録
+#        / コード表面規約 (scripts/lean_doc_lint.ts --staged)。
 #        sorry / @residual の計数は Lean コメント除去後の実 token のみ (docstring 散文を数えない)。
 # Bypass: `SKIP_LEAN_HOOK=1 git commit ...` または `git commit --no-verify`。
 #
@@ -145,6 +146,13 @@ while IFS= read -r f; do
 done <<PLN
 $plan_files
 PLN
+
+# 7) コード表面規約 (docs/rules/) の WARN 表示。BLOCK は編集直後の PostToolUse フック
+#    (.claude/hooks/lean-doc-lint.sh) 側が担うので、ここは取りこぼしの reminder に留める。
+#    判定本体は scripts/lean_doc_lint.ts (実装 SoT — hook / pre-commit / CI が同じものを呼ぶ)。
+if [ -n "$src_files" ] && command -v deno >/dev/null 2>&1; then
+  deno run -A scripts/lean_doc_lint.ts --staged >/dev/null || true
+fi
 
 if [ -n "$warn" ]; then
   printf '\n[pre-commit] honesty/import warnings (コミットは継続):\n%s' "$warn" >&2

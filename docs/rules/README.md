@@ -11,7 +11,25 @@
 ## このリポジトリでの位置づけ
 
 - **`CLAUDE.md` が上位**。import 方針 / 検証 honesty / skeleton-driven 開発 / docs hygiene など「ワークフロー」規約は `CLAUDE.md` が SoT。本ディレクトリはそこが扱わない **Lean コードの見た目（命名・レイアウト・タクティク作法）** を埋める。両者が衝突したら `CLAUDE.md` が勝つ。
-- **強制ではなく指針**。Mathlib 同様これらの多くは subjective であり、CI で機械強制はしていない（本プロジェクトに Mathlib の style linter は組み込まれていない）。新規コードを書くとき / レビューするときの共通の物差しとして使う。
+- **機械強制される分と指針に留まる分がある**。Mathlib 同様これらの多くは subjective だが、機械判定できる項目は [`scripts/lean_doc_lint.ts`](../../scripts/lean_doc_lint.ts) が強制する（→ 下記「機械強制の層」）。判定に人の判断が要る項目（散文の質・レシピか設計理由か・名前が statement を語れているか）は指針のままで、`style-auditor` とレビューが担う。
+
+## 機械強制の層
+
+規約を明文化しただけでは再発する（[`docstrings.md`](docstrings.md) 乖離表と [`../docstring-tidyup-plan.md`](../docstring-tidyup-plan.md) Phase 4 → Phase 6 が同じ再発を 2 度記録している）。実装 SoT は `scripts/lean_doc_lint.ts` 1 本で、3 点から同じものを呼ぶ:
+
+| 強制点 | いつ | 効果 |
+|---|---|---|
+| `.claude/hooks/lean-doc-lint.sh`（Claude Code `PostToolUse`） | `.lean` を編集した直後 | strict 違反 / ratchet 増加を stderr で差し戻す（同一ターン内で直る） |
+| `.githooks/pre-commit` | コミット時 | WARN 表示のみ（BLOCK はしない） |
+| CI job `doc-lint` | push / PR | strict > 0 または ratchet が baseline 超過で fail |
+
+規則は 2 クラス。**strict** = 個別違反が機械判定でき tree 全体で 0 を達成済（新規は 1 件でも落とす）。**ratchet** = 個別違反は機械判定できない（先頭太字が named theorem か topic ラベルか / 補助補題の name-adequacy）ので、**件数が増えたときだけ**落とす = 判定せずに再発機構だけ止める。ratchet の基準は `scripts/lean_doc_lint.baseline.json`（件数が正当に減ったときだけ `--baseline` で更新する）。
+
+```bash
+deno run -A scripts/lean_doc_lint.ts              # tree 全体のレポート
+deno run -A scripts/lean_doc_lint.ts --check      # CI と同じ判定
+deno run -A scripts/lean_doc_lint.ts --fix [file] # fun => ↦ / Main results 見出しの自動修正
+```
 
 ## 構成
 
