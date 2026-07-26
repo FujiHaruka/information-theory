@@ -1,5 +1,6 @@
 import InformationTheory.Shannon.BroadcastChannel.Basic
 import InformationTheory.Shannon.ChannelCoding.CodeToAmbient
+import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.MutualInfo
 
 /-!
@@ -31,6 +32,15 @@ per-receiver output sequences are recovered as further projections.
 * `bcConverseKernel_apply` — the kernel at a message pair is the code's block output law.
 * `bcConverseMsg₁_uniform`, `bcConverseMsg₂_uniform` — each message is uniform under the ambient.
 * `bcConverse_mutualInfo_eq_zero` — the two messages are independent under the ambient.
+* `bcConverse_memoryless₁`, `bcConverse_memoryless₂` — each output letter is conditionally
+  independent of the other message, the other input letters and all other output letters, given
+  the current input letter.  The two same-letter outputs are never decoupled from each other.
+* `bcConverse_isMarkovChain₁`, `bcConverse_isMarkovChain₂` — the messages act on a receiver's
+  output block only through the codeword: `(W₂, W₁) → (W₂, Xⁿ) → Y₁ⁿ` and its mirror.
+
+Together with the uniformity and independence statements these are exactly the structural
+preconditions of the message-level converse `bc_uv_converse`, so instantiating it at
+`bcConverseAmbient` needs no further hypotheses on the code.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -202,5 +212,163 @@ instance bcConverseCodeKernel_isMarkovKernel (W : BCChannel α β₁ β₂) [IsM
   infer_instance
 
 end CodeKernel
+
+/-! ### Structural hypotheses of the message-level converse -/
+
+section Structural
+
+variable [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
+variable [Fintype β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Nonempty β₁]
+variable [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] [Nonempty β₂]
+
+omit [Fintype α] [MeasurableSingletonClass α] [Fintype β₁] [MeasurableSingletonClass β₁]
+  [Fintype β₂] [MeasurableSingletonClass β₂] in
+lemma bcConverse_memoryless₁
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    IsMarkovChain (bcConverseAmbient c W)
+      (fun ω ↦ (bcConverseMsg₂ ω,
+        ((fun (j : {j : Fin n // j ≠ i}) ↦ c.encoder ω.1 j.val),
+         ((fun (j : {j : Fin n // j ≠ i}) ↦ bcConverseY₁s j.val ω),
+          (fun (j : {j : Fin n // j ≠ i}) ↦ bcConverseY₂s j.val ω)))))
+      (fun ω ↦ c.encoder ω.1 i) (bcConverseY₁s i) := by
+  set F : ((Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) →
+      Fin M₂ × (({j : Fin n // j ≠ i} → α) ×
+        (({j : Fin n // j ≠ i} → β₁) × ({j : Fin n // j ≠ i} → β₂))) :=
+    fun ω ↦ (bcConverseMsg₂ ω,
+      ((fun (j : {j : Fin n // j ≠ i}) ↦ c.encoder ω.1 j.val),
+       ((fun (j : {j : Fin n // j ≠ i}) ↦ bcConverseY₁s j.val ω),
+        (fun (j : {j : Fin n // j ≠ i}) ↦ bcConverseY₂s j.val ω)))) with hF_def
+  have hF : Measurable F := by
+    rw [hF_def]
+    exact measurable_bcConverseMsg₂.prodMk
+      ((measurable_pi_iff.mpr fun j : {j : Fin n // j ≠ i} ↦ (measurable_pi_apply j.val).comp
+          ((measurable_of_countable c.encoder).comp measurable_fst)).prodMk
+        ((measurable_pi_iff.mpr fun j : {j : Fin n // j ≠ i} ↦
+            measurable_bcConverseY₁s j.val).prodMk
+          (measurable_pi_iff.mpr fun j : {j : Fin n // j ≠ i} ↦ measurable_bcConverseY₂s j.val)))
+  have hupd : ∀ (m : Fin M₁ × Fin M₂) (y : Fin n → β₁ × β₂) (b : β₁ × β₂),
+      F (m, Function.update y i b) = F (m, y) := by
+    intro m y b
+    refine Prod.ext rfl (Prod.ext rfl (Prod.ext (funext fun j ↦ ?_) (funext fun j ↦ ?_)))
+    · exact congrArg Prod.fst (Function.update_of_ne j.2 b y)
+    · exact congrArg Prod.snd (Function.update_of_ne j.2 b y)
+  have hZc : Measurable (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂) ↦ c.encoder ω.1 i) :=
+    (measurable_pi_apply i).comp ((measurable_of_countable c.encoder).comp measurable_fst)
+  have hYo : Measurable (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂) ↦ ω.2 i) :=
+    (measurable_pi_apply i).comp measurable_snd
+  have h₀ := isMarkovChain_of_compProd_pi (bcConverseInput M₁ M₂) c.encoder
+    (measurable_of_countable _) W (bcConverseKernel c W) (fun m ↦ rfl) i F hF hupd
+  have h₁ := isMarkovChain_swap (bcConverseAmbient c W) F _ (fun ω ↦ ω.2 i) hF hZc hYo h₀
+  have h₂ := isMarkovChain_map_left (bcConverseAmbient c W) (fun ω ↦ ω.2 i) _ F hYo hZc hF
+    measurable_fst h₁
+  exact isMarkovChain_swap (bcConverseAmbient c W) _ _ F (measurable_bcConverseY₁s i) hZc hF h₂
+
+omit [Fintype α] [MeasurableSingletonClass α] [Fintype β₁] [MeasurableSingletonClass β₁]
+  [Fintype β₂] [MeasurableSingletonClass β₂] in
+lemma bcConverse_memoryless₂
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] (i : Fin n) :
+    IsMarkovChain (bcConverseAmbient c W)
+      (fun ω ↦ (bcConverseMsg₁ ω,
+        ((fun (j : {j : Fin n // j ≠ i}) ↦ c.encoder ω.1 j.val),
+         ((fun (j : {j : Fin n // j ≠ i}) ↦ bcConverseY₁s j.val ω),
+          (fun (j : {j : Fin n // j ≠ i}) ↦ bcConverseY₂s j.val ω)))))
+      (fun ω ↦ c.encoder ω.1 i) (bcConverseY₂s i) := by
+  set F : ((Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) →
+      Fin M₁ × (({j : Fin n // j ≠ i} → α) ×
+        (({j : Fin n // j ≠ i} → β₁) × ({j : Fin n // j ≠ i} → β₂))) :=
+    fun ω ↦ (bcConverseMsg₁ ω,
+      ((fun (j : {j : Fin n // j ≠ i}) ↦ c.encoder ω.1 j.val),
+       ((fun (j : {j : Fin n // j ≠ i}) ↦ bcConverseY₁s j.val ω),
+        (fun (j : {j : Fin n // j ≠ i}) ↦ bcConverseY₂s j.val ω)))) with hF_def
+  have hF : Measurable F := by
+    rw [hF_def]
+    exact measurable_bcConverseMsg₁.prodMk
+      ((measurable_pi_iff.mpr fun j : {j : Fin n // j ≠ i} ↦ (measurable_pi_apply j.val).comp
+          ((measurable_of_countable c.encoder).comp measurable_fst)).prodMk
+        ((measurable_pi_iff.mpr fun j : {j : Fin n // j ≠ i} ↦
+            measurable_bcConverseY₁s j.val).prodMk
+          (measurable_pi_iff.mpr fun j : {j : Fin n // j ≠ i} ↦ measurable_bcConverseY₂s j.val)))
+  have hupd : ∀ (m : Fin M₁ × Fin M₂) (y : Fin n → β₁ × β₂) (b : β₁ × β₂),
+      F (m, Function.update y i b) = F (m, y) := by
+    intro m y b
+    refine Prod.ext rfl (Prod.ext rfl (Prod.ext (funext fun j ↦ ?_) (funext fun j ↦ ?_)))
+    · exact congrArg Prod.fst (Function.update_of_ne j.2 b y)
+    · exact congrArg Prod.snd (Function.update_of_ne j.2 b y)
+  have hZc : Measurable (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂) ↦ c.encoder ω.1 i) :=
+    (measurable_pi_apply i).comp ((measurable_of_countable c.encoder).comp measurable_fst)
+  have hYo : Measurable (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂) ↦ ω.2 i) :=
+    (measurable_pi_apply i).comp measurable_snd
+  have h₀ := isMarkovChain_of_compProd_pi (bcConverseInput M₁ M₂) c.encoder
+    (measurable_of_countable _) W (bcConverseKernel c W) (fun m ↦ rfl) i F hF hupd
+  have h₁ := isMarkovChain_swap (bcConverseAmbient c W) F _ (fun ω ↦ ω.2 i) hF hZc hYo h₀
+  have h₂ := isMarkovChain_map_left (bcConverseAmbient c W) (fun ω ↦ ω.2 i) _ F hYo hZc hF
+    measurable_snd h₁
+  exact isMarkovChain_swap (bcConverseAmbient c W) _ _ F (measurable_bcConverseY₂s i) hZc hF h₂
+
+omit [StandardBorelSpace α] [Nonempty α] [Fintype β₁] [MeasurableSingletonClass β₁]
+  [Fintype β₂] [MeasurableSingletonClass β₂] in
+lemma bcConverse_isMarkovChain₁
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    IsMarkovChain (bcConverseAmbient c W)
+      (fun ω ↦ (bcConverseMsg₂ ω, bcConverseMsg₁ ω))
+      (fun ω ↦ (bcConverseMsg₂ ω, fun j ↦ c.encoder ω.1 j))
+      (fun ω j ↦ bcConverseY₁s j ω) := by
+  have hfstm : Measurable
+      (Prod.fst : ((Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) → Fin M₁ × Fin M₂) := measurable_fst
+  have hsndm : Measurable
+      (Prod.snd : ((Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) → (Fin n → β₁ × β₂)) := measurable_snd
+  have hZm : Measurable (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂) ↦
+      ((ω.1.2 : Fin M₂), c.encoder ω.1)) :=
+    (measurable_of_countable (fun m : Fin M₁ × Fin M₂ ↦ (m.2, c.encoder m))).comp measurable_fst
+  have hproj : Measurable (fun (y : Fin n → β₁ × β₂) (j : Fin n) ↦ (y j).1) :=
+    measurable_pi_iff.mpr fun j ↦ measurable_fst.comp (measurable_pi_apply j)
+  have hY₁m : Measurable
+      (fun (ω : (Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) (j : Fin n) ↦ bcConverseY₁s j ω) :=
+    measurable_pi_iff.mpr fun j ↦ measurable_bcConverseY₁s j
+  have h₀ := isMarkovChain_of_compProd_encoder (bcConverseInput M₁ M₂)
+    (fun m : Fin M₁ × Fin M₂ ↦ (m.2, c.encoder m)) (measurable_of_countable _)
+    (bcConverseKernel c W) ((bcConverseCodeKernel W).comap Prod.snd measurable_snd)
+    (fun m ↦ rfl)
+  have h₁ := isMarkovChain_swap (bcConverseAmbient c W) Prod.fst _ Prod.snd hfstm hZm hsndm h₀
+  have h₂ := isMarkovChain_map_left (bcConverseAmbient c W) Prod.snd _ Prod.fst hsndm hZm hfstm
+    hproj h₁
+  have h₃ := isMarkovChain_swap (bcConverseAmbient c W) _ _ Prod.fst hY₁m hZm hfstm h₂
+  exact isMarkovChain_map_left (bcConverseAmbient c W) Prod.fst _ _ hfstm hZm hY₁m
+    measurable_swap h₃
+
+omit [StandardBorelSpace α] [Nonempty α] [Fintype β₁] [MeasurableSingletonClass β₁]
+  [Fintype β₂] [MeasurableSingletonClass β₂] in
+lemma bcConverse_isMarkovChain₂
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    [NeZero M₁] [NeZero M₂] :
+    IsMarkovChain (bcConverseAmbient c W)
+      (fun ω ↦ (bcConverseMsg₁ ω, bcConverseMsg₂ ω))
+      (fun ω ↦ (bcConverseMsg₁ ω, fun j ↦ c.encoder ω.1 j))
+      (fun ω j ↦ bcConverseY₂s j ω) := by
+  have hfstm : Measurable
+      (Prod.fst : ((Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) → Fin M₁ × Fin M₂) := measurable_fst
+  have hsndm : Measurable
+      (Prod.snd : ((Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) → (Fin n → β₁ × β₂)) := measurable_snd
+  have hZm : Measurable (fun ω : (Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂) ↦
+      ((ω.1.1 : Fin M₁), c.encoder ω.1)) :=
+    (measurable_of_countable (fun m : Fin M₁ × Fin M₂ ↦ (m.1, c.encoder m))).comp measurable_fst
+  have hproj : Measurable (fun (y : Fin n → β₁ × β₂) (j : Fin n) ↦ (y j).2) :=
+    measurable_pi_iff.mpr fun j ↦ measurable_snd.comp (measurable_pi_apply j)
+  have hY₂m : Measurable
+      (fun (ω : (Fin M₁ × Fin M₂) × (Fin n → β₁ × β₂)) (j : Fin n) ↦ bcConverseY₂s j ω) :=
+    measurable_pi_iff.mpr fun j ↦ measurable_bcConverseY₂s j
+  have h₀ := isMarkovChain_of_compProd_encoder (bcConverseInput M₁ M₂)
+    (fun m : Fin M₁ × Fin M₂ ↦ (m.1, c.encoder m)) (measurable_of_countable _)
+    (bcConverseKernel c W) ((bcConverseCodeKernel W).comap Prod.snd measurable_snd)
+    (fun m ↦ rfl)
+  have h₁ := isMarkovChain_swap (bcConverseAmbient c W) Prod.fst _ Prod.snd hfstm hZm hsndm h₀
+  have h₂ := isMarkovChain_map_left (bcConverseAmbient c W) Prod.snd _ Prod.fst hsndm hZm hfstm
+    hproj h₁
+  exact isMarkovChain_swap (bcConverseAmbient c W) _ _ Prod.fst hY₂m hZm hfstm h₂
+
+end Structural
 
 end InformationTheory.Shannon.BroadcastChannel

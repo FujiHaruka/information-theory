@@ -16,6 +16,11 @@ instantiates them by supplying its own encoder and channel.
 
 * `isMarkovChain_of_compProd_encoder`: an ambient `ν ⊗ₘ κ` whose kernel factors through a
   deterministic encoder `g` carries the Markov chain `M → g M → Y`.
+* `isMarkovChain_of_compProd_pi`: for a per-letter product kernel `∏ⱼ W (x m j)`, the output
+  letter `Yᵢ` is conditionally independent of *any* variable that does not read the `i`-th output
+  coordinate, given the input letter `Xᵢ`.  The conditioner is an arbitrary measurable function of
+  the whole ambient point, constrained only by invariance under re-randomizing coordinate `i`, so
+  it may read the message as well as the other letters.
 * `isMemorylessChannel_of_compProd_pi`: if the kernel is the per-letter product `∏ⱼ W (x m j)`
   of a channel applied to a deterministic codeword, the ambient is a memoryless channel.
 * `compProd_pi_map_pair_eq`: the joint law of the `i`-th input-output pair is the channel joint
@@ -187,40 +192,28 @@ lemma lintegral_pi_eval {γ : Type*} [MeasurableSpace γ]
 
 /-! ### Memorylessness and the per-letter joint law -/
 
-/-- A product-channel ambient is a memoryless channel: if the message-to-output kernel
-factors as the per-letter product `κ m = ∏ⱼ W (x m j)` of a channel `W` applied to a
-deterministic codeword `x m`, then `ν ⊗ₘ κ` is a memoryless channel with per-letter
-inputs `x ω.1 i` and per-letter outputs `ω.2 i`.
-@audit:ok -/
-lemma isMemorylessChannel_of_compProd_pi
-    {M A B : Type*}
+lemma isMarkovChain_of_compProd_pi
+    {M A B C : Type*}
     [MeasurableSpace M] [StandardBorelSpace M] [Nonempty M]
     [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
     [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]
+    [MeasurableSpace C] [StandardBorelSpace C] [Nonempty C]
     {k : ℕ}
     (ν : Measure M) [IsProbabilityMeasure ν]
     (x : M → Fin k → A) (hx : Measurable x)
     (W : Kernel A B) [IsMarkovKernel W]
     (κ : Kernel M (Fin k → B)) [IsMarkovKernel κ]
-    (hκ : ∀ m, κ m = Measure.pi (fun j ↦ W (x m j))) :
-    IsMemorylessChannel (ν ⊗ₘ κ) (fun i ω ↦ x ω.1 i) (fun i ω ↦ ω.2 i) := by
-  intro i
+    (hκ : ∀ m, κ m = Measure.pi (fun j ↦ W (x m j)))
+    (i : Fin k) (F : M × (Fin k → B) → C) (hF : Measurable F)
+    (hFupd : ∀ (m : M) (y : Fin k → B) (b : B), F (m, Function.update y i b) = F (m, y)) :
+    IsMarkovChain (ν ⊗ₘ κ) F (fun ω ↦ x ω.1 i) (fun ω ↦ ω.2 i) := by
   set μ : Measure (M × (Fin k → B)) := ν ⊗ₘ κ with hμ_def
   haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
-  -- The three RVs of the per-letter Markov chain.
   set Zc : M × (Fin k → B) → A := fun ω ↦ x ω.1 i with hZc_def
   set Yo : M × (Fin k → B) → B := fun ω ↦ ω.2 i with hYo_def
-  set Full : M × (Fin k → B) → (({j : Fin k // j ≠ i} → A) × ({j : Fin k // j ≠ i} → B)) :=
-    fun ω ↦ ((fun j ↦ x ω.1 j.val), (fun j ↦ ω.2 j.val)) with hFull_def
   have hxi_meas : Measurable (fun m ↦ x m i) := (measurable_pi_apply i).comp hx
   have hZc_meas : Measurable Zc := hxi_meas.comp measurable_fst
   have hYo_meas : Measurable Yo := (measurable_pi_apply i).comp measurable_snd
-  have hFull_meas : Measurable Full := by
-    rw [hFull_def]
-    refine Measurable.prodMk ?_ ?_
-    · exact measurable_pi_iff.mpr
-        (fun j ↦ (measurable_pi_apply j.val).comp (hx.comp measurable_fst))
-    · exact measurable_pi_iff.mpr (fun j ↦ (measurable_pi_apply j.val).comp measurable_snd)
   -- Codeword law `μ.map Zc = ν.map (· i ∘ x)`.
   have h_map_Zc : μ.map Zc = ν.map (fun m ↦ x m i) := by
     have hcomp : Zc = (fun m ↦ x m i) ∘ Prod.fst := rfl
@@ -248,36 +241,32 @@ lemma isMemorylessChannel_of_compProd_pi
   have hK_Y_eq : condDistrib Yo Zc μ =ᵐ[μ.map Zc] W :=
     condDistrib_ae_eq_of_measure_eq_compProd Zc hYo_meas.aemeasurable h_pair_eq
   unfold IsMarkovChain
-  set K_Full := condDistrib Full Zc μ with hK_Full_def
+  set K_F := condDistrib F Zc μ with hK_F_def
   have h_compProd_eq :
-      (μ.map Zc) ⊗ₘ (K_Full ×ₖ condDistrib Yo Zc μ) = (μ.map Zc) ⊗ₘ (K_Full ×ₖ W) := by
+      (μ.map Zc) ⊗ₘ (K_F ×ₖ condDistrib Yo Zc μ) = (μ.map Zc) ⊗ₘ (K_F ×ₖ W) := by
     refine Measure.compProd_congr ?_
     filter_upwards [hK_Y_eq] with a ha
     ext s hs
     rw [Kernel.prod_apply, Kernel.prod_apply, ha]
   rw [h_compProd_eq]
   -- Step 3: triple-joint factorization via `ext_of_lintegral` + the re-randomize identity.
-  have h_LHS_meas : Measurable (fun ω ↦ (Zc ω, Full ω, Yo ω)) :=
-    hZc_meas.prodMk (hFull_meas.prodMk hYo_meas)
-  have hKX_fold : (μ.map Zc) ⊗ₘ K_Full = μ.map (fun ω ↦ (Zc ω, Full ω)) :=
-    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := Full) hFull_meas.aemeasurable
+  have h_LHS_meas : Measurable (fun ω ↦ (Zc ω, F ω, Yo ω)) :=
+    hZc_meas.prodMk (hF.prodMk hYo_meas)
+  have hKX_fold : (μ.map Zc) ⊗ₘ K_F = μ.map (fun ω ↦ (Zc ω, F ω)) :=
+    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := F) hF.aemeasurable
   refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   rw [lintegral_map hf h_LHS_meas, Measure.lintegral_compProd hf]
   have h_inner_split : ∀ z : A,
-      ∫⁻ p : (({j : Fin k // j ≠ i} → A) × ({j : Fin k // j ≠ i} → B)) × B,
-          f (z, p.1, p.2) ∂((K_Full ×ₖ W) z)
-        = ∫⁻ full, ∫⁻ b, f (z, full, b) ∂(W z) ∂(K_Full z) := by
+      ∫⁻ p : C × B, f (z, p.1, p.2) ∂((K_F ×ₖ W) z)
+        = ∫⁻ w, ∫⁻ b, f (z, w, b) ∂(W z) ∂(K_F z) := by
     intro z
     rw [Kernel.prod_apply,
-      lintegral_prod
-        (fun p : (({j : Fin k // j ≠ i} → A) × ({j : Fin k // j ≠ i} → B)) × B ↦ f (z, p.1, p.2))
+      lintegral_prod (fun p : C × B ↦ f (z, p.1, p.2))
         (hf.comp (measurable_const.prodMk (measurable_fst.prodMk measurable_snd))).aemeasurable]
   simp_rw [h_inner_split]
-  set G : A × (({j : Fin k // j ≠ i} → A) × ({j : Fin k // j ≠ i} → B)) → ℝ≥0∞ :=
-    fun p ↦ ∫⁻ b, f (p.1, p.2, b) ∂(W p.1) with hG_def
+  set G : A × C → ℝ≥0∞ := fun p ↦ ∫⁻ b, f (p.1, p.2, b) ∂(W p.1) with hG_def
   have hG_meas : Measurable G := by
-    let K' : Kernel (A × (({j : Fin k // j ≠ i} → A) × ({j : Fin k // j ≠ i} → B))) B :=
-      W.comap Prod.fst measurable_fst
+    let K' : Kernel (A × C) B := W.comap Prod.fst measurable_fst
     have h_eq_K' : G = fun p ↦ ∫⁻ b, f (p.1, p.2, b) ∂(K' p) := by
       funext p; simp [G, K', Kernel.comap_apply]
     rw [h_eq_K']
@@ -285,31 +274,57 @@ lemma isMemorylessChannel_of_compProd_pi
       (f := fun pp ↦ f (pp.1.1, pp.1.2, pp.2))
       (hf.comp ((measurable_fst.comp measurable_fst).prodMk
         ((measurable_snd.comp measurable_fst).prodMk measurable_snd)))
-  have h_RHS_is_G : ∀ z full, ∫⁻ b, f (z, full, b) ∂(W z) = G (z, full) := fun _ _ ↦ rfl
+  have h_RHS_is_G : ∀ z w, ∫⁻ b, f (z, w, b) ∂(W z) = G (z, w) := fun _ _ ↦ rfl
   simp_rw [h_RHS_is_G]
-  have hFmeas2 : Measurable (fun ω ↦ f (Zc ω, Full ω, Yo ω)) := hf.comp h_LHS_meas
-  have hGmeas2 : Measurable (fun ω ↦ G (Zc ω, Full ω)) := hG_meas.comp (hZc_meas.prodMk hFull_meas)
+  have hFmeas2 : Measurable (fun ω ↦ f (Zc ω, F ω, Yo ω)) := hf.comp h_LHS_meas
+  have hGmeas2 : Measurable (fun ω ↦ G (Zc ω, F ω)) := hG_meas.comp (hZc_meas.prodMk hF)
   rw [← Measure.lintegral_compProd hG_meas, hKX_fold,
-    lintegral_map hG_meas (hZc_meas.prodMk hFull_meas), hμ_def,
+    lintegral_map hG_meas (hZc_meas.prodMk hF), hμ_def,
     Measure.lintegral_compProd hFmeas2, Measure.lintegral_compProd hGmeas2]
   refine lintegral_congr fun m ↦ ?_
   rw [hκ]
   have hpair_m : Measurable (fun y : Fin k → B ↦ ((m, y) : M × (Fin k → B))) :=
     measurable_const.prodMk measurable_id
-  have hFm3 : Measurable (fun y ↦ f (Zc (m, y), Full (m, y), Yo (m, y))) :=
+  have hFm3 : Measurable (fun y ↦ f (Zc (m, y), F (m, y), Yo (m, y))) :=
     hf.comp ((hZc_meas.comp hpair_m).prodMk
-      ((hFull_meas.comp hpair_m).prodMk (hYo_meas.comp hpair_m)))
+      ((hF.comp hpair_m).prodMk (hYo_meas.comp hpair_m)))
   rw [lintegral_pi_reRandomize (fun j ↦ W (x m j)) i
-    (fun y ↦ f (Zc (m, y), Full (m, y), Yo (m, y))) hFm3]
+    (fun y ↦ f (Zc (m, y), F (m, y), Yo (m, y))) hFm3]
   refine lintegral_congr fun y ↦ ?_
   rw [hG_def]
-  show ∫⁻ b, f (Zc (m, Function.update y i b), Full (m, Function.update y i b),
+  show ∫⁻ b, f (Zc (m, Function.update y i b), F (m, Function.update y i b),
       Yo (m, Function.update y i b)) ∂(W (x m i))
-    = ∫⁻ b, f (Zc (m, y), Full (m, y), b) ∂(W (x m i))
+    = ∫⁻ b, f (Zc (m, y), F (m, y), b) ∂(W (x m i))
   refine lintegral_congr fun b ↦ ?_
-  refine congrArg f (Prod.ext rfl (Prod.ext (Prod.ext rfl ?_) ?_))
-  · funext j; exact Function.update_of_ne j.2 b y
-  · exact Function.update_self i b y
+  exact congrArg f (Prod.ext rfl (Prod.ext (hFupd m y b) (Function.update_self i b y)))
+
+/-- A product-channel ambient is a memoryless channel: if the message-to-output kernel
+factors as the per-letter product `κ m = ∏ⱼ W (x m j)` of a channel `W` applied to a
+deterministic codeword `x m`, then `ν ⊗ₘ κ` is a memoryless channel with per-letter
+inputs `x ω.1 i` and per-letter outputs `ω.2 i`.
+@audit:ok -/
+lemma isMemorylessChannel_of_compProd_pi
+    {M A B : Type*}
+    [MeasurableSpace M] [StandardBorelSpace M] [Nonempty M]
+    [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
+    [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]
+    {k : ℕ}
+    (ν : Measure M) [IsProbabilityMeasure ν]
+    (x : M → Fin k → A) (hx : Measurable x)
+    (W : Kernel A B) [IsMarkovKernel W]
+    (κ : Kernel M (Fin k → B)) [IsMarkovKernel κ]
+    (hκ : ∀ m, κ m = Measure.pi (fun j ↦ W (x m j))) :
+    IsMemorylessChannel (ν ⊗ₘ κ) (fun i ω ↦ x ω.1 i) (fun i ω ↦ ω.2 i) := by
+  classical
+  intro i
+  refine isMarkovChain_of_compProd_pi ν x hx W κ hκ i
+    (fun ω ↦ ((fun j : {j : Fin k // j ≠ i} ↦ x ω.1 j.val),
+      (fun j : {j : Fin k // j ≠ i} ↦ ω.2 j.val)))
+    (Measurable.prodMk
+      (measurable_pi_iff.mpr fun j ↦ (measurable_pi_apply j.val).comp (hx.comp measurable_fst))
+      (measurable_pi_iff.mpr fun j ↦ (measurable_pi_apply j.val).comp measurable_snd))
+    fun m y b ↦ ?_
+  exact Prod.ext rfl (funext fun j ↦ Function.update_of_ne j.2 b y)
 
 /-- Per-letter joint pushforward of a product-channel `compProd`: for an ambient `ν ⊗ₘ κ`
 whose message-to-output kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)`, the
