@@ -1,6 +1,6 @@
 # docstring tidy-up plan — Mathlib スタイルへの寄せ込み（英語化含む）
 
-**Status**: Phase 0–5 + 2.5 DONE (2026-06-22、CJK 0 / プロセス語彙 0 / full build green)。**Phase 5 DONE** (per-theorem 散文スタイル → Mathlib テンプレ、全ファミリ完遂。最終 = EPI honesty-dense light-touch `ea1490b0`)。**Phase 6 DONE** (2026-07-26、Phase 4 後に再発した先頭太字 topic ラベルの再スイープ)。**Parent**: なし (standalone) /
+**Status**: Phase 0–5 + 2.5 DONE (2026-06-22、CJK 0 / プロセス語彙 0 / full build green)。**Phase 5 DONE** (per-theorem 散文スタイル → Mathlib テンプレ、全ファミリ完遂。最終 = EPI honesty-dense light-touch `ea1490b0`)。**Phase 6 DONE** (2026-07-26、Phase 4 後に再発した先頭太字 topic ラベルの再スイープ)。**Phase 7 DONE** (2026-07-26、監査プロセスのナラティブ除去 + 陳腐化した虚偽記述の張り替え)。**Parent**: なし (standalone) /
 **関連**: 規約 SoT [`rules/docstrings.md`](rules/docstrings.md) ・実測 [`mathlib-conventions-gap.md`](mathlib-conventions-gap.md) ・honesty タグ SoT [`audit/audit-tags.md`](audit/audit-tags.md)
 
 分割リファクタ (footprint の裾を named lemma に割る) に着手する**前に**、既存 docstring を Mathlib スタイルへ整える。
@@ -184,54 +184,20 @@ theorem steinTypicalSet_Q_prob_le ...
 theorem steinTypicalSet_Q_prob_le ...
 ```
 
-### Phase 2 — ファミリ単位ロールアウト ✅ DONE (2026-06-14)
+### Phase 2 — ファミリ単位ロールアウト ✅ DONE (2026-06-14, `7b35db0`..`40f59e9`)
 
-ファミリ単位で 3 ワークストリーム (module doc 整形 / 補助補題散文の削除 / 生き残る散文の英語化) を
-text-only 1 パスで適用。各波で tag 数 (@residual/@audit) を before/after 照合し保存確認。完了波:
+全ファミリを module doc 整形 / 補助補題散文削除 / 英語化の text-only 1 パスで整形。波ごとに
+tag 数 (@residual/@audit) を before/after 照合・保存確認、`lake env lean` sorry-warning 0。
 
-- 波1 (12 families) `7b35db0` / 波2a (ChannelCoding/Huffman/ParallelGaussian/RateDistortion 他 + Shannon 直下) `ed4440d` / FisherInfo 13 本 `f49b8cb`。
-- 波2b — EPI/AWGN 残部 + 英語プロセス語彙クリーンアップ (CJK 1633→0):
-  EPI/Unconditional 7 本 `e7ba761` / EPI 機械エリア 17 本 (Case1/G2/Blachman/Conv) `d9a0516` /
-  EPI/InfiniteVariance+Stam 10 本 `75e8de7` / AWGN 14 本 + Asymptotic `7ce0f7a` /
-  英語プロセス語彙 11 本 (Phase/plan-ref/Wall narrative → 数学ロードマップ化) `40f59e9`。
+### Phase 3 — 検証 / メトリクス ✅ DONE (2026-06-14, `62077c70`)
 
-honesty: 波2b で触れた全ファイルは `lake env lean` で sorry-warning 0、編集は comment-strip 後
-code byte-identical。宣言直付け @residual/@audit タグは保存、tag slug は verbatim。
+full `lake build InformationTheory` 3471 jobs green・全ツリー CJK 0・pre-commit 0 BLOCK を機械確認。
 
-### Phase 3 — 検証 / メトリクス ✅ DONE (2026-06-14)
+### Phase 2.5 — 過去波プロセス語彙スイープ ✅ DONE (2026-06-14, `db18279d`)
 
-全 check pass (機械照合済):
-
-- full `lake build InformationTheory` = **3471 jobs green (exit 0)**。pre-commit 0 BLOCK。
-- **全ツリー CJK = 0 ファイル** (`rg -l '[ぁ-んァ-ヶ一-龠]' --glob '*.lean' InformationTheory` 空) =
-  コードベース全体の英語化完了。
-- 陳腐 scope 主張 (未着手 / スコープ / TODO) = 0。
-- 波2b の英語プロセス語彙 (Phase / plan-ref / Wall) = docstring / 見出しで 0
-  (残るのは honesty タグ slug 内の `@residual(plan:...)` / `@audit:closed-by-successor(...)` のみ、保存必須)。
-- tag grep 総数の減少 (residual / audit) は全て prose-ref / dated-audit-narrative 除去で、宣言タグの脱落ではない。
-- 文書化率は副指標扱いで数値は追わない (plan 既定どおり。タグ 644+66 / entry_point 709 / def 478 保持で構造的に Mathlib より高く着地)。
-
-### Phase 2.5 — 過去波プロセス語彙スイープ ✅ DONE (2026-06-14)
-
-英語プロセス語彙が CJK→0 済の過去波ファイルにも系統的に残存していた分を全て除去。
-**100 ファイルを 12 バッチ (opus subagent, 並列度1 の逐次 dispatch) で整形**:
-
-- 第1群 (`\bPhase\b` 66 本): ChannelCoding 8 / Hoeffding 8 / Shannon直下 13 / Cramer 4 /
-  SMB+Sanov+LZ78 9 / EPI+FisherInfo+RateDistortion 8 / Probability+小family 10 / singles 6。
-- 第2群 (Phase トークン無し・初回 grep 漏れ、plan-ref/wave/judgment/parked/dated 24 本)。
-- dev-slug 残部 (retreat-line `L-*` / task-code `T-*` / roadmap M-stage 14 本):
-  predicate を命名する `L-EPI3`/`L-SH1-3`/`L-C2` は実 predicate 名へ言い換え、純 decomposition ラベルは除去。
-
-除去対象: Phase ラベル / plan-file 参照 / wave・seed・judgment log / Wall narrative / retraction 経緯 /
-parked dev-status / dated closure metadata (`As of 2026`, axiom kernel, `0 sorry / 0 residual` 状態言明) /
-retreat-line・task-code・roadmap-stage slug。保持: 全 `@residual`/`@audit` タグ (散文参照含む verbatim)・
-構造的 honesty 推論 (load-bearing 判定理由 / regularity precondition / 実 residual 記述 / 補題間 delegation)。
-
-完了判定 (全て機械照合済): 全 100 ファイル **code byte-identical** (block/line コメント除去後 HEAD と diff) /
-**全タグ数 HEAD→work 不変** / `lake env lean` clean / tree-wide で散文プロセス語彙 0
-(`Phase`/`-plan`/`judgment`/`wave`/`T-code`/`L-slug`/`roadmap M`/`parked-status`/`dated` = 0、
-残る `scope-out` 3 は `@audit:closed-by-successor` タグの正当な根拠散文) / CJK 0 / **full `lake build` 3471 jobs green**。
-honesty audit 不要 (新規 sorry/@residual を導入しないため。タグ数保存で代替検証)。
+CJK→0 済ファイルに系統的残存していたプロセス語彙 (Phase ラベル / wave・judgment / retreat-slug /
+dated closure metadata) を 100 ファイル・12 バッチで除去。全タグ verbatim 保存・code byte-identical・
+full build green を機械確認。
 
 ### Phase 4 — bold-label 剥がし + 末尾ピリオド ✅ DONE (2026-06-22)
 
@@ -326,6 +292,61 @@ Phase 4 の後に書かれた宣言が `**topic ラベル**:` 始まりを再導
 - **教訓 (Phase 4 と同じ機構の再現)**: 一括移行は一度きりでは効かない。規約を知らない新規宣言が
   太字ラベルを書き戻す。再計測コマンドは**総数**しか返さず違反数ではない (named theorem か否かは
   機械判定できない) ので、compliant な床 90 を超えた分だけをラベル単位で仕分ける。
+
+### Phase 7 — 監査ナラティブ除去スイープ ✅ DONE (2026-07-26)
+
+コード面の永続記録 (`.lean` の docstring / コメント) から**監査プロセスのナラティブ**を除去し、
+陳腐化して虚偽に化けた記述を実態へ張り替えるスイープ。根拠は [`rules/docstrings.md`](rules/docstrings.md)
+L66/L80 (プロセス語彙を永続記録に書かない)、境界は同 L71 (honesty タグは残す)。
+
+9 バッチ (A–C は前セッション、D–I は今セッション) を `style-auditor` へ逐次 dispatch。commit (新しい順):
+`87c2fee7`(最終7本)/`59a87046`(H,9)/`dc48df5c`(G,10)/`3cfe549a`(F,12)/`af05d50f`(E,10)/
+`473c204d`+`b19cce56`(D,8)/`e1124ce3`(C)/`1ee17dc2`/`bd71db59`(B)/`1a94159f`/`983b700c`(A)。
+
+**完了判定** (機械実測、`87c2fee7` 時点):
+
+| マーカー | before | after |
+|---|---|---|
+| 日付 `2026-xx-xx` | 38 | **1** (`ParallelGaussian/PerCoord.lean:687` の `@[deprecated (since := ...)]`、Lean 必須構文で対象外) |
+| 監査プロセス実況 (`Audited <date>`/`independent audit`/`auditor`) | — | **0** |
+| `Phase`/`Leg` 開発ステージラベル | — | **0** |
+| `wall:<slug>` 参照 | 69 | **0** |
+
+再計測 (完了状態を散文にキャッシュせず毎回引く):
+
+```
+rg -o '202[0-9]-[0-9]{2}-[0-9]{2}' InformationTheory --glob '*.lean' | wc -l
+rg -o '[Aa]udited [0-9]|independent (honesty )?audit|audit PASS|auditor' InformationTheory --glob '*.lean' | wc -l
+rg -o '\bPhase [0-9A-Z]|\bLeg [A-Z][0-9]?\b|\bleg [0-9]' InformationTheory --glob '*.lean' | wc -l
+rg -o 'wall:[a-z0-9-]+' InformationTheory --glob '*.lean' | wc -l
+```
+
+`genuine`/`Genuine` は 549 → 216 (102 ファイル、`rg -oi genuine` 実測)。ゼロ化は意図的に見送り: 残るのは
+load-bearing/vacuity/junk value との明示的対比を伴う実質語で、消すと論証の根拠が落ちる。判断基準は
+「その語を消して意味が変わるなら残す、変わらないなら消す」。
+
+全バッチで `lake env lean` 0 error・コメント除去後の文字列完全一致 (code byte-identical)・
+`gen_readme_table.ts --check` PASS を維持。新規 sorry/@residual を導入しないため honesty audit 不要。
+
+**得られた知見**: 除去より張り替えの方が価値が高かった。監査ナラティブは単に冗長だったのでなく、
+陳腐化して**虚偽に化けていた**。実在しない参照先 (`IsLZ78ConverseCodingLowerBound` /
+`stamToEPIBridge_holds` / `AwgnCapacityConverseMaxent` 等 9 件) と、事実と逆向きの記述
+(`DeBruijnConclusion` の「Genuine residual remaining」節は当該定理が実際は `@audit:ok`、
+`h_max_ent` を「body の sorry」とする記述は実際は明示引数、`tsum_prolateEigenvalues_eq` を「未解決」
+とする記述 5 箇所は `#print axioms` 確認で sorryAx-free) が見つかった。永続記録に書かれた「他の宣言の
+状態」はキャッシュであり無効化されない — CLAUDE.md「Plan / docs hygiene」の re-derive > cache は
+plan だけでなくコードの docstring にも同じ強さで効く。docstring に書いてよいのは自身の数学的内容で
+あって、他所の進捗ではない。
+
+**手順上の教訓**: 陳腐化した事実を 1 つ見つけたら、同じ事実に依存する記述をプロジェクト全体から `rg`
+で洗う (取りこぼしが繰り返し見つかった)。タグ不変性は行 grep でなくコメント除去後の文字列完全一致で
+検証する (複数行 docstring の継続行は行 grep で拾えず、1 箇所取りこぼした)。監査タグの括弧内は
+style-auditor に触らせない (根拠か冗長語かの区別自体が honesty 判定であり、初回バッチで書き換えさせ
+非空虚性根拠 2 件を喪失した)。
+
+**残タスク** (scope 外として切り出し、TaskList 登録済): #25 旧フラットモジュール名の docstring 散文参照
+(`docs/rules/module-structure.md` 別タスク③、件数未計測)。#26 宣言名に含まれるプロセス語彙/`genuine`
+のリネーム検討 (`awgn_capacity_closed_form_genuine` は README 定理表掲載 headline のため波及大)。
 
 ## DoD
 
