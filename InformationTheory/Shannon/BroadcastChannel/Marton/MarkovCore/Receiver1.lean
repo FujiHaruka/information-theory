@@ -1,3 +1,4 @@
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.BroadcastChannel.Marton.MarkovCore.Prelim
 import InformationTheory.Shannon.ConditionalAEP
 
@@ -120,8 +121,8 @@ private lemma marton_sum_condMean_eq
   set c : ℝ := pV.real {(v₁, v₂)} * (K (v₁, v₂)).real {x} with hc
   set A : ℝ := ∑ b₁ : β₁, ∑ b₂ : β₂, (W x).real {(b₁, b₂)} * F v₁ b₁ with hA
   have hmass : ∑ b₁ : β₁, ∑ b₂ : β₂, (W x).real {(b₁, b₂)} = 1 := by
-    have hone : ∑ y : β₁ × β₂, (W x).real {y} = 1 := by
-      rw [sum_measureReal_singleton, Finset.coe_univ, probReal_univ]
+    have hone : ∑ y : β₁ × β₂, (W x).real {y} = 1 :=
+      sum_measureReal_singleton_univ_eq_one (W x)
     rw [← hone, Fintype.sum_prod_type]
   calc ∑ y₁ : β₁, ∑ y₂ : β₂, c * (W x).real {(y₁, y₂)} * A
       = (∑ y₁ : β₁, ∑ y₂ : β₂, c * (W x).real {(y₁, y₂)}) * A := by

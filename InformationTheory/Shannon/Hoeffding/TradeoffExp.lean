@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.Sanov.LDP
 import InformationTheory.Shannon.Sanov.TendstoSandwich
 import InformationTheory.Shannon.KLDivContinuous
@@ -293,8 +294,8 @@ lemma hoeffding_exp_minimizer
   have hμ₂_real : ∀ a, μ₂.real {a} = P₂ a := fun a ↦ by rw [hμ₂, pmfToMeasure_real_singleton]
   have hμ₁_pos : ∀ a, 0 < μ₁.real {a} := fun a ↦ by rw [hμ₁_real]; exact hP₁_pos a
   have hμ₂_pos : ∀ a, 0 < μ₂.real {a} := fun a ↦ by rw [hμ₂_real]; exact hP₂_pos a
-  have hμ₁_sum : ∑ a, μ₁.real {a} = 1 := by simp only [hμ₁_real]; exact hP₁_sum
-  have hμ₂_sum : ∑ a, μ₂.real {a} = 1 := by simp only [hμ₂_real]; exact hP₂_sum
+  have hμ₁_sum : ∑ a, μ₁.real {a} = 1 := sum_measureReal_singleton_univ_eq_one μ₁
+  have hμ₂_sum : ∑ a, μ₂.real {a} = 1 := sum_measureReal_singleton_univ_eq_one μ₂
   -- LHS = klDivPmf Qstar P₂.
   have hQs_sum : ∑ a, Qstar a = 1 := hQs_mem.1.2
   have hQs_nn : ∀ a, 0 ≤ Qstar a := fun a ↦ (hQs_pos a).le

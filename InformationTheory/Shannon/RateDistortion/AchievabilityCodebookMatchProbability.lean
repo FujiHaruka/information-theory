@@ -1,3 +1,4 @@
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.RateDistortion.AchievabilityJointTypicalEncoder
 
 /-!
@@ -151,14 +152,7 @@ theorem exists_codebook_low_avg
   have h_sum_one : ∑ c : Codebook M n β, (codebookMeasure p M n).real {c} = 1 := by
     haveI : IsProbabilityMeasure (codebookMeasure p M n) :=
       codebookMeasure.instIsProbabilityMeasure p M n
-    have h_real_univ : (codebookMeasure p M n).real
-        ((Finset.univ : Finset (Codebook M n β)) : Set _) = 1 := by
-      rw [Finset.coe_univ, measureReal_def, measure_univ]
-      rfl
-    have h_sum_eq :=
-      sum_measureReal_singleton (μ := codebookMeasure p M n)
-        (Finset.univ : Finset (Codebook M n β))
-    rw [h_sum_eq, h_real_univ]
+    exact sum_measureReal_singleton_univ_eq_one (codebookMeasure p M n)
   have h_w_nn : ∀ c : Codebook M n β,
       0 ≤ (codebookMeasure p M n).real {c} := fun _ ↦ measureReal_nonneg
   -- Strict-sum contradiction.

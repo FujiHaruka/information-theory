@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremGeneral
 import InformationTheory.Shannon.IIDProductInput.Basic
@@ -102,22 +103,7 @@ lemma pmfLog_iidYs_bound_smooth
       mul_nonneg (by linarith) ENNReal.toReal_nonneg
     linarith
   -- Sum lower bound.
-  have h_sum_p : ∑ a : α, p.real {a} = 1 := by
-    have h_univ : (∑ a : α, p.real {a}) = p.real (Set.univ : Set α) := by
-      rw [measureReal_def]
-      have h_sum_ennreal : (∑ a : α, p {a}) = p (Set.univ : Set α) := by
-        rw [← measure_biUnion_finset (s := (Finset.univ : Finset α))
-          (f := fun a ↦ ({a} : Set α))
-          (fun i _ j _ hij ↦ by
-            simpa [Set.disjoint_singleton] using hij)
-          (fun i _ ↦ measurableSet_singleton _)]
-        congr 1
-        ext a
-        simp
-      rw [← h_sum_ennreal, ENNReal.toReal_sum (fun a _ ↦ measure_ne_top _ _)]
-      rfl
-    rw [h_univ]
-    exact MeasureTheory.probReal_univ
+  have h_sum_p : ∑ a : α, p.real {a} = 1 := sum_measureReal_singleton_univ_eq_one p
   have h_out_lb : δ * (Fintype.card β : ℝ)⁻¹
       ≤ (outputDistribution p (Channel.smooth W δ)).real {b} := by
     rw [h_out_sum]

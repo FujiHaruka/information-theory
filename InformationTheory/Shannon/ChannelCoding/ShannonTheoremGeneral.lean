@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import Mathlib.Analysis.Convex.StdSimplex
@@ -385,18 +386,7 @@ private lemma Channel.smooth_TV_bound
     have h_card_pos : (0 : ℝ) < Fintype.card β := by exact_mod_cast h_card_pos_nat
     have h_sum_W : ∑ b : β, (W a).real {b} = 1 := by
       haveI : IsProbabilityMeasure (W a) := IsMarkovKernel.isProbabilityMeasure a
-      -- ∑ b, (W a).real {b} = (W a).real (⋃ b, {b}) = (W a).real univ = 1.
-      have h_pairwise : Pairwise (Function.onFun Disjoint (fun b : β ↦ ({b} : Set β))) := by
-        intro b₁ b₂ hb
-        show Disjoint (({b₁} : Set β)) (({b₂} : Set β))
-        rw [Set.disjoint_singleton]
-        exact hb
-      have h_meas : ∀ b : β, MeasurableSet ({b} : Set β) := fun b ↦ measurableSet_singleton b
-      have h_iUnion : (⋃ b : β, ({b} : Set β)) = Set.univ := by
-        ext x; simp
-      have h := measureReal_iUnion_fintype (μ := W a) h_pairwise h_meas
-      rw [h_iUnion] at h
-      rw [← h, probReal_univ]
+      exact sum_measureReal_singleton_univ_eq_one (W a)
     have h_sum_inv : ∑ _b : β, (Fintype.card β : ℝ)⁻¹ = 1 := by
       rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
       exact mul_inv_cancel₀ h_card_pos.ne'
