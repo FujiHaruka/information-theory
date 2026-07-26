@@ -39,13 +39,13 @@ the pushforward of `Measure.pi (fun i => gaussianReal (v i) N)` under `O.mulVec`
 `Measure.pi (fun i => gaussianReal ((O.mulVec v) i) N)`. -/
 theorem measurePi_gaussianReal_map_orthogonal {k : ℕ} (N : ℝ≥0) (v : Fin k → ℝ)
     (O : Matrix (Fin k) (Fin k) ℝ) (hO : O ∈ Matrix.orthogonalGroup (Fin k) ℝ) :
-    (Measure.pi (fun i => gaussianReal (v i) N)).map (fun y => O.mulVec y)
-      = Measure.pi (fun i => gaussianReal ((O.mulVec v) i) N) := by
-  have hmeas : Measurable (fun y : Fin k → ℝ => O.mulVec y) := by fun_prop
+    (Measure.pi (fun i ↦ gaussianReal (v i) N)).map (fun y ↦ O.mulVec y)
+      = Measure.pi (fun i ↦ gaussianReal ((O.mulVec v) i) N) := by
+  have hmeas : Measurable (fun y : Fin k → ℝ ↦ O.mulVec y) := by fun_prop
   have hmeasToLp : Measurable (WithLp.toLp 2 : (Fin k → ℝ) → EuclideanSpace ℝ (Fin k)) := by
     fun_prop
   haveI : IsProbabilityMeasure
-      ((Measure.pi (fun i => gaussianReal (v i) N)).map (fun y => O.mulVec y)) :=
+      ((Measure.pi (fun i ↦ gaussianReal (v i) N)).map (fun y ↦ O.mulVec y)) :=
     Measure.isProbabilityMeasure_map hmeas.aemeasurable
   -- adjoint identity for `mulVec`/`dotProduct`
   have hadj : ∀ (M : Matrix (Fin k) (Fin k) ℝ) (a b : Fin k → ℝ),
@@ -53,22 +53,22 @@ theorem measurePi_gaussianReal_map_orthogonal {k : ℕ} (N : ℝ≥0) (v : Fin k
     intro M a b
     rw [dotProduct_comm (M *ᵥ a) b, dotProduct_mulVec, mulVec_transpose,
       dotProduct_comm (b ᵥ* M) a]
-  refine (charFun_eq_pi_iff (μ := fun i => gaussianReal ((O.mulVec v) i) N)).mp ?_
+  refine (charFun_eq_pi_iff (μ := fun i ↦ gaussianReal ((O.mulVec v) i) N)).mp ?_
   intro t
-  set t' : Fin k → ℝ := fun i => t i with ht'
+  set t' : Fin k → ℝ := fun i ↦ t i with ht'
   -- LHS reduction: change of variables + inner-product adjoint, then `charFun_pi`
-  have hLHS : charFun ((((Measure.pi (fun i => gaussianReal (v i) N)).map
-        (fun y => O.mulVec y))).map (WithLp.toLp 2)) t
+  have hLHS : charFun ((((Measure.pi (fun i ↦ gaussianReal (v i) N)).map
+        (fun y ↦ O.mulVec y))).map (WithLp.toLp 2)) t
       = ∏ i, charFun (gaussianReal (v i) N) ((Oᵀ *ᵥ t') i) := by
     rw [Measure.map_map hmeasToLp hmeas]
-    have hinner : charFun ((Measure.pi (fun i => gaussianReal (v i) N)).map
-          (WithLp.toLp 2 ∘ fun y => O.mulVec y)) t
-        = charFun ((Measure.pi (fun i => gaussianReal (v i) N)).map (WithLp.toLp 2))
+    have hinner : charFun ((Measure.pi (fun i ↦ gaussianReal (v i) N)).map
+          (WithLp.toLp 2 ∘ fun y ↦ O.mulVec y)) t
+        = charFun ((Measure.pi (fun i ↦ gaussianReal (v i) N)).map (WithLp.toLp 2))
             (WithLp.toLp 2 (Oᵀ *ᵥ t')) := by
       rw [charFun_apply, charFun_apply,
         integral_map (by fun_prop) (by fun_prop),
         integral_map (by fun_prop) (by fun_prop)]
-      refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+      refine integral_congr_ae (Filter.Eventually.of_forall fun x ↦ ?_)
       simp only [Function.comp_apply]
       have hIP : (inner ℝ (WithLp.toLp 2 (O *ᵥ x)) t : ℝ)
           = inner ℝ (WithLp.toLp 2 x) (WithLp.toLp 2 (Oᵀ *ᵥ t')) := by
@@ -92,7 +92,7 @@ theorem measurePi_gaussianReal_map_orthogonal {k : ℕ} (N : ℝ≥0) (v : Fin k
     intro w m
     simp only [dotProduct, Complex.ofReal_sum, Finset.sum_mul, Finset.mul_sum, Finset.sum_div,
       ← Finset.sum_sub_distrib]
-    refine Finset.sum_congr rfl fun i _ => ?_
+    refine Finset.sum_congr rfl fun i _ ↦ ?_
     push_cast
     ring
   rw [key (Oᵀ *ᵥ t') v, key t' (O *ᵥ v), hmean, hnorm]
@@ -112,16 +112,16 @@ noncomputable def ContAwgnCode.rotate {T W P : ℝ} {M : ℕ}
   encoder_bandlimited := c.encoder_bandlimited
   encoder_power := c.encoder_power
   k := c.k
-  testFn := fun i t => ∑ j, O i j * c.testFn j t
-  testFn_memLp := fun i =>
-    memLp_finsetSum Finset.univ (fun j _ => (c.testFn_memLp j).const_mul (O i j))
+  testFn := fun i t ↦ ∑ j, O i j * c.testFn j t
+  testFn_memLp := fun i ↦
+    memLp_finsetSum Finset.univ (fun j _ ↦ (c.testFn_memLp j).const_mul (O i j))
   testFn_support := by
     intro i
     rw [Function.support_subset_iff]
     intro t ht
     by_contra htI
     apply ht
-    refine Finset.sum_eq_zero (fun j _ => ?_)
+    refine Finset.sum_eq_zero (fun j _ ↦ ?_)
     have htfn : c.testFn j t = 0 := by
       by_contra hne
       exact htI (c.testFn_support j (Function.mem_support.mpr hne))
@@ -129,37 +129,37 @@ noncomputable def ContAwgnCode.rotate {T W P : ℝ} {M : ℕ}
   testFn_orthonormal := by
     intro i j
     have hInt : ∀ a b, Integrable
-        (fun t => (O i a * c.testFn a t) * (O j b * c.testFn b t)) volume :=
-      fun a b => ((c.testFn_memLp a).const_mul (O i a)).integrable_mul
+        (fun t ↦ (O i a * c.testFn a t) * (O j b * c.testFn b t)) volume :=
+      fun a b ↦ ((c.testFn_memLp a).const_mul (O i a)).integrable_mul
         ((c.testFn_memLp b).const_mul (O j b))
     calc (∫ t, (∑ a, O i a * c.testFn a t) * (∑ b, O j b * c.testFn b t))
         = ∫ t, ∑ a, ∑ b, (O i a * c.testFn a t) * (O j b * c.testFn b t) := by
-          refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+          refine integral_congr_ae (Filter.Eventually.of_forall (fun t ↦ ?_))
           change (∑ a, O i a * c.testFn a t) * (∑ b, O j b * c.testFn b t)
               = ∑ a, ∑ b, (O i a * c.testFn a t) * (O j b * c.testFn b t)
           rw [Finset.sum_mul_sum]
       _ = ∑ a, ∑ b, ∫ t, (O i a * c.testFn a t) * (O j b * c.testFn b t) := by
           rw [integral_finsetSum Finset.univ
-            (fun a _ => integrable_finsetSum Finset.univ (fun b _ => hInt a b))]
+            (fun a _ ↦ integrable_finsetSum Finset.univ (fun b _ ↦ hInt a b))]
           exact Finset.sum_congr rfl
-            (fun a _ => integral_finsetSum Finset.univ (fun b _ => hInt a b))
+            (fun a _ ↦ integral_finsetSum Finset.univ (fun b _ ↦ hInt a b))
       _ = ∑ a, ∑ b, O i a * O j b * (if a = b then (1 : ℝ) else 0) := by
-          refine Finset.sum_congr rfl (fun a _ => Finset.sum_congr rfl (fun b _ => ?_))
-          rw [show (fun t => (O i a * c.testFn a t) * (O j b * c.testFn b t))
-                = (fun t => (O i a * O j b) * (c.testFn a t * c.testFn b t)) from by
+          refine Finset.sum_congr rfl (fun a _ ↦ Finset.sum_congr rfl (fun b _ ↦ ?_))
+          rw [show (fun t ↦ (O i a * c.testFn a t) * (O j b * c.testFn b t))
+                = (fun t ↦ (O i a * O j b) * (c.testFn a t * c.testFn b t)) from by
               funext t; ring]
           rw [integral_const_mul, c.testFn_orthonormal a b]
       _ = ∑ a, O i a * O j a := by
-          refine Finset.sum_congr rfl (fun a _ => ?_)
+          refine Finset.sum_congr rfl (fun a _ ↦ ?_)
           simp_rw [mul_ite, mul_one, mul_zero]
-          rw [Finset.sum_ite_eq Finset.univ a (fun b => O i a * O j b)]
+          rw [Finset.sum_ite_eq Finset.univ a (fun b ↦ O i a * O j b)]
           simp
       _ = if i = j then 1 else 0 := by
           have hmul : ∑ a, O i a * O j a = (O * Oᵀ) i j := by
             rw [Matrix.mul_apply]
-            exact Finset.sum_congr rfl (fun a _ => by rw [Matrix.transpose_apply])
+            exact Finset.sum_congr rfl (fun a _ ↦ by rw [Matrix.transpose_apply])
           rw [hmul, (mem_orthogonalGroup_iff (Fin c.k) ℝ).mp hO, Matrix.one_apply]
-  decoder := fun y => c.decoder (Oᵀ *ᵥ y)
+  decoder := fun y ↦ c.decoder (Oᵀ *ᵥ y)
   decoder_meas := c.decoder_meas.comp (by fun_prop)
 
 /-- Rotating the test functions rotates the observation vector by the same matrix:
@@ -169,20 +169,20 @@ lemma ContAwgnCode.rotate_observation {T W P : ℝ} {M : ℕ}
     (hO : O ∈ Matrix.orthogonalGroup (Fin c.k) ℝ) (m : Fin M) :
     (c.rotate O hO).observation m = O.mulVec (c.observation m) := by
   funext i
-  have hInt : ∀ j, Integrable (fun t => c.encoder m t * c.testFn j t) volume :=
-    fun j => (c.encoder_memLp m).integrable_mul (c.testFn_memLp j)
+  have hInt : ∀ j, Integrable (fun t ↦ c.encoder m t * c.testFn j t) volume :=
+    fun j ↦ (c.encoder_memLp m).integrable_mul (c.testFn_memLp j)
   change (∫ t, c.encoder m t * (∑ j, O i j * c.testFn j t)) = (O *ᵥ c.observation m) i
   calc (∫ t, c.encoder m t * (∑ j, O i j * c.testFn j t))
       = ∫ t, ∑ j, O i j * (c.encoder m t * c.testFn j t) := by
-        refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+        refine integral_congr_ae (Filter.Eventually.of_forall (fun t ↦ ?_))
         change c.encoder m t * (∑ j, O i j * c.testFn j t)
             = ∑ j, O i j * (c.encoder m t * c.testFn j t)
         rw [Finset.mul_sum]
-        exact Finset.sum_congr rfl (fun j _ => by ring)
+        exact Finset.sum_congr rfl (fun j _ ↦ by ring)
     _ = ∑ j, ∫ t, O i j * (c.encoder m t * c.testFn j t) :=
-        integral_finsetSum Finset.univ (fun j _ => (hInt j).const_mul (O i j))
+        integral_finsetSum Finset.univ (fun j _ ↦ (hInt j).const_mul (O i j))
     _ = ∑ j, O i j * c.observation m j := by
-        exact Finset.sum_congr rfl (fun j _ => by
+        exact Finset.sum_congr rfl (fun j _ ↦ by
           rw [integral_const_mul]; rfl)
     _ = (O *ᵥ c.observation m) i := rfl
 
@@ -196,20 +196,20 @@ lemma ContAwgnCode.rotate_averageError {T W P : ℝ} {M : ℕ}
   have hEP : ∀ m, (c.rotate O hO).errorProbAt N₀ m = c.errorProbAt N₀ m := by
     intro m
     have hobs := c.rotate_observation O hO m
-    have hmeasO : Measurable (fun y : Fin c.k → ℝ => O *ᵥ y) := by fun_prop
-    have hcomp : Measurable (fun y : Fin c.k → ℝ => c.decoder (Oᵀ *ᵥ y)) :=
+    have hmeasO : Measurable (fun y : Fin c.k → ℝ ↦ O *ᵥ y) := by fun_prop
+    have hcomp : Measurable (fun y : Fin c.k → ℝ ↦ c.decoder (Oᵀ *ᵥ y)) :=
       c.decoder_meas.comp (by fun_prop)
     have hS_rot : MeasurableSet {y : Fin c.k → ℝ | c.decoder (Oᵀ *ᵥ y) ≠ m} :=
       hcomp (t := {x : Fin M | x ≠ m}) MeasurableSet.of_discrete
-    have hpre : (fun y : Fin c.k → ℝ => O *ᵥ y) ⁻¹' {y | c.decoder (Oᵀ *ᵥ y) ≠ m}
+    have hpre : (fun y : Fin c.k → ℝ ↦ O *ᵥ y) ⁻¹' {y | c.decoder (Oᵀ *ᵥ y) ≠ m}
         = {z | c.decoder z ≠ m} := by
       ext z
       simp only [Set.mem_preimage, Set.mem_setOf_eq]
       rw [mulVec_mulVec, (mem_orthogonalGroup_iff' (Fin c.k) ℝ).mp hO, one_mulVec]
-    change Measure.pi (fun i : Fin c.k =>
+    change Measure.pi (fun i : Fin c.k ↦
           gaussianReal ((c.rotate O hO).observation m i) (N₀ / 2).toNNReal)
           {y : Fin c.k → ℝ | c.decoder (Oᵀ *ᵥ y) ≠ m}
-        = Measure.pi (fun i : Fin c.k => gaussianReal (c.observation m i) (N₀ / 2).toNNReal)
+        = Measure.pi (fun i : Fin c.k ↦ gaussianReal (c.observation m i) (N₀ / 2).toNNReal)
           {y : Fin c.k → ℝ | c.decoder y ≠ m}
     rw [hobs,
       (measurePi_gaussianReal_map_orthogonal (N₀ / 2).toNNReal (c.observation m) O hO).symm,
@@ -237,7 +237,7 @@ theorem diagonalizes by an orthogonal matrix. This exposes, for the S3 rotation:
 private lemma testFnLift_star {k : ℕ} (φ : Fin k → ℝ → ℝ) (hmem : ∀ i, MemLp (φ i) 2 volume)
     (i : Fin k) : star (testFnLift φ hmem i) = testFnLift φ hmem i := by
   refine Lp.ext ?_
-  have hcoe : (testFnLift φ hmem i : ℝ → ℂ) =ᵐ[volume] fun t => ((φ i t : ℝ) : ℂ) :=
+  have hcoe : (testFnLift φ hmem i : ℝ → ℂ) =ᵐ[volume] fun t ↦ ((φ i t : ℝ) : ℂ) :=
     MemLp.coeFn_toLp _
   filter_upwards [Lp.coeFn_star (testFnLift φ hmem i), hcoe] with t h1 h2
   rw [h1, Pi.star_apply, h2, Complex.star_def, Complex.conj_ofReal]
@@ -262,17 +262,17 @@ family `φ`. Its complex lift is the band-limited Gram of `testFnLift φ hmem`, 
 eigen-decomposition diagonalizes the band-Gram for the Shannon–Hartley converse rotation. -/
 noncomputable def bandGramRealMatrix (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
     (hmem : ∀ i, MemLp (φ i) 2 volume) : Matrix (Fin k) (Fin k) ℝ :=
-  fun i j =>
-    (Matrix.gram ℂ (fun i => (bandLimitSubspace W).starProjection (testFnLift φ hmem i)) i j).re
+  fun i j ↦
+    (Matrix.gram ℂ (fun i ↦ (bandLimitSubspace W).starProjection (testFnLift φ hmem i)) i j).re
 
 /-- The band-limited Gram of the complex lift of a real test family has real entries: it is the
 `ℝ → ℂ`-image of `bandGramRealMatrix`. -/
 theorem bandGram_eq_map_real (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
     (hmem : ∀ i, MemLp (φ i) 2 volume) :
-    Matrix.gram ℂ (fun i => (bandLimitSubspace W).starProjection (testFnLift φ hmem i))
+    Matrix.gram ℂ (fun i ↦ (bandLimitSubspace W).starProjection (testFnLift φ hmem i))
       = (bandGramRealMatrix W φ hmem).map (algebraMap ℝ ℂ) := by
   have hvstar : ∀ l, star ((bandLimitSubspace W).starProjection (testFnLift φ hmem l))
-      = (bandLimitSubspace W).starProjection (testFnLift φ hmem l) := fun l => by
+      = (bandLimitSubspace W).starProjection (testFnLift φ hmem l) := fun l ↦ by
     rw [← bandLimitProj_star, testFnLift_star]
   ext i j
   simp only [Matrix.map_apply, bandGramRealMatrix, Complex.coe_algebraMap]
@@ -292,7 +292,7 @@ theorem bandGram_eq_map_real (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
 theorem bandGramRealMatrix_isHermitian (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → ℝ)
     (hmem : ∀ i, MemLp (φ i) 2 volume) : (bandGramRealMatrix W φ hmem).IsHermitian := by
   have hvstar : ∀ l, star ((bandLimitSubspace W).starProjection (testFnLift φ hmem l))
-      = (bandLimitSubspace W).starProjection (testFnLift φ hmem l) := fun l => by
+      = (bandLimitSubspace W).starProjection (testFnLift φ hmem l) := fun l ↦ by
     rw [← bandLimitProj_star, testFnLift_star]
   ext i j
   simp only [Matrix.conjTranspose_apply, bandGramRealMatrix, Matrix.gram_apply, star_trivial]
@@ -351,10 +351,10 @@ theorem bandGramReal_high_count_le (T W : ℝ) {c : ℝ} (hc : 0 < c) {k : ℕ}
     (φ : Fin k → ℝ → ℝ) (hmem : ∀ i, MemLp (φ i) 2 volume)
     (h_on : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0)
     (h_supp : ∀ i, Function.support (φ i) ⊆ Set.Icc 0 T) :
-    (Finset.univ.filter (fun j => c < bandGramRealEigenvalues W φ hmem j)).card
+    (Finset.univ.filter (fun j ↦ c < bandGramRealEigenvalues W φ hmem j)).card
       ≤ prolateCount T W c := by
   classical
-  set v : Fin k → E := fun i => (bandLimitSubspace W).starProjection (testFnLift φ hmem i) with hv_def
+  set v : Fin k → E := fun i ↦ (bandLimitSubspace W).starProjection (testFnLift φ hmem i) with hv_def
   have hC : (Matrix.gram ℂ v).IsHermitian := Matrix.isHermitian_gram ℂ v
   have hR := bandGramRealMatrix_isHermitian W φ hmem
   have hmap : Matrix.gram ℂ v = (bandGramRealMatrix W φ hmem).map (algebraMap ℝ ℂ) :=
@@ -365,16 +365,16 @@ theorem bandGramReal_high_count_le (T W : ℝ) {c : ℝ} (hc : 0 < c) {k : ℕ}
   have hcharR : (Matrix.gram ℂ v).charpoly
       = ∏ i, (Polynomial.X - Polynomial.C ((hR.eigenvalues i : ℂ))) := by
     rw [hmap, Matrix.charpoly_map, hR.charpoly_eq, Polynomial.map_prod]
-    refine Finset.prod_congr rfl (fun i _ => ?_)
+    refine Finset.prod_congr rfl (fun i _ ↦ ?_)
     rw [Polynomial.map_sub, Polynomial.map_X, Polynomial.map_C, Complex.coe_algebraMap,
       RCLike.ofReal_real_eq_id, id_eq]
   have hprod : (∏ i, (Polynomial.X - Polynomial.C ((hC.eigenvalues i : ℂ))))
       = ∏ i, (Polynomial.X - Polynomial.C ((hR.eigenvalues i : ℂ))) := hcharC.symm.trans hcharR
   -- Hence the eigenvalue multisets coincide over ℂ, then over ℝ by injectivity of `ofReal`.
-  have hroots : Multiset.map (fun i => (hC.eigenvalues i : ℂ)) Finset.univ.val
-      = Multiset.map (fun i => (hR.eigenvalues i : ℂ)) Finset.univ.val := by
-    rw [← roots_prod_X_sub_C_fun (fun i => (hC.eigenvalues i : ℂ)),
-      ← roots_prod_X_sub_C_fun (fun i => (hR.eigenvalues i : ℂ)), hprod]
+  have hroots : Multiset.map (fun i ↦ (hC.eigenvalues i : ℂ)) Finset.univ.val
+      = Multiset.map (fun i ↦ (hR.eigenvalues i : ℂ)) Finset.univ.val := by
+    rw [← roots_prod_X_sub_C_fun (fun i ↦ (hC.eigenvalues i : ℂ)),
+      ← roots_prod_X_sub_C_fun (fun i ↦ (hR.eigenvalues i : ℂ)), hprod]
   have hcancel : Multiset.map hC.eigenvalues Finset.univ.val
       = Multiset.map hR.eigenvalues Finset.univ.val := by
     apply Multiset.map_injective Complex.ofReal_injective
@@ -382,18 +382,18 @@ theorem bandGramReal_high_count_le (T W : ℝ) {c : ℝ} (hc : 0 < c) {k : ℕ}
     exact hroots
   -- The high-eigenvalue counts are equal since they are `countP` over equal multisets.
   have hbridge : ∀ (f : Fin k → ℝ),
-      (Finset.univ.filter (fun i => c < f i)).card
-        = Multiset.countP (fun x => c < x) (Multiset.map f Finset.univ.val) := by
+      (Finset.univ.filter (fun i ↦ c < f i)).card
+        = Multiset.countP (fun x ↦ c < x) (Multiset.map f Finset.univ.val) := by
     intro f
     rw [Multiset.countP_map, ← Finset.filter_val]
     rfl
-  have hfinal : (Finset.univ.filter (fun j => c < hR.eigenvalues j)).card
-      = (Finset.univ.filter (fun j => c < hC.eigenvalues j)).card := by
+  have hfinal : (Finset.univ.filter (fun j ↦ c < hR.eigenvalues j)).card
+      = (Finset.univ.filter (fun j ↦ c < hC.eigenvalues j)).card := by
     rw [hbridge hR.eigenvalues, hbridge hC.eigenvalues, hcancel]
-  calc (Finset.univ.filter (fun j => c < bandGramRealEigenvalues W φ hmem j)).card
-      = (Finset.univ.filter (fun j => c < hC.eigenvalues j)).card := hfinal
+  calc (Finset.univ.filter (fun j ↦ c < bandGramRealEigenvalues W φ hmem j)).card
+      = (Finset.univ.filter (fun j ↦ c < hC.eigenvalues j)).card := hfinal
     _ = (Finset.univ.filter
-          (fun j => c < bandGramEigenvalues W (testFnLift φ hmem) j)).card := rfl
+          (fun j ↦ c < bandGramEigenvalues W (testFnLift φ hmem) j)).card := rfl
     _ ≤ prolateCount T W c :=
         gram_high_eigen_finrank_le_prolateCount_real T W hc φ hmem h_on h_supp
 
@@ -425,8 +425,8 @@ private lemma testFnLift_orthonormal {k : ℕ} (φ : Fin k → ℝ → ℝ)
     (hmem : ∀ i, MemLp (φ i) 2 volume)
     (h_on : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0) :
     Orthonormal ℂ (testFnLift φ hmem) := by
-  have hcoe : ∀ l, (testFnLift φ hmem l : ℝ → ℂ) =ᵐ[volume] fun t => ((φ l t : ℝ) : ℂ) :=
-    fun l => MemLp.coeFn_toLp _
+  have hcoe : ∀ l, (testFnLift φ hmem l : ℝ → ℂ) =ᵐ[volume] fun t ↦ ((φ l t : ℝ) : ℂ) :=
+    fun l ↦ MemLp.coeFn_toLp _
   rw [orthonormal_iff_ite]
   intro i j
   have hinner : (inner ℂ (testFnLift φ hmem i) (testFnLift φ hmem j) : ℂ)
@@ -462,9 +462,9 @@ private lemma inner_bandGramColumn (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → �
           (bandLimitSubspace W).starProjection (testFnLift φ hmem l)) : ℂ)
       = ∑ j, ∑ l, (O j i : ℂ) * (O l i' : ℂ) * (bandGramRealMatrix W φ hmem j l : ℂ) := by
     rw [sum_inner]
-    refine Finset.sum_congr rfl (fun j _ => ?_)
+    refine Finset.sum_congr rfl (fun j _ ↦ ?_)
     rw [inner_smul_left, inner_sum, Finset.mul_sum]
-    refine Finset.sum_congr rfl (fun l _ => ?_)
+    refine Finset.sum_congr rfl (fun l _ ↦ ?_)
     rw [inner_smul_right, hvinner j l, Complex.conj_ofReal]
     ring
   rw [hexp]
@@ -475,7 +475,7 @@ private lemma inner_bandGramColumn (W : ℝ) {k : ℕ} (φ : Fin k → ℝ → �
       = ∑ j, ∑ l, O j i * O l i' * bandGramRealMatrix W φ hmem j l := by
     simp_rw [Matrix.mul_apply, Matrix.transpose_apply, Finset.sum_mul]
     rw [Finset.sum_comm]
-    exact Finset.sum_congr rfl (fun j _ => Finset.sum_congr rfl (fun l _ => by ring))
+    exact Finset.sum_congr rfl (fun j _ ↦ Finset.sum_congr rfl (fun l _ ↦ by ring))
   have hreal : (∑ j, ∑ l, O j i * O l i' * bandGramRealMatrix W φ hmem j l)
       = if i = i' then bandGramRealEigenvalues W φ hmem i else 0 := by
     rw [← hmat, hd, Matrix.diagonal_apply]
@@ -513,7 +513,7 @@ private lemma bandGramColumn_eq_starProjection (W : ℝ) {k : ℕ} (φ : Fin k �
             testFnLift φ hmem j) := by
   unfold bandGramColumn
   rw [map_sum]
-  refine Finset.sum_congr rfl (fun j _ => ?_)
+  refine Finset.sum_congr rfl (fun j _ ↦ ?_)
   rw [map_smul]
 
 /-- The raw-frame combination indexed by a column of the orthogonal `O` has unit `E`-norm (the raw
@@ -529,10 +529,10 @@ private lemma norm_sq_testFnLift_combo (W : ℝ) {k : ℕ} (φ : Fin k → ℝ �
   have hinner : (inner ℂ (∑ j, (O j i : ℂ) • testFnLift φ hmem j)
         (∑ l, (O l i : ℂ) • testFnLift φ hmem l) : ℂ) = ((∑ j, O j i * O j i : ℝ) : ℂ) := by
     rw [sum_inner, Complex.ofReal_sum]
-    refine Finset.sum_congr rfl (fun j _ => ?_)
+    refine Finset.sum_congr rfl (fun j _ ↦ ?_)
     rw [inner_smul_left, inner_sum]
     simp_rw [inner_smul_right, orthonormal_iff_ite.mp ho, mul_ite, mul_one, mul_zero]
-    rw [Finset.sum_ite_eq Finset.univ j (fun l => (O l i : ℂ)), if_pos (Finset.mem_univ j),
+    rw [Finset.sum_ite_eq Finset.univ j (fun l ↦ (O l i : ℂ)), if_pos (Finset.mem_univ j),
       Complex.conj_ofReal]
     push_cast; ring
   -- `∑ⱼ (Oⱼᵢ)² = 1` since `O` is orthogonal (`Oᵀ O = 1`)
@@ -564,10 +564,10 @@ theorem bandGramRealEigenvalues_le_one (W : ℝ) {k : ℕ} (φ : Fin k → ℝ �
 /-- The complex lift of a band-limited encoder lies in `bandLimitSubspace W`. -/
 private lemma testFnLift_encoder_mem_bandLimitSubspace {W : ℝ} {f : ℝ → ℝ} (hf : MemLp f 2 volume)
     (hbl : IsBandlimited f W) :
-    ((hf.ofReal (K := ℂ)).toLp (fun t => ((f t : ℝ) : ℂ))) ∈ bandLimitSubspace W := by
+    ((hf.ofReal (K := ℂ)).toLp (fun t ↦ ((f t : ℝ) : ℂ))) ∈ bandLimitSubspace W := by
   obtain ⟨hf', hvanish⟩ := hbl
-  have heq : (hf.ofReal (K := ℂ)).toLp (fun t => ((f t : ℝ) : ℂ))
-      = hf'.toLp (fun t : ℝ => ((f t : ℝ) : ℂ)) := by
+  have heq : (hf.ofReal (K := ℂ)).toLp (fun t ↦ ((f t : ℝ) : ℂ))
+      = hf'.toLp (fun t : ℝ ↦ ((f t : ℝ) : ℂ)) := by
     refine Lp.ext ?_
     filter_upwards [MemLp.coeFn_toLp (hf.ofReal (K := ℂ)), MemLp.coeFn_toLp hf'] with t h1 h2
     exact h1.trans h2.symm
@@ -582,9 +582,9 @@ private lemma observation_eq_inner_re {T W P : ℝ} {M : ℕ} (c : ContAwgnCode 
       = (inner ℂ (testFnLift c.testFn c.testFn_memLp j)
           (testFnLift c.encoder c.encoder_memLp m)).re := by
   have hcoeψ : (testFnLift c.testFn c.testFn_memLp j : ℝ → ℂ)
-      =ᵐ[volume] fun t => ((c.testFn j t : ℝ) : ℂ) := MemLp.coeFn_toLp _
+      =ᵐ[volume] fun t ↦ ((c.testFn j t : ℝ) : ℂ) := MemLp.coeFn_toLp _
   have hcoeF : (testFnLift c.encoder c.encoder_memLp m : ℝ → ℂ)
-      =ᵐ[volume] fun t => ((c.encoder m t : ℝ) : ℂ) := MemLp.coeFn_toLp _
+      =ᵐ[volume] fun t ↦ ((c.encoder m t : ℝ) : ℂ) := MemLp.coeFn_toLp _
   have hinner : (inner ℂ (testFnLift c.testFn c.testFn_memLp j)
         (testFnLift c.encoder c.encoder_memLp m) : ℂ)
       = ((∫ t, c.encoder m t * c.testFn j t : ℝ) : ℂ) := by
@@ -625,7 +625,7 @@ private lemma rotate_observation_eq_inner_re {T W P : ℝ} {M : ℕ} (c : ContAw
       = ∑ j, O j i * c.observation m j := by
     unfold bandGramColumn
     rw [sum_inner, Complex.re_sum]
-    refine Finset.sum_congr rfl (fun j _ => ?_)
+    refine Finset.sum_congr rfl (fun j _ ↦ ?_)
     rw [inner_smul_left, Complex.conj_ofReal, Complex.re_ofReal_mul,
       inner_starProjection_testFn_encoder, ← observation_eq_inner_re]
   rw [hg]
@@ -635,7 +635,7 @@ private lemma rotate_observation_eq_inner_re {T W P : ℝ} {M : ℕ} (c : ContAw
 private lemma norm_sq_testFnLift_encoder {T W P : ℝ} {M : ℕ} (c : ContAwgnCode T W P M) (m : Fin M) :
     ‖testFnLift c.encoder c.encoder_memLp m‖ ^ 2 = ∫ t, (c.encoder m t) ^ 2 := by
   have hcoeF : (testFnLift c.encoder c.encoder_memLp m : ℝ → ℂ)
-      =ᵐ[volume] fun t => ((c.encoder m t : ℝ) : ℂ) := MemLp.coeFn_toLp _
+      =ᵐ[volume] fun t ↦ ((c.encoder m t : ℝ) : ℂ) := MemLp.coeFn_toLp _
   have hinner : (inner ℂ (testFnLift c.encoder c.encoder_memLp m)
         (testFnLift c.encoder c.encoder_memLp m) : ℂ) = ((∫ t, (c.encoder m t) ^ 2 : ℝ) : ℂ) := by
     rw [MeasureTheory.L2.inner_def, ← integral_complex_ofReal]
@@ -653,10 +653,10 @@ private lemma signalLaw_integral_coord_sq {T W P : ℝ} {M : ℕ} [NeZero M]
     (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c N₀))
       = (M : ℝ)⁻¹ * ∑ m : Fin M, (c.observation m i) ^ 2 := by
   have hint : ∀ m : Fin M,
-      Integrable (fun x : Fin c.k → ℝ => (x i) ^ 2) (Measure.dirac (c.observation m)) :=
-    fun m => integrable_dirac (by finiteness)
+      Integrable (fun x : Fin c.k → ℝ ↦ (x i) ^ 2) (Measure.dirac (c.observation m)) :=
+    fun m ↦ integrable_dirac (by finiteness)
   rw [contAwgnSignalLaw_eq_mixture c N₀, integral_smul_measure,
-    integral_finsetSum_measure (fun m _ => hint m)]
+    integral_finsetSum_measure (fun m _ ↦ hint m)]
   simp_rw [integral_dirac]
   rw [ENNReal.toReal_inv, ENNReal.toReal_natCast, smul_eq_mul]
 
@@ -681,19 +681,19 @@ theorem contAwgn_rotated_secondMoment {T W P N₀ : ℝ} {M : ℕ} [NeZero M]
   set F : Fin M → E := testFnLift c.encoder c.encoder_memLp with hF
   -- shared facts
   have hνnonneg : ∀ i, 0 ≤ ν i := bandGramRealEigenvalues_nonneg W c.testFn c.testFn_memLp
-  have hnormg : ∀ i, ‖g i‖ ^ 2 = ν i := fun i => norm_sq_bandGramColumn W c.testFn c.testFn_memLp i
+  have hnormg : ∀ i, ‖g i‖ ^ 2 = ν i := fun i ↦ norm_sq_bandGramColumn W c.testFn c.testFn_memLp i
   have hinnerg : ∀ i i', (inner ℂ (g i) (g i') : ℂ) = if i = i' then (ν i : ℂ) else 0 :=
-    fun i i' => inner_bandGramColumn W c.testFn c.testFn_memLp i i'
+    fun i i' ↦ inner_bandGramColumn W c.testFn c.testFn_memLp i i'
   have hFbound : ∀ m, ‖F m‖ ^ 2 ≤ T * P :=
-    fun m => (norm_sq_testFnLift_encoder c m).trans_le (c.encoder_power m)
-  have hRe : ∀ z : ℂ, z.re ^ 2 ≤ ‖z‖ ^ 2 := fun z => by
+    fun m ↦ (norm_sq_testFnLift_encoder c m).trans_le (c.encoder_power m)
+  have hRe : ∀ z : ℂ, z.re ^ 2 ≤ ‖z‖ ^ 2 := fun z ↦ by
     rw [Complex.sq_norm, Complex.normSq_apply]; nlinarith [sq_nonneg z.im]
   have hAval : ∀ i, (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀))
       = (M : ℝ)⁻¹ * ∑ m : Fin M, (inner ℂ (g i) (F m) : ℂ).re ^ 2 := by
     intro i
     rw [signalLaw_integral_coord_sq c' N₀ i]
     congr 1
-    refine Finset.sum_congr rfl (fun m _ => ?_)
+    refine Finset.sum_congr rfl (fun m _ ↦ ?_)
     have hro : c'.observation m i = (inner ℂ (g i) (F m) : ℂ).re :=
       rotate_observation_eq_inner_re c m i
     rw [hro]
@@ -702,7 +702,7 @@ theorem contAwgn_rotated_secondMoment {T W P N₀ : ℝ} {M : ℕ} [NeZero M]
       ∑ i, (if ν i = 0 then (0 : ℝ) else (inner ℂ (g i) (F m) : ℂ).re ^ 2 / ν i) ≤ ‖F m‖ ^ 2 := by
     intro m
     set e' : {i : Fin c.k // ν i ≠ 0} → E :=
-      fun j => ((Real.sqrt (ν j.1))⁻¹ : ℂ) • g j.1 with he'
+      fun j ↦ ((Real.sqrt (ν j.1))⁻¹ : ℂ) • g j.1 with he'
     have he'_on : Orthonormal ℂ e' := by
       rw [orthonormal_iff_ite]
       intro j j'
@@ -717,7 +717,7 @@ theorem contAwgn_rotated_secondMoment {T W P N₀ : ℝ} {M : ℕ} [NeZero M]
         rw [show ((Real.sqrt (ν j.1))⁻¹ : ℂ) * (((Real.sqrt (ν j.1))⁻¹ : ℂ) * (ν j.1 : ℂ))
             = (((Real.sqrt (ν j.1))⁻¹ * (Real.sqrt (ν j.1))⁻¹ * ν j.1 : ℝ) : ℂ) by push_cast; ring,
           hid, Complex.ofReal_one]
-      · rw [if_neg (fun h => hjj (Subtype.ext h)), if_neg hjj]; simp
+      · rw [if_neg (fun h ↦ hjj (Subtype.ext h)), if_neg hjj]; simp
     have hnorm_e : ∀ j : {i : Fin c.k // ν i ≠ 0},
         ‖(inner ℂ (e' j) (F m) : ℂ)‖ ^ 2 = ‖(inner ℂ (g j.1) (F m) : ℂ)‖ ^ 2 / ν j.1 := by
       intro j
@@ -733,16 +733,16 @@ theorem contAwgn_rotated_secondMoment {T W P N₀ : ℝ} {M : ℕ} [NeZero M]
       exact mul_le_mul_of_nonneg_right (hRe _) (inv_nonneg.mpr hνpos.le)
     have hsub : ∑ j : {i : Fin c.k // ν i ≠ 0}, (inner ℂ (g j.1) (F m) : ℂ).re ^ 2 / ν j.1
         = ∑ i, (if ν i = 0 then (0 : ℝ) else (inner ℂ (g i) (F m) : ℂ).re ^ 2 / ν i) := by
-      rw [← Finset.sum_subtype (Finset.univ.filter (fun i => ν i ≠ 0)) (fun x => by simp)
-        (fun i => (inner ℂ (g i) (F m) : ℂ).re ^ 2 / ν i), Finset.sum_filter]
-      refine Finset.sum_congr rfl (fun i _ => ?_)
+      rw [← Finset.sum_subtype (Finset.univ.filter (fun i ↦ ν i ≠ 0)) (fun x ↦ by simp)
+        (fun i ↦ (inner ℂ (g i) (F m) : ℂ).re ^ 2 / ν i), Finset.sum_filter]
+      refine Finset.sum_congr rfl (fun i _ ↦ ?_)
       by_cases hνi : ν i = 0
       · rw [if_neg (not_not.mpr hνi), if_pos hνi]
       · rw [if_pos hνi, if_neg hνi]
     rw [← hsub]
     calc ∑ j : {i : Fin c.k // ν i ≠ 0}, (inner ℂ (g j.1) (F m) : ℂ).re ^ 2 / ν j.1
         ≤ ∑ j : {i : Fin c.k // ν i ≠ 0}, ‖(inner ℂ (e' j) (F m) : ℂ)‖ ^ 2 :=
-          Finset.sum_le_sum (fun j _ => hperj j)
+          Finset.sum_le_sum (fun j _ ↦ hperj j)
       _ ≤ ‖F m‖ ^ 2 := he'_on.sum_inner_products_le (x := F m) (s := Finset.univ)
   -- the ellipsoid witness
   have hM : (M : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne M)
@@ -756,14 +756,14 @@ theorem contAwgn_rotated_secondMoment {T W P N₀ : ℝ} {M : ℕ} [NeZero M]
     · simp [hνi]
     · simp_rw [if_neg hνi]
       rw [hAval i, ← Finset.mul_sum, ← Finset.sum_div, mul_div_assoc]
-  refine ⟨fun i => if ν i = 0 then 0 else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i,
+  refine ⟨fun i ↦ if ν i = 0 then 0 else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i,
     ?_, ?_, ?_⟩
   · -- nonnegativity
     intro i
     change (0 : ℝ) ≤ if ν i = 0 then 0 else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i
     split_ifs with hνi
     · exact le_refl 0
-    · exact div_nonneg (integral_nonneg (fun x => sq_nonneg _)) (hνnonneg i)
+    · exact div_nonneg (integral_nonneg (fun x ↦ sq_nonneg _)) (hνnonneg i)
   · -- power budget
     change ∑ i, (if ν i = 0 then (0 : ℝ)
         else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i) ≤ T * P
@@ -771,13 +771,13 @@ theorem contAwgn_rotated_secondMoment {T W P N₀ : ℝ} {M : ℕ} [NeZero M]
           else (∫ x, (x i) ^ 2 ∂(contAwgnSignalLaw c' N₀)) / ν i)
         = (M : ℝ)⁻¹ * ∑ m : Fin M, ∑ i,
             (if ν i = 0 then (0 : ℝ) else (inner ℂ (g i) (F m) : ℂ).re ^ 2 / ν i) := by
-          rw [Finset.sum_congr rfl (fun i _ => hQval i)]
+          rw [Finset.sum_congr rfl (fun i _ ↦ hQval i)]
           simp_rw [← Finset.mul_sum]
           rw [Finset.sum_comm]
       _ ≤ (M : ℝ)⁻¹ * ∑ m : Fin M, ‖F m‖ ^ 2 :=
-          mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ => hbessel_m m)) hMinv
+          mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ ↦ hbessel_m m)) hMinv
       _ ≤ (M : ℝ)⁻¹ * ∑ m : Fin M, (T * P) :=
-          mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ => hFbound m)) hMinv
+          mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ ↦ hFbound m)) hMinv
       _ = T * P := by
           rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul,
             ← mul_assoc, inv_mul_cancel₀ hM, one_mul]
@@ -826,7 +826,7 @@ theorem contAwgn_converse_ellipsoid {T W P N₀ : ℝ} {M : ℕ}
   obtain ⟨Q, hQnn, hQsum, hQid⟩ := contAwgn_rotated_secondMoment c
   refine ⟨Q, hQnn, hQsum, ?_⟩
   -- Per-coordinate: `P'ᵢ ≤ νᵢ · Qᵢ`, hence a per-coordinate log bound.
-  have hP'le : ∀ i, P' i ≤ ν i * Q i := fun i => (hP'percoord i).trans (hQid i).le
+  have hP'le : ∀ i, P' i ≤ ν i * Q i := fun i ↦ (hP'percoord i).trans (hQid i).le
   have hlog_le : ∀ i, (1 / 2) * Real.log (1 + P' i / (N₀ / 2))
       ≤ (1 / 2) * Real.log (1 + ν i * Q i / (N₀ / 2)) := by
     intro i
@@ -842,7 +842,7 @@ theorem contAwgn_converse_ellipsoid {T W P N₀ : ℝ} {M : ℕ}
       + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := hP'log
   have hsum : (∑ i : Fin c.k, (1 / 2) * Real.log (1 + P' i / (N₀ / 2)))
       ≤ ∑ i : Fin c.k, (1 / 2) * Real.log (1 + ν i * Q i / (N₀ / 2)) :=
-    Finset.sum_le_sum (fun i _ => hlog_le i)
+    Finset.sum_le_sum (fun i _ ↦ hlog_le i)
   linarith
 
 end InformationTheory.Shannon.ShannonHartley

@@ -38,18 +38,18 @@ private lemma div_one_add_le_log_one_add {u : ℝ} (hu : 0 ≤ u) :
 /-- The per-slot capacity `x ↦ x · log(1 + a/x)` is monotone in the number of degrees of freedom
 `x` on `(0, ∞)` for `a ≥ 0`. -/
 lemma mul_log_one_add_div_monotone {a : ℝ} (ha : 0 ≤ a) :
-    MonotoneOn (fun x : ℝ => x * Real.log (1 + a / x)) (Set.Ioi 0) := by
-  have hcont : ContinuousOn (fun x : ℝ => x * Real.log (1 + a / x)) (Set.Ioi 0) := by
+    MonotoneOn (fun x : ℝ ↦ x * Real.log (1 + a / x)) (Set.Ioi 0) := by
+  have hcont : ContinuousOn (fun x : ℝ ↦ x * Real.log (1 + a / x)) (Set.Ioi 0) := by
     apply ContinuousOn.mul continuousOn_id
     apply ContinuousOn.log
     · exact continuousOn_const.add
-        (continuousOn_const.div continuousOn_id (fun x hx => ne_of_gt hx))
+        (continuousOn_const.div continuousOn_id (fun x hx ↦ ne_of_gt hx))
     · intro x hx
       have hx0 : 0 < x := hx
       have hu : 0 ≤ a / x := div_nonneg ha hx0.le
       exact ne_of_gt (by linarith)
   apply monotoneOn_of_hasDerivWithinAt_nonneg
-    (f' := fun x => Real.log (1 + a / x) - a / x / (1 + a / x)) (convex_Ioi 0) hcont
+    (f' := fun x ↦ Real.log (1 + a / x) - a / x / (1 + a / x)) (convex_Ioi 0) hcont
   · intro x hx
     rw [interior_Ioi] at hx
     have hx0 : 0 < x := hx
@@ -57,14 +57,14 @@ lemma mul_log_one_add_div_monotone {a : ℝ} (ha : 0 ≤ a) :
     have hu0 : 0 ≤ a / x := div_nonneg ha hx0.le
     have hpos : (0 : ℝ) < 1 + a / x := by linarith
     have hposne : (1 + a / x) ≠ 0 := ne_of_gt hpos
-    have hax : HasDerivAt (fun y : ℝ => a / y) ((0 * x - a * 1) / x ^ 2) x :=
+    have hax : HasDerivAt (fun y : ℝ ↦ a / y) ((0 * x - a * 1) / x ^ 2) x :=
       (hasDerivAt_const x a).div (hasDerivAt_id x) hxne
-    have hinner : HasDerivAt (fun y : ℝ => 1 + a / y) ((0 * x - a * 1) / x ^ 2) x :=
+    have hinner : HasDerivAt (fun y : ℝ ↦ 1 + a / y) ((0 * x - a * 1) / x ^ 2) x :=
       hax.const_add 1
-    have hlog : HasDerivAt (fun y : ℝ => Real.log (1 + a / y))
+    have hlog : HasDerivAt (fun y : ℝ ↦ Real.log (1 + a / y))
         ((0 * x - a * 1) / x ^ 2 / (1 + a / x)) x :=
       hinner.log hposne
-    have hprod : HasDerivAt (fun y : ℝ => y * Real.log (1 + a / y))
+    have hprod : HasDerivAt (fun y : ℝ ↦ y * Real.log (1 + a / y))
         (1 * Real.log (1 + a / x) + x * ((0 * x - a * 1) / x ^ 2 / (1 + a / x))) x :=
       (hasDerivAt_id x).mul hlog
     have hval : 1 * Real.log (1 + a / x) + x * ((0 * x - a * 1) / x ^ 2 / (1 + a / x))
@@ -82,7 +82,7 @@ lemma mul_log_one_add_div_monotone {a : ℝ} (ha : 0 ≤ a) :
 
 /-- Concavity of `x ↦ ½ log(1 + x/(N₀/2))` on `[0, ∞)`. -/
 private lemma concaveOn_half_log_one_add_div {N₀ : ℝ} (hN₀ : 0 < N₀) :
-    ConcaveOn ℝ (Set.Ici 0) (fun x : ℝ => (1 / 2) * Real.log (1 + x / (N₀ / 2))) := by
+    ConcaveOn ℝ (Set.Ici 0) (fun x : ℝ ↦ (1 / 2) * Real.log (1 + x / (N₀ / 2))) := by
   have hN2 : (0 : ℝ) < N₀ / 2 := by linarith
   set A : ℝ →ᵃ[ℝ] ℝ := AffineMap.const ℝ ℝ 1 + ((N₀ / 2)⁻¹ • LinearMap.id).toAffineMap with hA
   have hAeq : ∀ x : ℝ, A x = 1 + x / (N₀ / 2) := by
@@ -98,7 +98,7 @@ private lemma concaveOn_half_log_one_add_div {N₀ : ℝ} (hN₀ : 0 < N₀) :
     have : 0 ≤ x / (N₀ / 2) := div_nonneg hx hN2.le
     linarith
   have hconc2 : ConcaveOn ℝ (Set.Ici 0) (Real.log ∘ A) := hcomp.subset hsub (convex_Ici 0)
-  have hfun : (Real.log ∘ A) = fun x => Real.log (1 + x / (N₀ / 2)) := by
+  have hfun : (Real.log ∘ A) = fun x ↦ Real.log (1 + x / (N₀ / 2)) := by
     funext x; simp only [Function.comp_apply, hAeq]
   rw [hfun] at hconc2
   have hscaled := hconc2.smul (show (0 : ℝ) ≤ 1 / 2 by norm_num)
@@ -113,7 +113,7 @@ lemma waterfill_head_tail_bound {k : ℕ} (N₀ TP c₀ : ℝ) (hN₀ : 0 < N₀
     (hP'0 : ∀ i, 0 ≤ P' i) (hP'ν : ∀ i, P' i ≤ ν i * Q i)
     (hQ0 : ∀ i, 0 ≤ Q i) (hQsum : ∑ i, Q i ≤ TP)
     (hν0 : ∀ i, 0 ≤ ν i) (hν1 : ∀ i, ν i ≤ 1)
-    {B : ℕ} (hcount : (Finset.univ.filter (fun i => c₀ < ν i)).card ≤ B) :
+    {B : ℕ} (hcount : (Finset.univ.filter (fun i ↦ c₀ < ν i)).card ≤ B) :
     ∑ i, (1 / 2) * Real.log (1 + P' i / (N₀ / 2))
       ≤ c₀ * TP / N₀
         + (B : ℝ) * ((1 / 2) * Real.log (1 + TP / ((B : ℝ) * (N₀ / 2)))) := by
@@ -136,20 +136,20 @@ lemma waterfill_head_tail_bound {k : ℕ} (N₀ TP c₀ : ℝ) (hN₀ : 0 < N₀
     have hzz : (0 : ℝ) ≤ z / (N₀ / 2) := div_nonneg hz hN2.le
     have := Real.log_nonneg (show (1 : ℝ) ≤ 1 + z / (N₀ / 2) by linarith)
     linarith
-  set headS := Finset.univ.filter (fun i => c₀ < ν i) with hheadS
+  set headS := Finset.univ.filter (fun i ↦ c₀ < ν i) with hheadS
   -- split the total sum into "loud" (head) and "quiet" (tail) slots
   have hsplit :
       ∑ i, (1 / 2) * Real.log (1 + P' i / (N₀ / 2))
         = (∑ i ∈ headS, (1 / 2) * Real.log (1 + P' i / (N₀ / 2)))
-          + ∑ i ∈ Finset.univ.filter (fun i => ¬ c₀ < ν i),
+          + ∑ i ∈ Finset.univ.filter (fun i ↦ ¬ c₀ < ν i),
               (1 / 2) * Real.log (1 + P' i / (N₀ / 2)) := by
     rw [hheadS, Finset.sum_filter_add_sum_filter_not]
   -- TAIL: linearize `log(1+x) ≤ x` and use `νᵢ ≤ c₀`
   have htail :
-      ∑ i ∈ Finset.univ.filter (fun i => ¬ c₀ < ν i),
+      ∑ i ∈ Finset.univ.filter (fun i ↦ ¬ c₀ < ν i),
           (1 / 2) * Real.log (1 + P' i / (N₀ / 2))
         ≤ c₀ * TP / N₀ := by
-    have hbound : ∀ i ∈ Finset.univ.filter (fun i => ¬ c₀ < ν i),
+    have hbound : ∀ i ∈ Finset.univ.filter (fun i ↦ ¬ c₀ < ν i),
         (1 / 2) * Real.log (1 + P' i / (N₀ / 2)) ≤ c₀ * Q i / N₀ := by
       intro i hi
       have hνc : ν i ≤ c₀ := not_lt.mp (Finset.mem_filter.mp hi).2
@@ -165,16 +165,16 @@ lemma waterfill_head_tail_bound {k : ℕ} (N₀ TP c₀ : ℝ) (hN₀ : 0 < N₀
         rw [div_eq_mul_inv, div_eq_mul_inv]
         exact mul_le_mul_of_nonneg_right hP'c (by positivity)
       linarith
-    calc ∑ i ∈ Finset.univ.filter (fun i => ¬ c₀ < ν i),
+    calc ∑ i ∈ Finset.univ.filter (fun i ↦ ¬ c₀ < ν i),
             (1 / 2) * Real.log (1 + P' i / (N₀ / 2))
-          ≤ ∑ i ∈ Finset.univ.filter (fun i => ¬ c₀ < ν i), c₀ * Q i / N₀ :=
+          ≤ ∑ i ∈ Finset.univ.filter (fun i ↦ ¬ c₀ < ν i), c₀ * Q i / N₀ :=
             Finset.sum_le_sum hbound
-      _ = (c₀ / N₀) * ∑ i ∈ Finset.univ.filter (fun i => ¬ c₀ < ν i), Q i := by
-            rw [Finset.mul_sum]; exact Finset.sum_congr rfl (fun i _ => by ring)
+      _ = (c₀ / N₀) * ∑ i ∈ Finset.univ.filter (fun i ↦ ¬ c₀ < ν i), Q i := by
+            rw [Finset.mul_sum]; exact Finset.sum_congr rfl (fun i _ ↦ by ring)
       _ ≤ (c₀ / N₀) * TP := by
             apply mul_le_mul_of_nonneg_left _ (by positivity)
             exact le_trans (Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
-              (fun i _ _ => hQ0 i)) hQsum
+              (fun i _ _ ↦ hQ0 i)) hQsum
       _ = c₀ * TP / N₀ := by ring
   -- HEAD: Jensen + monotonicity in the number of loud slots
   have hhead :
@@ -199,8 +199,8 @@ lemma waterfill_head_tail_bound {k : ℕ} (N₀ TP c₀ : ℝ) (hN₀ : 0 < N₀
       have hBpos : (0 : ℝ) < (B : ℝ) := lt_of_lt_of_le hcardR hcardB
       have hSqTP : ∑ i ∈ headS, Q i ≤ TP :=
         le_trans (Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
-          (fun i _ _ => hQ0 i)) hQsum
-      have hSqnn : (0 : ℝ) ≤ ∑ i ∈ headS, Q i := Finset.sum_nonneg (fun i _ => hQ0 i)
+          (fun i _ _ ↦ hQ0 i)) hQsum
+      have hSqnn : (0 : ℝ) ≤ ∑ i ∈ headS, Q i := Finset.sum_nonneg (fun i _ ↦ hQ0 i)
       -- Step 1: `P'ᵢ ≤ Qᵢ`, so the head log-sum grows
       have hstep1 :
           ∑ i ∈ headS, (1 / 2) * Real.log (1 + P' i / (N₀ / 2))
@@ -213,8 +213,8 @@ lemma waterfill_head_tail_bound {k : ℕ} (N₀ TP c₀ : ℝ) (hN₀ : 0 < N₀
       have hconc := concaveOn_half_log_one_add_div (N₀ := N₀) hN₀
       have hsum_w : ∑ _i ∈ headS, ((headS.card : ℝ)⁻¹) = 1 := by
         rw [Finset.sum_const, nsmul_eq_mul, mul_inv_cancel₀ hcard_ne]
-      have hjen := hconc.le_map_sum (t := headS) (w := fun _ => (headS.card : ℝ)⁻¹) (p := Q)
-        (fun i _ => by positivity) hsum_w (fun i _ => Set.mem_Ici.mpr (hQ0 i))
+      have hjen := hconc.le_map_sum (t := headS) (w := fun _ ↦ (headS.card : ℝ)⁻¹) (p := Q)
+        (fun i _ ↦ by positivity) hsum_w (fun i _ ↦ Set.mem_Ici.mpr (hQ0 i))
       rw [← Finset.smul_sum, ← Finset.smul_sum] at hjen
       simp only [smul_eq_mul] at hjen
       have hSf :
@@ -258,17 +258,17 @@ capacity as `T → ∞`: `prolateCount T W c₀ / T → 2W`, and the continuous 
 `y ↦ y · ½ log(1 + P/(y·N₀/2))` evaluated at `2W` equals `bandlimitedAwgnCapacity W N₀ P`. -/
 lemma waterfill_head_div_tendsto (W N₀ P c₀ : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀)
     (hP : 0 ≤ P) (hc₀0 : 0 < c₀) (hc₀1 : c₀ < 1) :
-    Filter.Tendsto (fun T : ℝ => ((prolateCount T W c₀ : ℝ)
+    Filter.Tendsto (fun T : ℝ ↦ ((prolateCount T W c₀ : ℝ)
         * ((1 / 2) * Real.log (1 + T * P / ((prolateCount T W c₀ : ℝ) * (N₀ / 2))))) / T)
       Filter.atTop (nhds (bandlimitedAwgnCapacity W N₀ P)) := by
-  have hr : Tendsto (fun T : ℝ => (prolateCount T W c₀ : ℝ) / T) atTop (𝓝 (2 * W)) :=
+  have hr : Tendsto (fun T : ℝ ↦ (prolateCount T W c₀ : ℝ) / T) atTop (𝓝 (2 * W)) :=
     prolateCount_div_tendsto W hW hc₀0 hc₀1
   have h2W : (0 : ℝ) < 2 * W := by linarith
   have hN2 : (0 : ℝ) < N₀ / 2 := by linarith
   have hd : (0 : ℝ) < 2 * W * (N₀ / 2) := mul_pos h2W hN2
   -- continuity of the scaling function `y ↦ y · ½ log(1 + P/(y·N₀/2))` at `2W`
   have hgcont : ContinuousAt
-      (fun y : ℝ => y * ((1 / 2) * Real.log (1 + P / (y * (N₀ / 2))))) (2 * W) := by
+      (fun y : ℝ ↦ y * ((1 / 2) * Real.log (1 + P / (y * (N₀ / 2))))) (2 * W) := by
     apply ContinuousAt.mul continuousAt_id
     apply ContinuousAt.mul continuousAt_const
     apply ContinuousAt.log

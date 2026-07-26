@@ -84,7 +84,7 @@ control it, and their crossing at `a = 1/(2W)` is what produces the logarithm: `
 noncomputable def bandKernelTail (W a : ℝ) : ℝ := ∫ u in Set.Ioi a, bandKernelSq W u
 
 theorem bandKernelTail_nonneg (W a : ℝ) : 0 ≤ bandKernelTail W a :=
-  setIntegral_nonneg measurableSet_Ioi fun u _ => bandKernelSq_nonneg W u
+  setIntegral_nonneg measurableSet_Ioi fun u _ ↦ bandKernelSq_nonneg W u
 
 theorem bandKernelTail_antitone (W : ℝ) : Antitone (bandKernelTail W) := by
   intro a b hab
@@ -103,34 +103,34 @@ theorem bandKernelTail_zero (W : ℝ) (hW : 0 < W) : bandKernelTail W 0 = W := b
     have h := integral_comp_neg_Iic (0 : ℝ) (bandKernelSq W)
     rw [neg_zero] at h
     rw [← h]
-    exact setIntegral_congr_fun measurableSet_Iic fun x _ => (bandKernelSq_neg W x).symm
+    exact setIntegral_congr_fun measurableSet_Iic fun x _ ↦ (bandKernelSq_neg W x).symm
   rw [bandKernelSq_integral W hW] at hsplit
   rw [bandKernelTail]
   linarith
 
 theorem bandKernelTail_le_inv (W a : ℝ) (hW : 0 < W) (ha : 0 < a) :
     bandKernelTail W a ≤ 1 / (Real.pi ^ 2 * a) := by
-  have hrpow : IntegrableOn (fun t : ℝ => t ^ (-2 : ℝ)) (Set.Ioi a) volume :=
+  have hrpow : IntegrableOn (fun t : ℝ ↦ t ^ (-2 : ℝ)) (Set.Ioi a) volume :=
     integrableOn_Ioi_rpow_of_lt (by norm_num) ha
   have hpt : ∀ u : ℝ, 0 < u →
       (1 / Real.pi ^ 2) * u ^ (-2 : ℝ) = 1 / (Real.pi ^ 2 * u ^ 2) := by
     intro u hu
     rw [show (-2 : ℝ) = -((2 : ℕ) : ℝ) by norm_num, Real.rpow_neg hu.le, Real.rpow_natCast]
     field_simp
-  have hmaj : IntegrableOn (fun u : ℝ => 1 / (Real.pi ^ 2 * u ^ 2)) (Set.Ioi a) volume :=
+  have hmaj : IntegrableOn (fun u : ℝ ↦ 1 / (Real.pi ^ 2 * u ^ 2)) (Set.Ioi a) volume :=
     IntegrableOn.congr_fun (hrpow.const_mul (1 / Real.pi ^ 2))
-      (fun u hu => hpt u (lt_trans ha hu)) measurableSet_Ioi
+      (fun u hu ↦ hpt u (lt_trans ha hu)) measurableSet_Ioi
   have hval : (∫ u in Set.Ioi a, (1 : ℝ) / (Real.pi ^ 2 * u ^ 2)) = 1 / (Real.pi ^ 2 * a) := by
     have h1 : (∫ u in Set.Ioi a, (1 : ℝ) / (Real.pi ^ 2 * u ^ 2))
         = (1 / Real.pi ^ 2) * ∫ u in Set.Ioi a, u ^ (-2 : ℝ) := by
       rw [← integral_const_mul]
-      exact setIntegral_congr_fun measurableSet_Ioi fun u hu => (hpt u (lt_trans ha hu)).symm
+      exact setIntegral_congr_fun measurableSet_Ioi fun u hu ↦ (hpt u (lt_trans ha hu)).symm
     rw [h1, integral_Ioi_rpow_of_lt (by norm_num) ha, show (-2 : ℝ) + 1 = -1 by norm_num,
       Real.rpow_neg_one]
     field_simp
   rw [bandKernelTail, ← hval]
   refine setIntegral_mono_on (bandKernelSq_integrable W).integrableOn hmaj measurableSet_Ioi ?_
-  exact fun u hu => bandKernelSq_le_inv_sq W u hW (ne_of_gt (lt_trans ha hu))
+  exact fun u hu ↦ bandKernelSq_le_inv_sq W u hW (ne_of_gt (lt_trans ha hu))
 
 theorem bandKernelTail_le_const (W a : ℝ) (hW : 0 < W) (ha : 0 ≤ a) : bandKernelTail W a ≤ W :=
   (bandKernelTail_antitone W ha).trans_eq (bandKernelTail_zero W hW)
@@ -161,7 +161,7 @@ theorem setIntegral_bandKernelSq_window (W T t : ℝ) (hW : 0 < W) (hT : 0 ≤ T
     have h := integral_comp_neg_Iic (t - T) (bandKernelSq W)
     rw [show -(t - T) = T - t by ring] at h
     rw [bandKernelTail, ← h]
-    exact setIntegral_congr_fun measurableSet_Iic fun x _ => (bandKernelSq_neg W x).symm
+    exact setIntegral_congr_fun measurableSet_Iic fun x _ ↦ (bandKernelSq_neg W x).symm
   -- Split `ℝ = (−∞, t−T] ⊍ (t−T, t] ⊍ (t, ∞)`.
   have hsplit2 : (∫ u in Set.Ioc (t - T) t, bandKernelSq W u)
       + (∫ u in Set.Ioi t, bandKernelSq W u) = ∫ u in Set.Ioi (t - T), bandKernelSq W u := by
@@ -185,11 +185,11 @@ theorem integral_bandKernelTail_le (W T : ℝ) (hW : 0 < W) (hT : 0 ≤ T) :
   have ha0 : (0 : ℝ) < a₀ := by rw [ha0def]; positivity
   rcases le_or_gt T a₀ with hcase | hcase
   · -- `2WT ≤ 1`: the flat bound `ψ ≤ W` alone already gives `∫₀ᵀ ψ ≤ WT ≤ 1/2`.
-    have hconstW : IntegrableOn (fun _ : ℝ => W) (Set.Icc (0 : ℝ) T) volume :=
+    have hconstW : IntegrableOn (fun _ : ℝ ↦ W) (Set.Icc (0 : ℝ) T) volume :=
       integrableOn_const (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
     have hb : (∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W t) ≤ ∫ _t in Set.Icc (0 : ℝ) T, W :=
       setIntegral_mono_on hψ hconstW measurableSet_Icc
-        (fun t ht => bandKernelTail_le_const W t hW ht.1)
+        (fun t ht ↦ bandKernelTail_le_const W t hW ht.1)
     rw [setIntegral_const, Real.volume_real_Icc_of_le hT, sub_zero, smul_eq_mul] at hb
     have hTW : T * W ≤ 1 / 2 := by
       rw [ha0def, le_div_iff₀ (by positivity)] at hcase
@@ -197,9 +197,9 @@ theorem integral_bandKernelTail_le (W T : ℝ) (hW : 0 < W) (hT : 0 ≤ T) :
     linarith
   · -- `2WT > 1`: split the window at `a₀ = 1/(2W)`, flat bound below, `1/(π²t)` above.
     have hsub1 : IntegrableOn (bandKernelTail W) (Set.Ioc (0 : ℝ) a₀) volume :=
-      hψ.mono_set fun x hx => ⟨hx.1.le, le_trans hx.2 hcase.le⟩
+      hψ.mono_set fun x hx ↦ ⟨hx.1.le, le_trans hx.2 hcase.le⟩
     have hsub2 : IntegrableOn (bandKernelTail W) (Set.Ioc a₀ T) volume :=
-      hψ.mono_set fun x hx => ⟨le_trans ha0.le hx.1.le, hx.2⟩
+      hψ.mono_set fun x hx ↦ ⟨le_trans ha0.le hx.1.le, hx.2⟩
     have hsplit : (∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W t)
         = (∫ t in Set.Ioc (0 : ℝ) a₀, bandKernelTail W t)
           + ∫ t in Set.Ioc a₀ T, bandKernelTail W t := by
@@ -208,19 +208,19 @@ theorem integral_bandKernelTail_le (W T : ℝ) (hW : 0 < W) (hT : 0 ≤ T) :
         Set.Ioc_union_Ioc_eq_Ioc ha0.le hcase.le]
     -- Below `a₀`: total energy caps `ψ` by `W`, and `W · a₀ = 1/2`.
     have hp1 : (∫ t in Set.Ioc (0 : ℝ) a₀, bandKernelTail W t) ≤ 1 / 2 := by
-      have hc : IntegrableOn (fun _ : ℝ => W) (Set.Ioc (0 : ℝ) a₀) volume :=
+      have hc : IntegrableOn (fun _ : ℝ ↦ W) (Set.Ioc (0 : ℝ) a₀) volume :=
         integrableOn_const (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top)
       have hb := setIntegral_mono_on hsub1 hc measurableSet_Ioc
-        (fun t ht => bandKernelTail_le_const W t hW ht.1.le)
+        (fun t ht ↦ bandKernelTail_le_const W t hW ht.1.le)
       rw [setIntegral_const, Real.volume_real_Ioc_of_le ha0.le, sub_zero, smul_eq_mul] at hb
       have : a₀ * W = 1 / 2 := by rw [ha0def]; field_simp
       linarith
     -- Above `a₀`: `|sin| ≤ 1` caps `ψ` by `1/(π²t)`, whose integral is the logarithm.
-    have hcont : ContinuousOn (fun t : ℝ => 1 / (Real.pi ^ 2 * t)) (Set.Icc a₀ T) := by
-      refine ContinuousOn.div continuousOn_const (by fun_prop) fun t ht => ?_
+    have hcont : ContinuousOn (fun t : ℝ ↦ 1 / (Real.pi ^ 2 * t)) (Set.Icc a₀ T) := by
+      refine ContinuousOn.div continuousOn_const (by fun_prop) fun t ht ↦ ?_
       have ht0 : 0 < t := lt_of_lt_of_le ha0 ht.1
       positivity
-    have hmaj : IntegrableOn (fun t : ℝ => 1 / (Real.pi ^ 2 * t)) (Set.Ioc a₀ T) volume :=
+    have hmaj : IntegrableOn (fun t : ℝ ↦ 1 / (Real.pi ^ 2 * t)) (Set.Ioc a₀ T) volume :=
       (hcont.integrableOn_compact isCompact_Icc).mono_set Set.Ioc_subset_Icc_self
     have hval : (∫ t in Set.Ioc a₀ T, 1 / (Real.pi ^ 2 * t))
         = (1 / Real.pi ^ 2) * Real.log (T / a₀) := by
@@ -234,7 +234,7 @@ theorem integral_bandKernelTail_le (W T : ℝ) (hW : 0 < W) (hT : 0 ≤ T) :
     have hp2 : (∫ t in Set.Ioc a₀ T, bandKernelTail W t)
         ≤ (1 / Real.pi ^ 2) * Real.log (1 + 2 * W * T) := by
       have hb := setIntegral_mono_on hsub2 hmaj measurableSet_Ioc
-        (fun t ht => bandKernelTail_le_inv W t hW (lt_of_lt_of_le ha0 ht.1.le))
+        (fun t ht ↦ bandKernelTail_le_inv W t hW (lt_of_lt_of_le ha0 ht.1.le))
       rw [hval, hTa] at hb
       have hpos : (0 : ℝ) < 2 * W * T := by nlinarith
       have hmono := Real.log_le_log hpos (by linarith : 2 * W * T ≤ 1 + 2 * W * T)
@@ -248,18 +248,18 @@ theorem bandKernel_window_deficit_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
     2 * W * T - ∫ t in Set.Icc (0 : ℝ) T, ∫ s in Set.Icc (0 : ℝ) T, ‖bandKernel W t s‖ ^ 2
       = 2 * ∫ t in Set.Icc (0 : ℝ) T, bandKernelTail W t := by
   have hψ := bandKernelTail_integrableOn W T hW
-  have hconst : IntegrableOn (fun _ : ℝ => 2 * W) (Set.Icc (0 : ℝ) T) volume :=
+  have hconst : IntegrableOn (fun _ : ℝ ↦ 2 * W) (Set.Icc (0 : ℝ) T) volume :=
     integrableOn_const (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
   -- The inner integral, at each `t`, is the window identity.
   have hinner : ∀ t : ℝ, (∫ s in Set.Icc (0 : ℝ) T, ‖bandKernel W t s‖ ^ 2)
       = 2 * W - bandKernelTail W t - bandKernelTail W (T - t) := by
     intro t
     rw [← setIntegral_bandKernelSq_window W T t hW hT]
-    exact setIntegral_congr_fun measurableSet_Icc fun s _ => bandKernel_norm_sq_eq W t s
+    exact setIntegral_congr_fun measurableSet_Icc fun s _ ↦ bandKernel_norm_sq_eq W t s
   -- The reflected tail `t ↦ ψ(T − t)` is monotone and bounded by `W`, hence integrable.
-  have hmono : Monotone fun t => bandKernelTail W (T - t) :=
-    fun a b hab => bandKernelTail_antitone W (by linarith)
-  have hψ' : IntegrableOn (fun t => bandKernelTail W (T - t)) (Set.Icc 0 T) volume := by
+  have hmono : Monotone fun t ↦ bandKernelTail W (T - t) :=
+    fun a b hab ↦ bandKernelTail_antitone W (by linarith)
+  have hψ' : IntegrableOn (fun t ↦ bandKernelTail W (T - t)) (Set.Icc 0 T) volume := by
     refine Measure.integrableOn_of_bounded (M := W)
       (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
       hmono.measurable.aestronglyMeasurable ?_
@@ -285,7 +285,7 @@ theorem bandKernel_window_deficit_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) :
       integral_sub hconst hψ
     rw [h1, h2, setIntegral_const, Real.volume_real_Icc_of_le hT, sub_zero, smul_eq_mul]
     ring
-  rw [setIntegral_congr_fun measurableSet_Icc (fun t _ => hinner t), hsub, hrefl]
+  rw [setIntegral_congr_fun measurableSet_Icc (fun t _ ↦ hinner t), hsub, hrefl]
   ring
 
 /-- The trace deficit of the time-and-band limiting operator against
@@ -348,13 +348,13 @@ theorem bandKernelLp_mem_bandLimitSubspace (W : ℝ) (hW : 0 < W) (t : ℝ) :
     bandKernelLp W t ∈ bandLimitSubspace W := by
   have hΔ : (0 : ℝ) < 1 / (2 * W) := by positivity
   set S : E := (ShannonHartley.shiftSinc_memLp t (1 / (2 * W)) hΔ).toLp
-    (fun s => (NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℂ)) with hSdef
+    (fun s ↦ (NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℂ)) with hSdef
   set B : E := (ShannonHartley.specBoxcar_memLp t (1 / (2 * W)) hΔ 2).toLp
     (ShannonHartley.specBoxcar t (1 / (2 * W))) with hBdef
   have hFS : Lp.fourierTransformₗᵢ ℝ ℂ S = B :=
     ShannonHartley.fourier_shiftSinc_toLp t (1 / (2 * W)) hΔ
   have hfun : bandKernel W t
-      = (2 * W : ℂ) • (fun s : ℝ => ((NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℝ) : ℂ)) := by
+      = (2 * W : ℂ) • (fun s : ℝ ↦ ((NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℝ) : ℂ)) := by
     rw [bandKernel_eq_smul_shiftSinc hW t]
     rfl
   have hk : bandKernelLp W t = (2 * W : ℂ) • S := by
@@ -371,7 +371,7 @@ theorem bandKernelLp_mem_bandLimitSubspace (W : ℝ) (hW : 0 < W) (t : ℝ) :
       ae_restrict_mem (measurableSet_setOf_lt_abs W)] with ξ hξ hmem
     rw [hBdef, hξ, ShannonHartley.specBoxcar, Set.indicator_of_notMem, Pi.zero_apply]
     rw [hband]
-    exact fun hc => absurd (abs_le.mpr ⟨(Set.mem_Icc.mp hc).1, (Set.mem_Icc.mp hc).2⟩)
+    exact fun hc ↦ absurd (abs_le.mpr ⟨(Set.mem_Icc.mp hc).1, (Set.mem_Icc.mp hc).2⟩)
       (not_le.mpr hmem)
   rw [bandLimitSubspace, Submodule.mem_comap]
   show Lp.fourierTransformₗᵢ ℝ ℂ (bandKernelLp W t) ∈ zeroOnLp {ξ : ℝ | W < |ξ|}
@@ -398,7 +398,7 @@ theorem timeLimitProj_bandKernelLp_norm_sq (T W t : ℝ) :
           (((timeLimitSubspace T).starProjection (bandKernelLp W t) : ℝ → ℂ) s)
           (((timeLimitSubspace T).starProjection (bandKernelLp W t) : ℝ → ℂ) s) : ℂ))
         = ∫ s, (Set.Icc (0 : ℝ) T).indicator
-            (fun s => (((‖bandKernel W t s‖ ^ 2) : ℝ) : ℂ)) s := by
+            (fun s ↦ (((‖bandKernel W t s‖ ^ 2) : ℝ) : ℂ)) s := by
       refine integral_congr_ae ?_
       filter_upwards [timeLimitProj_apply_ae T (bandKernelLp W t), bandKernelLp_coeFn W t]
         with s hs hks
@@ -487,13 +487,13 @@ theorem norm_timeBandLimitingOp_sq_eq_setIntegral (T W : ℝ) (hW : 0 < W) (f : 
   have hcongr : (∫ t, (inner ℂ ((u : ℝ → ℂ) t)
         (((bandLimitSubspace W).starProjection u : ℝ → ℂ) t) : ℂ))
       = ∫ t, (Set.Icc (0 : ℝ) T).indicator
-          (fun t => inner ℂ (timeBandLimitingOp T W (bandKernelLp W t)) f *
+          (fun t ↦ inner ℂ (timeBandLimitingOp T W (bandKernelLp W t)) f *
             inner ℂ f (bandKernelLp W t)) t := by
     refine integral_congr_ae ?_
     have hu_ae : (u : ℝ → ℂ) =ᵐ[volume]
-        (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ) := by
+        (Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ)) * (g : ℝ → ℂ) := by
       rw [hudef]; exact timeLimitProj_apply_ae T g
-    have hg_ae : (g : ℝ → ℂ) =ᵐ[volume] fun t => inner ℂ (bandKernelLp W t) f := by
+    have hg_ae : (g : ℝ → ℂ) =ᵐ[volume] fun t ↦ inner ℂ (bandKernelLp W t) f := by
       rw [hgdef]; exact bandLimitProj_apply_eq_inner W hW.le f
     filter_upwards [hu_ae, hg_ae, bandLimitProj_apply_eq_inner W hW.le u] with t h1 h2 h3
     rw [h1, h3, Pi.mul_apply, h2]
@@ -508,13 +508,13 @@ theorem finsetSum_inner_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0
     ∑ i ∈ s, (inner ℂ (timeBandLimitingOp T W (e i)) (e i)).re ≤ 2 * W * T := by
   classical
   have hint : ∀ i : ι,
-      IntegrableOn (fun t => ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2)
+      IntegrableOn (fun t ↦ ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2)
         (Set.Icc (0 : ℝ) T) volume :=
-    fun i => integrableOn_inner_bandKernelLp_sq T W hW.le (e i)
+    fun i ↦ integrableOn_inner_bandKernelLp_sq T W hW.le (e i)
   have hsum : ∑ i ∈ s, (inner ℂ (timeBandLimitingOp T W (e i)) (e i)).re
       = ∫ t in Set.Icc (0 : ℝ) T, ∑ i ∈ s, ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2 := by
-    rw [integral_finsetSum _ (fun i _ => hint i)]
-    exact Finset.sum_congr rfl fun i _ => inner_timeBandLimitingOp_self_eq T W hW.le (e i)
+    rw [integral_finsetSum _ (fun i _ ↦ hint i)]
+    exact Finset.sum_congr rfl fun i _ ↦ inner_timeBandLimitingOp_self_eq T W hW.le (e i)
   rw [hsum]
   have hle : ∀ t ∈ Set.Icc (0 : ℝ) T,
       (∑ i ∈ s, ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2) ≤ 2 * W := by
@@ -522,12 +522,12 @@ theorem finsetSum_inner_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0
     have hb := he.sum_inner_products_le (x := bandKernelLp W t) (s := s)
     rw [bandKernelLp_norm_sq W t hW] at hb
     refine le_trans (le_of_eq ?_) hb
-    exact Finset.sum_congr rfl fun i _ => by rw [← norm_inner_symm]
-  have hconst : IntegrableOn (fun _ : ℝ => 2 * W) (Set.Icc (0 : ℝ) T) volume :=
+    exact Finset.sum_congr rfl fun i _ ↦ by rw [← norm_inner_symm]
+  have hconst : IntegrableOn (fun _ : ℝ ↦ 2 * W) (Set.Icc (0 : ℝ) T) volume :=
     integrableOn_const (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
   calc (∫ t in Set.Icc (0 : ℝ) T, ∑ i ∈ s, ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2)
       ≤ ∫ _t in Set.Icc (0 : ℝ) T, 2 * W :=
-        setIntegral_mono_on (integrable_finsetSum _ (fun i _ => hint i)) hconst
+        setIntegral_mono_on (integrable_finsetSum _ (fun i _ ↦ hint i)) hconst
           measurableSet_Icc hle
     _ = 2 * W * T := by
         rw [setIntegral_const, Real.volume_real_Icc_of_le hT, sub_zero, smul_eq_mul]
@@ -536,13 +536,13 @@ theorem finsetSum_inner_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0
 theorem inner_timeBandLimitingOp_self_nonneg (T W : ℝ) (hW : 0 ≤ W) (f : E) :
     0 ≤ (inner ℂ (timeBandLimitingOp T W f) f).re := by
   rw [inner_timeBandLimitingOp_self_eq T W hW f]
-  exact setIntegral_nonneg measurableSet_Icc fun t _ => by positivity
+  exact setIntegral_nonneg measurableSet_Icc fun t _ ↦ by positivity
 
 theorem summable_inner_timeBandLimitingOp_self (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     {ι : Type*} {e : ι → E} (he : Orthonormal ℂ e) :
-    Summable fun i => (inner ℂ (timeBandLimitingOp T W (e i)) (e i)).re :=
-  summable_of_sum_le (fun i => inner_timeBandLimitingOp_self_nonneg T W hW.le (e i))
-    (fun s => finsetSum_inner_timeBandLimitingOp_le T W hT hW he s)
+    Summable fun i ↦ (inner ℂ (timeBandLimitingOp T W (e i)) (e i)).re :=
+  summable_of_sum_le (fun i ↦ inner_timeBandLimitingOp_self_nonneg T W hW.le (e i))
+    (fun s ↦ finsetSum_inner_timeBandLimitingOp_le T W hT hW he s)
 
 /-- `‖A f‖² ≤ ⟪A f, f⟫`: the operator inequality `A² ≤ A` for `A = P_W Q_T P_W`, proved from the
 two facts that build `A` — `P_W` is a contraction and `Q_T` is a self-adjoint idempotent — rather
@@ -628,7 +628,7 @@ theorem tsum_norm_timeBandLimitingOp_sq_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < 
   classical
   haveI : Fact ((2 : ℝ≥0∞) ≠ ∞) := ⟨by norm_num⟩
   haveI : Countable ι := orthonormal_countable b.orthonormal
-  obtain ⟨F, hFdef⟩ : ∃ F : ι → ℝ → ℂ, F = fun i t =>
+  obtain ⟨F, hFdef⟩ : ∃ F : ι → ℝ → ℂ, F = fun i t ↦
       inner ℂ (timeBandLimitingOp T W (bandKernelLp W t)) (b i) *
         inner ℂ (b i) (bandKernelLp W t) := ⟨_, rfl⟩
   have hFapp : ∀ i t, F i t = inner ℂ (timeBandLimitingOp T W (bandKernelLp W t)) (b i) *
@@ -643,14 +643,14 @@ theorem tsum_norm_timeBandLimitingOp_sq_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < 
   have hpt : ∀ t : ℝ, ∑' i, F i t
       = ((∫ s in Set.Icc (0 : ℝ) T, ‖bandKernel W t s‖ ^ 2 : ℝ) : ℂ) := by
     intro t
-    rw [funext fun i => hFapp i t,
+    rw [funext fun i ↦ hFapp i t,
       (b.hasSum_inner_mul_inner (timeBandLimitingOp T W (bandKernelLp W t))
         (bandKernelLp W t)).tsum_eq,
       inner_timeBandLimitingOp_bandKernelLp_self T W hW t]
   -- (c) Measurability in `t`: both factors are `L²` representatives, via `A` self-adjoint.
   have hAsym : ((timeBandLimitingOp T W) : E →ₗ[ℂ] E).IsSymmetric :=
     ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.mp (timeBandLimitingOp_isSelfAdjoint T W)
-  have hFae : ∀ i, F i =ᵐ[volume] fun t =>
+  have hFae : ∀ i, F i =ᵐ[volume] fun t ↦
       ((bandLimitSubspace W).starProjection (timeBandLimitingOp T W (b i)) : ℝ → ℂ) t *
         (starRingEnd ℂ) (((bandLimitSubspace W).starProjection (b i) : ℝ → ℂ) t) := by
     intro i
@@ -673,22 +673,22 @@ theorem tsum_norm_timeBandLimitingOp_sq_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < 
     rw [hFapp i t, norm_mul]
     nlinarith [sq_nonneg (‖inner ℂ (timeBandLimitingOp T W (bandKernelLp W t)) (b i)‖
       - ‖inner ℂ (b i) (bandKernelLp W t)‖)]
-  have hAMsum : ∀ t : ℝ, HasSum (fun i =>
+  have hAMsum : ∀ t : ℝ, HasSum (fun i ↦
       (‖inner ℂ (timeBandLimitingOp T W (bandKernelLp W t)) (b i)‖ ^ 2
         + ‖inner ℂ (b i) (bandKernelLp W t)‖ ^ 2) / 2)
       ((‖timeBandLimitingOp T W (bandKernelLp W t)‖ ^ 2 + ‖bandKernelLp W t‖ ^ 2) / 2) := by
     intro t
     have h1 := hasSum_norm_inner_sq b (timeBandLimitingOp T W (bandKernelLp W t))
-    have h2 : HasSum (fun i => ‖inner ℂ (b i) (bandKernelLp W t)‖ ^ 2)
+    have h2 : HasSum (fun i ↦ ‖inner ℂ (b i) (bandKernelLp W t)‖ ^ 2)
         (‖bandKernelLp W t‖ ^ 2) := by
-      have hcongr : (fun i => ‖inner ℂ (b i) (bandKernelLp W t)‖ ^ 2)
-          = fun i => ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2 :=
-        funext fun i => by rw [← norm_inner_symm]
+      have hcongr : (fun i ↦ ‖inner ℂ (b i) (bandKernelLp W t)‖ ^ 2)
+          = fun i ↦ ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2 :=
+        funext fun i ↦ by rw [← norm_inner_symm]
       rw [hcongr]
       exact hasSum_norm_inner_sq b (bandKernelLp W t)
     exact (h1.add h2).div_const 2
-  have hsummableG : ∀ t : ℝ, Summable (fun i => ‖F i t‖) := fun t =>
-    Summable.of_nonneg_of_le (fun i => norm_nonneg _) (hGle t) (hAMsum t).summable
+  have hsummableG : ∀ t : ℝ, Summable (fun i ↦ ‖F i t‖) := fun t ↦
+    Summable.of_nonneg_of_le (fun i ↦ norm_nonneg _) (hGle t) (hAMsum t).summable
   have hGbound : ∀ t : ℝ, ∑' i, ‖F i t‖ ≤ 2 * W := by
     intro t
     have h1 : ∑' i, ‖F i t‖ ≤ (‖timeBandLimitingOp T W (bandKernelLp W t)‖ ^ 2
@@ -706,21 +706,21 @@ theorem tsum_norm_timeBandLimitingOp_sq_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < 
     nlinarith [norm_nonneg (timeBandLimitingOp T W (bandKernelLp W t)),
       norm_nonneg (bandKernelLp W t)]
   have hdom : ∑' i, ∫⁻ t in Set.Icc (0 : ℝ) T, ‖F i t‖ₑ ≠ ∞ := by
-    rw [← lintegral_tsum fun i => (hmeas i).enorm]
+    rw [← lintegral_tsum fun i ↦ (hmeas i).enorm]
     have hle : ∀ t : ℝ, ∑' i, ‖F i t‖ₑ ≤ ENNReal.ofReal (2 * W) := by
       intro t
       have hcast : ∑' i, ‖F i t‖ₑ = ENNReal.ofReal (∑' i, ‖F i t‖) := by
-        rw [ENNReal.ofReal_tsum_of_nonneg (fun i => norm_nonneg _) (hsummableG t)]
-        exact tsum_congr fun i => (ofReal_norm (F i t)).symm
+        rw [ENNReal.ofReal_tsum_of_nonneg (fun i ↦ norm_nonneg _) (hsummableG t)]
+        exact tsum_congr fun i ↦ (ofReal_norm (F i t)).symm
       rw [hcast]
       exact ENNReal.ofReal_le_ofReal (hGbound t)
     refine ne_of_lt (lt_of_le_of_lt (lintegral_mono hle) ?_)
     rw [setLIntegral_const, Real.volume_Icc]
     exact ENNReal.mul_lt_top ENNReal.ofReal_lt_top ENNReal.ofReal_lt_top
   -- (e) Assemble: swap `∑'` and `∫₀ᵀ`, then read off the pointwise Parseval value.
-  have hsummableR : Summable (fun i => ‖timeBandLimitingOp T W (b i)‖ ^ 2) :=
-    Summable.of_nonneg_of_le (fun i => by positivity)
-      (fun i => norm_timeBandLimitingOp_sq_le_inner T W (b i))
+  have hsummableR : Summable (fun i ↦ ‖timeBandLimitingOp T W (b i)‖ ^ 2) :=
+    Summable.of_nonneg_of_le (fun i ↦ by positivity)
+      (fun i ↦ norm_timeBandLimitingOp_sq_le_inner T W (b i))
       (summable_inner_timeBandLimitingOp_self T W hT hW b.orthonormal)
   have key : ((∑' i, ‖timeBandLimitingOp T W (b i)‖ ^ 2 : ℝ) : ℂ)
       = ((∫ t in Set.Icc (0 : ℝ) T, ∫ s in Set.Icc (0 : ℝ) T, ‖bandKernel W t s‖ ^ 2 : ℝ) : ℂ) := by
@@ -764,11 +764,11 @@ theorem tsum_inner_sub_norm_sq_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) 
     ∑' i, ((inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re
         - ‖timeBandLimitingOp T W (b i)‖ ^ 2)
       ≤ 2 + Real.log (1 + 2 * W * T) := by
-  have hs1 : Summable (fun i => (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re) :=
+  have hs1 : Summable (fun i ↦ (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re) :=
     summable_inner_timeBandLimitingOp_self T W hT hW b.orthonormal
-  have hs2 : Summable (fun i => ‖timeBandLimitingOp T W (b i)‖ ^ 2) :=
-    Summable.of_nonneg_of_le (fun i => by positivity)
-      (fun i => norm_timeBandLimitingOp_sq_le_inner T W (b i)) hs1
+  have hs2 : Summable (fun i ↦ ‖timeBandLimitingOp T W (b i)‖ ^ 2) :=
+    Summable.of_nonneg_of_le (fun i ↦ by positivity)
+      (fun i ↦ norm_timeBandLimitingOp_sq_le_inner T W (b i)) hs1
   rw [hs1.tsum_sub hs2, tsum_inner_timeBandLimitingOp_eq T W hT hW b,
     tsum_norm_timeBandLimitingOp_sq_eq T W hT hW b]
   exact bandKernel_window_deficit_le T W hT hW

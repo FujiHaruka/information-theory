@@ -26,14 +26,14 @@ definition of `bandLimitSubspace`, so a wrong gain fails to compile rather than 
 bound below.
 @audit:ok -/
 noncomputable def bandKernel (W t : ℝ) : ℝ → ℂ :=
-  fun s => ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ)
+  fun s ↦ ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ)
 
 /-- The kernel is a constant multiple of the shifted, dilated sinc `sincN((· − t)/Δ)` at
 `Δ = 1/(2W)`, whose `L²` membership is `ShannonHartley.shiftSinc_memLp`.
 @audit:ok -/
 theorem bandKernel_eq_smul_shiftSinc {W : ℝ} (hW : 0 < W) (t : ℝ) :
     bandKernel W t
-      = fun s => (2 * W : ℂ) *
+      = fun s ↦ (2 * W : ℂ) *
           ((NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℝ) : ℂ) := by
   funext s
   simp only [bandKernel]
@@ -60,7 +60,7 @@ theorem bandKernel_memLp (W t : ℝ) : MemLp (bandKernel W t) 2 volume := by
     rw [heq]
     exact (key (-W) (by linarith) t).neg
   · subst hW
-    have hz : bandKernel 0 t = fun _ => (0 : ℂ) := by funext s; simp [bandKernel]
+    have hz : bandKernel 0 t = fun _ ↦ (0 : ℂ) := by funext s; simp [bandKernel]
     rw [hz]
     exact MemLp.zero'
   · exact key W hW t
@@ -72,7 +72,7 @@ noncomputable def bandKernelLp (W t : ℝ) : E := (bandKernel_memLp W t).toLp (b
 theorem bandKernelLp_norm_sq (W t : ℝ) (hW : 0 < W) : ‖bandKernelLp W t‖ ^ 2 = 2 * W := by
   have hΔ : (0 : ℝ) < 1 / (2 * W) := by positivity
   set S : E := (ShannonHartley.shiftSinc_memLp t (1 / (2 * W)) hΔ).toLp
-    (fun s => (NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℂ)) with hSdef
+    (fun s ↦ (NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℂ)) with hSdef
   set B : E := (ShannonHartley.specBoxcar_memLp t (1 / (2 * W)) hΔ 2).toLp
     (ShannonHartley.specBoxcar t (1 / (2 * W))) with hBdef
   -- Plancherel on the band: `‖B‖² = Δ = 1/(2W)`, the boxcar's own energy.
@@ -92,7 +92,7 @@ theorem bandKernelLp_norm_sq (W t : ℝ) (hW : 0 < W) : ‖bandKernelLp W t‖ ^
     exact ((Lp.fourierTransformₗᵢ ℝ ℂ).norm_map S).symm
   -- The kernel is `2W · S`.
   have hfun : bandKernel W t
-      = (2 * W : ℂ) • (fun s : ℝ => ((NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℝ) : ℂ)) := by
+      = (2 * W : ℂ) • (fun s : ℝ ↦ ((NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℝ) : ℂ)) := by
     rw [bandKernel_eq_smul_shiftSinc hW t]
     rfl
   have hk : bandKernelLp W t = (2 * W : ℂ) • S := by
@@ -122,7 +122,7 @@ the (conjugate-linear-in-the-first-slot) inner product is invisible.
 @audit:ok -/
 theorem bandLimitProj_apply_eq_inner (W : ℝ) (hW : 0 ≤ W) (f : E) :
     ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume]
-      fun t => inner ℂ (bandKernelLp W t) f := by
+      fun t ↦ inner ℂ (bandKernelLp W t) f := by
   filter_upwards [bandLimitProj_apply_ae W hW f] with t ht
   rw [ht, inner_bandKernelLp]
   simp only [bandKernel]
@@ -149,7 +149,7 @@ theorem inner_timeBandLimitingOp_self_eq (T W : ℝ) (hW : 0 ≤ W) (f : E) :
     have hcongr : (∫ t, (inner ℂ (((timeLimitSubspace T).starProjection g : ℝ → ℂ) t)
           ((g : ℝ → ℂ) t) : ℂ))
         = ∫ t, (Set.Icc (0 : ℝ) T).indicator
-            (fun t => (((‖(g : ℝ → ℂ) t‖ ^ 2) : ℝ) : ℂ)) t := by
+            (fun t ↦ (((‖(g : ℝ → ℂ) t‖ ^ 2) : ℝ) : ℂ)) t := by
       refine integral_congr_ae ?_
       filter_upwards [timeLimitProj_apply_ae T g] with t ht
       rw [ht, Pi.mul_apply]
@@ -169,9 +169,9 @@ theorem inner_timeBandLimitingOp_self_eq (T W : ℝ) (hW : 0 ≤ W) (f : E) :
   rw [hstep1, hstep2, Complex.ofReal_re, hstep3]
 
 theorem integrableOn_inner_bandKernelLp_sq (T W : ℝ) (hW : 0 ≤ W) (f : E) :
-    IntegrableOn (fun t => ‖inner ℂ (bandKernelLp W t) f‖ ^ 2) (Set.Icc (0 : ℝ) T) volume := by
+    IntegrableOn (fun t ↦ ‖inner ℂ (bandKernelLp W t) f‖ ^ 2) (Set.Icc (0 : ℝ) T) volume := by
   have hint : Integrable
-      (fun t => ‖((bandLimitSubspace W).starProjection f : ℝ → ℂ) t‖ ^ 2) volume :=
+      (fun t ↦ ‖((bandLimitSubspace W).starProjection f : ℝ → ℂ) t‖ ^ 2) volume :=
     (memLp_two_iff_integrable_sq_norm (Lp.aestronglyMeasurable _)).mp (Lp.memLp _)
   refine (hint.integrableOn (s := Set.Icc (0 : ℝ) T)).congr ?_
   filter_upwards [ae_restrict_of_ae (bandLimitProj_apply_eq_inner W hW f)] with t ht
@@ -198,14 +198,14 @@ theorem sum_inner_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     ∑ i, (inner ℂ (timeBandLimitingOp T W (e i)) (e i)).re ≤ 2 * W * T := by
   classical
   have hint : ∀ i : Fin d,
-      IntegrableOn (fun t => ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2)
+      IntegrableOn (fun t ↦ ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2)
         (Set.Icc (0 : ℝ) T) volume :=
-    fun i => integrableOn_inner_bandKernelLp_sq T W hW.le (e i)
+    fun i ↦ integrableOn_inner_bandKernelLp_sq T W hW.le (e i)
   -- The trace is the integral of the Bessel sum: a finite sum, so it commutes with `∫`.
   have hsum : ∑ i, (inner ℂ (timeBandLimitingOp T W (e i)) (e i)).re
       = ∫ t in Set.Icc (0 : ℝ) T, ∑ i, ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2 := by
-    rw [integral_finsetSum _ (fun i _ => hint i)]
-    exact Finset.sum_congr rfl fun i _ => inner_timeBandLimitingOp_self_eq T W hW.le (e i)
+    rw [integral_finsetSum _ (fun i _ ↦ hint i)]
+    exact Finset.sum_congr rfl fun i _ ↦ inner_timeBandLimitingOp_self_eq T W hW.le (e i)
   rw [hsum]
   -- Bessel's inequality, pointwise in `t`, against the constant kernel norm `‖k_t‖² = 2W`.
   have hle : ∀ t ∈ Set.Icc (0 : ℝ) T,
@@ -214,12 +214,12 @@ theorem sum_inner_timeBandLimitingOp_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     have hb := he.sum_inner_products_le (x := bandKernelLp W t) (s := Finset.univ)
     rw [bandKernelLp_norm_sq W t hW] at hb
     refine le_trans (le_of_eq ?_) hb
-    exact Finset.sum_congr rfl fun i _ => by rw [← norm_inner_symm]
-  have hconst : IntegrableOn (fun _ : ℝ => 2 * W) (Set.Icc (0 : ℝ) T) volume :=
+    exact Finset.sum_congr rfl fun i _ ↦ by rw [← norm_inner_symm]
+  have hconst : IntegrableOn (fun _ : ℝ ↦ 2 * W) (Set.Icc (0 : ℝ) T) volume :=
     integrableOn_const (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
   calc (∫ t in Set.Icc (0 : ℝ) T, ∑ i, ‖inner ℂ (bandKernelLp W t) (e i)‖ ^ 2)
       ≤ ∫ _t in Set.Icc (0 : ℝ) T, 2 * W :=
-        setIntegral_mono_on (integrable_finsetSum _ (fun i _ => hint i)) hconst
+        setIntegral_mono_on (integrable_finsetSum _ (fun i _ ↦ hint i)) hconst
           measurableSet_Icc hle
     _ = 2 * W * T := by
         rw [setIntegral_const, Real.volume_real_Icc_of_le hT, sub_zero, smul_eq_mul]
@@ -244,8 +244,8 @@ theorem orthonormal_countable {H : Type*} [NormedAddCommGroup H] [InnerProductSp
     have hp := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero (v i) (-v j) h
     rw [← sub_eq_add_neg, norm_neg, hv.1 i, hv.1 j] at hp
     rw [sq]; rw [hp]; norm_num
-  refine Pairwise.countable_of_isOpen_disjoint (s := fun i => Metric.ball (v i) (1 / 2)) ?_
-    (fun _ => Metric.isOpen_ball) (fun i => ⟨v i, Metric.mem_ball_self (by norm_num)⟩)
+  refine Pairwise.countable_of_isOpen_disjoint (s := fun i ↦ Metric.ball (v i) (1 / 2)) ?_
+    (fun _ ↦ Metric.isOpen_ball) (fun i ↦ ⟨v i, Metric.mem_ball_self (by norm_num)⟩)
   intro i j hij
   simp only [Function.onFun]
   refine Metric.ball_disjoint_ball ?_
@@ -255,7 +255,7 @@ theorem orthonormal_countable {H : Type*} [NormedAddCommGroup H] [InnerProductSp
   nlinarith
 
 theorem hasSum_norm_inner_sq {ι : Type*} (b : HilbertBasis ι ℂ E) (k : E) :
-    HasSum (fun i => ‖inner ℂ k (b i)‖ ^ 2) (‖k‖ ^ 2) := by
+    HasSum (fun i ↦ ‖inner ℂ k (b i)‖ ^ 2) (‖k‖ ^ 2) := by
   have h := b.hasSum_inner_mul_inner k k
   have hval : (inner ℂ k k : ℂ) = ((‖k‖ ^ 2 : ℝ) : ℂ) := by
     rw [inner_self_eq_norm_sq_to_K]; norm_cast
@@ -268,7 +268,7 @@ theorem hasSum_norm_inner_sq {ι : Type*} (b : HilbertBasis ι ℂ E) (k : E) :
   exact Complex.hasSum_ofReal.mp h
 
 theorem hasSum_norm_inner_bandKernelLp_sq {ι : Type*} (b : HilbertBasis ι ℂ E) (W t : ℝ) :
-    HasSum (fun i => ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2) (‖bandKernelLp W t‖ ^ 2) :=
+    HasSum (fun i ↦ ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2) (‖bandKernelLp W t‖ ^ 2) :=
   hasSum_norm_inner_sq b (bandKernelLp W t)
 
 /-- The trace of the time-and-band limiting operator along *any* complete orthonormal basis is
@@ -303,16 +303,16 @@ theorem tsum_inner_timeBandLimitingOp_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
   classical
   haveI : Fact ((2 : ℝ≥0∞) ≠ ∞) := ⟨by norm_num⟩
   haveI : Countable ι := orthonormal_countable b.orthonormal
-  set a : ι → ℝ := fun i => (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re with hadef
+  set a : ι → ℝ := fun i ↦ (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re with hadef
   have hint : ∀ i : ι,
-      IntegrableOn (fun t => ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2) (Set.Icc (0 : ℝ) T) volume :=
-    fun i => integrableOn_inner_bandKernelLp_sq T W hW.le (b i)
+      IntegrableOn (fun t ↦ ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2) (Set.Icc (0 : ℝ) T) volume :=
+    fun i ↦ integrableOn_inner_bandKernelLp_sq T W hW.le (b i)
   have ha : ∀ i, a i = ∫ t in Set.Icc (0 : ℝ) T, ‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2 :=
-    fun i => inner_timeBandLimitingOp_self_eq T W hW.le (b i)
+    fun i ↦ inner_timeBandLimitingOp_self_eq T W hW.le (b i)
   have hnn : ∀ i, 0 ≤ a i := by
     intro i
     rw [ha i]
-    exact setIntegral_nonneg measurableSet_Icc fun t _ => by positivity
+    exact setIntegral_nonneg measurableSet_Icc fun t _ ↦ by positivity
   -- Each trace entry as a lower Lebesgue integral, so the swap below needs no integrability side
   -- condition.
   have hlint : ∀ i, ENNReal.ofReal (a i)
@@ -320,11 +320,11 @@ theorem tsum_inner_timeBandLimitingOp_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
           ENNReal.ofReal (‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2) := by
     intro i
     rw [ha i]
-    exact ofReal_integral_eq_lintegral_ofReal (hint i) (ae_of_all _ fun t => by positivity)
+    exact ofReal_integral_eq_lintegral_ofReal (hint i) (ae_of_all _ fun t ↦ by positivity)
   have hmeas : ∀ i, AEMeasurable
-      (fun t => ENNReal.ofReal (‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2))
+      (fun t ↦ ENNReal.ofReal (‖inner ℂ (bandKernelLp W t) (b i)‖ ^ 2))
       (volume.restrict (Set.Icc (0 : ℝ) T)) :=
-    fun i => ENNReal.measurable_ofReal.comp_aemeasurable (hint i).1.aemeasurable
+    fun i ↦ ENNReal.measurable_ofReal.comp_aemeasurable (hint i).1.aemeasurable
   have hTW : (0 : ℝ) ≤ 2 * W * T := mul_nonneg (by linarith) hT
   -- Tonelli (every term is `≥ 0`) plus Parseval, pointwise in `t`.
   have hkey : ∑' i, ENNReal.ofReal (a i) = ENNReal.ofReal (2 * W * T) := by
@@ -333,15 +333,15 @@ theorem tsum_inner_timeBandLimitingOp_eq (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
         = ENNReal.ofReal (2 * W) := by
       intro t
       have hs := hasSum_norm_inner_bandKernelLp_sq b W t
-      rw [← ENNReal.ofReal_tsum_of_nonneg (fun i => by positivity) hs.summable, hs.tsum_eq,
+      rw [← ENNReal.ofReal_tsum_of_nonneg (fun i ↦ by positivity) hs.summable, hs.tsum_eq,
         bandKernelLp_norm_sq W t hW]
     rw [lintegral_congr hpt, setLIntegral_const, Real.volume_Icc, sub_zero,
       ← ENNReal.ofReal_mul (by linarith)]
   -- Transfer the identity back to `ℝ`.
-  have h := ENNReal.tsum_toReal_eq (f := fun i => ENNReal.ofReal (a i))
-    fun i => ENNReal.ofReal_ne_top
+  have h := ENNReal.tsum_toReal_eq (f := fun i ↦ ENNReal.ofReal (a i))
+    fun i ↦ ENNReal.ofReal_ne_top
   rw [hkey, ENNReal.toReal_ofReal hTW,
-    tsum_congr fun i => ENNReal.toReal_ofReal (hnn i)] at h
+    tsum_congr fun i ↦ ENNReal.toReal_ofReal (hnn i)] at h
   exact h.symm
 
 /-- Non-vacuity of `tsum_inner_timeBandLimitingOp_eq`, machine-checked rather than asserted: a
@@ -386,7 +386,7 @@ theorem prolateEigenspaceSup_invariant (T W c : ℝ) :
   have hle : prolateEigenspaceSup T W c
       ≤ Submodule.comap (timeBandLimitingOp T W : E →ₗ[ℂ] E) (prolateEigenspaceSup T W c) := by
     conv_lhs => rw [prolateEigenspaceSup]
-    refine iSup₂_le fun μ hμ => ?_
+    refine iSup₂_le fun μ hμ ↦ ?_
     intro w hw
     have hwV : w ∈ prolateEigenspaceSup T W c :=
       Submodule.mem_iSup_of_mem μ (Submodule.mem_iSup_of_mem hμ hw)
@@ -423,7 +423,7 @@ theorem prolateRestrict_hasEigenvalue_le (T W : ℝ) {c : ℝ} {μ : ℂ}
   rw [Module.End.mem_eigenspace_iff] at hw_mem
   -- Transfer the eigenvector equation from `Vᗮ` to the ambient space.
   have hwE : timeBandLimitingOp T W (w : E) = μ • (w : E) := by
-    have h := congrArg (Subtype.val (p := fun x : E => x ∈ (prolateEigenspaceSup T W c)ᗮ)) hw_mem
+    have h := congrArg (Subtype.val (p := fun x : E ↦ x ∈ (prolateEigenspaceSup T W c)ᗮ)) hw_mem
     simpa [prolateRestrict] using h
   have hwE_ne : (w : E) ≠ 0 := by simpa using hw_ne
   have hμA : (prolateEnd T W).HasEigenvalue μ :=
@@ -449,7 +449,7 @@ theorem prolateRestrict_hasEigenvalue_le (T W : ℝ) {c : ℝ} {μ : ℂ}
     have hsub : Module.End.eigenspace (prolateEnd T W) ((μ.re : ℝ) : ℂ)
         ≤ prolateEigenspaceSup T W c := by
       rw [prolateEigenspaceSup]
-      exact le_biSup (fun ν : ℝ => Module.End.eigenspace (prolateEnd T W) ((ν : ℝ) : ℂ)) hmem
+      exact le_biSup (fun ν : ℝ ↦ Module.End.eigenspace (prolateEnd T W) ((ν : ℝ) : ℂ)) hmem
     have hwV : (w : E) ∈ prolateEigenspaceSup T W c :=
       hsub (Module.End.mem_eigenspace_iff.mpr (by rw [hre]; exact hwE))
     have hzero : inner ℂ (w : E) (w : E) = (0 : ℂ) :=
@@ -487,7 +487,7 @@ theorem prolateRestrict_norm_le (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   have hrad := (prolateRestrict T W c).spectralRadius_eq_nnnorm hsa
   have hle : (‖prolateRestrict T W c‖₊ : ℝ≥0∞) ≤ ENNReal.ofReal c := by
     rw [← hrad, spectralRadius]
-    refine iSup₂_le fun z hz => ?_
+    refine iSup₂_le fun z hz ↦ ?_
     rw [← enorm_eq_nnnorm, ← ofReal_norm]
     exact ENNReal.ofReal_le_ofReal (hspec z hz)
   rw [← enorm_eq_nnnorm, ← ofReal_norm] at hle
@@ -589,11 +589,11 @@ theorem le_inner_timeBandLimitingOp_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
   have hn : Module.finrank ℂ (prolateEigenspaceSup T W c) = d := rfl
   set b := hsymV.eigenvectorBasis hn with hb
   set ν := hsymV.eigenvalues hn with hνdef
-  set e : Fin d → E := fun i => ((b i : prolateEigenspaceSup T W c) : E) with he_def
+  set e : Fin d → E := fun i ↦ ((b i : prolateEigenspaceSup T W c) : E) with he_def
   have he : Orthonormal ℂ e :=
     b.orthonormal.comp_linearIsometry (prolateEigenspaceSup T W c).subtypeₗᵢ
-  have heig : ∀ i, timeBandLimitingOp T W (e i) = ((ν i : ℝ) : ℂ) • e i := fun i =>
-    congrArg (Subtype.val (p := fun x : E => x ∈ prolateEigenspaceSup T W c))
+  have heig : ∀ i, timeBandLimitingOp T W (e i) = ((ν i : ℝ) : ℂ) • e i := fun i ↦
+    congrArg (Subtype.val (p := fun x : E ↦ x ∈ prolateEigenspaceSup T W c))
       (hsymV.apply_eigenvectorBasis hn i)
   have hνgt : ∀ i, c < ν i := by
     intro i
@@ -601,11 +601,11 @@ theorem le_inner_timeBandLimitingOp_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
     rw [not_lt] at hcon
     have hperp : prolateEigenspaceSup T W c ≤ (ℂ ∙ (e i))ᗮ := by
       conv_lhs => rw [prolateEigenspaceSup]
-      refine iSup₂_le fun μ hμ => ?_
+      refine iSup₂_le fun μ hμ ↦ ?_
       intro w hw
       rw [Module.End.mem_eigenspace_iff] at hw
       refine Submodule.mem_orthogonal_singleton_iff_inner_right.mpr ?_
-      have hne : ν i ≠ μ := fun h => absurd hμ.1 (not_lt.mpr (h ▸ hcon))
+      have hne : ν i ≠ μ := fun h ↦ absurd hμ.1 (not_lt.mpr (h ▸ hcon))
       exact inner_eq_zero_of_eigenvalue_ne hne (heig i) hw
     have hzero : inner ℂ (e i) (e i) = (0 : ℂ) :=
       Submodule.mem_orthogonal_singleton_iff_inner_right.mp (hperp (b i).2)
@@ -614,12 +614,12 @@ theorem le_inner_timeBandLimitingOp_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
     rw [hz, norm_zero] at h1
     exact absurd h1 (by norm_num)
   set w : ↥(prolateEigenspaceSup T W c) := ⟨v, hv⟩ with hw
-  have hSb : ∀ i, S (b i) = (ν i : ℂ) • b i := fun i => hsymV.apply_eigenvectorBasis hn i
+  have hSb : ∀ i, S (b i) = (ν i : ℂ) • b i := fun i ↦ hsymV.apply_eigenvectorBasis hn i
   -- Expand the Rayleigh quotient of `A|_V` along the eigenbasis.
   have hcoeff : inner ℂ (S w) w
       = ((∑ i, ν i * ‖(inner ℂ (b i) w : ℂ)‖ ^ 2 : ℝ) : ℂ) := by
     rw [← OrthonormalBasis.sum_inner_mul_inner b (S w) w, Complex.ofReal_sum]
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     have h1 : inner ℂ (S w) (b i) = (ν i : ℂ) * (starRingEnd ℂ) (inner ℂ (b i) w) := by
       rw [hsymV w (b i), hSb i, inner_smul_right w (b i) (ν i : ℂ), ← inner_conj_symm w (b i)]
     rw [h1, mul_assoc, ← Complex.normSq_eq_conj_mul_self, Complex.normSq_eq_norm_sq,
@@ -634,7 +634,7 @@ theorem le_inner_timeBandLimitingOp_of_mem (T W c : ℝ) (hc : 0 < c) {v : E}
   have hnorm : ‖v‖ ^ 2 = ∑ i, ‖(inner ℂ (b i) w : ℂ)‖ ^ 2 := by
     rw [show ‖v‖ = ‖w‖ from rfl, ← OrthonormalBasis.sum_sq_norm_inner_right b w]
   rw [hval, hnorm, Finset.mul_sum]
-  refine Finset.sum_le_sum (fun i _ => ?_)
+  refine Finset.sum_le_sum (fun i _ ↦ ?_)
   exact mul_le_mul_of_nonneg_right (hνgt i).le (by positivity)
 
 /-- Count domination in the converse min-max direction: any subspace `S` on which the Rayleigh
@@ -660,7 +660,7 @@ theorem finrank_le_prolateCount_of_form_gt (T W : ℝ) {c : ℝ} (hc : 0 < c)
   haveI := prolateEigenspaceSup_finiteDimensional T W hc
   set V := prolateEigenspaceSup T W c with hV
   -- On `S ∩ Vᗮ` the two Rayleigh bounds `> c` and `≤ c` collide, so it is `{0}`.
-  have hzero : ∀ x ∈ S, x ∈ Vᗮ → x = 0 := fun x hxS hxV => by
+  have hzero : ∀ x ∈ S, x ∈ Vᗮ → x = 0 := fun x hxS hxV ↦ by
     by_contra hx0
     exact absurd (inner_timeBandLimitingOp_le_of_mem_orthogonal T W c hc hxV)
       (not_le.mpr (hS x hxS hx0))
@@ -687,7 +687,7 @@ lemma frame_form_le_op_form (T W : ℝ) {k : ℕ} (φ : Fin k → E)
     (g : E) (hg : g ∈ bandLimitSubspace W) :
     ∑ i, ‖inner ℂ g (φ i)‖ ^ 2 ≤ (inner ℂ (timeBandLimitingOp T W g) g).re := by
   classical
-  have hQfix : ∀ i, (timeLimitSubspace T).starProjection (φ i) = φ i := fun i =>
+  have hQfix : ∀ i, (timeLimitSubspace T).starProjection (φ i) = φ i := fun i ↦
     Submodule.starProjection_eq_self_iff.mpr (h_tl i)
   have hPg : (bandLimitSubspace W).starProjection g = g :=
     Submodule.starProjection_eq_self_iff.mpr hg
@@ -721,7 +721,7 @@ lemma frame_form_le_op_form (T W : ℝ) {k : ℕ} (φ : Fin k → E)
   rw [hform]
   calc ∑ i, ‖inner ℂ g (φ i)‖ ^ 2
       = ∑ i, ‖inner ℂ (φ i) ((timeLimitSubspace T).starProjection g)‖ ^ 2 :=
-        Finset.sum_congr rfl (fun i _ => hLHS i)
+        Finset.sum_congr rfl (fun i _ ↦ hLHS i)
     _ ≤ ‖(timeLimitSubspace T).starProjection g‖ ^ 2 :=
         h_on.sum_inner_products_le (x := (timeLimitSubspace T).starProjection g)
           (s := Finset.univ)
@@ -763,14 +763,14 @@ theorem prolateCount_mul_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (h
   have hn : Module.finrank ℂ (prolateEigenspaceSup T W c) = d := rfl
   set b := hsymV.eigenvectorBasis hn with hb
   set ν := hsymV.eigenvalues hn with hνdef
-  set e : Fin d → E := fun i => ((b i : prolateEigenspaceSup T W c) : E) with he_def
+  set e : Fin d → E := fun i ↦ ((b i : prolateEigenspaceSup T W c) : E) with he_def
   have he : Orthonormal ℂ e :=
     b.orthonormal.comp_linearIsometry (prolateEigenspaceSup T W c).subtypeₗᵢ
   -- Each basis vector is an eigenvector of `A` in the ambient space.
   have heig : ∀ i, timeBandLimitingOp T W (e i) = ((ν i : ℝ) : ℂ) • e i := by
     intro i
     have h := hsymV.apply_eigenvectorBasis hn i
-    have h' := congrArg (Subtype.val (p := fun x : E => x ∈ prolateEigenspaceSup T W c)) h
+    have h' := congrArg (Subtype.val (p := fun x : E ↦ x ∈ prolateEigenspaceSup T W c)) h
     simp only [LinearMap.coe_restrict_apply, Submodule.coe_smul,
       ContinuousLinearMap.coe_coe] at h'
     exact h'
@@ -781,11 +781,11 @@ theorem prolateCount_mul_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (h
     rw [not_lt] at hcon
     have hperp : prolateEigenspaceSup T W c ≤ (ℂ ∙ (e i))ᗮ := by
       conv_lhs => rw [prolateEigenspaceSup]
-      refine iSup₂_le fun μ hμ => ?_
+      refine iSup₂_le fun μ hμ ↦ ?_
       intro w hw
       rw [Module.End.mem_eigenspace_iff] at hw
       refine Submodule.mem_orthogonal_singleton_iff_inner_right.mpr ?_
-      have hne : ν i ≠ μ := fun h => absurd hμ.1 (not_lt.mpr (h ▸ hcon))
+      have hne : ν i ≠ μ := fun h ↦ absurd hμ.1 (not_lt.mpr (h ▸ hcon))
       exact inner_eq_zero_of_eigenvalue_ne hne (heig i) hw
     have hzero : inner ℂ (e i) (e i) = (0 : ℂ) :=
       Submodule.mem_orthogonal_singleton_iff_inner_right.mp (hperp (b i).2)
@@ -799,11 +799,11 @@ theorem prolateCount_mul_le (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W) {c : ℝ} (h
     rw [heig i, inner_smul_left, Complex.conj_ofReal, inner_self_eq_norm_sq_to_K, he.1 i]
     simp
   have hsum := sum_inner_timeBandLimitingOp_le T W hT hW he
-  rw [Finset.sum_congr rfl (fun i (_ : i ∈ Finset.univ) => hval i)] at hsum
+  rw [Finset.sum_congr rfl (fun i (_ : i ∈ Finset.univ) ↦ hval i)] at hsum
   have hlow : c * (d : ℝ) ≤ ∑ i, ν i := by
     calc c * (d : ℝ) = ∑ _i : Fin d, c := by
           rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, mul_comm]
-      _ ≤ ∑ i, ν i := Finset.sum_le_sum fun i _ => (hνgt i).le
+      _ ≤ ∑ i, ν i := Finset.sum_le_sum fun i _ ↦ (hνgt i).le
   linarith
 
 /-! ### The complete eigen-Hilbert basis and the trace transport -/
@@ -849,16 +849,16 @@ theorem exists_eigen_hilbertBasis (T W : ℝ) :
         prolateEigenspaceSup T W c = Submodule.span ℂ (b '' {i | c < lam i})) := by
   classical
   -- The eigenspaces of `A` form an orthogonal family.
-  have hof : OrthogonalFamily ℂ (fun μ : ℂ => Module.End.eigenspace (prolateEnd T W) μ)
-      (fun μ => (Module.End.eigenspace (prolateEnd T W) μ).subtypeₗᵢ) :=
+  have hof : OrthogonalFamily ℂ (fun μ : ℂ ↦ Module.End.eigenspace (prolateEnd T W) μ)
+      (fun μ ↦ (Module.End.eigenspace (prolateEnd T W) μ).subtypeₗᵢ) :=
     (timeBandLimitingOp_isSymmetric T W).orthogonalFamily_eigenspaces
   -- A Hilbert basis of each eigenspace, uniform in `μ` (completeness from the instance above).
   choose w bμ hbμ using
-    fun μ : ℂ => exists_hilbertBasis ℂ (Module.End.eigenspace (prolateEnd T W) μ)
+    fun μ : ℂ ↦ exists_hilbertBasis ℂ (Module.End.eigenspace (prolateEnd T W) μ)
   -- Collate them into one orthonormal family over `Σ μ, (per-eigenspace index)`.
-  have hv0 := hof.orthonormal_sigma_orthonormal fun μ => (bμ μ).orthonormal
+  have hv0 := hof.orthonormal_sigma_orthonormal fun μ ↦ (bμ μ).orthonormal
   set v : (Σ μ : ℂ, ↥(w μ)) → E :=
-    fun a => (Module.End.eigenspace (prolateEnd T W) a.1).subtypeₗᵢ (bμ a.1 a.2) with hvdef
+    fun a ↦ (Module.End.eigenspace (prolateEnd T W) a.1).subtypeₗᵢ (bμ a.1 a.2) with hvdef
   have hv : Orthonormal ℂ v := hv0
   -- Totality: a vector orthogonal to every collated basis vector is orthogonal to every eigenspace,
   -- hence zero by the compact self-adjoint spectral theorem.
@@ -873,7 +873,7 @@ theorem exists_eigen_hilbertBasis (T W : ℝ) :
       rw [← Submodule.orthogonalProjectionOnto_eq_zero_iff]
       have hz : ∀ k : ↥(w μ),
           inner ℂ ((bμ μ k : ↥(Module.End.eigenspace (prolateEnd T W) μ)) : E) x = (0 : ℂ) :=
-        fun k => (Submodule.mem_orthogonal _ _).mp hx _ (Submodule.subset_span ⟨⟨μ, k⟩, rfl⟩)
+        fun k ↦ (Submodule.mem_orthogonal _ _).mp hx _ (Submodule.subset_span ⟨⟨μ, k⟩, rfl⟩)
       have hsum := (bμ μ).hasSum_orthogonalProjectionOnto x
       simp only [hz, zero_smul] at hsum
       exact hsum.unique hasSum_zero
@@ -894,7 +894,7 @@ theorem exists_eigen_hilbertBasis (T W : ℝ) :
     intro i
     rw [congrFun hbv i]
     exact SetLike.coe_mem (bμ i.1 i.2)
-  have heigC : ∀ i, timeBandLimitingOp T W (b i) = i.1 • b i := fun i =>
+  have heigC : ∀ i, timeBandLimitingOp T W (b i) = i.1 • b i := fun i ↦
     Module.End.mem_eigenspace_iff.mp (hmem i)
   -- Each glued vector is a unit vector, so its eigenvalue is real and nonnegative.
   have hreal : ∀ i : (Σ μ : ℂ, ↥(w μ)), (i.1 : ℂ) = ((i.1.re : ℝ) : ℂ) ∧ 0 ≤ i.1.re := by
@@ -929,7 +929,7 @@ theorem exists_eigen_hilbertBasis (T W : ℝ) :
       ⟨Module.End.mem_eigenspace_iff.mpr (heigC i), hne⟩
   -- Each nonzero eigenspace is finite-dimensional, so the coerced per-eigenspace basis spans it.
   have hspanμ : ∀ μ : ℂ, μ ≠ 0 →
-      Submodule.span ℂ (Set.range (fun k : ↥(w μ) =>
+      Submodule.span ℂ (Set.range (fun k : ↥(w μ) ↦
         ((bμ μ k : ↥(Module.End.eigenspace (prolateEnd T W) μ)) : E)))
         = Module.End.eigenspace (prolateEnd T W) μ := by
     intro μ hμ0
@@ -938,12 +938,12 @@ theorem exists_eigen_hilbertBasis (T W : ℝ) :
     have hcl := (Submodule.span ℂ (Set.range (bμ μ))).closed_of_finiteDimensional
     have h1 : Submodule.span ℂ (Set.range (bμ μ)) = ⊤ := by
       rw [← hcl.submodule_topologicalClosure_eq, (bμ μ).dense_span]
-    have hrange : Set.range (fun k : ↥(w μ) =>
+    have hrange : Set.range (fun k : ↥(w μ) ↦
         ((bμ μ k : ↥(Module.End.eigenspace (prolateEnd T W) μ)) : E))
         = (Module.End.eigenspace (prolateEnd T W) μ).subtype '' Set.range (bμ μ) := by
       rw [← Set.range_comp]; rfl
     rw [hrange, Submodule.span_image, h1, Submodule.map_top, Submodule.range_subtype]
-  refine ⟨_, b, fun a => a.1.re, ?_, fun i => (hreal i).2, ?_⟩
+  refine ⟨_, b, fun a ↦ a.1.re, ?_, fun i ↦ (hreal i).2, ?_⟩
   · intro i
     rw [heigC i]
     congr 1
@@ -952,7 +952,7 @@ theorem exists_eigen_hilbertBasis (T W : ℝ) :
     apply le_antisymm
     · -- `prolateEigenspaceSup T W c ≤ span of the high eigenbasis vectors`
       rw [prolateEigenspaceSup]
-      refine iSup₂_le fun ν hν => ?_
+      refine iSup₂_le fun ν hν ↦ ?_
       have hν0 : (ν : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr (ne_of_gt (hc.trans hν.1))
       rw [← hspanμ (ν : ℂ) hν0]
       apply Submodule.span_mono
@@ -986,7 +986,7 @@ theorem tsum_eigen_eq_two_mul (T W : ℝ) (hT : 0 ≤ T) (hW : 0 < W)
     simp
   calc ∑' i, lam i
       = ∑' i, (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re :=
-        tsum_congr fun i => (hval i).symm
+        tsum_congr fun i ↦ (hval i).symm
     _ = 2 * W * T := tsum_inner_timeBandLimitingOp_eq T W hT hW b
 
 /-- For `t > 0`, only finitely many eigenbasis vectors have eigenvalue above `t`: they are
@@ -1053,7 +1053,7 @@ theorem setOf_lt_prolateEigenvalues_eq_Iio (T W : ℝ) {t : ℝ} (ht : 0 < t) :
       -- The least eigenvalue above `t` is `> t` and bounds `prolateEigenvalues n` from below.
       have hmem : sInf (prolateEigenvalueSet T W t) ∈ prolateEigenvalueSet T W t :=
         hFne.csInf_mem hFfin
-      have hbdd : BddBelow (prolateEigenvalueSet T W t) := ⟨t, fun x hx => hx.1.le⟩
+      have hbdd : BddBelow (prolateEigenvalueSet T W t) := ⟨t, fun x hx ↦ hx.1.le⟩
       have hlb : ∀ c ∈ {c : ℝ | 0 < c ∧ prolateCount T W c ≤ n},
           sInf (prolateEigenvalueSet T W t) ≤ c := by
         rintro c ⟨hc0, hcn⟩
@@ -1062,7 +1062,7 @@ theorem setOf_lt_prolateEigenvalues_eq_Iio (T W : ℝ) {t : ℝ} (ht : 0 < t) :
         rcases le_or_gt c t with hct | htc
         · exact absurd (le_trans (prolateCount_antitone T W hc0 hct) hcn) (by omega)
         · have hseteq : prolateEigenvalueSet T W c = prolateEigenvalueSet T W t := by
-            refine Set.Subset.antisymm (prolateEigenvalueSet_subset T W htc.le) fun ev hev => ?_
+            refine Set.Subset.antisymm (prolateEigenvalueSet_subset T W htc.le) fun ev hev ↦ ?_
             exact ⟨lt_of_lt_of_le hlt (csInf_le hbdd hev), hev.2⟩
           have : prolateCount T W c = prolateCount T W t := by
             rw [prolateCount, prolateCount, prolateEigenspaceSup, prolateEigenspaceSup, hseteq]
@@ -1101,7 +1101,7 @@ theorem tsum_eigen_eq_tsum_prolateEigenvalues (T W : ℝ) (hT : 0 ≤ T) (hW : 0
     ∑' i, lam i = ∑' n, prolateEigenvalues T W n := by
   classical
   letI : MeasurableSpace ι := ⊤
-  haveI : MeasurableSingletonClass ι := ⟨fun _ => MeasurableSpace.measurableSet_top⟩
+  haveI : MeasurableSingletonClass ι := ⟨fun _ ↦ MeasurableSpace.measurableSet_top⟩
   -- Each Rayleigh quotient along the eigenbasis is its eigenvalue.
   have hval : ∀ i, (inner ℂ (timeBandLimitingOp T W (b i)) (b i)).re = lam i := by
     intro i
@@ -1110,19 +1110,19 @@ theorem tsum_eigen_eq_tsum_prolateEigenvalues (T W : ℝ) (hT : 0 ≤ T) (hW : 0
     simp
   -- Summability of `lam` from the Bessel bound `∑ lam ≤ 2WT` on every finite subfamily.
   have hsummL : Summable lam := by
-    refine summable_of_sum_le (fun i => hnn i) (c := 2 * W * T) fun u => ?_
+    refine summable_of_sum_le (fun i ↦ hnn i) (c := 2 * W * T) fun u ↦ ?_
     have e : ↥u ≃ Fin u.card := Fintype.equivFinOfCardEq (Fintype.card_coe u)
-    have hinj : Function.Injective (fun k : Fin u.card => ((e.symm k : ↥u) : ι)) :=
+    have hinj : Function.Injective (fun k : Fin u.card ↦ ((e.symm k : ↥u) : ι)) :=
       Subtype.val_injective.comp e.symm.injective
     have hbes := sum_inner_timeBandLimitingOp_le T W hT hW (b.orthonormal.comp _ hinj)
     simp only [Function.comp_apply] at hbes
     have heq : (∑ k, (inner ℂ (timeBandLimitingOp T W (b ((e.symm k : ↥u) : ι)))
         (b ((e.symm k : ↥u) : ι))).re) = ∑ k : Fin u.card, lam ((e.symm k : ↥u) : ι) :=
-      Finset.sum_congr rfl fun k _ => hval ((e.symm k : ↥u) : ι)
+      Finset.sum_congr rfl fun k _ ↦ hval ((e.symm k : ↥u) : ι)
     rw [heq] at hbes
     calc ∑ i ∈ u, lam i = ∑ i : ↥u, lam ↑i := (Finset.sum_coe_sort u lam).symm
       _ = ∑ k : Fin u.card, lam ((e.symm k : ↥u) : ι) :=
-          (Equiv.sum_comp e.symm (fun i : ↥u => lam ↑i)).symm
+          (Equiv.sum_comp e.symm (fun i : ↥u ↦ lam ↑i)).symm
       _ ≤ 2 * W * T := hbes
   -- Both distribution functions equal `prolateCount T W t` for `t > 0`.
   have hLcount : ∀ t : ℝ, 0 < t →
@@ -1139,17 +1139,17 @@ theorem tsum_eigen_eq_tsum_prolateEigenvalues (T W : ℝ) (hT : 0 ≤ T) (hW : 0
   -- Layer cake: both `ℝ≥0∞` sums equal `∫⁻ t ∈ Ioi 0, prolateCount T W t`.
   have hLint : (∑' i, ENNReal.ofReal (lam i))
       = ∫⁻ t in Set.Ioi (0 : ℝ), (prolateCount T W t : ℝ≥0∞) := by
-    rw [← lintegral_count' (f := fun i => ENNReal.ofReal (lam i)) measurable_from_top,
-      lintegral_eq_lintegral_meas_lt Measure.count (ae_of_all _ fun i => hnn i)
+    rw [← lintegral_count' (f := fun i ↦ ENNReal.ofReal (lam i)) measurable_from_top,
+      lintegral_eq_lintegral_meas_lt Measure.count (ae_of_all _ fun i ↦ hnn i)
         measurable_from_top.aemeasurable]
-    exact setLIntegral_congr_fun measurableSet_Ioi fun t ht => hLcount t ht
+    exact setLIntegral_congr_fun measurableSet_Ioi fun t ht ↦ hLcount t ht
   have hRint : (∑' n, ENNReal.ofReal (prolateEigenvalues T W n))
       = ∫⁻ t in Set.Ioi (0 : ℝ), (prolateCount T W t : ℝ≥0∞) := by
-    rw [← lintegral_count (fun n => ENNReal.ofReal (prolateEigenvalues T W n)),
+    rw [← lintegral_count (fun n ↦ ENNReal.ofReal (prolateEigenvalues T W n)),
       lintegral_eq_lintegral_meas_lt Measure.count
-        (ae_of_all _ fun n => prolateEigenvalues_nonneg T W n)
+        (ae_of_all _ fun n ↦ prolateEigenvalues_nonneg T W n)
         (measurable_of_countable _).aemeasurable]
-    exact setLIntegral_congr_fun measurableSet_Ioi fun t ht => hRcount t ht
+    exact setLIntegral_congr_fun measurableSet_Ioi fun t ht ↦ hRcount t ht
   have hkey : (∑' i, ENNReal.ofReal (lam i))
       = ∑' n, ENNReal.ofReal (prolateEigenvalues T W n) := by rw [hLint, hRint]
   -- Transfer the identity back to `ℝ`.
@@ -1157,14 +1157,14 @@ theorem tsum_eigen_eq_tsum_prolateEigenvalues (T W : ℝ) (hT : 0 ≤ T) (hW : 0
     rw [← ENNReal.ofReal_tsum_of_nonneg hnn hsummL]; exact ENNReal.ofReal_ne_top
   have hsummR : Summable (prolateEigenvalues T W) := by
     have hne : (∑' n, ENNReal.ofReal (prolateEigenvalues T W n)) ≠ ⊤ := hkey ▸ hLfin
-    refine (ENNReal.summable_toReal hne).congr fun n => ?_
+    refine (ENNReal.summable_toReal hne).congr fun n ↦ ?_
     rw [ENNReal.toReal_ofReal (prolateEigenvalues_nonneg T W n)]
   have hfinal : ENNReal.ofReal (∑' i, lam i)
       = ENNReal.ofReal (∑' n, prolateEigenvalues T W n) := by
     rw [ENNReal.ofReal_tsum_of_nonneg hnn hsummL,
-      ENNReal.ofReal_tsum_of_nonneg (fun n => prolateEigenvalues_nonneg T W n) hsummR, hkey]
+      ENNReal.ofReal_tsum_of_nonneg (fun n ↦ prolateEigenvalues_nonneg T W n) hsummR, hkey]
   exact (ENNReal.ofReal_eq_ofReal_iff (tsum_nonneg hnn)
-    (tsum_nonneg fun n => prolateEigenvalues_nonneg T W n)).mp hfinal
+    (tsum_nonneg fun n ↦ prolateEigenvalues_nonneg T W n)).mp hfinal
 
 /-- The trace identity `tsum_inner_timeBandLimitingOp_eq`, transported onto the decreasing
 eigenvalue enumeration: `∑ₙ λₙ = 2WT` (the exact first spectral moment of `A = timeBandLimitingOp`).

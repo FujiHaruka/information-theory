@@ -1169,7 +1169,7 @@ lemma wzRateValueSet_weightedSum_mem
     (∑ i ∈ s, p i * w i) ∈ wzRateValueSet P_XY d (∑ i ∈ s, p i * Dv i) := by
   classical
   refine Finset.Nonempty.cons_induction
-    (motive := fun s _ => ∀ (p : ι → ℝ), (∀ i ∈ s, 0 ≤ p i) → (∑ i ∈ s, p i = 1) →
+    (motive := fun s _ ↦ ∀ (p : ι → ℝ), (∀ i ∈ s, 0 ≤ p i) → (∑ i ∈ s, p i = 1) →
       (∀ i ∈ s, w i ∈ wzRateValueSet P_XY d (Dv i)) →
       (∑ i ∈ s, p i * w i) ∈ wzRateValueSet P_XY d (∑ i ∈ s, p i * Dv i))
     ?_ ?_ hs p hp_nn hp_sum hmem
@@ -1183,42 +1183,42 @@ lemma wzRateValueSet_weightedSum_mem
     rw [Finset.sum_cons] at hq_sum
     have haj : 0 ≤ q j := hq_nn j (Finset.mem_cons_self j t)
     have hb_nn : 0 ≤ ∑ i ∈ t, q i :=
-      Finset.sum_nonneg (fun i hi => hq_nn i (Finset.mem_cons_of_mem hi))
+      Finset.sum_nonneg (fun i hi ↦ hq_nn i (Finset.mem_cons_of_mem hi))
     rcases eq_or_lt_of_le hb_nn with hb0 | hbpos
     · -- `b = 0`: all tail weights vanish, so `a = 1` and everything collapses to `j`
       have hzero : ∀ i ∈ t, q i = 0 :=
         (Finset.sum_eq_zero_iff_of_nonneg
-          (fun i hi => hq_nn i (Finset.mem_cons_of_mem hi))).1 hb0.symm
+          (fun i hi ↦ hq_nn i (Finset.mem_cons_of_mem hi))).1 hb0.symm
       have hsum_w : ∑ i ∈ t, q i * w i = 0 :=
-        Finset.sum_eq_zero (fun i hi => by rw [hzero i hi, zero_mul])
+        Finset.sum_eq_zero (fun i hi ↦ by rw [hzero i hi, zero_mul])
       have hsum_Dv : ∑ i ∈ t, q i * Dv i = 0 :=
-        Finset.sum_eq_zero (fun i hi => by rw [hzero i hi, zero_mul])
+        Finset.sum_eq_zero (fun i hi ↦ by rw [hzero i hi, zero_mul])
       have hqj1 : q j = 1 := by rw [← hb0, add_zero] at hq_sum; exact hq_sum
       rw [Finset.sum_cons, Finset.sum_cons, hsum_w, hsum_Dv, add_zero, add_zero,
         hqj1, one_mul, one_mul]
       exact hq_mem j (Finset.mem_cons_self j t)
     · -- `0 < b`: renormalize `p' i := q i / b`, apply IH then the binary lemma
       have hb_ne : (∑ i ∈ t, q i) ≠ 0 := hbpos.ne'
-      have hp'_nn : ∀ i ∈ t, 0 ≤ q i / (∑ k ∈ t, q k) := fun i hi =>
+      have hp'_nn : ∀ i ∈ t, 0 ≤ q i / (∑ k ∈ t, q k) := fun i hi ↦
         div_nonneg (hq_nn i (Finset.mem_cons_of_mem hi)) hbpos.le
       have hp'_sum : ∑ i ∈ t, q i / (∑ k ∈ t, q k) = 1 := by
         rw [← Finset.sum_div, div_self hb_ne]
-      have hp'_mem : ∀ i ∈ t, w i ∈ wzRateValueSet P_XY d (Dv i) := fun i hi =>
+      have hp'_mem : ∀ i ∈ t, w i ∈ wzRateValueSet P_XY d (Dv i) := fun i hi ↦
         hq_mem i (Finset.mem_cons_of_mem hi)
-      have hIH := IH (fun i => q i / (∑ k ∈ t, q k)) hp'_nn hp'_sum hp'_mem
+      have hIH := IH (fun i ↦ q i / (∑ k ∈ t, q k)) hp'_nn hp'_sum hp'_mem
       have hbin := wzRateValueSet_timeShare_mem h_pmf
         (hq_mem j (Finset.mem_cons_self j t)) hIH haj hbpos.le hq_sum
       have heq_w : (∑ i ∈ Finset.cons j t hj, q i * w i)
           = q j * w j + (∑ i ∈ t, q i) * (∑ i ∈ t, q i / (∑ k ∈ t, q k) * w i) := by
         rw [Finset.sum_cons, Finset.mul_sum]
         congr 1
-        refine Finset.sum_congr rfl (fun i _ => ?_)
+        refine Finset.sum_congr rfl (fun i _ ↦ ?_)
         field_simp
       have heq_Dv : (∑ i ∈ Finset.cons j t hj, q i * Dv i)
           = q j * Dv j + (∑ i ∈ t, q i) * (∑ i ∈ t, q i / (∑ k ∈ t, q k) * Dv i) := by
         rw [Finset.sum_cons, Finset.mul_sum]
         congr 1
-        refine Finset.sum_congr rfl (fun i _ => ?_)
+        refine Finset.sum_congr rfl (fun i _ ↦ ?_)
         field_simp
       rw [heq_w, heq_Dv]
       exact hbin
@@ -1240,8 +1240,8 @@ lemma wzRateValueSet_avg_mem
       mul_one_div, div_self hn0]
   have hkey := wzRateValueSet_weightedSum_mem h_pmf (d := d)
     (s := (Finset.univ : Finset (Fin n))) (hs := Finset.univ_nonempty)
-    (w := w) (Dv := Dv) (p := fun _ => 1 / (n : ℝ))
-    (hp_nn := fun i _ => by positivity) (hp_sum := hsum1) (hmem := fun i _ => hmem i)
+    (w := w) (Dv := Dv) (p := fun _ ↦ 1 / (n : ℝ))
+    (hp_nn := fun i _ ↦ by positivity) (hp_sum := hsum1) (hmem := fun i _ ↦ hmem i)
   rw [Finset.mul_sum, Finset.mul_sum]
   exact hkey
 

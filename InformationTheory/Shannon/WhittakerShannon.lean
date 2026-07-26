@@ -40,7 +40,7 @@ instance : Fact (0 < (1 : ℝ)) := ⟨one_pos⟩
 
 /-- The evaluation kernel as a real-line function `s ↦ e^{-2πist}`. -/
 noncomputable def wsExpFun (t : ℝ) : ℝ → ℂ :=
-  fun s => Complex.exp ((-(2 * π * t * s) : ℝ) * Complex.I)
+  fun s ↦ Complex.exp ((-(2 * π * t * s) : ℝ) * Complex.I)
 
 /-- The evaluation kernel `ξ ↦ e^{-2πiξt}` as an `L²` element of the unit circle. -/
 noncomputable def wsExp (t : ℝ) : Lp ℂ 2 (AddCircle.haarAddCircle (T := 1)) :=
@@ -69,15 +69,15 @@ theorem integral_exp_boxcar_eq_sincN (s : ℝ) :
       intervalIntegral.integral_const, sincN_zero]
     norm_num
   · have hc : (2 * π * s) ≠ 0 := by positivity
-    have hrw : (fun a : ℝ => Complex.exp ((2 * π * s * a : ℝ) * Complex.I))
-        = fun a : ℝ => (fun y : ℝ => Complex.exp ((y : ℝ) * Complex.I)) ((2 * π * s) * a) := by
+    have hrw : (fun a : ℝ ↦ Complex.exp ((2 * π * s * a : ℝ) * Complex.I))
+        = fun a : ℝ ↦ (fun y : ℝ ↦ Complex.exp ((y : ℝ) * Complex.I)) ((2 * π * s) * a) := by
       funext a; norm_num
     rw [show (∫ a in (-(1 / 2))..(1 / 2), Complex.exp ((2 * π * s * a : ℝ) * Complex.I))
           = ∫ a in (-(1 / 2))..(1 / 2),
-              (fun y : ℝ => Complex.exp ((y : ℝ) * Complex.I)) ((2 * π * s) * a) from by
+              (fun y : ℝ ↦ Complex.exp ((y : ℝ) * Complex.I)) ((2 * π * s) * a) from by
         rw [hrw]]
     rw [intervalIntegral.integral_comp_mul_left
-        (f := fun y : ℝ => Complex.exp ((y : ℝ) * Complex.I)) hc,
+        (f := fun y : ℝ ↦ Complex.exp ((y : ℝ) * Complex.I)) hc,
       show (2 * π * s) * (-(1 / 2)) = -(π * s) by ring,
       show (2 * π * s) * (1 / 2) = π * s by ring, integral_exp_mul_I_eq_sinc]
     rw [Complex.real_smul, sincN]
@@ -93,8 +93,8 @@ theorem inner_wsExp_fourierLp (t : ℝ) (n : ℤ) :
       AddCircle.liftIoc 1 (-(1 / 2)) (wsExpFun t) := MemLp.coeFn_toLp _
   have hfou : ⇑(fourierLp (T := 1) 2 n) =ᵐ[AddCircle.haarAddCircle (T := 1)] fourier n :=
     coeFn_fourierLp 2 n
-  have hcong : (fun ξ : AddCircle (1 : ℝ) => ⟪(wsExp t) ξ, (fourierLp (T := 1) 2 n) ξ⟫)
-      =ᵐ[AddCircle.haarAddCircle (T := 1)] fun ξ =>
+  have hcong : (fun ξ : AddCircle (1 : ℝ) ↦ ⟪(wsExp t) ξ, (fourierLp (T := 1) 2 n) ξ⟫)
+      =ᵐ[AddCircle.haarAddCircle (T := 1)] fun ξ ↦
         conj (AddCircle.liftIoc 1 (-(1 / 2)) (wsExpFun t) ξ) * fourier n ξ := by
     filter_upwards [hws, hfou] with ξ h1 h2
     rw [h1, h2, RCLike.inner_apply']
@@ -103,7 +103,7 @@ theorem inner_wsExp_fourierLp (t : ℝ) (n : ℤ) :
     ← AddCircle.intervalIntegral_preimage 1 (-(1 / 2)),
     show (-(1 / 2 : ℝ) + 1) = 1 / 2 by norm_num]
   apply intervalIntegral.integral_congr_ae
-  refine Filter.Eventually.of_forall (fun a ha => ?_)
+  refine Filter.Eventually.of_forall (fun a ha ↦ ?_)
   rw [Set.uIoc_of_le (by norm_num : (-(1 / 2 : ℝ)) ≤ 1 / 2)] at ha
   have hmem : a ∈ Set.Ioc (-(1 / 2 : ℝ)) (-(1 / 2) + 1) := ⟨ha.1, by linarith [ha.2]⟩
   simp only [AddCircle.liftIoc_coe_apply hmem, fourier_coe_apply, wsExpFun]
@@ -146,13 +146,13 @@ inverse-Fourier reconstruction, `F` ranges over the band-limited spectra). -/
 @[entry_point]
 theorem whittaker_shannon_hasSum
     (F : Lp ℂ 2 (AddCircle.haarAddCircle (T := 1))) (t : ℝ) :
-    HasSum (fun n : ℤ => wsSignal F n • (sincN (t - n) : ℂ)) (wsSignal F t) := by
+    HasSum (fun n : ℤ ↦ wsSignal F n • (sincN (t - n) : ℂ)) (wsSignal F t) := by
   have h1 := hasSum_fourier_series_L2 F
   have h2 := (innerSL ℂ (wsExp t)).hasSum h1
   simp only [map_smul, innerSL_apply_apply, inner_wsExp_fourierLp,
     fourierCoeff_eq_wsSignal] at h2
   refine (Equiv.hasSum_iff (Equiv.neg ℤ)).mp ?_
-  change HasSum (fun b : ℤ => wsSignal F ((-b : ℤ) : ℝ) • (sincN (t - ((-b : ℤ) : ℝ)) : ℂ))
+  change HasSum (fun b : ℤ ↦ wsSignal F ((-b : ℤ) : ℝ) • (sincN (t - ((-b : ℤ) : ℝ)) : ℂ))
     (wsSignal F t)
   simp only [Int.cast_neg, sub_neg_eq_add]
   exact h2
@@ -166,8 +166,8 @@ private lemma wsSignal_eq_boxcar (G : Lp ℂ 2 (AddCircle.haarAddCircle (T := 1)
       Complex.exp ((2 * π * w * ξ : ℝ) * Complex.I) * g ξ := by
   have hws : ⇑(wsExp w) =ᵐ[AddCircle.haarAddCircle (T := 1)]
       AddCircle.liftIoc 1 (-(1 / 2)) (wsExpFun w) := MemLp.coeFn_toLp _
-  have hcong : (fun ξ : AddCircle (1 : ℝ) => ⟪(wsExp w) ξ, G ξ⟫)
-      =ᵐ[AddCircle.haarAddCircle (T := 1)] fun ξ =>
+  have hcong : (fun ξ : AddCircle (1 : ℝ) ↦ ⟪(wsExp w) ξ, G ξ⟫)
+      =ᵐ[AddCircle.haarAddCircle (T := 1)] fun ξ ↦
         conj (AddCircle.liftIoc 1 (-(1 / 2)) (wsExpFun w) ξ)
           * AddCircle.liftIoc 1 (-(1 / 2)) g ξ := by
     filter_upwards [hws, hG] with ξ h1 h2
@@ -177,7 +177,7 @@ private lemma wsSignal_eq_boxcar (G : Lp ℂ 2 (AddCircle.haarAddCircle (T := 1)
     ← AddCircle.intervalIntegral_preimage 1 (-(1 / 2)),
     show (-(1 / 2 : ℝ) + 1) = 1 / 2 by norm_num]
   apply intervalIntegral.integral_congr_ae
-  refine Filter.Eventually.of_forall (fun a ha => ?_)
+  refine Filter.Eventually.of_forall (fun a ha ↦ ?_)
   rw [Set.uIoc_of_le (by norm_num : (-(1 / 2 : ℝ)) ≤ 1 / 2)] at ha
   have hmem : a ∈ Set.Ioc (-(1 / 2 : ℝ)) (-(1 / 2) + 1) := ⟨ha.1, by linarith [ha.2]⟩
   simp only [AddCircle.liftIoc_coe_apply hmem]
@@ -205,7 +205,7 @@ private lemma fourier_eq_boxcar (f : ℝ → ℂ) (hcont : Continuous f) (hf : I
   rw [← MeasureTheory.setIntegral_eq_integral_of_forall_compl_eq_zero hzero,
     MeasureTheory.integral_Icc_eq_integral_Ioc,
     ← intervalIntegral.integral_of_le (by norm_num : (-(1 / 2 : ℝ)) ≤ 1 / 2)]
-  refine intervalIntegral.integral_congr (fun ξ _ => ?_)
+  refine intervalIntegral.integral_congr (fun ξ _ ↦ ?_)
   simp only [smul_eq_mul, Real.inner_apply]
   rw [show (2 * π * (ξ * w) : ℝ) = 2 * π * w * ξ from by ring]
 
@@ -218,7 +218,7 @@ band-limited support hypothesis give `wsSignal F w = f w` for every real `w`. -/
 theorem whittaker_shannon_bandlimited
     (f : ℝ → ℂ) (hcont : Continuous f) (hf : Integrable f) (hFf : Integrable (𝓕 f))
     (hband : ∀ ξ : ℝ, ξ ∉ Set.Icc (-(1 / 2) : ℝ) (1 / 2) → 𝓕 f ξ = 0) (t : ℝ) :
-    HasSum (fun n : ℤ => f n • (sincN (t - n) : ℂ)) (f t) := by
+    HasSum (fun n : ℤ ↦ f n • (sincN (t - n) : ℂ)) (f t) := by
   have hcontFf : Continuous (𝓕 f) :=
     VectorFourier.fourierIntegral_continuous Real.continuous_fourierChar
       (innerSL ℝ).continuous₂ hf

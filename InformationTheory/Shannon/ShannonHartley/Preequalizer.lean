@@ -28,7 +28,7 @@ theorem exists_preequalizer {n : ℕ} {c : ℝ} (hc : 0 < c)
     ∃ a, A a = t ∧ ‖a‖ ^ 2 ≤ (1 / c) * ‖t‖ ^ 2 := by
   -- `A` is injective: `A v = 0 ⟹ c ‖v‖² ≤ 0 ⟹ v = 0`.
   have hinj : Function.Injective A := by
-    refine (injective_iff_map_eq_zero A).mpr fun v hv => ?_
+    refine (injective_iff_map_eq_zero A).mpr fun v hv ↦ ?_
     have h := hbdd v
     rw [hv, norm_zero] at h
     have hv2 : ‖v‖ ^ 2 ≤ 0 := by nlinarith [sq_nonneg ‖v‖]

@@ -102,8 +102,8 @@ for every non-L¹ signal, hence vacuous — junk-`0` — on the entire target cl
 time-limited band-limited L² signals), the L² transform is defined on the whole a.e. class and
 its support separates band-limited functions from broadband ones. -/
 def IsBandlimited (f : ℝ → ℝ) (W : ℝ) : Prop :=
-  ∃ hf : MemLp (fun t : ℝ => (f t : ℂ)) 2 volume,
-    (𝓕 (hf.toLp (fun t : ℝ => (f t : ℂ))) : Lp ℂ 2 volume)
+  ∃ hf : MemLp (fun t : ℝ ↦ (f t : ℂ)) 2 volume,
+    (𝓕 (hf.toLp (fun t : ℝ ↦ (f t : ℂ))) : Lp ℂ 2 volume)
       =ᵐ[volume.restrict {ξ : ℝ | W < |ξ|}] 0
 
 /-- The `L²`-`L¹` Fourier-agreement bridge: for `f ∈ L¹ ∩ L²`, the coeFn of the `L²`-Fourier
@@ -136,7 +136,7 @@ theorem l2Fourier_eq_fourierIntegral (f : ℝ → ℂ)
   have hφ1 : HasCompactSupport (Complex.ofRealCLM ∘ g) := hg_supp.comp_left rfl
   have hφ2 : ContDiff ℝ ∞ (Complex.ofRealCLM ∘ g) := Complex.ofRealCLM.contDiff.comp hg_diff
   set φ : 𝓢(ℝ, ℂ) := hφ1.toSchwartzMap hφ2 with hφdef
-  have hφ_coe : ∀ x, φ x = (g x : ℂ) := fun x => rfl
+  have hφ_coe : ∀ x, φ x = (g x : ℂ) := fun x ↦ rfl
   -- Real smul `g x • z` equals the multiplication `φ x • z` by the complexification of `g`.
   have hsmul : ∀ (x : ℝ) (z : ℂ), g x • z = φ x • z := by
     intro x z
@@ -147,7 +147,7 @@ theorem l2Fourier_eq_fourierIntegral (f : ℝ → ℂ)
   have hA : ∫ x, g x • (⇑G) x ∂volume = ∫ x, (𝓕 φ : 𝓢(ℝ, ℂ)) x • f x ∂volume := by
     calc ∫ x, g x • (⇑G) x ∂volume
         = ∫ x, φ x • (⇑G) x ∂volume :=
-          integral_congr_ae (Filter.Eventually.of_forall fun x => hsmul x (G x))
+          integral_congr_ae (Filter.Eventually.of_forall fun x ↦ hsmul x (G x))
       _ = (G : 𝓢'(ℝ, ℂ)) φ := (Lp.toTemperedDistribution_apply G φ).symm
       _ = 𝓕 ((hf2.toLp f : Lp ℂ 2 volume) : 𝓢'(ℝ, ℂ)) φ := by rw [hdist]
       _ = ((hf2.toLp f : Lp ℂ 2 volume) : 𝓢'(ℝ, ℂ)) (𝓕 φ) := TemperedDistribution.fourier_apply _ _
@@ -159,9 +159,9 @@ theorem l2Fourier_eq_fourierIntegral (f : ℝ → ℂ)
   -- Step B: rewrite the `L¹` side via the Fourier self-adjointness (multiplication formula).
   have hB : ∫ x, g x • (𝓕 f) x ∂volume = ∫ x, (𝓕 φ : 𝓢(ℝ, ℂ)) x • f x ∂volume := by
     have hstep : ∫ x, g x • (𝓕 f) x ∂volume = ∫ x, φ x • (𝓕 f) x ∂volume :=
-      integral_congr_ae (Filter.Eventually.of_forall fun x => hsmul x (𝓕 f x))
+      integral_congr_ae (Filter.Eventually.of_forall fun x ↦ hsmul x (𝓕 f x))
     have hFT : ∀ h : ℝ → ℂ, 𝓕 h = VectorFourier.fourierIntegral 𝐞 volume (innerₗ ℝ) h :=
-      fun _ => rfl
+      fun _ ↦ rfl
     rw [hstep]
     simp only [SchwartzMap.fourier_coe, hFT]
     simpa using
@@ -192,7 +192,7 @@ theorem l2FourierInv_eq_fourierIntegralInv (f : ℝ → ℂ)
   have hφ1 : HasCompactSupport (Complex.ofRealCLM ∘ g) := hg_supp.comp_left rfl
   have hφ2 : ContDiff ℝ ∞ (Complex.ofRealCLM ∘ g) := Complex.ofRealCLM.contDiff.comp hg_diff
   set φ : 𝓢(ℝ, ℂ) := hφ1.toSchwartzMap hφ2 with hφdef
-  have hφ_coe : ∀ x, φ x = (g x : ℂ) := fun x => rfl
+  have hφ_coe : ∀ x, φ x = (g x : ℂ) := fun x ↦ rfl
   have hsmul : ∀ (x : ℝ) (z : ℂ), g x • z = φ x • z := by
     intro x z
     rw [hφ_coe, Complex.real_smul, smul_eq_mul]
@@ -201,7 +201,7 @@ theorem l2FourierInv_eq_fourierIntegralInv (f : ℝ → ℂ)
   have hA : ∫ x, g x • (⇑G) x ∂volume = ∫ x, (𝓕⁻ φ : 𝓢(ℝ, ℂ)) x • f x ∂volume := by
     calc ∫ x, g x • (⇑G) x ∂volume
         = ∫ x, φ x • (⇑G) x ∂volume :=
-          integral_congr_ae (Filter.Eventually.of_forall fun x => hsmul x (G x))
+          integral_congr_ae (Filter.Eventually.of_forall fun x ↦ hsmul x (G x))
       _ = (G : 𝓢'(ℝ, ℂ)) φ := (Lp.toTemperedDistribution_apply G φ).symm
       _ = 𝓕⁻ ((hf2.toLp f : Lp ℂ 2 volume) : 𝓢'(ℝ, ℂ)) φ := by rw [hdist]
       _ = ((hf2.toLp f : Lp ℂ 2 volume) : 𝓢'(ℝ, ℂ)) (𝓕⁻ φ) :=
@@ -214,11 +214,11 @@ theorem l2FourierInv_eq_fourierIntegralInv (f : ℝ → ℂ)
           rw [hx]
   have hB : ∫ x, g x • (𝓕⁻ f) x ∂volume = ∫ x, (𝓕⁻ φ : 𝓢(ℝ, ℂ)) x • f x ∂volume := by
     have hstep : ∫ x, g x • (𝓕⁻ f) x ∂volume = ∫ x, φ x • (𝓕⁻ f) x ∂volume :=
-      integral_congr_ae (Filter.Eventually.of_forall fun x => hsmul x (𝓕⁻ f x))
+      integral_congr_ae (Filter.Eventually.of_forall fun x ↦ hsmul x (𝓕⁻ f x))
     have hFTinv : ∀ h : ℝ → ℂ, 𝓕⁻ h = VectorFourier.fourierIntegral 𝐞 volume (-innerₗ ℝ) h :=
-      fun _ => rfl
+      fun _ ↦ rfl
     have hflip : (-innerₗ ℝ : ℝ →ₗ[ℝ] ℝ →ₗ[ℝ] ℝ).flip = -innerₗ ℝ :=
-      LinearMap.ext fun a => LinearMap.ext fun b => by
+      LinearMap.ext fun a ↦ LinearMap.ext fun b ↦ by
         simp only [LinearMap.flip_apply, LinearMap.neg_apply, innerₗ_apply_apply,
           real_inner_comm b a]
     rw [hstep]
@@ -242,7 +242,7 @@ theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
     (hf : MemLp f 2 volume) (hbl : IsBandlimited f W) (hcont : Continuous f) (t : ℝ) :
     |f t| ≤ Real.sqrt (2 * W) * (eLpNorm f 2 volume).toReal := by
   obtain ⟨hfc2, hspec⟩ := hbl
-  set fc : ℝ → ℂ := fun t => (f t : ℂ) with hfcdef
+  set fc : ℝ → ℂ := fun t ↦ (f t : ℂ) with hfcdef
   set G : Lp ℂ 2 volume := 𝓕 (hfc2.toLp fc) with hG
   -- The band `S = [-W, W]`; its complement is the essential support of `hspec`.
   set S : Set ℝ := Set.Icc (-W) W with hSdef
@@ -268,7 +268,7 @@ theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
   have hG1 : MemLp (⇑G) 1 volume := by
     have hind_L1 : MemLp (S.indicator (⇑G)) 1 volume :=
       ((Lp.memLp G).indicator hS_meas).mono_exponent_of_measure_support_ne_top
-        (s := S) (fun x hx => Set.indicator_of_notMem hx _)
+        (s := S) (fun x hx ↦ Set.indicator_of_notMem hx _)
         (by rw [hvolS]; exact ENNReal.ofReal_ne_top) (by norm_num)
     exact (memLp_congr_ae hind_eq).mpr hind_L1
   have hG1_int : Integrable (⇑G) volume := memLp_one_iff_integrable.mp hG1
@@ -294,13 +294,13 @@ theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
   -- (f)+(g) `∫ ‖⇑G‖ ≤ √(2W)·‖f‖₂` by Hölder on `S` and Plancherel.
   have h_int_eq : ∫ ξ, ‖(⇑G) ξ‖ ∂volume = (eLpNorm (⇑G) 1 volume).toReal := by
     rw [eLpNorm_one_eq_lintegral_enorm, ← ofReal_integral_norm_eq_lintegral_enorm hG1_int,
-      ENNReal.toReal_ofReal (integral_nonneg fun _ => norm_nonneg _)]
+      ENNReal.toReal_ofReal (integral_nonneg fun _ ↦ norm_nonneg _)]
   have hnorm : (eLpNorm (⇑G) 2 volume).toReal = (eLpNorm f 2 volume).toReal := by
     rw [← Lp.norm_def G, hG, Lp.norm_fourier_eq, Lp.norm_def]
     congr 1
     rw [eLpNorm_congr_ae hfc2.coeFn_toLp]
     exact eLpNorm_congr_norm_ae
-      (Filter.Eventually.of_forall fun x => by simp only [hfcdef, Complex.norm_real])
+      (Filter.Eventually.of_forall fun x ↦ by simp only [hfcdef, Complex.norm_real])
   have h_holder :
       eLpNorm (⇑G) 1 volume ≤ eLpNorm (⇑G) 2 volume * ENNReal.ofReal (Real.sqrt (2 * W)) := by
     have e1 : eLpNorm (⇑G) 1 volume = eLpNorm (⇑G) 1 (volume.restrict S) := by
@@ -410,7 +410,7 @@ i.i.d. `N(0, N₀/2)` for that family alone — no spacing, rate or bandwidth co
 is what `ContAwgnCode.testFn_orthonormal` buys. -/
 noncomputable def ContAwgnCode.errorProbAt {T W P : ℝ} {M : ℕ}
     (c : ContAwgnCode T W P M) (N₀ : ℝ) (m : Fin M) : ℝ≥0∞ :=
-  Measure.pi (fun i : Fin c.k =>
+  Measure.pi (fun i : Fin c.k ↦
       gaussianReal (c.observation m i) (N₀ / 2).toNNReal)
     {y : Fin c.k → ℝ | c.decoder y ≠ m}
 
@@ -430,7 +430,7 @@ noncomputable def contAwgnMaxMessages (T W N₀ P ε : ℝ) : ℕ :=
 
 /-- The per-second rate achievable at error level `ε`: `limsup_T (log M(T, ε)) / T`. -/
 noncomputable def contAwgnRate (W N₀ P ε : ℝ) : ℝ :=
-  Filter.limsup (fun T : ℝ => Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) atTop
+  Filter.limsup (fun T : ℝ ↦ Real.log (contAwgnMaxMessages T W N₀ P ε : ℝ) / T) atTop
 
 /-- The **operational capacity** of the continuous-time band-limited AWGN channel:
 the per-second rate in the vanishing-error limit, `⨅_{ε ∈ (0,1)} contAwgnRate W N₀ P ε`.

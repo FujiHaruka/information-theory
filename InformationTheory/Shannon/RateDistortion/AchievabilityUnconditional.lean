@@ -627,7 +627,7 @@ theorem rate_distortion_achievability_operational
   have h_jts_subset_dts : ∀ {n : ℕ}, 0 < n → ∀ (x : Fin n → α) (y : Fin n → β),
       (x, y) ∈ jointStronglyTypicalSet (rdAmbient q') iidXs iidYs n ε_join →
       (x, y) ∈ distortionTypicalSet (rdAmbient q') iidXs iidYs d n ε_dist δ_typ :=
-    fun {n} hn x y hmem =>
+    fun {n} hn x y hmem ↦
       jts_subset_dts_of_dist_slack (rdAmbient q') iidXs iidYs
         measurable_iidXs measurable_iidYs hmarg_X hmarg_Y d hn hε_join_pos.le
         h_bound_X h_bound_Y h_bound_Z h_dist_slack hmem
@@ -642,7 +642,7 @@ theorem rate_distortion_achievability_operational
   have h_src : (rdAmbient q').map (iidXs (α := α) (β := β) 0)
       = pmfToMeasure (α := α) P_X :=
     rdAmbient_iidXs_eq_pmfToMeasure_source hq'_simp hP_pmf hmarg_q'
-  refine ⟨N, fun n hn => ?_⟩
+  refine ⟨N, fun n hn ↦ ?_⟩
   obtain ⟨M, hM_lb, hM_ub, c, hc⟩ := hN n hn
   rw [h_src] at hc
   exact ⟨M, hM_lb, hM_ub, c, by linarith⟩

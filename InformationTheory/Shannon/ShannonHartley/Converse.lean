@@ -463,7 +463,7 @@ lemma contAwgn_sum_observation_sq_le {T W P : ℝ} {M : ℕ}
     ∑ i : Fin c.k, (c.observation m i) ^ 2 ≤ T * P := by
   classical
   set f : Lp ℝ 2 volume := (c.encoder_memLp m).toLp (c.encoder m) with hf_def
-  set φ : Fin c.k → Lp ℝ 2 volume := fun i => (c.testFn_memLp i).toLp (c.testFn i) with hφ_def
+  set φ : Fin c.k → Lp ℝ 2 volume := fun i ↦ (c.testFn_memLp i).toLp (c.testFn i) with hφ_def
   have hinner : ∀ (i : Fin c.k) (g : Lp ℝ 2 volume),
       (inner ℝ (φ i) g : ℝ) = ∫ t, g t * c.testFn i t := by
     intro i g
@@ -497,7 +497,7 @@ lemma contAwgn_sum_observation_sq_le {T W P : ℝ} {M : ℕ}
     simp only [hf_def, ht, RCLike.inner_apply, conj_trivial, sq]
   calc ∑ i : Fin c.k, (c.observation m i) ^ 2
       = ∑ i : Fin c.k, ‖(inner ℝ (φ i) f : ℝ)‖ ^ 2 := by
-        refine Finset.sum_congr rfl fun i _ => ?_
+        refine Finset.sum_congr rfl fun i _ ↦ ?_
         rw [hobs i, Real.norm_eq_abs, sq_abs]
     _ ≤ ‖f‖ ^ 2 := hbessel
     _ = ∫ t, (c.encoder m t) ^ 2 := hnorm

@@ -65,7 +65,7 @@ sample values `a : Fin n → ℝ` at the nodes `t_i = i·(T/n)`. This is the *sy
 direction (build a band-limited function from finitely many samples), dual to the
 *analysis* direction of `whittaker_shannon_bandlimited`. -/
 noncomputable def synthSignal (T : ℝ) (n : ℕ) (a : Fin n → ℝ) : ℝ → ℝ :=
-  fun t => ∑ i : Fin n,
+  fun t ↦ ∑ i : Fin n,
     a i * sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ)))
 
 /-- `sincN` of a difference of natural-number casts is the Kronecker delta. -/
@@ -100,7 +100,7 @@ theorem synthSignal_sample (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) 
     · have hji : ¬ ((j : ℕ) = (i : ℕ)) := by
         intro hc; exact h (Fin.ext hc.symm)
       rw [if_neg hji, if_neg h, mul_zero]
-  rw [Finset.sum_congr rfl (fun i _ => hterm i), Finset.sum_ite_eq' Finset.univ j a]
+  rw [Finset.sum_congr rfl (fun i _ ↦ hterm i), Finset.sum_ite_eq' Finset.univ j a]
   simp
 
 /-! ## §B2 — Sinc/boxcar L²-Fourier atom
@@ -117,7 +117,7 @@ The workhorse of the whole reduction. A single shifted, dilated normalized sinc
 `L²`-Fourier transform of the shifted, dilated normalized sinc `t ↦ sincN((t - c)/Δ)`. -/
 noncomputable def specBoxcar (c Δ : ℝ) : ℝ → ℂ :=
   (Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))).indicator
-    fun ξ => (Δ : ℂ) * Complex.exp ((-(2 * Real.pi * c * ξ) : ℝ) * Complex.I)
+    fun ξ ↦ (Δ : ℂ) * Complex.exp ((-(2 * Real.pi * c * ξ) : ℝ) * Complex.I)
 
 /-- Dilated boxcar integral: rescaling the fundamental-interval identity
 `integral_exp_boxcar_eq_sincN` to the band `[-1/(2Δ), 1/(2Δ)]`. -/
@@ -126,9 +126,9 @@ theorem exp_dilate_interval_integral (Δ u : ℝ) (hΔ : 0 < Δ) :
         Complex.exp ((2 * Real.pi * u * ξ : ℝ) * Complex.I))
       = (Δ⁻¹ : ℂ) * (sincN (u / Δ) : ℂ) := by
   have hΔ' : Δ ≠ 0 := ne_of_gt hΔ
-  have hrw : (fun ξ : ℝ => Complex.exp ((2 * Real.pi * u * ξ : ℝ) * Complex.I))
-      = fun ξ : ℝ =>
-          (fun y : ℝ => Complex.exp ((2 * Real.pi * (u / Δ) * y : ℝ) * Complex.I)) (Δ * ξ) := by
+  have hrw : (fun ξ : ℝ ↦ Complex.exp ((2 * Real.pi * u * ξ : ℝ) * Complex.I))
+      = fun ξ : ℝ ↦
+          (fun y : ℝ ↦ Complex.exp ((2 * Real.pi * (u / Δ) * y : ℝ) * Complex.I)) (Δ * ξ) := by
     funext ξ
     have harg : (2 * Real.pi * u * ξ : ℝ) = 2 * Real.pi * (u / Δ) * (Δ * ξ) := by
       field_simp
@@ -136,10 +136,10 @@ theorem exp_dilate_interval_integral (Δ u : ℝ) (hΔ : 0 < Δ) :
   rw [show (∫ ξ in (-(1 / (2 * Δ)))..(1 / (2 * Δ)),
         Complex.exp ((2 * Real.pi * u * ξ : ℝ) * Complex.I))
         = ∫ ξ in (-(1 / (2 * Δ)))..(1 / (2 * Δ)),
-            (fun y : ℝ => Complex.exp ((2 * Real.pi * (u / Δ) * y : ℝ) * Complex.I)) (Δ * ξ) from by
+            (fun y : ℝ ↦ Complex.exp ((2 * Real.pi * (u / Δ) * y : ℝ) * Complex.I)) (Δ * ξ) from by
       rw [hrw]]
   rw [intervalIntegral.integral_comp_mul_left
-      (f := fun y : ℝ => Complex.exp ((2 * Real.pi * (u / Δ) * y : ℝ) * Complex.I)) hΔ',
+      (f := fun y : ℝ ↦ Complex.exp ((2 * Real.pi * (u / Δ) * y : ℝ) * Complex.I)) hΔ',
     show Δ * (-(1 / (2 * Δ))) = -(1 / 2) by field_simp,
     show Δ * (1 / (2 * Δ)) = 1 / 2 by field_simp,
     WhittakerShannon.integral_exp_boxcar_eq_sincN (u / Δ), Complex.real_smul, Complex.ofReal_inv]
@@ -148,14 +148,14 @@ theorem exp_dilate_interval_integral (Δ u : ℝ) (hΔ : 0 < Δ) :
 theorem specBoxcar_memLp (c Δ : ℝ) (hΔ : 0 < Δ) (p : ℝ≥0∞) :
     MemLp (specBoxcar c Δ) p volume := by
   have hcont : Continuous
-      fun ξ : ℝ => (Δ : ℂ) * Complex.exp ((-(2 * Real.pi * c * ξ) : ℝ) * Complex.I) := by
+      fun ξ : ℝ ↦ (Δ : ℂ) * Complex.exp ((-(2 * Real.pi * c * ξ) : ℝ) * Complex.I) := by
     fun_prop
   have haesm : AEStronglyMeasurable (specBoxcar c Δ) volume :=
     hcont.aestronglyMeasurable.indicator measurableSet_Icc
   have hvol : volume (Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))) ≠ ∞ := by
     rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top
   refine MemLp.mono' (memLp_indicator_const p measurableSet_Icc (Δ : ℝ) (Or.inr hvol)) haesm ?_
-  refine ae_of_all _ (fun ξ => ?_)
+  refine ae_of_all _ (fun ξ ↦ ?_)
   rw [specBoxcar]
   by_cases hξ : ξ ∈ Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))
   · rw [Set.indicator_of_mem hξ, Set.indicator_of_mem hξ, norm_mul,
@@ -170,10 +170,10 @@ theorem fourierInv_specBoxcar (c Δ : ℝ) (hΔ : 0 < Δ) (t : ℝ) :
   have hΔC : (Δ : ℂ) ≠ 0 := by exact_mod_cast ne_of_gt hΔ
   rw [Real.fourierInv_eq']
   simp only [Real.inner_apply]
-  have hfun : (fun ξ : ℝ => Complex.exp ((↑(2 * Real.pi * (ξ * t)) : ℂ) * Complex.I) •
+  have hfun : (fun ξ : ℝ ↦ Complex.exp ((↑(2 * Real.pi * (ξ * t)) : ℂ) * Complex.I) •
         specBoxcar c Δ ξ)
       = (Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))).indicator
-          (fun ξ => (Δ : ℂ) * Complex.exp ((2 * Real.pi * (t - c) * ξ : ℝ) * Complex.I)) := by
+          (fun ξ ↦ (Δ : ℂ) * Complex.exp ((2 * Real.pi * (t - c) * ξ : ℝ) * Complex.I)) := by
     funext ξ
     by_cases hξ : ξ ∈ Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))
     · have hexp : Complex.exp ((2 * Real.pi * (t - c) * ξ : ℝ) * Complex.I)
@@ -192,11 +192,11 @@ theorem fourierInv_specBoxcar (c Δ : ℝ) (hΔ : 0 < Δ) (t : ℝ) :
 /-- The complexified shifted, dilated sinc lies in `L²` (it is the inverse transform of an
 `L¹ ∩ L²` boxcar). -/
 theorem shiftSinc_memLp (c Δ : ℝ) (hΔ : 0 < Δ) :
-    MemLp (fun t => (sincN ((t - c) / Δ) : ℂ)) 2 volume := by
+    MemLp (fun t ↦ (sincN ((t - c) / Δ) : ℂ)) 2 volume := by
   have hS1 := specBoxcar_memLp c Δ hΔ 1
   have hS2 := specBoxcar_memLp c Δ hΔ 2
   have hbridge := l2FourierInv_eq_fourierIntegralInv (specBoxcar c Δ) hS1 hS2
-  have hpt : 𝓕⁻ (specBoxcar c Δ) = fun t => (sincN ((t - c) / Δ) : ℂ) := by
+  have hpt : 𝓕⁻ (specBoxcar c Δ) = fun t ↦ (sincN ((t - c) / Δ) : ℂ) := by
     funext t; exact fourierInv_specBoxcar c Δ hΔ t
   rw [hpt] at hbridge
   exact (memLp_congr_ae hbridge).mp (Lp.memLp _)
@@ -204,15 +204,15 @@ theorem shiftSinc_memLp (c Δ : ℝ) (hΔ : 0 < Δ) :
 /-- The abstract `L²`-Fourier transform of the sinc's canonical `Lp` representative is the
 boxcar's canonical `Lp` representative. -/
 theorem fourier_shiftSinc_toLp (c Δ : ℝ) (hΔ : 0 < Δ) :
-    (𝓕 ((shiftSinc_memLp c Δ hΔ).toLp (fun t => (sincN ((t - c) / Δ) : ℂ))) : Lp ℂ 2 volume)
+    (𝓕 ((shiftSinc_memLp c Δ hΔ).toLp (fun t ↦ (sincN ((t - c) / Δ) : ℂ))) : Lp ℂ 2 volume)
       = (specBoxcar_memLp c Δ hΔ 2).toLp (specBoxcar c Δ) := by
   have hS1 := specBoxcar_memLp c Δ hΔ 1
   have hbridge := l2FourierInv_eq_fourierIntegralInv (specBoxcar c Δ) hS1
     (specBoxcar_memLp c Δ hΔ 2)
-  have hpt : 𝓕⁻ (specBoxcar c Δ) = fun t => (sincN ((t - c) / Δ) : ℂ) := by
+  have hpt : 𝓕⁻ (specBoxcar c Δ) = fun t ↦ (sincN ((t - c) / Δ) : ℂ) := by
     funext t; exact fourierInv_specBoxcar c Δ hΔ t
   rw [hpt] at hbridge
-  have hGeq : (shiftSinc_memLp c Δ hΔ).toLp (fun t => (sincN ((t - c) / Δ) : ℂ))
+  have hGeq : (shiftSinc_memLp c Δ hΔ).toLp (fun t ↦ (sincN ((t - c) / Δ) : ℂ))
       = 𝓕⁻ ((specBoxcar_memLp c Δ hΔ 2).toLp (specBoxcar c Δ)) := by
     rw [← Lp.toLp_coeFn (𝓕⁻ ((specBoxcar_memLp c Δ hΔ 2).toLp (specBoxcar c Δ))) (Lp.memLp _)]
     exact MemLp.toLp_congr (shiftSinc_memLp c Δ hΔ) (Lp.memLp _) hbridge.symm
@@ -229,10 +229,10 @@ theorem inner_specBoxcar_toLp (c c' Δ : ℝ) (hΔ : 0 < Δ) :
   have hΔC : (Δ : ℂ) ≠ 0 := by exact_mod_cast ne_of_gt hΔ
   have hu := MemLp.coeFn_toLp (specBoxcar_memLp c Δ hΔ 2)
   have hv := MemLp.coeFn_toLp (specBoxcar_memLp c' Δ hΔ 2)
-  have hfun : (fun ξ : ℝ => (⟪((specBoxcar_memLp c Δ hΔ 2).toLp (specBoxcar c Δ)) ξ,
+  have hfun : (fun ξ : ℝ ↦ (⟪((specBoxcar_memLp c Δ hΔ 2).toLp (specBoxcar c Δ)) ξ,
         ((specBoxcar_memLp c' Δ hΔ 2).toLp (specBoxcar c' Δ)) ξ⟫ : ℂ))
-      =ᵐ[volume] fun ξ => (Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))).indicator
-        (fun ξ => (Δ : ℂ) ^ 2 * Complex.exp ((2 * Real.pi * (c - c') * ξ : ℝ) * Complex.I)) ξ := by
+      =ᵐ[volume] fun ξ ↦ (Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))).indicator
+        (fun ξ ↦ (Δ : ℂ) ^ 2 * Complex.exp ((2 * Real.pi * (c - c') * ξ : ℝ) * Complex.I)) ξ := by
     filter_upwards [hu, hv] with ξ hξu hξv
     rw [hξu, hξv]
     by_cases hmem : ξ ∈ Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))
@@ -260,45 +260,45 @@ theorem inner_specBoxcar_toLp (c c' Δ : ℝ) (hΔ : 0 < Δ) :
 
 /-- The complexified synthesis lies in `L²` (a finite sum of `L²` shifted sincs). -/
 theorem synthSignal_complex_memLp (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n) :
-    MemLp (fun t => (synthSignal T n a t : ℂ)) 2 volume := by
+    MemLp (fun t ↦ (synthSignal T n a t : ℂ)) 2 volume := by
   have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
   have hΔ : (0 : ℝ) < T / (n : ℝ) := by positivity
-  have hrw : (fun t => (synthSignal T n a t : ℂ))
-      = fun t => ∑ i : Fin n, (a i : ℂ) *
+  have hrw : (fun t ↦ (synthSignal T n a t : ℂ))
+      = fun t ↦ ∑ i : Fin n, (a i : ℂ) *
           (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ) := by
     funext t
     simp only [synthSignal, Complex.ofReal_sum, Complex.ofReal_mul]
   rw [hrw]
-  exact memLp_finsetSum Finset.univ (fun i _ =>
+  exact memLp_finsetSum Finset.univ (fun i _ ↦
     (shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).const_mul (a i : ℂ))
 
 /-- The synthesis's canonical `Lp` representative decomposes as the finite `Lp` combination
 `∑ᵢ aᵢ • (shifted sinc)ᵢ`. -/
 theorem synthSignal_toLp_eq_sum (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) (hn : 0 < n)
     (hΔ : 0 < T / (n : ℝ)) :
-    (synthSignal_complex_memLp T n a hT hn).toLp (fun t => (synthSignal T n a t : ℂ))
+    (synthSignal_complex_memLp T n a hT hn).toLp (fun t ↦ (synthSignal T n a t : ℂ))
       = ∑ i : Fin n, (a i : ℂ) •
           (shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
-            (fun t => (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ)) := by
+            (fun t ↦ (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ)) := by
   refine Lp.ext ?_
   have hRHS : (⇑(∑ i : Fin n, (a i : ℂ) •
         (shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
-          (fun t => (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))) : ℝ → ℂ)
-      =ᵐ[volume] fun t => (synthSignal T n a t : ℂ) := by
+          (fun t ↦ (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))) : ℝ → ℂ)
+      =ᵐ[volume] fun t ↦ (synthSignal T n a t : ℂ) := by
     refine (Lp.coeFn_fun_finsetSum _ _).trans ?_
     have hterm : ∀ i : Fin n, ∀ᵐ x ∂volume,
         (((a i : ℂ) • (shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
-            (fun t => (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))) x)
+            (fun t ↦ (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))) x)
           = (a i : ℂ) * (sincN ((x - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ) := by
       intro i
       filter_upwards [Lp.coeFn_smul (a i : ℂ)
           ((shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
-            (fun t => (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))),
+            (fun t ↦ (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))),
         MemLp.coeFn_toLp (shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ)]
         with x hx1 hx2
       rw [hx1, Pi.smul_apply, hx2, smul_eq_mul]
     filter_upwards [ae_all_iff.mpr hterm] with x hx
-    rw [Finset.sum_congr rfl (fun i _ => hx i)]
+    rw [Finset.sum_congr rfl (fun i _ ↦ hx i)]
     simp only [synthSignal, Complex.ofReal_sum, Complex.ofReal_mul]
   exact (MemLp.coeFn_toLp _).trans hRHS.symm
 
@@ -322,19 +322,19 @@ theorem synthSignal_bandlimited (T W : ℝ) (n : ℕ) (a : Fin n → ℝ)
     measurableSet_lt measurable_const measurable_id.abs
   refine ⟨synthSignal_complex_memLp T n a hT hn, ?_⟩
   have hFT : (𝓕 ((synthSignal_complex_memLp T n a hT hn).toLp
-        (fun t => (synthSignal T n a t : ℂ))) : Lp ℂ 2 volume)
+        (fun t ↦ (synthSignal T n a t : ℂ))) : Lp ℂ 2 volume)
       = ∑ i : Fin n, (a i : ℂ) •
           (specBoxcar_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ 2).toLp
             (specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ))) := by
     rw [synthSignal_toLp_eq_sum T n a hT hn hΔ, FourierTransform.fourier_sum]
-    refine Finset.sum_congr rfl (fun i _ => ?_)
+    refine Finset.sum_congr rfl (fun i _ ↦ ?_)
     rw [FourierTransform.fourier_smul,
       fourier_shiftSinc_toLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ]
   rw [hFT]
   have hcoe : (⇑(∑ i : Fin n, (a i : ℂ) •
         (specBoxcar_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ 2).toLp
           (specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)))) : ℝ → ℂ)
-      =ᵐ[volume] fun ξ => ∑ i : Fin n, (a i : ℂ) *
+      =ᵐ[volume] fun ξ ↦ ∑ i : Fin n, (a i : ℂ) *
         specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) ξ := by
     refine (Lp.coeFn_fun_finsetSum _ _).trans ?_
     have hterm : ∀ i : Fin n, ∀ᵐ x ∂volume,
@@ -349,20 +349,20 @@ theorem synthSignal_bandlimited (T W : ℝ) (n : ℕ) (a : Fin n → ℝ)
         with x hx1 hx2
       rw [hx1, Pi.smul_apply, hx2, smul_eq_mul]
     filter_upwards [ae_all_iff.mpr hterm] with x hx
-    exact Finset.sum_congr rfl (fun i _ => hx i)
+    exact Finset.sum_congr rfl (fun i _ ↦ hx i)
   have hcoe' : (⇑(∑ i : Fin n, (a i : ℂ) •
         (specBoxcar_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ 2).toLp
           (specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)))) : ℝ → ℂ)
-      =ᵐ[volume.restrict {ξ : ℝ | W < |ξ|}] fun ξ => ∑ i : Fin n, (a i : ℂ) *
+      =ᵐ[volume.restrict {ξ : ℝ | W < |ξ|}] fun ξ ↦ ∑ i : Fin n, (a i : ℂ) *
         specBoxcar (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) ξ := ae_restrict_of_ae hcoe
   refine hcoe'.trans ?_
   rw [Filter.EventuallyEq, ae_restrict_iff' hSmeas]
-  refine ae_of_all _ (fun ξ hξ => ?_)
+  refine ae_of_all _ (fun ξ hξ ↦ ?_)
   have hnotmem : ξ ∉ Set.Icc (-(1 / (2 * (T / (n : ℝ))))) (1 / (2 * (T / (n : ℝ)))) := by
     rw [Set.mem_Icc, ← abs_le, not_le]
     exact lt_of_le_of_lt hbW hξ
   simp only [Pi.zero_apply]
-  exact Finset.sum_eq_zero (fun i _ => by
+  exact Finset.sum_eq_zero (fun i _ ↦ by
     rw [specBoxcar, Set.indicator_of_notMem hnotmem, mul_zero])
 
 /-! ## §D — (iii) Parseval energy -/
@@ -372,8 +372,8 @@ theorem synthSignal_bandlimited (T W : ℝ) (n : ℕ) (a : Fin n → ℝ)
 @audit:ok -/
 theorem synthSignal_sq_integrable (T : ℝ) (n : ℕ) (a : Fin n → ℝ)
     (hT : 0 < T) (hn : 0 < n) :
-    Integrable (fun t => (synthSignal T n a t) ^ 2) := by
-  have hint : Integrable (fun t => ‖(synthSignal T n a t : ℂ)‖ ^ 2) :=
+    Integrable (fun t ↦ (synthSignal T n a t) ^ 2) := by
+  have hint : Integrable (fun t ↦ ‖(synthSignal T n a t : ℂ)‖ ^ 2) :=
     (synthSignal_complex_memLp T n a hT hn).integrable_norm_pow (p := 2) (by norm_num)
   refine hint.congr ?_
   filter_upwards with t
@@ -388,27 +388,27 @@ theorem synthSignal_energy (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) 
     (∫ t, (synthSignal T n a t) ^ 2) = (T / (n : ℝ)) * ∑ i : Fin n, (a i) ^ 2 := by
   have hnR : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
   have hΔ : (0 : ℝ) < T / (n : ℝ) := by positivity
-  have hstep1 : (⟪(synthSignal_complex_memLp T n a hT hn).toLp (fun t => (synthSignal T n a t : ℂ)),
-        (synthSignal_complex_memLp T n a hT hn).toLp (fun t => (synthSignal T n a t : ℂ))⟫ : ℂ)
+  have hstep1 : (⟪(synthSignal_complex_memLp T n a hT hn).toLp (fun t ↦ (synthSignal T n a t : ℂ)),
+        (synthSignal_complex_memLp T n a hT hn).toLp (fun t ↦ (synthSignal T n a t : ℂ))⟫ : ℂ)
       = ((∫ t, (synthSignal T n a t) ^ 2 : ℝ) : ℂ) := by
     rw [MeasureTheory.L2.inner_def]
-    have hae : (fun ξ => (⟪((synthSignal_complex_memLp T n a hT hn).toLp
-          (fun t => (synthSignal T n a t : ℂ))) ξ,
+    have hae : (fun ξ ↦ (⟪((synthSignal_complex_memLp T n a hT hn).toLp
+          (fun t ↦ (synthSignal T n a t : ℂ))) ξ,
         ((synthSignal_complex_memLp T n a hT hn).toLp
-          (fun t => (synthSignal T n a t : ℂ))) ξ⟫ : ℂ))
-        =ᵐ[volume] fun ξ => ((synthSignal T n a ξ ^ 2 : ℝ) : ℂ) := by
+          (fun t ↦ (synthSignal T n a t : ℂ))) ξ⟫ : ℂ))
+        =ᵐ[volume] fun ξ ↦ ((synthSignal T n a ξ ^ 2 : ℝ) : ℂ) := by
       filter_upwards [MemLp.coeFn_toLp (synthSignal_complex_memLp T n a hT hn)] with ξ hξ
       rw [hξ, RCLike.inner_apply', Complex.conj_ofReal]
       push_cast; ring
     rw [integral_congr_ae hae, integral_complex_ofReal]
-  have hstep2 : (⟪(synthSignal_complex_memLp T n a hT hn).toLp (fun t => (synthSignal T n a t : ℂ)),
-        (synthSignal_complex_memLp T n a hT hn).toLp (fun t => (synthSignal T n a t : ℂ))⟫ : ℂ)
+  have hstep2 : (⟪(synthSignal_complex_memLp T n a hT hn).toLp (fun t ↦ (synthSignal T n a t : ℂ)),
+        (synthSignal_complex_memLp T n a hT hn).toLp (fun t ↦ (synthSignal T n a t : ℂ))⟫ : ℂ)
       = ((T / (n : ℝ) * ∑ i : Fin n, (a i) ^ 2 : ℝ) : ℂ) := by
     have hinner : ∀ i j : Fin n,
         (⟪(shiftSinc_memLp (((i : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
-            (fun t => (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ)),
+            (fun t ↦ (sincN ((t - ((i : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ)),
           (shiftSinc_memLp (((j : ℕ) : ℝ) * (T / (n : ℝ))) (T / (n : ℝ)) hΔ).toLp
-            (fun t => (sincN ((t - ((j : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))⟫ : ℂ)
+            (fun t ↦ (sincN ((t - ((j : ℕ) : ℝ) * (T / (n : ℝ))) / (T / (n : ℝ))) : ℂ))⟫ : ℂ)
           = (T / (n : ℝ) : ℂ) * (if i = j then 1 else 0) := by
       intro i j
       rw [← Lp.inner_fourier_eq,
@@ -422,14 +422,14 @@ theorem synthSignal_energy (T : ℝ) (n : ℕ) (a : Fin n → ℝ) (hT : 0 < T) 
         sincN_natCast_sub]
       by_cases h : i = j
       · simp [h]
-      · have hne : (i : ℕ) ≠ (j : ℕ) := fun hc => h (Fin.ext hc)
+      · have hne : (i : ℕ) ≠ (j : ℕ) := fun hc ↦ h (Fin.ext hc)
         simp [hne, h]
     rw [synthSignal_toLp_eq_sum T n a hT hn hΔ]
     simp only [sum_inner, inner_sum, inner_smul_left, inner_smul_right, Complex.conj_ofReal, hinner]
     simp only [mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, if_true]
     push_cast
     rw [Finset.mul_sum]
-    exact Finset.sum_congr rfl (fun i _ => by ring)
+    exact Finset.sum_congr rfl (fun i _ ↦ by ring)
   exact_mod_cast hstep1.symm.trans hstep2
 
 /-! ## §E — boundedness of the message set -/
@@ -443,7 +443,7 @@ private theorem contAwgn_sum_observation_sq_le {T W P : ℝ} {M : ℕ}
   classical
   -- The codeword and the test family, as elements of `L²(ℝ)`.
   set f : Lp ℝ 2 volume := (c.encoder_memLp m).toLp (c.encoder m) with hf_def
-  set φ : Fin c.k → Lp ℝ 2 volume := fun i => (c.testFn_memLp i).toLp (c.testFn i) with hφ_def
+  set φ : Fin c.k → Lp ℝ 2 volume := fun i ↦ (c.testFn_memLp i).toLp (c.testFn i) with hφ_def
   -- `⟪φ i, g⟫ = ∫ t, g t * testFn i t` for any `g` given a.e. representatives.
   have hinner : ∀ (i : Fin c.k) (g : Lp ℝ 2 volume),
       (inner ℝ (φ i) g : ℝ) = ∫ t, g t * c.testFn i t := by
@@ -482,7 +482,7 @@ private theorem contAwgn_sum_observation_sq_le {T W P : ℝ} {M : ℕ}
     simp only [hf_def, ht, RCLike.inner_apply, conj_trivial, sq]
   calc ∑ i : Fin c.k, (c.observation m i) ^ 2
       = ∑ i : Fin c.k, ‖(inner ℝ (φ i) f : ℝ)‖ ^ 2 := by
-        refine Finset.sum_congr rfl fun i _ => ?_
+        refine Finset.sum_congr rfl fun i _ ↦ ?_
         rw [hobs i, Real.norm_eq_abs, sq_abs]
     _ ≤ ‖f‖ ^ 2 := hbessel
     _ = ∫ t, (c.encoder m t) ^ 2 := hnorm
@@ -529,7 +529,7 @@ private theorem contAwgn_averageError_toReal {T W P : ℝ} {M : ℕ} (hM : 0 < M
   unfold ContAwgnCode.averageError
   rw [if_neg hM.ne']
   rw [ENNReal.toReal_mul, ENNReal.toReal_inv,
-    ENNReal.toReal_sum (fun m _ => contAwgn_errorProbAt_ne_top c N₀ m)]
+    ENNReal.toReal_sum (fun m _ ↦ contAwgn_errorProbAt_ne_top c N₀ m)]
   simp [one_div]
 
 /-- The crude rate bound via Bessel's inequality alone, for codes with at least one observation:
@@ -558,7 +558,7 @@ theorem contAwgn_log_le_of_pos_k {T W N₀ P ε : ℝ} {M : ℕ}
   have hPe : Pe = (1 / M : ℝ) *
       ∑ m : Fin M, (dc.toCode.errorProbAt (AWGN.awgnChannel N h_meas) m).toReal := by
     rw [hPe_def, contAwgn_averageError_toReal hM0 c N₀]
-    exact congrArg _ (Finset.sum_congr rfl fun m _ => by
+    exact congrArg _ (Finset.sum_congr rfl fun m _ ↦ by
       rw [contAwgn_errorProbAt_eq c hk N₀ m])
   -- The discrete converse.
   have hconv := AWGN.awgn_converse P' hP'pos N hN h_meas hM hk dc Pe hPe
@@ -614,7 +614,7 @@ theorem contAwgn_averageError_of_k_eq_zero {T W P : ℝ} {M : ℕ} (hM : 0 < M)
     by_cases h : c.decoder x₀ = m <;> simp [h]
   rw [contAwgn_averageError_toReal hM c N₀]
   simp_rw [herr]
-  rw [Finset.sum_sub_distrib, Finset.sum_ite_eq _ m₀ (fun _ => (1 : ℝ))]
+  rw [Finset.sum_sub_distrib, Finset.sum_ite_eq _ m₀ (fun _ ↦ (1 : ℝ))]
   simp [Finset.card_univ, div_eq_inv_mul]
 
 /-- The message-count set is bounded above — the `BddAbove` obligation needed to lower-bound

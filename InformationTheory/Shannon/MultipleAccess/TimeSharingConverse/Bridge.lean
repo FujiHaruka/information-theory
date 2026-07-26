@@ -66,7 +66,7 @@ private lemma convexHull_mem_of_le {s : Set (ℝ × ℝ)}
     rw [hr2def]; split_ifs with h
     · rw [mul_zero]; linarith [hp2, hle2, h]
     · rw [mul_div_cancel₀ _ h]
-  refine mem_convexHull_of_exists_fintype w (fun i => ((z i).1 * r1, (z i).2 * r2)) hw0 hw1 ?_ ?_
+  refine mem_convexHull_of_exists_fintype w (fun i ↦ ((z i).1 * r1, (z i).2 * r2)) hw0 hw1 ?_ ?_
   · intro i
     obtain ⟨hzi1, hzi2⟩ := hpos _ (hz i)
     refine hdown _ (hz i) _ _ (mul_nonneg hzi1 hr1_nonneg) ?_ (mul_nonneg hzi2 hr2_nonneg) ?_
@@ -77,12 +77,12 @@ private lemma convexHull_mem_of_le {s : Set (ℝ × ℝ)}
   · apply Prod.ext
     · simp only [Prod.fst_sum, Prod.smul_fst, smul_eq_mul]
       calc ∑ i, w i * ((z i).1 * r1) = (∑ i, w i * (z i).1) * r1 := by
-            rw [Finset.sum_mul]; exact Finset.sum_congr rfl (fun i _ => by ring)
+            rw [Finset.sum_mul]; exact Finset.sum_congr rfl (fun i _ ↦ by ring)
         _ = q.1 * r1 := by rw [hq1]
         _ = p.1 := hkey1
     · simp only [Prod.snd_sum, Prod.smul_snd, smul_eq_mul]
       calc ∑ i, w i * ((z i).2 * r2) = (∑ i, w i * (z i).2) * r2 := by
-            rw [Finset.sum_mul]; exact Finset.sum_congr rfl (fun i _ => by ring)
+            rw [Finset.sum_mul]; exact Finset.sum_congr rfl (fun i _ ↦ by ring)
         _ = q.2 * r2 := by rw [hq2]
         _ = p.2 := hkey2
 
@@ -138,10 +138,10 @@ theorem mac_avgPentagon_mem_convexHull {n : ℕ} (hn : 0 < n)
   set B : ℝ × ℝ := ∑ i, (n : ℝ)⁻¹ • ((c i - b i, b i) : ℝ × ℝ) with hBdef
   have hA_mem : A ∈ convexHull ℝ S := by
     rw [hAdef]
-    exact mem_convexHull_of_exists_fintype _ _ (fun _ => by positivity) hw1 hcA_mem rfl
+    exact mem_convexHull_of_exists_fintype _ _ (fun _ ↦ by positivity) hw1 hcA_mem rfl
   have hB_mem : B ∈ convexHull ℝ S := by
     rw [hBdef]
-    exact mem_convexHull_of_exists_fintype _ _ (fun _ => by positivity) hw1 hcB_mem rfl
+    exact mem_convexHull_of_exists_fintype _ _ (fun _ ↦ by positivity) hw1 hcB_mem rfl
   -- component computations
   have hA1 : A.1 = (∑ i, a i) / n := by
     rw [hAdef]
@@ -152,7 +152,7 @@ theorem mac_avgPentagon_mem_convexHull {n : ℕ} (hn : 0 < n)
     simp only [Prod.fst_sum, Prod.snd_sum, Prod.smul_fst, Prod.smul_snd, smul_eq_mul]
     rw [← Finset.sum_add_distrib,
       show (∑ i, ((n : ℝ)⁻¹ * a i + (n : ℝ)⁻¹ * (c i - a i))) = ∑ i, (n : ℝ)⁻¹ * c i from
-        Finset.sum_congr rfl (fun i _ => by ring),
+        Finset.sum_congr rfl (fun i _ ↦ by ring),
       ← Finset.mul_sum, inv_mul_eq_div]
   have hB2 : B.2 = (∑ i, b i) / n := by
     rw [hBdef]
@@ -163,7 +163,7 @@ theorem mac_avgPentagon_mem_convexHull {n : ℕ} (hn : 0 < n)
     simp only [Prod.fst_sum, Prod.snd_sum, Prod.smul_fst, Prod.smul_snd, smul_eq_mul]
     rw [← Finset.sum_add_distrib,
       show (∑ i, ((n : ℝ)⁻¹ * (c i - b i) + (n : ℝ)⁻¹ * b i)) = ∑ i, (n : ℝ)⁻¹ * c i from
-        Finset.sum_congr rfl (fun i _ => by ring),
+        Finset.sum_congr rfl (fun i _ ↦ by ring),
       ← Finset.mul_sum, inv_mul_eq_div]
   have hR1A : R₁ ≤ A.1 := by rw [hA1]; exact h1
   have hR2B : R₂ ≤ B.2 := by rw [hB2]; exact h2

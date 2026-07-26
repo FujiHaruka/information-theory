@@ -78,12 +78,12 @@ theorem prolateEigenvalueSet_finite (T W : ℝ) {c : ℝ} (hc : 0 < c) :
   have hinf : (prolateEigenvalueSet T W c).Infinite := hfin
   -- An injective stream of distinct eigenvalues above `c`.
   let f := hinf.natEmbedding
-  set μ : ℕ → ℝ := fun n => ((f n : ℝ)) with hμdef
+  set μ : ℕ → ℝ := fun n ↦ ((f n : ℝ)) with hμdef
   have hμ_inj : Function.Injective μ := Subtype.val_injective.comp f.injective
-  have hμ_gt : ∀ n, c < μ n := fun n => (f n).2.1
-  have hμ_eig : ∀ n, (prolateEnd T W).HasEigenvalue ((μ n : ℝ) : ℂ) := fun n => (f n).2.2
+  have hμ_gt : ∀ n, c < μ n := fun n ↦ (f n).2.1
+  have hμ_eig : ∀ n, (prolateEnd T W).HasEigenvalue ((μ n : ℝ) : ℂ) := fun n ↦ (f n).2.2
   -- Unit eigenvectors for each of them.
-  choose e he_norm he_eig using fun n => exists_unit_eigenvector (hμ_eig n)
+  choose e he_norm he_eig using fun n ↦ exists_unit_eigenvector (hμ_eig n)
   -- Their images are pairwise `c`-separated.
   have hsep : ∀ i j : ℕ, i ≠ j →
       c < ‖timeBandLimitingOp T W (e i) - timeBandLimitingOp T W (e j)‖ := by
@@ -149,7 +149,7 @@ noncomputable def prolateCount (T W c : ℝ) : ℕ := Module.finrank ℂ (prolat
 
 theorem prolateEigenvalueSet_subset (T W : ℝ) {c c' : ℝ} (h : c ≤ c') :
     prolateEigenvalueSet T W c' ⊆ prolateEigenvalueSet T W c :=
-  fun _ hμ => ⟨lt_of_le_of_lt h hμ.1, hμ.2⟩
+  fun _ hμ ↦ ⟨lt_of_le_of_lt h hμ.1, hμ.2⟩
 
 theorem prolateEigenspaceSup_mono (T W : ℝ) {c c' : ℝ} (h : c ≤ c') :
     prolateEigenspaceSup T W c' ≤ prolateEigenspaceSup T W c :=
@@ -161,7 +161,7 @@ theorem prolateCount_antitone (T W : ℝ) {c c' : ℝ} (hc : 0 < c) (h : c ≤ c
   exact Submodule.finrank_mono (prolateEigenspaceSup_mono T W h)
 
 theorem prolateEigenvalueSet_one_eq_empty (T W : ℝ) : prolateEigenvalueSet T W 1 = ∅ := by
-  refine Set.eq_empty_iff_forall_notMem.mpr fun μ hμ => ?_
+  refine Set.eq_empty_iff_forall_notMem.mpr fun μ hμ ↦ ?_
   exact absurd (eigenvalue_le_one hμ.2) (not_le.mpr hμ.1)
 
 theorem prolateCount_one_eq_zero (T W : ℝ) : prolateCount T W 1 = 0 := by
@@ -198,10 +198,10 @@ theorem prolateEigenvalues_setOf_nonempty (T W : ℝ) (n : ℕ) :
 
 theorem prolateEigenvalues_setOf_bddBelow (T W : ℝ) (n : ℕ) :
     BddBelow {c : ℝ | 0 < c ∧ prolateCount T W c ≤ n} :=
-  ⟨0, fun _ hc => hc.1.le⟩
+  ⟨0, fun _ hc ↦ hc.1.le⟩
 
 theorem prolateEigenvalues_nonneg (T W : ℝ) (n : ℕ) : 0 ≤ prolateEigenvalues T W n :=
-  le_csInf (prolateEigenvalues_setOf_nonempty T W n) fun _ hc => hc.1.le
+  le_csInf (prolateEigenvalues_setOf_nonempty T W n) fun _ hc ↦ hc.1.le
 
 theorem prolateEigenvalues_le_of_count_le (T W : ℝ) {c : ℝ} (hc : 0 < c) {n : ℕ}
     (h : prolateCount T W c ≤ n) : prolateEigenvalues T W n ≤ c :=
@@ -215,13 +215,13 @@ theorem prolateEigenvalues_antitone (T W : ℝ) : Antitone (prolateEigenvalues T
   intro m n hmn
   refine csInf_le_csInf (prolateEigenvalues_setOf_bddBelow T W n)
     (prolateEigenvalues_setOf_nonempty T W m) ?_
-  exact fun c hc => ⟨hc.1, hc.2.trans hmn⟩
+  exact fun c hc ↦ ⟨hc.1, hc.2.trans hmn⟩
 
 theorem prolateEigenvalues_tendsto_zero (T W : ℝ) :
     Filter.Tendsto (prolateEigenvalues T W) Filter.atTop (nhds 0) := by
   rw [Metric.tendsto_atTop]
   intro ε hε
-  refine ⟨prolateCount T W (ε / 2), fun n hn => ?_⟩
+  refine ⟨prolateCount T W (ε / 2), fun n hn ↦ ?_⟩
   have h1 : prolateEigenvalues T W n ≤ ε / 2 :=
     prolateEigenvalues_le_of_count_le T W (by linarith) hn
   rw [Real.dist_eq, sub_zero, abs_of_nonneg (prolateEigenvalues_nonneg T W n)]
@@ -245,7 +245,7 @@ theorem prolateEigenvalues_hasEigenvalue (T W : ℝ) (n : ℕ) (h : prolateEigen
   have hc : 0 < c := lt_of_le_of_ne (prolateEigenvalues_nonneg T W n) (Ne.symm h)
   by_contra hnot
   have hFfin := prolateEigenvalueSet_finite T W (half_pos hc)
-  have hcF : c ∉ prolateEigenvalueSet T W (c / 2) := fun hmem => hnot hmem.2
+  have hcF : c ∉ prolateEigenvalueSet T W (c / 2) := fun hmem ↦ hnot hmem.2
   obtain ⟨ε₀, hε₀, hball⟩ := Metric.isOpen_iff.mp hFfin.isClosed.isOpen_compl c hcF
   have hδ : 0 < min ε₀ (c / 2) := lt_min hε₀ (half_pos hc)
   have hδ_le : min ε₀ (c / 2) ≤ c / 2 := min_le_right _ _
@@ -254,7 +254,7 @@ theorem prolateEigenvalues_hasEigenvalue (T W : ℝ) (n : ℕ) (h : prolateEigen
   have hε_le : ε ≤ c / 4 := by rw [hε_def]; linarith
   -- No eigenvalue lies within `ε` of `c`, so the eigenvalue sets either side agree.
   have hgap : prolateEigenvalueSet T W (c - ε) = prolateEigenvalueSet T W (c + ε) := by
-    refine Set.Subset.antisymm (fun μ hμ => ⟨?_, hμ.2⟩)
+    refine Set.Subset.antisymm (fun μ hμ ↦ ⟨?_, hμ.2⟩)
       (prolateEigenvalueSet_subset T W (by linarith))
     by_contra hle
     push Not at hle
@@ -297,7 +297,7 @@ noncomputable def timeBox (T : ℝ) : E :=
     (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top) (1 : ℂ)
 
 theorem timeBox_coeFn (T : ℝ) :
-    (timeBox T : ℝ → ℂ) =ᵐ[volume] (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) :=
+    (timeBox T : ℝ → ℂ) =ᵐ[volume] (Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ)) :=
   indicatorConstLp_coeFn
 
 theorem timeBox_mem_timeLimitSubspace (T : ℝ) : timeBox T ∈ timeLimitSubspace T := by
@@ -313,17 +313,17 @@ theorem timeBox_mem_timeLimitSubspace (T : ℝ) : timeBox T ∈ timeLimitSubspac
   · exact absurd hT (not_le.mpr h)
 
 theorem indicatorIcc_memLp_one (T : ℝ) :
-    MemLp ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) 1 volume :=
+    MemLp ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) 1 volume :=
   memLp_indicator_const 1 measurableSet_Icc (1 : ℂ)
     (Or.inr (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top))
 
 theorem fourierIntegral_indicatorIcc_continuous (T : ℝ) :
-    Continuous (𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)))) :=
+    Continuous (𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ)))) :=
   VectorFourier.fourierIntegral_continuous Real.continuous_fourierChar (innerSL ℝ).continuous₂
     (memLp_one_iff_integrable.mp (indicatorIcc_memLp_one T))
 
 theorem fourierIntegral_indicatorIcc_zero {T : ℝ} (hT : 0 < T) :
-    𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) 0 = (T : ℂ) := by
+    𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) 0 = (T : ℂ) := by
   rw [Real.fourier_eq]
   simp only [inner_zero_right, neg_zero, AddChar.map_zero_eq_one, one_smul]
   rw [MeasureTheory.integral_indicator measurableSet_Icc]
@@ -331,13 +331,13 @@ theorem fourierIntegral_indicatorIcc_zero {T : ℝ} (hT : 0 < T) :
 
 theorem fourier_timeBox_ae_eq (T : ℝ) :
     ((Lp.fourierTransformₗᵢ ℝ ℂ (timeBox T) : E) : ℝ → ℂ)
-      =ᵐ[volume] 𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) := by
-  have hmem2 : MemLp ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) 2 volume :=
+      =ᵐ[volume] 𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) := by
+  have hmem2 : MemLp ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) 2 volume :=
     memLp_indicator_const 2 measurableSet_Icc (1 : ℂ)
       (Or.inr (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top))
   have hbridge := ShannonHartley.l2Fourier_eq_fourierIntegral
-    ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) (indicatorIcc_memLp_one T) hmem2
-  have hLp : hmem2.toLp ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) = timeBox T := by
+    ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) (indicatorIcc_memLp_one T) hmem2
+  have hLp : hmem2.toLp ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) = timeBox T := by
     rw [← Lp.toLp_coeFn (timeBox T) (Lp.memLp _)]
     exact (MemLp.toLp_eq_toLp_iff hmem2 (Lp.memLp _)).mpr (timeBox_coeFn T).symm
   rw [hLp] at hbridge
@@ -346,10 +346,10 @@ theorem fourier_timeBox_ae_eq (T : ℝ) :
 theorem bandLimitProj_timeBox_ne_zero {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
     (bandLimitSubspace W).starProjection (timeBox T) ≠ 0 := by
   intro hzero
-  set F := 𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ))) with hF_def
+  set F := 𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) with hF_def
   -- The band cutoff of the box spectrum vanishes a.e.
   have hae : ∀ᵐ ξ ∂(volume : Measure ℝ),
-      (Set.Icc (-W) W).indicator (fun _ => (1 : ℂ)) ξ * F ξ = 0 := by
+      (Set.Icc (-W) W).indicator (fun _ ↦ (1 : ℂ)) ξ * F ξ = 0 := by
     have h1 := fourier_bandLimitProj_apply_ae W (timeBox T)
     rw [hzero] at h1
     have h0 : ((Lp.fourierTransformₗᵢ ℝ ℂ (0 : E) : E) : ℝ → ℂ) =ᵐ[volume] 0 := by
@@ -371,7 +371,7 @@ theorem bandLimitProj_timeBox_ne_zero {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
   -- `U` lies in the null set where the cutoff spectrum is nonzero.
   have hUnull : volume U = 0 := by
     rw [MeasureTheory.ae_iff] at hae
-    refine measure_mono_null (fun ξ hξ => ?_) hae
+    refine measure_mono_null (fun ξ hξ ↦ ?_) hae
     have hband : ξ ∈ Set.Icc (-W) W := Set.Ioo_subset_Icc_self hξ.2
     simp only [Set.mem_setOf_eq, Set.indicator_of_mem hband, one_mul]
     exact hξ.1
@@ -423,7 +423,7 @@ theorem exists_pos_hasEigenvalue {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
   have hiff := ContinuousLinearMap.eq_zero_of_forall_hasEigenvalue_eq_zero
     (timeBandLimitingOp_isCompact T W) (timeBandLimitingOp_isSymmetric T W)
   have hnot : ¬ (∀ μ : ℂ, Module.End.HasEigenvalue (prolateEnd T W) μ → μ = 0) :=
-    fun h => hA (hiff.mp h)
+    fun h ↦ hA (hiff.mp h)
   push Not at hnot
   obtain ⟨μ, hμ, hμ0⟩ := hnot
   have hconj := (timeBandLimitingOp_isSymmetric T W).conj_eigenvalue_eq_self hμ
@@ -458,7 +458,7 @@ theorem prolateEigenvalues_zero_pos {T W : ℝ} (hT : 0 < T) (hW : 0 < W) :
     have hle : Module.End.eigenspace (prolateEnd T W) ((μ : ℝ) : ℂ)
         ≤ prolateEigenspaceSup T W c := by
       rw [prolateEigenspaceSup]
-      exact le_biSup (fun μ : ℝ => Module.End.eigenspace (prolateEnd T W) ((μ : ℝ) : ℂ)) hmem
+      exact le_biSup (fun μ : ℝ ↦ Module.End.eigenspace (prolateEnd T W) ((μ : ℝ) : ℂ)) hmem
     have hbot : prolateEigenspaceSup T W c = ⊥ :=
       Submodule.finrank_eq_zero.mp (Nat.le_zero.mp hcount)
     exact hμ (le_bot_iff.mp (hbot ▸ hle))
@@ -489,14 +489,14 @@ section Degeneracy
 
 theorem timeBandLimitingOp_eq_zero_of_band_nonpos (T : ℝ) {W : ℝ} (hW : W ≤ 0) :
     timeBandLimitingOp T W = 0 := by
-  refine ContinuousLinearMap.ext fun f => ?_
+  refine ContinuousLinearMap.ext fun f ↦ ?_
   have hzf : (bandLimitSubspace W).starProjection f = 0 :=
     (Submodule.eq_bot_iff _).mp (bandLimitSubspace_eq_bot_of_nonpos hW) _ (Submodule.coe_mem _)
   simp only [timeBandLimitingOp, ContinuousLinearMap.comp_apply, hzf, map_zero, zero_apply]
 
 theorem timeBandLimitingOp_eq_zero_of_time_nonpos {T : ℝ} (hT : T ≤ 0) (W : ℝ) :
     timeBandLimitingOp T W = 0 := by
-  refine ContinuousLinearMap.ext fun f => ?_
+  refine ContinuousLinearMap.ext fun f ↦ ?_
   have hzf : (timeLimitSubspace T).starProjection ((bandLimitSubspace W).starProjection f) = 0 :=
     (Submodule.eq_bot_iff _).mp (timeLimitSubspace_eq_bot_of_nonpos hT) _ (Submodule.coe_mem _)
   simp only [timeBandLimitingOp, ContinuousLinearMap.comp_apply, hzf, map_zero, zero_apply]
@@ -506,7 +506,7 @@ theorem prolateEigenvalues_eq_zero_of_op_eq_zero {T W : ℝ} (hA : timeBandLimit
   -- A zero operator has no eigenvalue above a positive threshold, so every count vanishes.
   have hset : ∀ c : ℝ, 0 < c → prolateEigenvalueSet T W c = ∅ := by
     intro c hc
-    refine Set.eq_empty_iff_forall_notMem.mpr fun μ hμ => ?_
+    refine Set.eq_empty_iff_forall_notMem.mpr fun μ hμ ↦ ?_
     obtain ⟨v, hv_mem, hv_ne⟩ := hμ.2.exists_hasEigenvector
     rw [Module.End.mem_eigenspace_iff] at hv_mem
     have hv0 : (μ : ℂ) • v = 0 := by
@@ -526,7 +526,7 @@ theorem prolateEigenvalues_eq_zero_of_op_eq_zero {T W : ℝ} (hA : timeBandLimit
     rw [prolateCount, hbot]
     simp
   refine le_antisymm ?_ (prolateEigenvalues_nonneg T W n)
-  refine le_of_forall_pos_le_add fun ε hε => ?_
+  refine le_of_forall_pos_le_add fun ε hε ↦ ?_
   have := prolateEigenvalues_le_of_count_le T W hε ((hcount ε hε).le.trans (Nat.zero_le n))
   linarith
 

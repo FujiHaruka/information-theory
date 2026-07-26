@@ -78,7 +78,7 @@ theorem exists_pointwise_orthonormal_of_orthonormal {k : ℕ} {T : ℝ}
       (∀ i, Function.support (g i) ⊆ Set.Icc (0 : ℝ) T) ∧
       (∀ i, MemLp (g i) 2 volume) ∧
       (∀ i j, (∫ t, g i t * g j t) = if i = j then (1 : ℝ) else 0) := by
-  refine ⟨fun i => ptRepr (Set.Icc (0 : ℝ) T) (e i), ?_, ?_, ?_⟩
+  refine ⟨fun i ↦ ptRepr (Set.Icc (0 : ℝ) T) (e i), ?_, ?_, ?_⟩
   · intro i; exact support_ptRepr_subset _ _
   · intro i; exact memLp_ptRepr measurableSet_Icc _
   · intro i j

@@ -34,7 +34,7 @@ would force every gain `= 1`), nor a constant/zero. It pins the fine per-coordin
 band-limited gain structure the water-filling converse consumes.
 @audit:ok -/
 noncomputable def bandGramEigenvalues (W : ℝ) {k : ℕ} (φ : Fin k → E) : Fin k → ℝ :=
-  (Matrix.isHermitian_gram ℂ fun i => (bandLimitSubspace W).starProjection (φ i)).eigenvalues
+  (Matrix.isHermitian_gram ℂ fun i ↦ (bandLimitSubspace W).starProjection (φ i)).eigenvalues
 
 /-- The image in `E` of the `i`-th eigenvector of the Gram matrix of `v`, i.e. the vector
 `eᵢ = ∑ₗ (wᵢ)ₗ • vₗ` where `wᵢ` is the `i`-th orthonormal eigenvector of `gram ℂ v`. These vectors
@@ -75,7 +75,7 @@ private lemma inner_gramEig_v {k : ℕ} (v : Fin k → E) (i l : Fin k) :
     have hsum : (∑ m, inner ℂ (v l) ((⇑(hG.eigenvectorBasis i)) m • v m))
         = ((Matrix.gram ℂ v) *ᵥ ⇑(hG.eigenvectorBasis i)) l := by
       simp only [Matrix.mulVec, dotProduct]
-      refine Finset.sum_congr rfl (fun m _ => ?_)
+      refine Finset.sum_congr rfl (fun m _ ↦ ?_)
       rw [inner_smul_right, Matrix.gram_apply, mul_comm]
     rw [hsum, hmv, Pi.smul_apply]
     simp [RCLike.real_smul_eq_coe_mul]
@@ -84,7 +84,7 @@ private lemma inner_gramEig_v {k : ℕ} (v : Fin k → E) (i l : Fin k) :
 /-- Each eigenvector image lies in any submodule containing the raw frame `v`. -/
 private lemma gramEig_mem {k : ℕ} (v : Fin k → E) (S : Submodule ℂ E) (hv : ∀ l, v l ∈ S)
     (i : Fin k) : gramEig v i ∈ S :=
-  Submodule.sum_mem _ fun l _ => Submodule.smul_mem _ _ (hv l)
+  Submodule.sum_mem _ fun l _ ↦ Submodule.smul_mem _ _ (hv l)
 
 /-- Count domination in the converse min-max direction: the number of band-limited Gram
 eigenvalues of an orthonormal, time-limited test family `φ` that exceed `c` is at most
@@ -104,15 +104,15 @@ min-max bound applies. Non-circular: no "codewords = prolate basis" assumption.
 theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < c)
     {k : ℕ} (φ : Fin k → E) (h_on : Orthonormal ℂ φ)
     (h_tl : ∀ i, φ i ∈ timeLimitSubspace T) :
-    (Finset.univ.filter (fun j => c < bandGramEigenvalues W φ j)).card ≤ prolateCount T W c := by
+    (Finset.univ.filter (fun j ↦ c < bandGramEigenvalues W φ j)).card ≤ prolateCount T W c := by
   classical
-  set v : Fin k → E := fun i => (bandLimitSubspace W).starProjection (φ i) with hvdef
+  set v : Fin k → E := fun i ↦ (bandLimitSubspace W).starProjection (φ i) with hvdef
   set hG := Matrix.isHermitian_gram ℂ v with hGdef
   rw [show bandGramEigenvalues W φ = hG.eigenvalues from rfl]
   set ν := hG.eigenvalues with hνdef
   -- The band-limited frame lies in `bandLimitSubspace W`, and so do the eigenvector images.
-  have hv_band : ∀ l, v l ∈ bandLimitSubspace W := fun l => Submodule.starProjection_apply_mem _ _
-  have he_band : ∀ i, gramEig v i ∈ bandLimitSubspace W := fun i =>
+  have hv_band : ∀ l, v l ∈ bandLimitSubspace W := fun l ↦ Submodule.starProjection_apply_mem _ _
+  have he_band : ∀ i, gramEig v i ∈ bandLimitSubspace W := fun i ↦
     gramEig_mem v (bandLimitSubspace W) hv_band i
   -- Subtype-level orthogonality of the eigenvector images.
   have he'_inner : ∀ j j' : {j : Fin k // c < ν j},
@@ -121,13 +121,13 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
     rw [inner_gramEig_gramEig v j.1 j'.1]
     by_cases h : j = j'
     · rw [if_pos h, if_pos (congrArg Subtype.val h)]
-    · rw [if_neg h, if_neg (fun hc => h (Subtype.ext hc))]
+    · rw [if_neg h, if_neg (fun hc ↦ h (Subtype.ext hc))]
   -- The realized high-eigenvalue subspace `S ⊆ E`.
-  set e' : {j : Fin k // c < ν j} → E := fun j => gramEig v j.1 with he'def
+  set e' : {j : Fin k // c < ν j} → E := fun j ↦ gramEig v j.1 with he'def
   set S := Submodule.span ℂ (Set.range e') with hSdef
   -- The eigenvector images over the high indices are orthogonal and nonzero, hence independent.
   have hlin : LinearIndependent ℂ e' := by
-    refine linearIndependent_of_ne_zero_of_inner_eq_zero (fun j hj0 => ?_) (fun j j' hjj' => ?_)
+    refine linearIndependent_of_ne_zero_of_inner_eq_zero (fun j hj0 ↦ ?_) (fun j j' hjj' ↦ ?_)
     · have h1 : inner ℂ (e' j) (e' j) = (ν j.1 : ℂ) := by
         rw [he'def, he'_inner j j, if_pos rfl]
       rw [hj0, inner_zero_left] at h1
@@ -143,7 +143,7 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
     -- `g` is band-limited (a combination of band-limited eigenvector images).
     have hg_band : g ∈ bandLimitSubspace W := by
       rw [← ha]
-      exact Submodule.sum_mem _ fun j _ => Submodule.smul_mem _ _ (he_band j.1)
+      exact Submodule.sum_mem _ fun j _ ↦ Submodule.smul_mem _ _ (he_band j.1)
     -- Frame coefficients against `φ` and against the projected frame `v` agree on band-limited `g`.
     have hPg : (bandLimitSubspace W).starProjection g = g :=
       Submodule.starProjection_eq_self_iff.mpr hg_band
@@ -157,7 +157,7 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
         = ∑ j, (starRingEnd ℂ (b j)) * (a j * (ν j.1 : ℂ)) := by
       intro b
       rw [← ha, sum_inner]
-      refine Finset.sum_congr rfl (fun j _ => ?_)
+      refine Finset.sum_congr rfl (fun j _ ↦ ?_)
       rw [inner_smul_left, inner_sum]
       congr 1
       simp_rw [he'def, inner_smul_right, he'_inner j]
@@ -167,7 +167,7 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
       have hgg : inner ℂ g g = ((∑ j, ‖a j‖ ^ 2 * ν j.1 : ℝ) : ℂ) := by
         nth_rewrite 1 [← ha]
         rw [hbil a, Complex.ofReal_sum]
-        refine Finset.sum_congr rfl (fun j _ => ?_)
+        refine Finset.sum_congr rfl (fun j _ ↦ ?_)
         have hcj : (starRingEnd ℂ) (a j) * a j = ((‖a j‖ ^ 2 : ℝ) : ℂ) := by
           rw [RCLike.conj_mul]; norm_cast
         rw [show (starRingEnd ℂ) (a j) * (a j * (ν j.1 : ℂ))
@@ -184,7 +184,7 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
               * ((ν j.1 : ℂ) * (starRingEnd ℂ) ((⇑(hG.eigenvectorBasis j.1)) i)) := by
         intro i
         rw [← ha, sum_inner]
-        refine Finset.sum_congr rfl (fun j _ => ?_)
+        refine Finset.sum_congr rfl (fun j _ ↦ ?_)
         rw [inner_smul_left]
         congr 1
         exact inner_gramEig_v v j.1 i
@@ -198,7 +198,7 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
             = inner ℂ (hG.eigenvectorBasis j.1) (hG.eigenvectorBasis j'.1) := by
           rw [EuclideanSpace.inner_eq_star_dotProduct]
           simp only [dotProduct, Pi.star_apply, RCLike.star_def]
-          exact Finset.sum_congr rfl (fun i _ => mul_comm _ _)
+          exact Finset.sum_congr rfl (fun i _ ↦ mul_comm _ _)
         rw [hconv]
         exact orthonormal_iff_ite.mp hG.eigenvectorBasis.orthonormal j.1 j'.1
       -- The complex bilinear identity `∑ᵢ ⟪g,vᵢ⟫ · conj⟪g,vᵢ⟫ = ↑(∑ⱼ ‖aⱼ‖² νⱼ²)`.
@@ -210,17 +210,17 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
                     * (⇑(hG.eigenvectorBasis j'.1)) i) := by
           intro i
           rw [hgvi i, map_sum, Finset.sum_mul_sum]
-          refine Finset.sum_congr rfl (fun j _ => Finset.sum_congr rfl (fun j' _ => ?_))
+          refine Finset.sum_congr rfl (fun j _ ↦ Finset.sum_congr rfl (fun j' _ ↦ ?_))
           rw [map_mul, map_mul, Complex.conj_conj, Complex.conj_ofReal, Complex.conj_conj]
           ring
-        rw [Finset.sum_congr rfl (fun i _ => hexpand i), Finset.sum_comm]
+        rw [Finset.sum_congr rfl (fun i _ ↦ hexpand i), Finset.sum_comm]
         rw [Complex.ofReal_sum]
-        refine Finset.sum_congr rfl (fun j _ => ?_)
+        refine Finset.sum_congr rfl (fun j _ ↦ ?_)
         rw [Finset.sum_comm]
         -- inner sum over `i` collapses via `hw_orth`, then over `j'` via the Kronecker delta.
         simp_rw [← Finset.mul_sum, hw_orth, Subtype.coe_inj, mul_ite, mul_one, mul_zero]
         rw [Finset.sum_ite_eq Finset.univ j
-          (fun j' => starRingEnd ℂ (a j) * a j' * (ν j.1 : ℂ) * (ν j'.1 : ℂ))]
+          (fun j' ↦ starRingEnd ℂ (a j) * a j' * (ν j.1 : ℂ) * (ν j'.1 : ℂ))]
         rw [if_pos (Finset.mem_univ _)]
         have hcj : (starRingEnd ℂ) (a j) * a j = ((‖a j‖ ^ 2 : ℝ) : ℂ) := by
           rw [RCLike.conj_mul]; norm_cast
@@ -232,7 +232,7 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
       have hsum_eq : ((∑ i, ‖inner ℂ g (v i)‖ ^ 2 : ℝ) : ℂ)
           = ∑ i, inner ℂ g (v i) * (starRingEnd ℂ) (inner ℂ g (v i)) := by
         rw [Complex.ofReal_sum]
-        refine Finset.sum_congr rfl (fun i _ => ?_)
+        refine Finset.sum_congr rfl (fun i _ ↦ ?_)
         rw [RCLike.mul_conj]
         norm_cast
       exact_mod_cast hsum_eq.trans hcomplex
@@ -244,7 +244,7 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
     -- Strict comparison `c ∑ⱼ‖aⱼ‖²νⱼ < ∑ⱼ‖aⱼ‖²νⱼ²`.
     have hlt : c * (∑ j, ‖a j‖ ^ 2 * ν j.1) < ∑ j, ‖a j‖ ^ 2 * (ν j.1) ^ 2 := by
       rw [Finset.mul_sum]
-      refine Finset.sum_lt_sum (fun j _ => ?_) ?_
+      refine Finset.sum_lt_sum (fun j _ ↦ ?_) ?_
       · nlinarith [mul_nonneg (mul_nonneg (sq_nonneg ‖a j‖) (hc.trans j.2).le)
           (sub_nonneg.mpr j.2.le)]
       · obtain ⟨j0, hj0⟩ := hexists
@@ -255,11 +255,11 @@ theorem gram_high_eigen_finrank_le_prolateCount (T W : ℝ) {c : ℝ} (hc : 0 < 
     calc c * ‖g‖ ^ 2 = c * (∑ j, ‖a j‖ ^ 2 * ν j.1) := by rw [hnorm]
       _ < ∑ j, ‖a j‖ ^ 2 * (ν j.1) ^ 2 := hlt
       _ = ∑ i, ‖inner ℂ g (v i)‖ ^ 2 := hframe.symm
-      _ = ∑ i, ‖inner ℂ g (φ i)‖ ^ 2 := Finset.sum_congr rfl (fun i _ => by rw [hgv i])
+      _ = ∑ i, ‖inner ℂ g (φ i)‖ ^ 2 := Finset.sum_congr rfl (fun i _ ↦ by rw [hgv i])
       _ ≤ (inner ℂ (timeBandLimitingOp T W g) g).re :=
           frame_form_le_op_form T W φ h_on h_tl g hg_band
   -- The count is `finrank S`, bounded by C1.
-  calc (Finset.univ.filter (fun j => c < ν j)).card
+  calc (Finset.univ.filter (fun j ↦ c < ν j)).card
       = Fintype.card {j : Fin k // c < ν j} := (Fintype.card_subtype _).symm
     _ = Module.finrank ℂ S := hcard.symm
     _ ≤ prolateCount T W c := finrank_le_prolateCount_of_form_gt T W hc S hS
@@ -274,7 +274,7 @@ class.
 @audit:ok -/
 noncomputable def testFnLift {k : ℕ} (φ : Fin k → ℝ → ℝ) (hmem : ∀ i, MemLp (φ i) 2 volume) :
     Fin k → E :=
-  fun i => ((hmem i).ofReal (K := ℂ)).toLp (fun t => ((φ i t : ℝ) : ℂ))
+  fun i ↦ ((hmem i).ofReal (K := ℂ)).toLp (fun t ↦ ((φ i t : ℝ) : ℂ))
 
 /-- Count domination for a real test family: for an orthonormal, `[0,T]`-supported real test
 family `φ`, the number of band-limited Gram eigenvalues of its complex lift exceeding `c` is at most
@@ -294,10 +294,10 @@ theorem gram_high_eigen_finrank_le_prolateCount_real (T W : ℝ) {c : ℝ} (hc :
     {k : ℕ} (φ : Fin k → ℝ → ℝ) (hmem : ∀ i, MemLp (φ i) 2 volume)
     (h_on : ∀ i j, (∫ t, φ i t * φ j t) = if i = j then (1 : ℝ) else 0)
     (h_supp : ∀ i, Function.support (φ i) ⊆ Set.Icc 0 T) :
-    (Finset.univ.filter (fun j => c < bandGramEigenvalues W (testFnLift φ hmem) j)).card
+    (Finset.univ.filter (fun j ↦ c < bandGramEigenvalues W (testFnLift φ hmem) j)).card
       ≤ prolateCount T W c := by
-  have hcoe : ∀ l, (testFnLift φ hmem l : ℝ → ℂ) =ᵐ[volume] fun t => ((φ l t : ℝ) : ℂ) :=
-    fun l => MemLp.coeFn_toLp _
+  have hcoe : ∀ l, (testFnLift φ hmem l : ℝ → ℂ) =ᵐ[volume] fun t ↦ ((φ l t : ℝ) : ℂ) :=
+    fun l ↦ MemLp.coeFn_toLp _
   -- Complex orthonormality of the lift transfers from the real integral orthonormality.
   have hψ_on : Orthonormal ℂ (testFnLift φ hmem) := by
     rw [orthonormal_iff_ite]
@@ -319,9 +319,9 @@ theorem gram_high_eigen_finrank_le_prolateCount_real (T W : ℝ) {c : ℝ} (hc :
   have hψ_tl : ∀ i, testFnLift φ hmem i ∈ timeLimitSubspace T := by
     intro i
     change (testFnLift φ hmem i : ℝ → ℂ) =ᵐ[volume.restrict {t : ℝ | t < 0 ∨ T < t}] 0
-    have h0 : (fun t => ((φ i t : ℝ) : ℂ)) =ᵐ[volume.restrict {t : ℝ | t < 0 ∨ T < t}] 0 := by
+    have h0 : (fun t ↦ ((φ i t : ℝ) : ℂ)) =ᵐ[volume.restrict {t : ℝ | t < 0 ∨ T < t}] 0 := by
       rw [Filter.EventuallyEq, ae_restrict_iff' hset]
-      refine Filter.Eventually.of_forall (fun t ht => ?_)
+      refine Filter.Eventually.of_forall (fun t ht ↦ ?_)
       have hφ0 : φ i t = 0 := by
         by_contra hne
         have hin := h_supp i (show t ∈ Function.support (φ i) from hne)

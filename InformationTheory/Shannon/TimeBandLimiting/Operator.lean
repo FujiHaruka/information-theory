@@ -54,20 +54,20 @@ theorem zeroOnLp_isClosed (S : Set ℝ) : IsClosed (zeroOnLp S : Set E) := by
   apply IsSeqClosed.isClosed
   intro f g hf hf_lim
   -- `hf n : ⇑(f n) =ᵐ[volume.restrict S] 0`, `hf_lim : Tendsto f atTop (𝓝 g)` in `L²`.
-  have hmeas : TendstoInMeasure volume (fun n => (f n : E)) Filter.atTop g :=
+  have hmeas : TendstoInMeasure volume (fun n ↦ (f n : E)) Filter.atTop g :=
     tendstoInMeasure_of_tendsto_Lp hf_lim
   obtain ⟨ns, _, hae⟩ := hmeas.exists_seq_tendsto_ae
   -- Membership of `g`: it vanishes a.e. on `S`.
   change (⇑g : ℝ → ℂ) =ᵐ[volume.restrict S] 0
   have hae' : ∀ᵐ x ∂(volume.restrict S),
-      Filter.Tendsto (fun i => (f (ns i) : ℝ → ℂ) x) Filter.atTop (nhds ((g : ℝ → ℂ) x)) :=
+      Filter.Tendsto (fun i ↦ (f (ns i) : ℝ → ℂ) x) Filter.atTop (nhds ((g : ℝ → ℂ) x)) :=
     ae_restrict_of_ae hae
   have hz : ∀ᵐ x ∂(volume.restrict S), ∀ i, (f (ns i) : ℝ → ℂ) x = 0 := by
     rw [ae_all_iff]
     intro i
     filter_upwards [hf (ns i)] with x hx using by simpa using hx
   filter_upwards [hae', hz] with x hx hxz
-  have hconst : Filter.Tendsto (fun i => (f (ns i) : ℝ → ℂ) x) Filter.atTop (nhds 0) := by
+  have hconst : Filter.Tendsto (fun i ↦ (f (ns i) : ℝ → ℂ) x) Filter.atTop (nhds 0) := by
     simp only [hxz]
     exact tendsto_const_nhds
   simpa using tendsto_nhds_unique hx hconst
@@ -178,7 +178,7 @@ every real `W`, the degenerate band being handled separately via
 `2W sincN(2W·)` factor is the ideal low-pass whose Fourier transform is `𝟙_[-W,W]`, i.e. the
 convolution kernel of the band-limiting `P_W`. -/
 noncomputable def sincConvKernel (T W : ℝ) (t s : ℝ) : ℂ :=
-  (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) t *
+  (Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ)) t *
     ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ)
 
 /-- The sinc integral operator `C = Q_T ∘ P_W` (band-limit, then time-limit). `A = P_W ∘ C`. -/
@@ -198,12 +198,12 @@ so the projection-uniqueness argument is written once here.
 @audit:ok -/
 theorem zeroOnLp_starProjection_apply_ae {S : Set ℝ} (hS : MeasurableSet S) (g : E) :
     ((zeroOnLp S).starProjection g : ℝ → ℂ) =ᵐ[volume]
-      Sᶜ.indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ) := by
+      Sᶜ.indicator (fun _ ↦ (1 : ℂ)) * (g : ℝ → ℂ) := by
   -- Candidate projection `P = 𝟙_{Sᶜ} · g` as an `Lp` element.
   have hmem : MemLp (Sᶜ.indicator (g : ℝ → ℂ)) 2 volume := (Lp.memLp g).indicator hS.compl
   set P : E := hmem.toLp _ with hP
   have hP_ae : (P : ℝ → ℂ) =ᵐ[volume] Sᶜ.indicator (g : ℝ → ℂ) := hmem.coeFn_toLp
-  have hind : Sᶜ.indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ) = Sᶜ.indicator (g : ℝ → ℂ) := by
+  have hind : Sᶜ.indicator (fun _ ↦ (1 : ℂ)) * (g : ℝ → ℂ) = Sᶜ.indicator (g : ℝ → ℂ) := by
     funext x
     by_cases hx : x ∈ Sᶜ <;> simp [Set.indicator_of_mem, Set.indicator_of_notMem, hx]
   rw [hind]
@@ -236,7 +236,7 @@ by the indicator of `[0,T]`. The instance `S = [0,T]ᶜ` of `zeroOnLp_starProjec
 @audit:ok -/
 theorem timeLimitProj_apply_ae (T : ℝ) (g : E) :
     ((timeLimitSubspace T).starProjection g : ℝ → ℂ) =ᵐ[volume]
-      (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) * (g : ℝ → ℂ) := by
+      (Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ)) * (g : ℝ → ℂ) := by
   have hScompl : {t : ℝ | t < 0 ∨ T < t} = (Set.Icc (0 : ℝ) T)ᶜ := by
     ext x
     simp only [Set.mem_setOf_eq, Set.mem_compl_iff, Set.mem_Icc, not_and, not_le]
@@ -313,7 +313,7 @@ entirely in the passage from the multiplier `𝟙_[-W,W]` to the kernel `2W sinc
 @audit:ok -/
 theorem fourier_bandLimitProj_apply_ae (W : ℝ) (f : E) :
     ((Lp.fourierTransformₗᵢ ℝ ℂ ((bandLimitSubspace W).starProjection f) : E) : ℝ → ℂ)
-      =ᵐ[volume] (Set.Icc (-W) W).indicator (fun _ => (1 : ℂ)) *
+      =ᵐ[volume] (Set.Icc (-W) W).indicator (fun _ ↦ (1 : ℂ)) *
         ((Lp.fourierTransformₗᵢ ℝ ℂ f : E) : ℝ → ℂ) := by
   rw [bandLimitProj_eq_fourier_conj, LinearIsometryEquiv.apply_symm_apply]
   have h := zeroOnLp_starProjection_apply_ae (measurableSet_setOf_lt_abs W)
@@ -341,7 +341,7 @@ theorem ae_ne_zero : ∀ᵐ x ∂(volume : Measure ℝ), x ≠ 0 := by
 
 theorem zeroOnLp_eq_bot_of_ae_mem {S : Set ℝ} (hS : ∀ᵐ x ∂(volume : Measure ℝ), x ∈ S) :
     zeroOnLp S = ⊥ := by
-  refine (Submodule.eq_bot_iff _).mpr fun g hg => ?_
+  refine (Submodule.eq_bot_iff _).mpr fun g hg ↦ ?_
   have hg' : (g : ℝ → ℂ) =ᵐ[volume.restrict S] 0 := hg
   rw [Measure.restrict_eq_self_of_ae_mem hS] at hg'
   exact (Lp.eq_zero_iff_ae_eq_zero (f := g)).mpr hg'
@@ -377,7 +377,7 @@ theorem bandLimitSubspace_eq_bot_of_nonpos {W : ℝ} (hW : W ≤ 0) : bandLimitS
 `P_W f`; being an `L²` function cut down to a bounded interval it is moreover integrable, which
 is what lets the `L¹ ∩ L²` Fourier bridge evaluate `P_W f` pointwise. -/
 noncomputable def bandLimitSpec (W : ℝ) (f : E) : ℝ → ℂ :=
-  (Set.Icc (-W) W).indicator (fun _ => (1 : ℂ)) *
+  (Set.Icc (-W) W).indicator (fun _ ↦ (1 : ℂ)) *
     ((Lp.fourierTransformₗᵢ ℝ ℂ f : E) : ℝ → ℂ)
 
 theorem bandLimitSpec_eq_indicator (W : ℝ) (f : E) :
@@ -414,7 +414,7 @@ theorem bandLimitProj_coeFn_ae_eq_fourierInv (W : ℝ) (f : E) :
 theorem inner_two_mul_specBoxcar_apply (W t ξ : ℝ) (hW : 0 < W) (z : ℂ) :
     inner ℂ ((2 * (W : ℂ)) * ShannonHartley.specBoxcar t (1 / (2 * W)) ξ) z
       = Complex.exp ((2 * Real.pi * (ξ * t) : ℝ) * Complex.I) *
-          ((Set.Icc (-W) W).indicator (fun _ => (1 : ℂ)) ξ * z) := by
+          ((Set.Icc (-W) W).indicator (fun _ ↦ (1 : ℂ)) ξ * z) := by
   have hW' : (W : ℝ) ≠ 0 := ne_of_gt hW
   have hhalf : 1 / (2 * (1 / (2 * W))) = W := by field_simp
   rw [ShannonHartley.specBoxcar, hhalf]
@@ -422,7 +422,7 @@ theorem inner_two_mul_specBoxcar_apply (W t ξ : ℝ) (hW : 0 < W) (z : ℂ) :
   · have hWC : (W : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hW'
     have hbox : (2 * (W : ℂ)) *
         ((Set.Icc (-W) W).indicator
-          (fun ζ : ℝ => (((1 / (2 * W) : ℝ)) : ℂ) *
+          (fun ζ : ℝ ↦ (((1 / (2 * W) : ℝ)) : ℂ) *
             Complex.exp ((-(2 * Real.pi * t * ζ) : ℝ) * Complex.I)) ξ)
         = Complex.exp ((-(2 * Real.pi * t * ξ) : ℝ) * Complex.I) := by
       rw [Set.indicator_of_mem hξ, ← mul_assoc]
@@ -445,7 +445,7 @@ theorem fourierInv_bandLimitSpec_eq (W : ℝ) (hW : 0 < W) (f : E) (t : ℝ) :
   have hΔ : (0:ℝ) < 1 / (2 * W) := by positivity
   -- `S` = the shifted/dilated sinc, `B = 𝓕 S` = the spectral boxcar at `t`.
   set S : E := (ShannonHartley.shiftSinc_memLp t (1 / (2 * W)) hΔ).toLp
-    (fun s => (NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℂ)) with hSdef
+    (fun s ↦ (NormalizedSinc.sincN ((s - t) / (1 / (2 * W))) : ℂ)) with hSdef
   set B : E := (ShannonHartley.specBoxcar_memLp t (1 / (2 * W)) hΔ 2).toLp
     (ShannonHartley.specBoxcar t (1 / (2 * W))) with hBdef
   have hFS : Lp.fourierTransformₗᵢ ℝ ℂ S = B :=
@@ -503,7 +503,7 @@ The degenerate `W = 0` band is a null set, where both sides vanish.
 @audit:ok -/
 theorem bandLimitProj_apply_ae (W : ℝ) (hW : 0 ≤ W) (f : E) :
     ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume]
-      fun t => ∫ s, ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ) *
+      fun t ↦ ∫ s, ((2 * W * NormalizedSinc.sincN (2 * W * (t - s)) : ℝ) : ℂ) *
         (f : ℝ → ℂ) s ∂volume := by
   rcases eq_or_lt_of_le hW with hW0 | hWpos
   · -- `W = 0`: the band `[-0,0] = {0}` is a null set, so both sides vanish.
@@ -583,7 +583,7 @@ theorem bandLimitProj_star (W : ℝ) (f : E) :
     filter_upwards [Lp.coeFn_star f] with s hs
     rw [hs, Pi.star_apply, map_mul, Complex.conj_ofReal, Complex.star_def]
   · -- `W < 0`: the band is empty, `P_W = 0`, and both sides collapse.
-    have hbot : ∀ g : E, (bandLimitSubspace W).starProjection g = 0 := fun g =>
+    have hbot : ∀ g : E, (bandLimitSubspace W).starProjection g = 0 := fun g ↦
       (Submodule.eq_bot_iff _).mp (bandLimitSubspace_eq_bot_of_nonpos hW.le) _
         (Submodule.starProjection_apply_mem _ g)
     rw [hbot, hbot, star_zero_Lp]
@@ -605,8 +605,8 @@ integrable `2/(1 + x²)`. Mathlib's `Real.integrable_sinc` is finite-measure-onl
 `L²` fact is built here.
 @audit:ok -/
 theorem sincN_memLp_two :
-    MemLp (fun x : ℝ => (NormalizedSinc.sincN x : ℂ)) 2 volume := by
-  have hcont : Continuous (fun x : ℝ => (NormalizedSinc.sincN x : ℂ)) :=
+    MemLp (fun x : ℝ ↦ (NormalizedSinc.sincN x : ℂ)) 2 volume := by
+  have hcont : Continuous (fun x : ℝ ↦ (NormalizedSinc.sincN x : ℂ)) :=
     Complex.continuous_ofReal.comp NormalizedSinc.continuous_sincN
   -- Pointwise majorant `sincN x ^ 2 ≤ 2 / (1 + x ^ 2)`.
   have hpt : ∀ x : ℝ, NormalizedSinc.sincN x ^ 2 ≤ 2 / (1 + x ^ 2) := by
@@ -630,7 +630,7 @@ theorem sincN_memLp_two :
       rw [le_div_iff₀ hden, div_mul_eq_mul_div, one_mul, div_le_iff₀ hpx2]
       nlinarith [hπ2, hx1, sq_nonneg x]
   rw [memLp_two_iff_integrable_sq_norm hcont.aestronglyMeasurable]
-  have hg : Integrable (fun x : ℝ => 2 / (1 + x ^ 2)) volume := by
+  have hg : Integrable (fun x : ℝ ↦ 2 / (1 + x ^ 2)) volume := by
     simp_rw [div_eq_mul_inv]
     exact integrable_inv_one_add_sq.const_mul 2
   refine hg.mono' ((continuous_norm.comp hcont).pow 2).aestronglyMeasurable ?_
@@ -650,14 +650,14 @@ Hypothesis-free in `T` and `W`: the degenerate `T < 0` (empty `[0,T]`, zero mass
 (zero kernel) cases are both covered.
 @audit:ok -/
 theorem sincConvKernel_memLp (T W : ℝ) :
-    MemLp (fun p : ℝ × ℝ => sincConvKernel T W p.1 p.2) 2 (volume.prod volume) := by
+    MemLp (fun p : ℝ × ℝ ↦ sincConvKernel T W p.1 p.2) 2 (volume.prod volume) := by
   -- The ideal low-pass factor `2W sincN(2W·)`, as a one-variable function.
-  set g : ℝ → ℂ := fun u => ((2 * W * NormalizedSinc.sincN (2 * W * u) : ℝ) : ℂ) with hg_def
+  set g : ℝ → ℂ := fun u ↦ ((2 * W * NormalizedSinc.sincN (2 * W * u) : ℝ) : ℂ) with hg_def
   have hg_cont : Continuous g := by
     rw [hg_def]; exact Complex.continuous_ofReal.comp (by fun_prop)
   have hg_aesm : AEStronglyMeasurable g volume := hg_cont.aestronglyMeasurable
   -- `sincN` is square-integrable (the 1-D crux, `sincN_memLp_two`).
-  have hsincN_sq_int : Integrable (fun x : ℝ => NormalizedSinc.sincN x ^ 2) volume := by
+  have hsincN_sq_int : Integrable (fun x : ℝ ↦ NormalizedSinc.sincN x ^ 2) volume := by
     have h := (memLp_two_iff_integrable_sq_norm
       (Complex.continuous_ofReal.comp NormalizedSinc.continuous_sincN).aestronglyMeasurable).mp
       sincN_memLp_two
@@ -667,18 +667,18 @@ theorem sincConvKernel_memLp (T W : ℝ) :
   -- `g ∈ L²(ℝ)`: rescale `sincN ∈ L²` by the sample rate `2W` (Plancherel of the ideal low-pass).
   have hg_memLp : MemLp g 2 volume := by
     rcases eq_or_ne (2 * W) 0 with h2W | h2W
-    · have hz : g = (fun _ => (0 : ℂ)) := by
+    · have hz : g = (fun _ ↦ (0 : ℂ)) := by
         funext u; simp only [hg_def]; rw [h2W]; simp
       rw [hz]; exact MemLp.zero'
     · rw [memLp_two_iff_integrable_sq_norm hg_aesm]
-      have hφ : Integrable (fun x : ℝ => (2 * W * NormalizedSinc.sincN x) ^ 2) volume := by
-        have hpow : (fun x : ℝ => (2 * W * NormalizedSinc.sincN x) ^ 2)
-            = (fun x : ℝ => (2 * W) ^ 2 * NormalizedSinc.sincN x ^ 2) := by
+      have hφ : Integrable (fun x : ℝ ↦ (2 * W * NormalizedSinc.sincN x) ^ 2) volume := by
+        have hpow : (fun x : ℝ ↦ (2 * W * NormalizedSinc.sincN x) ^ 2)
+            = (fun x : ℝ ↦ (2 * W) ^ 2 * NormalizedSinc.sincN x ^ 2) := by
           funext x; rw [mul_pow]
         rw [hpow]; exact hsincN_sq_int.const_mul _
       have hcomp :=
         (integrable_comp_mul_left_iff
-          (fun x : ℝ => (2 * W * NormalizedSinc.sincN x) ^ 2) h2W).mpr hφ
+          (fun x : ℝ ↦ (2 * W * NormalizedSinc.sincN x) ^ 2) h2W).mpr hφ
       refine hcomp.congr ?_
       filter_upwards with u
       simp only [hg_def, Complex.norm_real, Real.norm_eq_abs, sq_abs]
@@ -687,21 +687,21 @@ theorem sincConvKernel_memLp (T W : ℝ) :
     lintegral_rpow_enorm_lt_top_of_eLpNorm_lt_top (by norm_num) (by norm_num) hg_memLp.2
   set C : ℝ≥0∞ := ∫⁻ s, ‖g s‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume with hC_def
   -- The product kernel is a.e.-strongly-measurable.
-  have hk_meas : AEStronglyMeasurable (fun p : ℝ × ℝ => sincConvKernel T W p.1 p.2)
+  have hk_meas : AEStronglyMeasurable (fun p : ℝ × ℝ ↦ sincConvKernel T W p.1 p.2)
       (volume.prod volume) := by
     simp only [sincConvKernel]
     refine AEStronglyMeasurable.mul ?_ ?_
     · exact ((measurable_const.indicator measurableSet_Icc).comp
         measurable_fst).aestronglyMeasurable
     · exact (Complex.continuous_ofReal.comp (by fun_prop :
-        Continuous (fun p : ℝ × ℝ =>
+        Continuous (fun p : ℝ × ℝ ↦
           2 * W * NormalizedSinc.sincN (2 * W * (p.1 - p.2))))).aestronglyMeasurable
   refine ⟨hk_meas, ?_⟩
   rw [eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num)]
   -- Per-`t` inner integral: `∫⁻ s, ‖k t s‖ₑ² ds = 𝟙_[0,T](t) · C`.
   have hinner : ∀ t : ℝ,
       (∫⁻ s, ‖sincConvKernel T W t s‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume)
-        = (Set.Icc (0 : ℝ) T).indicator (fun _ => C) t := by
+        = (Set.Icc (0 : ℝ) T).indicator (fun _ ↦ C) t := by
     intro t
     by_cases ht : t ∈ Set.Icc (0 : ℝ) T
     · rw [Set.indicator_of_mem ht]
@@ -712,7 +712,7 @@ theorem sincConvKernel_memLp (T W : ℝ) :
           simp only [sincConvKernel, Set.indicator_of_mem ht, one_mul, hg_def]
         rw [hks]
       rw [lintegral_congr hval, hC_def]
-      exact lintegral_sub_left_eq_self (fun u => ‖g u‖ₑ ^ (2 : ℝ≥0∞).toReal) t
+      exact lintegral_sub_left_eq_self (fun u ↦ ‖g u‖ₑ ^ (2 : ℝ≥0∞).toReal) t
     · rw [Set.indicator_of_notMem ht]
       have hval : ∀ s, ‖sincConvKernel T W t s‖ₑ ^ (2 : ℝ≥0∞).toReal = 0 := by
         intro s
@@ -724,7 +724,7 @@ theorem sincConvKernel_memLp (T W : ℝ) :
   calc (∫⁻ p : ℝ × ℝ, ‖sincConvKernel T W p.1 p.2‖ₑ ^ (2 : ℝ≥0∞).toReal ∂(volume.prod volume))
       ≤ ∫⁻ t, ∫⁻ s, ‖sincConvKernel T W t s‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume ∂volume :=
         lintegral_prod_le _
-    _ = ∫⁻ t, (Set.Icc (0 : ℝ) T).indicator (fun _ => C) t ∂volume := lintegral_congr hinner
+    _ = ∫⁻ t, (Set.Icc (0 : ℝ) T).indicator (fun _ ↦ C) t ∂volume := lintegral_congr hinner
     _ = ∫⁻ _ in Set.Icc (0 : ℝ) T, C ∂volume := lintegral_indicator measurableSet_Icc _
     _ = C * volume (Set.Icc (0 : ℝ) T) := setLIntegral_const _ _
     _ < ∞ := ENNReal.mul_lt_top hC_lt (by rw [Real.volume_Icc]; exact ENNReal.ofReal_lt_top)
@@ -750,13 +750,13 @@ abbrev L2Kernel : Type := Lp ℂ 2 ((volume : Measure ℝ).prod (volume : Measur
 /-- The integral operator attached to a kernel, at the level of raw functions:
 `f ↦ (t ↦ ∫ k(t,s) f(s) ds)`. -/
 noncomputable def l2KernelApply (κ : L2Kernel) (f : E) : ℝ → ℂ :=
-  fun t => ∫ s, (κ : ℝ × ℝ → ℂ) (t, s) * (f : ℝ → ℂ) s ∂volume
+  fun t ↦ ∫ s, (κ : ℝ × ℝ → ℂ) (t, s) * (f : ℝ → ℂ) s ∂volume
 
 theorem l2Kernel_slice_memLp (κ : L2Kernel) :
-    ∀ᵐ t ∂(volume : Measure ℝ), MemLp (fun s => (κ : ℝ × ℝ → ℂ) (t, s)) 2 volume := by
+    ∀ᵐ t ∂(volume : Measure ℝ), MemLp (fun s ↦ (κ : ℝ × ℝ → ℂ) (t, s)) 2 volume := by
   have hsm : AEStronglyMeasurable (κ : ℝ × ℝ → ℂ) (volume.prod volume) := (Lp.memLp κ).1
   have hae := hsm.prodMk_left (ν := (volume : Measure ℝ))
-  have hmeas : AEMeasurable (fun p : ℝ × ℝ => ‖(κ : ℝ × ℝ → ℂ) p‖ₑ ^ (2 : ℝ≥0∞).toReal)
+  have hmeas : AEMeasurable (fun p : ℝ × ℝ ↦ ‖(κ : ℝ × ℝ → ℂ) p‖ₑ ^ (2 : ℝ≥0∞).toReal)
       (volume.prod volume) := hsm.enorm.pow_const _
   have htop : (∫⁻ p, ‖(κ : ℝ × ℝ → ℂ) p‖ₑ ^ (2 : ℝ≥0∞).toReal ∂(volume.prod volume)) < ∞ :=
     (eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num)).mp
@@ -770,13 +770,13 @@ theorem l2Kernel_slice_memLp (κ : L2Kernel) :
 
 theorem l2Kernel_integrable (κ : L2Kernel) (f : E) :
     ∀ᵐ t ∂(volume : Measure ℝ),
-      Integrable (fun s => (κ : ℝ × ℝ → ℂ) (t, s) * (f : ℝ → ℂ) s) volume := by
+      Integrable (fun s ↦ (κ : ℝ × ℝ → ℂ) (t, s) * (f : ℝ → ℂ) s) volume := by
   filter_upwards [l2Kernel_slice_memLp κ] with t ht
   exact ht.integrable_mul (Lp.memLp f)
 
 theorem l2KernelApply_aestronglyMeasurable (κ : L2Kernel) (f : E) :
     AEStronglyMeasurable (l2KernelApply κ f) volume := by
-  have h : AEStronglyMeasurable (fun p : ℝ × ℝ => (κ : ℝ × ℝ → ℂ) p * (f : ℝ → ℂ) p.2)
+  have h : AEStronglyMeasurable (fun p : ℝ × ℝ ↦ (κ : ℝ × ℝ → ℂ) p * (f : ℝ → ℂ) p.2)
       (volume.prod volume) :=
     (Lp.memLp κ).1.mul
       ((Lp.memLp f).1.comp_quasiMeasurePreserving Measure.quasiMeasurePreserving_snd)
@@ -786,9 +786,9 @@ theorem l2KernelApply_eLpNorm_le (κ : L2Kernel) (f : E) :
     eLpNorm (l2KernelApply κ f) 2 volume
       ≤ eLpNorm (κ : ℝ × ℝ → ℂ) 2 (volume.prod volume) * eLpNorm (f : ℝ → ℂ) 2 volume := by
   set D : ℝ≥0∞ := ∫⁻ s, ‖(f : ℝ → ℂ) s‖ₑ ^ (2 : ℝ) ∂volume with hD
-  set A : ℝ → ℝ≥0∞ := fun t => ∫⁻ s, ‖(κ : ℝ × ℝ → ℂ) (t, s)‖ₑ ^ (2 : ℝ) ∂volume with hA
-  have hfm : AEMeasurable (fun s => ‖(f : ℝ → ℂ) s‖ₑ) volume := (Lp.memLp f).1.enorm
-  have hκm : AEMeasurable (fun p : ℝ × ℝ => ‖(κ : ℝ × ℝ → ℂ) p‖ₑ ^ (2 : ℝ))
+  set A : ℝ → ℝ≥0∞ := fun t ↦ ∫⁻ s, ‖(κ : ℝ × ℝ → ℂ) (t, s)‖ₑ ^ (2 : ℝ) ∂volume with hA
+  have hfm : AEMeasurable (fun s ↦ ‖(f : ℝ → ℂ) s‖ₑ) volume := (Lp.memLp f).1.enorm
+  have hκm : AEMeasurable (fun p : ℝ × ℝ ↦ ‖(κ : ℝ × ℝ → ℂ) p‖ₑ ^ (2 : ℝ))
       (volume.prod volume) := (Lp.memLp κ).1.enorm.pow_const _
   -- Cauchy–Schwarz on each slice: `‖∫ k(t,s) f(s) ds‖ ≤ ‖k(t,·)‖₂ · ‖f‖₂`.
   have hpt : ∀ᵐ t ∂(volume : Measure ℝ),
@@ -798,7 +798,7 @@ theorem l2KernelApply_eLpNorm_le (κ : L2Kernel) (f : E) :
       calc ‖l2KernelApply κ f t‖ₑ
           ≤ ∫⁻ s, ‖(κ : ℝ × ℝ → ℂ) (t, s) * (f : ℝ → ℂ) s‖ₑ ∂volume :=
             enorm_integral_le_lintegral_enorm _
-        _ = ∫⁻ s, ((fun u => ‖(κ : ℝ × ℝ → ℂ) (t, u)‖ₑ) * fun u => ‖(f : ℝ → ℂ) u‖ₑ) s ∂volume := by
+        _ = ∫⁻ s, ((fun u ↦ ‖(κ : ℝ × ℝ → ℂ) (t, u)‖ₑ) * fun u ↦ ‖(f : ℝ → ℂ) u‖ₑ) s ∂volume := by
             simp [enorm_mul]
         _ ≤ A t ^ (1 / 2 : ℝ) * D ^ (1 / 2 : ℝ) :=
             ENNReal.lintegral_mul_le_Lp_mul_Lq volume Real.HolderConjugate.two_two ht.enorm hfm
@@ -867,7 +867,7 @@ theorem l2KernelLin_coeFn (κ : L2Kernel) (f : E) :
 noncomputable def l2KernelBilin : L2Kernel →ₗ[ℂ] (E →ₗ[ℂ] E) where
   toFun := l2KernelLin
   map_add' κ κ' := by
-    refine LinearMap.ext fun f => ?_
+    refine LinearMap.ext fun f ↦ ?_
     rw [LinearMap.add_apply]
     refine Lp.ext ?_
     have hae : ∀ᵐ t ∂(volume : Measure ℝ), ∀ᵐ s ∂(volume : Measure ℝ),
@@ -888,7 +888,7 @@ noncomputable def l2KernelBilin : L2Kernel →ₗ[ℂ] (E →ₗ[ℂ] E) where
     filter_upwards [hs] with s hsv
     rw [hsv, add_mul]
   map_smul' c κ := by
-    refine LinearMap.ext fun f => ?_
+    refine LinearMap.ext fun f ↦ ?_
     rw [RingHom.id_apply, LinearMap.smul_apply]
     refine Lp.ext ?_
     have hae : ∀ᵐ t ∂(volume : Measure ℝ), ∀ᵐ s ∂(volume : Measure ℝ),
@@ -946,19 +946,19 @@ theorem l2KernelOp_indicator_prod_isCompact {A B : Set ℝ} (hA : MeasurableSet 
     rw [hzero, map_zero]
     exact isCompactOperator_zero
   · have hABm : (volume : Measure ℝ) A * volume B ≠ ∞ := by rw [← Measure.prod_prod]; exact hAB
-    have hA0 : (volume : Measure ℝ) A ≠ 0 := fun h => hne0 (by rw [h, zero_mul])
-    have hB0 : (volume : Measure ℝ) B ≠ 0 := fun h => hne0 (by rw [h, mul_zero])
-    have hAf : (volume : Measure ℝ) A ≠ ∞ := fun h => hABm (by rw [h, ENNReal.top_mul hB0])
-    have hBf : (volume : Measure ℝ) B ≠ ∞ := fun h => hABm (by rw [h, ENNReal.mul_top hA0])
+    have hA0 : (volume : Measure ℝ) A ≠ 0 := fun h ↦ hne0 (by rw [h, zero_mul])
+    have hB0 : (volume : Measure ℝ) B ≠ 0 := fun h ↦ hne0 (by rw [h, mul_zero])
+    have hAf : (volume : Measure ℝ) A ≠ ∞ := fun h ↦ hABm (by rw [h, ENNReal.top_mul hB0])
+    have hBf : (volume : Measure ℝ) B ≠ ∞ := fun h ↦ hABm (by rw [h, ENNReal.mul_top hA0])
     set gA : E := indicatorConstLp 2 hA hAf (1 : ℂ) with hgA_def
     set gB : E := indicatorConstLp 2 hB hBf (1 : ℂ) with hgB_def
     set φ : E →L[ℂ] ℂ := c • (innerSL ℂ gB) with hφ_def
     set ψ : ℂ →L[ℂ] E := (ContinuousLinearMap.id ℂ ℂ).smulRight gA with hψ_def
     have hEq : l2KernelOp (indicatorConstLp 2 (hA.prod hB) hAB c) = ψ ∘L φ := by
-      refine ContinuousLinearMap.ext fun f => Lp.ext ?_
+      refine ContinuousLinearMap.ext fun f ↦ Lp.ext ?_
       -- The functional: `⟪𝟙_B, f⟫ = ∫_B f`.
       have hinner : (innerSL ℂ gB) f
-          = ∫ s, B.indicator (fun _ => (1 : ℂ)) s * (f : ℝ → ℂ) s ∂volume := by
+          = ∫ s, B.indicator (fun _ ↦ (1 : ℂ)) s * (f : ℝ → ℂ) s ∂volume := by
         simp only [coe_innerSL_apply]
         rw [MeasureTheory.L2.inner_def]
         refine integral_congr_ae ?_
@@ -969,7 +969,7 @@ theorem l2KernelOp_indicator_prod_isCompact {A B : Set ℝ} (hA : MeasurableSet 
       -- The a.e. shape of the kernel.
       have hker : ∀ᵐ t ∂(volume : Measure ℝ), ∀ᵐ s ∂(volume : Measure ℝ),
           ((indicatorConstLp 2 (hA.prod hB) hAB c : L2Kernel) : ℝ × ℝ → ℂ) (t, s)
-            = (A ×ˢ B).indicator (fun _ => c) (t, s) :=
+            = (A ×ˢ B).indicator (fun _ ↦ c) (t, s) :=
         Measure.ae_ae_of_ae_prod indicatorConstLp_coeFn
       filter_upwards [l2KernelOp_apply_ae (indicatorConstLp 2 (hA.prod hB) hAB c) f,
         Lp.coeFn_smul (φ f) gA, (indicatorConstLp_coeFn : (gA : ℝ → ℂ) =ᵐ[volume] _), hker]
@@ -983,16 +983,16 @@ theorem l2KernelOp_indicator_prod_isCompact {A B : Set ℝ} (hA : MeasurableSet 
         Pi.smul_apply, smul_eq_mul, hinner]
       have hrw : (∫ s, ((indicatorConstLp 2 (hA.prod hB) hAB c : L2Kernel) : ℝ × ℝ → ℂ) (t, s)
           * (f : ℝ → ℂ) s ∂volume)
-          = ∫ s, (A ×ˢ B).indicator (fun _ => c) (t, s) * (f : ℝ → ℂ) s ∂volume :=
+          = ∫ s, (A ×ˢ B).indicator (fun _ ↦ c) (t, s) * (f : ℝ → ℂ) s ∂volume :=
         integral_congr_ae (by filter_upwards [hs] with s hsv using by rw [hsv])
       rw [hrw]
       by_cases htA : t ∈ A
       · rw [Set.indicator_of_mem htA, mul_one, ← MeasureTheory.integral_const_mul]
-        refine integral_congr_ae (Filter.Eventually.of_forall fun s => ?_)
+        refine integral_congr_ae (Filter.Eventually.of_forall fun s ↦ ?_)
         by_cases hsB : s ∈ B <;>
           simp [Set.mem_prod, htA, hsB, Set.indicator_of_mem, Set.indicator_of_notMem]
       · rw [Set.indicator_of_notMem htA, mul_zero]
-        have hz : ∀ s : ℝ, (A ×ˢ B).indicator (fun _ => c) (t, s) * (f : ℝ → ℂ) s = 0 := by
+        have hz : ∀ s : ℝ, (A ×ˢ B).indicator (fun _ ↦ c) (t, s) * (f : ℝ → ℂ) s = 0 := by
           intro s; simp [Set.mem_prod, htA, Set.indicator_of_notMem]
         simp [hz]
     rw [hEq]
@@ -1050,7 +1050,7 @@ theorem kernelBox_mono : Monotone kernelBox := by
   exact ⟨Set.Icc_subset_Icc (by linarith) h h1, Set.Icc_subset_Icc (by linarith) h h2⟩
 
 theorem iUnion_kernelBox : (⋃ R : ℕ, kernelBox R) = Set.univ := by
-  refine Set.eq_univ_of_forall fun p => Set.mem_iUnion.mpr ?_
+  refine Set.eq_univ_of_forall fun p ↦ Set.mem_iUnion.mpr ?_
   obtain ⟨R, hR⟩ := exists_nat_ge (max |p.1| |p.2|)
   have h1 := abs_le.mp ((le_max_left |p.1| |p.2|).trans hR)
   have h2 := abs_le.mp ((le_max_right |p.1| |p.2|).trans hR)
@@ -1062,7 +1062,7 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
   set V : Submodule ℂ L2Kernel :=
     Submodule.comap (l2KernelOp : L2Kernel →L[ℂ] (E →L[ℂ] E)).toLinearMap
       (compactOperator (RingHom.id ℂ) E E) with hV_def
-  have hVmem : ∀ ν : L2Kernel, ν ∈ V ↔ IsCompactOperator (l2KernelOp ν) := fun _ => Iff.rfl
+  have hVmem : ∀ ν : L2Kernel, ν ∈ V ↔ IsCompactOperator (l2KernelOp ν) := fun _ ↦ Iff.rfl
   have hVclosed : IsClosed (V : Set L2Kernel) := by
     have hpre : (V : Set L2Kernel)
         = (l2KernelOp : L2Kernel → (E →L[ℂ] E)) ⁻¹' {f : E →L[ℂ] E | IsCompactOperator f} := rfl
@@ -1071,17 +1071,17 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
   -- Step 1: rectangles.
   have hrect : ∀ (A B : Set ℝ) (hA : MeasurableSet A) (hB : MeasurableSet B)
       (h : (volume.prod volume) (A ×ˢ B) ≠ ∞),
-      indicatorConstLp 2 (hA.prod hB) h (1 : ℂ) ∈ V := fun A B hA hB h =>
+      indicatorConstLp 2 (hA.prod hB) h (1 : ℂ) ∈ V := fun A B hA hB h ↦
     (hVmem _).mpr (l2KernelOp_indicator_prod_isCompact hA hB h 1)
   have hboxV : ∀ R : ℕ,
-      indicatorConstLp 2 (kernelBox_measurableSet R) (kernelBox_ne_top R) (1 : ℂ) ∈ V := fun R =>
+      indicatorConstLp 2 (kernelBox_measurableSet R) (kernelBox_ne_top R) (1 : ℂ) ∈ V := fun R ↦
     hrect _ _ measurableSet_Icc measurableSet_Icc (kernelBox_ne_top R)
   -- Step 2: every measurable set, cut down to a box (π-λ induction over rectangles).
   have key : ∀ (u : Set (ℝ × ℝ)) (hu : MeasurableSet u), ∀ R : ℕ,
       indicatorConstLp 2 (hu.inter (kernelBox_measurableSet R)) (kernelBox_inter_ne_top u R)
         (1 : ℂ) ∈ V := by
     refine MeasurableSpace.induction_on_inter
-      (C := fun u hu => ∀ R : ℕ, indicatorConstLp 2 (hu.inter (kernelBox_measurableSet R))
+      (C := fun u hu ↦ ∀ R : ℕ, indicatorConstLp 2 (hu.inter (kernelBox_measurableSet R))
         (kernelBox_inter_ne_top u R) (1 : ℂ) ∈ V)
       generateFrom_prod.symm isPiSystem_prod ?_ ?_ ?_ ?_
     · -- `∅`
@@ -1103,7 +1103,7 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
     · -- complements
       intro t htm ih R
       have hdisj : Disjoint (tᶜ ∩ kernelBox R) (t ∩ kernelBox R) := by
-        refine Set.disjoint_left.mpr fun x hx hx' => ?_
+        refine Set.disjoint_left.mpr fun x hx hx' ↦ ?_
         exact hx.1 hx'.1
       have hsum : indicatorConstLp 2 (kernelBox_measurableSet R) (kernelBox_ne_top R) (1 : ℂ)
           = indicatorConstLp 2 (htm.compl.inter (kernelBox_measurableSet R))
@@ -1121,19 +1121,19 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
       rwa [hsum, add_sub_cancel_right] at this
     · -- countable disjoint unions
       intro f hfd hfm ih R
-      set Es : ℕ → Set (ℝ × ℝ) := fun i => f i ∩ kernelBox R with hEs
-      have hEsm : ∀ i, MeasurableSet (Es i) := fun i =>
+      set Es : ℕ → Set (ℝ × ℝ) := fun i ↦ f i ∩ kernelBox R with hEs
+      have hEsm : ∀ i, MeasurableSet (Es i) := fun i ↦
         (hfm i).inter (kernelBox_measurableSet R)
-      have hEsfin : ∀ i, (volume.prod volume) (Es i) ≠ ∞ := fun i => kernelBox_inter_ne_top _ R
-      have hEsd : Pairwise (fun i j => Disjoint (Es i) (Es j)) := fun i j hij =>
+      have hEsfin : ∀ i, (volume.prod volume) (Es i) ≠ ∞ := fun i ↦ kernelBox_inter_ne_top _ R
+      have hEsd : Pairwise (fun i j ↦ Disjoint (Es i) (Es j)) := fun i j hij ↦
         ((hfd hij).mono Set.inter_subset_left Set.inter_subset_left)
       -- Partial unions are finite sums of rectangle-supported pieces.
-      have hUm : ∀ n : ℕ, MeasurableSet (⋃ i ∈ Finset.range n, Es i) := fun n =>
-        Finset.measurableSet_biUnion _ fun i _ => hEsm i
+      have hUm : ∀ n : ℕ, MeasurableSet (⋃ i ∈ Finset.range n, Es i) := fun n ↦
+        Finset.measurableSet_biUnion _ fun i _ ↦ hEsm i
       have hUfin : ∀ n : ℕ, (volume.prod volume) (⋃ i ∈ Finset.range n, Es i) ≠ ∞ := by
         intro n
         refine ne_top_of_le_ne_top (kernelBox_ne_top R) (measure_mono ?_)
-        exact Set.iUnion₂_subset fun i _ => Set.inter_subset_right
+        exact Set.iUnion₂_subset fun i _ ↦ Set.inter_subset_right
       have hpartial : ∀ n : ℕ, indicatorConstLp 2 (hUm n) (hUfin n) (1 : ℂ)
           = ∑ i ∈ Finset.range n, indicatorConstLp 2 (hEsm i) (hEsfin i) (1 : ℂ) := by
         intro n
@@ -1143,7 +1143,7 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
           exact indicatorConstLp_of_measure_zero _ _ (by simp) 1
         | succ n ih2 =>
           have hdisj : Disjoint (Es n) (⋃ i ∈ Finset.range n, Es i) := by
-            refine Set.disjoint_iUnion₂_right.mpr fun i hi => ?_
+            refine Set.disjoint_iUnion₂_right.mpr fun i hi ↦ ?_
             exact hEsd (by simpa using (Finset.mem_range.mp hi).ne')
           have hsplit : indicatorConstLp 2 (hUm (n + 1)) (hUfin (n + 1)) (1 : ℂ)
               = indicatorConstLp 2 (hEsm n) (hEsfin n) (1 : ℂ)
@@ -1156,14 +1156,14 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
       have hUV : ∀ n : ℕ, indicatorConstLp 2 (hUm n) (hUfin n) (1 : ℂ) ∈ V := by
         intro n
         rw [hpartial n]
-        exact V.sum_mem fun i _ => ih i R
+        exact V.sum_mem fun i _ ↦ ih i R
       -- The partial unions converge in `L²` to the full union.
       have hUnionm : MeasurableSet ((⋃ i, f i) ∩ kernelBox R) :=
         (MeasurableSet.iUnion hfm).inter (kernelBox_measurableSet R)
       have hset : (⋃ i, f i) ∩ kernelBox R = ⋃ i, Es i := by
         rw [hEs, Set.iUnion_inter]
       have htend : Filter.Tendsto
-          (fun n => (volume.prod volume) ((⋃ i ∈ Finset.range n, Es i) ∆ (⋃ i, Es i)))
+          (fun n ↦ (volume.prod volume) ((⋃ i ∈ Finset.range n, Es i) ∆ (⋃ i, Es i)))
           Filter.atTop (nhds 0) := by
         haveI : IsFiniteMeasure ((volume.prod volume).restrict (kernelBox R)) := by
           refine ⟨?_⟩
@@ -1171,7 +1171,7 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
           exact lt_top_iff_ne_top.mpr (kernelBox_ne_top R)
         have hbase := tendsto_measure_biUnion_Ici_zero_of_pairwise_disjoint
           (μ := (volume.prod volume).restrict (kernelBox R))
-          (fun i => (hEsm i).nullMeasurableSet) (fun i j hij => hEsd hij)
+          (fun i ↦ (hEsm i).nullMeasurableSet) (fun i j hij ↦ hEsd hij)
         have hsymm : ∀ n : ℕ, ((⋃ i ∈ Finset.range n, Es i) ∆ (⋃ i, Es i)) = ⋃ i ≥ n, Es i := by
           intro n
           ext x
@@ -1186,13 +1186,13 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
             refine Or.inr ⟨⟨i, hxi⟩, ?_⟩
             rintro ⟨j, hj, hxj⟩
             exact Set.disjoint_left.mp (hEsd (by omega : i ≠ j)) hxi hxj
-        have hcap : ∀ n : ℕ, (⋃ i ≥ n, Es i) ∩ kernelBox R = ⋃ i ≥ n, Es i := fun n =>
-          Set.inter_eq_left.mpr (Set.iUnion₂_subset fun i _ => Set.inter_subset_right)
-        refine hbase.congr fun n => ?_
+        have hcap : ∀ n : ℕ, (⋃ i ≥ n, Es i) ∩ kernelBox R = ⋃ i ≥ n, Es i := fun n ↦
+          Set.inter_eq_left.mpr (Set.iUnion₂_subset fun i _ ↦ Set.inter_subset_right)
+        refine hbase.congr fun n ↦ ?_
         rw [Function.comp_apply, Measure.restrict_apply' (kernelBox_measurableSet R), hcap n,
           hsymm n]
       have hlim : Filter.Tendsto
-          (fun n => indicatorConstLp (μ := (volume : Measure ℝ).prod volume) 2 (hUm n) (hUfin n)
+          (fun n ↦ indicatorConstLp (μ := (volume : Measure ℝ).prod volume) 2 (hUm n) (hUfin n)
             (1 : ℂ))
           Filter.atTop
           (nhds (indicatorConstLp 2 hUnionm (kernelBox_inter_ne_top _ R) (1 : ℂ))) := by
@@ -1205,27 +1205,27 @@ theorem l2KernelOp_isCompact (κ : L2Kernel) : IsCompactOperator (l2KernelOp κ)
     intro c s hs hμs
     rw [indicatorConstLp_eq_smul_one]
     refine V.smul_mem c ?_
-    have hanti : Antitone fun R : ℕ => s \ kernelBox R := fun R R' hRR' =>
+    have hanti : Antitone fun R : ℕ ↦ s \ kernelBox R := fun R R' hRR' ↦
       Set.sdiff_subset_sdiff_right (kernelBox_mono hRR')
     have hzero : (⋂ R : ℕ, s \ kernelBox R) = ∅ := by
       rw [← Set.sdiff_iUnion, iUnion_kernelBox, Set.sdiff_univ]
-    have htend : Filter.Tendsto (fun R : ℕ => (volume.prod volume) (s \ kernelBox R))
+    have htend : Filter.Tendsto (fun R : ℕ ↦ (volume.prod volume) (s \ kernelBox R))
         Filter.atTop (nhds 0) := by
       have := tendsto_measure_iInter_atTop (μ := (volume : Measure ℝ).prod volume)
-        (fun R : ℕ => (hs.diff (kernelBox_measurableSet R)).nullMeasurableSet) hanti
+        (fun R : ℕ ↦ (hs.diff (kernelBox_measurableSet R)).nullMeasurableSet) hanti
         ⟨0, ne_top_of_le_ne_top hμs (measure_mono Set.sdiff_subset)⟩
       rwa [hzero, measure_empty] at this
     have hlim : Filter.Tendsto
-        (fun R : ℕ => indicatorConstLp (μ := (volume : Measure ℝ).prod volume) 2
+        (fun R : ℕ ↦ indicatorConstLp (μ := (volume : Measure ℝ).prod volume) 2
           (hs.inter (kernelBox_measurableSet R)) (kernelBox_inter_ne_top s R) (1 : ℂ))
         Filter.atTop (nhds (indicatorConstLp 2 hs hμs (1 : ℂ))) := by
       refine tendsto_indicatorConstLp_set (by norm_num) ?_
-      refine htend.congr fun R => ?_
+      refine htend.congr fun R ↦ ?_
       congr 1
       ext x
       simp only [Set.mem_symmDiff, Set.mem_inter_iff, Set.mem_sdiff]
       tauto
-    exact hVclosed.mem_of_tendsto hlim (Filter.Eventually.of_forall fun R => key s hs R)
+    exact hVclosed.mem_of_tendsto hlim (Filter.Eventually.of_forall fun R ↦ key s hs R)
   refine (hVmem κ).mp ?_
   induction κ using Lp.induction (p := 2) (by norm_num) with
   | indicatorConst c hs hμs =>
@@ -1242,10 +1242,10 @@ compactness rather than assumed; the a.e.-representation clause pins `Op` unique
 is an a.e. class), so the existential is not weakened by it.
 @audit:ok -/
 theorem l2KernelOperator_isCompact {k : ℝ → ℝ → ℂ}
-    (hk : MemLp (fun p : ℝ × ℝ => k p.1 p.2) 2 (volume.prod volume)) :
+    (hk : MemLp (fun p : ℝ × ℝ ↦ k p.1 p.2) 2 (volume.prod volume)) :
     ∃ Op : E →L[ℂ] E, (∀ f : E, (Op f : ℝ → ℂ) =ᵐ[volume]
-        fun t => ∫ s, k t s * (f : ℝ → ℂ) s ∂volume) ∧ IsCompactOperator Op := by
-  refine ⟨l2KernelOp (hk.toLp _), fun f => ?_, l2KernelOp_isCompact _⟩
+        fun t ↦ ∫ s, k t s * (f : ℝ → ℂ) s ∂volume) ∧ IsCompactOperator Op := by
+  refine ⟨l2KernelOp (hk.toLp _), fun f ↦ ?_, l2KernelOp_isCompact _⟩
   have hae : ∀ᵐ t ∂(volume : Measure ℝ), ∀ᵐ s ∂(volume : Measure ℝ),
       ((hk.toLp _ : L2Kernel) : ℝ × ℝ → ℂ) (t, s) = k t s :=
     Measure.ae_ae_of_ae_prod hk.coeFn_toLp
@@ -1261,9 +1261,9 @@ by the caller's case split.
 @audit:ok -/
 theorem timeBandLimitingComp_apply_ae (T W : ℝ) (hW : 0 ≤ W) (f : E) :
     (timeBandLimitingComp T W f : ℝ → ℂ) =ᵐ[volume]
-      fun t => ∫ s, sincConvKernel T W t s * (f : ℝ → ℂ) s ∂volume := by
+      fun t ↦ ∫ s, sincConvKernel T W t s * (f : ℝ → ℂ) s ∂volume := by
   have h1 : (timeBandLimitingComp T W f : ℝ → ℂ) =ᵐ[volume]
-      (Set.Icc (0 : ℝ) T).indicator (fun _ => (1 : ℂ)) *
+      (Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ)) *
         ((bandLimitSubspace W).starProjection f : ℝ → ℂ) := by
     simpa only [timeBandLimitingComp, ContinuousLinearMap.comp_apply] using
       timeLimitProj_apply_ae T ((bandLimitSubspace W).starProjection f)
@@ -1271,7 +1271,7 @@ theorem timeBandLimitingComp_apply_ae (T W : ℝ) (hW : 0 ≤ W) (f : E) :
   rw [ht1]
   simp only [Pi.mul_apply]
   rw [ht2, ← MeasureTheory.integral_const_mul]
-  refine integral_congr_ae (Filter.Eventually.of_forall fun s => ?_)
+  refine integral_congr_ae (Filter.Eventually.of_forall fun s ↦ ?_)
   simp only [sincConvKernel]
   ring
 
@@ -1285,7 +1285,7 @@ theorem timeBandLimitingComp_isCompact (T W : ℝ) :
   rcases lt_or_ge W 0 with hW | hW
   · -- Degenerate band: `bandLimitSubspace W = ⊥`, so `C = Q_T ∘ 0 = 0`.
     have hzero : timeBandLimitingComp T W = 0 := by
-      refine ContinuousLinearMap.ext fun f => ?_
+      refine ContinuousLinearMap.ext fun f ↦ ?_
       have hmem : (bandLimitSubspace W).starProjection f ∈ bandLimitSubspace W :=
         Submodule.coe_mem _
       have hzf : (bandLimitSubspace W).starProjection f = 0 :=
@@ -1296,7 +1296,7 @@ theorem timeBandLimitingComp_isCompact (T W : ℝ) :
     exact isCompactOperator_zero
   · obtain ⟨Op, hOp_ae, hOp_cpt⟩ := l2KernelOperator_isCompact (sincConvKernel_memLp T W)
     have hEq : Op = timeBandLimitingComp T W := by
-      refine ContinuousLinearMap.ext (fun f => MeasureTheory.Lp.ext ?_)
+      refine ContinuousLinearMap.ext (fun f ↦ MeasureTheory.Lp.ext ?_)
       exact (hOp_ae f).trans (timeBandLimitingComp_apply_ae T W hW f).symm
     rwa [hEq] at hOp_cpt
 

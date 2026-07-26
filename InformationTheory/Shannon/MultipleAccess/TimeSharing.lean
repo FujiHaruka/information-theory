@@ -117,11 +117,11 @@ theorem mac_achievable_zero_zero (W : MACChannel α₁ α₂ β) :
     MACAchievable W 0 0 := by
   classical
   intro ε' hε'
-  refine ⟨0, fun n _ => ?_⟩
+  refine ⟨0, fun n _ ↦ ?_⟩
   set c : MACCode 1 1 n α₁ α₂ β :=
-    { encoder₁ := fun _ _ => Classical.arbitrary α₁
-      encoder₂ := fun _ _ => Classical.arbitrary α₂
-      decoder := fun _ => (0, 0) } with hc
+    { encoder₁ := fun _ _ ↦ Classical.arbitrary α₁
+      encoder₂ := fun _ _ ↦ Classical.arbitrary α₂
+      decoder := fun _ ↦ (0, 0) } with hc
   have herr : ∀ m : Fin 1 × Fin 1, c.errorProbAt W m = 0 := by
     intro m
     have hev : c.errorEvent m = (∅ : Set (Fin n → β)) := by
@@ -160,10 +160,10 @@ def macConcatCode {Ka₁ Ka₂ Kb₁ Kb₂ n₁ n₂ : ℕ}
   encoder₂ m := Fin.append (c₁.encoder₂ (finProdFinEquiv.symm m).1)
                            (c₂.encoder₂ (finProdFinEquiv.symm m).2)
   decoder y :=
-    (finProdFinEquiv ((c₁.decoder (fun i => y (Fin.castAdd n₂ i))).1,
-                      (c₂.decoder (fun j => y (Fin.natAdd n₁ j))).1),
-     finProdFinEquiv ((c₁.decoder (fun i => y (Fin.castAdd n₂ i))).2,
-                      (c₂.decoder (fun j => y (Fin.natAdd n₁ j))).2))
+    (finProdFinEquiv ((c₁.decoder (fun i ↦ y (Fin.castAdd n₂ i))).1,
+                      (c₂.decoder (fun j ↦ y (Fin.natAdd n₁ j))).1),
+     finProdFinEquiv ((c₁.decoder (fun i ↦ y (Fin.castAdd n₂ i))).2,
+                      (c₂.decoder (fun j ↦ y (Fin.natAdd n₁ j))).2))
 
 omit [Fintype α₁] [DecidableEq α₁] [Nonempty α₁] [MeasurableSingletonClass α₁]
   [Fintype α₂] [DecidableEq α₂] [Nonempty α₂] [MeasurableSingletonClass α₂]
@@ -180,7 +180,7 @@ theorem macConcatCode_errorProbAt_le (W : MACChannel α₁ α₂ β) [IsMarkovKe
       ≤ c₁.errorProbAt W (i₁, i₂) + c₂.errorProbAt W (k₁, k₂) := by
   -- The block-output law family for the concatenated code.
   set ν : Fin (n₁ + n₂) → Measure β :=
-    fun t => W ((macConcatCode c₁ c₂).encoder₁ (finProdFinEquiv (i₁, k₁)) t,
+    fun t ↦ W ((macConcatCode c₁ c₂).encoder₁ (finProdFinEquiv (i₁, k₁)) t,
                 (macConcatCode c₁ c₂).encoder₂ (finProdFinEquiv (i₂, k₂)) t) with hνdef
   haveI hνprob : ∀ t, IsProbabilityMeasure (ν t) := by
     intro t; rw [hνdef]; infer_instance
@@ -189,29 +189,29 @@ theorem macConcatCode_errorProbAt_le (W : MACChannel α₁ α₂ β) [IsMarkovKe
     intro s; rw [hνdef]; simp only [macConcatCode, Equiv.symm_apply_apply, Fin.append_left]
   have hright : ∀ t : Fin n₂, ν (Fin.natAdd n₁ t) = W (c₂.encoder₁ k₁ t, c₂.encoder₂ k₂ t) := by
     intro t; rw [hνdef]; simp only [macConcatCode, Equiv.symm_apply_apply, Fin.append_right]
-  have hfam₁ : (fun s : Fin n₁ => ν (finSumFinEquiv (Sum.inl s)))
-      = fun s => W (c₁.encoder₁ i₁ s, c₁.encoder₂ i₂ s) := by
+  have hfam₁ : (fun s : Fin n₁ ↦ ν (finSumFinEquiv (Sum.inl s)))
+      = fun s ↦ W (c₁.encoder₁ i₁ s, c₁.encoder₂ i₂ s) := by
     funext s; rw [finSumFinEquiv_apply_left]; exact hleft s
-  have hfam₂ : (fun t : Fin n₂ => ν (finSumFinEquiv (Sum.inr t)))
-      = fun t => W (c₂.encoder₁ k₁ t, c₂.encoder₂ k₂ t) := by
+  have hfam₂ : (fun t : Fin n₂ ↦ ν (finSumFinEquiv (Sum.inr t)))
+      = fun t ↦ W (c₂.encoder₁ k₁ t, c₂.encoder₂ k₂ t) := by
     funext t; rw [finSumFinEquiv_apply_right]; exact hright t
   -- Two measure-preserving maps gluing the two blocks into the full block.
   have hmp1 : MeasurePreserving
-      (MeasurableEquiv.piCongrLeft (fun _ : Fin (n₁ + n₂) => β) finSumFinEquiv)
-      (Measure.pi (fun j => ν (finSumFinEquiv j))) (Measure.pi ν) :=
-    measurePreserving_piCongrLeft (α := fun _ : Fin (n₁ + n₂) => β) (μ := ν) finSumFinEquiv
+      (MeasurableEquiv.piCongrLeft (fun _ : Fin (n₁ + n₂) ↦ β) finSumFinEquiv)
+      (Measure.pi (fun j ↦ ν (finSumFinEquiv j))) (Measure.pi ν) :=
+    measurePreserving_piCongrLeft (α := fun _ : Fin (n₁ + n₂) ↦ β) (μ := ν) finSumFinEquiv
   have hmp2 : MeasurePreserving
-      (MeasurableEquiv.sumPiEquivProdPi (fun _ : Fin n₁ ⊕ Fin n₂ => β)).symm
-      ((Measure.pi (fun s => ν (finSumFinEquiv (Sum.inl s)))).prod
-        (Measure.pi (fun t => ν (finSumFinEquiv (Sum.inr t)))))
-      (Measure.pi (fun j => ν (finSumFinEquiv j))) :=
-    measurePreserving_sumPiEquivProdPi_symm (fun j => ν (finSumFinEquiv j))
+      (MeasurableEquiv.sumPiEquivProdPi (fun _ : Fin n₁ ⊕ Fin n₂ ↦ β)).symm
+      ((Measure.pi (fun s ↦ ν (finSumFinEquiv (Sum.inl s)))).prod
+        (Measure.pi (fun t ↦ ν (finSumFinEquiv (Sum.inr t)))))
+      (Measure.pi (fun j ↦ ν (finSumFinEquiv j))) :=
+    measurePreserving_sumPiEquivProdPi_symm (fun j ↦ ν (finSumFinEquiv j))
   set T : (Fin n₁ → β) × (Fin n₂ → β) → (Fin (n₁ + n₂) → β) :=
-    ⇑(MeasurableEquiv.piCongrLeft (fun _ : Fin (n₁ + n₂) => β) finSumFinEquiv) ∘
-      ⇑(MeasurableEquiv.sumPiEquivProdPi (fun _ : Fin n₁ ⊕ Fin n₂ => β)).symm with hTdef
+    ⇑(MeasurableEquiv.piCongrLeft (fun _ : Fin (n₁ + n₂) ↦ β) finSumFinEquiv) ∘
+      ⇑(MeasurableEquiv.sumPiEquivProdPi (fun _ : Fin n₁ ⊕ Fin n₂ ↦ β)).symm with hTdef
   have hmp : MeasurePreserving T
-      ((Measure.pi (fun s => ν (finSumFinEquiv (Sum.inl s)))).prod
-        (Measure.pi (fun t => ν (finSumFinEquiv (Sum.inr t)))))
+      ((Measure.pi (fun s ↦ ν (finSumFinEquiv (Sum.inl s)))).prod
+        (Measure.pi (fun t ↦ ν (finSumFinEquiv (Sum.inr t)))))
       (Measure.pi ν) := hmp1.comp hmp2
   -- T sends a block pair to the interleaved full block, coordinate-wise.
   have hT_left : ∀ (u : Fin n₁ → β) (v : Fin n₂ → β) (s : Fin n₁),
@@ -244,8 +244,8 @@ theorem macConcatCode_errorProbAt_le (W : MACChannel α₁ α₂ β) [IsMarkovKe
     simp only [not_or, ne_eq, not_not] at hcon
     obtain ⟨h1, h2⟩ := hcon
     apply hmem
-    have hu : (fun s => T (u, v) (Fin.castAdd n₂ s)) = u := funext (fun s => hT_left u v s)
-    have hv : (fun t => T (u, v) (Fin.natAdd n₁ t)) = v := funext (fun t => hT_right u v t)
+    have hu : (fun s ↦ T (u, v) (Fin.castAdd n₂ s)) = u := funext (fun s ↦ hT_left u v s)
+    have hv : (fun t ↦ T (u, v) (Fin.natAdd n₁ t)) = v := funext (fun t ↦ hT_right u v t)
     change (macConcatCode c₁ c₂).decoder (T (u, v))
         = (finProdFinEquiv (i₁, k₁), finProdFinEquiv (i₂, k₂))
     simp only [macConcatCode]
@@ -256,23 +256,23 @@ theorem macConcatCode_errorProbAt_le (W : MACChannel α₁ α₂ β) [IsMarkovKe
       = (Measure.pi ν) ((macConcatCode c₁ c₂).errorEvent
           (finProdFinEquiv (i₁, k₁), finProdFinEquiv (i₂, k₂))) := rfl
   rw [hEP, ← hmp.measure_preimage hEmeas.nullMeasurableSet]
-  have hμ₁E : (Measure.pi (fun s => ν (finSumFinEquiv (Sum.inl s)))) (c₁.errorEvent (i₁, i₂))
+  have hμ₁E : (Measure.pi (fun s ↦ ν (finSumFinEquiv (Sum.inl s)))) (c₁.errorEvent (i₁, i₂))
       = c₁.errorProbAt W (i₁, i₂) := by rw [hfam₁]; rfl
-  have hμ₂E : (Measure.pi (fun t => ν (finSumFinEquiv (Sum.inr t)))) (c₂.errorEvent (k₁, k₂))
+  have hμ₂E : (Measure.pi (fun t ↦ ν (finSumFinEquiv (Sum.inr t)))) (c₂.errorEvent (k₁, k₂))
       = c₂.errorProbAt W (k₁, k₂) := by rw [hfam₂]; rfl
-  calc ((Measure.pi (fun s => ν (finSumFinEquiv (Sum.inl s)))).prod
-          (Measure.pi (fun t => ν (finSumFinEquiv (Sum.inr t)))))
+  calc ((Measure.pi (fun s ↦ ν (finSumFinEquiv (Sum.inl s)))).prod
+          (Measure.pi (fun t ↦ ν (finSumFinEquiv (Sum.inr t)))))
         (T ⁻¹' ((macConcatCode c₁ c₂).errorEvent
           (finProdFinEquiv (i₁, k₁), finProdFinEquiv (i₂, k₂))))
-      ≤ ((Measure.pi (fun s => ν (finSumFinEquiv (Sum.inl s)))).prod
-          (Measure.pi (fun t => ν (finSumFinEquiv (Sum.inr t)))))
+      ≤ ((Measure.pi (fun s ↦ ν (finSumFinEquiv (Sum.inl s)))).prod
+          (Measure.pi (fun t ↦ ν (finSumFinEquiv (Sum.inr t)))))
           ((c₁.errorEvent (i₁, i₂)) ×ˢ Set.univ ∪ Set.univ ×ˢ (c₂.errorEvent (k₁, k₂))) :=
         measure_mono hsub
-    _ ≤ ((Measure.pi (fun s => ν (finSumFinEquiv (Sum.inl s)))).prod
-          (Measure.pi (fun t => ν (finSumFinEquiv (Sum.inr t)))))
+    _ ≤ ((Measure.pi (fun s ↦ ν (finSumFinEquiv (Sum.inl s)))).prod
+          (Measure.pi (fun t ↦ ν (finSumFinEquiv (Sum.inr t)))))
           ((c₁.errorEvent (i₁, i₂)) ×ˢ Set.univ)
-        + ((Measure.pi (fun s => ν (finSumFinEquiv (Sum.inl s)))).prod
-          (Measure.pi (fun t => ν (finSumFinEquiv (Sum.inr t)))))
+        + ((Measure.pi (fun s ↦ ν (finSumFinEquiv (Sum.inl s)))).prod
+          (Measure.pi (fun t ↦ ν (finSumFinEquiv (Sum.inr t)))))
           (Set.univ ×ˢ (c₂.errorEvent (k₁, k₂))) := measure_union_le _ _
     _ = c₁.errorProbAt W (i₁, i₂) + c₂.errorProbAt W (k₁, k₂) := by
         rw [Measure.prod_prod, Measure.prod_prod, measure_univ, measure_univ, mul_one, one_mul,
@@ -300,7 +300,7 @@ theorem macConcatCode_averageErrorProb_le (W : MACChannel α₁ α₂ β) [IsMar
       ≤ ∑ q : (Fin Ka₁ × Fin Kb₁) × (Fin Ka₂ × Fin Kb₂),
           (c₁.errorProbAt W (q.1.1, q.2.1) + c₂.errorProbAt W (q.1.2, q.2.2)) := by
     rw [← Equiv.sum_comp (Equiv.prodCongr finProdFinEquiv finProdFinEquiv)
-          (fun m => (macConcatCode c₁ c₂).errorProbAt W m)]
+          (fun m ↦ (macConcatCode c₁ c₂).errorProbAt W m)]
     apply Finset.sum_le_sum
     rintro ⟨⟨i₁, k₁⟩, ⟨i₂, k₂⟩⟩ _
     exact macConcatCode_errorProbAt_le W c₁ c₂ i₁ i₂ k₁ k₂
@@ -385,7 +385,7 @@ theorem mac_timesharing_strict (W : MACChannel α₁ α₂ β) [IsMarkovKernel W
       have h1lam : (0 : ℝ) < 1 - lam := by linarith
       refine ⟨max (max (Nat.ceil (((Na : ℝ) + 1) / lam)) (Nat.ceil ((Nb : ℝ) / (1 - lam))))
                   (max (Nat.ceil (|a₁ - b₁| / g₁)) (Nat.ceil (|a₂ - b₂| / g₂))),
-             fun n hn => ?_⟩
+             fun n hn ↦ ?_⟩
       -- Extract the four size conditions from n ≥ N.
       have hc1 : Nat.ceil (((Na : ℝ) + 1) / lam) ≤ n :=
         le_trans (le_trans (le_max_left _ _) (le_max_left _ _)) hn
@@ -527,15 +527,15 @@ theorem mac_mem_closure_of_strictly_below (W : MACChannel α₁ α₂ β) (p : �
     (h : ∀ ε : ℝ, 0 < ε → MACAchievable W (p.1 - ε) (p.2 - ε)) :
     p ∈ closure {q : ℝ × ℝ | MACAchievable W q.1 q.2} := by
   rw [mem_closure_iff_seq_limit]
-  refine ⟨fun k => (p.1 - 1 / ((k : ℝ) + 1), p.2 - 1 / ((k : ℝ) + 1)), ?_, ?_⟩
+  refine ⟨fun k ↦ (p.1 - 1 / ((k : ℝ) + 1), p.2 - 1 / ((k : ℝ) + 1)), ?_, ?_⟩
   · intro k
     have hpos : 0 < 1 / ((k : ℝ) + 1) := by positivity
     exact h _ hpos
-  · have ht : Tendsto (fun k : ℕ => 1 / ((k : ℝ) + 1)) atTop (𝓝 0) :=
+  · have ht : Tendsto (fun k : ℕ ↦ 1 / ((k : ℝ) + 1)) atTop (𝓝 0) :=
       tendsto_one_div_add_atTop_nhds_zero_nat
-    have h1 : Tendsto (fun k : ℕ => p.1 - 1 / ((k : ℝ) + 1)) atTop (𝓝 p.1) := by
+    have h1 : Tendsto (fun k : ℕ ↦ p.1 - 1 / ((k : ℝ) + 1)) atTop (𝓝 p.1) := by
       simpa using tendsto_const_nhds.sub ht
-    have h2 : Tendsto (fun k : ℕ => p.2 - 1 / ((k : ℝ) + 1)) atTop (𝓝 p.2) := by
+    have h2 : Tendsto (fun k : ℕ ↦ p.2 - 1 / ((k : ℝ) + 1)) atTop (𝓝 p.2) := by
       simpa using tendsto_const_nhds.sub ht
     exact h1.prodMk_nhds h2
 
@@ -575,9 +575,9 @@ theorem mac_capacityRegion_convex (W : MACChannel α₁ α₂ β) [IsMarkovKerne
   intro x hx y hy a b ha hb hab
   obtain ⟨u, hu_mem, hu_tend⟩ := mem_closure_iff_seq_limit.mp hx
   obtain ⟨v, hv_mem, hv_tend⟩ := mem_closure_iff_seq_limit.mp hy
-  have hw_mem : ∀ k, a • u k + b • v k ∈ macCapacityRegion W := fun k =>
+  have hw_mem : ∀ k, a • u k + b • v k ∈ macCapacityRegion W := fun k ↦
     seg (u k) (hu_mem k) (v k) (hv_mem k) a b ha hb hab
-  have hw_tend : Tendsto (fun k => a • u k + b • v k) atTop (𝓝 (a • x + b • y)) :=
+  have hw_tend : Tendsto (fun k ↦ a • u k + b • v k) atTop (𝓝 (a • x + b • y)) :=
     (hu_tend.const_smul a).add (hv_tend.const_smul b)
   exact (mac_capacityRegion_isClosed W).mem_of_tendsto hw_tend (Eventually.of_forall hw_mem)
 
@@ -828,7 +828,7 @@ theorem mac_pentagon_subset_capacityRegion
       · nlinarith [mul_le_mul_of_nonneg_left hRsumle h1t, mul_lt_mul_of_pos_left hcsum ht0]
     -- `R` is the limit of these interior points, hence in the closure.
     refine mem_closure_iff_seq_limit.mpr
-      ⟨fun k => R + (1 / ((k : ℝ) + 1)) • (((c₁, c₂) : ℝ × ℝ) - R), ?_, ?_⟩
+      ⟨fun k ↦ R + (1 / ((k : ℝ) + 1)) • (((c₁, c₂) : ℝ × ℝ) - R), ?_, ?_⟩
     · intro k
       have ht0 : (0 : ℝ) < 1 / ((k : ℝ) + 1) := by positivity
       have ht1 : 1 / ((k : ℝ) + 1) ≤ 1 := by
@@ -841,7 +841,7 @@ theorem mac_pentagon_subset_capacityRegion
       have e2 : (R + (1 / ((k : ℝ) + 1)) • (((c₁, c₂) : ℝ × ℝ) - R)).2
           = R.2 + (1 / ((k : ℝ) + 1)) * (c₂ - R.2) := by simp [smul_eq_mul]
       rw [e1, e2]; exact hk
-    · have ht : Tendsto (fun k : ℕ => 1 / ((k : ℝ) + 1)) atTop (𝓝 0) :=
+    · have ht : Tendsto (fun k : ℕ ↦ 1 / ((k : ℝ) + 1)) atTop (𝓝 0) :=
         tendsto_one_div_add_atTop_nhds_zero_nat
       have hlim := tendsto_const_nhds (x := R) (f := atTop) |>.add
         (ht.smul_const (((c₁, c₂) : ℝ × ℝ) - R))
@@ -859,14 +859,14 @@ theorem mac_pentagon_subset_capacityRegion
       -- to `MACAchievable W 0 (R.2 − ε)` (with `R.2 − ε < macInfo₂`) by monotonicity, so `R`
       -- is a limit of achievable points.
       have hR1zero : R.1 = 0 := le_antisymm (hR1le.trans h1) hR1nn
-      refine mac_mem_closure_of_strictly_below W R (fun ε hε => ?_)
+      refine mac_mem_closure_of_strictly_below W R (fun ε hε ↦ ?_)
       have hax : MACAchievable W 0 (R.2 - ε) :=
         mac_axis1_achievable p₁ p₂ W hp₁ hp₂ hW (by linarith [hR2le])
       exact mac_achievable_mono hax (by rw [hR1zero]; linarith) le_rfl
     · -- `macInfo₂ ≤ 0` ⇒ `R.2 = 0`: symmetric single-user achievability with user 2 silent,
       -- via the `M₂ = 1` internal specialization `mac_axis2_achievable`.
       have hR2zero : R.2 = 0 := le_antisymm (hR2le.trans h2) hR2nn
-      refine mac_mem_closure_of_strictly_below W R (fun ε hε => ?_)
+      refine mac_mem_closure_of_strictly_below W R (fun ε hε ↦ ?_)
       have hax : MACAchievable W (R.1 - ε) 0 :=
         mac_axis2_achievable p₁ p₂ W hp₁ hp₂ hW (by linarith [hR1le])
       exact mac_achievable_mono hax le_rfl (by rw [hR2zero]; linarith)
@@ -976,9 +976,9 @@ lemma macMix_full_support (p μ₀ : Measure X) [IsProbabilityMeasure p] [IsProb
 
 omit [MeasurableSingletonClass X] in
 lemma macMix_real_continuous (p μ₀ : Measure X) [IsProbabilityMeasure p] [IsProbabilityMeasure μ₀]
-    (a : X) : Continuous (fun ε : ℝ => (macMix p μ₀ ε).real {a}) := by
-  have hrw : (fun ε : ℝ => (macMix p μ₀ ε).real {a})
-      = (fun ε : ℝ => (1 - macMixWeight ε) * p.real {a} + macMixWeight ε * μ₀.real {a}) := by
+    (a : X) : Continuous (fun ε : ℝ ↦ (macMix p μ₀ ε).real {a}) := by
+  have hrw : (fun ε : ℝ ↦ (macMix p μ₀ ε).real {a})
+      = (fun ε : ℝ ↦ (1 - macMixWeight ε) * p.real {a} + macMixWeight ε * μ₀.real {a}) := by
     funext ε; exact macMix_real_apply p μ₀ ε a
   rw [hrw]
   exact ((continuous_const.sub macMixWeight_continuous).mul continuous_const).add
@@ -992,9 +992,9 @@ lemma map_real_singleton_fiber_sum {γ : Type*} [MeasurableSpace γ] [Measurable
     [DecidableEq γ] (μ : Measure (α₁ × α₂ × β)) [SigmaFinite μ]
     (f : α₁ × α₂ × β → γ) (hf : Measurable f) (x : γ) :
     (μ.map f).real {x}
-      = ∑ q ∈ Finset.univ.filter (fun q => f q = x), μ.real {q} := by
+      = ∑ q ∈ Finset.univ.filter (fun q ↦ f q = x), μ.real {q} := by
   rw [map_measureReal_apply hf (measurableSet_singleton x)]
-  have hset : f ⁻¹' {x} = ↑(Finset.univ.filter (fun q => f q = x)) := by
+  have hset : f ⁻¹' {x} = ↑(Finset.univ.filter (fun q ↦ f q = x)) := by
     ext q; simp [Set.mem_preimage, Finset.coe_filter]
   rw [hset, sum_measureReal_singleton]
 
@@ -1002,12 +1002,12 @@ lemma macMixJoint_real_continuous
     (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
     (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
     (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] (q : α₁ × α₂ × β) :
-    Continuous (fun ε : ℝ =>
+    Continuous (fun ε : ℝ ↦
       (macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W).real {q}) := by
   obtain ⟨a₁, a₂, b⟩ := q
-  have hrw : (fun ε : ℝ =>
+  have hrw : (fun ε : ℝ ↦
       (macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W).real {(a₁, a₂, b)})
-      = (fun ε : ℝ =>
+      = (fun ε : ℝ ↦
         (macMix p₁ μ₀₁ ε).real {a₁} * (macMix p₂ μ₀₂ ε).real {a₂} * (W (a₁, a₂)).real {b}) := by
     funext ε
     exact macJointDistribution_triple_singleton (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W a₁ a₂ b
@@ -1020,33 +1020,33 @@ lemma macMixJoint_map_real_continuous {γ : Type*} [Fintype γ] [DecidableEq γ]
     (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
     (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
     (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] (f : α₁ × α₂ × β → γ) (hf : Measurable f) (x : γ) :
-    Continuous (fun ε : ℝ =>
+    Continuous (fun ε : ℝ ↦
       ((macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W).map f).real {x}) := by
-  have hrw : (fun ε : ℝ =>
+  have hrw : (fun ε : ℝ ↦
       ((macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W).map f).real {x})
-      = (fun ε : ℝ => ∑ q ∈ Finset.univ.filter (fun q => f q = x),
+      = (fun ε : ℝ ↦ ∑ q ∈ Finset.univ.filter (fun q ↦ f q = x),
         (macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W).real {q}) := by
     funext ε
     exact map_real_singleton_fiber_sum _ f hf x
   rw [hrw]
-  exact continuous_finsetSum _ (fun q _ => macMixJoint_real_continuous p₁ μ₀₁ p₂ μ₀₂ W q)
+  exact continuous_finsetSum _ (fun q _ ↦ macMixJoint_real_continuous p₁ μ₀₁ p₂ μ₀₂ W q)
 
 lemma macMix_entropy_continuous {γ : Type*} [Fintype γ] [DecidableEq γ] [Nonempty γ]
     [MeasurableSpace γ] [MeasurableSingletonClass γ]
     (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
     (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
     (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] (f : α₁ × α₂ × β → γ) (hf : Measurable f) :
-    Continuous (fun ε : ℝ =>
+    Continuous (fun ε : ℝ ↦
       entropy (macJointDistribution (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) f) := by
   unfold entropy
-  exact continuous_finsetSum _ (fun x _ =>
+  exact continuous_finsetSum _ (fun x _ ↦
     Real.continuous_negMulLog.comp (macMixJoint_map_real_continuous p₁ μ₀₁ p₂ μ₀₂ W f hf x))
 
 lemma macInfo₁_perturb_continuous
     (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
     (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
     (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
-    Continuous (fun ε : ℝ => macInfo₁ (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) := by
+    Continuous (fun ε : ℝ ↦ macInfo₁ (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) := by
   unfold macInfo₁
   exact ((macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W Prod.fst measurable_fst).add
     (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W Prod.snd measurable_snd)).sub
@@ -1056,11 +1056,11 @@ lemma macInfo₂_perturb_continuous
     (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
     (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
     (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
-    Continuous (fun ε : ℝ => macInfo₂ (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) := by
+    Continuous (fun ε : ℝ ↦ macInfo₂ (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) := by
   unfold macInfo₂
-  exact ((macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q => q.2.1)
+  exact ((macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q ↦ q.2.1)
       (measurable_fst.comp measurable_snd)).add
-    (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q => (q.1, q.2.2))
+    (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q ↦ (q.1, q.2.2))
       (measurable_fst.prodMk (measurable_snd.comp measurable_snd)))).sub
     (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W id measurable_id)
 
@@ -1068,11 +1068,11 @@ lemma macInfoBoth_perturb_continuous
     (p₁ μ₀₁ : Measure α₁) [IsProbabilityMeasure p₁] [IsProbabilityMeasure μ₀₁]
     (p₂ μ₀₂ : Measure α₂) [IsProbabilityMeasure p₂] [IsProbabilityMeasure μ₀₂]
     (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
-    Continuous (fun ε : ℝ => macInfoBoth (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) := by
+    Continuous (fun ε : ℝ ↦ macInfoBoth (macMix p₁ μ₀₁ ε) (macMix p₂ μ₀₂ ε) W) := by
   unfold macInfoBoth
-  exact ((macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q => (q.1, q.2.1))
+  exact ((macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q ↦ (q.1, q.2.1))
       (measurable_fst.prodMk (measurable_fst.comp measurable_snd))).add
-    (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q => q.2.2)
+    (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W (fun q ↦ q.2.2)
       (measurable_snd.comp measurable_snd))).sub
     (macMix_entropy_continuous p₁ μ₀₁ p₂ μ₀₂ W id measurable_id)
 
@@ -1133,32 +1133,32 @@ theorem mac_pentagon_subset_capacityRegion_allprob
   haveI : IsProbabilityMeasure μ₀₁ := by rw [hμ₀₁]; infer_instance
   haveI : IsProbabilityMeasure μ₀₂ := by rw [hμ₀₂]; infer_instance
   -- Smoothing sequence `εₖ = 1/(k+1) ∈ (0, 1]` tending to `0`.
-  set ε : ℕ → ℝ := fun k => 1 / ((k : ℝ) + 1) with hεdef
-  have hε_pos : ∀ k, 0 < ε k := fun k => by rw [hεdef]; positivity
+  set ε : ℕ → ℝ := fun k ↦ 1 / ((k : ℝ) + 1) with hεdef
+  have hε_pos : ∀ k, 0 < ε k := fun k ↦ by rw [hεdef]; positivity
   have hε_tendsto : Tendsto ε atTop (𝓝 0) := tendsto_one_div_add_atTop_nhds_zero_nat
   -- Corner informations converge along the smoothing.
-  have hAk : Tendsto (fun k => macInfo₁ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
+  have hAk : Tendsto (fun k ↦ macInfo₁ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
       atTop (𝓝 (macInfo₁ p₁ p₂ W)) := by
     have hc := (macInfo₁_perturb_continuous p₁ μ₀₁ p₂ μ₀₂ W).tendsto 0
     rw [macMix_zero, macMix_zero] at hc
     exact hc.comp hε_tendsto
-  have hBk : Tendsto (fun k => macInfo₂ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
+  have hBk : Tendsto (fun k ↦ macInfo₂ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
       atTop (𝓝 (macInfo₂ p₁ p₂ W)) := by
     have hc := (macInfo₂_perturb_continuous p₁ μ₀₁ p₂ μ₀₂ W).tendsto 0
     rw [macMix_zero, macMix_zero] at hc
     exact hc.comp hε_tendsto
-  have hCk : Tendsto (fun k => macInfoBoth (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
+  have hCk : Tendsto (fun k ↦ macInfoBoth (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
       atTop (𝓝 (macInfoBoth p₁ p₂ W)) := by
     have hc := (macInfoBoth_perturb_continuous p₁ μ₀₁ p₂ μ₀₂ W).tendsto 0
     rw [macMix_zero, macMix_zero] at hc
     exact hc.comp hε_tendsto
   -- Uniform shrink amount `gapₖ ≥ 0` bounding all three corner losses, tending to `0`.
-  set gap : ℕ → ℝ := fun k =>
+  set gap : ℕ → ℝ := fun k ↦
     max 0 (max (macInfo₁ p₁ p₂ W - macInfo₁ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
       (max (macInfo₂ p₁ p₂ W - macInfo₂ (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)
         (macInfoBoth p₁ p₂ W - macInfoBoth (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W)))
     with hgapdef
-  have hgap_nn : ∀ k, 0 ≤ gap k := fun k => le_max_left _ _
+  have hgap_nn : ∀ k, 0 ≤ gap k := fun k ↦ le_max_left _ _
   have hgap_tendsto : Tendsto gap atTop (𝓝 0) := by
     rw [hgapdef]
     have h1 := (tendsto_const_nhds (x := macInfo₁ p₁ p₂ W)).sub hAk
@@ -1167,7 +1167,7 @@ theorem mac_pentagon_subset_capacityRegion_allprob
     simp only [sub_self] at h1 h2 h3
     simpa using (tendsto_const_nhds (x := (0 : ℝ))).max (h1.max (h2.max h3))
   -- Approximating points `Qₖ → R`, each in a full-support pentagon hence in the region.
-  set Q : ℕ → ℝ × ℝ := fun k => (max 0 (R.1 - gap k), max 0 (R.2 - gap k)) with hQdef
+  set Q : ℕ → ℝ × ℝ := fun k ↦ (max 0 (R.1 - gap k), max 0 (R.2 - gap k)) with hQdef
   have hQmem : ∀ k, Q k ∈ macCapacityRegion W := by
     intro k
     have hgapA : macInfo₁ p₁ p₂ W
@@ -1182,8 +1182,8 @@ theorem mac_pentagon_subset_capacityRegion_allprob
       rw [hgapdef]
       exact le_trans (le_trans (le_max_right _ _) (le_max_right _ _)) (le_max_right _ _)
     refine mac_pentagon_subset_capacityRegion (macMix p₁ μ₀₁ (ε k)) (macMix p₂ μ₀₂ (ε k)) W
-      (fun a => macMix_full_support p₁ μ₀₁ hμ₀₁pos (hε_pos k) a)
-      (fun a => macMix_full_support p₂ μ₀₂ hμ₀₂pos (hε_pos k) a) hW ?_
+      (fun a ↦ macMix_full_support p₁ μ₀₁ hμ₀₁pos (hε_pos k) a)
+      (fun a ↦ macMix_full_support p₂ μ₀₂ hμ₀₂pos (hε_pos k) a) hW ?_
     refine ⟨le_max_left _ _, le_max_left _ _, ?_, ?_, ?_⟩
     · exact max_le (macInfo₁_nonneg _ _ _) (by linarith)
     · exact max_le (macInfo₂_nonneg _ _ _) (by linarith)
@@ -1191,13 +1191,13 @@ theorem mac_pentagon_subset_capacityRegion_allprob
         (max_le (macInfoBoth_nonneg _ _ _) (by linarith))
   have hQ_tendsto : Tendsto Q atTop (𝓝 R) := by
     rw [hQdef]
-    have hg1 : Tendsto (fun k => R.1 - gap k) atTop (𝓝 R.1) := by
+    have hg1 : Tendsto (fun k ↦ R.1 - gap k) atTop (𝓝 R.1) := by
       simpa using (tendsto_const_nhds (x := R.1)).sub hgap_tendsto
-    have hg2 : Tendsto (fun k => R.2 - gap k) atTop (𝓝 R.2) := by
+    have hg2 : Tendsto (fun k ↦ R.2 - gap k) atTop (𝓝 R.2) := by
       simpa using (tendsto_const_nhds (x := R.2)).sub hgap_tendsto
-    have hm1 : Tendsto (fun k => max 0 (R.1 - gap k)) atTop (𝓝 (max 0 R.1)) :=
+    have hm1 : Tendsto (fun k ↦ max 0 (R.1 - gap k)) atTop (𝓝 (max 0 R.1)) :=
       (tendsto_const_nhds (x := (0 : ℝ))).max hg1
-    have hm2 : Tendsto (fun k => max 0 (R.2 - gap k)) atTop (𝓝 (max 0 R.2)) :=
+    have hm2 : Tendsto (fun k ↦ max 0 (R.2 - gap k)) atTop (𝓝 (max 0 R.2)) :=
       (tendsto_const_nhds (x := (0 : ℝ))).max hg2
     rw [max_eq_right hR1nn] at hm1
     rw [max_eq_right hR2nn] at hm2
