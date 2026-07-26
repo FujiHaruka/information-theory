@@ -28,7 +28,7 @@ touched file: `InformationTheory/Shannon/MultivariateDiffEntropy.lean`
    - For each z satisfying 6 a.e. conditions (`μ.rnDeriv ρ z ≠ 0, ≠ ∞`, `μ.rnDeriv vol z ≠ 0, ≠ ∞`, `μX.rnDeriv vol z.1 ≠ 0, ≠ ∞`, `μY.rnDeriv vol z.2 ≠ 0, ≠ ∞`): take `toReal` (via `ENNReal.toReal_mul`), then `log` (via `Real.log_mul` with positivity).
    - Marginal positivity transfer: `μX(rnDeriv = 0) = 0` (from `rnDeriv_pos h_fst_ac`), pulled to `μ({z | μX.rnDeriv vol z.1 = 0}) = 0` via `ae_map_iff` with `measurable_fst.aemeasurable`. Similar for finiteness and for μY.
 
-3. **`klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2`** + **`jointDifferentialEntropy_le_sum_v2`** (~10 lines each): Just plug `llr_split_from_density_factorize` into the existing honest-hyp versions, removing the `h_llr_split` argument. The remaining honest hyps (5 integrability conditions) are regularity (Bochner) and conservative.
+3. **`klDiv_prod_marginals_toReal_eq_sum_sub_joint`** + **`jointDifferentialEntropy_le_sum`** (~10 lines each): Just plug `llr_split_from_density_factorize` into the existing honest-hyp versions, removing the `h_llr_split` argument. The remaining honest hyps (5 integrability conditions) are regularity (Bochner) and conservative.
 
 ### lemma misses / corrections during build
 
@@ -84,14 +84,14 @@ Neither is a Lean `@audit:` tag (no closing `... -/` association with a declarat
 
 After Phase 1 success + Phase 2 withdrawal:
 
-- 2-variable wrappers (`klDiv_prod_marginals_toReal_eq_sum_sub_joint` L90, `jointDifferentialEntropy_le_sum` L176): retagged `@audit:suspect(multivariate-diffentropy-subadditivity-plan)` → `@audit:superseded-by(<v2-name>)`. Audit vocabulary `docs/audit/audit-tags.md:24` matches exactly: "後続版 (typically `_unconditional` 版) が既に存在している旧 declaration の残置 ... typically `_of_condEntDiff` 等の conditional 版が unconditional 版に置き換えられた後の history record".
+- 2-variable wrappers (`klDiv_prod_marginals_toReal_eq_sum_sub_joint_of_llr_split` L90, `jointDifferentialEntropy_le_sum_of_llr_split` L176): retagged `@audit:suspect(multivariate-diffentropy-subadditivity-plan)` → `@audit:superseded-by(<v2-name>)`. Audit vocabulary `docs/audit/audit-tags.md:24` matches exactly: "後続版 (typically `_unconditional` 版) が既に存在している旧 declaration の残置 ... typically `_of_condEntDiff` 等の conditional 版が unconditional 版に置き換えられた後の history record".
 - n-variable wrappers (`klDiv_pi_marginals_toReal_eq_sum_sub_joint` L215, `jointDifferentialEntropyPi_le_sum` L280): kept `@audit:suspect(multivariate-diffentropy-subadditivity-plan)` (residual discharge target).
 - File header docstring "Honesty status" section rewritten to reflect the Phase 1 / Phase 2 split, with explicit pointer to `_v2` successors and the `pi_withDensity` Mathlib gap as the n-variable blocker.
 
 Final `@audit:` grep:
 ```
-108:`@audit:superseded-by(klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2)` -/
-198:`@audit:superseded-by(jointDifferentialEntropy_le_sum_v2)` -/
+108:`@audit:superseded-by(klDiv_prod_marginals_toReal_eq_sum_sub_joint)` -/
+198:`@audit:superseded-by(jointDifferentialEntropy_le_sum)` -/
 237:`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` -/
 302:`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` -/
 ```

@@ -889,8 +889,8 @@ Entry points total : 736
 
 --- Shannon.MultivariateDiffEntropy  [InformationTheory.Shannon] (3) ---
   jointDifferentialEntropyPi_le_sum
-  jointDifferentialEntropy_le_sum_v2
-  klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
+  jointDifferentialEntropy_le_sum
+  klDiv_prod_marginals_toReal_eq_sum_sub_joint
 
 --- Shannon.MutualInfo  [InformationTheory.Shannon] (4) ---
   mutualInfo_comm

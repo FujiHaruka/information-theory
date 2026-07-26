@@ -371,7 +371,7 @@ lemma _root_.MeasurableEmbedding.map_withDensity_rnDeriv (hf : MeasurableEmbeddi
 
 - **自作 `withDensity_map` helper の前提**: density `g` の `Measurable g` (rnDeriv 版は `Measure.measurable_rnDeriv` で自動充足、generic 版では明示前提)。`MeasurableEquiv` を使う限り `MeasurableEmbedding` (`e.measurableEmbedding`) + `e.measurable` / `e.symm.measurable` は自動。**`SigmaFinite` は generic density 版では不要** (rnDeriv 版が `[SigmaFinite μ] [SigmaFinite ν]` を要求するのは `rnDeriv_map` step のため、generic 版はその step を `symm_apply_apply` で回避するので落とせる見込み — 着手時要確認)。
 - **`measurePreserving_piFinSuccAbove` (`Pi.lean:802`)**: `[∀ i, SigmaFinite (μ i)]` を要求。案 A induction で各 marginal `μ.map (· i)` は `IsProbabilityMeasure` (供給済 instance) ⇒ `SigmaFinite` 自動。**ただし `Measure.pi` を `(μ i).prod (Measure.pi rest)` に分解した後、`klDiv_prod_eq_add` (`MIChainRule.lean:254`) は 4 measure 全て `[IsProbabilityMeasure]` を要求** — reshape 後の `Measure.pi rest` が `IsProbabilityMeasure` であることを `MeasureTheory.isProbabilityMeasure_pi` 等で供給する必要 (前回 plan §落とし穴で言及済、`Measure.isProbabilityMeasure_map` pattern で derive)。
-- **2 変数 `_v2` 既存資産は genuine 完成** (`prod_marginals_eq_volume_withDensity` / `llr_split_from_density_factorize` / `jointDifferentialEntropy_le_sum_v2`, L285+)。案 A induction の内側 (2 変数 step) はこれを `Fin n → ℝ` carrier 側に適用するだけ — **新規 honest 仮定なし、helper 1 本のみが残 gap**。
+- **2 変数の無条件版既存資産は genuine 完成** (`prod_marginals_eq_volume_withDensity` / `llr_split_from_density_factorize` / `jointDifferentialEntropy_le_sum`, L285+)。案 A induction の内側 (2 変数 step) はこれを `Fin n → ℝ` carrier 側に適用するだけ — **新規 honest 仮定なし、helper 1 本のみが残 gap**。
 
 ### 自作が必要な要素 (優先度順)
 

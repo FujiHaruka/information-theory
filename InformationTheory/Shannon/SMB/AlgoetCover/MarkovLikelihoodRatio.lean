@@ -557,10 +557,10 @@ lemma qkSingleton_blockRV_eq_ofReal_exp_negLogQk
       rw [neg_add, Real.exp_add]
 
 omit [DecidableEq α] in
-/-- A.s. equivalence between the new `MRatioUp` ratio form and the old
+/-- A.s. equivalence between the `MRatioUp` ratio form and the
 exp-of-difference form used by downstream lemmas (`MRatioUp_le_sq_eventually`,
 `blockLogAvg_le_negLogQk_plus_error`). -/
-lemma MRatioUp_eq_ofReal_exp_old
+lemma MRatioUp_eq_ofReal_exp
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
     ∀ᵐ ω ∂μ,
       qkSingleton μ p k n (p.blockRV n ω) / (μ.map (p.blockRV n)) {p.blockRV n ω}
@@ -644,7 +644,7 @@ omit [DecidableEq α] in
 
 Proof:
 1. Bridge `MRatioUp` to the ratio form `qkSingleton k n (blockRV n ω) / P_n {blockRV n ω}`
-   a.s. via `MRatioUp_eq_ofReal_exp_old`.
+   a.s. via `MRatioUp_eq_ofReal_exp`.
 2. Push forward through `blockRV n` using `lintegral_map`, then
    `lintegral_fintype` over the finite alphabet:
    `∑_y qkSingleton k n y / P_n {y} * P_n {y}`.
@@ -660,7 +660,7 @@ theorem integral_MRatioUp_le_one
   have h_block_meas : Measurable (p.blockRV n) := p.measurable_blockRV n
   have h_Pn_meas : Measurable (fun y : Fin n → α ↦
       qkSingleton μ p k n y / (μ.map (p.blockRV n)) {y}) := measurable_of_finite _
-  have h_eq_ae := MRatioUp_eq_ofReal_exp_old μ p k n
+  have h_eq_ae := MRatioUp_eq_ofReal_exp μ p k n
   -- rewrite goal via a.s. equality:
   -- ∫⁻ ω, MRatioUp ∂μ = ∫⁻ ω, qkSingleton k n (blockRV n ω) / Pn {blockRV n ω} ∂μ
   have h_lintegral_eq :

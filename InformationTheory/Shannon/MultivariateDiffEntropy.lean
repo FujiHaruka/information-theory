@@ -24,7 +24,7 @@ Common foundation for AWGN / Parallel-Gaussian output-entropy upper bounds.
 ## Main statements
 
 * `integral_log_rnDeriv_self_eq_neg` — `∫ log(dμ/dν) ∂μ = -h(μ)`.
-* `jointDifferentialEntropy_le_sum_v2` — `h(X,Y) ≤ h(X) + h(Y)`.
+* `jointDifferentialEntropy_le_sum` — `h(X,Y) ≤ h(X) + h(Y)`.
 * `jointDifferentialEntropyPi_le_sum` — `h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)`.
 
 ## Implementation notes
@@ -107,10 +107,10 @@ theorem withDensity_map_equiv {α β : Type*} [MeasurableSpace α] [MeasurableSp
 `(klDiv(joint ‖ μ_X ⊗ μ_Y)).toReal = h(μ_X) + h(μ_Y) − h(joint)`.
 
 Hypotheses: absolute continuity + Bayes llr split `h_llr_split` + integrability.
-Superseded by `klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2`, which internalizes the split.
+Superseded by `klDiv_prod_marginals_toReal_eq_sum_sub_joint`, which internalizes the split.
 
-`@audit:superseded-by(klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2)` -/
-theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
+`@audit:superseded-by(klDiv_prod_marginals_toReal_eq_sum_sub_joint)` -/
+theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_of_llr_split
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
     (h_snd_ac : (μ.map Prod.snd) ≪ volume)
@@ -195,10 +195,10 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
 /-- 2-variable differential-entropy subadditivity `h(X,Y) ≤ h(X) + h(Y)`.
 
 Requires an explicit `h_llr_split` hypothesis for the Bayes density split.
-Superseded by `jointDifferentialEntropy_le_sum_v2`, which internalizes the split.
+Superseded by `jointDifferentialEntropy_le_sum`, which internalizes the split.
 
-`@audit:superseded-by(jointDifferentialEntropy_le_sum_v2)` -/
-theorem jointDifferentialEntropy_le_sum
+`@audit:superseded-by(jointDifferentialEntropy_le_sum)` -/
+theorem jointDifferentialEntropy_le_sum_of_llr_split
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
     (h_snd_ac : (μ.map Prod.snd) ≪ volume)
@@ -225,7 +225,7 @@ theorem jointDifferentialEntropy_le_sum
       ≤ differentialEntropy (μ.map Prod.fst) + differentialEntropy (μ.map Prod.snd) := by
   have h_nn : (0 : ℝ) ≤ (klDiv μ ((μ.map Prod.fst).prod (μ.map Prod.snd))).toReal :=
     ENNReal.toReal_nonneg
-  have h_bridge := klDiv_prod_marginals_toReal_eq_sum_sub_joint
+  have h_bridge := klDiv_prod_marginals_toReal_eq_sum_sub_joint_of_llr_split
     h_fst_ac h_snd_ac h_joint_ac h_llr_split h_int_fst h_int_snd h_int_joint
     h_int_fst_marg h_int_snd_marg
   linarith [h_nn, h_bridge]
@@ -527,9 +527,9 @@ theorem jointDifferentialEntropyPi_le_sum
 
 /-! ## 2-variable Bayes density split
 
-The `_v2` family below discharges the `h_llr_split` hypothesis of the
-original `klDiv_prod_marginals_toReal_eq_sum_sub_joint` and
-`jointDifferentialEntropy_le_sum` via Mathlib's `prod_withDensity` +
+The unconditional family below discharges the `h_llr_split` hypothesis of
+`klDiv_prod_marginals_toReal_eq_sum_sub_joint_of_llr_split` and
+`jointDifferentialEntropy_le_sum_of_llr_split` via Mathlib's `prod_withDensity` +
 `rnDeriv_mul_rnDeriv`. -/
 
 /-- Product of marginals expressed as a `withDensity` on Lebesgue measure.
@@ -704,7 +704,7 @@ theorem llr_split_from_density_factorize
 
 The Bayes density split is produced internally by `llr_split_from_density_factorize`. -/
 @[entry_point]
-theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
+theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
     (h_snd_ac : (μ.map Prod.snd) ≪ volume)
@@ -724,7 +724,7 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
     (klDiv μ ((μ.map Prod.fst).prod (μ.map Prod.snd))).toReal
       = differentialEntropy (μ.map Prod.fst) + differentialEntropy (μ.map Prod.snd)
         - jointDifferentialEntropy μ :=
-  klDiv_prod_marginals_toReal_eq_sum_sub_joint
+  klDiv_prod_marginals_toReal_eq_sum_sub_joint_of_llr_split
     h_fst_ac h_snd_ac h_joint_ac
     (llr_split_from_density_factorize h_fst_ac h_snd_ac h_joint_ac)
     h_int_fst h_int_snd h_int_joint h_int_fst_marg h_int_snd_marg
@@ -734,7 +734,7 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
 The Bayes density split is internalized via `llr_split_from_density_factorize`;
 no explicit `h_llr_split` argument required. -/
 @[entry_point]
-theorem jointDifferentialEntropy_le_sum_v2
+theorem jointDifferentialEntropy_le_sum
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
     (h_snd_ac : (μ.map Prod.snd) ≪ volume)
@@ -753,7 +753,7 @@ theorem jointDifferentialEntropy_le_sum_v2
         (μ.map Prod.snd)) :
     jointDifferentialEntropy μ
       ≤ differentialEntropy (μ.map Prod.fst) + differentialEntropy (μ.map Prod.snd) :=
-  jointDifferentialEntropy_le_sum
+  jointDifferentialEntropy_le_sum_of_llr_split
     h_fst_ac h_snd_ac h_joint_ac
     (llr_split_from_density_factorize h_fst_ac h_snd_ac h_joint_ac)
     h_int_fst h_int_snd h_int_joint h_int_fst_marg h_int_snd_marg

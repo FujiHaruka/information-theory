@@ -139,8 +139,8 @@ slug を docstring 本文で参照しているだけで、declaration 上の tag
 
   | # | file:line | declaration | load-bearing hyp | plan 内対応 | close ROI |
   |---|---|---|---|---|---|
-  | 1 | MultivariateDiffEntropy.lean:90 | `klDiv_prod_marginals_toReal_eq_sum_sub_joint` | `hμ_ac`, `h_joint_ac`, `h_llr_split`, `h_int_marg`, `h_int_joint`, `h_marg_id` (subadditivity bridge の honest hyp 6 本) | **なし** (plan は univariate のみ) | low (Bayes llr split / `klDiv_pi` 分解が Mathlib 不在、本格 inventory 必要) |
-  | 2 | MultivariateDiffEntropy.lean:175 | `jointDifferentialEntropy_le_sum` | 同上 6 本を被継承 (`klDiv_prod_marginals_toReal_eq_sum_sub_joint` + `klDiv` non-negativity) | なし | medium (連鎖、#1 が閉じれば自動) |
+  | 1 | MultivariateDiffEntropy.lean:90 | `klDiv_prod_marginals_toReal_eq_sum_sub_joint_of_llr_split` | `hμ_ac`, `h_joint_ac`, `h_llr_split`, `h_int_marg`, `h_int_joint`, `h_marg_id` (subadditivity bridge の honest hyp 6 本) | **なし** (plan は univariate のみ) | low (Bayes llr split / `klDiv_pi` 分解が Mathlib 不在、本格 inventory 必要) |
+  | 2 | MultivariateDiffEntropy.lean:175 | `jointDifferentialEntropy_le_sum_of_llr_split` | 同上 6 本を被継承 (`klDiv_prod_marginals_toReal_eq_sum_sub_joint_of_llr_split` + `klDiv` non-negativity) | なし | medium (連鎖、#1 が閉じれば自動) |
   | 3 | MultivariateDiffEntropy.lean:214 | `klDiv_pi_marginals_toReal_eq_sum_sub_joint` | n-variable 版の honest hyp 7-8 本 (`hμ_ac`, `h_joint_ac`, `h_llr_split`, `h_int_marg`, `h_int_joint`, `h_marg_id`, `h_marg_int`) | なし | low (`Measure.pi` rnDeriv split が薄い) |
   | 4 | MultivariateDiffEntropy.lean:279 | `jointDifferentialEntropyPi_le_sum` | 同上を継承 | なし | medium (連鎖、#3 が閉じれば自動) |
 

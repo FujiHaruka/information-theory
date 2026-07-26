@@ -603,7 +603,7 @@ private theorem wz_inputs_cond_indep
   rw [hzero] at hle
   exact le_antisymm hle zero_le
 
-private lemma wz_singleletter_rate_le_step1
+private lemma wz_perletter_mutualInfo_sub_eq_condMutualInfo
     {Ω : Type*} [MeasurableSpace Ω] {M n : ℕ} [NeZero M]
     (c : WynerZivCode M n α β γ) (hencoder : Measurable c.encoder)
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -670,7 +670,7 @@ private lemma wz_singleletter_rate_le_step1
     rw [← hc1, hswap]; exact hc2
   rw [← hkey, ENNReal.add_sub_cancel_left (hfin_YU i)]
 
-private lemma wz_singleletter_rate_le_step2
+private lemma wz_perletter_condMutualInfo_eq_block
     {Ω : Type*} [MeasurableSpace Ω] {M n : ℕ} [NeZero M]
     (c : WynerZivCode M n α β γ) (hencoder : Measurable c.encoder)
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -761,7 +761,7 @@ private lemma wz_singleletter_rate_le_step2
         rw [hzero1, zero_add]
     _ = condMutualInfo μ (Xs i) Jn Yn := hreshape
 
-private lemma wz_singleletter_rate_le_step3
+private lemma wz_sum_condMutualInfo_le_mutualInfo_sub
     {Ω : Type*} [MeasurableSpace Ω] {M n : ℕ} [NeZero M]
     (c : WynerZivCode M n α β γ) (hencoder : Measurable c.encoder)
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -919,7 +919,7 @@ private theorem wz_singleletter_rate_le
   -- Per-letter identity `I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ) = I(Xᵢ; Uᵢ | Yᵢ)`.
   -- Twofold chain rule `I((Xᵢ,Yᵢ); Uᵢ) = I(Yᵢ; Uᵢ) + I(Xᵢ; Uᵢ | Yᵢ) = I(Xᵢ; Uᵢ) + I(Yᵢ; Uᵢ | Xᵢ)`
   -- with `I(Yᵢ; Uᵢ | Xᵢ) = 0` (per-letter Markov chain `Uᵢ − Xᵢ − Yᵢ`, `wz_perletter_markov`).
-  have hstep1 := wz_singleletter_rate_le_step1 c hencoder μ Xs Ys hXs hYs hindep
+  have hstep1 := wz_perletter_mutualInfo_sub_eq_condMutualInfo c hencoder μ Xs Ys hXs hYs hindep
   -- Memoryless collapse `I(Xᵢ; Uᵢ | Yᵢ) = I(Xᵢ; J | Yⁿ)`. Needs the
   -- conditional chain rule on the middle argument `Uᵢ = (J, Y_{\i})` plus the memoryless
   -- conditional independence `I(Xᵢ; Y_{\i} | Yᵢ) = 0` and the reshape `(Y_{\i}, Yᵢ) ≅ Yⁿ`.
@@ -928,14 +928,14 @@ private theorem wz_singleletter_rate_le
           (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
             fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) (Ys i)
         = condMutualInfo μ (Xs i) Jn Yn :=
-    wz_singleletter_rate_le_step2 c hencoder μ Xs Ys hXs hYs hindep
+    wz_perletter_condMutualInfo_eq_block c hencoder μ Xs Ys hXs hYs hindep
   -- Sum bound `∑ᵢ I(Xᵢ; J | Yⁿ) ≤ I(J; Xⁿ) − I(J; Yⁿ)`. Needs the
   -- conditional chain rule `I(Xⁿ; J | Yⁿ) = ∑ᵢ I(Xᵢ; J | (Yⁿ, X^{<i}))`, memoryless
   -- monotonicity `I(Xᵢ; J | Yⁿ) ≤ I(Xᵢ; J | (Yⁿ, X^{<i}))`, and the deterministic-encoder
   -- Markov chain `J − Xⁿ − Yⁿ` giving `I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)`.
   have hsum : ∑ i : Fin n, condMutualInfo μ (Xs i) Jn Yn
       ≤ mutualInfo μ Jn Xn - mutualInfo μ Jn Yn :=
-    wz_singleletter_rate_le_step3 c hencoder μ Xs Ys hXs hYs hindep
+    wz_sum_condMutualInfo_le_mutualInfo_sub c hencoder μ Xs Ys hXs hYs hindep
   -- `.toReal`-bookkeeping tying `hstep1` / `hstep2` / `hsum` together.
   have hsummand_ne : ∀ i : Fin n,
       mutualInfo μ (Xs i)

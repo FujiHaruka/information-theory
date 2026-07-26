@@ -135,7 +135,7 @@
 
 - **状態**: ❌ **Mathlib に直接補題不在** (loogle `MeasureTheory.Measure.rnDeriv, MeasureTheory.Measure.prod` = 0 declarations)
 - **代替**: `ProbabilityTheory.rnDeriv_compProd` (Kernel 形、§3.4 参照) は存在するが、`(volume.prod volume)` への分母は kernel composition product 形ではないため、直接適用不可。
-- **applicability to 軸 3**: **Option α (rnDeriv 形) の致命的 gap**。`(joint).rnDeriv (volume.prod volume)` を `gaussianPDF(x) * gaussianPDF(y - x)` 形に展開する補題は自作必要。InformationTheory 既存の `MultivariateDiffEntropy.klDiv_prod_marginals_toReal_eq_sum_sub_joint` は同じ gap を `h_llr_split` honest hyp で吸収している (line 97-102)。
+- **applicability to 軸 3**: **Option α (rnDeriv 形) の致命的 gap**。`(joint).rnDeriv (volume.prod volume)` を `gaussianPDF(x) * gaussianPDF(y - x)` 形に展開する補題は自作必要。InformationTheory 既存の `MultivariateDiffEntropy.klDiv_prod_marginals_toReal_eq_sum_sub_joint_of_llr_split` は同じ gap を `h_llr_split` honest hyp で吸収している (line 97-102)。
 
 ### **不在**: `klDiv (gaussianReal _ _) (gaussianReal _ _)` の Mathlib 補題
 
@@ -509,7 +509,7 @@ end InformationTheory.Shannon.AWGN
 | 1-d Gaussian 値の closed form | ✅ `rnDeriv_gaussianReal` | ✅ `differentialEntropy_gaussianReal` (InformationTheory) | ✅ `klDiv_gaussianReal_gaussianReal_eq` (InformationTheory) |
 | Y = X+Z の joint density / convolution | ✅ `gaussianReal_conv_gaussianReal` | △ 1-d 化経由 | ✅ `gaussianReal_add_gaussianReal_of_indepFun` |
 | n-d (Measure.pi) への持ち上げ補題 | ❌ Mathlib `rnDeriv × Measure.pi` = 0 | ❌ Mathlib `differentialEntropy_pi` 不在、InformationTheory `jointDifferentialEntropyPi_le_sum` は load-bearing hyp 残置 | ✅ **`klDiv_pi_eq_sum` (InformationTheory、無条件 = 等号)** |
-| chain rule (joint → marginal + conditional) | △ `rnDeriv_compProd` (Mathlib) があるが分母 `volume.prod` への bridge 必要 | △ `klDiv_prod_marginals_toReal_eq_sum_sub_joint` (InformationTheory) は load-bearing hyp 経由 | ✅ **`klDiv_compProd_eq_add` (Mathlib、無条件)** |
+| chain rule (joint → marginal + conditional) | △ `rnDeriv_compProd` (Mathlib) があるが分母 `volume.prod` への bridge 必要 | △ `klDiv_prod_marginals_toReal_eq_sum_sub_joint_of_llr_split` (InformationTheory) は load-bearing hyp 経由 | ✅ **`klDiv_compProd_eq_add` (Mathlib、無条件)** |
 | AWGN setup (`p ⊗ₘ W`) との接続 | △ kernel 形で書ければ `rnDeriv_compProd` 経由 | △ 1-d 化経由 | ✅ **`mutualInfoOfChannel` (InformationTheory) が klDiv 形で既存** |
 | Phase B-4 (indep-product の典型確率) との接続 | △ density 形の Markov 不等式 | △ 同上 | ✅ **`klDiv_pi_eq_sum` で 1 行** |
 | load-bearing hyp 残置リスク | 中 (rnDeriv 分解 bridge) | **高** (`h_llr_split` 残置、InformationTheory 既存自作の負債を継承) | **低** (chain rule が無条件 = 等号) |
