@@ -2,6 +2,8 @@ import InformationTheory.Shannon.BroadcastChannel.Basic
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV
 import InformationTheory.Shannon.ChannelCoding.CodeToAmbient
 import InformationTheory.Shannon.CondEntropyMemoryless
+import InformationTheory.Shannon.CondMutualInfo
+import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.MutualInfo
 
 /-!
@@ -21,6 +23,9 @@ outputs are read off the resulting measure as coordinate projections.
 * `bcConverseYs`, `bcConverseY₁s`, `bcConverseY₂s` — the output-pair projection and its two
   per-receiver components.
 * `bcConverseCodeKernel` — the codeword → output-block kernel.
+* `uvPadMap`, `uvUnpadMap` — the re-encoding of the letter-`i` auxiliary alphabet into a
+  fixed one, and its left inverse.
+* `uvAuxPad` — the letter-`i` auxiliary variable read in that fixed alphabet.
 
 ## Main statements
 
@@ -38,6 +43,9 @@ outputs are read off the resulting measure as coordinate projections.
   `(log M₁, log M₂)` and the Fano slack still symbolic.
 * `bc_uv_rate_extract` — the same bound with the rate pair `(n R₁, n R₂)` of a code whose
   message counts satisfy `⌈exp (n Rₖ)⌉ ≤ Mₖ`.
+* `uvAux_pad_mutualInfo_eq`, `uvAux_pad_condMutualInfo_eq` — re-encoding the auxiliary
+  variable into the fixed alphabet changes neither the mutual information it carries about
+  an output nor the conditional mutual information it conditions.
 
 ## Implementation notes
 
@@ -46,6 +54,12 @@ of sequences.  With that choice the message-to-output kernel is literally
 `BroadcastCode.blockOutputLaw`, so the product structure over letters is available to the
 structural lemmas and the same-letter pair `(Y_{1,i}, Y_{2,i})` is never split; the two
 per-receiver output sequences are recovered as further projections.
+
+The alphabet of `uvAux … i` depends on the letter `i`, so different letters produce auxiliary
+variables of different types.  `uvAuxPad` moves all of them onto one alphabet by padding the
+prefix and the suffix with a default value and keeping `i` as a first component; keeping `i`
+is what makes the padding invertible, and invertibility is what turns the data processing
+inequality into an equality of informations.
 
 Together with the uniformity and independence statements the four structural lemmas discharge
 the structural preconditions of the message-level converse `bc_uv_converse`.  Instantiating it
@@ -601,5 +615,148 @@ lemma bc_uv_rate_extract [NeZero M₁] [NeZero M₂]
 end Converse
 
 end CodeLevel
+
+/-! ### Fixed-alphabet form of the auxiliary variable -/
+
+section Pad
+
+variable {Ω : Type*} [MeasurableSpace Ω]
+variable {ξ : Type*} [MeasurableSpace ξ]
+variable {γ : Type*} [MeasurableSpace γ]
+
+/-- Re-encoding of the letter-`i` auxiliary alphabet into one that does not depend on `i`: the
+receiver-1 prefix and the receiver-2 suffix are extended to full-length sequences by a default
+value, and the letter index is kept as a first component so that the extension can be undone. -/
+noncomputable def uvPadMap [Nonempty β₁] [Nonempty β₂] (i : Fin n) :
+    ξ × ((Fin i.val → β₁) × ({j : Fin n // i.val < j.val} → β₂)) →
+      Fin n × ξ × (Fin n → β₁) × (Fin n → β₂) :=
+  fun p ↦ (i, p.1,
+    (fun j ↦ if h : j.val < i.val then p.2.1 ⟨j.val, h⟩ else Classical.arbitrary β₁),
+    fun j ↦ if h : i.val < j.val then p.2.2 ⟨j, h⟩ else Classical.arbitrary β₂)
+
+/-- Left inverse of `uvPadMap i`: restrict the two full-length sequences back to the
+receiver-1 prefix `Y₁^{<i}` and the receiver-2 suffix `Y₂^{>i}`. -/
+def uvUnpadMap (i : Fin n) :
+    Fin n × ξ × (Fin n → β₁) × (Fin n → β₂) →
+      ξ × ((Fin i.val → β₁) × ({j : Fin n // i.val < j.val} → β₂)) :=
+  fun q ↦ (q.2.1,
+    (fun j ↦ q.2.2.1 ⟨j.val, j.isLt.trans i.isLt⟩, fun j ↦ q.2.2.2 j.val))
+
+/-- The letter-`i` auxiliary variable of the UV outer bound, re-encoded into the fixed
+alphabet `Fin n × ξ × (Fin n → β₁) × (Fin n → β₂)`, which no longer depends on `i`. -/
+noncomputable def uvAuxPad [Nonempty β₁] [Nonempty β₂]
+    (W : Ω → ξ) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂) (i : Fin n) :
+    Ω → Fin n × ξ × (Fin n → β₁) × (Fin n → β₂) :=
+  fun ω ↦ uvPadMap i (uvAux W Y₁s Y₂s i ω)
+
+omit [MeasurableSpace β₁] [MeasurableSpace β₂] [MeasurableSpace ξ] in
+lemma uvUnpadMap_uvPadMap [Nonempty β₁] [Nonempty β₂] (i : Fin n)
+    (p : ξ × ((Fin i.val → β₁) × ({j : Fin n // i.val < j.val} → β₂))) :
+    uvUnpadMap i (uvPadMap i p) = p := by
+  obtain ⟨w, f, g⟩ := p
+  simp only [uvPadMap, uvUnpadMap, Prod.mk.injEq, true_and]
+  refine ⟨funext fun j ↦ ?_, funext fun j ↦ ?_⟩
+  · rw [dif_pos j.isLt]
+  · rw [dif_pos j.prop]
+
+lemma measurable_uvPadMap [Nonempty β₁] [Nonempty β₂] (i : Fin n) :
+    Measurable (uvPadMap (ξ := ξ) (β₁ := β₁) (β₂ := β₂) i) := by
+  refine measurable_const.prodMk (measurable_fst.prodMk (Measurable.prodMk ?_ ?_))
+  · refine measurable_pi_lambda _ fun j ↦ ?_
+    by_cases h : j.val < i.val
+    · simp only [dif_pos h]
+      exact (measurable_pi_apply _).comp (measurable_fst.comp measurable_snd)
+    · simp only [dif_neg h]
+      exact measurable_const
+  · refine measurable_pi_lambda _ fun j ↦ ?_
+    by_cases h : i.val < j.val
+    · simp only [dif_pos h]
+      exact (measurable_pi_apply _).comp (measurable_snd.comp measurable_snd)
+    · simp only [dif_neg h]
+      exact measurable_const
+
+lemma measurable_uvUnpadMap (i : Fin n) :
+    Measurable (uvUnpadMap (ξ := ξ) (β₁ := β₁) (β₂ := β₂) i) := by
+  have h₁ : Measurable
+      (fun q : Fin n × ξ × (Fin n → β₁) × (Fin n → β₂) ↦ q.2.2.1) :=
+    measurable_fst.comp (measurable_snd.comp measurable_snd)
+  have h₂ : Measurable
+      (fun q : Fin n × ξ × (Fin n → β₁) × (Fin n → β₂) ↦ q.2.2.2) :=
+    measurable_snd.comp (measurable_snd.comp measurable_snd)
+  exact (measurable_fst.comp measurable_snd).prodMk
+    ((measurable_pi_lambda _ fun j ↦ (measurable_pi_apply _).comp h₁).prodMk
+      (measurable_pi_lambda _ fun j ↦ (measurable_pi_apply _).comp h₂))
+
+lemma measurable_uvAuxPad [Nonempty β₁] [Nonempty β₂]
+    (W : Ω → ξ) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
+    (hW : Measurable W) (hY₁s : ∀ i, Measurable (Y₁s i)) (hY₂s : ∀ i, Measurable (Y₂s i))
+    (i : Fin n) :
+    Measurable (uvAuxPad W Y₁s Y₂s i) :=
+  (measurable_uvPadMap i).comp (measurable_uvAux W Y₁s Y₂s hW hY₁s hY₂s i)
+
+lemma mutualInfo_eq_of_leftInverse {A B : Type*} [MeasurableSpace A] [MeasurableSpace B]
+    (μ : Measure Ω) [IsFiniteMeasure μ] (U : Ω → A) (Yo : Ω → γ)
+    (hU : Measurable U) (hYo : Measurable Yo)
+    {f : A → B} {g : B → A} (hf : Measurable f) (hg : Measurable g)
+    (hgf : ∀ a, g (f a) = a) :
+    mutualInfo μ (fun ω ↦ f (U ω)) Yo = mutualInfo μ U Yo := by
+  have hfU : Measurable (fun ω ↦ f (U ω)) := hf.comp hU
+  refine le_antisymm ?_ ?_
+  · rw [mutualInfo_comm μ _ Yo hfU hYo, mutualInfo_comm μ U Yo hU hYo]
+    exact mutualInfo_le_of_postprocess μ Yo U hYo hU hf
+  · have hUg : U = fun ω ↦ g (f (U ω)) := funext fun ω ↦ (hgf (U ω)).symm
+    rw [mutualInfo_comm μ U Yo hU hYo, mutualInfo_comm μ _ Yo hfU hYo]
+    calc mutualInfo μ Yo U = mutualInfo μ Yo (fun ω ↦ g (f (U ω))) := by rw [← hUg]
+      _ ≤ mutualInfo μ Yo (fun ω ↦ f (U ω)) :=
+          mutualInfo_le_of_postprocess μ Yo _ hYo hfU hg
+
+lemma uvAux_pad_mutualInfo_eq [Nonempty β₁] [Nonempty β₂]
+    (μ : Measure Ω) [IsFiniteMeasure μ]
+    (W : Ω → ξ) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂) (Yo : Ω → γ)
+    (hW : Measurable W) (hY₁s : ∀ i, Measurable (Y₁s i)) (hY₂s : ∀ i, Measurable (Y₂s i))
+    (hYo : Measurable Yo) (i : Fin n) :
+    mutualInfo μ (uvAuxPad W Y₁s Y₂s i) Yo = mutualInfo μ (uvAux W Y₁s Y₂s i) Yo :=
+  mutualInfo_eq_of_leftInverse μ (uvAux W Y₁s Y₂s i) Yo
+    (measurable_uvAux W Y₁s Y₂s hW hY₁s hY₂s i) hYo
+    (measurable_uvPadMap i) (measurable_uvUnpadMap i) (uvUnpadMap_uvPadMap i)
+
+lemma uvAux_pad_mutualInfo_prod_eq [Nonempty β₁] [Nonempty β₂]
+    (μ : Measure Ω) [IsFiniteMeasure μ]
+    (W : Ω → ξ) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
+    (Xs : Ω → α) (Yo : Ω → γ)
+    (hW : Measurable W) (hY₁s : ∀ i, Measurable (Y₁s i)) (hY₂s : ∀ i, Measurable (Y₂s i))
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (i : Fin n) :
+    mutualInfo μ (fun ω ↦ (uvAuxPad W Y₁s Y₂s i ω, Xs ω)) Yo
+      = mutualInfo μ (fun ω ↦ (uvAux W Y₁s Y₂s i ω, Xs ω)) Yo :=
+  mutualInfo_eq_of_leftInverse μ (fun ω ↦ (uvAux W Y₁s Y₂s i ω, Xs ω)) Yo
+    ((measurable_uvAux W Y₁s Y₂s hW hY₁s hY₂s i).prodMk hXs) hYo
+    (f := fun p ↦ (uvPadMap i p.1, p.2)) (g := fun q ↦ (uvUnpadMap i q.1, q.2))
+    ((measurable_uvPadMap i).comp measurable_fst |>.prodMk measurable_snd)
+    ((measurable_uvUnpadMap i).comp measurable_fst |>.prodMk measurable_snd)
+    (fun a ↦ by rw [uvUnpadMap_uvPadMap i a.1])
+
+lemma uvAux_pad_condMutualInfo_eq [Nonempty β₁] [Nonempty β₂]
+    [Fintype ξ] [MeasurableSingletonClass ξ]
+    [Fintype β₁] [MeasurableSingletonClass β₁]
+    [Fintype β₂] [MeasurableSingletonClass β₂]
+    [Fintype γ] [MeasurableSingletonClass γ] [StandardBorelSpace γ] [Nonempty γ]
+    [StandardBorelSpace α] [Nonempty α]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (W : Ω → ξ) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
+    (Xs : Ω → α) (Yo : Ω → γ)
+    (hW : Measurable W) (hY₁s : ∀ i, Measurable (Y₁s i)) (hY₂s : ∀ i, Measurable (Y₂s i))
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (i : Fin n) :
+    condMutualInfo μ Xs Yo (uvAuxPad W Y₁s Y₂s i)
+      = condMutualInfo μ Xs Yo (uvAux W Y₁s Y₂s i) := by
+  classical
+  have hAux := measurable_uvAux W Y₁s Y₂s hW hY₁s hY₂s i
+  have hPad := measurable_uvAuxPad W Y₁s Y₂s hW hY₁s hY₂s i
+  have hpair := uvAux_pad_mutualInfo_prod_eq μ W Y₁s Y₂s Xs Yo hW hY₁s hY₂s hXs hYo i
+  rw [mutualInfo_chain_rule μ Xs Yo (uvAuxPad W Y₁s Y₂s i) hXs hYo hPad,
+    mutualInfo_chain_rule μ Xs Yo (uvAux W Y₁s Y₂s i) hXs hYo hAux,
+    uvAux_pad_mutualInfo_eq μ W Y₁s Y₂s Yo hW hY₁s hY₂s hYo i] at hpair
+  exact (ENNReal.add_right_inj (mutualInfo_ne_top μ _ Yo hAux hYo)).mp hpair
+
+end Pad
 
 end InformationTheory.Shannon.BroadcastChannel
