@@ -2,6 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.BroadcastChannel.Basic
 import InformationTheory.Shannon.BroadcastChannel.ConverseGateway
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Gateway
+import InformationTheory.Shannon.Converse
 import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.MIChainRule
@@ -41,6 +42,7 @@ output with a suffix of the other.
 
 * `bc_uv_singleletterize_r1` / `bc_uv_singleletterize_r2` — the two corner bounds.
 * `bc_uv_singleletterize_sum₂` / `bc_uv_singleletterize_sum₁` — the two sum bounds.
+* `bc_uv_converse` — the four bounds at the message level, with the Fano slack.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -670,5 +672,212 @@ theorem bc_uv_singleletterize_sum₁
     uvAux_absorbs_receiver1_terms μ W₁ Y₁s Y₂s i hW₁ hY₁s hY₂s
 
 end SumBounds
+
+/-! ## Message level -/
+
+/-- The Nair–El Gamal (UV) outer-bound predicate: the two corner inequalities together with
+the two sum-rate inequalities. As with `InBCCapacityRegion` the four information slots are
+abstract; the intended instantiation (`bc_uv_converse`) is `I₁ = ∑ᵢ I(Vᵢ; Y_{1,i})`,
+`I₂ = ∑ᵢ I(Uᵢ; Y_{2,i})`, `J₂ = ∑ᵢ (I(Uᵢ; Y_{2,i}) + I(Xᵢ; Y_{1,i} | Uᵢ))` and
+`J₁ = ∑ᵢ (I(Vᵢ; Y_{1,i}) + I(Xᵢ; Y_{2,i} | Vᵢ))`, each with the Fano slack added. -/
+structure InBCOuterRegionUV (R₁ R₂ I₁ I₂ J₂ J₁ : ℝ) : Prop where
+  /-- Receiver-1 corner bound. -/
+  bound₁ : R₁ ≤ I₁
+  /-- Receiver-2 corner bound. -/
+  bound₂ : R₂ ≤ I₂
+  /-- Sum-rate bound with the receiver-2 auxiliary in the leading term. -/
+  sumBound₂ : R₁ + R₂ ≤ J₂
+  /-- Sum-rate bound with the receiver-1 auxiliary in the leading term. -/
+  sumBound₁ : R₁ + R₂ ≤ J₁
+
+section MessageLevel
+
+variable {α : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [StandardBorelSpace α] [Nonempty α]
+variable {ξ₁ : Type*} [Fintype ξ₁] [MeasurableSpace ξ₁] [MeasurableSingletonClass ξ₁]
+  [StandardBorelSpace ξ₁] [Nonempty ξ₁]
+variable {ξ₂ : Type*} [Fintype ξ₂] [MeasurableSpace ξ₂] [MeasurableSingletonClass ξ₂]
+  [StandardBorelSpace ξ₂] [Nonempty ξ₂]
+variable {β₁ : Type*} [Fintype β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
+  [StandardBorelSpace β₁] [Nonempty β₁]
+variable {β₂ : Type*} [Fintype β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
+  [StandardBorelSpace β₂] [Nonempty β₂]
+
+omit [Fintype α] [MeasurableSingletonClass α] [Fintype ξ₁] [MeasurableSingletonClass ξ₁] in
+private lemma mutualInfo_le_condMutualInfo_of_indep_markov
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (W₁ : Ω → ξ₁) (W₂ : Ω → ξ₂) (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β₁)
+    (hW₁ : Measurable W₁) (hW₂ : Measurable W₂)
+    (hXs : ∀ j, Measurable (Xs j)) (hYs : ∀ j, Measurable (Ys j))
+    (h_indep : mutualInfo μ W₁ W₂ = 0)
+    (hmarkov : IsMarkovChain μ (fun ω ↦ (W₂ ω, W₁ ω))
+      (fun ω ↦ (W₂ ω, fun j ↦ Xs j ω)) (fun ω j ↦ Ys j ω)) :
+    mutualInfo μ W₁ (fun ω j ↦ Ys j ω)
+      ≤ condMutualInfo μ (fun ω j ↦ Xs j ω) (fun ω j ↦ Ys j ω) W₂ := by
+  classical
+  have hXpi : Measurable (fun ω j ↦ Xs j ω) := measurable_pi_iff.mpr hXs
+  have hYpi : Measurable (fun ω j ↦ Ys j ω) := measurable_pi_iff.mpr hYs
+  have hstep1 : mutualInfo μ W₁ (fun ω ↦ (W₂ ω, fun j ↦ Ys j ω))
+      = condMutualInfo μ W₁ (fun ω j ↦ Ys j ω) W₂ := by
+    rw [mutualInfo_comm μ W₁ (fun ω ↦ (W₂ ω, fun j ↦ Ys j ω)) hW₁ (hW₂.prodMk hYpi),
+      mutualInfo_chain_rule μ (fun ω j ↦ Ys j ω) W₁ W₂ hYpi hW₁ hW₂,
+      mutualInfo_comm μ W₂ W₁ hW₂ hW₁, h_indep, zero_add]
+    exact condMutualInfo_comm μ (fun ω j ↦ Ys j ω) W₁ W₂ hYpi hW₁ hW₂
+  have hmono : mutualInfo μ W₁ (fun ω j ↦ Ys j ω)
+      ≤ mutualInfo μ W₁ (fun ω ↦ (W₂ ω, fun j ↦ Ys j ω)) := by
+    rw [mutualInfo_comm μ W₁ (fun ω j ↦ Ys j ω) hW₁ hYpi,
+      mutualInfo_comm μ W₁ (fun ω ↦ (W₂ ω, fun j ↦ Ys j ω)) hW₁ (hW₂.prodMk hYpi)]
+    have hreshape : mutualInfo μ (fun ω ↦ (W₂ ω, fun j ↦ Ys j ω)) W₁
+        = mutualInfo μ (fun ω ↦ ((fun j ↦ Ys j ω), W₂ ω)) W₁ :=
+      (mutualInfo_map_left_measurableEquiv μ (fun ω ↦ (W₂ ω, fun j ↦ Ys j ω)) W₁
+        (hW₂.prodMk hYpi) hW₁ MeasurableEquiv.prodComm).symm
+    rw [hreshape, mutualInfo_chain_rule μ W₂ W₁ (fun ω j ↦ Ys j ω) hW₂ hW₁ hYpi]
+    exact le_self_add
+  exact (hmono.trans_eq hstep1).trans
+    (ChannelCodingConverseGeneral.condMutualInfo_le_of_markov_joint μ
+      W₁ (fun ω j ↦ Xs j ω) (fun ω j ↦ Ys j ω) W₂ hW₁ hXpi hYpi hW₂ hmarkov
+      (mutualInfo_ne_top μ W₂ (fun ω j ↦ Ys j ω) hW₂ hYpi))
+
+/-- Message-level UV outer bound for the general broadcast channel (El Gamal–Kim, Ch. 8):
+for uniform, independent messages sent over a memoryless broadcast channel and decoded per
+receiver, the rate pair lies in the Nair–El Gamal region whose four information bounds are
+the per-letter sums over the auxiliaries `Uᵢ = (W₂, Y₁^{<i}, Y₂^{>i})` and
+`Vᵢ = (W₁, Y₁^{<i}, Y₂^{>i})`, plus the Fano error slack.
+
+No degradedness is assumed: what the degraded converse obtained from a conditioner swap is
+supplied here by the Csiszár sum identity. The remaining structural preconditions encode the
+channel, not the conclusion:
+
+* `h_memo₁` / `h_memo₂` — joint-output memoryless, `Y_{k,i} ⫫ (W, X^{≠i}, Y₁^{≠i}, Y₂^{≠i}) | Xᵢ`.
+  The same-letter pair `(Y_{1,i}, Y_{2,i})` is never decoupled, so the two outputs stay
+  arbitrarily correlated within a letter.
+* `hmarkov₁` / `hmarkov₂` — the encoder Markov chain `(W₂, W₁) → (W₂, Xⁿ) → Y₁ⁿ` and its
+  mirror, which is what makes the messages act on the outputs only through the codeword.
+
+The operational instantiation — building `μ` from uniform messages through the encoder and
+the channel — is a separate wrapper, not part of this statement. -/
+@[entry_point]
+theorem bc_uv_converse
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (W₁ : Ω → ξ₁) (W₂ : Ω → ξ₂) (Xs : Fin n → Ω → α)
+    (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
+    (dec₁ : (Fin n → β₁) → ξ₁) (dec₂ : (Fin n → β₂) → ξ₂)
+    (hW₁ : Measurable W₁) (hW₂ : Measurable W₂) (hXs : ∀ j, Measurable (Xs j))
+    (hY₁s : ∀ j, Measurable (Y₁s j)) (hY₂s : ∀ j, Measurable (Y₂s j))
+    (hW₁_uniform : μ.map W₁ = (Fintype.card ξ₁ : ℝ≥0∞)⁻¹ • Measure.count)
+    (hW₂_uniform : μ.map W₂ = (Fintype.card ξ₂ : ℝ≥0∞)⁻¹ • Measure.count)
+    (hcard₁ : 2 ≤ Fintype.card ξ₁) (hcard₂ : 2 ≤ Fintype.card ξ₂)
+    (h_indep : mutualInfo μ W₁ W₂ = 0)
+    (h_memo₁ : ∀ i : Fin n,
+      IsMarkovChain μ
+        (fun ω ↦ (W₂ ω,
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+           ((fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω),
+            (fun (j : {j : Fin n // j ≠ i}) ↦ Y₂s j.val ω)))))
+        (Xs i) (Y₁s i))
+    (h_memo₂ : ∀ i : Fin n,
+      IsMarkovChain μ
+        (fun ω ↦ (W₁ ω,
+          ((fun (j : {j : Fin n // j ≠ i}) ↦ Xs j.val ω),
+           ((fun (j : {j : Fin n // j ≠ i}) ↦ Y₁s j.val ω),
+            (fun (j : {j : Fin n // j ≠ i}) ↦ Y₂s j.val ω)))))
+        (Xs i) (Y₂s i))
+    (hmarkov₁ : IsMarkovChain μ (fun ω ↦ (W₂ ω, W₁ ω))
+      (fun ω ↦ (W₂ ω, fun j ↦ Xs j ω)) (fun ω j ↦ Y₁s j ω))
+    (hmarkov₂ : IsMarkovChain μ (fun ω ↦ (W₁ ω, W₂ ω))
+      (fun ω ↦ (W₁ ω, fun j ↦ Xs j ω)) (fun ω j ↦ Y₂s j ω)) :
+    InBCOuterRegionUV
+      (Real.log (Fintype.card ξ₁)) (Real.log (Fintype.card ξ₂))
+      ((∑ i : Fin n, mutualInfo μ (uvAux W₁ Y₁s Y₂s i) (Y₁s i)).toReal
+        + Real.binEntropy (MeasureFano.errorProb μ W₁ (fun ω j ↦ Y₁s j ω) dec₁)
+        + MeasureFano.errorProb μ W₁ (fun ω j ↦ Y₁s j ω) dec₁
+            * Real.log ((Fintype.card ξ₁ : ℝ) - 1))
+      ((∑ i : Fin n, mutualInfo μ (uvAux W₂ Y₁s Y₂s i) (Y₂s i)).toReal
+        + Real.binEntropy (MeasureFano.errorProb μ W₂ (fun ω j ↦ Y₂s j ω) dec₂)
+        + MeasureFano.errorProb μ W₂ (fun ω j ↦ Y₂s j ω) dec₂
+            * Real.log ((Fintype.card ξ₂ : ℝ) - 1))
+      ((∑ i : Fin n, (mutualInfo μ (uvAux W₂ Y₁s Y₂s i) (Y₂s i)
+            + condMutualInfo μ (Xs i) (Y₁s i) (uvAux W₂ Y₁s Y₂s i))).toReal
+        + (Real.binEntropy (MeasureFano.errorProb μ W₁ (fun ω j ↦ Y₁s j ω) dec₁)
+            + MeasureFano.errorProb μ W₁ (fun ω j ↦ Y₁s j ω) dec₁
+                * Real.log ((Fintype.card ξ₁ : ℝ) - 1))
+        + (Real.binEntropy (MeasureFano.errorProb μ W₂ (fun ω j ↦ Y₂s j ω) dec₂)
+            + MeasureFano.errorProb μ W₂ (fun ω j ↦ Y₂s j ω) dec₂
+                * Real.log ((Fintype.card ξ₂ : ℝ) - 1)))
+      ((∑ i : Fin n, (mutualInfo μ (uvAux W₁ Y₁s Y₂s i) (Y₁s i)
+            + condMutualInfo μ (Xs i) (Y₂s i) (uvAux W₁ Y₁s Y₂s i))).toReal
+        + (Real.binEntropy (MeasureFano.errorProb μ W₁ (fun ω j ↦ Y₁s j ω) dec₁)
+            + MeasureFano.errorProb μ W₁ (fun ω j ↦ Y₁s j ω) dec₁
+                * Real.log ((Fintype.card ξ₁ : ℝ) - 1))
+        + (Real.binEntropy (MeasureFano.errorProb μ W₂ (fun ω j ↦ Y₂s j ω) dec₂)
+            + MeasureFano.errorProb μ W₂ (fun ω j ↦ Y₂s j ω) dec₂
+                * Real.log ((Fintype.card ξ₂ : ℝ) - 1))) := by
+  classical
+  have hXpi : Measurable (fun ω j ↦ Xs j ω) := measurable_pi_iff.mpr hXs
+  have hY₁pi : Measurable (fun ω j ↦ Y₁s j ω) := measurable_pi_iff.mpr hY₁s
+  have hY₂pi : Measurable (fun ω j ↦ Y₂s j ω) := measurable_pi_iff.mpr hY₂s
+  have hmi₁fin : mutualInfo μ W₁ (fun ω j ↦ Y₁s j ω) ≠ ∞ :=
+    mutualInfo_ne_top μ W₁ (fun ω j ↦ Y₁s j ω) hW₁ hY₁pi
+  have hmi₂fin : mutualInfo μ W₂ (fun ω j ↦ Y₂s j ω) ≠ ∞ :=
+    mutualInfo_ne_top μ W₂ (fun ω j ↦ Y₂s j ω) hW₂ hY₂pi
+  have hcmi₁fin : condMutualInfo μ (fun ω j ↦ Xs j ω) (fun ω j ↦ Y₁s j ω) W₂ ≠ ∞ :=
+    condMutualInfo_ne_top μ _ _ W₂ hXpi hY₁pi hW₂
+  have hcmi₂fin : condMutualInfo μ (fun ω j ↦ Xs j ω) (fun ω j ↦ Y₂s j ω) W₁ ≠ ∞ :=
+    condMutualInfo_ne_top μ _ _ W₁ hXpi hY₂pi hW₁
+  have hfano₁ := shannon_converse_single_shot μ W₁ (fun ω j ↦ Y₁s j ω) dec₁ hW₁ hY₁pi
+    (measurable_of_countable _) hW₁_uniform hcard₁ hmi₁fin
+  have hfano₂ := shannon_converse_single_shot μ W₂ (fun ω j ↦ Y₂s j ω) dec₂ hW₂ hY₂pi
+    (measurable_of_countable _) hW₂_uniform hcard₂ hmi₂fin
+  have hUfin : ∀ i : Fin n, mutualInfo μ (uvAux W₂ Y₁s Y₂s i) (Y₂s i) ≠ ∞ := fun i ↦
+    mutualInfo_ne_top μ _ (Y₂s i) (measurable_uvAux W₂ Y₁s Y₂s hW₂ hY₁s hY₂s i) (hY₂s i)
+  have hVfin : ∀ i : Fin n, mutualInfo μ (uvAux W₁ Y₁s Y₂s i) (Y₁s i) ≠ ∞ := fun i ↦
+    mutualInfo_ne_top μ _ (Y₁s i) (measurable_uvAux W₁ Y₁s Y₂s hW₁ hY₁s hY₂s i) (hY₁s i)
+  have hXUfin : ∀ i : Fin n,
+      condMutualInfo μ (Xs i) (Y₁s i) (uvAux W₂ Y₁s Y₂s i) ≠ ∞ := fun i ↦
+    condMutualInfo_ne_top μ (Xs i) (Y₁s i) _ (hXs i) (hY₁s i)
+      (measurable_uvAux W₂ Y₁s Y₂s hW₂ hY₁s hY₂s i)
+  have hXVfin : ∀ i : Fin n,
+      condMutualInfo μ (Xs i) (Y₂s i) (uvAux W₁ Y₁s Y₂s i) ≠ ∞ := fun i ↦
+    condMutualInfo_ne_top μ (Xs i) (Y₂s i) _ (hXs i) (hY₂s i)
+      (measurable_uvAux W₁ Y₁s Y₂s hW₁ hY₁s hY₂s i)
+  have hfinV : (∑ i : Fin n, mutualInfo μ (uvAux W₁ Y₁s Y₂s i) (Y₁s i)) ≠ ∞ :=
+    (ENNReal.sum_lt_top.mpr fun i _ ↦ (hVfin i).lt_top).ne
+  have hfinU : (∑ i : Fin n, mutualInfo μ (uvAux W₂ Y₁s Y₂s i) (Y₂s i)) ≠ ∞ :=
+    (ENNReal.sum_lt_top.mpr fun i _ ↦ (hUfin i).lt_top).ne
+  have hfinS₂ : (∑ i : Fin n, (mutualInfo μ (uvAux W₂ Y₁s Y₂s i) (Y₂s i)
+      + condMutualInfo μ (Xs i) (Y₁s i) (uvAux W₂ Y₁s Y₂s i))) ≠ ∞ :=
+    (ENNReal.sum_lt_top.mpr fun i _ ↦
+      (ENNReal.add_ne_top.mpr ⟨hUfin i, hXUfin i⟩).lt_top).ne
+  have hfinS₁ : (∑ i : Fin n, (mutualInfo μ (uvAux W₁ Y₁s Y₂s i) (Y₁s i)
+      + condMutualInfo μ (Xs i) (Y₂s i) (uvAux W₁ Y₁s Y₂s i))) ≠ ∞ :=
+    (ENNReal.sum_lt_top.mpr fun i _ ↦
+      (ENNReal.add_ne_top.mpr ⟨hVfin i, hXVfin i⟩).lt_top).ne
+  have hdp₁ : (mutualInfo μ W₁ (fun ω j ↦ Y₁s j ω)).toReal
+      ≤ (condMutualInfo μ (fun ω j ↦ Xs j ω) (fun ω j ↦ Y₁s j ω) W₂).toReal :=
+    ENNReal.toReal_mono hcmi₁fin
+      (mutualInfo_le_condMutualInfo_of_indep_markov μ W₁ W₂ Xs Y₁s hW₁ hW₂ hXs hY₁s
+        h_indep hmarkov₁)
+  have hdp₂ : (mutualInfo μ W₂ (fun ω j ↦ Y₂s j ω)).toReal
+      ≤ (condMutualInfo μ (fun ω j ↦ Xs j ω) (fun ω j ↦ Y₂s j ω) W₁).toReal :=
+    ENNReal.toReal_mono hcmi₂fin
+      (mutualInfo_le_condMutualInfo_of_indep_markov μ W₂ W₁ Xs Y₂s hW₂ hW₁ hXs hY₂s
+        ((mutualInfo_comm μ W₁ W₂ hW₁ hW₂).symm.trans h_indep) hmarkov₂)
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · have h := ENNReal.toReal_mono hfinV
+      (bc_uv_singleletterize_r1 μ W₁ Y₁s Y₂s hW₁ hY₁s hY₂s)
+    linarith
+  · have h := ENNReal.toReal_mono hfinU
+      (bc_uv_singleletterize_r2 μ W₂ Y₁s Y₂s hW₂ hY₁s hY₂s)
+    linarith
+  · have h := ENNReal.toReal_mono hfinS₂
+      (bc_uv_singleletterize_sum₂ μ W₂ Xs Y₁s Y₂s hW₂ hXs hY₁s hY₂s h_memo₁)
+    rw [ENNReal.toReal_add hmi₂fin hcmi₁fin] at h
+    linarith
+  · have h := ENNReal.toReal_mono hfinS₁
+      (bc_uv_singleletterize_sum₁ μ W₁ Xs Y₁s Y₂s hW₁ hXs hY₁s hY₂s h_memo₂)
+    rw [ENNReal.toReal_add hmi₁fin hcmi₂fin] at h
+    linarith
+
+end MessageLevel
 
 end InformationTheory.Shannon.BroadcastChannel
