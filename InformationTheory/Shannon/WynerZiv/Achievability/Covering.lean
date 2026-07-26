@@ -1,3 +1,4 @@
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.WynerZiv.Operational
 import InformationTheory.Shannon.WynerZiv.FactorizableRate
 import InformationTheory.Shannon.WynerZiv.Converse
@@ -917,10 +918,7 @@ lemma wzSideInfoMarginal_sum_eq_one
     exact (Finset.sum_eq_zero_iff_of_nonneg (fun _ _ ↦ measureReal_nonneg)).mp hz x
       (Finset.mem_univ x)
   -- Total mass over `α × β` is `1`.
-  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := by
-    have h1 : (∑ p : α × β, P_XY.real {p}) = P_XY.real (Finset.univ : Finset (α × β)) := by
-      simp [sum_measureReal_singleton]
-    rw [h1, Finset.coe_univ, probReal_univ]
+  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := sum_measureReal_singleton_univ_eq_one P_XY
   show ∑ p : Fin k × {y : β // 0 < ∑ x', P_XY.real {(x', y)}},
       ∑ x, κ' x p.1 * P_XY.real {(x, p.2.1)} = 1
   rw [Fintype.sum_prod_type]
@@ -952,10 +950,7 @@ lemma wzSideInfoMarginal_mem_stdSimplex
 lemma wzSideInfoMarginal_subtype_nonempty
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY] :
     Nonempty {y : β // 0 < ∑ x, P_XY.real {(x, y)}} := by
-  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := by
-    have h1 : (∑ p : α × β, P_XY.real {p}) = P_XY.real (Finset.univ : Finset (α × β)) := by
-      simp [sum_measureReal_singleton]
-    rw [h1, Finset.coe_univ, probReal_univ]
+  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := sum_measureReal_singleton_univ_eq_one P_XY
   obtain ⟨x₀, y₀, hxy⟩ : ∃ x y, 0 < P_XY.real {(x, y)} := by
     by_contra h
     push_neg at h
@@ -1226,10 +1221,7 @@ lemma wz_sourcePmf_mem_stdSimplex
       ∈ stdSimplex ℝ ({x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β) := by
   classical
   refine ⟨fun p ↦ measureReal_nonneg, ?_⟩
-  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := by
-    have h1 : (∑ p : α × β, P_XY.real {p}) = P_XY.real (Finset.univ : Finset (α × β)) := by
-      simp [sum_measureReal_singleton]
-    rw [h1, Finset.coe_univ, probReal_univ]
+  have hsum1 : ∑ p : α × β, P_XY.real {p} = 1 := sum_measureReal_singleton_univ_eq_one P_XY
   show ∑ p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β, P_XY.real {(p.1.1, p.2)} = 1
   rw [Fintype.sum_prod_type]
   have hsub_total :

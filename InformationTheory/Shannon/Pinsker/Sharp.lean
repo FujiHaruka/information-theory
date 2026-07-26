@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.Pinsker.Basic
 import Mathlib.Analysis.Calculus.Deriv.MeanValue
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
@@ -354,16 +355,8 @@ theorem tvNorm_le_sqrt_klDiv_div_two
         rw [div_mul_eq_mul_div, mul_div_assoc, div_self hd, mul_one]
   -- Step 4: Σ (p + 2q) = 1 + 2 = 3
   have h_sum_g : ∑ x : α, (P.real {x} + 2 * Q.real {x}) = 3 := by
-    have h_P : ∑ x : α, P.real {x} = 1 := by
-      rw [show (∑ x : α, P.real {x}) = ∑ x ∈ (Finset.univ : Finset α), P.real {x} from rfl,
-        sum_measureReal_singleton]
-      rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
-      simp [measureReal_def, measure_univ]
-    have h_Q : ∑ x : α, Q.real {x} = 1 := by
-      rw [show (∑ x : α, Q.real {x}) = ∑ x ∈ (Finset.univ : Finset α), Q.real {x} from rfl,
-        sum_measureReal_singleton]
-      rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
-      simp [measureReal_def, measure_univ]
+    have h_P : ∑ x : α, P.real {x} = 1 := sum_measureReal_singleton_univ_eq_one P
+    have h_Q : ∑ x : α, Q.real {x} = 1 := sum_measureReal_singleton_univ_eq_one Q
     rw [Finset.sum_add_distrib, ← Finset.mul_sum, h_P, h_Q]
     ring
   -- Step 5: Σ (p-q)²/(p+2q) ≤ (2/3) · KL.toReal

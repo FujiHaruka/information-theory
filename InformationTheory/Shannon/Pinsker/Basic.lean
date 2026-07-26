@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.Bridge
 import Mathlib.Data.Real.Sqrt
 import Mathlib.Algebra.Order.BigOperators.Ring.Finset
@@ -249,16 +250,8 @@ theorem tvNorm_le_sqrt_klDiv
         * (∑ x : α, (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2) :=
     finset_cs_sqrt_sq _ _ (fun _ ↦ measureReal_nonneg) (fun _ ↦ measureReal_nonneg)
   -- Step 6: Σ (√p + √q)^2 ≤ 4 (via sum_sqrt_add_sq_le_four)
-  have h_P : ∑ x : α, P.real {x} = 1 := by
-    rw [show (∑ x : α, P.real {x}) = ∑ x ∈ (Finset.univ : Finset α), P.real {x} from rfl,
-      sum_measureReal_singleton]
-    rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
-    simp [measureReal_def, measure_univ]
-  have h_Q : ∑ x : α, Q.real {x} = 1 := by
-    rw [show (∑ x : α, Q.real {x}) = ∑ x ∈ (Finset.univ : Finset α), Q.real {x} from rfl,
-      sum_measureReal_singleton]
-    rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
-    simp [measureReal_def, measure_univ]
+  have h_P : ∑ x : α, P.real {x} = 1 := sum_measureReal_singleton_univ_eq_one P
+  have h_Q : ∑ x : α, Q.real {x} = 1 := sum_measureReal_singleton_univ_eq_one Q
   have h_sum_sq_sum_le_4 : ∑ x : α, (Real.sqrt (P.real {x}) + Real.sqrt (Q.real {x}))^2 ≤ 4 :=
     sum_sqrt_add_sq_le_four _ _ (fun _ ↦ measureReal_nonneg) (fun _ ↦ measureReal_nonneg)
       h_P h_Q

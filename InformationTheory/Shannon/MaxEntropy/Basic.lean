@@ -1,4 +1,5 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.Bridge
 import Mathlib.Probability.UniformOn
 import Mathlib.Analysis.Convex.Jensen
@@ -212,12 +213,7 @@ theorem klDiv_uniformOn_univ_toReal_eq
   rw [show (∑ x : α, P.real {x} * Real.log N)
         = (∑ x : α, P.real {x}) * Real.log N from
         (Finset.sum_mul _ _ _).symm]
-  have h_sum_one : ∑ x : α, P.real {x} = 1 := by
-    rw [show (∑ x : α, P.real {x})
-          = ∑ x ∈ (Finset.univ : Finset α), P.real {x} from rfl,
-        sum_measureReal_singleton]
-    rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
-    simp [measureReal_def, measure_univ]
+  have h_sum_one : ∑ x : α, P.real {x} = 1 := sum_measureReal_singleton_univ_eq_one P
   rw [h_sum_one, one_mul]
   -- ∑ x, negMulLog (P.real {x}) = entropy μ X (by definition of entropy).
   show Real.log N - ∑ x : α, Real.negMulLog (P.real {x})
@@ -242,11 +238,7 @@ theorem entropy_le_log_card
   set P : Measure α := μ.map X with hP_def
   haveI hP : IsProbabilityMeasure P := Measure.isProbabilityMeasure_map hX.aemeasurable
   have hent : entropy μ X = ∑ x : α, Real.negMulLog (P.real {x}) := rfl
-  have h_sum_one : ∑ x : α, P.real {x} = 1 := by
-    rw [show (∑ x : α, P.real {x}) = ∑ x ∈ (Finset.univ : Finset α), P.real {x} from rfl,
-        sum_measureReal_singleton]
-    rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
-    simp [measureReal_def, measure_univ]
+  have h_sum_one : ∑ x : α, P.real {x} = 1 := sum_measureReal_singleton_univ_eq_one P
   -- finite-sum Jensen: uniform weights 1/N, each point P.real {x} ∈ Ici 0
   have hw0 : ∀ i ∈ (Finset.univ : Finset α), (0 : ℝ) ≤ 1 / N := fun _ _ ↦ by positivity
   have hw1 : ∑ _i ∈ (Finset.univ : Finset α), (1 : ℝ) / N = 1 := by
@@ -283,11 +275,7 @@ theorem entropy_eq_log_card_iff
   set P : Measure α := μ.map X with hP_def
   haveI hP : IsProbabilityMeasure P := Measure.isProbabilityMeasure_map hX.aemeasurable
   have hent : entropy μ X = ∑ x : α, Real.negMulLog (P.real {x}) := rfl
-  have h_sum_one : ∑ x : α, P.real {x} = 1 := by
-    rw [show (∑ x : α, P.real {x}) = ∑ x ∈ (Finset.univ : Finset α), P.real {x} from rfl,
-        sum_measureReal_singleton]
-    rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
-    simp [measureReal_def, measure_univ]
+  have h_sum_one : ∑ x : α, P.real {x} = 1 := sum_measureReal_singleton_univ_eq_one P
   have hw0 : ∀ i ∈ (Finset.univ : Finset α), (0 : ℝ) < 1 / N := fun _ _ ↦ by positivity
   have hw1 : ∑ _i ∈ (Finset.univ : Finset α), (1 : ℝ) / N = 1 := by
     rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one_div, div_self hN_ne_R]

@@ -1,3 +1,4 @@
+import InformationTheory.Probability.SingletonMass
 import InformationTheory.Shannon.MultipleAccess.Achievability.Codebook
 
 /-!
@@ -860,18 +861,10 @@ theorem mac_exists_codebook_le_avg
   haveI : IsProbabilityMeasure (codebookMeasure p₂ M₂ n) :=
     codebookMeasure.instIsProbabilityMeasure p₂ M₂ n
   -- Each codebook law sums to 1 over its (finite) codebook space.
-  have h1 : ∑ c₁ : MACCodebook M₁ n α₁, (codebookMeasure p₁ M₁ n).real {c₁} = 1 := by
-    have h_real_univ : (codebookMeasure p₁ M₁ n).real
-        ((Finset.univ : Finset (MACCodebook M₁ n α₁)) : Set _) = 1 := by
-      rw [Finset.coe_univ, measureReal_def, measure_univ]; rfl
-    rw [sum_measureReal_singleton (μ := codebookMeasure p₁ M₁ n)
-      (Finset.univ : Finset (MACCodebook M₁ n α₁)), h_real_univ]
-  have h2 : ∑ c₂ : MACCodebook M₂ n α₂, (codebookMeasure p₂ M₂ n).real {c₂} = 1 := by
-    have h_real_univ : (codebookMeasure p₂ M₂ n).real
-        ((Finset.univ : Finset (MACCodebook M₂ n α₂)) : Set _) = 1 := by
-      rw [Finset.coe_univ, measureReal_def, measure_univ]; rfl
-    rw [sum_measureReal_singleton (μ := codebookMeasure p₂ M₂ n)
-      (Finset.univ : Finset (MACCodebook M₂ n α₂)), h_real_univ]
+  have h1 : ∑ c₁ : MACCodebook M₁ n α₁, (codebookMeasure p₁ M₁ n).real {c₁} = 1 :=
+    sum_measureReal_singleton_univ_eq_one (codebookMeasure p₁ M₁ n)
+  have h2 : ∑ c₂ : MACCodebook M₂ n α₂, (codebookMeasure p₂ M₂ n).real {c₂} = 1 :=
+    sum_measureReal_singleton_univ_eq_one (codebookMeasure p₂ M₂ n)
   -- Flatten to a single sum over the product codebook space.
   set weight : MACCodebook M₁ n α₁ × MACCodebook M₂ n α₂ → ℝ :=
     fun p ↦ (codebookMeasure p₁ M₁ n).real {p.1} * (codebookMeasure p₂ M₂ n).real {p.2}
