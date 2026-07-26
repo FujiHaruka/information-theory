@@ -196,8 +196,7 @@ internal `sorry`: the supplied `h_xy_z_epi` / `h_x_y_epi` carry lower-arity EPI 
 `IsEntropyPowerInequalityHypothesis _ _ P` transparently, and this wrapper holds no core itself —
 the load-bearing content lives at the definition site of the `IsEntropyPowerInequalityHypothesis`
 predicate. The sister `entropy_power_inequality_four_arg` (`EPI/Plumbing.lean`) carries `@audit:ok`
-for the same reason, and this declaration was migrated from a stale
-`@audit:retract-candidate(load-bearing-predicate)`.
+for the same reason.
 
 @audit:ok -/
 theorem entropy_power_inequality_three_arg {Ω : Type*} {mΩ : MeasurableSpace Ω}

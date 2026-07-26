@@ -14,8 +14,7 @@ import Mathlib.Topology.Instances.NNReal.Lemmas
 
 This file supplies the `t`-parameter measurability needed by the `integrable_deriv`
 field of `isDeBruijnRegularityHyp_of_methodX_unitnoise`
-(`EPI/Case1/RatioLimit/Producer.lean`), the sole remaining `sorryAx` leaf of the EPI
-moonshot.
+(`EPI/Case1/RatioLimit/Producer.lean`).
 
 ## Route — C-b (closed-form score, no `measurable_deriv_with_param`)
 
