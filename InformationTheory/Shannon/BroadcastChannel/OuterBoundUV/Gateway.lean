@@ -23,10 +23,10 @@ of plumbing that the degraded converse (`BroadcastChannel.Converse`) did not:
 
 ## Main statements
 
-* `mutualInfo_chain_rule_Y_fin_suffix`
-* `condMutualInfo_suffix_chain_rule_full`
-* `condMutualInfo_le_add_condMutualInfo`
-* `csiszar_sum_identity_cond`
+* `mutualInfo_chain_rule_Y_fin_suffix` — reverse-order expansion of `I(W; Bⁿ)`.
+* `condMutualInfo_suffix_chain_rule_full` — the same expansion for `I(Bⁿ; C | Z)`.
+* `condMutualInfo_le_add_condMutualInfo` — inserting a variable into the conditioner.
+* `csiszar_sum_identity_cond` — the Csiszár sum identity with a background conditioner.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -43,6 +43,13 @@ variable {δ : Type*} [MeasurableSpace δ] [StandardBorelSpace δ] [Nonempty δ]
 variable {γ : Type*} [Fintype γ] [MeasurableSpace γ] [MeasurableSingletonClass γ]
   [StandardBorelSpace γ] [Nonempty γ]
 
+/-- Chain rule for mutual information expanded along the sequence argument in reverse order:
+`I(W; Bⁿ) = ∑ᵢ I(W; Bᵢ | B^{>i})`, the conditioner being the *suffix* `B^{>i}`. The suffix
+counterpart of `mutualInfo_chain_rule_Y_fin'`, obtained by reindexing the sequence with
+`Fin.rev` so that the prefix expansion applies and then transporting the resulting prefix
+conditioner back across that reindexing.
+
+@audit:ok -/
 lemma mutualInfo_chain_rule_Y_fin_suffix
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W : Ω → δ) (Bs : Fin n → Ω → γ)
@@ -105,6 +112,13 @@ variable {δ : Type*} [MeasurableSpace δ] [StandardBorelSpace δ] [Nonempty δ]
 variable {γ : Type*} [MeasurableSpace γ] [StandardBorelSpace γ] [Nonempty γ]
 variable {ζ : Type*} [MeasurableSpace ζ]
 
+/-- Conditional chain rule expanded along the sequence in reverse order:
+`I(Bⁿ; C | Z) = ∑ᵢ I(Bᵢ; C | (Z, B^{>i}))`, the background conditioner `Z` riding along
+untouched. Same `Fin.rev` reindexing as `mutualInfo_chain_rule_Y_fin_suffix`, applied to
+`condMutualInfo_prefix_chain_rule`; `hZC` is the finiteness side condition that expansion
+needs in order to cancel the background term `I(Z; C)`.
+
+@audit:ok -/
 theorem condMutualInfo_suffix_chain_rule_full
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Bs : Fin n → Ω → γ) (C : Ω → δ) (Z : Ω → ζ)
@@ -170,6 +184,13 @@ variable {lam : Type*} [MeasurableSpace lam] [StandardBorelSpace lam] [Nonempty 
 variable {δ : Type*} [MeasurableSpace δ] [StandardBorelSpace δ] [Nonempty δ]
 variable {ζ : Type*} [MeasurableSpace ζ]
 
+/-- Inserting a variable into the conditioner:
+`I(A; C | Z) ≤ I(B; C | Z) + I(A; C | (Z, B))`. Expanding `I((Z, A, B); C)` by the chain rule
+in the two possible orders gives two decompositions that differ by the nonnegative term
+`I(B; C | (Z, A))`, and the inequality is what remains after dropping it. `hZC` cancels the
+background term `I(Z; C)` shared by both decompositions.
+
+@audit:ok -/
 lemma condMutualInfo_le_add_condMutualInfo
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (A : Ω → κ) (B : Ω → lam) (C : Ω → δ) (Z : Ω → ζ)
@@ -213,6 +234,15 @@ variable {β : Type*} [Fintype β] [MeasurableSpace β] [MeasurableSingletonClas
   [StandardBorelSpace β] [Nonempty β]
 variable {ξ : Type*} [Fintype ξ] [MeasurableSpace ξ] [MeasurableSingletonClass ξ]
 
+/-- Conditioned form of the **Csiszár sum identity**, for two sequences over distinct
+alphabets and a background conditioner `Wc`:
+`∑ᵢ I(A^{<i}; Bᵢ | (Wc, B^{>i})) = ∑ᵢ I(B^{>i}; Aᵢ | (Wc, A^{<i}))`. As in
+`csiszar_sum_identity`, both sides expand to the common triangular double sum
+`∑_{k<i} I(Aₖ; Bᵢ | (Wc, A^{<k}, B^{>i}))` — the left by the prefix chain rule, the right by
+the suffix one — and the terms are matched by `condMutualInfo_comm` together with a
+`prodComm` relabel of the conditioner (El Gamal–Kim).
+
+@audit:ok -/
 theorem csiszar_sum_identity_cond
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Wc : Ω → ξ) (As : Fin n → Ω → α) (Bs : Fin n → Ω → β)

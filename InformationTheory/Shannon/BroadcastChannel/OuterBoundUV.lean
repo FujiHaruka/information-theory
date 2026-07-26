@@ -38,6 +38,13 @@ degradedness hypothesis appears: the conditioner swap that degradedness performe
 replaced here by the Csiszár identity, which is why the auxiliaries mix a prefix of one
 output with a suffix of the other.
 
+## Main definitions
+
+* `uvAux` — the time structure shared by both auxiliaries: a message together with the
+  receiver-1 output prefix and the receiver-2 output suffix.
+* `InBCOuterRegionUV` — the four inequalities of the bound, as a predicate on a rate pair
+  and four abstract information slots.
+
 ## Main statements
 
 * `bc_uv_singleletterize_r1` / `bc_uv_singleletterize_r2` — the two corner bounds.
@@ -53,10 +60,14 @@ open scoped ENNReal NNReal BigOperators
 variable {Ω : Type*} [MeasurableSpace Ω]
 variable {n : ℕ}
 
+/-! ## The auxiliary variable -/
+
 /-- The auxiliary variable of the UV outer bound at letter `i`: a message together with the
 receiver-1 output prefix `Y₁^{<i}` and the receiver-2 output suffix `Y₂^{>i}`. Both
 auxiliaries of the bound have this shape and differ only in the message they carry —
-`Uᵢ = uvAux W₂ …` for the receiver-2 corner, `Vᵢ = uvAux W₁ …` for the receiver-1 one. -/
+`Uᵢ = uvAux W₂ …` for the receiver-2 corner, `Vᵢ = uvAux W₁ …` for the receiver-1 one.
+
+@audit:ok -/
 def uvAux {ξ β₁ β₂ : Type*}
     (W : Ω → ξ) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂) (i : Fin n) :
     Ω → ξ × ((Fin i.val → β₁) × ({j : Fin n // i.val < j.val} → β₂)) :=
@@ -80,6 +91,8 @@ lemma measurable_uvAux
 
 end Aux
 
+/-! ## Corner bounds -/
+
 section CornerBounds
 
 variable {ξ : Type*} [Fintype ξ] [MeasurableSpace ξ] [MeasurableSingletonClass ξ]
@@ -90,6 +103,13 @@ variable {β₂ : Type*} [Fintype β₂] [MeasurableSpace β₂] [MeasurableSing
   [StandardBorelSpace β₂] [Nonempty β₂]
 
 omit [Fintype ξ] [MeasurableSingletonClass ξ] [Fintype β₂] [MeasurableSingletonClass β₂] in
+/-- Receiver-1 corner bound: with `Vᵢ = uvAux W₁ Y₁s Y₂s i = (W₁, Y₁^{<i}, Y₂^{>i})`, the
+message–output mutual information is dominated by the per-letter sum
+`I(W₁; Y₁ⁿ) ≤ ∑ᵢ I(Vᵢ; Y_{1,i})`. Nothing but measurability is assumed: expanding the left
+side along the prefix chain rule leaves `∑ᵢ I(W₁; Y_{1,i} | Y₁^{<i})`, and adjoining first
+the prefix and then the receiver-2 suffix to the data variable only increases each summand.
+
+@audit:ok -/
 theorem bc_uv_singleletterize_r1
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W₁ : Ω → ξ) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
@@ -145,6 +165,12 @@ theorem bc_uv_singleletterize_r1
     (Y₁s i) ((hpre₁.prodMk hW₁).prodMk hsuf₂) (hY₁s i) e).symm
 
 omit [Fintype ξ] [MeasurableSingletonClass ξ] [Fintype β₁] [MeasurableSingletonClass β₁] in
+/-- Receiver-2 corner bound: with `Uᵢ = uvAux W₂ Y₁s Y₂s i = (W₂, Y₁^{<i}, Y₂^{>i})`,
+`I(W₂; Y₂ⁿ) ≤ ∑ᵢ I(Uᵢ; Y_{2,i})`. The mirror of `bc_uv_singleletterize_r1`, expanded along
+the reverse-order chain rule `mutualInfo_chain_rule_Y_fin_suffix` so that the conditioner it
+produces is the receiver-2 *suffix* the auxiliary already carries.
+
+@audit:ok -/
 theorem bc_uv_singleletterize_r2
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W₂ : Ω → ξ) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
@@ -200,6 +226,8 @@ theorem bc_uv_singleletterize_r2
     (Y₂s i) ((hsuf₂.prodMk hW₂).prodMk hpre₁) (hY₂s i) e).symm
 
 end CornerBounds
+
+/-! ## Sum-rate bounds -/
 
 section SumBounds
 
@@ -486,6 +514,8 @@ private lemma uvAux_markov_of_memo
       (measurable_fst.comp measurable_snd)
   exact isMarkovChain_map_left μ _ (Xs i) Yo hblock (hXs i) hYo hf h_memo
 
+-- Receiver-1 letter: from the conditioner `(W, Y₁^{<i})`, insert the receiver-2 suffix and
+-- collapse the input sequence `Xⁿ` to the single letter `Xᵢ`.
 private lemma bc_uv_input_step
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W : Ω → ξ) (Xs : Fin n → Ω → α) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
@@ -534,6 +564,9 @@ private lemma bc_uv_input_step
     (measurable_uvAux W Y₁s Y₂s hW hY₁s hY₂s i)
     (uvAux_markov_of_memo μ W Xs Y₁s Y₂s (Y₁s i) i hW hXs hY₁s hY₂s (hY₁s i) h_memo))
 
+-- The receiver-2 mirror of `bc_uv_input_step`: the target letter is `Y_{2,i}`, the
+-- conditioner is `(W, Y₂^{>i})` and the inserted variable is the receiver-1 prefix. The two
+-- differ only in which receiver's letter is the target, not in strength, hence the prime.
 private lemma bc_uv_input_step'
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W : Ω → ξ) (Xs : Fin n → Ω → α) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
@@ -592,6 +625,15 @@ private lemma bc_uv_input_step'
     (measurable_uvAux W Y₁s Y₂s hW hY₁s hY₂s i)
     (uvAux_markov_of_memo μ W Xs Y₁s Y₂s (Y₂s i) i hW hXs hY₁s hY₂s (hY₂s i) h_memo))
 
+/-- Sum-rate single-letterization carrying the receiver-2 auxiliary in the leading term:
+`I(W₂; Y₂ⁿ) + I(Xⁿ; Y₁ⁿ | W₂) ≤ ∑ᵢ (I(Uᵢ; Y_{2,i}) + I(Xᵢ; Y_{1,i} | Uᵢ))` for
+`Uᵢ = (W₂, Y₁^{<i}, Y₂^{>i})`. Two structural ingredients: the Csiszár sum identity with the
+background conditioner `W₂` (`csiszar_sum_identity_cond`) trades the receiver-1 prefix terms
+left over by the chain-rule expansion for receiver-2 suffix terms the auxiliary absorbs, and
+`h_memo` — joint-output memorylessness `Y_{1,i} ⫫ (W₂, X^{≠i}, Y₁^{≠i}, Y₂^{≠i}) | Xᵢ` —
+collapses the full input `Xⁿ` to the single letter `Xᵢ`.
+
+@audit:ok -/
 theorem bc_uv_singleletterize_sum₂
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W₂ : Ω → ξ) (Xs : Fin n → Ω → α) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
@@ -631,6 +673,14 @@ theorem bc_uv_singleletterize_sum₂
   exact Finset.sum_le_sum fun i _ ↦
     uvAux_absorbs_receiver2_terms μ W₂ Y₁s Y₂s i hW₂ hY₁s hY₂s
 
+/-- Sum-rate single-letterization carrying the receiver-1 auxiliary in the leading term:
+`I(W₁; Y₁ⁿ) + I(Xⁿ; Y₂ⁿ | W₁) ≤ ∑ᵢ (I(Vᵢ; Y_{1,i}) + I(Xᵢ; Y_{2,i} | Vᵢ))` for
+`Vᵢ = (W₁, Y₁^{<i}, Y₂^{>i})`. The mirror of `bc_uv_singleletterize_sum₂`: the Csiszár
+identity is consumed in the opposite direction, trading receiver-2 suffix terms for
+receiver-1 prefix terms, and `h_memo` is the memoryless hypothesis for the receiver-2 letter
+`Y_{2,i}`.
+
+@audit:ok -/
 theorem bc_uv_singleletterize_sum₁
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W₁ : Ω → ξ) (Xs : Fin n → Ω → α) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
@@ -679,7 +729,9 @@ end SumBounds
 the two sum-rate inequalities. As with `InBCCapacityRegion` the four information slots are
 abstract; the intended instantiation (`bc_uv_converse`) is `I₁ = ∑ᵢ I(Vᵢ; Y_{1,i})`,
 `I₂ = ∑ᵢ I(Uᵢ; Y_{2,i})`, `J₂ = ∑ᵢ (I(Uᵢ; Y_{2,i}) + I(Xᵢ; Y_{1,i} | Uᵢ))` and
-`J₁ = ∑ᵢ (I(Vᵢ; Y_{1,i}) + I(Xᵢ; Y_{2,i} | Vᵢ))`, each with the Fano slack added. -/
+`J₁ = ∑ᵢ (I(Vᵢ; Y_{1,i}) + I(Xᵢ; Y_{2,i} | Vᵢ))`, each with the Fano slack added.
+
+@audit:ok -/
 structure InBCOuterRegionUV (R₁ R₂ I₁ I₂ J₂ J₁ : ℝ) : Prop where
   /-- Receiver-1 corner bound. -/
   bound₁ : R₁ ≤ I₁
@@ -704,6 +756,7 @@ variable {β₂ : Type*} [Fintype β₂] [MeasurableSpace β₂] [MeasurableSing
   [StandardBorelSpace β₂] [Nonempty β₂]
 
 omit [Fintype α] [MeasurableSingletonClass α] [Fintype ξ₁] [MeasurableSingletonClass ξ₁] in
+/-- @audit:ok -/
 private lemma mutualInfo_le_condMutualInfo_of_indep_markov
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W₁ : Ω → ξ₁) (W₂ : Ω → ξ₂) (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β₁)
@@ -755,7 +808,9 @@ channel, not the conclusion:
   mirror, which is what makes the messages act on the outputs only through the codeword.
 
 The operational instantiation — building `μ` from uniform messages through the encoder and
-the channel — is a separate wrapper, not part of this statement. -/
+the channel — is a separate wrapper, not part of this statement.
+
+@audit:ok -/
 @[entry_point]
 theorem bc_uv_converse
     (μ : Measure Ω) [IsProbabilityMeasure μ]
