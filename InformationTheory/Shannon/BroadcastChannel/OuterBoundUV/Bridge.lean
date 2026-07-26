@@ -13,6 +13,13 @@ The canonical ambient probability measure attached to a broadcast block code: a 
 pair is passed through the per-letter product channel, and the messages and the two receiver
 outputs are read off the resulting measure as coordinate projections.
 
+Read off that measure are the structural hypotheses of the message-level bound
+`bc_uv_converse` — memorylessness and the two Markov chains — together with the identification
+of the ambient decode error with the code's average error probability; instantiating
+`bc_uv_converse` there gives the headline `bc_uv_converse_from_code`.  A final section, stated
+for an arbitrary ambient measure, re-encodes the per-letter auxiliary variable onto a single
+alphabet.
+
 ## Main definitions
 
 * `bcConverseInput` — the uniform law on the message pair.
@@ -62,9 +69,9 @@ is what makes the padding invertible, and invertibility is what turns the data p
 inequality into an equality of informations.
 
 Together with the uniformity and independence statements the four structural lemmas discharge
-the structural preconditions of the message-level converse `bc_uv_converse`.  Instantiating it
-at `bcConverseAmbient` still asks the code for the measurability of the encoded letters and for
-the two message counts to be at least `2`.
+the structural preconditions of the message-level converse `bc_uv_converse`.  The encoder is
+measurable for free because the message pair ranges over a finite type, so the only hypotheses
+`bc_uv_converse_from_code` keeps are `2 ≤ M₁` and `2 ≤ M₂`.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -77,7 +84,9 @@ variable {β₁ : Type*} [MeasurableSpace β₁]
 variable {β₂ : Type*} [MeasurableSpace β₂]
 variable {M₁ M₂ n : ℕ}
 
-/-! ### The ambient measure -/
+/-! ## The ambient measure of a broadcast code -/
+
+/-! ### The input law, the channel kernel and the ambient -/
 
 /-- Uniform input law on the message pair: the product of the two uniform message laws. -/
 noncomputable def bcConverseInput (M₁ M₂ : ℕ) : Measure (Fin M₁ × Fin M₂) :=
@@ -254,7 +263,7 @@ instance bcConverseCodeKernel_isMarkovKernel (W : BCChannel α β₁ β₂) [IsM
 
 end CodeKernel
 
-/-! ### Structural hypotheses of the message-level converse -/
+/-! ## Structural hypotheses of the message-level converse -/
 
 section Structural
 
@@ -426,7 +435,7 @@ lemma bcConverse_isMarkovChain₂
 
 end Structural
 
-/-! ### Code-level converse and rate extraction -/
+/-! ## Code-level converse and rate extraction -/
 
 section CodeLevel
 
@@ -616,7 +625,7 @@ end Converse
 
 end CodeLevel
 
-/-! ### Fixed-alphabet form of the auxiliary variable -/
+/-! ## Fixed-alphabet form of the auxiliary variable -/
 
 section Pad
 
