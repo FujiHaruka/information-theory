@@ -40,7 +40,7 @@ pair pins the empirical type of the transmitted words.
   weakly and at the strongly typical set.
 * `marton_mutual_covering` and `marton_strong_mutual_covering` — the same statements for the
   auxiliary variables of Marton's inner bound, with the covering threshold read as `I(V₁; V₂)`
-  and the typicality radius produced below any prescribed bound.
+  and the typicality radius produced below any prescribed bound, uniformly in the failure level.
 * `meas_marton_codebook_no_jointlyTypicalPair_lt` and
   `meas_marton_codebook_no_jointStronglyTypicalPair_lt` — the same two bounds with the typicality
   parameter left as a hypothesis, so that a consumer may choose one radius meeting the covering
@@ -826,7 +826,7 @@ private lemma marton_coveringAmbient_facts
 /-- Mutual covering for Marton's auxiliary codebooks at a prescribed typicality parameter.
 The parameter `ε` is a hypothesis rather than an output, so that a consumer may choose one `ε`
 meeting the smallness conditions here together with those of the decoding analysis;
-`marton_mutual_covering` is the form in which `ε` is chosen.
+`marton_mutual_covering` is the form in which `ε` is chosen, uniformly in the failure level `η`.
 
 @audit:ok -/
 theorem meas_marton_codebook_no_jointlyTypicalPair_lt
@@ -860,9 +860,10 @@ theorem meas_marton_codebook_no_jointlyTypicalPair_lt
 /-- Marton's mutual covering lemma.  Two subcodebooks are drawn independently, the first from
 the `V₁`-marginal of the auxiliary law and the second from its `V₂`-marginal, at positive rates
 `R₁'` and `R₂'` whose sum exceeds the dependence `I(V₁; V₂)` between the auxiliary variables.
-Then for every prescribed failure level `η` and every prescribed bound `ε₀` there is a typicality
-parameter `ε < ε₀` for which, at every large enough blocklength, the probability that no pair of
-codewords is jointly typical is below `η`.
+Then for every prescribed bound `ε₀` there is a typicality parameter `ε < ε₀` for which the
+probability that no pair of codewords is jointly typical falls below any prescribed failure level
+`η` at every large enough blocklength.  The single `ε` works for all `η`, so the failure
+probability tends to zero as the blocklength grows.
 
 The upper bound `ε < ε₀` is what gives the conclusion content.  A typicality radius wide enough
 to swallow the whole space empties the failure event, so a statement asserting only `0 < ε`
@@ -880,9 +881,9 @@ theorem marton_mutual_covering
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hpV : ∀ v : V₁ × V₂, 0 < pV.real {v}) (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {R₁' R₂' η ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂')
-    (hcov : martonInfoV₁V₂ pV K W < R₁' + R₂') (hη : 0 < η) (hε₀ : 0 < ε₀) :
-    ∃ ε > 0, ε < ε₀ ∧ ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+    {R₁' R₂' ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂')
+    (hcov : martonInfoV₁V₂ pV K W < R₁' + R₂') (hε₀ : 0 < ε₀) :
+    ∃ ε > 0, ε < ε₀ ∧ ∀ η : ℝ, 0 < η → ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       ((codebookMeasure (pV.map Prod.fst) ⌈Real.exp ((n : ℝ) * R₁')⌉₊ n).prod
           (codebookMeasure (pV.map Prod.snd) ⌈Real.exp ((n : ℝ) * R₂')⌉₊ n)).real
         {c | ∀ i j, (c.1 i, c.2 j) ∉
@@ -897,8 +898,10 @@ theorem marton_mutual_covering
   have hε : 0 < ε := by
     rw [hεdef]
     exact lt_min (lt_min (lt_min (by linarith) (by linarith)) (by linarith)) (by linarith)
-  exact ⟨ε, hε, by linarith, meas_marton_codebook_no_jointlyTypicalPair_lt pV K W hpV hK hW hε hη
-    (by linarith) (by linarith) (by linarith)⟩
+  refine ⟨ε, hε, by linarith, ?_⟩
+  intro η hη
+  exact meas_marton_codebook_no_jointlyTypicalPair_lt pV K W hpV hK hW hε hη
+    (by linarith) (by linarith) (by linarith)
 
 /-- Mutual covering with independent auxiliary variables, where the covering threshold
 `I(V₁; V₂)` vanishes and every pair of positive rates therefore qualifies.  The typicality
@@ -914,8 +917,8 @@ theorem marton_mutual_covering_of_indepAux
     (hp₁ : ∀ v : V₁, 0 < p₁.real {v}) (hp₂ : ∀ v : V₂, 0 < p₂.real {v})
     (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {R₁' R₂' η ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂') (hη : 0 < η) (hε₀ : 0 < ε₀) :
-    ∃ ε > 0, ε < ε₀ ∧ ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+    {R₁' R₂' ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂') (hε₀ : 0 < ε₀) :
+    ∃ ε > 0, ε < ε₀ ∧ ∀ η : ℝ, 0 < η → ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       ((codebookMeasure ((p₁.prod p₂).map Prod.fst) ⌈Real.exp ((n : ℝ) * R₁')⌉₊ n).prod
           (codebookMeasure ((p₁.prod p₂).map Prod.snd) ⌈Real.exp ((n : ℝ) * R₂')⌉₊ n)).real
         {c | ∀ i j, (c.1 i, c.2 j) ∉
@@ -928,7 +931,7 @@ theorem marton_mutual_covering_of_indepAux
       simp [Prod.ext_iff]
     rw [hsingleton, measureReal_prod_prod]
     exact mul_pos (hp₁ v.1) (hp₂ v.2)
-  refine marton_mutual_covering (p₁.prod p₂) K W hpV hK hW hR₁' hR₂' ?_ hη hε₀
+  refine marton_mutual_covering (p₁.prod p₂) K W hpV hK hW hR₁' hR₂' ?_ hε₀
   rw [martonInfoV₁V₂_eq_zero_of_prod]
   linarith
 
@@ -988,9 +991,10 @@ theorem meas_marton_codebook_no_jointStronglyTypicalPair_lt
 /-- Marton's mutual covering lemma at the strongly typical set.  Two subcodebooks are drawn
 independently, the first from the `V₁`-marginal of the auxiliary law and the second from its
 `V₂`-marginal, at positive rates `R₁'` and `R₂'` whose sum exceeds the dependence `I(V₁; V₂)`
-between the auxiliary variables.  Then for every prescribed failure level `η` and every prescribed
-bound `ε₀` there is a typicality parameter `ε < ε₀` for which, at every large enough blocklength,
-the probability that no pair of codewords is jointly strongly typical is below `η`.
+between the auxiliary variables.  Then for every prescribed bound `ε₀` there is a typicality
+parameter `ε < ε₀` for which the probability that no pair of codewords is jointly strongly typical
+falls below any prescribed failure level `η` at every large enough blocklength.  The single `ε`
+works for all `η`, so the failure probability tends to zero as the blocklength grows.
 
 This is strictly stronger than `marton_mutual_covering`: the strongly typical set is contained in
 the weakly typical one of the radius widened by `martonCoveringBandConst`, so the event bounded
@@ -1012,9 +1016,9 @@ theorem marton_strong_mutual_covering
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hpV : ∀ v : V₁ × V₂, 0 < pV.real {v}) (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {R₁' R₂' η ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂')
-    (hcov : martonInfoV₁V₂ pV K W < R₁' + R₂') (hη : 0 < η) (hε₀ : 0 < ε₀) :
-    ∃ ε > 0, ε < ε₀ ∧ ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+    {R₁' R₂' ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂')
+    (hcov : martonInfoV₁V₂ pV K W < R₁' + R₂') (hε₀ : 0 < ε₀) :
+    ∃ ε > 0, ε < ε₀ ∧ ∀ η : ℝ, 0 < η → ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       ((codebookMeasure (pV.map Prod.fst) ⌈Real.exp ((n : ℝ) * R₁')⌉₊ n).prod
           (codebookMeasure (pV.map Prod.snd) ⌈Real.exp ((n : ℝ) * R₂')⌉₊ n)).real
         {c | ∀ i j, (c.1 i, c.2 j) ∉
@@ -1036,8 +1040,9 @@ theorem marton_strong_mutual_covering
     rw [hεdef]
     exact lt_min (lt_min (lt_min (div_pos (by linarith) (by linarith))
       (div_pos hR₁' (by linarith))) (div_pos hR₂' (by linarith))) (by linarith)
-  refine ⟨ε, hε, by linarith,
-    meas_marton_codebook_no_jointStronglyTypicalPair_lt pV K W hpV hK hW hε hη ?_ ?_ ?_⟩
+  refine ⟨ε, hε, by linarith, ?_⟩
+  intro η hη
+  refine meas_marton_codebook_no_jointStronglyTypicalPair_lt pV K W hpV hK hW hε hη ?_ ?_ ?_
   · have h := mul_le_mul_of_nonneg_left hεA hDpos.le
     rw [show D * ((R₁' + R₂' - martonInfoV₁V₂ pV K W) / (2 * D))
         = (R₁' + R₂' - martonInfoV₁V₂ pV K W) / 2 by field_simp] at h
@@ -1063,8 +1068,8 @@ theorem marton_strong_mutual_covering_of_indepAux
     (hp₁ : ∀ v : V₁, 0 < p₁.real {v}) (hp₂ : ∀ v : V₂, 0 < p₂.real {v})
     (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    {R₁' R₂' η ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂') (hη : 0 < η) (hε₀ : 0 < ε₀) :
-    ∃ ε > 0, ε < ε₀ ∧ ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+    {R₁' R₂' ε₀ : ℝ} (hR₁' : 0 < R₁') (hR₂' : 0 < R₂') (hε₀ : 0 < ε₀) :
+    ∃ ε > 0, ε < ε₀ ∧ ∀ η : ℝ, 0 < η → ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       ((codebookMeasure ((p₁.prod p₂).map Prod.fst) ⌈Real.exp ((n : ℝ) * R₁')⌉₊ n).prod
           (codebookMeasure ((p₁.prod p₂).map Prod.snd) ⌈Real.exp ((n : ℝ) * R₂')⌉₊ n)).real
         {c | ∀ i j, (c.1 i, c.2 j) ∉
@@ -1077,7 +1082,7 @@ theorem marton_strong_mutual_covering_of_indepAux
       simp [Prod.ext_iff]
     rw [hsingleton, measureReal_prod_prod]
     exact mul_pos (hp₁ v.1) (hp₂ v.2)
-  refine marton_strong_mutual_covering (p₁.prod p₂) K W hpV hK hW hR₁' hR₂' ?_ hη hε₀
+  refine marton_strong_mutual_covering (p₁.prod p₂) K W hpV hK hW hR₁' hR₂' ?_ hε₀
   rw [martonInfoV₁V₂_eq_zero_of_prod]
   linarith
 
