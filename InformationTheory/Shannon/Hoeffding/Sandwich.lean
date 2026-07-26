@@ -11,12 +11,12 @@ sequence `-(1/n) log (steinTypeII_at_level_pmf P₁ P₂ n alpha)`. They are
 unconditional facts about the rate sequence, and
 `hoeffding_rate_isBoundedUnder_le` is consumed by
 `hoeffding_tradeoff_achievability_at_boundary`
-(`HoeffdingMinimizerExistence.lean`).
+(`Hoeffding/MinimizerExistence.lean`).
 
 The fixed-`alpha` rate converges to `D(P₁‖P₂)`, not to the Hoeffding tradeoff
 curve `E₂(alpha)`; the genuine statement of the tradeoff is
 `hoeffding_tradeoff_exp` at the exponential level
-(`HoeffdingTradeoffExp.lean`).
+(`Hoeffding/TradeoffExp.lean`).
 
 ## What this file publishes
 

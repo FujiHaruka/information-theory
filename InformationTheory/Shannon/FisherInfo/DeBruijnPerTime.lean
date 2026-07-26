@@ -13,7 +13,7 @@ import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 # Per-time de Bruijn identity — analytic-core atoms
 
 The analytic-core atoms of the per-time de Bruijn identity for a general `X`, decomposed for the
-assembly `debruijnIdentityV2_holds_assembled` in `FisherInfoDeBruijnAssembly.lean`.
+assembly `debruijnIdentityV2_holds_assembled` in `FisherInfo/DeBruijnAssembly/Assembly.lean`.
 
 ## Main statements
 

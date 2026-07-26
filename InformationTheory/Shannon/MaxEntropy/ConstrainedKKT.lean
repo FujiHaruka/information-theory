@@ -45,7 +45,7 @@ which we pass through (Mathlib lacks the convex-duality theorems needed to
 We define `logPartitionψ` and `expFamilyDist` via the existing `gibbsZ` and
 `gibbsPmf` (a single `Real.exp_sub` step bridges the two presentations). All
 theorems are then proved by direct reduction to their `gibbsPmf` analogues in
-`MaxEntropyConstrained.lean`. The KKT first-order condition is encoded as the
+`MaxEntropy/Constrained.lean`. The KKT first-order condition is encoded as the
 constraint-witness hypothesis `∀ i, ∑ x, expFamilyDist λ f x · f i x = c i`
 (equivalent to `∇ψ(λ) = 𝔼_{p*}[f]` at the saddle point, but stated in the
 ansatz-pass-through form to avoid the convex-duality theorems Mathlib does

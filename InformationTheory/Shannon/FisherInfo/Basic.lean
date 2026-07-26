@@ -28,8 +28,8 @@ density `f`.
 
 ## Implementation notes
 
-The Fisher information itself is defined in `FisherInfo.lean` (`fisherInfoOfDensity`) and
-`FisherInfoDeBruijn.lean` (`fisherInfoOfMeasureV2`); this file holds only the
+The Fisher information itself is defined in `FisherInfo/OfDensity.lean` (`fisherInfoOfDensity`) and
+`FisherInfo/DeBruijn.lean` (`fisherInfoOfMeasureV2`); this file holds only the
 density-based helpers that do not reference those definitions.
 -/
 

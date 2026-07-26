@@ -8,8 +8,8 @@ import InformationTheory.Meta.EntryPoint
 
 This file publishes the `IsHoeffdingMinimizerFullSupport` predicate plus the
 boundary full-support discharges (`α = 0` and `α ≥ klDivPmf P₂ P₁`) used by
-the constructive minimizer of `HoeffdingMinimizerExistence.lean` and the
-exponential-level closure `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`).
+the constructive minimizer of `Hoeffding/MinimizerExistence.lean` and the
+exponential-level closure `hoeffding_tradeoff_exp` (`Hoeffding/TradeoffExp.lean`).
 
 The fixed-`alpha` rate targets `D(P₁‖P₂)`, not the Hoeffding tradeoff curve
 `E₂(alpha)`; the genuine statement is `hoeffding_tradeoff_exp`.
@@ -55,7 +55,7 @@ existing Mathlib + InformationTheory API:
 `∀ a, 0 < Qstar a`); callers construct it either from a raw pointwise positivity
 proof or from the boundary discharges above. The boundary discharges assume
 `hP₁_pos` / `hP₂_pos` (full-support source pmfs); the `α = 0` case additionally
-needs `klDivPmf_eq_zero_iff_pmf` from `MaxEntropyConstrained.lean`.
+needs `klDivPmf_eq_zero_iff_pmf` from `MaxEntropy/Constrained.lean`.
 -/
 
 namespace InformationTheory.Shannon.HoeffdingBoundaryMinimizer

@@ -19,7 +19,7 @@ I(X^n; Y^n) = H(Y^n) - H(Y^n | X^n)
 This file establishes the four building blocks:
 
 * `entropy_pi_le_sum_entropy` — `H(Y^n) ≤ ∑ H(Y_i)` (subadditivity, encoder-agnostic).
-  Combines `Han.lean`'s `jointEntropy_chain_rule` with `SlepianWolf.lean`'s
+  Combines `Han/Basic.lean`'s `jointEntropy_chain_rule` with `SlepianWolf/Basic.lean`'s
   `entropy_ge_condEntropy` (conditioning never increases entropy).
 * `condEntropy_pi_chain_rule` — `H(Y^n | X^n) = ∑ H(Y_i | X^n, Y^{<i})` (n-var
   conditional chain rule, mirrors `jointEntropy_chain_rule`).
@@ -442,7 +442,7 @@ private lemma isMarkovChain_map_right
 
 /-- A local copy of `Fin n → β ≃ᵐ β × ({j : Fin n // j ≠ i} → β)`, for use in
 `condEntropy_pi_eq_sum_of_memoryless_strong`. Mirrors `measurableEquivExtract` in
-`ChannelCodingConverseGeneralStrong.lean` but defined locally to keep this file
+`ChannelCoding/ConverseMemorylessMarkov.lean` but defined locally to keep this file
 upstream. -/
 private noncomputable def measurableEquivExtractLocal {β' : Type*} [MeasurableSpace β']
     (i : Fin n) :
@@ -457,7 +457,7 @@ omit [DecidableEq α] [DecidableEq β] in
 Combines `condEntropy_pi_chain_rule` (Building Block 2) with the per-summand
 collapse `H(Y_i | X^n, Y^{<i}) = H(Y_i | X_i)`. The collapse uses the two Markov
 axioms (taken as hypotheses, not as `IsMemorylessChannelStrong` to avoid circular
-import — the caller in `ChannelCodingConverseGeneralStrong.lean` unpacks the
+import — the caller in `ChannelCoding/ConverseMemorylessMarkov.lean` unpacks the
 structure):
 
 * `h_outputs_cond_indep` (≈ `outputs_cond_indep`): `Y_i ⫫ Y^{<i} | X^n` ⇒ can drop

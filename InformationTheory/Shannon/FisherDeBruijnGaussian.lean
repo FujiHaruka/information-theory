@@ -11,7 +11,7 @@ Assembles the Gaussian heat-kernel derivative facts into a de Bruijn heat-flow w
 
 Both analytic halves of `∂_t g_t = (1/2) Δ_x g_t` for the centred Gaussian heat kernel
 `g_t = heatKernel t` are proved internally:
-- spatial: `isHeatSpatialDerivHyp_gaussian` (`FisherInfoHeatFlow.lean`)
+- spatial: `isHeatSpatialDerivHyp_gaussian` (`FisherInfo/HeatFlow.lean`)
 - time: `isHeatTimeDerivHyp_gaussian` (`GaussianPDFVarianceDerivative.lean`)
 
 ## Main statements

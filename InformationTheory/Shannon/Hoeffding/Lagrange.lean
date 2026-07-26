@@ -6,7 +6,7 @@ import Mathlib.Topology.Order.IntermediateValue
 # Hoeffding tradeoff — Lagrange constraint-match via IVT
 
 The interior Csiszár characterization `IsHoeffdingLagrangeHyp`
-(`HoeffdingTilt.lean`) is a `structure` with two fields:
+(`Hoeffding/Tilt.lean`) is a `structure` with two fields:
 
 * `mem` — the tilt at `lam` lies in the constraint set `K(α)`
   (`klDivPmf (tilt) P₁ ≤ alpha`);
@@ -14,7 +14,7 @@ The interior Csiszár characterization `IsHoeffdingLagrangeHyp`
   (`hoeffdingE2 = klDivPmf (tilt) P₂`).
 
 The companion gradient sub-predicate `IsKLGradientHyp` is discharged in
-`HoeffdingTilt.lean` (`isKLGradientHyp_tilt`). This file
+`Hoeffding/Tilt.lean` (`isKLGradientHyp_tilt`). This file
 discharges the `mem` half — the *constraint-match* — from the
 **Intermediate Value Theorem**, and reduces the remaining `realises` half to
 a strictly-more-primitive *minimality* predicate `IsHoeffdingTiltMinimal` (the

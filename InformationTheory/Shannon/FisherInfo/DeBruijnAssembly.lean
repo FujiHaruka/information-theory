@@ -8,7 +8,7 @@ import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Assembly
 
 Aggregates the submodules that prove the per-time de Bruijn identity
 `debruijnIdentityV2_holds_assembled` for a general `X`. This file is placed downstream of
-the atom supplier `FisherInfoDeBruijnPerTime.lean` (which imports `FisherInfoDeBruijn`)
+the atom supplier `FisherInfo/DeBruijnPerTime.lean` (which imports `FisherInfo/DeBruijn.lean`)
 so that the assembly can use those atoms without an import cycle.
 
 ## Implementation notes

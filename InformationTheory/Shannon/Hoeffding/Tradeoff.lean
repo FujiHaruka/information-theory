@@ -36,7 +36,7 @@ and the Pythagoras-based minimizer bound.
 
 * This file provides the variational scaffolding; the full sandwich `Tendsto`
   (achievability from Sanov LDP + converse from Stein typicality) is in
-  `HoeffdingTradeoffExp.lean`.
+  `Hoeffding/TradeoffExp.lean`.
 * The pmf ↔ Measure bridge uses `PMF.ofFintype` + `PMF.toMeasure` (~4 lemmas).
 -/
 

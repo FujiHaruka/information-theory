@@ -12,7 +12,7 @@ import Mathlib.Probability.Independence.Basic
 /-!
 # Fisher information V2 — measure-keyed wrapper and de Bruijn identity
 
-Builds on the density-as-input Fisher information of `FisherInfo.lean` to define a
+Builds on the density-as-input Fisher information of `FisherInfo/OfDensity.lean` to define a
 measure-keyed wrapper, the heat-flow convolution path `X + √t · Z`, the V2 de Bruijn
 regularity predicate, and the Gaussian discharge of the de Bruijn identity.
 

@@ -5,7 +5,7 @@ import InformationTheory.Shannon.Han.D
 /-!
 # Polymatroid axioms for joint entropy
 
-`jointEntropySubset` (from `HanD.lean`) satisfies the three polymatroid rank
+`jointEntropySubset` (from `Han/D.lean`) satisfies the three polymatroid rank
 function axioms:
 
 * `jointEntropySubset_empty` — `H(X_∅) = 0`.

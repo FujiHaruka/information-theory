@@ -4,7 +4,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Hoeffding I-projection minimizer attainment — `IsHoeffdingTiltMinimal` discharge
 
-`HoeffdingLagrange.lean` discharged the `mem` half of
+`Hoeffding/Lagrange.lean` discharged the `mem` half of
 `IsHoeffdingLagrangeHyp` from the IVT and reduced the `realises` half to the
 strictly-primitive predicate
 

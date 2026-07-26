@@ -6,7 +6,7 @@ import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly
 
 The per-time de Bruijn identity and its integrated form, delegating to the assembled
 per-time identity `debruijnIdentityV2_holds_assembled`. These consumers live downstream of
-the assembly file because the assembly transitively imports `FisherInfoDeBruijn.lean`,
+the assembly file because the assembly transitively imports `FisherInfo/DeBruijn.lean`,
 so they cannot call the assembled identity from there without an import cycle.
 
 ## Main statements

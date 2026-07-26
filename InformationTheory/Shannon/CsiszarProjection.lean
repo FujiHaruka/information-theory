@@ -56,7 +56,7 @@ variable {α : Type*} [Fintype α]
 `klDivPmf P Q := ∑ a, Q a * klFun (P a / Q a)` where
 `klFun x = x * log x + 1 - x` (Mathlib `InformationTheory.klFun`).
 
-Equivalent to `(klDiv P Q).toReal` under support hypotheses (bridge in `Sanov.lean`),
+Equivalent to `(klDiv P Q).toReal` under support hypotheses (bridge in `Sanov/Basic.lean`),
 but we work Real-only here to leverage `strictConvexOn_klFun` + finite-sum API directly. -/
 noncomputable def klDivPmf (P Q : α → ℝ) : ℝ :=
   ∑ a : α, Q a * klFun (P a / Q a)
