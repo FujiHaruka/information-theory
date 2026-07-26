@@ -548,7 +548,9 @@ bounds.
 the existential's conjuncts, including the slice/content one
 `∀ j, (lz78PhraseStrings …)[bAbsorbed+j]? = some (slice)`, are all discharged from
 `lz78_parse_tiling_positions` and `markovFactor_blockRV_pos_ae`, with no new input
-hypothesis or `*Hypothesis` predicate; sorryAx-free.) -/
+hypothesis or `*Hypothesis` predicate; non-vacuous — the parse-anchored conjunct
+`c + bAbsorbed = parseCount` together with `bAbsorbed ≤ k + 1` forces `c > 0` once
+`parseCount > k + 1`, so the empty-tiling escape is closed.) -/
 lemma lz78_block_tiling
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (k n : ℕ) :

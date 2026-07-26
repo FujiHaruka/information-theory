@@ -494,7 +494,9 @@ dictionary grows only by appending `cur ++ [s]` with `cur` an earlier entry, so
 the emit branch has `(cur ++ [s]).dropLast = cur ∈ dict` by `List.dropLast_concat`.
 
 @audit:ok (non-vacuous; the fuel-induction discharges its base and `nil` cases
-through the threaded running invariant `hdict`, not by fuel exhaustion). -/
+through the threaded running invariant `hdict`, not by fuel exhaustion, and the
+top level supplies the sufficient fuel `input.length + 1`, so the quantified
+parse is not the empty list). -/
 theorem lz78PhraseStrings_dropLast_earlier (input : List α) :
     ∀ j, ∀ h : j < (lz78PhraseStrings input).length,
       ((lz78PhraseStrings input)[j]'h).dropLast ∈ (lz78PhraseStrings input).take j
