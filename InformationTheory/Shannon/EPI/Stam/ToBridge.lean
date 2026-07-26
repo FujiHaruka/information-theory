@@ -63,7 +63,7 @@ derivative `J_sum − (N_X · J_X + N_Y · J_Y) / (N_X + N_Y)` is `≤ 0`, equiv
 
 This is the factor-1 inequality (coefficient `1` on `J_sum`), a true real-arithmetic inequality
 over the free variables. The analogous factor-2 statement is false from harmonic Stam and
-positivity alone; the factor mismatch for the genuine `𝒩(0, 2)` sum coupling lives in the de Bruijn
+positivity alone; the factor mismatch for the `𝒩(0, 2)` sum coupling lives in the de Bruijn
 lift, not in this lemma.
 @audit:ok -/
 theorem csiszar_ratio_deriv_le_zero_arith
@@ -99,9 +99,9 @@ chain-rule helper), `HasDerivAt.log` for the two log terms, composed by `HasDeri
 `h_reg_*` are regularity preconditions.
 
 The conclusion is the factor-1 derivative, correct under the stated hypotheses: `h_reg_sum`'s
-`Z_law` field asserts `P.map (Z_X + Z_Y) = gaussianReal 0 1`. For the genuine sum coupling with
+`Z_law` field asserts `P.map (Z_X + Z_Y) = gaussianReal 0 1`. For the sum coupling with
 independent unit-variance noises the sum law is `gaussianReal 0 2`, so `h_reg_sum` is then
-uninhabitable; honest closure of the sum line uses the two-time route, where `X` and `Y` are
+uninhabitable; the sum line is instead closed by the two-time route, where `X` and `Y` are
 perturbed with separate unit-variance noises and the variance-2 view never arises.
 @audit:ok -/
 theorem csiszarLogRatioGap_hasDerivAt
@@ -255,8 +255,8 @@ The harmonic Stam inequality is extracted by applying the producer `h_stam` at t
 densities, using the Fisher identifications `J_i = (fisherInfoOfMeasureV2 (P.map _) f_i).toReal`
 (`rfl`, since `fisherInfoOfMeasureV2` ignores its measure argument) together with the
 caller-supplied regularity preconditions (`IsRegularDensityV2`, the normalizations, the pointwise
-convolution identification, and the `IsBlachmanConvReady` bundle). The inequality core lives in the
-producer; none of the preconditions bundle it.
+convolution identification, and the `IsBlachmanConvReady` bundle). The inequality core is supplied
+by the producer `h_stam`, not by those preconditions.
 @audit:ok -/
 @[entry_point]
 theorem csiszarLogRatioGap_deriv_le_zero
@@ -336,7 +336,7 @@ theorem csiszarLogRatioGap_deriv_le_zero
     · -- `J_sum = (fisherInfoOfMeasureV2 (P.map ((X+√t·Z_X)+(Y+√t·Z_Y))) fXY).toReal`
       rw [hJsum_def]
       rfl
-  -- The genuine arithmetic core closes the goal from plain Stam + positivity.
+  -- The arithmetic core closes the goal from plain Stam + positivity.
   exact csiszar_ratio_deriv_le_zero_arith J_X J_Y J_sum N_X N_Y
     hJX_pos hJY_pos hJsum_pos hNX_pos hNY_pos h_plain_stam
 
@@ -463,13 +463,14 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
   -- `csiszarLogRatioGap_continuousWithinAt_zero` + `AntitoneOn.insert_of_continuousWithinAt`.
   set f := fun t : ℝ ↦ InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
     X Y Z_X Z_Y P t with hf_def
-  -- Genuine interior differentiability (= continuity) on `Set.Ioi 0`.
+  -- Interior differentiability (= continuity) on `Set.Ioi 0`.
   have h_diff_Ioi : DifferentiableOn ℝ f (Set.Ioi 0) := by
     have := csiszarLogRatioGap_differentiableOn_interior X Y Z_X Z_Y P
       hX hZX hXZX hY hZY hYZY hXYZXY h_reg_sum h_reg_X h_reg_Y
     rwa [interior_Ici] at this
-  -- `AntitoneOn f (Set.Ioi 0)`, genuine (no wall): continuity on `Ioi 0` is the
-  -- interior differentiability, `interior (Ioi 0) = Ioi 0`, deriv ≤ 0 from R-2 + R-3.
+  -- `AntitoneOn f (Set.Ioi 0)`: continuity on `Ioi 0` is the interior
+  -- differentiability, `interior (Ioi 0) = Ioi 0`, and `deriv ≤ 0` comes from
+  -- `csiszarLogRatioGap_hasDerivAt` + `csiszarLogRatioGap_deriv_le_zero`.
   have h_anti_Ioi : AntitoneOn f (Set.Ioi 0) := by
     refine antitoneOn_of_deriv_nonpos (convex_Ioi 0) h_diff_Ioi.continuousOn
       (by rw [interior_Ioi]; exact h_diff_Ioi) ?_
@@ -490,7 +491,7 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
   have h_cluster : ClusterPt (0 : ℝ) (Filter.principal (Set.Ioi 0)) := by
     rw [← mem_closure_iff_clusterPt, closure_Ioi]
     exact Set.self_mem_Ici
-  -- Endpoint continuity from the shrunk wall atom (R-5-b').
+  -- Endpoint continuity at `0` within `Set.Ioi 0`.
   have h_cont_zero : ContinuousWithinAt f (Set.Ioi 0) 0 :=
     csiszarLogRatioGap_continuousWithinAt_zero X Y Z_X Z_Y P
       h_endpt_sum h_endpt_X h_endpt_Y

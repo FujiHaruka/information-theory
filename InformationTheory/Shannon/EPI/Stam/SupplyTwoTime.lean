@@ -12,25 +12,25 @@ flow at `σ + τ`.
 
 ## Approach
 
-Mirror the same-time producer `EPIDensityForm.lean:300-414` (which parks the sum
-conjuncts because the same-noise sum has variance `𝒩(0,2)`), but with separate
-times `σ ≠ τ` and a separate unit noise `Z` for the sum. The asymmetric
+The same-time route leaves the sum conjuncts unreachable, because a shared noise gives
+the sum the law `𝒩(0, 2)`. Here the two addends are smoothed at separate times
+`σ ≠ τ` and the sum is perturbed by its own unit noise `Z`. The asymmetric
 variance-add bridge `EPIConvDensityAssoc.convDensityAdd_convGaussian_interchange_asym`
-then closes the conv-pin seam at the genuine sum-time `σ + τ` (no `𝒩(0,2)` reparam).
+then closes the conv-pin seam at the sum-time `σ + τ` (no `𝒩(0,2)` reparam).
 
 The structure `IsRegularDeBruijnHypV2` exposes a smooth density witness `density_t`
 pointwise-pinned (`density_t_eq`, ∀x not a.e.) to `convDensityAdd pX g_t`. The three
 positivities and all `IsStamInequalityHyp` regularity gates are discharged by rewriting
 `density_t` to its conv-Gaussian form and reusing the per-time conv-Gaussian producers.
 
-The single genuinely-new piece is the conv-pin gate
+The one piece specific to this route is the conv-pin gate
 `density_sum_{σ+τ} = convDensityAdd density_X_σ density_Y_τ`, reduced via the asym
 interchange to the input-level a.e. identity `pXY =ᵐ convDensityAdd pX pY`
 (independent-sum density = convolution-of-densities), proved from `pX_law`/`pY_law`/
 `pXY_law` + `IndepFun.map_add_eq_map_conv_map` + `conv_withDensity_eq_lconvolution`
-+ withDensity a.e.-uniqueness. The a.e.→pointwise wash through `convDensityAdd · g`
-is honest: the consumed object is the pointwise-pinned smooth `density_t`, the a.e.
-seam lives only at the un-smoothed input density.
++ withDensity a.e.-uniqueness. Under the wash through `convDensityAdd · g` the a.e.
+seam survives only at the un-smoothed input density; the consumed object is the
+pointwise-pinned smooth `density_t`.
 -/
 import InformationTheory.Shannon.EPI.Case1.TwoTime
 import InformationTheory.Shannon.EPI.Stam.FisherCoupling
@@ -53,8 +53,7 @@ open scoped ENNReal NNReal Convolution
 
 /-- Density facts from a `withDensity` law (probability-density normalization):
 if `P.map W = volume.withDensity (ofReal ∘ p)` with `P` a probability measure and `p ≥ 0`
-measurable, then `p` is `volume`-integrable with mass `1`. Copy of the `density_facts`
-local lemma in `EPIDensityForm.lean:321-340`, lifted to a top-level helper.
+measurable, then `p` is `volume`-integrable with mass `1`.
 @audit:ok -/
 theorem density_int_mass {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
     [IsProbabilityMeasure P] (W : Ω → ℝ) (p : ℝ → ℝ)
@@ -84,7 +83,7 @@ densities `pX`, `pY` and `X+Y` with Lebesgue density `pXY` (all from probability
 Both `pXY` and `convDensityAdd pX pY` are densities of
 `P.map (X+Y) = (P.map X) ∗ (P.map Y)` (independence), and `withDensity` densities are
 a.e.-unique. This is an a.e. identity at the un-smoothed input level; the consumed
-`density_t` is pinned pointwise to the *smooth* convolution, so this a.e. seam is honest.
+`density_t` is pinned pointwise to the *smooth* convolution.
 @audit:ok -/
 theorem indepSum_density_ae {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
     [IsProbabilityMeasure P] (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
@@ -597,7 +596,7 @@ restriction was incidental. The only structural change is `int_fisherZ`: the con
 interchange bridge `convDensityAdd_convGaussian_interchange_asym` (variance `σ+τ`, not `2t`).
 
 All hypotheses are regularity preconditions; the conclusion (19-field integrability /
-boundedness / positivity bundle) is genuinely derived. No bundled analytic core.
+boundedness / positivity bundle) is derived from them.
 @audit:ok -/
 theorem isBlachmanConvReady_convDensityAdd_gaussian_asym (pX pY : ℝ → ℝ) {s t : ℝ}
     (hs : 0 < s) (ht : 0 < t)
@@ -734,7 +733,7 @@ appropriately, with Lebesgue densities and finite second moments, and de Bruijn 
 the three smoothed Fisher informations are positive and `1/J_S ≥ 1/J_X + 1/J_Y` with
 `J_S` the single-noise sum heat flow at `σ + τ`.
 
-Genuine (no residual): the conv-pin seam `indepSum_density_ae`
+The conv-pin seam `indepSum_density_ae`
 (`pXY =ᵐ convDensityAdd pX pY`) is proved via
 `IndepFun.map_add_eq_map_conv_map` + `conv_withDensity_eq_lconvolution`
 + `withDensity` a.e.-uniqueness + the lconvolution-Bochner a.e. bridge
@@ -822,7 +821,7 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
   have hpX_mass : (0 : ℝ) < ∫ x, pX x ∂volume := by rw [hpX_norm]; norm_num
   have hpY_mass : (0 : ℝ) < ∫ x, pY x ∂volume := by rw [hpY_norm]; norm_num
   have hpXY_mass : (0 : ℝ) < ∫ x, pXY x ∂volume := by rw [hpXY_norm]; norm_num
-  -- ===== (1) three Fisher positivities (genuine, via convDensityAdd_pos producer) =====
+  -- ===== (1) three Fisher positivities (via convDensityAdd_pos producer) =====
   have hposX : 0 < fisherInfoOfDensityReal RX.density_t := by
     rw [hpinX]
     exact EPIConvDensityRegular.fisherInfoOfDensityReal_convDensityAdd_pos
@@ -842,13 +841,13 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
   set B : Ω → ℝ := fun ω ↦ Y ω + Real.sqrt τ * Z_Y ω with hB_def
   have hA_meas : Measurable A := by fun_prop
   have hB_meas : Measurable B := by fun_prop
-  -- independence `A ⊥ B` (adapt the EPIDensityForm `hStam_indep` block to σ ≠ τ)
+  -- independence `A ⊥ B` from the source-noise pair independence, at `σ ≠ τ`
   have hAB_indep : IndepFun A B P := by
     have hcombA : Measurable (fun q : ℝ × ℝ ↦ q.1 + Real.sqrt σ * q.2) := by fun_prop
     have hcombB : Measurable (fun q : ℝ × ℝ ↦ q.1 + Real.sqrt τ * q.2) := by fun_prop
     have := hpair_indep.comp hcombA hcombB
     exact this
-  -- genuine Stam hyp via step3
+  -- Stam hyp via step3
   have hStam : StamEPIBridge.IsStamInequalityHyp A B P :=
     StamFisherCoupling.isStamInequalityHyp_via_step3 P A B hA_meas hB_meas hAB_indep
   -- per-time regularity of the three `density_t`s (= conv-Gaussian densities)

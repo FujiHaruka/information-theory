@@ -18,7 +18,7 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 # Entropy power inequality via the Stam inequality and de Bruijn integration
 
 This file raises the Stam-inequality and de Bruijn-integration ingredients of the entropy power
-inequality to their genuine signatures and assembles them into a pipeline.
+inequality to predicate signatures and assembles them into a pipeline.
 
 ## Main definitions
 
@@ -62,7 +62,7 @@ Blachman 1965): for independent `X, Y` with finite Fisher information,
 The quantification block carries regularity preconditions (`IsRegularDensityV2 fX/fY`, the
 normalizations `∫ fX = 1`, `∫ fY = 1`, the pointwise convolution identity
 `∀ x, fXY x = convDensityAdd fX fY x`, and the `IsBlachmanConvReady fX fY` bundle). These are not
-the inequality core: the bound is genuinely produced from regularity alone by
+the inequality core: the bound is produced from regularity alone by
 `stam_step2_density_wall` via `convex_fisher_bound_of_ready`. They are jointly satisfiable (a
 Gaussian witness inhabits the `IsBlachmanConvReady` bundle), so the predicate is non-vacuous.
 

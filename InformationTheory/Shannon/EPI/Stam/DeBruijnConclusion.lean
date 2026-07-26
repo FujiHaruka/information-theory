@@ -20,7 +20,7 @@ The EPI proof pieces:
 
 * The Stam inequality (Cover-Thomas Lemma 17.7.2). Step 4 (λ-optimization closed
   form `J_sum ≤ J_X J_Y / (J_X + J_Y)`) is *fully arithmetic*, in
-  `StamInequality.lean` (`stam_lambda_min`, `stam_lambda_lower_bound`,
+  `EPI/Stam/Inequality.lean` (`stam_lambda_min`, `stam_lambda_lower_bound`,
   `stam_inverse_form_of_harmonic_mean`). The Step 2-3 analytic core (the
   conditional Cauchy-Schwarz + convex Fisher bound) is localized to the single
   lemma `StamInequality.stam_step2_density_wall`, via
@@ -34,7 +34,7 @@ The EPI proof pieces:
 
 This file is the conclusion-assembly layer: it wires those discharged Stam +
 de Bruijn pieces into a tighter EPI pipeline, reducing the EPI main theorem's
-remaining hypothesis to the genuinely-irreducible primitives.
+remaining hypothesis to the irreducible primitives.
 
 ## Approach
 
@@ -42,46 +42,43 @@ This file wires the Stam + de Bruijn pieces directly into the EPI
 conclusion, with no intermediate scaling-decomposition structure. The wiring
 proceeds two ways:
 
-1. Stam from regularity via the wall lemma (§2). The
+1. Stam from regularity (§2). The
    Step 2-3 analytic core is localized to `stam_step2_density_wall`;
    `isStamInequalityHyp_of_primitives`
    derives `IsStamInequalityHyp` from regularity preconditions alone (no
    load-bearing analytic hypothesis).
 2. The de Bruijn gap-monotonicity engine (§1, §6). The de Bruijn derivative
    `g'(t) = (1/2) · J(g_t)` is `≥ 0` because Fisher information is non-negative
-   (`fisherInfoOfDensityReal_nonneg`). This is the *genuine* monotonicity content
+   (`fisherInfoOfDensityReal_nonneg`). This is the monotonicity content
    that makes the EPI gap monotone along the heat-flow scaling path — we discharge
    `g'(t) ≥ 0` outright from the de Bruijn V2 witness.
 
 The EPI conclusion (§3) is landed from regularity by deriving the Stam inequality
-from the shared wall and feeding it through the monolithic
+from `stam_step2_density_wall` and feeding it through the monolithic
 `IsEPIL3IntegratedPipeline`. The Gaussian EPI (§5) is obtained directly
 from Gaussian saturation (`entropy_power_inequality_gaussian_full'`), with no Stam
 claim.
 
-## Genuine residual remaining
-
-After this assembly the EPI conclusion reduces to a single residual.
-`stam_step2_density_wall` — the conditional Cauchy-Schwarz +
-convex Fisher bound (Cover-Thomas 17.7.2's deepest analytic content) — is
-closed (`@audit:ok`) via
-`convex_fisher_bound_of_ready`. The remaining residual is the regularity-precondition
-signature gap on the published `IsStamInequalityHyp`, localized to
-`isStamInequalityHyp_via_body` (`@residual(plan:epi-wall-reattack-plan)`,
-`StamInequality.lean`), an owner-level pivot — not a Mathlib wall. The
-Stam→EPI bridge
-(`IsStamToEPIBridgeHyp`, Csiszár scaling-path coupling, Lemma 17.7.3) is
-discharged internally by consumers via the shared sorry lemma
-`stamToEPIBridge_holds`.
-
-## Key signatures
+## Main statements
 
 * `IsEPIGapMonotoneHyp` — de Bruijn gap-monotonicity sub-predicate (§1)
 * `deBruijn_deriv_nonneg` / `isEPIGapMonotoneHyp_of_deBruijnV2` — `g'(t) ≥ 0` (§1)
-* `isStamInequalityHyp_of_primitives` — Stam from regularity via shared wall (§2)
-* `entropy_power_inequality_via_stamDeBruijn` — main EPI from regularity (§3)
-* `entropy_power_inequality_gaussian_full'` — genuine Gaussian EPI via saturation (§5)
+* `isStamInequalityHyp_of_primitives` — Stam from regularity (§2)
+* `entropy_power_inequality_gaussian_full'` — Gaussian EPI via saturation (§5)
 * `deBruijn_gap_deriv_nonneg_gaussian` — composed Gaussian gap monotonicity (§6)
+
+## Implementation notes
+
+The conditional Cauchy-Schwarz plus convex Fisher bound (Cover-Thomas 17.7.2's
+deepest analytic content) is localized to `stam_step2_density_wall`, which
+produces it from regularity preconditions alone via
+`convex_fisher_bound_of_ready`; `isStamInequalityHyp_via_body`
+(`EPI/Stam/Inequality.lean`) reshapes that harmonic-mean bound into the published
+`IsStamInequalityHyp` signature. The Stam→EPI bridge (`IsStamToEPIBridgeHyp`,
+Csiszár scaling-path coupling, Cover-Thomas Lemma 17.7.3) is not a field of the
+integrated pipeline: consumers that need the entropy power inequality supply it
+separately through `epi_via_stam`, discharged in the Gaussian case by
+`isStamToEPIBridgeHyp_of_gaussian`.
 -/
 
 namespace InformationTheory.Shannon.EPIStamDeBruijnConclusion
@@ -109,7 +106,7 @@ Bruijn derivative `g'(t) = (d/dt) h(X + √t · Z) = (1/2) · J(g_t)` is the eng
 it is non-negative because Fisher information is non-negative.
 
 This `Prop`-level predicate records the non-negativity of the de Bruijn
-derivative for the density witness `f` — the genuine analytic content that makes
+derivative for the density witness `f` — the analytic content that makes
 the gap monotone. It complements `EPIStamToBridge.csiszarLogRatioGap_antitoneOn_Ici_zero`
 (which carries the global `AntitoneOn` witness for the Csiszár log-ratio gap along
 the heat-flow path); the present predicate isolates the *derivative-sign* step of
@@ -142,9 +139,9 @@ theorem isEPIGapMonotoneHyp_of_deBruijnV2
     IsEPIGapMonotoneHyp h_reg.density_t :=
   isEPIGapMonotoneHyp_discharge h_reg.density_t
 
-/-! ## §2 — Stam inequality from regularity (via shared wall) -/
+/-! ## §2 — Stam inequality from regularity -/
 
-/-- The Stam inequality from regularity preconditions (via the shared wall).
+/-- The Stam inequality from regularity preconditions.
 
 Produces `IsStamInequalityHyp` from measurability / independence /
 probability measure alone, delegating the Step 2-3 analytic core to the
@@ -162,11 +159,12 @@ theorem isStamInequalityHyp_of_primitives
     IsStamInequalityHyp X Y P :=
   isStamInequalityHyp_via_step3 P X Y hX hY hXY
 
-/-! ## §3 — Main EPI from regularity (via shared wall)
+/-! ## §3 — Main EPI from regularity
 
-The public main theorem `entropy_power_inequality` runs via
-`EntropyPowerInequality.stamToEPIBridge_holds`, and the load-bearing predicate
-content is localized to the shared `stam_step2_density_wall`. -/
+`isStamInequalityHyp_of_primitives` above supplies `IsStamInequalityHyp` from
+regularity alone; combined with an `IsStamToEPIBridgeHyp` witness through
+`epi_via_stam` this yields `IsEntropyPowerInequalityHypothesis`. The analytic
+content is localized to `stam_step2_density_wall`. -/
 
 /-! ## §5 — Gaussian EPI (via saturation)
 

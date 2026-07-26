@@ -20,9 +20,9 @@ import Mathlib.Order.Filter.AtTopBot.Group
 /-!
 # Entropy power inequality — final integration
 
-This file integrates the building blocks from `EPIPlumbing`, `StamEPIBridge`,
-and `FisherInfoDeBruijn` to assemble `IsEPIL3IntegratedPipeline` and derive the
-entropy power inequality.
+This file integrates the building blocks from `EntropyPowerInequality`,
+`StamEPIBridge`, and `FisherInfo` to assemble `IsEPIL3IntegratedPipeline` and
+derive the entropy power inequality.
 
 ## Main definitions
 
@@ -30,23 +30,23 @@ entropy power inequality.
 
 ## Main statements
 
-- `isEPIL3IntegratedPipeline_of_gaussian`: Gaussian pipeline witness from an honest
+- `isEPIL3IntegratedPipeline_of_gaussian`: Gaussian pipeline witness from a
   Stam hypothesis.
 - `entropy_power_inequality_gaussian_full`: Gaussian EPI, hypothesis-free.
 - `isEPIL3IntegratedPipeline_symm`: symmetry of the integrated pipeline.
-- `isEPIL3IntegratedPipeline_of_stam`: pipeline from a Stam residual.
+- `isEPIL3IntegratedPipeline_of_stam`: pipeline from a Stam hypothesis.
 - `integrated_pipeline_roundtrip`: round-trip sanity check.
 
 ## Implementation notes
 
-The Stam-to-EPI bridge (Cover–Thomas Lemma 17.7.3, Csiszár-style coupling) is absent
-from Mathlib. The current design:
-- The Stam inequality is received as a genuine `IsStamInequalityHyp X Y P`.
+The Stam-to-EPI bridge (Cover–Thomas Lemma 17.7.3, Csiszár-style coupling) enters as
+follows:
+- The Stam inequality is received as an `IsStamInequalityHyp X Y P` argument.
 - de Bruijn integration uses `IsDeBruijnIntegrationHyp` and
-  `FisherInfoDeBruijn.deBruijn_identity_v2_gaussian` for the Gaussian case.
-- The Stam-to-EPI coupling is discharged internally by consumers via the shared
-  sorry lemma `EntropyPowerInequality.stamToEPIBridge_holds`; the Gaussian
-  saturation case is fully discharged.
+  `FisherInfo.deBruijn_identity_v2_gaussian` for the Gaussian case.
+- The Stam-to-EPI coupling is not a field of the pipeline: consumers supply
+  `IsStamToEPIBridgeHyp` separately (`epi_via_stam`). The Gaussian saturation
+  case needs no bridge at all (`entropy_power_inequality_gaussian_full`).
 -/
 
 namespace InformationTheory.Shannon.EPIL3Integration
@@ -65,25 +65,24 @@ open InformationTheory.Shannon.EPIGaussianDensityRoute (convDensityAdd_gaussian_
 
 /-- The integrated pipeline predicate.
 
-Carries the genuine Stam inequality (Cover–Thomas Lemma 17.7.2 signature) as its
-single field. The Stam-to-EPI *bridge* (Cover–Thomas Lemma 17.7.3 coupling) is not a
-load-bearing field: consumers discharge it internally via the shared sorry lemma
-`EntropyPowerInequality.stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`) rather than threading a
-`bridge : IsStamToEPIBridgeHyp` predicate hypothesis. -/
+Carries the Stam inequality (Cover–Thomas Lemma 17.7.2 signature) as its
+single field. The Stam-to-EPI *bridge* (Cover–Thomas Lemma 17.7.3 coupling) is
+deliberately not a field: consumers that need the entropy power inequality supply
+`IsStamToEPIBridgeHyp` separately (`epi_via_stam`) rather than threading a
+`bridge : IsStamToEPIBridgeHyp` predicate hypothesis through the pipeline. -/
 @[entry_point]
 structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop where
-  /-- Stam inequality (Cover–Thomas Lemma 17.7.2) genuine signature. -/
+  /-- Stam inequality (Cover–Thomas Lemma 17.7.2) signature. -/
   stam : IsStamInequalityHyp X Y P
 
 /-! ## Gaussian pipeline witness -/
 
-/-- A Gaussian pipeline witness from an honest Stam hypothesis.
+/-- A Gaussian pipeline witness from a Stam hypothesis.
 
 For independent Gaussians `X, Y` with non-zero variance, the *Stam* field is supplied
-as an honest `IsStamInequalityHyp X Y P` argument, not discharged. The
-genuine hypothesis-free Gaussian EPI (no Stam claim at all) is
+as an `IsStamInequalityHyp X Y P` argument, not discharged. The
+hypothesis-free Gaussian EPI (no Stam claim at all) is
 `entropy_power_inequality_gaussian_full`. -/
 @[entry_point]
 theorem isEPIL3IntegratedPipeline_of_gaussian
@@ -94,7 +93,7 @@ theorem isEPIL3IntegratedPipeline_of_gaussian
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
     (h_stam : IsStamInequalityHyp X Y P) :
     IsEPIL3IntegratedPipeline X Y P :=
-  -- The bridge is discharged internally by consumers via `stamToEPIBridge_holds`;
+  -- The bridge is supplied separately by consumers (`epi_via_stam`);
   -- the Gaussian-law arguments are retained as regularity preconditions
   -- documenting the setting.
   { stam := h_stam }
@@ -110,10 +109,10 @@ theorem isEPIL3IntegratedPipeline_symm
     IsEPIL3IntegratedPipeline Y X P where
   stam := isStamInequalityHyp_symm h.stam
 
-/-- A pipeline built from a Stam residual directly (mirrors `epi_via_stam`).
+/-- A pipeline built directly from a Stam hypothesis.
 
-The pipeline is built from the genuine Stam residual alone; the Stam-to-EPI bridge
-is discharged internally by consumers via `stamToEPIBridge_holds`. -/
+The Stam inequality is the pipeline's only field; the Stam-to-EPI bridge is not
+part of it and is supplied separately by consumers (`epi_via_stam`). -/
 @[entry_point]
 theorem isEPIL3IntegratedPipeline_of_stam
     {Ω : Type*} [MeasurableSpace Ω]
@@ -124,7 +123,7 @@ theorem isEPIL3IntegratedPipeline_of_stam
 
 /-! ## Concrete Gaussian EPI via saturation
 
-The genuine Gaussian EPI is `entropy_power_inequality_gaussian_full` below (direct from
+The Gaussian EPI is `entropy_power_inequality_gaussian_full` below (direct from
 `entropyPower_gaussian_additivity`); the integrated-pipeline form takes a real
 `IsStamInequalityHyp` argument. -/
 
@@ -146,7 +145,7 @@ theorem entropy_power_inequality_gaussian_full
 
 /-! ## Final sanity-check theorems -/
 
-/-- Building a pipeline from the Stam residual and then extracting it yields the
+/-- Building a pipeline from the Stam hypothesis and then extracting it yields the
 original. -/
 @[entry_point]
 theorem integrated_pipeline_roundtrip
@@ -160,15 +159,13 @@ theorem integrated_pipeline_roundtrip
 /-! ## Family-level de Bruijn lift and bounded-T FTC application
 
 This section provides the family-level de Bruijn lift and the bounded-T Gaussian
-FTC application. The genuine `HasDerivAt` content is available through
+FTC application. The `HasDerivAt` content is available through
 `FisherInfo.deBruijn_identity_v2_gaussian`; a non-Gaussian extension routes
-through the genuine de Bruijn lemma `debruijnIdentityV2_holds_assembled`.
+through the de Bruijn lemma `debruijnIdentityV2_holds_assembled`.
 
-The §1–§11 pipeline wrappers take only the single-field Stam-residual bundle and
-discharge the Stam-to-EPI bridge internally via the shared sorry lemma
-`EntropyPowerInequality.stamToEPIBridge_holds`
-(`@residual(plan:epi-stam-to-conclusion-plan)`); they carry no load-bearing
-predicate hypothesis. The de Bruijn integration identity here is the honest input
+The pipeline wrappers above take only the single-field Stam bundle; the
+Stam-to-EPI bridge is not among their hypotheses and is supplied separately by
+consumers (`epi_via_stam`). The de Bruijn integration identity here is the input
 to Csiszár scaling. -/
 
 /-! ### De Bruijn tail externalization
@@ -196,7 +193,7 @@ closing the `Z := 0` vacuous-bypass channel.
 
 Each field is a regularity precondition: `Z_law` rules out the vacuous `Z := 0`
 bypass, `h_inf : EReal` lifts the divergent Gaussian case, and `tail_limit`
-carries the genuine `Tendsto` content. The Gaussian instance constructor
+carries the `Tendsto` content. The Gaussian instance constructor
 `isDeBruijnTailHyp_of_gaussian` exhibits a substantive multi-step `Tendsto`
 discharge via `Real.tendsto_log_atTop` + `EReal.tendsto_coe_nhds_top_iff`.
 @audit:ok -/
@@ -273,12 +270,12 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
       InformationTheory.Shannon.FisherInfo.IsRegularDeBruijnHypV2 X Z P t := by
   intro t ht
   -- `IsRegularDeBruijnHypV2` is 2-field (regularity only). The
-  -- `derivAt_entropy_eq_half_fisher_v2` discharge is downstream, via the genuine
+  -- `derivAt_entropy_eq_half_fisher_v2` discharge is downstream, via
   -- `debruijnIdentityV2_holds_assembled`.
   exact
     { Z_law := hZ_law
       density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩)
-      -- Conv-pin (Gaussian case): genuine closure.
+      -- Conv-pin (Gaussian case).
       -- `density_t = gaussianPDFReal m (v + ⟨t,ht.le⟩)` and the conv-pin RHS is
       -- `convDensityAdd (gaussianPDFReal m v) (gaussianPDFReal 0 ⟨t,ht.le⟩)`, which
       -- equals `gaussianPDFReal (m+0) (v+⟨t,ht.le⟩) = gaussianPDFReal m (v+⟨t,ht.le⟩)`
@@ -298,7 +295,7 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
         -- `P.map X = gaussianReal m v = withDensity (gaussianPDF m v)`,
         -- and `gaussianPDF m v = fun x ↦ ofReal (gaussianPDFReal m v x)` (def).
         rw [_hX_law, gaussianReal_of_var_ne_zero m hv, gaussianPDF_def]
-      -- Second-moment regularity (genuine, Gaussian case). `X ∼ 𝒩(m,v)` has a finite
+      -- Second-moment regularity (Gaussian case). `X ∼ 𝒩(m,v)` has a finite
       -- second moment: `id ∈ L²(gaussianReal m v)` (`memLp_id_gaussianReal`), so
       -- `x ↦ x²` is `gaussianReal m v`-integrable (`MemLp.integrable_sq`); transport to
       -- `volume` via `gaussianReal = withDensity (gaussianPDF m v)` and
@@ -347,7 +344,7 @@ combined with `Real.tendsto_log_atTop` and the standard `atTop`-shift /
 
 When `P.map X = gaussianReal m v` with `v ≠ 0`, `P.map Z = gaussianReal 0 1`,
 and `X ⊥ Z`, the heat-flow entropy diverges to `+∞` (Gaussian sub-entropy
-lower bound `(1/2) log (2π e (v + T)) → +∞`), so `h_inf := ⊤` is genuine.
+lower bound `(1/2) log (2π e (v + T)) → +∞`), so `h_inf := ⊤`.
 
 Discharge route (`differentialEntropy_gaussianConvolution_of_gaussian` above
 already gives the closed form `(1/2) log (2π e (v + T))`):
@@ -589,10 +586,9 @@ theorem bounded_T_ftc_gaussian
 
 /-! ## 1-source Csiszár log-ratio gap
 
-The ratio object `csiszarLogRatioGap` (and its `t = 0` / `t = 1` endpoints) is used
-by the live EPI ratio line in `EPIStamToBridge.lean`
-(`csiszarLogRatioGap_hasDerivAt` → `csiszarLogRatioGap_antitoneOn_Ici_zero` →
-`isStamToEPIScalingHyp_of_*`). -/
+The ratio object `csiszarLogRatioGap` (and its `t = 0` / `t = 1` endpoints) is consumed
+in `EPI/Stam/ToBridge.lean` (`csiszarLogRatioGap_hasDerivAt` →
+`csiszarLogRatioGap_deriv_le_zero` → `csiszarLogRatioGap_antitoneOn_Ici_zero`). -/
 
 /-- The 1-source Csiszár log-ratio gap (a monotone object).
 
@@ -645,9 +641,9 @@ saturates: `N_sum(1) = N_X(1) + N_Y(1)` by `entropyPower_gaussian_additivity`.
 Hence `r(1) = log N_sum(1) − log (N_X(1) + N_Y(1)) = log A − log A = 0`
 (`sub_self`).
 
-This is the genuine endpoint of the monotone log-ratio object: together with
+This is the endpoint of the monotone log-ratio object: together with
 `r'(t) ≤ 0` on `[0, ∞)` and `r(1) = 0`, monotonicity gives `r(0) ≥ 0`, i.e. EPI.
-The Gaussian-pair hypotheses are honest preconditions (laws + independence of the
+The Gaussian-pair hypotheses are preconditions (laws + independence of the
 convolved endpoints), not load-bearing bundling. -/
 @[entry_point]
 theorem csiszarLogRatioGap_at_one_eq_zero {Ω : Type*} {mΩ : MeasurableSpace Ω}

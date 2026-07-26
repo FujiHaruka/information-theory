@@ -23,7 +23,7 @@ the symmetric Fisher coupling and bridging into the optimization — explicit.
 
 ## Main statements
 
-* `isStamInequalityHyp_via_step3` — the full chain to the genuine `IsStamInequalityHyp` signature,
+* `isStamInequalityHyp_via_step3` — the full chain to the `IsStamInequalityHyp` signature,
   from regularity alone via `stam_step2_density_wall`.
 * `stam_optimal_lambda_mem_unit` — membership of the optimal `λ` in the unit interval.
 * `stam_coupling_saturates` — the Gaussian saturation arithmetic kernel.
@@ -31,7 +31,7 @@ the symmetric Fisher coupling and bridging into the optimization — explicit.
 
 ## Implementation notes
 
-The genuine analytic content of Steps 2-3 — the conditional Cauchy–Schwarz integrated against `p_Z`
+The analytic content of Steps 2-3 — the conditional Cauchy–Schwarz integrated against `p_Z`
 giving the convex Fisher bound and its `λ`-optimum — is localized to the single lemma
 `StamInequality.stam_step2_density_wall`, which takes regularity preconditions only.
 
@@ -63,13 +63,13 @@ theorem stam_optimal_lambda_mem_unit {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
   rw [div_le_one hab]
   linarith
 
-/-! ## §4 — Full Step 1 → 4 chain to the genuine Stam signature -/
+/-! ## §4 — Full Step 1 → 4 chain to the Stam signature -/
 
-/-- The full Step 1 → 4 chain to the genuine Stam signature: produces `IsStamInequalityHyp`
+/-- The full Step 1 → 4 chain to the Stam signature: produces `IsStamInequalityHyp`
 (Cover–Thomas Lemma 17.7.2) from regularity preconditions alone. The Step 2-3 convex Fisher bound
 is supplied internally by `stam_step2_density_wall`, and the remaining steps are discharged
-arithmetically by `isStamInequalityHyp_via_body`. It carries no load-bearing analytic hypothesis —
-only measurability, independence, and the probability-measure instance.
+arithmetically by `isStamInequalityHyp_via_body`. The hypotheses are only measurability,
+independence, and the probability-measure instance.
 @audit:ok -/
 @[entry_point]
 theorem isStamInequalityHyp_via_step3 {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -80,9 +80,9 @@ theorem isStamInequalityHyp_via_step3 {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
 /-! ## §5 — Gaussian saturation: Step 3 holds with equality at the optimum
 
-The genuine Gaussian entropy power inequality runs via `entropyPower_gaussian_additivity`
-(see `epi_via_stam_step3_gaussian` below); the arithmetic saturation kernel
-`stam_coupling_saturates` is kept.
+The Gaussian entropy power inequality runs via `entropyPower_gaussian_additivity`
+(see `epi_via_stam_step3_gaussian` below); `stam_coupling_saturates` is the
+arithmetic saturation kernel.
 -/
 
 /-- Gaussian saturation equality witness: at the optimal `λ = b / (a + b)`, the coupling RHS
