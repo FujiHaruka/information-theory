@@ -1,0 +1,18 @@
+{
+  "problem": "more capable broadcast channel の容量領域の単一文字特徴づけ bc_moreCapable_capacity_eq_uv : bcCapacityRegion W = bcOuterRegionUV W (全支持チャネルに対する等号)。less noisy の等号 (bc-lessnoisy-equality) の後続で、内界を 2 制約から 3 制約 (和レート制約つき) へ一般化する。M0 在庫 (probe 7 本を全部コンパイルさせてから執筆) → 実装 leg A (条件付き more capable + uvInfoJoint スロット) → leg B (3 制約内界 + 時分割/摂動/量子化変種 + headline 3 本) → leg C 後片付け (改名 / F-28 uvInfoJoint 移設 / 汎用 2 本の昇格) → README 定理表 → 親子 plan + 在庫の同期。commit range 6527722b..d95a12e6 (10 commits、うち実装は 4a01dff8..730844a1)。",
+  "proof_log": "docs/proof-logs/proof-log-bc-morecapable-equality.md",
+  "sessions": [
+    {
+      "id": "7f8f7cc1-41d3-4825-81dd-c7d104369c95",
+      "prompt_ids": ["09f980d0", "c66426ba", "325ff4c0"],
+      "note": "relay leg 6 の後半。less noisy の後片付けが終わった後、同一セッション内で more capable の M0 在庫を起こした (6527722b、probe MC0-MC6 の 7 本を scratchpad に書いて全部コンパイル通過させてから執筆) → 在庫が plan の 3 予測を訂正し親子 plan へ同期 (9eb87b38、L-BCO3 retire / F-28 起票) → handoff。前半の 4 ターン (775d9593 / 979d89f9 / b367a51a / 74f224d5) と proof-log 起票ターン (24ed8e22) は less noisy 側の manifest が持つので除外。"
+    },
+    {
+      "id": "f1f3f3b8-dc65-44c2-89f2-a60c68201da8",
+      "prompt_ids": ["ad54ab4e", "c17abe73", "78371994", "65db40df", "f876bd0d", "cc34baaa", "0833e5da"],
+      "note": "relay leg 7。実装 3 leg + 2 ゲート + 後片付け: leg A 条件付き more capable + uvInfoJoint スロット (4a01dff8) → style ゲート A (b230c15e) → leg B 3 制約内界 + headline 3 本 (fcdcf82b) → style ゲート B (改名を勧告、編集 0 で PASS) → leg C 改名 8 本 + F-28 uvInfoJoint 移設 + 汎用 2 本の昇格 (506c5184 / bb40c820 / 730844a1) → README 定理表 (594887a4) → 親子 plan + 在庫の同期 (d95a12e6)。honesty ゲートは新規 sorry 0 で launch 条件外。末尾の 94bb1f0f は本 proof-log 自体を書くターンなので除外。"
+    }
+  ],
+  "filters": { "file_prefix": "InformationTheory/Shannon" },
+  "idle_gap_minutes": 5
+}

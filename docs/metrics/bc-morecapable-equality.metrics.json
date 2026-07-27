@@ -1,0 +1,1181 @@
+{
+  "problem": "more capable broadcast channel の容量領域の単一文字特徴づけ bc_moreCapable_capacity_eq_uv : bcCapacityRegion W = bcOuterRegionUV W (全支持チャネルに対する等号)。less noisy の等号 (bc-lessnoisy-equality) の後続で、内界を 2 制約から 3 制約 (和レート制約つき) へ一般化する。M0 在庫 (probe 7 本を全部コンパイルさせてから執筆) → 実装 leg A (条件付き more capable + uvInfoJoint スロット) → leg B (3 制約内界 + 時分割/摂動/量子化変種 + headline 3 本) → leg C 後片付け (改名 / F-28 uvInfoJoint 移設 / 汎用 2 本の昇格) → README 定理表 → 親子 plan + 在庫の同期。commit range 6527722b..d95a12e6 (10 commits、うち実装は 4a01dff8..730844a1)。",
+  "proof_log": "docs/proof-logs/proof-log-bc-morecapable-equality.md",
+  "generated_at": "2026-07-27T22:37:19.071Z",
+  "filters": {
+    "file_prefix": "InformationTheory/Shannon"
+  },
+  "idle_gap_minutes": 5,
+  "sessions": [
+    {
+      "id": "7f8f7cc1-41d3-4825-81dd-c7d104369c95",
+      "note": "relay leg 6 の後半。less noisy の後片付けが終わった後、同一セッション内で more capable の M0 在庫を起こした (6527722b、probe MC0-MC6 の 7 本を scratchpad に書いて全部コンパイル通過させてから執筆) → 在庫が plan の 3 予測を訂正し親子 plan へ同期 (9eb87b38、L-BCO3 retire / F-28 起票) → handoff。前半の 4 ターン (775d9593 / 979d89f9 / b367a51a / 74f224d5) と proof-log 起票ターン (24ed8e22) は less noisy 側の manifest が持つので除外。",
+      "start": "2026-07-27T19:09:45.656Z",
+      "end": "2026-07-27T20:22:48.135Z",
+      "wall_time_seconds": 4382,
+      "active_time_seconds": 1246,
+      "turns": 24,
+      "tool_calls": {
+        "Bash": 13,
+        "TaskUpdate": 1,
+        "Read": 1,
+        "Agent": 2,
+        "Write": 1
+      },
+      "bash_breakdown": {
+        "git": 7,
+        "rg": 2,
+        "other": 4
+      },
+      "bash_total": 13,
+      "edits_by_file": {},
+      "writes_by_file": {
+        ".claude/handoff.md": 1
+      },
+      "reads_by_file": {
+        "docs/shannon/bc-general-region-plan.md": 1
+      },
+      "matched_edits": 0,
+      "matched_writes": 0,
+      "tool_errors": 0,
+      "tokens": {
+        "input": 72,
+        "output": 31219,
+        "cache_read": 6406500,
+        "cache_creation": 51769
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "sidechain_entries": 0,
+      "subagents": [
+        {
+          "id": "agent-abc-dedup-6fd228ba400240b1",
+          "start": null,
+          "end": null,
+          "wall_time_seconds": 0,
+          "active_time_seconds": 0,
+          "turns": 0,
+          "tool_calls": {},
+          "bash_breakdown": {},
+          "bash_total": 0,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {},
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "cache_read": 0,
+            "cache_creation": 0
+          },
+          "models": [],
+          "sidechain_entries": 0,
+          "subagents": [],
+          "agent_name": "bc-dedup",
+          "agent_type": "bc-dedup",
+          "custom_agent_type": "lean-implementer",
+          "description": "F-21/F-22/F-c 重複解消"
+        },
+        {
+          "id": "agent-abc-f19-move-6aeb01b37f5264f8",
+          "start": null,
+          "end": null,
+          "wall_time_seconds": 0,
+          "active_time_seconds": 0,
+          "turns": 0,
+          "tool_calls": {},
+          "bash_breakdown": {},
+          "bash_total": 0,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {},
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "cache_read": 0,
+            "cache_creation": 0
+          },
+          "models": [],
+          "sidechain_entries": 0,
+          "subagents": [],
+          "agent_name": "bc-f19-move",
+          "agent_type": "bc-f19-move",
+          "custom_agent_type": "lean-implementer",
+          "description": "F-19 Superposition サブディレクトリ昇格"
+        },
+        {
+          "id": "agent-abc-plan-sync-6882a93d4c466bad",
+          "start": null,
+          "end": null,
+          "wall_time_seconds": 0,
+          "active_time_seconds": 0,
+          "turns": 0,
+          "tool_calls": {},
+          "bash_breakdown": {},
+          "bash_total": 0,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {},
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "cache_read": 0,
+            "cache_creation": 0
+          },
+          "models": [],
+          "sidechain_entries": 0,
+          "subagents": [],
+          "agent_name": "bc-plan-sync",
+          "agent_type": "bc-plan-sync",
+          "custom_agent_type": "lean-planner",
+          "description": "refactor leg 完遂を plan に同期"
+        },
+        {
+          "id": "agent-abc-prooflog-6f8afe8f87e356b3",
+          "start": null,
+          "end": null,
+          "wall_time_seconds": 0,
+          "active_time_seconds": 0,
+          "turns": 0,
+          "tool_calls": {},
+          "bash_breakdown": {},
+          "bash_total": 0,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {},
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "cache_read": 0,
+            "cache_creation": 0
+          },
+          "models": [],
+          "sidechain_entries": 0,
+          "subagents": [],
+          "agent_name": "bc-prooflog",
+          "agent_type": "bc-prooflog",
+          "description": "less noisy 等号の proof-log"
+        },
+        {
+          "id": "agent-abc-s5-fix-64b7918125caff07",
+          "start": null,
+          "end": null,
+          "wall_time_seconds": 0,
+          "active_time_seconds": 0,
+          "turns": 0,
+          "tool_calls": {},
+          "bash_breakdown": {},
+          "bash_total": 0,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {},
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "cache_read": 0,
+            "cache_creation": 0
+          },
+          "models": [],
+          "sidechain_entries": 0,
+          "subagents": [],
+          "agent_name": "bc-s5-fix",
+          "agent_type": "bc-s5-fix",
+          "custom_agent_type": "lean-planner",
+          "description": "S5 行数誤記の是正"
+        },
+        {
+          "id": "agent-abc-style-refactor-ab0c8af25ea2f8ea",
+          "start": null,
+          "end": null,
+          "wall_time_seconds": 0,
+          "active_time_seconds": 0,
+          "turns": 0,
+          "tool_calls": {},
+          "bash_breakdown": {},
+          "bash_total": 0,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {},
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "cache_read": 0,
+            "cache_creation": 0
+          },
+          "models": [],
+          "sidechain_entries": 0,
+          "subagents": [],
+          "agent_name": "bc-style-refactor",
+          "agent_type": "bc-style-refactor",
+          "custom_agent_type": "style-auditor",
+          "description": "refactor leg の style ゲート"
+        },
+        {
+          "id": "agent-areadme-f5-b41e9016dd4a523b",
+          "start": null,
+          "end": null,
+          "wall_time_seconds": 0,
+          "active_time_seconds": 0,
+          "turns": 0,
+          "tool_calls": {},
+          "bash_breakdown": {},
+          "bash_total": 0,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {},
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "cache_read": 0,
+            "cache_creation": 0
+          },
+          "models": [],
+          "sidechain_entries": 0,
+          "subagents": [],
+          "agent_name": "readme-f5",
+          "agent_type": "readme-f5",
+          "description": "README 定理表に BC 等号を登録"
+        },
+        {
+          "id": "agent-abc-morecapable-inv-9614e0574a1d65d4",
+          "start": "2026-07-27T19:11:35.591Z",
+          "end": "2026-07-27T19:57:47.903Z",
+          "wall_time_seconds": 2772,
+          "active_time_seconds": 2703,
+          "turns": 83,
+          "tool_calls": {
+            "Read": 17,
+            "Bash": 55,
+            "Write": 9,
+            "Edit": 1,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "other": 10,
+            "rg": 14,
+            "ls": 1,
+            "lake_env_lean": 8,
+            "python3": 12,
+            "cat": 1,
+            "echo": 2,
+            "git": 2,
+            "sed": 3,
+            "wc": 1,
+            "deno": 1
+          },
+          "bash_total": 55,
+          "edits_by_file": {
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC1TimeShare.lean": 1
+          },
+          "writes_by_file": {
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC0Setup.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC1TimeShare.lean": 2,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC2CondMoreCapable.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC3SumBound.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC4Perturb.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC5Region.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC6Corner.lean": 1,
+            "docs/shannon/bc-morecapable-equality-inventory.md": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/shannon/bc-general-region-plan.md": 2,
+            "docs/shannon/bc-s8-assembly-inventory.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Classes.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/Region.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/TimeShare.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/FullSupport.lean": 2,
+            "InformationTheory/Shannon/CondMutualInfoMixture.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Region.lean": 1,
+            "InformationTheory/Shannon/MutualInfo.lean": 1,
+            "InformationTheory/Shannon/ChannelCoding/CodeToAmbient.lean": 2
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 294,
+            "output": 187741,
+            "cache_read": 41324997,
+            "cache_creation": 1225937
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 234,
+          "subagents": [],
+          "agent_name": "bc-morecapable-inv",
+          "agent_type": "bc-morecapable-inv",
+          "custom_agent_type": "mathlib-inventory",
+          "description": "more capable 等号の M0 在庫"
+        },
+        {
+          "id": "agent-abc-plan-mc-a6500bf107562965",
+          "start": "2026-07-27T19:58:36.247Z",
+          "end": "2026-07-27T20:20:59.928Z",
+          "wall_time_seconds": 1344,
+          "active_time_seconds": 1344,
+          "turns": 88,
+          "tool_calls": {
+            "Read": 23,
+            "Bash": 24,
+            "Edit": 43,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "git": 1,
+            "deno": 1,
+            "rg": 5,
+            "sed": 4,
+            "wc": 12,
+            "other": 1
+          },
+          "bash_total": 24,
+          "edits_by_file": {
+            "docs/shannon/bc-general-region-plan.md": 37,
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 6
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/moonshot-plan-template.md": 1,
+            "docs/subplan-template.md": 1,
+            "docs/shannon/bc-general-region-plan.md": 15,
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 1,
+            "docs/shannon/bc-morecapable-equality-inventory.md": 2,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/tasks/bdfnnww91.output": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 276,
+            "output": 75054,
+            "cache_read": 23931061,
+            "cache_creation": 527551
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 234,
+          "subagents": [],
+          "agent_name": "bc-plan-mc",
+          "agent_type": "bc-plan-mc",
+          "custom_agent_type": "lean-planner",
+          "description": "在庫の訂正を plan に反映 + 親同期"
+        }
+      ]
+    },
+    {
+      "id": "f1f3f3b8-dc65-44c2-89f2-a60c68201da8",
+      "note": "relay leg 7。実装 3 leg + 2 ゲート + 後片付け: leg A 条件付き more capable + uvInfoJoint スロット (4a01dff8) → style ゲート A (b230c15e) → leg B 3 制約内界 + headline 3 本 (fcdcf82b) → style ゲート B (改名を勧告、編集 0 で PASS) → leg C 改名 8 本 + F-28 uvInfoJoint 移設 + 汎用 2 本の昇格 (506c5184 / bb40c820 / 730844a1) → README 定理表 (594887a4) → 親子 plan + 在庫の同期 (d95a12e6)。honesty ゲートは新規 sorry 0 で launch 条件外。末尾の 94bb1f0f は本 proof-log 自体を書くターンなので除外。",
+      "start": "2026-07-27T20:22:05.019Z",
+      "end": "2026-07-27T22:27:42.681Z",
+      "wall_time_seconds": 7538,
+      "active_time_seconds": 3509,
+      "turns": 46,
+      "tool_calls": {
+        "Bash": 21,
+        "Skill": 1,
+        "ToolSearch": 2,
+        "TaskList": 1,
+        "TaskCreate": 3,
+        "Read": 7,
+        "Agent": 7,
+        "TaskUpdate": 1
+      },
+      "bash_breakdown": {
+        "ls": 5,
+        "git": 9,
+        "other": 2,
+        "rg": 3,
+        "cat": 1,
+        "head": 1
+      },
+      "bash_total": 21,
+      "edits_by_file": {},
+      "writes_by_file": {},
+      "reads_by_file": {
+        "docs/shannon/bc-morecapable-equality-inventory.md": 3,
+        ".claude/guides/agent-dispatch-guide.md": 1,
+        "InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean": 1,
+        "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 2
+      },
+      "matched_edits": 0,
+      "matched_writes": 0,
+      "tool_errors": 0,
+      "tokens": {
+        "input": 218,
+        "output": 169744,
+        "cache_read": 13429843,
+        "cache_creation": 438329
+      },
+      "models": [
+        "claude-opus-5"
+      ],
+      "sidechain_entries": 0,
+      "subagents": [
+        {
+          "id": "agent-amc-prooflog-eda8dc0dca3e1014",
+          "start": null,
+          "end": null,
+          "wall_time_seconds": 0,
+          "active_time_seconds": 0,
+          "turns": 0,
+          "tool_calls": {},
+          "bash_breakdown": {},
+          "bash_total": 0,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {},
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "cache_read": 0,
+            "cache_creation": 0
+          },
+          "models": [],
+          "sidechain_entries": 0,
+          "subagents": [],
+          "agent_name": "mc-prooflog",
+          "agent_type": "mc-prooflog",
+          "description": "more capable 等号の proof-log"
+        },
+        {
+          "id": "agent-amc-legA-b0f43ea2fd46e690",
+          "start": "2026-07-27T20:25:05.042Z",
+          "end": "2026-07-27T20:39:05.121Z",
+          "wall_time_seconds": 840,
+          "active_time_seconds": 840,
+          "turns": 78,
+          "tool_calls": {
+            "Read": 17,
+            "Bash": 32,
+            "Write": 1,
+            "Edit": 33,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "ls": 1,
+            "other": 4,
+            "sed": 2,
+            "rg": 5,
+            "lake_env_lean": 14,
+            "wc": 1,
+            "cat": 2,
+            "deno": 1,
+            "git": 2
+          },
+          "bash_total": 32,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 32,
+            "InformationTheory.lean": 1
+          },
+          "writes_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 1
+          },
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/shannon/bc-morecapable-equality-inventory.md": 2,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC2CondMoreCapable.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC3SumBound.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC1TimeShare.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC4Perturb.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC6Corner.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC0Setup.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/FullSupport.lean": 1,
+            "docs/rules/naming.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/TimeShare.lean": 1,
+            "docs/rules/docstrings.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 2
+          },
+          "matched_edits": 32,
+          "matched_writes": 1,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 250,
+            "output": 50660,
+            "cache_read": 22027606,
+            "cache_creation": 493176
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 212,
+          "subagents": [],
+          "agent_name": "mc-legA",
+          "agent_type": "mc-legA",
+          "custom_agent_type": "lean-implementer",
+          "description": "BC more capable 実装 leg A"
+        },
+        {
+          "id": "agent-amc-style-A-eb61005f9c4556dc",
+          "start": "2026-07-27T20:39:37.024Z",
+          "end": "2026-07-27T20:49:25.943Z",
+          "wall_time_seconds": 589,
+          "active_time_seconds": 589,
+          "turns": 31,
+          "tool_calls": {
+            "Read": 9,
+            "Bash": 24,
+            "Edit": 2,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "rg": 10,
+            "other": 4,
+            "ls": 1,
+            "head": 1,
+            "echo": 3,
+            "lake_env_lean": 3,
+            "git": 1,
+            "cp": 1
+          },
+          "bash_total": 24,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 2
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/rules/README.md": 1,
+            "docs/rules/docstrings.md": 1,
+            "docs/rules/naming.md": 1,
+            "docs/rules/module-structure.md": 1,
+            "docs/rules/lean-style.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 1,
+            "docs/shannon/bc-morecapable-equality-inventory.md": 2
+          },
+          "matched_edits": 2,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 120,
+            "output": 30002,
+            "cache_read": 5585117,
+            "cache_creation": 401820
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 98,
+          "subagents": [],
+          "agent_name": "mc-style-A",
+          "agent_type": "mc-style-A",
+          "custom_agent_type": "style-auditor",
+          "description": "style gate on MoreCapable.lean"
+        },
+        {
+          "id": "agent-amc-legB-555462dfdca39dcf",
+          "start": "2026-07-27T20:51:22.354Z",
+          "end": "2026-07-27T21:08:00.933Z",
+          "wall_time_seconds": 999,
+          "active_time_seconds": 999,
+          "turns": 64,
+          "tool_calls": {
+            "Read": 13,
+            "Bash": 27,
+            "Edit": 27,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "other": 3,
+            "rg": 3,
+            "lake_env_lean": 15,
+            "sed": 2,
+            "cat": 2,
+            "git": 2
+          },
+          "bash_total": 27,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 27
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/shannon/bc-morecapable-equality-inventory.md": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC1TimeShare.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC5Region.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC0Setup.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/Region.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/FullSupport.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/TimeShare.lean": 1
+          },
+          "matched_edits": 27,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 206,
+            "output": 65126,
+            "cache_read": 19365068,
+            "cache_creation": 545599
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 175,
+          "subagents": [],
+          "agent_name": "mc-legB",
+          "agent_type": "mc-legB",
+          "custom_agent_type": "lean-implementer",
+          "description": "BC more capable 実装 leg B"
+        },
+        {
+          "id": "agent-amc-style-B-7c84198f2f26885c",
+          "start": "2026-07-27T21:08:53.593Z",
+          "end": "2026-07-27T21:16:45.961Z",
+          "wall_time_seconds": 472,
+          "active_time_seconds": 472,
+          "turns": 21,
+          "tool_calls": {
+            "Read": 11,
+            "Bash": 17,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "other": 4,
+            "git": 1,
+            "rg": 5,
+            "echo": 4,
+            "python3": 1,
+            "deno": 1,
+            "lake_env_lean": 1
+          },
+          "bash_total": 17,
+          "edits_by_file": {},
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "docs/rules/README.md": 1,
+            "docs/rules/docstrings.md": 1,
+            "docs/rules/naming.md": 1,
+            "docs/rules/module-structure.md": 1,
+            "docs/rules/lean-style.md": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 2,
+            "docs/shannon/bc-morecapable-equality-inventory.md": 1,
+            "scripts/lean_doc_lint.ts": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/Region.lean": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 0,
+          "tokens": {
+            "input": 96,
+            "output": 30977,
+            "cache_read": 4383256,
+            "cache_creation": 405737
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 80,
+          "subagents": [],
+          "agent_name": "mc-style-B",
+          "agent_type": "mc-style-B",
+          "custom_agent_type": "style-auditor",
+          "description": "style gate on leg B additions"
+        },
+        {
+          "id": "agent-amc-legC-4c2825df9206a74d",
+          "start": "2026-07-27T21:18:18.614Z",
+          "end": "2026-07-27T22:05:03.346Z",
+          "wall_time_seconds": 2805,
+          "active_time_seconds": 2096,
+          "turns": 119,
+          "tool_calls": {
+            "Read": 29,
+            "Bash": 64,
+            "Edit": 26,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "wc": 1,
+            "rg": 18,
+            "git": 6,
+            "other": 13,
+            "lake_build": 6,
+            "cat": 3,
+            "awk": 1,
+            "lake_env_lean": 8,
+            "mkdir": 1,
+            "echo": 2,
+            "deno": 5
+          },
+          "bash_total": 64,
+          "edits_by_file": {
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 13,
+            "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Bridge.lean": 4,
+            "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Assembly.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/TimeShare.lean": 6,
+            "InformationTheory/Shannon/CondMutualInfo.lean": 1,
+            "InformationTheory/Shannon/MutualInfo.lean": 1
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/audit/audit-tags.md": 1,
+            "docs/rules/naming.md": 1,
+            "docs/shannon/bc-morecapable-equality-inventory.md": 2,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 10,
+            "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Bridge.lean": 2,
+            "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Assembly.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/TimeShare.lean": 4,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/f1f3f3b8-dc65-44c2-89f2-a60c68201da8/tasks/b09ght60k.output": 1,
+            "InformationTheory/Shannon/CondMutualInfoMixture.lean": 1,
+            "InformationTheory/Shannon/AEP/Basic/Converse.lean": 1,
+            "InformationTheory/Shannon/CondMutualInfo.lean": 1,
+            "InformationTheory/Shannon/MutualInfo.lean": 1,
+            "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/f1f3f3b8-dc65-44c2-89f2-a60c68201da8/tasks/bndikqjzi.output": 1
+          },
+          "matched_edits": 26,
+          "matched_writes": 0,
+          "tool_errors": 2,
+          "tokens": {
+            "input": 402,
+            "output": 53874,
+            "cache_read": 28189542,
+            "cache_creation": 1390478
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 324,
+          "subagents": [],
+          "agent_name": "mc-legC",
+          "agent_type": "mc-legC",
+          "custom_agent_type": "lean-implementer",
+          "description": "BC more capable leg C 整理"
+        },
+        {
+          "id": "agent-areadme-sync-0b96cc2b32be5b5f",
+          "start": "2026-07-27T22:05:57.061Z",
+          "end": "2026-07-27T22:07:21.833Z",
+          "wall_time_seconds": 85,
+          "active_time_seconds": 85,
+          "turns": 12,
+          "tool_calls": {
+            "Bash": 8,
+            "Read": 3,
+            "Edit": 1,
+            "ToolSearch": 1,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "rg": 3,
+            "git": 3,
+            "deno": 2
+          },
+          "bash_total": 8,
+          "edits_by_file": {
+            "docs/readme-theorems.txt": 1
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "docs/readme-theorems.txt": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 1,
+            "InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 42,
+            "output": 4705,
+            "cache_read": 816096,
+            "cache_creation": 150538
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 39,
+          "subagents": [],
+          "agent_name": "readme-sync",
+          "agent_type": "readme-sync",
+          "description": "README 定理表の同期"
+        },
+        {
+          "id": "agent-abc-plan-sync-9bde4bf72997aad7",
+          "start": "2026-07-27T22:09:35.060Z",
+          "end": "2026-07-27T22:27:56.930Z",
+          "wall_time_seconds": 1102,
+          "active_time_seconds": 1102,
+          "turns": 89,
+          "tool_calls": {
+            "Read": 22,
+            "Bash": 32,
+            "Edit": 40,
+            "SendMessage": 1
+          },
+          "bash_breakdown": {
+            "wc": 7,
+            "other": 5,
+            "rg": 11,
+            "echo": 2,
+            "cat": 1,
+            "lake_env_lean": 1,
+            "deno": 2,
+            "python3": 1,
+            "git": 2
+          },
+          "bash_total": 32,
+          "edits_by_file": {
+            "docs/shannon/bc-general-region-plan.md": 24,
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 6,
+            "docs/shannon/bc-morecapable-equality-inventory.md": 10
+          },
+          "writes_by_file": {},
+          "reads_by_file": {
+            "/Users/haruka/.claude/CLAUDE.md": 1,
+            "CLAUDE.md": 1,
+            "docs/shannon/bc-general-region-plan.md": 12,
+            "docs/audit/audit-tags.md": 1,
+            "docs/shannon/broadcast-channel-moonshot-plan.md": 2,
+            "docs/shannon/bc-morecapable-equality-inventory.md": 4,
+            "docs/subplan-template.md": 1
+          },
+          "matched_edits": 0,
+          "matched_writes": 0,
+          "tool_errors": 1,
+          "tokens": {
+            "input": 296,
+            "output": 71197,
+            "cache_read": 28094255,
+            "cache_creation": 502484
+          },
+          "models": [
+            "claude-opus-5"
+          ],
+          "sidechain_entries": 248,
+          "subagents": [],
+          "agent_name": "bc-plan-sync",
+          "agent_type": "bc-plan-sync",
+          "custom_agent_type": "lean-planner",
+          "description": "BC plan の書き戻しと圧縮"
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "start": "2026-07-27T19:09:45.656Z",
+    "end": "2026-07-27T22:27:42.681Z",
+    "wall_time_seconds": 11920,
+    "active_time_seconds": 4755,
+    "turns": 70,
+    "tool_calls": {
+      "Bash": 34,
+      "TaskUpdate": 2,
+      "Read": 8,
+      "Agent": 9,
+      "Write": 1,
+      "Skill": 1,
+      "ToolSearch": 2,
+      "TaskList": 1,
+      "TaskCreate": 3
+    },
+    "bash_breakdown": {
+      "git": 16,
+      "rg": 5,
+      "other": 6,
+      "ls": 5,
+      "cat": 1,
+      "head": 1
+    },
+    "bash_total": 34,
+    "edits_by_file": {},
+    "writes_by_file": {
+      ".claude/handoff.md": 1
+    },
+    "reads_by_file": {
+      "docs/shannon/bc-general-region-plan.md": 1,
+      "docs/shannon/bc-morecapable-equality-inventory.md": 3,
+      ".claude/guides/agent-dispatch-guide.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 2
+    },
+    "matched_edits": 0,
+    "matched_writes": 0,
+    "tool_errors": 0,
+    "tokens": {
+      "input": 290,
+      "output": 200963,
+      "cache_read": 19836343,
+      "cache_creation": 490098
+    },
+    "models": [
+      "claude-opus-5"
+    ],
+    "sidechain_entries": 0
+  },
+  "subagent_totals": {
+    "start": "2026-07-27T19:11:35.591Z",
+    "end": "2026-07-27T22:27:56.930Z",
+    "wall_time_seconds": 11008,
+    "active_time_seconds": 10230,
+    "turns": 585,
+    "tool_calls": {
+      "Read": 144,
+      "Bash": 283,
+      "Write": 10,
+      "Edit": 173,
+      "SendMessage": 9,
+      "ToolSearch": 1
+    },
+    "bash_breakdown": {
+      "other": 44,
+      "rg": 74,
+      "ls": 3,
+      "lake_env_lean": 50,
+      "python3": 14,
+      "cat": 9,
+      "echo": 13,
+      "git": 20,
+      "sed": 11,
+      "wc": 22,
+      "deno": 13,
+      "head": 1,
+      "cp": 1,
+      "lake_build": 6,
+      "awk": 1,
+      "mkdir": 1
+    },
+    "bash_total": 283,
+    "edits_by_file": {
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC1TimeShare.lean": 1,
+      "docs/shannon/bc-general-region-plan.md": 61,
+      "docs/shannon/broadcast-channel-moonshot-plan.md": 12,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 74,
+      "InformationTheory.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Bridge.lean": 4,
+      "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Assembly.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/TimeShare.lean": 6,
+      "InformationTheory/Shannon/CondMutualInfo.lean": 1,
+      "InformationTheory/Shannon/MutualInfo.lean": 1,
+      "docs/readme-theorems.txt": 1,
+      "docs/shannon/bc-morecapable-equality-inventory.md": 10
+    },
+    "writes_by_file": {
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC0Setup.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC1TimeShare.lean": 2,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC2CondMoreCapable.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC3SumBound.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC4Perturb.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC5Region.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC6Corner.lean": 1,
+      "docs/shannon/bc-morecapable-equality-inventory.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 1
+    },
+    "reads_by_file": {
+      "/Users/haruka/.claude/CLAUDE.md": 8,
+      "CLAUDE.md": 5,
+      "docs/shannon/bc-general-region-plan.md": 29,
+      "docs/shannon/bc-s8-assembly-inventory.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Classes.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/Region.lean": 3,
+      "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/TimeShare.lean": 8,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/FullSupport.lean": 4,
+      "InformationTheory/Shannon/CondMutualInfoMixture.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Region.lean": 1,
+      "InformationTheory/Shannon/MutualInfo.lean": 2,
+      "InformationTheory/Shannon/ChannelCoding/CodeToAmbient.lean": 2,
+      "docs/audit/audit-tags.md": 5,
+      "docs/moonshot-plan-template.md": 1,
+      "docs/subplan-template.md": 2,
+      "docs/shannon/broadcast-channel-moonshot-plan.md": 3,
+      "docs/shannon/bc-morecapable-equality-inventory.md": 15,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/tasks/bdfnnww91.output": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC2CondMoreCapable.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC3SumBound.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC1TimeShare.lean": 2,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC4Perturb.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC6Corner.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC0Setup.lean": 2,
+      "docs/rules/naming.md": 4,
+      "docs/rules/docstrings.md": 3,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 17,
+      "docs/rules/README.md": 2,
+      "docs/rules/module-structure.md": 2,
+      "docs/rules/lean-style.md": 2,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC5Region.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean": 2,
+      "scripts/lean_doc_lint.ts": 1,
+      "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Bridge.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Assembly.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/f1f3f3b8-dc65-44c2-89f2-a60c68201da8/tasks/b09ght60k.output": 1,
+      "InformationTheory/Shannon/AEP/Basic/Converse.lean": 1,
+      "InformationTheory/Shannon/CondMutualInfo.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/f1f3f3b8-dc65-44c2-89f2-a60c68201da8/tasks/bndikqjzi.output": 1,
+      "docs/readme-theorems.txt": 1
+    },
+    "matched_edits": 87,
+    "matched_writes": 1,
+    "tool_errors": 5,
+    "tokens": {
+      "input": 1982,
+      "output": 569336,
+      "cache_read": 173716998,
+      "cache_creation": 5643320
+    },
+    "models": [
+      "claude-opus-5"
+    ],
+    "sidechain_entries": 1644
+  },
+  "combined_totals": {
+    "start": "2026-07-27T19:09:45.656Z",
+    "end": "2026-07-27T22:27:56.930Z",
+    "wall_time_seconds": 11934,
+    "active_time_seconds": 11156,
+    "turns": 655,
+    "tool_calls": {
+      "Bash": 317,
+      "TaskUpdate": 2,
+      "Read": 152,
+      "Agent": 9,
+      "Write": 11,
+      "Edit": 173,
+      "SendMessage": 9,
+      "Skill": 1,
+      "ToolSearch": 3,
+      "TaskList": 1,
+      "TaskCreate": 3
+    },
+    "bash_breakdown": {
+      "git": 36,
+      "rg": 79,
+      "other": 50,
+      "ls": 8,
+      "lake_env_lean": 50,
+      "python3": 14,
+      "cat": 10,
+      "echo": 13,
+      "sed": 11,
+      "wc": 22,
+      "deno": 13,
+      "head": 2,
+      "cp": 1,
+      "lake_build": 6,
+      "awk": 1,
+      "mkdir": 1
+    },
+    "bash_total": 317,
+    "edits_by_file": {
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC1TimeShare.lean": 1,
+      "docs/shannon/bc-general-region-plan.md": 61,
+      "docs/shannon/broadcast-channel-moonshot-plan.md": 12,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 74,
+      "InformationTheory.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Bridge.lean": 4,
+      "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Assembly.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/TimeShare.lean": 6,
+      "InformationTheory/Shannon/CondMutualInfo.lean": 1,
+      "InformationTheory/Shannon/MutualInfo.lean": 1,
+      "docs/readme-theorems.txt": 1,
+      "docs/shannon/bc-morecapable-equality-inventory.md": 10
+    },
+    "writes_by_file": {
+      ".claude/handoff.md": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC0Setup.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC1TimeShare.lean": 2,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC2CondMoreCapable.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC3SumBound.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC4Perturb.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC5Region.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC6Corner.lean": 1,
+      "docs/shannon/bc-morecapable-equality-inventory.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 1
+    },
+    "reads_by_file": {
+      "docs/shannon/bc-general-region-plan.md": 30,
+      "/Users/haruka/.claude/CLAUDE.md": 8,
+      "CLAUDE.md": 5,
+      "docs/shannon/bc-s8-assembly-inventory.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Classes.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/Region.lean": 3,
+      "InformationTheory/Shannon/BroadcastChannel/Achievability/Assembly.lean": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/TimeShare.lean": 8,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/FullSupport.lean": 4,
+      "InformationTheory/Shannon/CondMutualInfoMixture.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Region.lean": 1,
+      "InformationTheory/Shannon/MutualInfo.lean": 2,
+      "InformationTheory/Shannon/ChannelCoding/CodeToAmbient.lean": 2,
+      "docs/audit/audit-tags.md": 5,
+      "docs/moonshot-plan-template.md": 1,
+      "docs/subplan-template.md": 2,
+      "docs/shannon/broadcast-channel-moonshot-plan.md": 3,
+      "docs/shannon/bc-morecapable-equality-inventory.md": 18,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/tasks/bdfnnww91.output": 1,
+      ".claude/guides/agent-dispatch-guide.md": 1,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean": 3,
+      "InformationTheory/Shannon/BroadcastChannel/Superposition/MoreCapable.lean": 19,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC2CondMoreCapable.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC3SumBound.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC1TimeShare.lean": 2,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC4Perturb.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC6Corner.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC0Setup.lean": 2,
+      "docs/rules/naming.md": 4,
+      "docs/rules/docstrings.md": 3,
+      "docs/rules/README.md": 2,
+      "docs/rules/module-structure.md": 2,
+      "docs/rules/lean-style.md": 2,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-41d3-4825-81dd-c7d104369c95/scratchpad/ProbeMC5Region.lean": 1,
+      "scripts/lean_doc_lint.ts": 1,
+      "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Bridge.lean": 2,
+      "InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Assembly.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/f1f3f3b8-dc65-44c2-89f2-a60c68201da8/tasks/b09ght60k.output": 1,
+      "InformationTheory/Shannon/AEP/Basic/Converse.lean": 1,
+      "InformationTheory/Shannon/CondMutualInfo.lean": 1,
+      "/private/tmp/claude-502/-Users-haruka-dev-lean-projects/f1f3f3b8-dc65-44c2-89f2-a60c68201da8/tasks/bndikqjzi.output": 1,
+      "docs/readme-theorems.txt": 1
+    },
+    "matched_edits": 87,
+    "matched_writes": 1,
+    "tool_errors": 5,
+    "tokens": {
+      "input": 2272,
+      "output": 770299,
+      "cache_read": 193553341,
+      "cache_creation": 6133418
+    },
+    "models": [
+      "claude-opus-5"
+    ],
+    "sidechain_entries": 1644
+  },
+  "subagent_count": 17
+}
