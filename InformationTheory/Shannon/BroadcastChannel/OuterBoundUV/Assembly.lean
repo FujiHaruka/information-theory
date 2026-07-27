@@ -17,6 +17,12 @@ whatever the channel is.  The union is therefore indexed by the laws whose outpu
 generated from the input letter by the channel and by nothing else, which is one composition
 product identity, `IsUVChannelLaw`.
 
+The main result is `bc_capacity_subset_uv`: the operational capacity region of the channel lies
+in this region.  The rate pair of a code, each coordinate discounted by the error probability of
+its receiver and by two bits per letter, is a point of the quadrilateral of the time-shared letter
+law; the discount vanishes as the error tolerance shrinks and the block length grows, and the
+region is a closed lower set, so the limit and the rate pairs below it are in the region too.
+
 ## Main definitions
 
 * `IsUVChannelLaw W ν` — the conditional law of the output pair `(Y₁, Y₂)` given the two
@@ -69,6 +75,9 @@ product identity, `IsUVChannelLaw`.
   longer refers to the message count of the other receiver.
 * `bc_achievable_clamp_iff` — clamping a rate pair into the first quadrant leaves achievability
   unchanged, since both ceilings equal one at a nonpositive rate.
+* `bc_uv_quadrant_mem_of_achievable` — an achievable rate pair with nonnegative coordinates lies
+  in the region, obtained from the code points by letting the error tolerance and the per-letter
+  residue vanish.
 * `bc_capacity_subset_uv` — the operational capacity region lies in the UV outer region.
 
 ## Implementation notes
@@ -304,12 +313,17 @@ def bcOuterRegionUV (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
 theorem bcOuterRegionUV_isClosed (W : BCChannel α β₁ β₂) : IsClosed (bcOuterRegionUV W) :=
   isClosed_closure
 
+/-- @audit:ok -/
 lemma uvRegion_isLowerSet {U V : Type*} [MeasurableSpace U] [MeasurableSpace V]
     (ν : Measure (U × V × α × β₁ × β₂)) [IsFiniteMeasure ν] : IsLowerSet (uvRegion ν) := by
   rintro p q hqp ⟨h₁, h₂, h₃, h₄⟩
   exact ⟨hqp.1.trans h₁, hqp.2.trans h₂, (add_le_add hqp.1 hqp.2).trans h₃,
     (add_le_add hqp.1 hqp.2).trans h₄⟩
 
+/-- The UV outer region is a lower set: a rate pair below a point of the region is again in the
+region.  Each quadrilateral bounds the two rates and their sum from above, and both the union and
+the closure preserve that.
+@audit:ok -/
 theorem bcOuterRegionUV_isLowerSet (W : BCChannel α β₁ β₂) :
     IsLowerSet (bcOuterRegionUV W) :=
   IsLowerSet.closure
@@ -1076,6 +1090,7 @@ lemma le_toReal_of_inv_mul_le {S J : ℝ≥0∞} {m : ℕ} (hm : 0 < m)
   have hkey : r ≤ S.toReal / (m : ℝ) := (le_div_iff₀ hm0).mpr (by linarith)
   linarith
 
+/-- @audit:ok -/
 lemma bc_uv_mixture_point_mem
     [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
@@ -1146,6 +1161,7 @@ lemma bc_uv_mixture_point_mem
 
 omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
   [StandardBorelSpace β₁] [Nonempty β₁] [StandardBorelSpace β₂] [Nonempty β₂] in
+/-- @audit:ok -/
 lemma bcConverseFanoSlack₁_le [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hcard₁ : 2 ≤ M₁) :
@@ -1160,6 +1176,7 @@ lemma bcConverseFanoSlack₁_le [NeZero M₁] [NeZero M₂]
 
 omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
   [StandardBorelSpace β₁] [Nonempty β₁] [StandardBorelSpace β₂] [Nonempty β₂] in
+/-- @audit:ok -/
 lemma bcConverseFanoSlack₂_le [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hcard₂ : 2 ≤ M₂) :
@@ -1172,6 +1189,7 @@ lemma bcConverseFanoSlack₂_le [NeZero M₁] [NeZero M₂]
   exact add_le_add Real.binEntropy_le_log_two
     (mul_le_mul_of_nonneg_left hlog ENNReal.toReal_nonneg)
 
+/-- @audit:ok -/
 lemma bc_uv_converse_slots [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :
@@ -1252,6 +1270,7 @@ theorem bc_uv_shrunk_point_mem
   · rw [hsumr]; linarith [hslot.sumBound₂, hF₁, hF₂]
   · rw [hsumr]; linarith [hslot.sumBound₁, hF₁, hF₂]
 
+/-- @audit:ok -/
 lemma bc_uv_code_point_mem [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :
@@ -1277,6 +1296,7 @@ lemma bc_uv_code_point_mem [NeZero M₁] [NeZero M₂]
   · rw [hcancel₂, he₁, he₂]; linarith [hslot.sumBound₂]
   · rw [hcancel₂, he₁, he₂]; linarith [hslot.sumBound₁]
 
+/-- @audit:ok -/
 lemma bc_uv_rate_point_mem [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {r₁ r₂ : ℝ}
@@ -1320,6 +1340,7 @@ def padSecond (c : BroadcastCode M₁ 1 n α β₁ β₂) : BroadcastCode M₁ 2
   decoder₁ := c.decoder₁
   decoder₂ _ := 0
 
+/-- @audit:ok -/
 lemma averageErrorProb₂_padFirst (c : BroadcastCode 1 M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) :
     (c.padFirst).averageErrorProb₂ W = c.averageErrorProb₂ W := by
   rcases Nat.eq_zero_or_pos M₂ with hM | hM
@@ -1341,6 +1362,7 @@ lemma averageErrorProb₂_padFirst (c : BroadcastCode 1 M₂ n α β₁ β₂) (
       = ((2 : ℝ≥0∞)⁻¹ * 2) * ((M₂ : ℝ≥0∞)⁻¹ * ∑ b : Fin M₂, c.errorProbAt₂ W (0, b)) by ring,
     ENNReal.inv_mul_cancel (by norm_num) (by norm_num), one_mul]
 
+/-- @audit:ok -/
 lemma averageErrorProb₁_padSecond (c : BroadcastCode M₁ 1 n α β₁ β₂) (W : BCChannel α β₁ β₂) :
     (c.padSecond).averageErrorProb₁ W = c.averageErrorProb₁ W := by
   rcases Nat.eq_zero_or_pos M₁ with hM | hM
@@ -1378,6 +1400,10 @@ variable [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β
 omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α] [Fintype β₁]
   [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Nonempty β₁] [Fintype β₂]
   [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] [Nonempty β₂] in
+/-- Clamping a rate pair into the first quadrant leaves achievability unchanged: at a nonpositive
+rate the message count `⌈exp (n * R)⌉` a code is asked to carry is one, the same value it takes at
+rate zero.
+@audit:ok -/
 lemma bc_achievable_clamp_iff (W : BCChannel α β₁ β₂) (R₁ R₂ : ℝ) :
     BCAchievable W R₁ R₂ ↔ BCAchievable W (max R₁ 0) (max R₂ 0) := by
   have key : ∀ (R : ℝ) (n : ℕ),
@@ -1403,6 +1429,7 @@ lemma bc_achievable_clamp_iff (W : BCChannel α β₁ β₂) (R₁ R₂ : ℝ) :
     obtain ⟨M₁, M₂, hM₁, hM₂, c, hc⟩ := hN n hn
     exact ⟨M₁, M₂, by rw [← key R₁ n]; exact hM₁, by rw [← key R₂ n]; exact hM₂, c, hc⟩
 
+/-- @audit:ok -/
 lemma bc_uv_shifted_point_mem (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (hn : 0 < n) {R₁ R₂ ε : ℝ}
     (hR₁ : 0 ≤ R₁) (hR₂ : 0 ≤ R₂) (hε1 : ε ≤ 1)
@@ -1486,6 +1513,11 @@ lemma bc_uv_shifted_point_mem (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
       haveI : NeZero M₂ := ⟨by omega⟩
       exact bc_uv_rate_point_mem c W hn (by omega) (by omega) hprod₁ hprod₂
 
+/-- An achievable rate pair with nonnegative coordinates lies in the UV outer region.  For every
+error tolerance and every block length the pair, discounted by the error probability of each
+receiver and by two bits per letter, is a point of the region; those points converge to the pair
+itself as the tolerance shrinks and the block length grows, and the region is closed.
+@audit:ok -/
 lemma bc_uv_quadrant_mem_of_achievable (W : BCChannel α β₁ β₂) [IsMarkovKernel W] {R₁ R₂ : ℝ}
     (hR₁ : 0 ≤ R₁) (hR₂ : 0 ≤ R₂) (hach : BCAchievable W R₁ R₂) :
     (R₁, R₂) ∈ bcOuterRegionUV W := by
