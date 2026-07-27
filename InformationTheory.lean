@@ -127,6 +127,7 @@ import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.MartonBridge
 import InformationTheory.Shannon.BroadcastChannel.MartonUnion
 import InformationTheory.Shannon.BroadcastChannel.SuperpositionRegion
 import InformationTheory.Shannon.BroadcastChannel.SuperpositionTimeShare
+import InformationTheory.Shannon.BroadcastChannel.SuperpositionFullSupport
 import InformationTheory.Shannon.RelayCutset
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity
