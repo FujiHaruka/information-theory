@@ -117,7 +117,7 @@ theorem errorProbAt₂_le_one
     unfold blockOutputLaw; infer_instance
   exact prob_le_one
 
-/-! ### Padding a code that carries a single message -/
+/-! ## Padding a code that carries a single message -/
 
 /-- A second receiver-1 message attached to a code that carries only one.  Both messages are sent
 with the single codeword of the original code, so receiver 1 cannot separate them, while receiver

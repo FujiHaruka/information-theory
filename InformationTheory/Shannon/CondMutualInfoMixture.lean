@@ -8,7 +8,8 @@ A mixture of laws indexed by a countable tag is a composition product of the tag
 kernel of the components, so the tag-conditioned mutual information of the mixture is the tag
 average of the mutual informations of the components.  Adding back the tag term of the chain rule
 turns that into an identity for the mutual information of the mixture itself, whenever the
-variable in question recovers the tag; dropping the tag term leaves the averaging inequality.
+variable in question recovers the tag; since that term is nonnegative, the identity also
+bounds the tag average of the components by the mutual information of the mixture.
 
 None of the statements mentions a channel or a code: they are properties of `mutualInfo` and
 `condMutualInfo` under a composition product of a countably supported measure with a Markov
