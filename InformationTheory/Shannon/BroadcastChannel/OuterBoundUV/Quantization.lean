@@ -28,13 +28,14 @@ finite output alphabet caps it by `log |β₂|`.
 ## Main statements
 
 * `uvQuantizeLaw_isUVChannelLaw` — truncating the auxiliary keeps a channel law a channel law.
-* `uvInfo₂_le_uvQuantizeLaw` and `uvInfoSum₂_le_uvQuantizeLaw` — the receiver-2 corner slot and
-  the sum-rate slot lose at most the slack under the truncation.
+* `uvInfo₂_le_uvQuantizeLaw_add_slack` and `uvInfoSum₂_le_uvQuantizeLaw_add_slack` — the receiver-2
+  corner slot and the sum-rate slot lose at most the slack under the truncation.
 * `tendsto_uvQuantizeSlack` — the slack vanishes as the truncation level grows.
 * `uvInfo₂_ne_top` and `uvInfoSum₂_ne_top` — the two slots are finite even over a countable
   auxiliary, which is what lets the estimates be read in the reals.
-* `mutualInfo_ne_top_of_right` and `mutualInfo_le_ofReal_log_card` — a finite alphabet on one
-  side alone bounds the mutual information, which is what the countable auxiliary needs.
+* `mutualInfo_ne_top_of_fintype_right` and `mutualInfo_le_ofReal_log_card` — a finite
+  alphabet on one side alone bounds the mutual information, which is what the countable
+  auxiliary needs.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -45,6 +46,8 @@ open scoped ENNReal Topology
 
 universe u
 
+/-! ## Finiteness and monotonicity of the information slots -/
+
 /-! ### Mutual information against a finite alphabet -/
 
 section FiniteRange
@@ -53,7 +56,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {A : Type*} [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
 variable {B : Type*} [Fintype B] [Nonempty B] [MeasurableSpace B] [MeasurableSingletonClass B]
 
-theorem mutualInfo_ne_top_of_right (μ : Measure Ω) [IsProbabilityMeasure μ]
+theorem mutualInfo_ne_top_of_fintype_right (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → A) (Yo : Ω → B) (hXs : Measurable Xs) (hYo : Measurable Yo) :
     mutualInfo μ Xs Yo ≠ ∞ :=
   ne_top_of_le_ne_top (mutualInfo_ne_top μ Yo Yo hYo hYo)
@@ -70,7 +73,7 @@ theorem mutualInfo_le_ofReal_log_card (μ : Measure Ω) [IsProbabilityMeasure μ
       InformationTheory.Shannon.MaxEntropy.entropy_le_log_card μ Yo hYo
     linarith
   calc mutualInfo μ Xs Yo = ENNReal.ofReal (mutualInfo μ Xs Yo).toReal :=
-        (ENNReal.ofReal_toReal (mutualInfo_ne_top_of_right μ Xs Yo hXs hYo)).symm
+        (ENNReal.ofReal_toReal (mutualInfo_ne_top_of_fintype_right μ Xs Yo hXs hYo)).symm
     _ ≤ ENNReal.ofReal (Real.log (Fintype.card B)) := ENNReal.ofReal_le_ofReal htoReal
 
 omit [StandardBorelSpace A] [Nonempty A] [Fintype B] [Nonempty B]
@@ -100,12 +103,13 @@ omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β₁] [N
   [MeasurableSingletonClass β₁] in
 theorem uvInfo₂_ne_top (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν] :
     uvInfo₂ ν ≠ ∞ :=
-  mutualInfo_ne_top_of_right ν _ _ (by fun_prop) (by fun_prop)
+  mutualInfo_ne_top_of_fintype_right ν _ _ (by fun_prop) (by fun_prop)
 
 theorem uvInfoSum₂_ne_top (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν] :
     uvInfoSum₂ ν ≠ ∞ := by
   have hjoint : mutualInfo ν (fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.2.1))
-      (fun q ↦ q.2.2.2.1) ≠ ∞ := mutualInfo_ne_top_of_right ν _ _ (by fun_prop) (by fun_prop)
+      (fun q ↦ q.2.2.2.1) ≠ ∞ :=
+    mutualInfo_ne_top_of_fintype_right ν _ _ (by fun_prop) (by fun_prop)
   rw [mutualInfo_chain_rule ν (fun q : U × V × α × β₁ × β₂ ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
     (fun q ↦ q.1) (by fun_prop) (by fun_prop) (by fun_prop)] at hjoint
   exact ENNReal.add_ne_top.mpr ⟨uvInfo₂_ne_top ν, (ENNReal.add_ne_top.mp hjoint).2⟩
@@ -128,11 +132,11 @@ theorem IsUVChannelLaw.condMutualInfo_le_map_cond {U' : Type*} [MeasurableSpace 
   have hfq : Measurable (fun q : U × V × α × β₁ × β₂ ↦ f q.1) := hf.comp measurable_fst
   have hpair : Measurable (fun u : U ↦ (f u, u)) := hf.prodMk measurable_id
   have hfinX : mutualInfo ν (fun q : U × V × α × β₁ × β₂ ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) ≠ ∞ :=
-    mutualInfo_ne_top_of_right ν _ _ (by fun_prop) (by fun_prop)
+    mutualInfo_ne_top_of_fintype_right ν _ _ (by fun_prop) (by fun_prop)
   have hfinUm : mutualInfo ν (fun q : U × V × α × β₁ × β₂ ↦ f q.1) (fun q ↦ q.2.2.2.1) ≠ ∞ :=
-    mutualInfo_ne_top_of_right ν _ _ hfq (by fun_prop)
+    mutualInfo_ne_top_of_fintype_right ν _ _ hfq (by fun_prop)
   have hfinU : mutualInfo ν (fun q : U × V × α × β₁ × β₂ ↦ q.1) (fun q ↦ q.2.2.2.1) ≠ ∞ :=
-    mutualInfo_ne_top_of_right ν _ _ (by fun_prop) (by fun_prop)
+    mutualInfo_ne_top_of_fintype_right ν _ _ (by fun_prop) (by fun_prop)
   -- the channel law's Markov chain, post-processed, kills `I((U', U); Y₁ ∣ X)`.
   have hzero : condMutualInfo ν (fun q ↦ (f q.1, q.1)) (fun q ↦ q.2.2.2.1)
       (fun q ↦ q.2.2.1) = 0 :=
@@ -174,6 +178,8 @@ theorem IsUVChannelLaw.condMutualInfo_le_map_cond {U' : Type*} [MeasurableSpace 
 
 end Coarsen
 
+/-! ## Truncating the countable auxiliary -/
+
 /-! ### The truncating quantizer -/
 
 /-- The truncating quantizer of the countable auxiliary: letters below the truncation level are
@@ -196,7 +202,7 @@ entropy the second output alphabet can carry. -/
 noncomputable def uvQuantizeSlack (ν : Measure (ℕ × ℕ × α × β₁ × β₂)) (m : ℕ) : ℝ≥0∞ :=
   ν {q | m ≤ q.1} * ENNReal.ofReal (Real.log (Fintype.card β₂))
 
-instance isProbabilityMeasure_uvQuantizeLaw (ν : Measure (ℕ × ℕ × α × β₁ × β₂))
+instance uvQuantizeLaw_isProbabilityMeasure (ν : Measure (ℕ × ℕ × α × β₁ × β₂))
     [IsProbabilityMeasure ν] (m : ℕ) : IsProbabilityMeasure (uvQuantizeLaw.{u} ν m) :=
   Measure.isProbabilityMeasure_map
     (measurable_uvRelabel (measurable_uvQuantize.{u} m) measurable_id).aemeasurable
@@ -257,7 +263,7 @@ theorem ae_ae_uvQuantize_eq_fst :
       measurable_id).aemeasurable
   · exact measurableSet_eq_fun (measurable_of_countable _) measurable_fst
 
-theorem lintegral_mutualInfo_condDistrib_le :
+theorem lintegral_mutualInfo_condDistrib_le_uvQuantizeSlack :
     ∫⁻ t, mutualInfo (condDistrib id (fun q ↦ uvQuantize.{u} m q.1) ν t)
         (fun q ↦ q.1) (fun q ↦ q.2.2.2.2) ∂(ν.map fun q ↦ uvQuantize.{u} m q.1)
       ≤ uvQuantizeSlack ν m := by
@@ -326,18 +332,19 @@ theorem mutualInfo_le_mutualInfo_uvQuantize_add_slack :
     mutualInfo_map_comp ν _ hT _ (by fun_prop) _ (by fun_prop)
   rw [hcp, hL, hR] at hsplit
   rw [hsplit]
-  exact add_le_add le_rfl (lintegral_mutualInfo_condDistrib_le ν m)
+  exact add_le_add le_rfl (lintegral_mutualInfo_condDistrib_le_uvQuantizeSlack ν m)
 
 end Tail
 
 /-! ### The truncation estimates at the level of the slots -/
 
-theorem uvInfo₂_le_uvQuantizeLaw (ν : Measure (ℕ × ℕ × α × β₁ × β₂)) [IsProbabilityMeasure ν]
-    (m : ℕ) : uvInfo₂ ν ≤ uvInfo₂ (uvQuantizeLaw.{u} ν m) + uvQuantizeSlack ν m := by
+theorem uvInfo₂_le_uvQuantizeLaw_add_slack (ν : Measure (ℕ × ℕ × α × β₁ × β₂))
+    [IsProbabilityMeasure ν] (m : ℕ) :
+    uvInfo₂ ν ≤ uvInfo₂ (uvQuantizeLaw.{u} ν m) + uvQuantizeSlack ν m := by
   rw [uvInfo₂_uvQuantizeLaw ν m]
   exact mutualInfo_le_mutualInfo_uvQuantize_add_slack ν m
 
-theorem uvInfoSum₂_le_uvQuantizeLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+theorem uvInfoSum₂_le_uvQuantizeLaw_add_slack (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν)
     (m : ℕ) : uvInfoSum₂ ν ≤ uvInfoSum₂ (uvQuantizeLaw.{u} ν m) + uvQuantizeSlack ν m := by
   simp only [uvInfoSum₂, condMutualInfo_uvQuantizeLaw ν m]
@@ -345,7 +352,7 @@ theorem uvInfoSum₂_le_uvQuantizeLaw (W : BCChannel α β₁ β₂) [IsMarkovKe
       ≤ uvInfo₂ (uvQuantizeLaw.{u} ν m) + uvQuantizeSlack ν m
         + condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
             (fun q ↦ uvQuantize.{u} m q.1) :=
-        add_le_add (uvInfo₂_le_uvQuantizeLaw ν m)
+        add_le_add (uvInfo₂_le_uvQuantizeLaw_add_slack ν m)
           (h.condMutualInfo_le_map_cond (measurable_uvQuantize.{u} m))
     _ = uvInfo₂ (uvQuantizeLaw.{u} ν m)
           + condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
