@@ -35,9 +35,9 @@ The second endpoint is where a less noisy channel enters: it forces
   that law.
 * `mul_uvInfo₂_le_uvInfo₂_uvTimeShareLaw` and `condMutualInfo_uvTimeShareLaw` — the two slots of
   the time-shared law against the slots of the original one.
-* `exists_bcInfo_ge_of_isUVChannelLaw` — over a less noisy channel, a rate pair satisfying the
-  three UV outer inequalities of a channel law is dominated by the two informations of some
-  achievability pair.
+* `exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw` — over a less noisy channel, a rate pair
+  satisfying the three UV outer inequalities of a channel law is dominated by the two
+  informations of some achievability pair.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -79,9 +79,6 @@ section Mixture
 variable {α β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
 variable {U V : Type*} [MeasurableSpace U] [MeasurableSpace V]
 
-lemma measurable_tagTrue : Measurable (fun u : U ↦ (true, u)) :=
-  measurable_const.prodMk measurable_id
-
 /-- The branch that keeps the auxiliary, tagging it with `true`. -/
 noncomputable def uvTagTrue (ν : Measure (U × V × α × β₁ × β₂)) :
     Measure ((Bool × U) × V × α × β₁ × β₂) :=
@@ -95,7 +92,7 @@ noncomputable def uvTagConst (ν : Measure (U × V × α × β₁ × β₂)) (u�
 instance uvTagTrue_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
     [IsProbabilityMeasure ν] : IsProbabilityMeasure (uvTagTrue ν) :=
   Measure.isProbabilityMeasure_map
-    (measurable_uvRelabel (measurable_tagTrue (U := U)) measurable_id).aemeasurable
+    (measurable_uvRelabel (measurable_prodMk_left) measurable_id).aemeasurable
 
 instance uvTagConst_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
     [IsProbabilityMeasure ν] (u₀ : U) : IsProbabilityMeasure (uvTagConst ν u₀) :=
@@ -152,7 +149,7 @@ lemma uvBranchKernel_ae_tag (ν : Measure (U × V × α × β₁ × β₂)) [IsP
     rw [uvBranchKernel]
     show ∀ᵐ q ∂(uvTagTrue ν), (q.1).1 = true
     rw [uvTagTrue, ae_map_iff
-      (measurable_uvRelabel (measurable_tagTrue (U := U)) measurable_id).aemeasurable
+      (measurable_uvRelabel (measurable_prodMk_left) measurable_id).aemeasurable
       (p := fun q : (Bool × U) × V × α × β₁ × β₂ ↦ (q.1).1 = true)
       (measurableSet_eq_fun (measurable_fst.comp measurable_fst) measurable_const)]
     filter_upwards with q
@@ -166,12 +163,12 @@ lemma uvTimeShareLaw_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKern
   haveI : IsFiniteMeasure ((1 - lam) • uvTagConst ν u₀) :=
     Measure.smul_finite _ (ne_top_of_le_ne_top ENNReal.one_ne_top tsub_le_self)
   rw [uvTimeShareLaw_eq ν u₀ lam]
-  exact ((h.map_auxiliaries (measurable_tagTrue (U := U)) measurable_id).smul (lam ⊓ 1)).add
+  exact ((h.map_auxiliaries (measurable_prodMk_left) measurable_id).smul (lam ⊓ 1)).add
     ((h.map_auxiliaries measurable_const measurable_id).smul (1 - lam))
 
 lemma uvInfo₂_uvTagTrue (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν] :
     uvInfo₂ (uvTagTrue ν) = uvInfo₂ ν :=
-  uvInfo₂_map_uvRelabel ν (measurable_tagTrue (U := U)) measurable_id measurable_snd
+  uvInfo₂_map_uvRelabel ν (measurable_prodMk_left) measurable_id measurable_snd
     (fun _ ↦ rfl)
 
 end Mixture
@@ -246,12 +243,12 @@ lemma condMutualInfo_uvTagTrue (ν : Measure (U × V × α × β₁ × β₂)) [
     condMutualInfo (uvTagTrue ν) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
       = condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) := by
   rw [condMutualInfo_map_comp' ν (uvRelabel (fun u : U ↦ (true, u)) id)
-    (measurable_uvRelabel (measurable_tagTrue (U := U)) measurable_id) (uvTagTrue ν) rfl
+    (measurable_uvRelabel (measurable_prodMk_left) measurable_id) (uvTagTrue ν) rfl
     (fun q ↦ q.2.2.1) (by fun_prop) (fun q ↦ q.2.2.2.1) (by fun_prop) (fun q ↦ q.1)
     measurable_fst]
   exact condMutualInfo_eq_of_leftInverse_cond ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
     (fun q ↦ q.1) (by fun_prop) (by fun_prop) measurable_fst
-    (measurable_tagTrue (U := U)) measurable_snd (fun _ ↦ rfl)
+    (measurable_prodMk_left) measurable_snd (fun _ ↦ rfl)
     (mutualInfo_ne_top_of_fintype_right ν _ _ measurable_fst (by fun_prop))
 
 omit [StandardBorelSpace U] [Nonempty U] [Fintype β₁] [MeasurableSingletonClass β₁] in
@@ -471,7 +468,7 @@ lemma exists_bcInfo_ge_of_tagged (W : BCChannel α β₁ β₂) [IsMarkovKernel 
   · rw [bcInfo₂_uvCloudLaw W hlaw, hinfo₂]
     exact h₂
 
-theorem exists_bcInfo_ge_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+theorem exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hln : IsBCLessNoisy W) {m : ℕ}
     {ν : Measure (Marton.bcAuxAlphabet.{u} m × V × α × β₁ × β₂)} [IsProbabilityMeasure ν]
     (h : IsUVChannelLaw W ν) {R₁ R₂ : ℝ}
