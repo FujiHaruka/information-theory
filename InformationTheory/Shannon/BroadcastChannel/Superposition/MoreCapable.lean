@@ -45,8 +45,8 @@ comparison bounds is spent.
 ## Main definitions
 
 * `uvInfoJoint ν` — the information `I(X; Y₁)` of a five-tuple law.
-* `bcSuperposition3Region W` — the superposition inner bound with its sum-rate constraint kept,
-  as a union over the auxiliary alphabets, restricted to the full-support indices.
+* `bcSuperpositionRegionSumRate W` — the superposition inner bound with its sum-rate constraint
+  kept, as a union over the auxiliary alphabets, restricted to the full-support indices.
 
 ## Main statements
 
@@ -59,7 +59,7 @@ comparison bounds is spent.
 * `uvInfoJoint_uvTimeShareLaw` — time sharing leaves `I(X; Y₁)` unchanged.
 * `mul_uvInfoJoint_le_uvInfoJoint_uvPerturbLaw` — perturbing a law toward the uniform one with
   weight `lam` keeps at least the fraction `lam` of `I(X; Y₁)`.
-* `bcSuperposition3Region_subset_capacity` — the three-constraint inner bound sits inside the
+* `bcSuperpositionRegionSumRate_subset_capacity` — the three-constraint inner bound sits inside the
   operational capacity region, for any broadcast channel.
 * `bc_moreCapable_uv_subset_superposition` — the UV outer region of a more capable channel is
   contained in the three-constraint superposition inner bound.
@@ -543,7 +543,7 @@ variable [Fintype β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSin
   [StandardBorelSpace β₂]
 variable {V : Type*} [MeasurableSpace V] [StandardBorelSpace V] [Nonempty V]
 
-lemma exists_bcInfo3_ge_of_tagged (W : BCChannel α β₁ β₂) [IsMarkovKernel W] {m : ℕ}
+lemma exists_bcInfo_ge_sumRate_of_tagged (W : BCChannel α β₁ β₂) [IsMarkovKernel W] {m : ℕ}
     {ν : Measure ((Bool × Marton.bcAuxAlphabet.{u} m) × V × α × β₁ × β₂)}
     [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) {R₁ R₂ : ℝ}
     (h₁ : R₁ ≤ (condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)).toReal)
@@ -571,8 +571,8 @@ lemma exists_bcInfo3_ge_of_tagged (W : BCChannel α β₁ β₂) [IsMarkovKernel
       mutualInfo ν' (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) = uvInfoJoint ν' from rfl, hjoint]
     exact hJ
 
-theorem exists_bcInfo3_ge_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W] {m : ℕ}
-    {ν : Measure (Marton.bcAuxAlphabet.{u} m × V × α × β₁ × β₂)} [IsProbabilityMeasure ν]
+theorem exists_bcInfo_ge_sumRate_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {m : ℕ} {ν : Measure (Marton.bcAuxAlphabet.{u} m × V × α × β₁ × β₂)} [IsProbabilityMeasure ν]
     (h : IsUVChannelLaw W ν) {R₁ R₂ : ℝ}
     (h₁ : R₁ ≤ (uvInfo₁ ν).toReal) (h₂ : R₂ ≤ (uvInfo₂ ν).toReal)
     (hs₂ : R₁ + R₂ ≤ (uvInfoSum₂ ν).toReal)
@@ -625,7 +625,7 @@ theorem exists_bcInfo3_ge_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMa
     intro lam; rw [uvInfoJoint_uvTimeShareLaw]
   rcases le_or_gt R₂ 0 with hR₂ | hR₂
   · -- A nonpositive second rate asks for a constant auxiliary.
-    refine exists_bcInfo3_ge_of_tagged W (uvTimeShareLaw_isUVChannelLaw W h u₀ 0) ?_
+    refine exists_bcInfo_ge_sumRate_of_tagged W (uvTimeShareLaw_isUVChannelLaw W h u₀ 0) ?_
       (hR₂.trans ENNReal.toReal_nonneg) ?_
     · rw [hslot₁ 0 zero_le_one, ENNReal.toReal_zero]
       have hcJ : (uvInfo₁ ν).toReal ≤ J :=
@@ -641,7 +641,7 @@ theorem exists_bcInfo3_ge_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMa
     have hbb : (R₂ / b) * b = R₂ := div_mul_cancel₀ R₂ (ne_of_gt hb0)
     have hlam : ENNReal.ofReal (R₂ / b) ≤ 1 := ENNReal.ofReal_le_one.mpr hlam1
     have hlamR : (ENNReal.ofReal (R₂ / b)).toReal = R₂ / b := ENNReal.toReal_ofReal hlam0.le
-    refine exists_bcInfo3_ge_of_tagged W
+    refine exists_bcInfo_ge_sumRate_of_tagged W
       (uvTimeShareLaw_isUVChannelLaw W h u₀ (ENNReal.ofReal (R₂ / b))) ?_ ?_ ?_
     · rw [hslot₁ _ hlam, hlamR]
       have e1 : (R₂ / b) * (R₁ + R₂) ≤ (R₂ / b) * (b + a) :=
@@ -677,7 +677,7 @@ where the first rate is negative.
 `bcSuperpositionRegionFullSupport` drops the sum constraint, which is exact over a less noisy
 channel and a proper enlargement outside that class; this set is the general superposition bound
 and is contained in it. -/
-noncomputable def bcSuperposition3Region (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
+noncomputable def bcSuperpositionRegionSumRate (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k))
     (_ : IsProbabilityMeasure pU) (_ : ∀ x : Marton.bcAuxAlphabet.{u} k, 0 < pU.real {x})
     (K : Kernel (Marton.bcAuxAlphabet.{u} k) α) (_ : IsMarkovKernel K)
@@ -687,16 +687,16 @@ noncomputable def bcSuperposition3Region (W : BCChannel α β₁ β₂) : Set (�
 
 omit [Nonempty α] [MeasurableSingletonClass α] [Nonempty β₁] [MeasurableSingletonClass β₁]
   [Nonempty β₂] [MeasurableSingletonClass β₂] in
-theorem bcSuperposition3Region_isClosed (W : BCChannel α β₁ β₂) :
-    IsClosed (bcSuperposition3Region.{u} W) := isClosed_closure
+theorem bcSuperpositionRegionSumRate_isClosed (W : BCChannel α β₁ β₂) :
+    IsClosed (bcSuperpositionRegionSumRate.{u} W) := isClosed_closure
 
 /-- The three-constraint superposition inner bound of a broadcast channel is achievable: it is
 contained in the operational capacity region.  No comparison between the two receivers is needed,
 because the region carries the sum constraint the achievability theorem asks for. -/
 @[entry_point]
-theorem bcSuperposition3Region_subset_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+theorem bcSuperpositionRegionSumRate_subset_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) :
-    bcSuperposition3Region.{u} W ⊆ bcCapacityRegion W := by
+    bcSuperpositionRegionSumRate.{u} W ⊆ bcCapacityRegion W := by
   classical
   refine closure_minimal ?_ (bc_capacityRegion_isClosed W)
   refine Set.iUnion_subset fun k ↦ Set.iUnion_subset fun pU ↦ Set.iUnion_subset fun hpU ↦
@@ -729,7 +729,8 @@ section Law
 variable {U : Type u} [Fintype U] [Nonempty U] [MeasurableSpace U]
   [MeasurableSingletonClass U] [StandardBorelSpace U]
 
-theorem exists_fullSupport_bcInfo3_ge_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+theorem exists_fullSupport_bcInfo_ge_sumRate_of_isUVChannelLaw (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W]
     {ν : Measure (U × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν)
     {R₁ R₂ δ : ℝ} (hδ : 0 < δ)
     (h₁ : R₁ ≤ (condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)).toReal)
@@ -784,7 +785,7 @@ theorem exists_fullSupport_bcInfo3_ge_of_isUVChannelLaw (W : BCChannel α β₁ 
     have hmax : max (R₁ - δ) 0 ≤ max R₁ 0 := max_le_max (by linarith) le_rfl
     nlinarith [mul_nonneg hε0.le hA]
 
-theorem exists_fullSupport_bcInfo3_ge (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+theorem exists_fullSupport_bcInfo_ge_sumRate (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (pU : Measure U) [IsProbabilityMeasure pU] (K : Kernel U α) [IsMarkovKernel K]
     {R₁ R₂ δ : ℝ} (hδ : 0 < δ) (h₁ : R₁ ≤ bcInfo₁ pU K W) (h₂ : R₂ ≤ bcInfo₂ pU K W)
     (h₃ : max R₁ 0 + R₂ ≤ bcInfoJoint pU K W) :
@@ -818,23 +819,24 @@ theorem exists_fullSupport_bcInfo3_ge (W : BCChannel α β₁ β₂) [IsMarkovKe
       mutualInfo_map_comp _ _ (by fun_prop) _ (by fun_prop) _ (by fun_prop),
       mutualInfo_pair_out₁_eq_uvInfoJoint (uvLawOfPair W pU K) (fun q ↦ q.1) measurable_fst
         hlaw.isMarkovChain_U_X_Y₁]
-  exact exists_fullSupport_bcInfo3_ge_of_isUVChannelLaw W hlaw hδ (hs₁ ▸ h₁) (hs₂ ▸ h₂)
+  exact exists_fullSupport_bcInfo_ge_sumRate_of_isUVChannelLaw W hlaw hδ (hs₁ ▸ h₁) (hs₂ ▸ h₂)
     (hs₃ ▸ h₃)
 
 end Law
 
-lemma sub_mem_bcSuperposition3Region_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+lemma sub_mem_bcSuperpositionRegionSumRate_of_isUVChannelLaw (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W]
     {m : ℕ} {ν : Measure (Marton.bcAuxAlphabet.{u} m × V × α × β₁ × β₂)} [IsProbabilityMeasure ν]
     (h : IsUVChannelLaw W ν) {R₁ R₂ δ : ℝ} (hδ : 0 < δ)
     (h₁ : R₁ ≤ (uvInfo₁ ν).toReal) (h₂ : R₂ ≤ (uvInfo₂ ν).toReal)
     (hs₂ : R₁ + R₂ ≤ (uvInfoSum₂ ν).toReal)
     (hs₁ : max R₁ 0 + R₂ ≤ (uvInfoJoint ν).toReal) :
-    ((R₁ - δ, R₂ - δ) : ℝ × ℝ) ∈ bcSuperposition3Region.{u} W := by
+    ((R₁ - δ, R₂ - δ) : ℝ × ℝ) ∈ bcSuperpositionRegionSumRate.{u} W := by
   classical
   obtain ⟨k, pU, hpU, K, hK, hb₁, hb₂, hb₃⟩ :=
-    exists_bcInfo3_ge_of_isUVChannelLaw W h h₁ h₂ hs₂ hs₁
+    exists_bcInfo_ge_sumRate_of_isUVChannelLaw W h h₁ h₂ hs₂ hs₁
   obtain ⟨pU', hpU', hfs, K', hK', hfsK, hc₁, hc₂, hc₃⟩ :=
-    exists_fullSupport_bcInfo3_ge W pU K hδ hb₁ hb₂ hb₃
+    exists_fullSupport_bcInfo_ge_sumRate W pU K hδ hb₁ hb₂ hb₃
   refine subset_closure ?_
   simp only [Set.mem_iUnion]
   exact ⟨k, pU', hpU', hfs, K', hK', hfsK, hc₁, hc₂, hc₃⟩
@@ -864,11 +866,12 @@ lemma uvInfoJoint_uvQuantizeLaw (ν : Measure (ℕ × ℕ × α × β₁ × β�
     uvInfoJoint (uvQuantizeLaw.{u} ν m) = uvInfoJoint ν :=
   uvInfoJoint_map_uvRelabel ν (measurable_uvQuantize.{u} m) measurable_id
 
-theorem sub_mem_bcSuperposition3Region_of_mem_uvRegion (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+theorem sub_mem_bcSuperpositionRegionSumRate_of_mem_uvRegion (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W]
     (hmc : IsBCMoreCapable W) {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν]
     (h : IsUVChannelLaw W ν) {p : ℝ × ℝ} (hp : p ∈ uvRegion ν) (m : ℕ) {δ : ℝ} (hδ : 0 < δ) :
     ((p.1 - δ, p.2 - (uvQuantizeSlack ν m).toReal - δ) : ℝ × ℝ)
-      ∈ bcSuperposition3Region.{u} W := by
+      ∈ bcSuperpositionRegionSumRate.{u} W := by
   classical
   obtain ⟨hb₁, hb₂, hs₂, hs₁⟩ := hp
   have hlaw : IsUVChannelLaw W (uvQuantizeLaw.{u} ν m) := uvQuantizeLaw_isUVChannelLaw W h m
@@ -893,12 +896,12 @@ theorem sub_mem_bcSuperposition3Region_of_mem_uvRegion (W : BCChannel α β₁ �
       linarith [ENNReal.toReal_mono hJfin (uvInfoSum₁_le_uvInfoJoint_of_moreCapable W hmc h)]
     · rw [max_eq_right hp₁.le, zero_add]
       linarith [ENNReal.toReal_mono hJfin (uvInfo₂_le_uvInfoJoint_of_moreCapable W hmc h)]
-  exact sub_mem_bcSuperposition3Region_of_isUVChannelLaw W hlaw hδ h₁ h₂ hsum hJ
+  exact sub_mem_bcSuperpositionRegionSumRate_of_isUVChannelLaw W hlaw hδ h₁ h₂ hsum hJ
 
-theorem mem_bcSuperposition3Region_of_mem_uvRegion (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+theorem mem_bcSuperpositionRegionSumRate_of_mem_uvRegion (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hmc : IsBCMoreCapable W) {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν]
     (h : IsUVChannelLaw W ν) {p : ℝ × ℝ} (hp : p ∈ uvRegion ν) :
-    p ∈ bcSuperposition3Region.{u} W := by
+    p ∈ bcSuperpositionRegionSumRate.{u} W := by
   have ht : Tendsto (fun k : ℕ ↦ 1 / ((k : ℝ) + 1)) atTop (𝓝 0) :=
     tendsto_one_div_add_atTop_nhds_zero_nat
   have hslack : Tendsto (fun m : ℕ ↦ (uvQuantizeSlack ν m).toReal) atTop (𝓝 0) := by
@@ -910,22 +913,22 @@ theorem mem_bcSuperposition3Region_of_mem_uvRegion (W : BCChannel α β₁ β₂
   have h2 : Tendsto (fun k : ℕ ↦ p.2 - (uvQuantizeSlack ν k).toReal - 1 / ((k : ℝ) + 1))
       atTop (𝓝 p.2) := by
     simpa using (tendsto_const_nhds.sub hslack).sub ht
-  exact (bcSuperposition3Region_isClosed W).mem_of_tendsto (h1.prodMk_nhds h2)
+  exact (bcSuperpositionRegionSumRate_isClosed W).mem_of_tendsto (h1.prodMk_nhds h2)
     (Eventually.of_forall fun k ↦
-      sub_mem_bcSuperposition3Region_of_mem_uvRegion W hmc h hp k (by positivity))
+      sub_mem_bcSuperpositionRegionSumRate_of_mem_uvRegion W hmc h hp k (by positivity))
 
 /-- The UV outer region of a more capable broadcast channel is contained in the three-constraint
 superposition inner bound over the full-support achievability pairs.  The channel needs no support
 hypothesis here: the inclusion compares two single-letter regions, and positive mass on every
 output pair is asked for only where the inner bound is turned into codes
-(`bcSuperposition3Region_subset_capacity`). -/
+(`bcSuperpositionRegionSumRate_subset_capacity`). -/
 @[entry_point]
 theorem bc_moreCapable_uv_subset_superposition (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hmc : IsBCMoreCapable W) :
-    bcOuterRegionUV W ⊆ bcSuperposition3Region.{u} W := by
-  refine closure_minimal ?_ (bcSuperposition3Region_isClosed W)
+    bcOuterRegionUV W ⊆ bcSuperpositionRegionSumRate.{u} W := by
+  refine closure_minimal ?_ (bcSuperpositionRegionSumRate_isClosed W)
   refine Set.iUnion_subset fun ν ↦ Set.iUnion_subset fun hν ↦ fun p hp ↦ ?_
-  exact mem_bcSuperposition3Region_of_mem_uvRegion W hmc hν hp
+  exact mem_bcSuperpositionRegionSumRate_of_mem_uvRegion W hmc hν hp
 
 end Converse
 
@@ -951,13 +954,13 @@ theorem bc_moreCapable_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKe
   classical
   exact Set.Subset.antisymm (bc_capacity_subset_uv W)
     ((bc_moreCapable_uv_subset_superposition.{u} W hmc).trans
-      (bcSuperposition3Region_subset_capacity W hW))
+      (bcSuperpositionRegionSumRate_subset_capacity W hW))
 
 theorem bc_moreCapable_superposition_eq_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) (hmc : IsBCMoreCapable W) :
-    bcSuperposition3Region.{u} W = bcCapacityRegion W := by
+    bcSuperpositionRegionSumRate.{u} W = bcCapacityRegion W := by
   classical
-  exact Set.Subset.antisymm (bcSuperposition3Region_subset_capacity W hW)
+  exact Set.Subset.antisymm (bcSuperpositionRegionSumRate_subset_capacity W hW)
     ((bc_capacity_subset_uv W).trans (bc_moreCapable_uv_subset_superposition.{u} W hmc))
 
 end Equality
