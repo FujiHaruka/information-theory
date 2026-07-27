@@ -1,8 +1,10 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.BroadcastChannel.Operational
+import InformationTheory.Shannon.BroadcastChannel.OuterBound
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Bridge
 import InformationTheory.Shannon.CondKLIntegral
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
+import Mathlib.Topology.Algebra.Order.UpperLower
 
 /-!
 # Broadcast channel — the UV outer region as a subset of the plane
@@ -30,10 +32,15 @@ product identity, `IsUVChannelLaw`.
 * `uvRelabel` — re-encoding of the two auxiliary alphabets of a five-tuple.
 * `bcUVLetterKernel`, `bcUVLetterIndexLaw`, `bcUVTimeShare` — the letter laws of a code read as a
   Markov kernel from the letter index, the uniform law of that index, and the resulting mixture.
+* `BroadcastCode.padFirst`, `BroadcastCode.padSecond` — a second message attached to a receiver
+  that carries only one, which is what brings a code of a zero rate into the scope of a converse
+  asking for at least two messages per receiver.
 
 ## Main statements
 
 * `bcOuterRegionUV_isClosed` — the region is closed.
+* `bcOuterRegionUV_isLowerSet` — the region is a lower set, so a rate pair below one of its
+  points belongs to it as well.
 * `bcOuterRegionUV_nonempty` — the region is nonempty, witnessed by `uvConstLaw`, so the union
   is indexed by a nonempty family of channel laws.
 * `isUVChannelLaw_iff` — a law is a channel law exactly when it is a law of the auxiliaries and
@@ -57,6 +64,12 @@ product identity, `IsUVChannelLaw`.
   law dominates the average of the letter slots.
 * `bc_uv_shrunk_point_mem` — the rate pair of a code, shrunk by the Fano slack per letter, lies
   in the region.
+* `bc_uv_code_point_mem` — the same in the form the asymptotic argument consumes: each rate is
+  discounted by the error probability of its receiver and by two bits per letter, which no
+  longer refers to the message count of the other receiver.
+* `bc_achievable_clamp_iff` — clamping a rate pair into the first quadrant leaves achievability
+  unchanged, since both ceilings equal one at a nonpositive rate.
+* `bc_capacity_subset_uv` — the operational capacity region lies in the UV outer region.
 
 ## Implementation notes
 
@@ -75,6 +88,14 @@ operational region is itself a closure.
 
 `uvRegion` imposes no sign constraint on the rate pair, matching the operational region, which
 contains nonpositive pairs; imposing one would exclude pairs the operational region contains.
+Both regions being lower sets is what carries the inclusion off the first quadrant, so no
+intersection with it is needed.
+
+The asymptotic argument runs on `bc_uv_code_point_mem` rather than on `bc_uv_shrunk_point_mem`:
+the latter subtracts the sum of both Fano slacks from each coordinate, and a slack of the other
+receiver is not controlled by the rate of this one, since the message counts of an achievable
+pair are bounded from below only.  Discounting each rate by its own error probability removes
+that coupling, and the residue is two bits per block whatever the message counts are.
 
 `compProd_comap_map_prodMap` and `compProd_pi_map_pair_eq_of_update_invariant` speak about a
 composition product of an arbitrary measure with an arbitrary Markov kernel and mention no
@@ -282,6 +303,17 @@ def bcOuterRegionUV (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
 /-- @audit:ok -/
 theorem bcOuterRegionUV_isClosed (W : BCChannel α β₁ β₂) : IsClosed (bcOuterRegionUV W) :=
   isClosed_closure
+
+lemma uvRegion_isLowerSet {U V : Type*} [MeasurableSpace U] [MeasurableSpace V]
+    (ν : Measure (U × V × α × β₁ × β₂)) [IsFiniteMeasure ν] : IsLowerSet (uvRegion ν) := by
+  rintro p q hqp ⟨h₁, h₂, h₃, h₄⟩
+  exact ⟨hqp.1.trans h₁, hqp.2.trans h₂, (add_le_add hqp.1 hqp.2).trans h₃,
+    (add_le_add hqp.1 hqp.2).trans h₄⟩
+
+theorem bcOuterRegionUV_isLowerSet (W : BCChannel α β₁ β₂) :
+    IsLowerSet (bcOuterRegionUV W) :=
+  IsLowerSet.closure
+    (isLowerSet_iUnion fun _ ↦ isLowerSet_iUnion fun _ ↦ uvRegion_isLowerSet _)
 
 /-- The five-tuple law with constant auxiliaries and a constant input letter `x₀`, whose output
 pair is drawn from `W x₀`.
@@ -1044,56 +1076,18 @@ lemma le_toReal_of_inv_mul_le {S J : ℝ≥0∞} {m : ℕ} (hm : 0 < m)
   have hkey : r ≤ S.toReal / (m : ℝ) := (le_div_iff₀ hm0).mpr (by linarith)
   linarith
 
-/-- The rate pair of a broadcast code, shrunk by the per-letter Fano slack, lies in the UV outer
-region.  The letter index is absorbed into the auxiliaries, which already carry it, so the
-average of the letter laws is again a channel law and dominates the per-letter averages of all
-four information slots.
-@audit:ok -/
-theorem bc_uv_shrunk_point_mem
+lemma bc_uv_mixture_point_mem
     [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
-    (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {R₁ R₂ : ℝ}
-    (hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
-    (hM₂ : Nat.ceil (Real.exp ((n : ℝ) * R₂)) ≤ M₂) :
-    (R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ),
-      R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
-      ∈ bcOuterRegionUV W := by
+    (hn : 0 < n) {r₁ r₂ : ℝ}
+    (hb₁ : (n : ℝ) * r₁ ≤ (∑ i : Fin n, uvInfo₁ (bcUVJointDistribution c W i)).toReal)
+    (hb₂ : (n : ℝ) * r₂ ≤ (∑ i : Fin n, uvInfo₂ (bcUVJointDistribution c W i)).toReal)
+    (hb₃ : (n : ℝ) * (r₁ + r₂)
+      ≤ (∑ i : Fin n, uvInfoSum₂ (bcUVJointDistribution c W i)).toReal)
+    (hb₄ : (n : ℝ) * (r₁ + r₂)
+      ≤ (∑ i : Fin n, uvInfoSum₁ (bcUVJointDistribution c W i)).toReal) :
+    (r₁, r₂) ∈ bcOuterRegionUV W := by
   haveI : NeZero n := ⟨hn.ne'⟩
-  have hn' : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
-  have hnne : (n : ℝ) ≠ 0 := ne_of_gt hn'
-  have hM₁R : (2 : ℝ) ≤ (M₁ : ℝ) := by exact_mod_cast hcard₁
-  have hM₂R : (2 : ℝ) ≤ (M₂ : ℝ) := by exact_mod_cast hcard₂
-  -- both Fano slacks are nonnegative, so shrinking by their sum only weakens the bounds
-  have hF₁ : 0 ≤ bcConverseFanoSlack₁ c W := by
-    unfold bcConverseFanoSlack₁
-    exact add_nonneg (Real.binEntropy_nonneg measureReal_nonneg measureReal_le_one)
-      (mul_nonneg measureReal_nonneg (Real.log_nonneg (by linarith)))
-  have hF₂ : 0 ≤ bcConverseFanoSlack₂ c W := by
-    unfold bcConverseFanoSlack₂
-    exact add_nonneg (Real.binEntropy_nonneg measureReal_nonneg measureReal_le_one)
-      (mul_nonneg measureReal_nonneg (Real.log_nonneg (by linarith)))
-  -- the code-level converse, with the four per-letter sums identified as slot sums
-  have hext := bc_uv_rate_extract c W hcard₁ hcard₂ hM₁ hM₂
-  rw [show (∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
-        (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i))
-      = ∑ i : Fin n, uvInfo₁ (bcUVJointDistribution c W i) from
-      Finset.sum_congr rfl fun i _ ↦ bc_uv_mutualInfo_eq_uvInfo₁_at c W i,
-    show (∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
-        (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i))
-      = ∑ i : Fin n, uvInfo₂ (bcUVJointDistribution c W i) from
-      Finset.sum_congr rfl fun i _ ↦ bc_uv_mutualInfo_eq_uvInfo₂_at c W i,
-    show (∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
-          (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)
-        + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
-          (bcConverseY₁s i) (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i)))
-      = ∑ i : Fin n, uvInfoSum₂ (bcUVJointDistribution c W i) from
-      Finset.sum_congr rfl fun i _ ↦ bc_uv_sum_eq_uvInfoSum₂_at c W i,
-    show (∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
-          (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)
-        + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
-          (bcConverseY₂s i) (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i)))
-      = ∑ i : Fin n, uvInfoSum₁ (bcUVJointDistribution c W i) from
-      Finset.sum_congr rfl fun i _ ↦ bc_uv_sum_eq_uvInfoSum₁_at c W i] at hext
   -- re-encode the two auxiliary alphabets of the time-shared law into `ℕ`
   obtain ⟨e₁, hinj₁⟩ := exists_injective_nat (Fin n × Fin M₂ × (Fin n → β₁) × (Fin n → β₂))
   obtain ⟨e₂, hinj₂⟩ := exists_injective_nat (Fin n × Fin M₁ × (Fin n → β₁) × (Fin n → β₂))
@@ -1134,46 +1128,426 @@ theorem bc_uv_shrunk_point_mem
       (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
       (measurable_fst.comp measurable_snd)⟩
   -- the four bounds at the re-encoded time-shared law
+  have g₁ : r₁ ≤ (uvInfo₁ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal :=
+    le_toReal_of_inv_mul_le hn (by rw [hs₁]; exact bcUVTimeShare_uvInfo₁_ge c W)
+      (by rw [hs₁]; exact hfin₁) hb₁
+  have g₂ : r₂ ≤ (uvInfo₂ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal :=
+    le_toReal_of_inv_mul_le hn (by rw [hs₂]; exact bcUVTimeShare_uvInfo₂_ge c W)
+      (by rw [hs₂]; exact hfin₂) hb₂
+  have g₃ : r₁ + r₂ ≤ (uvInfoSum₂ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal :=
+    le_toReal_of_inv_mul_le hn (by rw [hs₃]; exact bcUVTimeShare_uvInfoSum₂_ge c W)
+      (by rw [hs₃]; exact hfin₃) hb₃
+  have g₄ : r₁ + r₂ ≤ (uvInfoSum₁ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal :=
+    le_toReal_of_inv_mul_le hn (by rw [hs₄]; exact bcUVTimeShare_uvInfoSum₁_ge c W)
+      (by rw [hs₄]; exact hfin₄) hb₄
+  exact subset_closure (Set.mem_iUnion.mpr
+    ⟨⟨(bcUVTimeShare c W).map (uvRelabel e₁ e₂), inferInstance⟩,
+      Set.mem_iUnion.mpr ⟨hchan, g₁, g₂, g₃, g₄⟩⟩)
+
+omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
+  [StandardBorelSpace β₁] [Nonempty β₁] [StandardBorelSpace β₂] [Nonempty β₂] in
+lemma bcConverseFanoSlack₁_le [NeZero M₁] [NeZero M₂]
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hcard₁ : 2 ≤ M₁) :
+    bcConverseFanoSlack₁ c W
+      ≤ Real.log 2 + (c.averageErrorProb₁ W).toReal * Real.log (M₁ : ℝ) := by
+  have hM : (2 : ℝ) ≤ (M₁ : ℝ) := by exact_mod_cast hcard₁
+  have hlog : Real.log ((M₁ : ℝ) - 1) ≤ Real.log (M₁ : ℝ) :=
+    Real.log_le_log (by linarith) (by linarith)
+  rw [bcConverseFanoSlack₁, bcConverse_errorProb₁_eq]
+  exact add_le_add Real.binEntropy_le_log_two
+    (mul_le_mul_of_nonneg_left hlog ENNReal.toReal_nonneg)
+
+omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
+  [StandardBorelSpace β₁] [Nonempty β₁] [StandardBorelSpace β₂] [Nonempty β₂] in
+lemma bcConverseFanoSlack₂_le [NeZero M₁] [NeZero M₂]
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hcard₂ : 2 ≤ M₂) :
+    bcConverseFanoSlack₂ c W
+      ≤ Real.log 2 + (c.averageErrorProb₂ W).toReal * Real.log (M₂ : ℝ) := by
+  have hM : (2 : ℝ) ≤ (M₂ : ℝ) := by exact_mod_cast hcard₂
+  have hlog : Real.log ((M₂ : ℝ) - 1) ≤ Real.log (M₂ : ℝ) :=
+    Real.log_le_log (by linarith) (by linarith)
+  rw [bcConverseFanoSlack₂, bcConverse_errorProb₂_eq]
+  exact add_le_add Real.binEntropy_le_log_two
+    (mul_le_mul_of_nonneg_left hlog ENNReal.toReal_nonneg)
+
+lemma bc_uv_converse_slots [NeZero M₁] [NeZero M₂]
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :
+    InBCOuterRegionUV (Real.log (M₁ : ℝ)) (Real.log (M₂ : ℝ))
+      ((∑ i : Fin n, uvInfo₁ (bcUVJointDistribution c W i)).toReal + bcConverseFanoSlack₁ c W)
+      ((∑ i : Fin n, uvInfo₂ (bcUVJointDistribution c W i)).toReal + bcConverseFanoSlack₂ c W)
+      ((∑ i : Fin n, uvInfoSum₂ (bcUVJointDistribution c W i)).toReal
+        + bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W)
+      ((∑ i : Fin n, uvInfoSum₁ (bcUVJointDistribution c W i)).toReal
+        + bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) := by
+  have hext := bc_uv_converse_from_code c W hcard₁ hcard₂
+  rwa [show (∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
+        (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i))
+      = ∑ i : Fin n, uvInfo₁ (bcUVJointDistribution c W i) from
+      Finset.sum_congr rfl fun i _ ↦ bc_uv_mutualInfo_eq_uvInfo₁_at c W i,
+    show (∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
+        (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i))
+      = ∑ i : Fin n, uvInfo₂ (bcUVJointDistribution c W i) from
+      Finset.sum_congr rfl fun i _ ↦ bc_uv_mutualInfo_eq_uvInfo₂_at c W i,
+    show (∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
+          (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)
+        + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
+          (bcConverseY₁s i) (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i)))
+      = ∑ i : Fin n, uvInfoSum₂ (bcUVJointDistribution c W i) from
+      Finset.sum_congr rfl fun i _ ↦ bc_uv_sum_eq_uvInfoSum₂_at c W i,
+    show (∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
+          (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)
+        + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
+          (bcConverseY₂s i) (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i)))
+      = ∑ i : Fin n, uvInfoSum₁ (bcUVJointDistribution c W i) from
+      Finset.sum_congr rfl fun i _ ↦ bc_uv_sum_eq_uvInfoSum₁_at c W i] at hext
+
+/-- The rate pair of a broadcast code, shrunk by the per-letter Fano slack, lies in the UV outer
+region.  The letter index is absorbed into the auxiliaries, which already carry it, so the
+average of the letter laws is again a channel law and dominates the per-letter averages of all
+four information slots.
+@audit:ok -/
+theorem bc_uv_shrunk_point_mem
+    [NeZero M₁] [NeZero M₂]
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {R₁ R₂ : ℝ}
+    (hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
+    (hM₂ : Nat.ceil (Real.exp ((n : ℝ) * R₂)) ≤ M₂) :
+    (R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ),
+      R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
+      ∈ bcOuterRegionUV W := by
+  haveI : NeZero n := ⟨hn.ne'⟩
+  have hn' : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hnne : (n : ℝ) ≠ 0 := ne_of_gt hn'
+  have hM₁R : (2 : ℝ) ≤ (M₁ : ℝ) := by exact_mod_cast hcard₁
+  have hM₂R : (2 : ℝ) ≤ (M₂ : ℝ) := by exact_mod_cast hcard₂
+  -- both Fano slacks are nonnegative, so shrinking by their sum only weakens the bounds
+  have hF₁ : 0 ≤ bcConverseFanoSlack₁ c W := by
+    unfold bcConverseFanoSlack₁
+    exact add_nonneg (Real.binEntropy_nonneg measureReal_nonneg measureReal_le_one)
+      (mul_nonneg measureReal_nonneg (Real.log_nonneg (by linarith)))
+  have hF₂ : 0 ≤ bcConverseFanoSlack₂ c W := by
+    unfold bcConverseFanoSlack₂
+    exact add_nonneg (Real.binEntropy_nonneg measureReal_nonneg measureReal_le_one)
+      (mul_nonneg measureReal_nonneg (Real.log_nonneg (by linarith)))
+  -- the code-level converse, with the four per-letter sums identified as slot sums
+  have hslot := bc_uv_converse_slots c W hcard₁ hcard₂
+  have hr₁ : (n : ℝ) * R₁ ≤ Real.log (M₁ : ℝ) := le_log_of_ceil_exp_le hM₁
+  have hr₂ : (n : ℝ) * R₂ ≤ Real.log (M₂ : ℝ) := le_log_of_ceil_exp_le hM₂
   have hcorner : ∀ r : ℝ, (n : ℝ) * (r - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W)
       / (n : ℝ)) = (n : ℝ) * r - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) := by
     intro r
     field_simp
-  have g₁ : R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ)
-      ≤ (uvInfo₁ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal := by
-    refine le_toReal_of_inv_mul_le hn (by rw [hs₁]; exact bcUVTimeShare_uvInfo₁_ge c W)
-      (by rw [hs₁]; exact hfin₁) ?_
-    rw [hcorner]
-    linarith [hext.bound₁, hF₂]
-  have g₂ : R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ)
-      ≤ (uvInfo₂ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal := by
-    refine le_toReal_of_inv_mul_le hn (by rw [hs₂]; exact bcUVTimeShare_uvInfo₂_ge c W)
-      (by rw [hs₂]; exact hfin₂) ?_
-    rw [hcorner]
-    linarith [hext.bound₂, hF₁]
   have hsumr : (n : ℝ) * ((R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
         + (R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ)))
       = (n : ℝ) * R₁ + (n : ℝ) * R₂
         - 2 * (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) := by
     field_simp
     ring
-  have g₃ : (R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
-        + (R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
-      ≤ (uvInfoSum₂ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal := by
-    refine le_toReal_of_inv_mul_le hn (by rw [hs₃]; exact bcUVTimeShare_uvInfoSum₂_ge c W)
-      (by rw [hs₃]; exact hfin₃) ?_
-    rw [hsumr]
-    linarith [hext.sumBound₂, hF₁, hF₂]
-  have g₄ : (R₁ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
-        + (R₂ - (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) / (n : ℝ))
-      ≤ (uvInfoSum₁ ((bcUVTimeShare c W).map (uvRelabel e₁ e₂))).toReal := by
-    refine le_toReal_of_inv_mul_le hn (by rw [hs₄]; exact bcUVTimeShare_uvInfoSum₁_ge c W)
-      (by rw [hs₄]; exact hfin₄) ?_
-    rw [hsumr]
-    linarith [hext.sumBound₁, hF₁, hF₂]
-  exact subset_closure (Set.mem_iUnion.mpr
-    ⟨⟨(bcUVTimeShare c W).map (uvRelabel e₁ e₂), inferInstance⟩,
-      Set.mem_iUnion.mpr ⟨hchan, g₁, g₂, g₃, g₄⟩⟩)
+  refine bc_uv_mixture_point_mem c W hn ?_ ?_ ?_ ?_
+  · rw [hcorner]; linarith [hslot.bound₁, hF₂]
+  · rw [hcorner]; linarith [hslot.bound₂, hF₁]
+  · rw [hsumr]; linarith [hslot.sumBound₂, hF₁, hF₂]
+  · rw [hsumr]; linarith [hslot.sumBound₁, hF₁, hF₂]
+
+lemma bc_uv_code_point_mem [NeZero M₁] [NeZero M₂]
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :
+    ((Real.log (M₁ : ℝ) * (1 - (c.averageErrorProb₁ W).toReal) - 2 * Real.log 2) / (n : ℝ),
+      (Real.log (M₂ : ℝ) * (1 - (c.averageErrorProb₂ W).toReal) - 2 * Real.log 2) / (n : ℝ))
+      ∈ bcOuterRegionUV W := by
+  have hn' : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hnne : (n : ℝ) ≠ 0 := ne_of_gt hn'
+  have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hslot := bc_uv_converse_slots c W hcard₁ hcard₂
+  have hF₁ := bcConverseFanoSlack₁_le c W hcard₁
+  have hF₂ := bcConverseFanoSlack₂_le c W hcard₂
+  have hcancel : ∀ x : ℝ, (n : ℝ) * (x / (n : ℝ)) = x := fun x ↦ by field_simp
+  have hcancel₂ : ∀ x y : ℝ, (n : ℝ) * (x / (n : ℝ) + y / (n : ℝ)) = x + y := by
+    intro x y; field_simp
+  have he₁ : Real.log (M₁ : ℝ) * (1 - (c.averageErrorProb₁ W).toReal)
+      = Real.log (M₁ : ℝ) - (c.averageErrorProb₁ W).toReal * Real.log (M₁ : ℝ) := by ring
+  have he₂ : Real.log (M₂ : ℝ) * (1 - (c.averageErrorProb₂ W).toReal)
+      = Real.log (M₂ : ℝ) - (c.averageErrorProb₂ W).toReal * Real.log (M₂ : ℝ) := by ring
+  refine bc_uv_mixture_point_mem c W hn ?_ ?_ ?_ ?_
+  · rw [hcancel, he₁]; linarith [hslot.bound₁]
+  · rw [hcancel, he₂]; linarith [hslot.bound₂]
+  · rw [hcancel₂, he₁, he₂]; linarith [hslot.sumBound₂]
+  · rw [hcancel₂, he₁, he₂]; linarith [hslot.sumBound₁]
+
+lemma bc_uv_rate_point_mem [NeZero M₁] [NeZero M₂]
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {r₁ r₂ : ℝ}
+    (h₁ : (n : ℝ) * r₁ ≤ Real.log (M₁ : ℝ) * (1 - (c.averageErrorProb₁ W).toReal))
+    (h₂ : (n : ℝ) * r₂ ≤ Real.log (M₂ : ℝ) * (1 - (c.averageErrorProb₂ W).toReal)) :
+    (r₁ - 2 * Real.log 2 / (n : ℝ), r₂ - 2 * Real.log 2 / (n : ℝ)) ∈ bcOuterRegionUV W := by
+  have hn' : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  refine bcOuterRegionUV_isLowerSet W (Prod.mk_le_mk.mpr ⟨?_, ?_⟩)
+    (bc_uv_code_point_mem c W hn hcard₁ hcard₂)
+  · have hd : r₁ ≤ Real.log (M₁ : ℝ) * (1 - (c.averageErrorProb₁ W).toReal) / (n : ℝ) := by
+      rw [le_div_iff₀ hn']; linarith [h₁]
+    rw [sub_div]
+    linarith
+  · have hd : r₂ ≤ Real.log (M₂ : ℝ) * (1 - (c.averageErrorProb₂ W).toReal) / (n : ℝ) := by
+      rw [le_div_iff₀ hn']; linarith [h₂]
+    rw [sub_div]
+    linarith
 
 end TimeSharing
 
+/-! ## Padding a code that carries a single message -/
+
+section Padding
+
+namespace BroadcastCode
+
+/-- A second receiver-1 message attached to a code that carries only one.  Both messages are sent
+with the single codeword of the original code, so receiver 1 cannot separate them, while receiver
+2 sees exactly the original code.  This is what puts a code of a nonpositive rate pair inside the
+scope of the converse, which asks for at least two messages per receiver. -/
+def padFirst (c : BroadcastCode 1 M₂ n α β₁ β₂) : BroadcastCode 2 M₂ n α β₁ β₂ where
+  encoder m := c.encoder (0, m.2)
+  decoder₁ _ := 0
+  decoder₂ := c.decoder₂
+
+/-- The mirror of `padFirst` at the second receiver. -/
+def padSecond (c : BroadcastCode M₁ 1 n α β₁ β₂) : BroadcastCode M₁ 2 n α β₁ β₂ where
+  encoder m := c.encoder (m.1, 0)
+  decoder₁ := c.decoder₁
+  decoder₂ _ := 0
+
+lemma averageErrorProb₂_padFirst (c : BroadcastCode 1 M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) :
+    (c.padFirst).averageErrorProb₂ W = c.averageErrorProb₂ W := by
+  rcases Nat.eq_zero_or_pos M₂ with hM | hM
+  · subst hM; simp [averageErrorProb₂]
+  have hpt : ∀ m : Fin 2 × Fin M₂,
+      (c.padFirst).errorProbAt₂ W m = c.errorProbAt₂ W (0, m.2) := fun _ ↦ rfl
+  have hsum2 : (∑ m : Fin 2 × Fin M₂, (c.padFirst).errorProbAt₂ W m)
+      = 2 * ∑ b : Fin M₂, c.errorProbAt₂ W (0, b) := by
+    simp only [hpt, Fintype.sum_prod_type, Finset.sum_const, Finset.card_univ,
+      Fintype.card_fin, nsmul_eq_mul, Nat.cast_ofNat]
+  have hsum1 : (∑ m : Fin 1 × Fin M₂, c.errorProbAt₂ W m)
+      = ∑ b : Fin M₂, c.errorProbAt₂ W (0, b) := by
+    rw [Fintype.sum_prod_type, Fin.sum_univ_one]
+  have hcast : ((2 * M₂ : ℕ) : ℝ≥0∞) = 2 * (M₂ : ℝ≥0∞) := by push_cast; ring
+  unfold averageErrorProb₂
+  rw [if_neg (by simpa using hM.ne'), if_neg (by simpa using hM.ne'), hsum2, hsum1, hcast,
+    ENNReal.mul_inv (Or.inl (by norm_num)) (Or.inl (by norm_num)), one_mul,
+    show (2 : ℝ≥0∞)⁻¹ * (M₂ : ℝ≥0∞)⁻¹ * (2 * ∑ b : Fin M₂, c.errorProbAt₂ W (0, b))
+      = ((2 : ℝ≥0∞)⁻¹ * 2) * ((M₂ : ℝ≥0∞)⁻¹ * ∑ b : Fin M₂, c.errorProbAt₂ W (0, b)) by ring,
+    ENNReal.inv_mul_cancel (by norm_num) (by norm_num), one_mul]
+
+lemma averageErrorProb₁_padSecond (c : BroadcastCode M₁ 1 n α β₁ β₂) (W : BCChannel α β₁ β₂) :
+    (c.padSecond).averageErrorProb₁ W = c.averageErrorProb₁ W := by
+  rcases Nat.eq_zero_or_pos M₁ with hM | hM
+  · subst hM; simp [averageErrorProb₁]
+  have hpt : ∀ m : Fin M₁ × Fin 2,
+      (c.padSecond).errorProbAt₁ W m = c.errorProbAt₁ W (m.1, 0) := fun _ ↦ rfl
+  have hsum2 : (∑ m : Fin M₁ × Fin 2, (c.padSecond).errorProbAt₁ W m)
+      = 2 * ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0) := by
+    simp only [hpt, Fintype.sum_prod_type, Finset.sum_const, Finset.card_univ,
+      Fintype.card_fin, nsmul_eq_mul, Nat.cast_ofNat, ← Finset.mul_sum]
+  have hsum1 : (∑ m : Fin M₁ × Fin 1, c.errorProbAt₁ W m)
+      = ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0) := by
+    rw [Fintype.sum_prod_type]
+    exact Finset.sum_congr rfl fun a _ ↦ Fin.sum_univ_one fun b ↦ c.errorProbAt₁ W (a, b)
+  have hcast : ((M₁ * 2 : ℕ) : ℝ≥0∞) = (M₁ : ℝ≥0∞) * 2 := by push_cast; ring
+  unfold averageErrorProb₁
+  rw [if_neg (by simpa using hM.ne'), if_neg (by simpa using hM.ne'), hsum2, hsum1, hcast,
+    ENNReal.mul_inv (Or.inr (by norm_num)) (Or.inr (by norm_num)), mul_one,
+    show (M₁ : ℝ≥0∞)⁻¹ * (2 : ℝ≥0∞)⁻¹ * (2 * ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0))
+      = ((2 : ℝ≥0∞)⁻¹ * 2) * ((M₁ : ℝ≥0∞)⁻¹ * ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0)) by ring,
+    ENNReal.inv_mul_cancel (by norm_num) (by norm_num), one_mul]
+
+end BroadcastCode
+
+end Padding
+
+/-! ## The operational region lies in the UV outer region -/
+
+section Operational
+
+variable [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α]
+variable [Fintype β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Nonempty β₁]
+variable [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] [Nonempty β₂]
+
+omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α] [Fintype β₁]
+  [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Nonempty β₁] [Fintype β₂]
+  [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] [Nonempty β₂] in
+lemma bc_achievable_clamp_iff (W : BCChannel α β₁ β₂) (R₁ R₂ : ℝ) :
+    BCAchievable W R₁ R₂ ↔ BCAchievable W (max R₁ 0) (max R₂ 0) := by
+  have key : ∀ (R : ℝ) (n : ℕ),
+      Nat.ceil (Real.exp ((n : ℝ) * max R 0)) = Nat.ceil (Real.exp ((n : ℝ) * R)) := by
+    intro R n
+    by_cases hR : 0 ≤ R
+    · rw [max_eq_left hR]
+    · replace hR : R < 0 := not_le.mp hR
+      rw [max_eq_right hR.le, mul_zero, Real.exp_zero, Nat.ceil_one]
+      symm
+      refine le_antisymm (Nat.ceil_le.mpr ?_) (Nat.ceil_pos.mpr (Real.exp_pos _))
+      rw [Nat.cast_one, ← Real.exp_zero]
+      exact Real.exp_le_exp.mpr (mul_nonpos_of_nonneg_of_nonpos (Nat.cast_nonneg n) hR.le)
+  constructor
+  · intro h ε' hε'
+    obtain ⟨N, hN⟩ := h ε' hε'
+    refine ⟨N, fun n hn ↦ ?_⟩
+    obtain ⟨M₁, M₂, hM₁, hM₂, c, hc⟩ := hN n hn
+    exact ⟨M₁, M₂, by rw [key R₁ n]; exact hM₁, by rw [key R₂ n]; exact hM₂, c, hc⟩
+  · intro h ε' hε'
+    obtain ⟨N, hN⟩ := h ε' hε'
+    refine ⟨N, fun n hn ↦ ?_⟩
+    obtain ⟨M₁, M₂, hM₁, hM₂, c, hc⟩ := hN n hn
+    exact ⟨M₁, M₂, by rw [← key R₁ n]; exact hM₁, by rw [← key R₂ n]; exact hM₂, c, hc⟩
+
+lemma bc_uv_shifted_point_mem (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (hn : 0 < n) {R₁ R₂ ε : ℝ}
+    (hR₁ : 0 ≤ R₁) (hR₂ : 0 ≤ R₂) (hε1 : ε ≤ 1)
+    (hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
+    (hM₂ : Nat.ceil (Real.exp ((n : ℝ) * R₂)) ≤ M₂)
+    (he₁ : (c.averageErrorProb₁ W).toReal ≤ ε) (he₂ : (c.averageErrorProb₂ W).toReal ≤ ε) :
+    (R₁ * (1 - ε) - 2 * Real.log 2 / (n : ℝ), R₂ * (1 - ε) - 2 * Real.log 2 / (n : ℝ))
+      ∈ bcOuterRegionUV W := by
+  have hn' : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hcast2 : ((2 : ℕ) : ℝ) = 2 := by norm_num
+  have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have hlogM₁ : (n : ℝ) * R₁ ≤ Real.log (M₁ : ℝ) := le_log_of_ceil_exp_le hM₁
+  have hlogM₂ : (n : ℝ) * R₂ ≤ Real.log (M₂ : ℝ) := le_log_of_ceil_exp_le hM₂
+  have h1M₁ : 1 ≤ M₁ := lt_of_lt_of_le (Nat.ceil_pos.mpr (Real.exp_pos _)) hM₁
+  have h1M₂ : 1 ≤ M₂ := lt_of_lt_of_le (Nat.ceil_pos.mpr (Real.exp_pos _)) hM₂
+  have hnR₁ : (0 : ℝ) ≤ (n : ℝ) * R₁ := mul_nonneg hn'.le hR₁
+  have hnR₂ : (0 : ℝ) ≤ (n : ℝ) * R₂ := mul_nonneg hn'.le hR₂
+  have hprod₁ : (n : ℝ) * (R₁ * (1 - ε))
+      ≤ Real.log (M₁ : ℝ) * (1 - (c.averageErrorProb₁ W).toReal) := by
+    rw [← mul_assoc]
+    exact mul_le_mul hlogM₁ (by linarith) (by linarith) (hnR₁.trans hlogM₁)
+  have hprod₂ : (n : ℝ) * (R₂ * (1 - ε))
+      ≤ Real.log (M₂ : ℝ) * (1 - (c.averageErrorProb₂ W).toReal) := by
+    rw [← mul_assoc]
+    exact mul_le_mul hlogM₂ (by linarith) (by linarith) (hnR₂.trans hlogM₂)
+  -- a padded receiver contributes nothing: its rate is zero and its Fano slack is one bit
+  have hpad : ∀ {K₁ K₂ : ℕ} (d : BroadcastCode K₁ K₂ n α β₁ β₂), (2 : ℕ) ≤ K₁ →
+      (0 : ℝ) ≤ Real.log ((2 : ℕ) : ℝ) * (1 - (d.averageErrorProb₁ W).toReal) := by
+    intro K₁ K₂ d _
+    have hle : (d.averageErrorProb₁ W).toReal ≤ 1 := by
+      simpa using ENNReal.toReal_mono ENNReal.one_ne_top (d.averageErrorProb₁_le_one W)
+    rw [hcast2]
+    exact mul_nonneg (Real.log_nonneg (by norm_num)) (by linarith)
+  have hpad' : ∀ {K₁ K₂ : ℕ} (d : BroadcastCode K₁ K₂ n α β₁ β₂), (2 : ℕ) ≤ K₂ →
+      (0 : ℝ) ≤ Real.log ((2 : ℕ) : ℝ) * (1 - (d.averageErrorProb₂ W).toReal) := by
+    intro K₁ K₂ d _
+    have hle : (d.averageErrorProb₂ W).toReal ≤ 1 := by
+      simpa using ENNReal.toReal_mono ENNReal.one_ne_top (d.averageErrorProb₂_le_one W)
+    rw [hcast2]
+    exact mul_nonneg (Real.log_nonneg (by norm_num)) (by linarith)
+  rcases eq_or_lt_of_le h1M₁ with h1 | h1
+  · -- receiver 1 carries a single message, so its rate is zero and the code needs padding
+    subst h1
+    have hR₁z : R₁ = 0 := by
+      rw [Nat.cast_one, Real.log_one] at hlogM₁
+      have : R₁ ≤ 0 := by nlinarith
+      linarith
+    rcases eq_or_lt_of_le h1M₂ with h2 | h2
+    · subst h2
+      have hR₂z : R₂ = 0 := by
+        rw [Nat.cast_one, Real.log_one] at hlogM₂
+        have : R₂ ≤ 0 := by nlinarith
+        linarith
+      haveI : NeZero (2 : ℕ) := ⟨by norm_num⟩
+      refine bc_uv_rate_point_mem (c.padFirst.padSecond) W hn le_rfl le_rfl ?_ ?_
+      · rw [hR₁z, zero_mul, mul_zero]
+        exact hpad _ le_rfl
+      · rw [hR₂z, zero_mul, mul_zero]
+        exact hpad' _ le_rfl
+    · haveI : NeZero M₂ := ⟨by omega⟩
+      haveI : NeZero (2 : ℕ) := ⟨by norm_num⟩
+      refine bc_uv_rate_point_mem c.padFirst W hn le_rfl (by omega) ?_ ?_
+      · rw [hR₁z, zero_mul, mul_zero]
+        exact hpad _ le_rfl
+      · rw [BroadcastCode.averageErrorProb₂_padFirst]
+        exact hprod₂
+  · rcases eq_or_lt_of_le h1M₂ with h2 | h2
+    · subst h2
+      have hR₂z : R₂ = 0 := by
+        rw [Nat.cast_one, Real.log_one] at hlogM₂
+        have : R₂ ≤ 0 := by nlinarith
+        linarith
+      haveI : NeZero M₁ := ⟨by omega⟩
+      haveI : NeZero (2 : ℕ) := ⟨by norm_num⟩
+      refine bc_uv_rate_point_mem c.padSecond W hn (by omega) le_rfl ?_ ?_
+      · rw [BroadcastCode.averageErrorProb₁_padSecond]
+        exact hprod₁
+      · rw [hR₂z, zero_mul, mul_zero]
+        exact hpad' _ le_rfl
+    · haveI : NeZero M₁ := ⟨by omega⟩
+      haveI : NeZero M₂ := ⟨by omega⟩
+      exact bc_uv_rate_point_mem c W hn (by omega) (by omega) hprod₁ hprod₂
+
+lemma bc_uv_quadrant_mem_of_achievable (W : BCChannel α β₁ β₂) [IsMarkovKernel W] {R₁ R₂ : ℝ}
+    (hR₁ : 0 ≤ R₁) (hR₂ : 0 ≤ R₂) (hach : BCAchievable W R₁ R₂) :
+    (R₁, R₂) ∈ bcOuterRegionUV W := by
+  have hlog2 : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have key : ∀ η : ℝ, 0 < η → (R₁ - η, R₂ - η) ∈ bcOuterRegionUV W := by
+    intro η hη
+    have hden : (0 : ℝ) < 2 * (R₁ + R₂ + 1) := by linarith
+    set ε := min (1 / 2) (η / (2 * (R₁ + R₂ + 1))) with hεdef
+    have hε0 : 0 < ε := lt_min (by norm_num) (by positivity)
+    have hε1 : ε ≤ 1 := (min_le_left _ _).trans (by norm_num)
+    have hεle : ε ≤ η / (2 * (R₁ + R₂ + 1)) := min_le_right _ _
+    obtain ⟨N, hN⟩ := hach ε hε0
+    obtain ⟨n, hnge⟩ := exists_nat_ge (max (max (N : ℝ) 1) (4 * Real.log 2 / η))
+    have hnN : N ≤ n := by
+      exact_mod_cast ((le_max_left (N : ℝ) 1).trans (le_max_left _ _)).trans hnge
+    have hn1 : (1 : ℝ) ≤ (n : ℝ) := ((le_max_right (N : ℝ) 1).trans (le_max_left _ _)).trans hnge
+    have hn : 0 < n := by exact_mod_cast lt_of_lt_of_le zero_lt_one hn1
+    have hn' : (0 : ℝ) < (n : ℝ) := by linarith
+    obtain ⟨M₁, M₂, hM₁, hM₂, c, hc₁, hc₂⟩ := hN n hnN
+    -- the error term and the two-bit term are each at most half the target slack
+    have hA : R₁ * ε ≤ η / 2 := by
+      have hεD : ε * (2 * (R₁ + R₂ + 1)) ≤ η := (le_div_iff₀ hden).mp hεle
+      nlinarith [mul_nonneg hε0.le hR₂, hε0.le]
+    have hA' : R₂ * ε ≤ η / 2 := by
+      have hεD : ε * (2 * (R₁ + R₂ + 1)) ≤ η := (le_div_iff₀ hden).mp hεle
+      nlinarith [mul_nonneg hε0.le hR₁, hε0.le]
+    have hB : 2 * Real.log 2 / (n : ℝ) ≤ η / 2 := by
+      have h4 : 4 * Real.log 2 / η ≤ (n : ℝ) := (le_max_right _ _).trans hnge
+      rw [div_le_iff₀ hη] at h4
+      rw [div_le_div_iff₀ hn' (by norm_num : (0 : ℝ) < 2)]
+      linarith
+    have hmem := bc_uv_shifted_point_mem W c hn hR₁ hR₂ hε1 hM₁ hM₂ hc₁.le hc₂.le
+    refine bcOuterRegionUV_isLowerSet W (Prod.mk_le_mk.mpr ⟨?_, ?_⟩) hmem
+    · have : R₁ * (1 - ε) = R₁ - R₁ * ε := by ring
+      rw [this]; linarith
+    · have : R₂ * (1 - ε) = R₂ - R₂ * ε := by ring
+      rw [this]; linarith
+  have ht : Filter.Tendsto (fun k : ℕ ↦ 1 / ((k : ℝ) + 1)) Filter.atTop (nhds 0) :=
+    tendsto_one_div_add_atTop_nhds_zero_nat
+  have h1 : Filter.Tendsto (fun k : ℕ ↦ R₁ - 1 / ((k : ℝ) + 1)) Filter.atTop (nhds R₁) := by
+    simpa using tendsto_const_nhds.sub ht
+  have h2 : Filter.Tendsto (fun k : ℕ ↦ R₂ - 1 / ((k : ℝ) + 1)) Filter.atTop (nhds R₂) := by
+    simpa using tendsto_const_nhds.sub ht
+  exact (bcOuterRegionUV_isClosed W).mem_of_tendsto (h1.prodMk_nhds h2)
+    (Filter.Eventually.of_forall fun k ↦ key _ (by positivity))
+
+/-- The operational capacity region of a broadcast channel is contained in the UV (Nair–El Gamal)
+outer region.  Together with `marton_region_subset_capacity` this places the capacity region
+between Marton's inner bound and the UV outer bound as subsets of the plane.
+
+Nonpositive rates are covered without a sign hypothesis: clamping a rate pair into the first
+quadrant leaves achievability unchanged, and the outer region is a lower set, so the clamped pair
+carries the original one. -/
+@[entry_point]
+theorem bc_capacity_subset_uv (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    bcCapacityRegion W ⊆ bcOuterRegionUV W := by
+  rw [bcCapacityRegion]
+  refine (bcOuterRegionUV_isClosed W).closure_subset_iff.mpr fun p hp ↦ ?_
+  have hmem : (max p.1 0, max p.2 0) ∈ bcOuterRegionUV W :=
+    bc_uv_quadrant_mem_of_achievable W (le_max_right _ _) (le_max_right _ _)
+      ((bc_achievable_clamp_iff W p.1 p.2).mp hp)
+  exact bcOuterRegionUV_isLowerSet W ⟨le_max_left _ _, le_max_left _ _⟩ hmem
+
+end Operational
+
 end InformationTheory.Shannon.BroadcastChannel
+
