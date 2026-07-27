@@ -39,9 +39,9 @@ product identity, `IsUVChannelLaw`.
 * `IsUVChannelLaw.map_input_output` — a channel law has the channel joint `(ν.map X) ⊗ₘ W` as
   its input-output pair law, which is the constraint a law copying the input letter into the
   outputs violates.
-* `IsUVChannelLaw.map_U_X_Y₁_Y₂` — dropping the second auxiliary leaves the law of the first
-  auxiliary, the input letter and the two outputs in the shape a superposition ensemble has: the
-  law of the pair `(U, X)` pushed through the channel.
+* `IsUVChannelLaw.map_auxiliary_input_output` — dropping the second auxiliary leaves the law of
+  the first auxiliary, the input letter and the two outputs in the shape a superposition ensemble
+  has: the law of the pair `(U, X)` pushed through the channel.
 * `IsUVChannelLaw.isMarkovChain_UV_X_Y` — the two auxiliaries reach the output pair through the
   input letter only, with `IsUVChannelLaw.isMarkovChain_U_X_Y₁` and
   `IsUVChannelLaw.isMarkovChain_V_X_Y₁` reading one auxiliary and one output off it.
@@ -248,7 +248,7 @@ lemma IsUVChannelLaw.map_input_output {W : BCChannel α β₁ β₂} [IsMarkovKe
     Measure.map_map hg hπ] at hcong
   exact hcong
 
-lemma IsUVChannelLaw.map_U_X_Y₁_Y₂ {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
+lemma IsUVChannelLaw.map_auxiliary_input_output {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
     {ν : Measure (U × V × α × β₁ × β₂)} [SFinite ν] (h : IsUVChannelLaw W ν) :
     ν.map (fun q ↦ (q.1, q.2.2.1, q.2.2.2.1, q.2.2.2.2))
       = ((ν.map fun q ↦ (q.1, q.2.2.1)) ⊗ₘ

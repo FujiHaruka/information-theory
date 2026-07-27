@@ -121,6 +121,7 @@ import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Bridge
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Region
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Assembly
+import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Quantization
 import InformationTheory.Shannon.BroadcastChannel.Classes
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.MartonBridge
 import InformationTheory.Shannon.BroadcastChannel.MartonUnion
