@@ -29,13 +29,13 @@ Lean の 1 本の定理列として持つこと。
 | `uvAux` | `OuterBoundUV.lean:71` | UV 補助変数。**型が letter `i` に依存する** (S5 の型統一の理由) |
 | `bc_uv_singleletterize_r1/_r2/_sum₁/_sum₂` | `OuterBoundUV.lean:113` / `:174` / `:684` / `:637` | 単一文字化 4 本 (corner 2 + sum-rate 2)、degradedness 前提なし |
 | `InBCOuterRegionUV` / `bc_uv_converse` | `OuterBoundUV.lean:735` / `:815` | UV 外界の 4 不等式束と メッセージレベル headline (`@[entry_point]`) |
-| **符号→ambient の共有層 (S1)** | `ChannelCoding/CodeToAmbient.lean` (469 行 / 12 decl、MAC/BC 共有) | `isMarkovChain_of_compProd_pi:203` (conditioner 一般形) / `isMemorylessChannel_of_compProd_pi:315` / `le_log_of_ceil_exp_le:461` |
-| **BC の符号→ambient 橋 (S2–S6)** | `BroadcastChannel/OuterBoundUV/Bridge.lean` (952 行 / 59 decl) | `bcConverseAmbient:141` → 構造前提 4 本 `:301`–`:428` → `bcConverseFanoSlack₁/₂:532`/`:541` → `bc_uv_converse_from_code:562` / `bc_uv_rate_extract:602` → `uvAuxPad:663` + 不変性 `:729`–`:754` |
-| **UV per-letter 情報スロット (S6)** | 同ファイル `:780`–`:948` (`section PerLetterInfo`) | `uvInfo₁:793` / `uvInfo₂:798` / `uvInfoSum₂:803` / `uvInfoSum₁:808` (5 つ組法 `ν` の 1 引数汎関数) + `bcUVTuple:825` / `bcUVJointDistribution:849` + 同定 4 本 `:865` / `:883` / `:900` / `:925` |
-| **UV 外界の集合版 (S7)** | `BroadcastChannel/OuterBoundUV/Assembly.lean` (1588 行 / 81 decl) `section ChannelLaw` / `section Region` / `section CodeLaw` / `section NotVacuous` | チャネル整合条件 `IsUVChannelLaw` + 特徴づけ `isUVChannelLaw_iff` + 閉包性 5 本 (`.smul` / `.add` / `.finsetSum` / `.map_auxiliaries` / `.map_input_output`)。領域 `uvRegion` / `bcOuterRegionUV` / `_isClosed` / `_isLowerSet` / `_nonempty`。符号側の支払い `bcUVJointDistribution_isUVChannelLaw`。非退化の証拠 `not_isUVChannelLaw_uvOutputCopiesInputLaw` / `not_isUVChannelLaw_uvAuxCopiesOutputLaw` |
-| **時間共有 + 平均化 (S8-a)** | 同ファイル `section Averaging` / `section AuxRelabel` / `section TimeSharing` | 混合法 `bcUVTimeShare` (+ `_isUVChannelLaw` / `_eq_sum`) と 4 スロットの平均化 `bcUVTimeShare_uvInfo₁_ge` / `_uvInfo₂_ge` / `_uvInfoSum₂_ge` / `_uvInfoSum₁_ge`。補助アルファベットの `ℕ` 付け替え `uvRelabel` + スロット不変 4 本 |
-| **極限 + 退化被覆 + headline (S8-b)** | 同ファイル `section TimeSharing` 後半 / `section Padding` / `section Operational` | 縮小点の**乗法形** `bc_uv_code_point_mem` → `bc_uv_rate_point_mem` → `bc_uv_shifted_point_mem` (極限) → `bc_uv_quadrant_mem_of_achievable` → headline `bc_capacity_subset_uv` (`@[entry_point]`)。退化被覆は `bc_achievable_clamp_iff` + 下方集合性、`2 ≤ M` の穴は `BroadcastCode.padFirst` / `padSecond` + 誤り確率補題 2 本 |
-| 汎用資産 (S7/S8 自作、BC 非依存) | 同ファイル `compProd_comap_map_prodMap` / `compProd_pi_map_pair_eq_of_update_invariant` / `mutualInfo_congr_ae` / `condMutualInfo_eq_of_leftInverse_cond` / `condMutualInfo_compProd_fst_eq_lintegral` / `mutualInfo_compProd_eq_add_lintegral` / `condMutualInfo_compProd_snd_eq_lintegral` / `le_toReal_of_inv_mul_le` | Mathlib 不在で自作。`compProd_pi_map_pair_eq_of_update_invariant` は `CodeToAmbient.lean:344` の `compProd_pi_map_pair_eq` の strict generalization (監査が機械確認)。`condMutualInfo_compProd_*_eq_lintegral` は**絶対連続性の仮説を持たない等式**。移設先は後続作業 6 |
+| **符号→ambient の共有層 (S1)** | `ChannelCoding/CodeToAmbient.lean` (539 行 / 15 decl、MAC/BC 共有) | `isMarkovChain_of_compProd_pi:210` (conditioner 一般形) / `isMemorylessChannel_of_compProd_pi:322` / `le_log_of_ceil_exp_le:518`。分割 A で BC 由来の汎用 3 本が合流 (`compProd_comap_map_prodMap:346` / `compProd_pi_map_pair_eq_of_update_invariant:396` / `le_toReal_of_inv_mul_le:528`) |
+| **BC の符号→ambient 橋 (S2–S6)** | `BroadcastChannel/OuterBoundUV/Bridge.lean` (936 行 / 58 decl) | `bcConverseAmbient:141` → 構造前提 4 本 `:301`–`:428` → `bcConverseFanoSlack₁/₂:532`/`:541` → `bc_uv_converse_from_code:562` / `bc_uv_rate_extract:602` → `uvAuxPad:663` + 不変性 `:713`–`:738` |
+| **UV per-letter 情報スロット (S6)** | 同ファイル `:764`–`:934` (`section PerLetterInfo`) | `uvInfo₁:777` / `uvInfo₂:782` / `uvInfoSum₂:787` / `uvInfoSum₁:792` (5 つ組法 `ν` の 1 引数汎関数) + `bcUVTuple:809` / `bcUVJointDistribution:833` + 同定 4 本 `:849` / `:867` / `:884` / `:909` |
+| **UV 外界の集合版 (S7)** | `BroadcastChannel/OuterBoundUV/Region.lean` (474 行 / 33 decl) の `section ChannelLaw` / `section Region` / `section NotVacuous` + `Assembly.lean` (851 行 / 35 decl) の `section CodeLaw` | チャネル整合条件 `IsUVChannelLaw:102` + 特徴づけ `isUVChannelLaw_iff:123` + 閉包性 5 本 (`.smul` / `.add` / `.finsetSum` / `.map_auxiliaries` / `.map_input_output`)。領域 `uvRegion:233` / `bcOuterRegionUV:245` / `_isClosed:251` / `_isLowerSet:265` / `_nonempty:317`。非退化の証拠 `not_isUVChannelLaw_uvOutputCopiesInputLaw:363` / `not_isUVChannelLaw_uvAuxCopiesOutputLaw:438`。符号側の支払い `bcUVJointDistribution_isUVChannelLaw` だけは符号に依存するので `Assembly.lean:72` に残る |
+| **時間共有 + 平均化 (S8-a)** | `Assembly.lean` の `section AuxRelabel` / `section TimeSharing` (汎用の混合法補題は `Shannon/CondMutualInfoMixture.lean` へ分離) | 混合法 `bcUVTimeShare:258` (+ `_isUVChannelLaw:284` / `_eq_sum:272`) と 4 スロットの平均化 `bcUVTimeShare_uvInfo₁_ge:315` / `_uvInfo₂_ge` / `_uvInfoSum₂_ge` / `_uvInfoSum₁_ge`。補助アルファベットの `ℕ` 付け替え `uvRelabel:134` + スロット不変 4 本 |
+| **極限 + 退化被覆 + headline (S8-b)** | `Assembly.lean` の `section TimeSharing` 後半 / `section Operational` (パディングは `BroadcastChannel/Basic.lean` へ分離) | 縮小点の**乗法形** `bc_uv_code_point_mem:609` → `bc_uv_rate_point_mem:635` → `bc_uv_shifted_point_mem:696` (極限) → `bc_uv_quadrant_mem_of_achievable:784` → headline `bc_capacity_subset_uv:839` (`@[entry_point]`、本ファイル唯一)。退化被覆は `bc_achievable_clamp_iff:670` + 下方集合性、`2 ≤ M` の穴は `BroadcastCode.padFirst`/`padSecond` (`Basic.lean:127`/`:134`) + 誤り確率補題 2 本 |
+| 汎用資産 (S7/S8 自作、BC 非依存) | `CodeToAmbient.lean`: `compProd_comap_map_prodMap` / `compProd_pi_map_pair_eq_of_update_invariant` / `le_toReal_of_inv_mul_le`。`Shannon/CondMutualInfoMixture.lean` (193 行 / 7 decl): 再符号化不変 3 本 `mutualInfo_eq_of_leftInverse:40` / `mutualInfo_congr_ae:57` / `condMutualInfo_eq_of_leftInverse_cond:66` + 混合法 4 本 `condDistrib_compProd_fst_ae_eq:91` (private) / `condMutualInfo_compProd_fst_eq_lintegral:102` / `mutualInfo_compProd_eq_add_lintegral:142` / `condMutualInfo_compProd_snd_eq_lintegral:164` | Mathlib 不在で自作。`compProd_pi_map_pair_eq_of_update_invariant` は同ファイル `compProd_pi_map_pair_eq:366` の strict generalization (監査が機械確認、統合は §後続作業 D)。`condMutualInfo_compProd_*_eq_lintegral` は**絶対連続性の仮説を持たない等式**。BC 側からの移設は分割 A で完了 |
 | `csiszar_sum_identity_cond` | `OuterBoundUV/Gateway.lean:246` | 条件付き Csiszár 和恒等式 (異アルファベット + 背景 conditioner)。Phase 4a の核 |
 | `csiszar_sum_identity` | `BroadcastChannel/ConverseGateway.lean:142` | 無条件版 (同一アルファベット) |
 | `bc_converse` / `bc_input_singleletterize` | `BroadcastChannel/Converse.lean:571` / `:316` | degraded 限定の converse。Phase 5 の接続先。**これも floating 形** |
@@ -190,68 +190,35 @@ proof-log: 未定 (クラス定義段は no、等号が閉じたら yes)。
 
 ## 後続作業 (Phase 5 の前提ではない)
 
-style / honesty ゲートが提起し、当該 leg では見送った項目。
+style / honesty ゲートが提起して当該 leg では見送った項目 + 分割 A の実施後に立った flag。
+完了したものは 1 行 + commit に圧縮して残す (項目番号は他文書が参照するので付け替えない)。
 
-### A. `Assembly.lean` の分割 (**次に切るならこれ**、二段の実行計画)
+### A. `Assembly.lean` の二段分割 ✅ 完了
 
-現在 **1588 行**で 1500 行ガイド超過。style ゲートが材料込みで確定させた計画をそのまま置く。
-**行番号は移動で必ずドリフトするので、行範囲ではなく宣言名を SoT とすること**。
-
-**一段目 (計 285 行が降りて Assembly ≈ 1303 行)**:
-
-| ブロック (宣言名で指定) | 移動先 | 根拠 |
-|---|---|---|
-| `section Averaging` 6 本 (`mutualInfo_congr_ae` / `condMutualInfo_eq_of_leftInverse_cond` / `condDistrib_compProd_fst_ae_eq` (private) / `condMutualInfo_compProd_fst_eq_lintegral` / `mutualInfo_compProd_eq_add_lintegral` / `condMutualInfo_compProd_snd_eq_lintegral`) **+ `mutualInfo_eq_of_leftInverse` (`Bridge.lean`)** | **新規 `InformationTheory/Shannon/CondMutualInfoMixture.lean`** | 依存は `CondMutualInfo` + `CondKLIntegral` + Mathlib のみ |
-| `compProd_pi_map_pair_eq_of_update_invariant` / `compProd_comap_map_prodMap` / `le_toReal_of_inv_mul_le` | `ChannelCoding/CodeToAmbient.lean` | 一般化元 `compProd_pi_map_pair_eq` と兄弟 `le_log_of_ceil_exp_le` が同ファイルにある |
-| `section Padding` 4 本 (`BroadcastCode.padFirst` / `padSecond` / `averageErrorProb₂_padFirst` / `averageErrorProb₁_padSecond`) | `BroadcastChannel/Basic.lean` | variable ブロックと namespace が完全一致 (style が実 Read で確認)。147 → 約 219 行 |
-
-**import DAG は障害にならない** (style が実測で反証): `condMutualInfo_eq_of_leftInverse_cond` が
-消費する `mutualInfo_eq_of_leftInverse` (`Bridge.lean:713`) は**それ自身が完全に汎用**
-(依存は `mutualInfo_comm` と `mutualInfo_le_of_postprocess` のみ、BC 要素ゼロ)。Bridge にあるのは
-偶然なので、**2 本を一緒に下層へ降ろす**のが正解。
-
-**`CondMutualInfo.lean` 本体に入れない理由**: 同ファイルは `CondKLIntegral` を import しておらず、
-**22 ファイル**が import する低層ハブ。KL-integral 依存を足すと全下流の import 面が広がる。
-
-**namespace**: 汎用ブロックを `Shannon/` 直下へ降ろすと `Shannon.BroadcastChannel` → `Shannon` に
-変わるが、Bridge / Assembly とも `open` 済なので**呼出側のテキスト変更は不要**。
-
-**consumer 実測 (`scripts/dep_consumers.sh`、本 plan 更新時に再取得)** — 移動先ファイルを
-import する必要がある側を漏らさないための表:
-
-| 移動する decl | direct consumers | 含意 |
-|---|---|---|
-| `mutualInfo_eq_of_leftInverse` | **6 decl / 2 file** — `Assembly.lean` 4 本 (`condMutualInfo_eq_of_leftInverse_cond` / `mutualInfo_compProd_eq_add_lintegral` / `uvInfo₁_map_uvRelabel` / `uvInfo₂_map_uvRelabel`) + `Bridge.lean` 2 本 (`uvAux_pad_mutualInfo_eq` / `uvAux_pad_mutualInfo_prod_eq`) | 消費者のうち `uvInfo₁/₂_map_uvRelabel` は `section AuxRelabel` = **一段目で移動しない側に残る** ⟹ **`Assembly.lean` と `Bridge.lean` の両方が新ファイルを import する**。「Assembly 外の参照ゼロ」ではない |
-| `compProd_pi_map_pair_eq_of_update_invariant` | **1 decl / 1 file** — `Assembly.lean` の `bcUVJointDistribution_isUVChannelLaw` (`section CodeLaw` = 残る側) | Assembly が `CodeToAmbient` を引き続き import すれば足りる |
-
-**二段目 (推奨)**: `section ChannelLaw` + `section Region` + `section NotVacuous` ≈ 395 行を
-**`OuterBoundUV/Region.lean`** へ。結果 Assembly ≈ 908 行 / Region ≈ 430 行。**private の越境なし**
-(style が実測確認)。一段目だけだと 1303 行で余裕 13% しかなく、1179 → 1588 と 2 leg で伸びた実績
-から Phase 5 で再超過する見込み。
-
-**置換まで行く場合の追加コスト (移設とは別 leg に割ること)**:
-`compProd_pi_map_pair_eq_of_update_invariant` は `CodeToAmbient.lean:344` の
-`compProd_pi_map_pair_eq` の strict generalization で、被置換側の consumer は direct 1 decl / 1 file
-(`TimeSharingConverse/Bridge.lean:712` = `macConverse_map_triple_eq`)、**transitive 12 decl / 2 file**
-(MAC `Bridge.lean` 4 本 + `Assembly.lean` 8 本 = `mac_timesharing_capacity_region` まで到達)。
-`mutualInfo_eq_of_leftInverse` も `MIChainRule.lean` の `mutualInfo_map_left_measurableEquiv`
-(より強い `MeasurableEquiv` 仮説) を subsume するので、**置換まで行くなら直接 touch 対象は
-17 decl / 11 file** (MAC 系・BC 系・WZ 系にまたがる)。
+`210b7558` (一段目) → `e163853d` (style) → `69cc5b10` (死んだ import 掃除) → `5c121f95` (二段目) →
+`3af79fea` (style)。Assembly 1588 → **851 行**、全ファイルが 1500 行ガイド内。汎用ブロックは
+`Shannon/CondMutualInfoMixture.lean` (新規) / `ChannelCoding/CodeToAmbient.lean` /
+`BroadcastChannel/Basic.lean` へ、領域定義 3 section は `OuterBoundUV/Region.lean` (新規) へ。
+**純粋な移設で新しい数学は 0 行 / 新規 sorry 0 / `@audit:ok` は逐語保存**、`bc_capacity_subset_uv`
+(唯一の `@[entry_point]`) は Assembly 残留。現在の配置は §在庫 が SoT。予測と実測の差は判断ログ 11。
 
 ### B. 命名 / 死んだ宣言 (**波及がほぼ 0 の今なら事実上無料**)
 
 1. **`bc_uv_rate_extract` (`Bridge.lean:602`、`@audit:ok`) が dead** — Assembly が
    `bc_uv_converse_slots` に乗り換えた結果、direct consumer **0**
    (`scripts/dep_consumers.sh` 実測)。削除 or 保持の判断が要る
-2. **`*_point_mem` 5 本の命名** (`bc_uv_{mixture,shrunk,code,rate,shifted}_point_mem`) — 形容詞が
+2. **`*_point_mem` 5 本の命名** (`bc_uv_{mixture,shrunk,code,rate,shifted}_point_mem`、5 本とも
+   分割後も `Assembly.lean` 在住 `:429` / `:565` / `:609` / `:635` / `:696`) — 形容詞が
    段階を系統的に区別しておらず名前だけでは判別不能。`docs/rules/naming.md` §2 は判別子を仮定側に
    置けと定める (`bc_uv_mem_of_letterSum_le` 等)。**波及ほぼ 0**: `bc_uv_shrunk_point_mem` のみ
    docs 3 本が参照、残り 4 本は Assembly 外の参照ゼロ
-3. `uvAux_pad_mutualInfo_prod_eq` の `prod` が何の直積か名前から読めない (実際は左引数で補助変数と
-   `Xs` を対にする)。`uvAux_pad_pair_mutualInfo_eq` 等へのリネーム提案。consumer は in-file 1 件
+3. `uvAux_pad_mutualInfo_prod_eq` (`Bridge.lean:723`) の `prod` が何の直積か名前から読めない
+   (実際は左引数で補助変数と `Xs` を対にする)。`uvAux_pad_pair_mutualInfo_eq` 等へのリネーム提案。
+   consumer は in-file 1 件 (`uvAux_pad_condMutualInfo_eq:738`、`dep_consumers.sh` 実測)
 4. **命名の軽微な逸脱** `condMutualInfo_eq_of_leftInverse_cond` — `naming.md` §2 は `_of_` 以降を
-   仮定列に充てるので、区別子 `_cond` は `_of_` の**前**に置くのが Mathlib 順。優先度低
-   (分割 A の一段目で新ファイルへ移すときに序でに直すのが安い)
+   仮定列に充てるので、区別子 `_cond` は `_of_` の**前**に置くのが Mathlib 順。優先度低。
+   在住は分割 A で `Assembly.lean` → **`Shannon/CondMutualInfoMixture.lean:66`**。移設は逐語で
+   行いリネームしていないので「移すついでに直す」機会は過ぎた ⟹ 単独のリネーム leg になる
 
 ### C. 数学的な締めどころ / その他
 
@@ -260,9 +227,11 @@ import する必要がある側を漏らさないための表:
    詰めたくなったときの最初の締めどころ
 2. `bcOuterRegionUV ⊆ bcOuterRegionCoop` を示せれば「UV は協調外界より狭い」が機械可読になる
    (**任意**。示せなくても挟み込みは 2 本並立で成立する)
-3. `CodeToAmbient.lean` の移設由来 6 本 (`compProd_pi_map_pair_eq` / `mutualInfo_map_comp` /
+3. `CodeToAmbient.lean` の MAC 由来 6 本 (`compProd_pi_map_pair_eq` / `mutualInfo_map_comp` /
    `condDistrib_map_comp` / `condMutualInfo_map_comp` / `condMutualInfo_map_comp'` /
-   `le_log_of_ceil_exp_le`) が無タグ。file 全体のタグ被覆を揃えるなら別 leg。同ファイルに
+   `le_log_of_ceil_exp_le`) が無タグ。分割 A で合流した BC 由来 3 本のうち 2 本は `@audit:ok` を
+   逐語で持って来たが `le_toReal_of_inv_mul_le` は無タグなので、対象は 7 本 (実測)。file 全体の
+   タグ被覆を揃えるなら別 leg。同ファイルに
    `show` → `change` の linter 警告が 1 件 (`lake build` でのみ出る)
 4. **section 再配置による逐語コピーの完全畳み込み (残 ~30 行)**。
    `∑ i, uvInfo₁ (bcUVJointDistribution c W i)` 形への完全な畳み込みは現配置では不可能 —
@@ -276,13 +245,49 @@ import する必要がある側を漏らさないための表:
    `@[entry_point]` もタグも無い theorem に散文 docstring を足すと 1 本あたり `internal-doc` +1。
    S8-a で `bc_uv_shrunk_point_mem` が通ったのは `@audit:ok` タグがあったから
    (`lean_doc_lint.ts:469`–`:478` が `@residual|@audit:` を含む docstring を skip する) で、
-   一般には通らない。**現に `Assembly.lean` の Main statements 掲載でタグ無しが 6 本裸**:
-   `isUVChannelLaw_iff` / `not_isUVChannelLaw_uvOutputCopiesInputLaw` /
-   `not_isUVChannelLaw_uvAuxCopiesOutputLaw` / `condMutualInfo_compProd_fst_eq_lintegral` /
-   `condMutualInfo_compProd_snd_eq_lintegral` / `bcUVTimeShare_uvInfo₁_ge` 系。
+   一般には通らない。**Main statements 掲載でタグ無しが 6 本裸** — 分割 A で 3 ファイルに散った
+   (実測): `Region.lean` の `isUVChannelLaw_iff:123` / `not_isUVChannelLaw_uvOutputCopiesInputLaw:363` /
+   `not_isUVChannelLaw_uvAuxCopiesOutputLaw:438`、`CondMutualInfoMixture.lean` の
+   `condMutualInfo_compProd_fst_eq_lintegral:102` / `condMutualInfo_compProd_snd_eq_lintegral:164`、
+   `Assembly.lean` の `bcUVTimeShare_uvInfo₁_ge:315` 系。**分割は衝突を再生産する** — 新ファイルの
+   module doc は Main statements を書き直すので、そこに載る宣言が新たに裸のまま増える。
    解は「真の headline に `@[entry_point]` を付ける (リンターが除外)」か
    「module doc に散文を持たせる現行慣行を追認する」の二択で、ファイル単体を超える方針判断
    = **本 plan の範囲外** (`docs/rules/` 側の課題として起票)
+
+### D. 汎用補題の置換統合 (分割 A とは別 leg、未着手)
+
+分割 A は**移設だけ**を行い、重複する一般形 / 特殊形の統合は手つかず。数学は増えず consumer の
+書き換えだけがコストなので、着手判断は純粋に波及の大きさで決まる。
+
+| 統合 | 被置換側の consumer (`dep_consumers.sh` 実測) |
+|---|---|
+| `compProd_pi_map_pair_eq_of_update_invariant` (`CodeToAmbient.lean:396`) は**同ファイル** `compProd_pi_map_pair_eq:366` の strict generalization | direct **1 decl / 1 file** (`TimeSharingConverse/Bridge.lean:712` = `macConverse_map_triple_eq`)、**transitive 12 decl / 2 file** (MAC `Bridge.lean` 4 本 + MAC `Assembly.lean` 8 本 = `mac_timesharing_capacity_region` まで到達) |
+| `mutualInfo_eq_of_leftInverse` (`CondMutualInfoMixture.lean:40`) は `MIChainRule.lean:35` の `mutualInfo_map_left_measurableEquiv` (より強い `MeasurableEquiv` 仮説) を subsume | direct **17 decl / 11 file** — BC 系 4 file (`Converse` / `ConverseGateway` / `OuterBoundUV` 3 本 / `OuterBoundUV/Gateway` 2 本) + MAC 系 3 file + WZ 系 1 file + chain-rule 系 3 file |
+
+**2 本目は import 面の判断が先**: 両ファイルは兄弟 (`MIChainRule` → `MutualInfo`/`CondMutualInfo`/
+`Entropy`、`CondMutualInfoMixture` → `CondKLIntegral`/`CondMutualInfo`) で循環はしないが、
+consumer に `MIChainRule.lean:73` 自身が含まれるため、置換すると **chain-rule ハブに KL-integral
+依存が入る**。§後続作業 A が `CondMutualInfo.lean` 本体への合流を却下したのと同じ理由なので、
+**1 本目 (同ファイル内で完結) だけ先に切る**のが安い。
+
+### E. 分割 A が新たに立てた flag (どちらも行数圧力ゼロ、優先度低)
+
+1. **`CondMutualInfoMixture.lean` はファイル名と中身が一致していない** — 7 宣言のうち mixture は
+   4 本で、残り 3 本 (`mutualInfo_eq_of_leftInverse` / `mutualInfo_congr_ae` /
+   `condMutualInfo_eq_of_leftInverse_cond`) は**再符号化不変性**で mixture に一切触れない。
+   コンパイラで見える決定的な tell: **`Bridge.lean` は本ファイルを `mutualInfo_eq_of_leftInverse` の
+   ためだけに import しており (参照は `:719` / `:731` の 2 箇所のみ、実測)、mixture 補題を 1 本も
+   使っていない**。分割案 = `Shannon/MutualInfoReencoding.lean` (再符号化 3 本) + 現ファイル
+   (mixture 4 本、前者を import)。consumer が既に綺麗に分かれている (Bridge → 再符号化のみ /
+   Assembly → 両方) ので循環は生じない。**193 行で行数圧力はゼロ**なので急がないが、consumer が
+   2 ファイルだけの今が最も安い。着手時は判断ログ 11 の (i) を先に適用すること
+   (新ファイルの import は consumer 表ではなく**移動先が引かざるを得ない依存の閉包**で決まる)
+2. **`open scoped BigOperators` が tree 全体で死んでいる** — 今の Mathlib では `∑`/`∏` 記法が
+   global。style ゲートが `Region.lean` から外して EXIT=0 を確認したが、同じ open を持つファイルが
+   **189 本** (実測) あり数ファイルだけ外すと不揃いになるので戻した。tree 一括 sweep
+   (一括置換 + `lake build` 1 回) として別 leg にするのが筋で、BC 固有ではないので**本 plan の
+   範囲外** (起票先は `docs/rules/` 側)
 
 ## 未解決本体との距離 (正直な見積り)
 
@@ -325,8 +330,9 @@ Phase 4b の 2 件 (単一文字還元の形 / 結合 memoryless の持ち方) �
 
 ## 推奨実行順
 
-**5 (クラス定義 → 等号)**。Phase 2 は独立で、いつ入れてもよいし入れなくても本線は完結する。
-後続作業 A (`Assembly.lean` の分割) は Phase 5 が同ファイルを膨らませる前に切るのが安い。
+**次の本線は Phase 5 (クラス定義 → 等号)**。分割 A が済んで `Assembly.lean` に 650 行の余裕が
+できたので、着手を阻む前提は残っていない。Phase 2 は独立で、いつ入れてもよいし入れなくても本線は
+完結する。§後続作業 B–E はいずれも Phase 5 の前提ではない。
 
 ## 判断ログ
 
@@ -355,22 +361,22 @@ Phase 4b の 2 件 (単一文字還元の形 / 結合 memoryless の持ち方) �
    **包含の右辺を縮める構造条件**」— 符号側で構成的に示す義務は
    `bcUVJointDistribution_isUVChannelLaw` として支払い済。**Phase 5 が外界の形を触るときは、この
    特徴づけが壊れないかが最初のチェック点**。
-11. **在庫予測の外れ 6 回目 (S8-b で 2 件同時、通算 7 件)** — 在庫ファイル自体は編集しないので、
-    本エントリが記録の SoT。過去 5 回は (a) 一般化の方向が 1 段広かった (S3、conditioner を任意の
+11. **在庫予測の外れ (通算 10 件) — 在庫ファイル自体は編集しないので本エントリが記録の SoT**。
+    S8-b までの 5 件は (a) 一般化の方向が 1 段広かった (S3、conditioner を任意の
     update 不変写像に開く形になり整形層が丸ごと消えた) / (b) `macConverseInput_eq` = `absent` は
     誤りで対一様性は受信機別の誤り確率同定**両方**に要った (S4) / (c) union の無制約化で外界が
     平面全体に退化する反例 class が在庫に載っていなかった (S6→S7、判断ログ 9) / (d) 0-hit 見落とし /
     (e) 在庫が名指しした危険 (`h_ac`) が `by_cases` の否定側で **∞ = ∞** に落ちて丸ごと消え、
     `condMutualInfo_compProd_fst_eq_lintegral` は絶対連続性の仮説を持たない等式になった (S8-a、
-    over-estimation 側)。今回の 2 件:
-    - **(a) MAC 雛形の前提が誤っていた**: 本 plan と実装ブリーフは MAC
+    over-estimation 側)。S8-b の 2 件:
+    - **(f) MAC 雛形の前提が誤っていた**: 本 plan と実装ブリーフは MAC
       `TimeSharingConverse/Assembly.lean` の約 420 行を「退化レート被覆の雛形」としていたが、
       **MAC はそもそも退化レートを被覆していない** — `mac_timesharing_capacity_region` 自身が
       第一象限交差版で、MAC は最初から L-BCO6 相当を選んでいた。あの 420 行は「MAC の縮小点補題が
       `0 ≤ R₁` と `0 ≤ R₂` を**同時に**要求する」ことの帰結 = 軸上の点を入れるための補題であって、
       退化被覆の一般解ではない。**BC には移植不要だった**。
       ⟹ 雛形を参照するときは「その雛形の**到達目標が自分と同じ強さか**」を先に確認する。
-    - **(b)「極限を取るだけ」が誤り**: 本 plan は S8-b を「点列の極限を取るだけで情報量の議論は
+    - **(g)「極限を取るだけ」が誤り**: 本 plan は S8-b を「点列の極限を取るだけで情報量の議論は
       増えない」としていたが実測は否。`bc_uv_shrunk_point_mem` の**加法形** (両座標から `(F₁+F₂)/n`
       を引く) は極限に乗らない — `F₂` は `Pe₂ * Real.log (M₂ - 1)` を含み、`BCAchievable` は `M₂` を
       **下からしか**縛らないので `Real.log M₂` が非有界 ⟹ `F₂/n` が 0 に行かない。受信機 1 の座標に
@@ -380,3 +386,24 @@ Phase 4b の 2 件 (単一文字還元の形 / 結合 memoryless の持ち方) �
       ⟹ 一般教訓: **前 step の到達点が次 step の入口として使えるとは限らない**。到達点が無条件宣言で
       あっても、次段が要求する性質 (ここでは各項が 0 に行くこと) を持つとは限らない。step 境界では
       「前 step の結論の**形**が次 step の入口として妥当か」を独立に確認する。
+
+    分割 A (移設リファクタ) の 3 件。**3 件とも「宣言の配置を変えると何が起きるか」の読み違い**で、
+    数学ではなくファイル境界に関する予測が外れた:
+    - **(h) consumer 実測表が 1 本落ちていた**: §後続作業 A の表は `mutualInfo_eq_of_leftInverse` と
+      `compProd_pi_map_pair_eq_of_update_invariant` の 2 本しか載せず、**同じ leg で移す
+      `compProd_comap_map_prodMap` を落としていた**。実測 consumer は 2 decl
+      (`IsUVChannelLaw.map_auxiliaries` / `IsUVChannelLaw.map_input_output`) で、どちらも
+      `section ChannelLaw` = **二段目で `Region.lean` へ移る側**。結果は無害 (推移的に届いた) だが、
+      表の目的 (移動先を import する必要がある側を漏らさない) に対して穴が開いていた。
+      ⟹ consumer 表は**移す decl 全部**を行にする。1 本でも欠けると表が「網羅」の役を果たさない。
+    - **(i) 「新ファイルなので import が要る」という予測が誤り**: (h) から立てた予測
+      「`Region.lean` は `CodeToAmbient` を明示 import する必要がある」は外れた。`Region.lean` は
+      `uvRegion` が使う `uvInfo₁/₂` のために `Bridge.lean` を import せざるを得ず、その `Bridge` が
+      既に `CodeToAmbient` を import している ⟹ 推移的に自動で届く。明示 import は入れたが
+      **コンパイル上は必須ではなく規律上望ましいだけ**だった。
+      ⟹ 一般教訓: **import の必要性は consumer 表では決まらない**。決めるのは
+      **移動先ファイルが他に何を import せざるを得ないかの閉包**なので、判断はそちらを見てから行う。
+    - **(j) 移設は移動元の import を殺す**: plan は「移設で死ぬ import」を予測していなかったが、
+      実測で 4 本 (うち Mathlib 2 本) が dead になった (`69cc5b10`)。宣言が抜ければその宣言だけが
+      使っていた import が浮くのは**規則的に起きる**。
+      ⟹ 移設 leg には最初から「移動元の import 生死を実測する」step を入れる。
