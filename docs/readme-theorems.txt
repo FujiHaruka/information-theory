@@ -112,6 +112,7 @@ marton_achievability | general broadcast-channel achievability, Marton inner bou
 marton_region_subset_capacity | general broadcast-channel inner bound in set form, Marton region ⊆ capacity region
 bc_capacity_subset_coop | general broadcast-channel converse by receiver cooperation, capacity region ⊆ cooperative outer region
 bc_capacity_subset_uv | general broadcast-channel converse, capacity region ⊆ UV outer region (Nair–El Gamal, El Gamal–Kim Ch. 8)
+bc_lessNoisy_capacity_eq_uv | less noisy broadcast channel, capacity region = UV outer region (equality, for a transition law giving every output pair positive mass; Nair–El Gamal, El Gamal–Kim Ch. 8)
 relay_cutset_outer_bound | relay-channel cut-set outer bound, min of broadcast-cut and MAC-cut per-letter sums (Cover–Thomas Thm 15.10.1)
 
 @ 16 | Log-optimal portfolio
