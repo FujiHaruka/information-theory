@@ -432,8 +432,7 @@ lemma martonInfo₁_sub_martonInfoV₁V₂_le
       (fun q ↦ q.1) (fun q ↦ q.2.1) (fun q ↦ q.2.2.2.1)
       (by fun_prop) (by fun_prop) (by fun_prop)).trans
     (add_le_add le_rfl (condMutualInfo_aux₁_le_input pV K W))
-  have hmono := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨hfin_a, hfin_c⟩) hle
-  rw [ENNReal.toReal_add hfin_a hfin_c] at hmono
+  have hmono := ENNReal.toReal_le_add hle hfin_a hfin_c
   rw [martonInfo₁_eq_mutualInfo_toReal, martonInfoV₁V₂_eq_mutualInfo_toReal,
     condMutualInfo_martonSwapLaw₁]
   linarith
@@ -456,8 +455,7 @@ lemma martonInfo₂_sub_martonInfoV₁V₂_le
     (add_le_add le_rfl (condMutualInfo_aux₂_le_input pV K W))
   rw [mutualInfo_comm (martonJointDistribution pV K W) (fun q ↦ q.2.1) (fun q ↦ q.1)
     (by fun_prop) (by fun_prop)] at hle
-  have hmono := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨hfin_a, hfin_c⟩) hle
-  rw [ENNReal.toReal_add hfin_a hfin_c] at hmono
+  have hmono := ENNReal.toReal_le_add hle hfin_a hfin_c
   rw [martonInfo₂_eq_mutualInfo_toReal, martonInfoV₁V₂_eq_mutualInfo_toReal,
     condMutualInfo_martonSwapLaw₂]
   linarith

@@ -57,9 +57,7 @@ theorem uvInfo₂_toReal_sub_slack_le (ν : Measure (ℕ × ℕ × α × β₁ �
       ≤ (uvInfo₂ (uvQuantizeLaw.{u} ν m)).toReal := by
   have hs := uvQuantizeSlack_ne_top ν m
   have hfin := uvInfo₂_ne_top (uvQuantizeLaw.{u} ν m)
-  have h := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨hfin, hs⟩)
-    (uvInfo₂_le_uvQuantizeLaw_add_slack.{u} ν m)
-  rw [ENNReal.toReal_add hfin hs] at h
+  have h := ENNReal.toReal_le_add (uvInfo₂_le_uvQuantizeLaw_add_slack.{u} ν m) hfin hs
   linarith
 
 omit [StandardBorelSpace β₂] in
@@ -70,9 +68,7 @@ theorem uvInfoSum₂_toReal_sub_slack_le (W : BCChannel α β₁ β₂) [IsMarko
       ≤ (uvInfoSum₂ (uvQuantizeLaw.{u} ν m)).toReal := by
   have hs := uvQuantizeSlack_ne_top ν m
   have hfin := uvInfoSum₂_ne_top (uvQuantizeLaw.{u} ν m)
-  have hle := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨hfin, hs⟩)
-    (uvInfoSum₂_le_uvQuantizeLaw_add_slack.{u} W h m)
-  rw [ENNReal.toReal_add hfin hs] at hle
+  have hle := ENNReal.toReal_le_add (uvInfoSum₂_le_uvQuantizeLaw_add_slack.{u} W h m) hfin hs
   linarith
 
 theorem sub_mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion (W : BCChannel α β₁ β₂)
