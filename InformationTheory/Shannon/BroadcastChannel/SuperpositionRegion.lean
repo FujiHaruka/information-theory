@@ -5,7 +5,7 @@ import InformationTheory.Shannon.BroadcastChannel.MartonUnion
 /-!
 # Broadcast channel — the superposition inner bound over a less noisy channel
 
-Superposition coding sends a cloud centre `U` to both receivers and a satellite `X` to the
+Superposition coding sends a cloud center `U` to both receivers and a satellite `X` to the
 first one only.  Its inner bound is achievable as soon as the first receiver decodes the cloud
 at least as well as the second one does, which is exactly what `IsBCLessNoisy` asks; physical
 degradedness is not needed.  This file takes the union of that bound over the auxiliary
@@ -105,6 +105,12 @@ theorem bc_lessNoisy_achievability {U : Type u}
 /-- The superposition inner bound of a broadcast channel: the closure of the union, over the
 full-support auxiliary laws on `Marton.bcAuxAlphabet`, of the rectangles cut out by
 `R₁ ≤ I(X; Y₁ ∣ U)` and `R₂ ≤ I(U; Y₂)`.
+
+The general superposition bound also constrains the rate sum by `R₁ + R₂ ≤ I((U, X); Y₁)`, and
+that constraint is dropped here.  Dropping it is exact over a less noisy channel, where
+`I(U; Y₁) ≥ I(U; Y₂)` forces `I(X; Y₁ ∣ U) + I(U; Y₂) ≤ I((U, X); Y₁)`
+(`bc_lessNoisy_infoJoint_ge`), so the omitted inequality already follows from the two kept ones.
+Outside that class this set is only a superset of the superposition bound.
 
 The full-support indices are the ones the achievability theorem applies to, so this is the form
 of the union that is achievable.  As for `bcCapacityRegion` and the outer bounds, no sign

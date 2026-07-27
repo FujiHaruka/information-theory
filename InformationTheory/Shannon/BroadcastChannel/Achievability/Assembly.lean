@@ -4,8 +4,10 @@ import InformationTheory.Shannon.BroadcastChannel.Achievability.ErrorAnalysis
 # Degraded broadcast channel — superposition random-coding assembly and headline
 
 The superposition random-coding assembly (E0 vanishing, per-codebook error decomposition,
-two-codebook average bounds, random → deterministic two-tier pigeonhole, degradedness + rate
-slack) and the headline `bc_achievability`.
+two-codebook average bounds, random → deterministic two-tier pigeonhole, rate slack) and the
+headline `bc_achievability`.  The assembly carries the rate-sum inequality
+`I(X; Y₁ ∣ U) + I(U; Y₂) ≤ I((U, X); Y₁)` as a hypothesis rather than deriving it, so it serves
+any comparison class that supplies it; degradedness discharges it for the headline.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -35,7 +37,7 @@ the two per-receiver error probabilities:
 * per-codebook `averageErrorProb.toReal` decomposition into the Bonferroni terms.
 * two-codebook average bounds (weight-summed swaps).
 * pigeonhole to a deterministic codebook pair.
-* rate-slack vanishing + degradedness `I((U, X); Y₁) ≥ I(X; Y₁ ∣ U) + I(U; Y₂)`.
+* rate-slack vanishing under the rate-sum hypothesis `I((U, X); Y₁) ≥ I(X; Y₁ ∣ U) + I(U; Y₂)`.
 -/
 
 /-- Pairwise independence of any BC coordinate selector under the ambient measure. -/
@@ -1096,7 +1098,7 @@ theorem bc_Ec_lt_of_clamped_rate {Ijoint R₁ R₂ ε ε' : ℝ}
   have h := hN n hn
   rwa [bc_ceil_exp_max_zero R₁ n] at h
 
-/-! ### Headline: superposition achievability -/
+/-! ### Superposition achievability: the general forms and the degraded headline -/
 
 theorem bc_achievability_of_rate_lt
     (pU : Measure U) [IsProbabilityMeasure pU]
