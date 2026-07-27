@@ -38,6 +38,17 @@ positive multiple of it survives the mixture that repairs full support.
 * `uvInfoJoint_uvTimeShareLaw` — time sharing leaves `I(X; Y₁)` unchanged.
 * `mul_uvInfoJoint_le_uvInfoJoint_uvPerturbLaw` — perturbing a law toward the uniform one with
   weight `lam` keeps at least the fraction `lam` of `I(X; Y₁)`.
+
+## Implementation notes
+
+Transporting the comparison means exchanging the measure inside an information, which `rw` cannot
+do: `condMutualInfo` takes the finiteness instance on its measure argument, so rewriting that
+argument leaves a motive that is not type correct.  `condMutualInfo_congr_measure` performs the
+exchange by substitution instead, and `mutualInfo_congr_pair` is the coarser form, where the two
+ambient measures may differ as long as the joint law of the compared pair agrees.
+`mutualInfo_compProd_out₁` and `mutualInfo_compProd_out₂` read a marginal channel off a
+composition product, which is what puts the comparison in the `mutualInfoOfChannel` form
+`IsBCMoreCapable` is stated in.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -183,7 +194,7 @@ variable {α β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [
 variable {U V U' V' : Type*} [MeasurableSpace U] [MeasurableSpace V]
   [MeasurableSpace U'] [MeasurableSpace V']
 
-/-- The information `I(X; Y₁)` of a five-tuple law. -/
+/-- The input-output information `I(X; Y₁)` of a five-tuple law `(U, V, X, Y₁, Y₂)`. -/
 noncomputable def uvInfoJoint (ν : Measure (U × V × α × β₁ × β₂)) : ℝ≥0∞ :=
   mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
 
