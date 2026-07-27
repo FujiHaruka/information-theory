@@ -1,0 +1,38 @@
+{
+  "problem": "less noisy broadcast channel の容量領域の単一文字特徴づけ bc_lessNoisy_capacity_eq_uv : bcCapacityRegion W = bcOuterRegionUV W (全支持チャネルに対する等号)。Assembly 分割 → Phase 5 定義段 (比較クラス 3 本 + 包含鎖) → 内外の橋 S1-S6 → Phase 2 Marton union 最小完遂 → 経路変更 (Marton union 経由が偽と数値判定) → superposition 路 S0-S8 (達成側の factor out / スロット同定 / Markov 鎖 / 補助の有限量子化 / 時分割の補助への吸収 / 全支持への摂動 / 逆包含 + 等号) → README 登録 + refactor leg (F-19 ディレクトリ昇格 / F-21 / F-22 / F-c)。commit range 210b7558~1..09ee5234 (54 commits)。",
+  "proof_log": "docs/proof-logs/proof-log-bc-lessnoisy-equality.md",
+  "sessions": [
+    {
+      "id": "7da31041-3467-4e40-8c9e-055f4fbefec5",
+      "prompt_ids": ["d53b239d", "37e84741", "db09db2f", "5f5db49e", "0cf6f643", "50260cb1", "27c4d747", "c3298aa3", "69a31bbe", "aa57a2ea", "0999490a"],
+      "note": "relay leg 1。後続作業 A = OuterBoundUV/Assembly.lean の二段分割 (210b7558 / 5c121f95、汎用 13 宣言を CondMutualInfoMixture / CodeToAmbient / BC Basic へ、領域定義 3 section を OuterBoundUV/Region.lean へ) → Phase 5 定義段の在庫 (66dfffa3) → Classes.lean 新設 + martonRegion からの第一象限制約の除去 (2c938fe0 / 91fd8dcf) → honesty (e6ff1963) / style (42ac21e7) 2 ゲート → plan 同期。"
+    },
+    {
+      "id": "792d4103-0711-492f-9278-2741fb54ab03",
+      "prompt_ids": ["f94996c4", "fd848c15", "0418725e", "01560136", "97f17dd2", "8e1b346c", "ae6decbb", "01a9c1f5", "1181802d", "9b39a28e", "9924c90a", "f7d2b729"],
+      "note": "relay leg 2。内外の橋の在庫 (probe 7 本、6b0c1ea1) → 橋 S1-S4 (76b83bc1) → 橋 S5/S6 = marton_region_subset_uv まで (28eae4ea) → Phase 2 union の在庫 (ce8e9d0b) → MartonUnion.lean 最小完遂 P1-P3 (fcdafaf5)。各段に style ゲートと plan 同期。"
+    },
+    {
+      "id": "219b3220-d981-4037-adcc-d9b1f66f14e5",
+      "prompt_ids": ["9553fe86", "2eb60cdd", "2450dcbc", "412da4b5", "207387f1", "07ed28cf", "95805bd9", "a164ef91", "3be01341"],
+      "note": "relay leg 3。less noisy 等号の在庫 (9a41c3b7) で plan の次手 bcOuterRegionUV ⊆ martonRegionUnionFS を数値実験で偽と判定し経路を superposition へ差し替え (9e6050b7、bc-facts.md 新設) → S0-S2 達成側の factor out + Superposition/Region.lean (06817339) → honesty (32385115) / style (a97fde13) → S3/S4 スロット同定 + Markov 鎖 (102d514a)。"
+    },
+    {
+      "id": "abc83ceb-84f8-4f9f-b0e9-c9408d308cfe",
+      "prompt_ids": ["016106a2", "3026556d", "d4bb9583", "c97e76a0", "4160c437", "5950d5e4", "99329c08", "6ccd3008", "80bd352d", "c62d6da9", "3b0cea88"],
+      "note": "relay leg 4。S5 在庫 (89daa826、probe 147 行) → S5 補助の有限量子化と裾評価 (c3508204) → style + リネーム 4 件 (47933abd) → S6 在庫 (d3f0c9c7、probe 295 行、bound₁ が load-bearing という反例を機械確認) → S6 時分割の補助への吸収 (70fc424e) → style (308f7c15) / flags (dd981e01)。"
+    },
+    {
+      "id": "40d6cc1b-8a8b-4830-b6ad-cabfa161585a",
+      "prompt_ids": ["72bae40b", "ff2fcc34", "ae80049d", "526ad6a8", "b261779e", "ba8b2db6", "113fe30d", "1ffbe343", "4040b8e5", "7fa674bf"],
+      "note": "relay leg 5。S7 在庫 (90fac85b、probe 745 行、乗法だけの下界が偽と数値反例) → S7 全支持への摂動 (560c3399) → style (069c6016) → S8 在庫 (7aac8226、probe 295 行、逆包含が sorryAx-free) → S8 逆包含 + headline 等号 (3ca197cd) → style (558b3fca)。S7 の実装中に lake env lean の linter 盲目が実測で発覚し、以後 -D linter.mathlibStandardSet=true へ切替。"
+    },
+    {
+      "id": "7f8f7cc1-41d3-4825-81dd-c7d104369c95",
+      "prompt_ids": ["775d9593", "979d89f9", "b367a51a", "74f224d5"],
+      "note": "relay leg 6 (後片付け)。README 定理表への登録 F-5 (b545cbd7) + Superposition クラスタのサブディレクトリ昇格 F-19 (4ea35cc0) → 重複の畳み込み F-21 / F-22 / F-c (bf8519c6 / d5a30401 / 114d7654) → style (d0ac3aed) → plan 同期 (09ee5234)。末尾の proof-log 起票ターン (24ed8e22) は本 proof-log 自体を書くターンなので除外。"
+    }
+  ],
+  "filters": { "file_prefix": "InformationTheory/Shannon" },
+  "idle_gap_minutes": 5
+}
