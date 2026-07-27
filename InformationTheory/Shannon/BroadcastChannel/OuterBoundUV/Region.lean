@@ -46,6 +46,8 @@ product identity, `IsUVChannelLaw`.
   averaging the letter laws of a code stays inside the index of the union.
 * `IsUVChannelLaw.map_auxiliaries` — re-encoding the two auxiliary alphabets keeps a channel
   law a channel law, which is how a law on the auxiliaries of a code reaches the fixed ones.
+* `IsUVChannelLaw.swap_auxiliaries` — exchanging the two auxiliary alphabets keeps a channel law
+  a channel law, so a law indexing its auxiliaries in the opposite order indexes the union too.
 
 ## Implementation notes
 
@@ -196,6 +198,30 @@ lemma IsUVChannelLaw.map_auxiliaries {U' V' : Type*} [MeasurableSpace U'] [Measu
     compProd_comap_map_prodMap (ν.map fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1))
       (W.comap (fun r : U' × V' × α ↦ r.2.2) (measurable_snd.comp measurable_snd)) hφ,
     Measure.map_map hφ measurable_uvFirstThree] at hcong
+  exact hcong
+
+lemma IsUVChannelLaw.swap_auxiliaries {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
+    {ν : Measure (U × V × α × β₁ × β₂)} [SFinite ν] (h : IsUVChannelLaw W ν) :
+    IsUVChannelLaw W (ν.map fun q ↦ (q.2.1, q.1, q.2.2)) := by
+  have hσ : Measurable (fun r : U × V × α ↦ (r.2.1, r.1, r.2.2)) :=
+    (measurable_fst.comp measurable_snd).prodMk
+      (measurable_fst.prodMk (measurable_snd.comp measurable_snd))
+  have hψ : Measurable (fun q : U × V × α × β₁ × β₂ ↦ (q.2.1, q.1, q.2.2)) :=
+    (measurable_fst.comp measurable_snd).prodMk
+      (measurable_fst.prodMk (measurable_snd.comp measurable_snd))
+  have hprod : Measurable (fun z : (U × V × α) × (β₁ × β₂) ↦
+      ((z.1.2.1, z.1.1, z.1.2.2), z.2)) := (hσ.comp measurable_fst).prodMk measurable_snd
+  have hkernel : W.comap (fun r : U × V × α ↦ r.2.2) (measurable_snd.comp measurable_snd)
+      = (W.comap (fun r : V × U × α ↦ r.2.2) (measurable_snd.comp measurable_snd)).comap
+        (fun r : U × V × α ↦ (r.2.1, r.1, r.2.2)) hσ := Kernel.ext fun _ ↦ rfl
+  unfold IsUVChannelLaw at h ⊢
+  rw [Measure.map_map measurable_uvSplit hψ, Measure.map_map measurable_uvFirstThree hψ]
+  have hcong := congrArg (Measure.map (fun z : (U × V × α) × (β₁ × β₂) ↦
+    ((z.1.2.1, z.1.1, z.1.2.2), z.2))) h
+  rw [Measure.map_map hprod measurable_uvSplit, hkernel,
+    compProd_comap_map_prodMap (ν.map fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1))
+      (W.comap (fun r : V × U × α ↦ r.2.2) (measurable_snd.comp measurable_snd)) hσ,
+    Measure.map_map hσ measurable_uvFirstThree] at hcong
   exact hcong
 
 /-- @audit:ok -/
