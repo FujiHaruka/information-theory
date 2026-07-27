@@ -21,7 +21,8 @@
   - [x] 内外を同じ添字に載せる橋 S1–S6 ✅ `6b0c1ea1` `76b83bc1` `0186b708` `28eae4ea`
   - [ ] less noisy の等号 🔄 **経路変更** — 内界は Marton union ではなく **superposition**。
         S0–S2 ✅ `06817339`…`a97fde13` / S3–S4 ✅ `102d514a` `28aafa87` /
-        S5 ✅ `c3508204` `89daa826` `47933abd` / **S6–S8 📋 ★次の一手は S6**
+        S5 ✅ `c3508204` `89daa826` `47933abd` / S6 ✅ `70fc424e` `308f7c15` `dd981e01` /
+        **S7–S8 📋 ★次の一手は S7**
 
 ## 在庫
 
@@ -47,6 +48,7 @@
 | **達成側の共通形 3 本 + degraded headline** | `BroadcastChannel/Achievability/Assembly.lean` | `bc_ceil_exp_max_zero:1080` / `bc_Ec_lt_of_clamped_rate:1090` / **`bc_achievability_of_rate_lt:1103`** (レートの符号制約なし、`hJlt : max R₁ 0 + R₂ < bcInfoJoint`) / `bc_achievability_of_infoJoint_ge:1239` (`hsum` 形) / `bc_achievability:1270` (**署名・結論は逐語不変**) / `bc_degraded_infoJoint_ge:967` |
 | **superposition 内界 (S0–S2)** | `BroadcastChannel/SuperpositionRegion.lean` (209 行 / 7 decl、import 3 本) | `bcInfo₁_nonneg:50` / `@[entry_point]` `bc_lessNoisy_achievability:143` / def `bcSuperpositionRegionFullSupport:178` / `@[entry_point]` `bcSuperpositionRegionFullSupport_subset_capacity:189` (仮説は `hW` + `hln` のみ)。**less noisy の言葉で挟み込みが並ぶ** |
 | **S3 = 情報量スロットの同定 3 本** | 同上 `### The three informations as (conditional) mutual informations` | `bcInfo₂_eq_mutualInfo_toReal:78` (`= I(U;Y₂).toReal`) / `bcInfoJoint_eq_mutualInfo_toReal:90` (`= I((U,X);Y₁).toReal`) / `bcInfo₁_eq_condMutualInfo_toReal:110` (`= I(X;Y₁∣U).toReal`)。`U` は `Type*` 総称 ⟹ **more capable でも再利用可**。型クラス前提は逐語 `[Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]` + `[IsProbabilityMeasure pU]` / `[IsMarkovKernel K]` / `[IsMarkovKernel W]` |
+| **S6 = 時分割の補助への吸収** | `BroadcastChannel/SuperpositionTimeShare.lean` (545 行 / 32 decl、import 2 本) | 到達点 `exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw:471` — 外界の 3 不等式 (`h₁` / `h₂` / `hsum`) を満たす点から達成側の対 `(pU, K)` を**実際に構成して**返す。仮説は `[IsMarkovKernel W]` / `hln : IsBCLessNoisy W` / `h : IsUVChannelLaw W ν` / 3 不等式のみ。補助 `exists_bcInfo_ge_of_tagged:446` が「再ラベル + 対の取り出し」を分離。混合側 `uvTimeShareLaw:114` (+ `_eq:123` / `_isUVChannelLaw:158`) と `uvBranchKernel_ae_tag:131` は **`lam ≤ 1` を要求しない** (`⊓ 1` clamp で無条件、在庫の署名案からの訂正 ⟹ S7 も `hlam` を用意しなくてよい)。cloud 側 `uvCloudLaw:309` / `uvSatelliteKernel:314` + スロット同定 3 本 `bcInfo₂_uvCloudLaw:359` / `bcInfo₁_uvCloudLaw:366` / `bcInfoJoint_uvCloudLaw:375`。汎用の自作 `boolLaw:58` 一族 3 本 + `condMutualInfo_eq_mutualInfo_of_ae_const:186` (置き場は §後続作業 F-15) |
 | **内界の Marton union** | `BroadcastChannel/MartonUnion.lean` (110 行 / 5 decl) | `bcAuxAlphabet:52` (`= ULift.{u} (Fin (k+1))`) / `martonRegionUnion:58` / `martonRegionUnionFS:68` + `@[entry_point]` 2 本 `martonRegionUnion_subset_uv:81` (明示仮説ゼロ) / `martonRegionUnionFS_subset_capacity:101` + `_subset_union:88`。**superposition 路の補助アルファベットとしても再利用中** — `uvQuantizeLaw ν m` の第 1 成分は `ULift.{u} (Fin (m+1))` = `bcAuxAlphabet m` と**同じ型**なので、S8 で内界の union 添字に載せる橋は無料 |
 | `marton_achievability` / `InMartonRegion` | `Marton/Achievability.lean:767` / `Marton/Basic.lean:40` | 一般 BC 内界 (EGK Thm 8.3、private message のみ、**共通補助 `U₀` なし**) と 3 不等式バンドル |
 | **内外の橋 (S1–S6、全段 proof done)** | `OuterBoundUV/MartonBridge.lean` (525 行 / 31 decl) + `Region.lean:209` | `martonJointDistribution_isUVChannelLaw:70` → `martonSwapLaw:117` → `martonUVLaw:160` + `_isUVChannelLaw:177` + 4 スロット保存 `uvInfo₁_martonUVLaw:186` 系 / `.toReal` 同定 3 本 `:228` `:240` `:252` / 和レート 4 本 `:419` `:441` `:465` `:481` (核は Markov 鎖 2 本 `:275` `:301` + 条件付き DPI) / `marton_region_subset_uv:502` (`@[entry_point]`) |
@@ -56,7 +58,7 @@
 
 **存在しないもの** (等号が要求し、まだ書かれていないもの): (a) 逆包含
 `bcOuterRegionUV W ⊆ bcSuperpositionRegionFullSupport W` (**等号に残る唯一の包含**)。量子化 + 裾評価
-は S5 で入り、残りは **時分割の補助への吸収 (S6) / 全支持への摂動 (S7) / 組み立て (S8)**。
+は S5、時分割の補助への吸収は S6 で入り、残りは **全支持への摂動 (S7) / 組み立て (S8)**。
 (b) more capable の 3 制約を受ける structure (`InBCCapacityRegion` は 2 field)、(d) `IsBCDegraded W`
 から `bcConverseAmbient` 上の per-letter Markov 鎖 `h_deg_block` を出す補題、(e)
 `(mutualInfo μ Xs Xs).toReal = entropy μ Xs` と決定的写像の条件付きエントロピー消失
@@ -98,17 +100,12 @@ union の順包含 `martonRegionUnion ⊆ bcOuterRegionUV` は一般 BC の内�
 
 M0 在庫は [`bc-phase2-union-inventory.md`](bc-phase2-union-inventory.md) (Mathlib の壁 0 件)。
 最小完遂 P1–P3 ✅ (`ce8e9d0b` 在庫 / `fcdafaf5` 実装 / `b1837901` style) で
-`BroadcastChannel/MartonUnion.lean` を新設し、補助の型と分布についての union を取った:
-
-```
-martonRegionUnion W = closure (⋃ k₁ k₂ (pV : Measure (bcAuxAlphabet k₁ × bcAuxAlphabet k₂)) _ K _,
-                                 martonRegion pV K W)     -- bcAuxAlphabet k = ULift.{u} (Fin (k+1))
-```
-
-設計の 3 点はいずれも**機械確認済**なので蒸し返さないこと: (a) `Fin (k+1)` であって `Fin k` でない
-(`k = 0` で `Nonempty` が出ない)。(b) `ULift.{u}` が要る (`IsBCLessNoisy` が `∀ (U : Type u)` を量化)。
-(c) `closure` を外側に取る (比較先が閉集合なので包含に損がない)。**配置はトップ直下**
-(`Marton/` へ移すと `OuterBoundUV/` との依存が双方向 = `module-structure.md` §5 違反)。
+`BroadcastChannel/MartonUnion.lean` を新設し、補助の型 `k₁ k₂` と分布 `pV` / `K` についての union を
+`closure` で取った (定義そのものは §在庫 の行番号が SoT)。設計の 3 点はいずれも**機械確認済**なので
+蒸し返さないこと: (a) `Fin (k+1)` であって `Fin k` でない (`k = 0` で `Nonempty` が出ない)。
+(b) `ULift.{u}` が要る (`IsBCLessNoisy` が `∀ (U : Type u)` を量化)。(c) `closure` を外側に取る
+(比較先が閉集合なので包含に損がない)。**配置はトップ直下** (`Marton/` へ移すと `OuterBoundUV/` との
+依存が双方向 = `module-structure.md` §5 違反)。
 
 ⚠ **正直な限界 (実際に発火した)**: この `martonRegionUnion` は共通補助 `U₀` を持たない Marton 内界で、
 **劣化 BSC 対で `martonRegionUnionFS ⊊ bcCapacityRegion`** として限界が現れた (判断ログ 18)。
@@ -122,7 +119,7 @@ martonRegionUnion W = closure (⋃ k₁ k₂ (pV : Measure (bcAuxAlphabet k₁ �
 
 **時分割 / 凸包は要らない** (在庫 §6 が実測で決着): 各 `martonRegion` は凸、union は非凸だが相手側
 `bcOuterRegionUV` も非凸なので両辺が並ぶ。時分割変数 `Q` の補助への吸収は Marton では効かない
-(`I(V₁;V₂)` が `H(Q)` だけ増える) が、**superposition の 2 制約領域では効く** (S6 が使う)。
+(`I(V₁;V₂)` が `H(Q)` だけ増える) が、**superposition の 2 制約領域では効いた** (S6 ✅)。
 proof-log: no。
 
 ### Phase 4b — UV 外界の集合化 + 操作的包含 ✅ CLOSED
@@ -179,7 +176,7 @@ theorem bc_lessNoisy_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKern
 `bc_capacity_subset_uv` は無条件)。`IsBCLessNoisy` は両領域を一切参照しないチャネルレベルの述語
 なので load-bearing ではない。
 
-##### S0–S5 ✅ 全段 proof done
+##### S0–S6 ✅ 全段 proof done
 
 | step | 成果 | commit |
 |---|---|---|
@@ -188,9 +185,10 @@ theorem bc_lessNoisy_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKern
 | **S3** スロット同定 3 本 | **41 行** (見積 90)。**自作した数学は 0 行** | `102d514a` `28aafa87` |
 | **S4** 四つ組法 + Markov 鎖 3 本 | **74 行** (見積 140)。**自作した数学は 0 行** — 親玉は既存 4 本の合成 **13 行**。前提として F-a の上流移動が要った | 同上 |
 | **S5** 有限量子化 + 裾評価 | **289 行** (見積 280)。`Quantization.lean` 新設 21 decl。F-12 リネーム同梱 | `c3508204` `89daa826` `47933abd` |
+| **S6** 時分割の補助への吸収 | **545 行** (見積 440、判断ログ 20)。`SuperpositionTimeShare.lean` 新設 32 decl。**自作した数学は 3 本だけ** — `boolLaw` 一族 15 行 / `condMutualInfo_eq_mutualInfo_of_ae_const` 16 行 / **在庫に無かった** `condMutualInfo_map_uvRelabel` 14 行 | `70fc424e` `308f7c15` `dd981e01` |
 
 ゲート: S0–S2 honesty **all OK** (`hsum` / `hJlt` は precondition と判定) / style **PASS**。
-S3–S5 は style **PASS**、honesty は launch 条件外 (新規 `sorry` 0 / 既存署名の honesty 関連変更なし)。
+S3–S6 は style **PASS**、honesty は launch 条件外 (新規 `sorry` 0 / 既存署名の honesty 関連変更なし)。
 
 **S5 の成果物の署名 (消費側で機械確認した形)** — 3 本は §在庫 の行番号が SoT:
 
@@ -201,43 +199,49 @@ tendsto_uvQuantizeSlack               : Tendsto (uvQuantizeSlack ν) atTop (𝓝
 ```
 
 ⚠ **仮説の非対称は意図的** — 1 本目と 3 本目は `W` も `h` も取らない。署名を揃えて使わない前提を
-運ばせないための設計判断なので、S6 で「揃っていない」と見えても揃えないこと。
+運ばせないための設計判断なので、S8 で「揃っていない」と見えても揃えないこと。
 
-##### S6–S8 📋 逆包含 (残り ~390 行)
+##### S7–S8 📋 逆包含 (残り ~210 行)
 
-証明戦略 (擬似 Lean、在庫 §Q2 が導出):
+証明戦略 (擬似 Lean。S6 までの実測で 2 段が既存宣言に置き換わった):
 
 ```
 antisymm
   ├ ⊆ : bc_capacity_subset_uv W                             -- 既存、無条件
   └ ⊇ : intro ν hν p hp                                     -- p ∈ uvRegion ν
-        b := (uvInfo₂ ν).toReal ; a := (uvInfoSum₂ ν).toReal - b   -- I(U;Y₂) / I(X;Y₁|U)
-        U_m := 有限量子化 ; b_m ≥ b - ε_m ; a_m ≥ a                 -- S5 ✅
-        I(X;Y₁) ≥ I(U_m;Y₁) + a_m ≥ b_m + a_m                      -- hln at U_m + 連鎖律
-        λ := p.2 / b_m ; U' := Bool × U_m                          -- S6 時分割
+        U_m := 有限量子化 ; uvInfo₂ の裾を ε_m で払う               -- S5 ✅
+        exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw            -- S6 ✅ (時分割 + 対の構成)
+        ν' := (1-δ)·ν + δ·uniform で全支持へ (時分割の後に 1 度)     -- S7 📋
         bc_lessNoisy_achievability at (p.1-δ, p.2-δ) → closure      -- S2
 ```
 
-- [ ] **S6 ★次の一手** 時分割の補助への吸収 (`Bool × U_m`) と 2 本の混合等式・不等式 (在庫見積 ~180 行)
-- [ ] **S7** 全支持への摂動 (`(1-δ)·law + δ·uniform` の連続性、~120 行)
+⚠ **第一象限を暗に仮定しないこと** (S6 で実際に発火した): 旧擬似 Lean の `λ := p.2 / b_m` は
+`R₂ > 0` を暗に前提しており、実装は `R₂ ≤ 0` の枝で `h₁` (`R₁ ≤ (uvInfo₁ ν).toReal`) を DPI 1 発 +
+`linarith` で使って閉じた。**`h₁` を落としていたら S6 は閉じなかった** ⟹ 外界は全平面版なので、
+S7 / S8 で 3 不等式のどれかが不要に見えたら毎回点検する。
+
+- [ ] **S7 ★次の一手** 全支持への摂動 (~120 行)。**摂動対象は `(pU, K)` ではなく `ν'` (時分割済の
+      五つ組法)** が安い (在庫 §Q2-6 の提案、実装者も同意): `IsUVChannelLaw` が `.smul` / `.add` で
+      閉じる (S6 の `uvTimeShareLaw_isUVChannelLaw` がこの閉包性で建っており、そのまま再利用できる)
+      / 連続性が `ℝ≥0∞` の 2 スロットで閉じる。摂動は時分割の**後**に 1 度だけ。混合側の 3 本は
+      `hlam : lam ≤ 1` を要求しない (§在庫) ので S7 で用意しなくてよい
 - [ ] **S8** 逆包含 `bc_uv_subset_superposition` の組み立て + headline 等号 (~90 行)。
-      凸結合の場合分け (`λ = R₂ / b` と `R₂ ≤ 0`) は probe B で機械確認済 (`nlinarith` 2 発)
+      **S5 の 3 本 (上記の署名) を消費するのは S8** — S6 は 1 本も使っていない。凸結合の場合分けは
+      probe B で機械確認済 (`nlinarith` 2 発)
 
-###### S6 の在庫ブリーフが引く材料 (**機械確認済のものだけ**)
+###### S7 / S8 への申し送り (S6 実装が逐語で踏んだもの)
 
-- 効くのは **汎用の混合法 3 本** (`CondMutualInfoMixture.lean:102` / `:142` / `:164`) と
-  **「索引を補助の第 1 成分に埋めて `tag` で復元する」設計パターン** の 2 点で、
-  **`bcUVTimeShare` の写経ではない** — あれは `BroadcastCode` の文字添字 `Fin n` 一様混合に
-  張り付いており重み `λ` を取れない (判断ログ 11-(f) の 2 度目の発火)
-- S5 が一般化した `IsUVChannelLaw.condMutualInfo_le_map_cond`
-  (`Quantization.lean:126`、任意の可測 `f : U → U'`) が `Bool × U_m` でも当たる見込み
-- **L-BCO9 の発動判定は S6 が唯一の担い手になった** (S5 側は不発動が確定)
-- **在庫段階で probe を厚くする** — S5 は在庫が 147 行を先に compile 通過させた結果、見積 280 に
-  対し実測 289 とほぼ的中した (S3 / S4 は下振れ)。⟹ **在庫で実際に通したコード量が見積り精度を
-  そのまま決める**。S6 の在庫でも probe を厚く取ること
-- 在庫 [`bc-s5-quantization-inventory.md`](bc-s5-quantization-inventory.md) に**旧名が 3 種 9 箇所
-  残っている** (片側有限性 7 / 不等式 2 本が 1 ずつ。新旧の対応は `47933abd` の diff が SoT)。
-  **S6 の在庫 leg に張替を畳み込む**
+- **`set ν' := … with hν'` の `rw [hν']` は motive not type correct になる** (`condMutualInfo` が
+  測度に依存する instance 引数を取るため)。回避は `hν'` を rw せず **`ν'` の等式を `have` で先に
+  立てて `ℝ≥0∞` 値の項ごと書き換える**
+- **`condMutualInfo_map_comp` の motive エラーは「測度を書き換える方向」でだけ出る** — 無印が通る
+  場面 (`condMutualInfo_map_uvRelabel`) と `'` 版必須の場面 (4 箇所) が両方ある ⟹ **無印を
+  `private` にする案はこの区別を潰すので保留**
+- Mathlib 側の改名 2 件: `le_or_lt` は消えて **`le_or_gt`** / `ENNReal.one_toReal` は
+  **`ENNReal.toReal_one`**
+- 在庫 [`bc-s6-timesharing-inventory.md`](bc-s6-timesharing-inventory.md) に**旧名が 2 箇所残る**
+  (`:188` / `:260`。新旧の対応は `dd981e01` の diff が SoT) ⟹ **S7 の在庫 leg に張替を畳み込む**
+- **L-BCO9 は S6 でも不発動**。発動判定は **S7 / S8 に持ち越し**
 
 ##### 残る 2 クラス 📋
 
@@ -252,7 +256,7 @@ antisymm
       direct consumer 0 件で合流先の配線が存在せず、`bc_converse` の degradedness は `h_deg_block`
       (ambient 上の per-letter Markov 鎖) なので **4b の橋はそのままでは効かない** (判断ログ 11-(n))
 
-proof-log: 定義段 / 橋 S1–S6 / S0–S5 は no。**等号 (S6–S8) が閉じたら yes** — 書くべき要点は
+proof-log: 定義段 / 橋 S1–S6 / S0–S6 は no。**等号 (S7–S8) が閉じたら yes** — 書くべき要点は
 判断ログ 18 (内界の選択がクラスごとに変わる) と S5 / S6 の量子化 + 時分割。
 
 ## 後続作業 (Phase 5 の前提ではない)
@@ -359,17 +363,37 @@ style / honesty ゲートが提起して当該 leg では見送った項目。�
     と非対称 (兄弟は `(ρ) (hρ)` を `f/g/h` の前、こちらは後)。呼び出し 3 箇所に波及、優先度低
 14. `SuperpositionRegion.lean` の新宣言が出す `unusedDecidableInType` warning は同ファイル既存宣言と
     同じ状態 (BC 標準 variable 束由来)。直すなら family 一括の別 leg
-15. **汎用補題 3 本が BC namespace に居る (S5 の style ゲート、推奨度 高)** —
-    `mutualInfo_ne_top_of_fintype_right` / `mutualInfo_le_ofReal_log_card` /
-    `mutualInfo_eq_zero_of_ae_const` (`Quantization.lean:59` / `:66` / `:81`) は BC 固有の語を 1 つも
-    含まない汎用 API で、**次に同じ補題を探す人は `BroadcastChannel/` を見ない** (CLAUDE.md
-    「In-repo asset search」の失敗モード直撃)。移動先は `MutualInfo.lean` か `MaxEntropy/Basic.lean`
-    だが `entropy_le_log_card` と `mutualInfo_eq_entropy_sub_condEntropy` の**両方**を要求する
-16. **`Quantization.lean` は `@[entry_point]` 0 件 + 外部 consumer 0 件で orphan 検出の到達外** —
-    **S6 が S5 の 3 本を消費すれば不要**、S5 単体で置くなら 3 本にタグを付す。**S6 着手時に判定する**
-17. **§C-5 の規約衝突が S5 で 2 度目の発火** (本 plan の範囲外・記録のみ) — 非 `@[entry_point]` の
+15. **汎用補題が BC namespace に居る (S5 / S6 の style ゲート、推奨度 高。S6 で対象が 5 本に増えた)** —
+    `Quantization.lean:59` / `:66` / `:81` の `mutualInfo_ne_top_of_fintype_right` /
+    `mutualInfo_le_ofReal_log_card` / `mutualInfo_eq_zero_of_ae_const` と、
+    `SuperpositionTimeShare.lean:58`–`:70` の `boolLaw` 一族 3 本 (`boolLaw` /
+    `boolLaw_isProbabilityMeasure` / `lintegral_boolLaw`) + `:186` の
+    `condMutualInfo_eq_mutualInfo_of_ae_const`。いずれも BC 固有の語を 1 つも含まない汎用 API で、
+    **次に同じ補題を探す人は `BroadcastChannel/` を見ない** (CLAUDE.md「In-repo asset search」の
+    失敗モード直撃)。移動先候補は `Shannon/MutualInfo.lean` / `Shannon/CondMutualInfo.lean` /
+    `Shannon/CondMutualInfoMixture.lean` / 確率ユーティリティで、**import 循環の検討が要る一括タスク**
+    (判断ログ 11-(i): 移動先は consumer ではなく `entropy_le_log_card` と
+    `mutualInfo_eq_entropy_sub_condEntropy` の**両方**に届く位置で決まる)。`boolLaw` は移設するなら
+    名前も再考 (BC namespace 直下では総称的すぎる。`bernoulliClamped` 等)。波及の実測は
+    `mutualInfo_ne_top_of_fintype_right` が direct **8 decl / 2 file**
+    (`dep_consumers.sh`)。`condMutualInfo_map_uvRelabel` は `uvRelabel` を主語にするので**対象外**
+16. ✅ 決着 — `Quantization.lean` の orphan 懸念は S6 が解消した。`SuperpositionTimeShare.lean` が
+    同ファイルの 4 本 (`mutualInfo_ne_top_of_fintype_right` / `mutualInfo_eq_zero_of_ae_const` /
+    `uvInfo₂_ne_top` / `uvInfoSum₂_ne_top`) を消費する ⟹ **外部 consumer 0 件ではなくなった**。
+    S5 の裾評価 3 本は S8 が消費する
+17. **§C-5 の規約衝突が S6 で 3 度目の発火** (本 plan の範囲外・記録のみ) — 非 `@[entry_point]` の
     Main statements 掲載定理で `docstrings.md` item 1 と `internal-doc` ratchet が逆方向に引く。
-    今回は強制されている linter 側に従った。一本化の起票先は `docs/rules/` 側
+    style ゲートが今回**実効ルールを言語化した**:「**docstring 必須は `@[entry_point]` headline**、
+    `@[entry_point]` の無い Main statements エントリは name-adequacy で bare」。一本化の起票先は
+    `docs/rules/` 側 (本 plan からは編集しない)
+19. **`Superposition*` クラスタのサブディレクトリ昇格 (S6 の style ゲート、いま実行しない)** —
+    現状 2 ファイル 754 行。今やると S7 / S8 の主題が未確定のままディレクトリ名を固定する。
+    **発火条件を数値で置く**: 「クラスタが 3 ファイルに達する」または「いずれかが ~1200 行を
+    超える」の**先に来た方**。先例は `OuterBoundUV.lean` umbrella + `OuterBoundUV/` 6 ファイル
+20. **内ループの `lake env lean` は一部の linter に盲目 (検証の穴、記録のみ)** — `lake build` は
+    `SuperpositionTimeShare.lean` に `unusedDecidableInType` を 2 件出すが `lake env lean` では出ない
+    (`exists_bcInfo_ge_of_tagged` と headline の `[DecidableEq α/β₁/β₂]` が型で未使用、Assembly
+    section の `variable` 束由来)。掃除は F-14 と同じ family 一括の別 leg
 
 以下は橋 S5 / S6 の style ゲートが提起 (F-a は完了済):
 
@@ -412,7 +436,7 @@ style / honesty ゲートが提起して当該 leg では見送った項目。�
 | **L-BCO6** | S8-b の退化レート被覆が MAC 同様 450 行級に膨らむ | **不発動** — 全平面版で closure した (退化被覆は約 15 行) |
 | **L-BCO7** | semi-deterministic の等号を狙う段で、内界の達成側の全支持仮説が外せない (判断ログ 13) | **semi-deterministic はクラス定義 + 外界側だけで止め、等号は述べない**。外界 (`bc_capacity_subset_uv` の特殊化) は `hW` を要求しないので単独で成立する。退避の出口は `sorry` + `@residual(plan:bc-semideterministic-fullsupport)`。**`IsSemiDeterministicAchievable` のような述語に核を束ねる形は取らない**。**判定対象は経路変更で移った** — 旧: `marton_achievability` の `hW` / 新: `bc_achievability_of_rate_lt` の `hpU` / `hK` / `hW`。橋 S1–S6 は全支持仮説を 1 本も要求しない (判断ログ 15) ので本ラインの外 |
 | **L-BCO8** | (**⚠ 無効化**。逆包含 `bcOuterRegionUV ⊆ martonRegionUnionFS` が**偽**と判定され枠組みごと失効、判断ログ 18) | **⚠ 使用禁止** — 旧退避先「`sorry` で署名を保つ」は偽の命題を署名に残すことになり取れない (CLAUDE.md 検証の誠実性)。後継は **L-BCO9** |
-| **L-BCO9** | less noisy の等号で **S6 (時分割の補助への吸収) が閉じない**。⚠ **S5 側は不発動が確定** (`c3508204` で proof done) ⟹ **判定の担い手は S6 のみ** | 逆包含 `bc_uv_subset_superposition : bcOuterRegionUV W ⊆ bcSuperpositionRegionFullSupport W` を **署名を保ったまま** `sorry` + `@residual(plan:bc-lessnoisy-converse-quantization)` で残し (後継 plan のファイル名 stem)、S0–S5 の成果だけで leg を閉じる。この時点でも `bcSuperpositionRegionFullSupport W ⊆ bcCapacityRegion W ⊆ bcOuterRegionUV W` の挟み込みが **less noisy の言葉で** 1 本立つので単独で価値がある。**`IsLessNoisyTight` / `IsSuperpositionOptimal` のような「等号が成り立つ」を束ねる述語は作らない** |
+| **L-BCO9** | (凍結文言) less noisy の等号で **S6 (時分割の補助への吸収) が閉じない**。⚠ **S5 / S6 とも不発動が確定** (`c3508204` / `70fc424e` で proof done) ⟹ **発動判定の担い手は S7 (全支持への摂動) / S8 (組み立て) に移った**。以後は「逆包含が閉じない」と読む | 逆包含 `bc_uv_subset_superposition : bcOuterRegionUV W ⊆ bcSuperpositionRegionFullSupport W` を **署名を保ったまま** `sorry` + `@residual(plan:bc-lessnoisy-converse-quantization)` で残し (後継 plan のファイル名 stem)、S0–S5 の成果だけで leg を閉じる。この時点でも `bcSuperpositionRegionFullSupport W ⊆ bcCapacityRegion W ⊆ bcOuterRegionUV W` の挟み込みが **less noisy の言葉で** 1 本立つので単独で価値がある。**`IsLessNoisyTight` / `IsSuperpositionOptimal` のような「等号が成り立つ」を束ねる述語は作らない** |
 
 **active な撤退ラインは L-BCO2 / L-BCO3 / L-BCO7 / L-BCO9 の 4 本**。L-BCO8 は無効化 (履歴として残置)。
 
@@ -433,16 +457,15 @@ Phase 5 定義段 ✅ → 内外の橋 S1–S6 ✅ → Phase 2 最小完遂 P1�
 S0 達成側の factor out ✅ → S1 less noisy 接続 ✅ → S2 内界の集合化 ✅
   ↓  bcSuperpositionRegionFullSupport ⊆ bcCapacityRegion ⊆ bcOuterRegionUV が less noisy で並んだ
 S3 スロット同定 ✅ → S4 Markov 鎖 + 四つ組法 ✅ → S5 量子化 + 裾評価 ✅ (S3–S5 は more capable で再利用可)
-  ↓
-S6 時分割 ★次の一手 (詰んだら L-BCO9) → S7 全支持摂動 → S8 逆包含 + 等号
+  ↓  S6 時分割 ✅ = 外界の 3 不等式から達成側の対 `(pU, K)` を構成する 1 本まで到達
+S7 全支持摂動 ★次の一手 (詰んだら L-BCO9) → S8 逆包含 + 等号
 more capable の等号 (3 field の新 structure、S3 / S4 / S5 を再利用) → semi-deterministic は L-BCO7
 ```
 
-**S6 の dispatch は在庫 leg から始める** (S5 で「在庫の probe 実測量が見積り精度をそのまま決める」が
-確認できたので、probe を厚く取る)。在庫 leg には旧名 3 種の張替も畳み込む (上記 §S6 の材料)。
-**S6 が S5 の 3 本を消費するかが F-16 (`@[entry_point]` を付すか) の判定材料**になるので、
-S6 着手時に 1 度判定する。**Phase 2 の P4–P7 / §後続作業 B–F はいずれも前提ではない**
-(F-1 / F-6 リネーム束のみ consumer が 0 の今が最安)。
+**S7 の dispatch も在庫 leg から始める** (probe を厚く取る根拠は判断ログ 20。ただし**行数見積りは
+数学と散文・section 構造を別枠で積む**)。在庫 leg には旧名 2 箇所の張替を畳み込む (上記 §申し送り)。
+**Phase 2 の P4–P7 / §後続作業 B–F はいずれも前提ではない** (F-1 / F-6 リネーム束のみ consumer が
+0 の今が最安。F-19 は数値の発火条件待ち)。
 
 ## 判断ログ
 
@@ -518,3 +541,15 @@ S6 着手時に 1 度判定する。**Phase 2 の P4–P7 / §後続作業 B–F
     **達成側だけ** ⟹ 量子化は橋の**後**でよい (S5 はこの順序で実装され、実測が予測どおりだった)。
     Lean は使われた変数だけを取り込むので、宣言行にも `variable` ブロックにも現れない差が出る。
     判定は `#check` (CLAUDE.md「in-repo asset search」の signature diff 規律の単一宣言版)。
+20. **S6 の実測が在庫予測を 2 つの粒度で外した (見積りの粒度 / 雛形の粒度)** — どちらも S7 / S8 で
+    同型が出るので次 leg の判断材料:
+    - **(a) 在庫の probe 行数は「数学の行数」を予測するが「ファイルの行数」は予測しない**。
+      S5 = probe 147 行 → 見積 280 / 実測 289 (的中)、S6 = probe 295 行 → 見積 440 / 実測 545
+      (**+24%、帯を上振れ超過**)。**超過分の主因は数学ではない** — 数学の中身は probe 295 行が
+      ほぼそのまま乗り、増分は module doc 42 行 + `omit` を最小化するための `variable` 束 8 分割。
+      ⟹ **見積りは「数学」と「散文・section 構造」を別枠で積む**。
+    - **(b) 雛形の再利用可否は「宣言」と「証明骨格」で別々に判定する** (11-(f) の S6 での決着)。
+      `bcUVTimeShare` は予告どおり**宣言としては再利用不可**だった (`Fin n` 一様混合に張り付き重み
+      `λ` を取れない) が、**証明骨格は逐語で効き S6 で最も時間を節約した資産**になった。plan は
+      「写経ではない」とだけ書いて後者を落としていた ⟹ **雛形を却下するときは「宣言 / 骨格」の
+      どちらを却下したのかまで書く**。
