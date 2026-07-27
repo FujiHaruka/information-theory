@@ -24,7 +24,10 @@ The second endpoint is where a less noisy channel enters: it forces
 * `uvCloudLaw ν` and `uvSatelliteKernel ν` — the achievability pair read off a five-tuple law.
 * `boolLaw lam` — the Bernoulli tag law, clamped so that it is a probability measure for every
   weight.
-* `uvTagTrue ν` and `uvTagConst ν u₀` — the two branches, tagging the auxiliary and collapsing it.
+* `uvTagFalse σ`, `uvMixKernel ν σ` and `uvMixLaw ν σ lam` — two channel laws mixed along a
+  Bernoulli tag carried by the auxiliary.
+* `uvTagTrue ν`, `uvCollapse ν u₀` and `uvTagConst ν u₀` — the two branches, tagging the
+  auxiliary and collapsing it.
 * `uvTimeShareLaw ν u₀ lam` — the two branches mixed with weight `lam`.
 * `boolProdAuxEquiv m` — the tagged auxiliary alphabet re-encoded into `Marton.bcAuxAlphabet`.
 
@@ -84,70 +87,75 @@ noncomputable def uvTagTrue (ν : Measure (U × V × α × β₁ × β₂)) :
     Measure ((Bool × U) × V × α × β₁ × β₂) :=
   ν.map (uvRelabel (fun u ↦ (true, u)) id)
 
-/-- The branch that collapses the auxiliary to the constant `(false, u₀)`. -/
-noncomputable def uvTagConst (ν : Measure (U × V × α × β₁ × β₂)) (u₀ : U) :
+/-- The branch that keeps the auxiliary, tagging it with `false`. -/
+noncomputable def uvTagFalse (σ : Measure (U × V × α × β₁ × β₂)) :
     Measure ((Bool × U) × V × α × β₁ × β₂) :=
-  ν.map (uvRelabel (fun _ ↦ (false, u₀)) id)
+  σ.map (uvRelabel (fun u ↦ (false, u)) id)
 
 instance uvTagTrue_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
     [IsProbabilityMeasure ν] : IsProbabilityMeasure (uvTagTrue ν) :=
   Measure.isProbabilityMeasure_map
     (measurable_uvRelabel (measurable_prodMk_left) measurable_id).aemeasurable
 
-instance uvTagConst_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
-    [IsProbabilityMeasure ν] (u₀ : U) : IsProbabilityMeasure (uvTagConst ν u₀) :=
+instance uvTagFalse_isProbabilityMeasure (σ : Measure (U × V × α × β₁ × β₂))
+    [IsProbabilityMeasure σ] : IsProbabilityMeasure (uvTagFalse σ) :=
   Measure.isProbabilityMeasure_map
-    (measurable_uvRelabel measurable_const measurable_id).aemeasurable
+    (measurable_uvRelabel (measurable_prodMk_left) measurable_id).aemeasurable
 
-/-- The kernel that selects a branch from the tag. -/
-noncomputable def uvBranchKernel (ν : Measure (U × V × α × β₁ × β₂)) (u₀ : U) :
+/-- The kernel that selects one of two tagged laws from the tag. -/
+noncomputable def uvMixKernel (ν σ : Measure (U × V × α × β₁ × β₂)) :
     Kernel Bool ((Bool × U) × V × α × β₁ × β₂) :=
-  Kernel.ofFunOfCountable (fun t ↦ if t then uvTagTrue ν else uvTagConst ν u₀)
+  Kernel.ofFunOfCountable (fun t ↦ if t then uvTagTrue ν else uvTagFalse σ)
 
-instance uvBranchKernel_isMarkovKernel (ν : Measure (U × V × α × β₁ × β₂))
-    [IsProbabilityMeasure ν] (u₀ : U) : IsMarkovKernel (uvBranchKernel ν u₀) := by
+instance uvMixKernel_isMarkovKernel (ν σ : Measure (U × V × α × β₁ × β₂))
+    [IsProbabilityMeasure ν] [IsProbabilityMeasure σ] : IsMarkovKernel (uvMixKernel ν σ) := by
   refine ⟨fun t ↦ ?_⟩
-  change IsProbabilityMeasure (if t then uvTagTrue ν else uvTagConst ν u₀)
-  cases t <;> simp <;> infer_instance
+  change IsProbabilityMeasure (if t then uvTagTrue ν else uvTagFalse σ)
+  cases t
+  · simp only [Bool.false_eq_true, ↓reduceIte]
+    infer_instance
+  · simp only [↓reduceIte]
+    infer_instance
 
-/-- The two branches mixed with weight `lam`, carried by the auxiliary `Bool × U`. -/
-noncomputable def uvTimeShareLaw (ν : Measure (U × V × α × β₁ × β₂)) (u₀ : U) (lam : ℝ≥0∞) :
+/-- The two laws mixed with weight `lam`, carried by the auxiliary `Bool × U`. -/
+noncomputable def uvMixLaw (ν σ : Measure (U × V × α × β₁ × β₂)) (lam : ℝ≥0∞) :
     Measure ((Bool × U) × V × α × β₁ × β₂) :=
-  ((boolLaw lam) ⊗ₘ (uvBranchKernel ν u₀)).map Prod.snd
+  ((boolLaw lam) ⊗ₘ (uvMixKernel ν σ)).map Prod.snd
 
-instance uvTimeShareLaw_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
-    [IsProbabilityMeasure ν] (u₀ : U) (lam : ℝ≥0∞) :
-    IsProbabilityMeasure (uvTimeShareLaw ν u₀ lam) :=
+instance uvMixLaw_isProbabilityMeasure (ν σ : Measure (U × V × α × β₁ × β₂))
+    [IsProbabilityMeasure ν] [IsProbabilityMeasure σ] (lam : ℝ≥0∞) :
+    IsProbabilityMeasure (uvMixLaw ν σ lam) :=
   Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
 
-lemma uvTimeShareLaw_eq (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν] (u₀ : U)
-    (lam : ℝ≥0∞) :
-    uvTimeShareLaw ν u₀ lam = (lam ⊓ 1) • uvTagTrue ν + (1 - lam) • uvTagConst ν u₀ := by
+lemma uvMixLaw_eq (ν σ : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
+    [IsProbabilityMeasure σ] (lam : ℝ≥0∞) :
+    uvMixLaw ν σ lam = (lam ⊓ 1) • uvTagTrue ν + (1 - lam) • uvTagFalse σ := by
   ext s hs
-  rw [uvTimeShareLaw, ← Measure.snd, Measure.snd_compProd,
+  rw [uvMixLaw, ← Measure.snd, Measure.snd_compProd,
     Measure.bind_apply hs (Kernel.aemeasurable _), lintegral_boolLaw]
-  simp [uvBranchKernel, Kernel.ofFunOfCountable, Measure.add_apply, Measure.smul_apply]
+  simp [uvMixKernel, Kernel.ofFunOfCountable, Measure.add_apply, Measure.smul_apply]
 
-lemma uvBranchKernel_ae_tag (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
-    (u₀ : U) (lam : ℝ≥0∞) :
-    ∀ᵐ p ∂((boolLaw lam) ⊗ₘ (uvBranchKernel ν u₀)), (p.2.1).1 = p.1 := by
+lemma uvMixKernel_ae_tag (ν σ : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
+    [IsProbabilityMeasure σ] (lam : ℝ≥0∞) :
+    ∀ᵐ p ∂((boolLaw lam) ⊗ₘ (uvMixKernel ν σ)), (p.2.1).1 = p.1 := by
   rw [Measure.ae_compProd_iff
     (p := fun p : Bool × ((Bool × U) × V × α × β₁ × β₂) ↦ (p.2.1).1 = p.1)
     (measurableSet_eq_fun
       (measurable_fst.comp (measurable_fst.comp measurable_snd)) measurable_fst)]
   filter_upwards with t
   cases t
-  · show ∀ᵐ q ∂(uvBranchKernel ν u₀ false), (q.1).1 = false
-    rw [uvBranchKernel]
-    show ∀ᵐ q ∂(uvTagConst ν u₀), (q.1).1 = false
-    rw [uvTagConst, ae_map_iff (measurable_uvRelabel measurable_const measurable_id).aemeasurable
+  · change ∀ᵐ q ∂(uvMixKernel ν σ false), (q.1).1 = false
+    rw [uvMixKernel]
+    change ∀ᵐ q ∂(uvTagFalse σ), (q.1).1 = false
+    rw [uvTagFalse, ae_map_iff
+      (measurable_uvRelabel (measurable_prodMk_left) measurable_id).aemeasurable
       (p := fun q : (Bool × U) × V × α × β₁ × β₂ ↦ (q.1).1 = false)
       (measurableSet_eq_fun (measurable_fst.comp measurable_fst) measurable_const)]
     filter_upwards with q
     rfl
-  · show ∀ᵐ q ∂(uvBranchKernel ν u₀ true), (q.1).1 = true
-    rw [uvBranchKernel]
-    show ∀ᵐ q ∂(uvTagTrue ν), (q.1).1 = true
+  · change ∀ᵐ q ∂(uvMixKernel ν σ true), (q.1).1 = true
+    rw [uvMixKernel]
+    change ∀ᵐ q ∂(uvTagTrue ν), (q.1).1 = true
     rw [uvTagTrue, ae_map_iff
       (measurable_uvRelabel (measurable_prodMk_left) measurable_id).aemeasurable
       (p := fun q : (Bool × U) × V × α × β₁ × β₂ ↦ (q.1).1 = true)
@@ -155,16 +163,96 @@ lemma uvBranchKernel_ae_tag (ν : Measure (U × V × α × β₁ × β₂)) [IsP
     filter_upwards with q
     rfl
 
+lemma uvTagTrue_map_forget (ν : Measure (U × V × α × β₁ × β₂)) :
+    (uvTagTrue ν).map (uvRelabel (Prod.snd : Bool × U → U) (id : V → V)) = ν := by
+  rw [uvTagTrue, Measure.map_map (measurable_uvRelabel measurable_snd measurable_id)
+    (measurable_uvRelabel (measurable_prodMk_left) measurable_id)]
+  exact Measure.map_id
+
+lemma uvTagFalse_map_forget (σ : Measure (U × V × α × β₁ × β₂)) :
+    (uvTagFalse σ).map (uvRelabel (Prod.snd : Bool × U → U) (id : V → V)) = σ := by
+  rw [uvTagFalse, Measure.map_map (measurable_uvRelabel measurable_snd measurable_id)
+    (measurable_uvRelabel (measurable_prodMk_left) measurable_id)]
+  exact Measure.map_id
+
+lemma uvMixLaw_map_forget (ν σ : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
+    [IsProbabilityMeasure σ] (lam : ℝ≥0∞) :
+    (uvMixLaw ν σ lam).map (uvRelabel (Prod.snd : Bool × U → U) (id : V → V))
+      = (lam ⊓ 1) • ν + (1 - lam) • σ := by
+  rw [uvMixLaw_eq, Measure.map_add _ _ (measurable_uvRelabel measurable_snd measurable_id),
+    Measure.map_smul, Measure.map_smul, uvTagTrue_map_forget, uvTagFalse_map_forget]
+
+lemma uvMixLaw_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {ν σ : Measure (U × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] [IsProbabilityMeasure σ]
+    (hν : IsUVChannelLaw W ν) (hσ : IsUVChannelLaw W σ) (lam : ℝ≥0∞) :
+    IsUVChannelLaw W (uvMixLaw ν σ lam) := by
+  haveI : IsFiniteMeasure ((lam ⊓ 1) • uvTagTrue ν) :=
+    Measure.smul_finite _ (ne_top_of_le_ne_top ENNReal.one_ne_top inf_le_right)
+  haveI : IsFiniteMeasure ((1 - lam) • uvTagFalse σ) :=
+    Measure.smul_finite _ (ne_top_of_le_ne_top ENNReal.one_ne_top tsub_le_self)
+  rw [uvMixLaw_eq ν σ lam]
+  refine ((hν.map_auxiliaries (measurable_prodMk_left) measurable_id).smul (lam ⊓ 1)).add ?_
+  exact (hσ.map_auxiliaries (measurable_prodMk_left) measurable_id).smul (1 - lam)
+
+lemma uvMixLaw_map_tag (ν σ : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
+    [IsProbabilityMeasure σ] (lam : ℝ≥0∞) :
+    (uvMixLaw ν σ lam).map (fun q ↦ q.1.1) = boolLaw lam := by
+  rw [uvMixLaw, Measure.map_map (by fun_prop) measurable_snd]
+  have hae : (fun p : Bool × ((Bool × U) × V × α × β₁ × β₂) ↦ p.2.1.1)
+      =ᵐ[(boolLaw lam) ⊗ₘ (uvMixKernel ν σ)] Prod.fst := by
+    filter_upwards [uvMixKernel_ae_tag ν σ lam] with p hp using hp
+  rw [show ((fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.1.1) ∘
+      (Prod.snd : Bool × ((Bool × U) × V × α × β₁ × β₂) → _))
+      = (fun p : Bool × ((Bool × U) × V × α × β₁ × β₂) ↦ p.2.1.1) from rfl,
+    Measure.map_congr hae]
+  exact Measure.fst_compProd _ _
+
+/-- The law with its auxiliary collapsed to the constant letter `u₀`. -/
+noncomputable def uvCollapse (ν : Measure (U × V × α × β₁ × β₂)) (u₀ : U) :
+    Measure (U × V × α × β₁ × β₂) :=
+  ν.map (uvRelabel (fun _ ↦ u₀) id)
+
+instance uvCollapse_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
+    [IsProbabilityMeasure ν] (u₀ : U) : IsProbabilityMeasure (uvCollapse ν u₀) :=
+  Measure.isProbabilityMeasure_map
+    (measurable_uvRelabel measurable_const measurable_id).aemeasurable
+
+/-- The branch that collapses the auxiliary to the constant `(false, u₀)`. -/
+noncomputable def uvTagConst (ν : Measure (U × V × α × β₁ × β₂)) (u₀ : U) :
+    Measure ((Bool × U) × V × α × β₁ × β₂) :=
+  uvTagFalse (uvCollapse ν u₀)
+
+instance uvTagConst_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
+    [IsProbabilityMeasure ν] (u₀ : U) : IsProbabilityMeasure (uvTagConst ν u₀) :=
+  uvTagFalse_isProbabilityMeasure _
+
+lemma uvTagConst_eq_map (ν : Measure (U × V × α × β₁ × β₂)) (u₀ : U) :
+    uvTagConst ν u₀ = ν.map (uvRelabel (fun _ ↦ (false, u₀)) (id : V → V)) := by
+  rw [uvTagConst, uvTagFalse, uvCollapse, Measure.map_map
+    (measurable_uvRelabel (measurable_prodMk_left) measurable_id)
+    (measurable_uvRelabel measurable_const measurable_id)]
+  rfl
+
+/-- The two branches mixed with weight `lam`, carried by the auxiliary `Bool × U`. -/
+noncomputable def uvTimeShareLaw (ν : Measure (U × V × α × β₁ × β₂)) (u₀ : U) (lam : ℝ≥0∞) :
+    Measure ((Bool × U) × V × α × β₁ × β₂) :=
+  uvMixLaw ν (uvCollapse ν u₀) lam
+
+instance uvTimeShareLaw_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
+    [IsProbabilityMeasure ν] (u₀ : U) (lam : ℝ≥0∞) :
+    IsProbabilityMeasure (uvTimeShareLaw ν u₀ lam) :=
+  uvMixLaw_isProbabilityMeasure _ _ _
+
+lemma uvTimeShareLaw_eq (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν] (u₀ : U)
+    (lam : ℝ≥0∞) :
+    uvTimeShareLaw ν u₀ lam = (lam ⊓ 1) • uvTagTrue ν + (1 - lam) • uvTagConst ν u₀ :=
+  uvMixLaw_eq ν (uvCollapse ν u₀) lam
+
 lemma uvTimeShareLaw_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {ν : Measure (U × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν)
     (u₀ : U) (lam : ℝ≥0∞) : IsUVChannelLaw W (uvTimeShareLaw ν u₀ lam) := by
-  haveI : IsFiniteMeasure ((lam ⊓ 1) • uvTagTrue ν) :=
-    Measure.smul_finite _ (ne_top_of_le_ne_top ENNReal.one_ne_top inf_le_right)
-  haveI : IsFiniteMeasure ((1 - lam) • uvTagConst ν u₀) :=
-    Measure.smul_finite _ (ne_top_of_le_ne_top ENNReal.one_ne_top tsub_le_self)
-  rw [uvTimeShareLaw_eq ν u₀ lam]
-  exact ((h.map_auxiliaries (measurable_prodMk_left) measurable_id).smul (lam ⊓ 1)).add
-    ((h.map_auxiliaries measurable_const measurable_id).smul (1 - lam))
+  refine uvMixLaw_isUVChannelLaw W h ?_ lam
+  exact h.map_auxiliaries measurable_const measurable_id
 
 lemma uvInfo₂_uvTagTrue (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν] :
     uvInfo₂ (uvTagTrue ν) = uvInfo₂ ν :=
@@ -218,13 +306,13 @@ lemma mul_uvInfo₂_le_uvInfo₂_uvTimeShareLaw (ν : Measure (U × V × α × �
     lam * uvInfo₂ ν ≤ uvInfo₂ (uvTimeShareLaw ν u₀ lam) := by
   have hU : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.1) := measurable_fst
   have hY₂ : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.2.2) := by fun_prop
-  simp only [uvInfo₂, uvTimeShareLaw]
+  simp only [uvInfo₂, uvTimeShareLaw, uvMixLaw]
   rw [mutualInfo_map_comp _ Prod.snd measurable_snd _ hU _ hY₂,
     mutualInfo_compProd_eq_add_lintegral _ _ hU hY₂ (tag := fun a ↦ a.1) measurable_fst
-      (by filter_upwards [uvBranchKernel_ae_tag ν u₀ lam] with p hp using hp),
+      (by filter_upwards [uvMixKernel_ae_tag ν (uvCollapse ν u₀) lam] with p hp using hp),
     lintegral_boolLaw, inf_of_le_left hlam]
-  have hbr : mutualInfo (uvBranchKernel ν u₀ true) (fun q ↦ q.1) (fun q ↦ q.2.2.2.2)
-      = uvInfo₂ ν := by
+  have hbr : mutualInfo (uvMixKernel ν (uvCollapse ν u₀) true) (fun q ↦ q.1)
+      (fun q ↦ q.2.2.2.2) = uvInfo₂ ν := by
     show mutualInfo (uvTagTrue ν) (fun q ↦ q.1) (fun q ↦ q.2.2.2.2) = uvInfo₂ ν
     exact uvInfo₂_uvTagTrue ν
   rw [hbr]
@@ -257,7 +345,8 @@ lemma condMutualInfo_uvTagConst (ν : Measure (U × V × α × β₁ × β₂)) 
     condMutualInfo (uvTagConst ν u₀) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
       = mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) := by
   rw [condMutualInfo_map_comp' ν (uvRelabel (fun _ : U ↦ (false, u₀)) id)
-    (measurable_uvRelabel measurable_const measurable_id) (uvTagConst ν u₀) rfl
+    (measurable_uvRelabel measurable_const measurable_id) (uvTagConst ν u₀)
+    (uvTagConst_eq_map ν u₀)
     (fun q ↦ q.2.2.1) (by fun_prop) (fun q ↦ q.2.2.2.1) (by fun_prop) (fun q ↦ q.1)
     measurable_fst]
   exact condMutualInfo_eq_mutualInfo_of_ae_const ν _ _ _ (by fun_prop) (by fun_prop)
@@ -272,7 +361,7 @@ lemma condMutualInfo_uvTimeShareLaw (ν : Measure (U × V × α × β₁ × β�
   have hX : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.1) := by fun_prop
   have hY₁ : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.2.1) := by fun_prop
   have hU : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.1) := measurable_fst
-  have hmargfin : ∫⁻ t, mutualInfo (uvBranchKernel ν u₀ t) (fun q ↦ q.1)
+  have hmargfin : ∫⁻ t, mutualInfo (uvMixKernel ν (uvCollapse ν u₀) t) (fun q ↦ q.1)
       (fun q ↦ q.2.2.2.1) ∂(boolLaw lam) ≠ ∞ := by
     rw [lintegral_boolLaw]
     refine ENNReal.add_ne_top.mpr
@@ -282,10 +371,10 @@ lemma condMutualInfo_uvTimeShareLaw (ν : Measure (U × V × α × β₁ × β�
       exact mutualInfo_ne_top_of_fintype_right _ _ _ measurable_fst (by fun_prop)
     · show mutualInfo (uvTagConst ν u₀) _ _ ≠ ∞
       exact mutualInfo_ne_top_of_fintype_right _ _ _ measurable_fst (by fun_prop)
-  rw [condMutualInfo_map_comp' ((boolLaw lam) ⊗ₘ (uvBranchKernel ν u₀)) Prod.snd measurable_snd
-      (uvTimeShareLaw ν u₀ lam) rfl _ hX _ hY₁ _ hU,
+  rw [condMutualInfo_map_comp' ((boolLaw lam) ⊗ₘ (uvMixKernel ν (uvCollapse ν u₀))) Prod.snd
+      measurable_snd (uvTimeShareLaw ν u₀ lam) rfl _ hX _ hY₁ _ hU,
     condMutualInfo_compProd_snd_eq_lintegral _ _ hX hY₁ hU (tag := fun a ↦ a.1) measurable_fst
-      (by filter_upwards [uvBranchKernel_ae_tag ν u₀ lam] with p hp using hp)
+      (by filter_upwards [uvMixKernel_ae_tag ν (uvCollapse ν u₀) lam] with p hp using hp)
       (mutualInfo_ne_top_of_fintype_right _ _ _ measurable_fst (by fun_prop)) hmargfin,
     lintegral_boolLaw, inf_of_le_left hlam]
   congr 1
