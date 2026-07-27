@@ -9,10 +9,6 @@ as the second.  Two of them form a chain refining physical degradedness: a degra
 less noisy, and a less noisy channel is more capable.  Semi-determinism is a separate condition
 on the first output alone and does not enter that chain.
 
-The auxiliary variable of `IsBCLessNoisy` ranges over the universe of the input alphabet, which
-is what lets the input itself be taken as the auxiliary; that instantiation is the whole step
-from less noisy to more capable.
-
 ## Main definitions
 
 * `IsBCLessNoisy W` — every auxiliary variable feeding the input carries at least as much
@@ -29,6 +25,12 @@ from less noisy to more capable.
   dominates the sum `I(X; Y₁ ∣ U) + I(U; Y₂)` of the two per-receiver informations.
 * `IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero` — a semi-deterministic channel with
   at least two first-output letters gives some output pair probability zero.
+
+## Implementation notes
+
+The auxiliary variable of `IsBCLessNoisy` ranges over the universe of the input alphabet, which
+is what lets the input itself be taken as the auxiliary; that instantiation is the whole step
+from less noisy to more capable.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -36,7 +38,7 @@ namespace InformationTheory.Shannon.BroadcastChannel
 open MeasureTheory ProbabilityTheory InformationTheory.Shannon
 open InformationTheory.Shannon.MAC
 open InformationTheory.Shannon.ChannelCoding
-open scoped ENNReal NNReal
+open scoped ENNReal
 
 set_option linter.unusedSectionVars false
 
@@ -56,7 +58,7 @@ marginals of `W` only, not on their joint law.
 
 Quantifying the auxiliary alphabet over the input alphabet's universe is no restriction: every
 finite type is measurably isomorphic to one of this universe, and mutual information is invariant
-under such a relabelling.
+under such a relabeling.
 @audit:ok -/
 def IsBCLessNoisy (W : BCChannel α β₁ β₂) : Prop :=
   ∀ (U : Type u) [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U]
