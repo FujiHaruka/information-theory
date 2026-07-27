@@ -241,9 +241,8 @@ style / honesty ゲートが提起して当該 leg では見送った項目。�
 5 ファイル **−85 行** (予測 −95)、style **PASS** (`d0ac3aed`)。**F-c は自作の共有補助を 1 本も
 書いていない**ので **F-15 の移設束に何も足さない** / **F-28** `uvInfoJoint` を
 `OuterBoundUV/Bridge.lean:801` の 4 スロットの隣、不変性を `OuterBoundUV/Assembly.lean:166` の
-兄弟の隣へ置きベタ書きを置換 (`bb40c820`。**予告は `TimeShare.lean` 5 箇所だったが実測 7 箇所** —
-def を作った leg 自身が `MoreCapable.lean` に 2 箇所ベタ書きを残していた。`dep_consumers.sh` 実測で
-direct **20 decl / 3 file**) / **F-15 は汎用 2 本ぶん決着** — `condMutualInfo_congr_measure` →
+兄弟の隣へ置きベタ書きを置換 (`bb40c820`。置換箇所の数え漏れは F-26-(b)) /
+**F-15 は汎用 2 本ぶん決着** — `condMutualInfo_congr_measure` →
 `Shannon/CondMutualInfo.lean:76`、`mutualInfo_congr_pair` → `Shannon/MutualInfo.lean:46`
 (`730844a1`。**移設前に結論形でも検索し同等物の不在を確認済** — 最近縁は `mutualInfo_congr_ae` と
 `entropy_eq_of_identDistrib` でどちらも包含しない)。
@@ -300,7 +299,6 @@ direct **20 decl / 3 file**) / **F-15 は汎用 2 本ぶん決着** — `condMut
    **2 本同時リネームか両方現状維持かの二択** (style の推奨は現状維持)
 3. 語彙橋 2 本を `private` にするか / 4. `IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero`
    に `_of_one_lt_card` を付けるか (どちらも任意、優先度低)
-5. ✅ 完了 (上記「完了」欄)
 6. **リネーム束 — 4 本まとめて 1 leg**。いずれも**外部 consumer 0** (`rg` 実測) = 今が最安。
    - `auxNatIndex` → `natIndex` (中) — 定義は任意の `Fintype X` に総称で、「補助変数の」は使用側の
      ラベルにすぎない / `martonSwapLaw` → `martonAuxSwapLaw` (低) — 何を swap したか名前に出ていない
@@ -326,7 +324,6 @@ direct **20 decl / 3 file**) / **F-15 は汎用 2 本ぶん決着** — `condMut
     なった。4 ファイル同時のクラスタ一貫性判断なので単独では直さず flag
 11. **`bc_lessNoisy_achievability` の docstring が共有コアとして `bc_achievability` を名指している**
     が、実際に共有されているのは `bc_achievability_of_infoJoint_ge`。偽ではないので未修正、優先度低
-12. ✅ 完了 (上記「完了」欄)
 13. `isMarkovChain_map_comp` (`CodeToAmbient.lean:496`) の引数順が兄弟 `condMutualInfo_map_comp':527`
     と非対称 (兄弟は `(ρ) (hρ)` を `f/g/h` の前、こちらは後)。呼び出し 3 箇所に波及、優先度低
 14. `Superposition/Region.lean` の新宣言が出す `unusedDecidableInType` warning は同ファイル既存宣言と
@@ -341,20 +338,17 @@ direct **20 decl / 3 file**) / **F-15 は汎用 2 本ぶん決着** — `condMut
     `mutualInfo_eq_entropy_sub_condEntropy` の**両方**に届く位置で決まる)。波及の実測は
     `mutualInfo_ne_top_of_fintype_right` が direct **8 decl / 2 file**。**more capable leg が書いた
     汎用 2 本は本項の軸でその場で決着済** (上記「完了」欄) — 残る 11 本の判断は変わらない
-16. ✅ 決着 — `Quantization.lean` の orphan 懸念は S6 が解消 (`Superposition/TimeShare.lean` が同
-    ファイルの 4 本を消費し、S5 の裾評価 3 本は S8 が消費する)
+16. ✅ 決着 — `Quantization.lean` の orphan 懸念は S6 / S8 が同ファイルの補題を消費して解消
 17. **§C-5 の規約衝突は機構が特定済** (本 plan の範囲外・記録のみ) — 原因は**規約文が決着に追随して
     いないこと**: 実効ルールは「**docstring 必須は `@[entry_point]` headline**、`@[entry_point]` の
     無い Main statements エントリは name-adequacy で bare」なのに `docs/rules/docstrings.md` item 1 の
     括弧が旧文言のまま。**恒久解は item 1 の括弧を `@[entry_point]` のみに直すこと** (起票先は
     `docs/rules/` 側)。S8 でも同じ隙間に `bc_lessNoisy_superposition_eq_capacity` が落ちた
-19. ✅ 完了 (上記「完了」欄)
 20. **内ループの `lake env lean` は一部の linter に盲目 (検証の穴)** — S7 で実測が裏付けた
     (`lake env lean` 沈黙に対し `lake build` が 19 件)。**S8 / more capable の probe では実害 0** —
     probe 段階から `lake build` 相当の linter 条件で書いたため ⟹ family の既定手を 2 段にする:
     **実装 leg の検証バーに `lake build <module>` を含める** + **在庫 leg の probe 段階から linter
     条件を有効にする** (more capable 在庫 §Q6 の設定がそのまま実装 leg の内ループ)
-21. / 22. ✅ 完了 (上記「完了」欄)
 23. **`isUVChannelLaw_iff` (`OuterBoundUV/Region.lean:137`) の右辺が `uvLawOfInput` の本体を逐語で
     書き下している** — `:139`–`:141` は定義上 `uvLawOfInput W (ν.map fun q ↦ (q.1, q.2.1, q.2.2.1))`
     そのもの。def を名指す形へ書き換えれば重複は消えるが**これは statement の変更**で全 consumer が
@@ -375,19 +369,25 @@ direct **20 decl / 3 file**) / **F-15 は汎用 2 本ぶん決着** — `condMut
     (calc 形) と `MultipleAccess/TimeSharingConverse/Assembly.lean:123` (`rw [← ENNReal.toReal_add …]` 形)。
     どちらも `ENNReal.toReal_le_add` の 1 呼び出しに潰れる。refactor leg の brief 外だったので手を
     付けていない (**新しい数学 0 行、2 ファイル**)
-26. **2 本の在庫が誤った S5 行数を較正基準として引用している (⚠ 記録のみ — 在庫は編集しない)** —
-    `bc-s6-timesharing-inventory.md:338` と `bc-s7-fullsupport-inventory.md:306` の「S5 は 280→289 で
-    的中」は誤り (真値は as-landed 375 / style 後 382 = **+34% の上振れ**)。**同じ 1 つの数値が
-    逆向きの 2 主張 (下振れ無し / 上振れ無し) を支えている**のが徴候で、伝播したのは測定値ではなく
-    「的中した」という評価語 ⟹ **次の在庫 leg はこの 2 文のどちらも較正基準として引かない**
-    (more capable 在庫は遵守し自前の実測だけを使った)。経緯は
-    [`proof-log-bc-lessnoisy-equality.md`](../proof-logs/proof-log-bc-lessnoisy-equality.md) §8
+26. **同期 leg が手で数えた数値は、行数も個数も較正基準に引かない (⚠ 記録のみ — 在庫は編集しない)** —
+    3 件が同機構。(a) `bc-s6-timesharing-inventory.md:338` / `bc-s7-fullsupport-inventory.md:306` の
+    「S5 は 280→289 で的中」は誤り (真値は as-landed 375 / style 後 382 = **+34%**)。**同じ 1 つの
+    数値が逆向きの 2 主張 (下振れ無し / 上振れ無し) を支えている**のが徴候で、伝播したのは測定値では
+    なく「的中した」という評価語 ⟹ **次の在庫 leg はこの 2 文のどちらも引かない**。(b) F-28 の置換
+    箇所は予告 5 に対し**実測 7** (def を作った leg 自身が `MoreCapable.lean` に 2 箇所残していた)。
+    (c) `506c5184` の改名一族は在庫が「予告 6 → 実測 8」と記録したが**実測 10 本** — 在庫が名指した
+    `3` 入りの宣言名が 5 本しかなく、「同様に追随」で暗黙に改名された分が数から漏れた。
+    ⟹ **行数・宣言数・置換箇所数はすべて re-derive 側**で、行数は `git show <commit>:<path> | wc -l`、
+    個数は**名前ではなく結論形・接尾辞で再検索**する ((c) の再導出は
+    `rg -n '^(theorem|lemma|noncomputable def|def) \S*[Ss]umRate' <file>`)。経緯は proof-log §8 2 本
+    ([lessnoisy](../proof-logs/proof-log-bc-lessnoisy-equality.md) /
+    [morecapable](../proof-logs/proof-log-bc-morecapable-equality.md))
 27. **行数の機械照合を `scripts/plan_lint.ts` に足す (本 plan の範囲外・記録のみ)** — commit hash と
     併記された**ファイル単位**の行数は `git show <commit>:<path> | wc -l` で機械照合できるのに、
     現行 linter は decl / `file:line` / wall slug しか突き合わせていない。**起票先は `scripts/` 側で
     BC の leg は実装しない** (F-9 / F-17 と同じ扱い)。⚠ 射程はファイル単位まで — **宣言クラスタ単位**の
     数値は数え方が規約化されておらず機械照合できない
-28. ✅ 完了 (上記「完了」欄)
+**✅ 完了 (上記「完了」欄)**: 5 / 12 / 19 / 21 / 22 / 28
 
 以下は橋 S5 / S6 の style ゲートが提起 (F-a / F-c は完了済):
 
