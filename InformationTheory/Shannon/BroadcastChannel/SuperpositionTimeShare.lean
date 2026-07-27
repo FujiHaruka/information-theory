@@ -53,8 +53,8 @@ universe u
 
 /-- The Bernoulli tag law with weight `lam`, clamped so that it is a probability measure for
 every weight.  The clamp is what makes `IsProbabilityMeasure` an instance rather than a lemma
-with a side condition, which the conditional mutual information of the mixture needs in order
-to be stated at all. -/
+with a side condition, and the conditional mutual information of the mixture needs that instance
+in order to be stated at all. -/
 noncomputable def boolLaw (lam : ℝ≥0∞) : Measure Bool :=
   (lam ⊓ 1) • Measure.dirac true + (1 - lam) • Measure.dirac false
 
@@ -301,6 +301,8 @@ end Slots
 
 /-! ## Reading an achievability pair off a channel law -/
 
+/-! ### The cloud law and the satellite kernel -/
+
 section CloudDefs
 
 variable {α β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
@@ -429,6 +431,8 @@ lemma condMutualInfo_map_uvRelabel (ν : Measure (U × V × α × β₁ × β₂
     (mutualInfo_ne_top_of_fintype_right ν _ _ measurable_fst (by fun_prop))
 
 end Landing
+
+/-! ## Tracing the segment between the two endpoints -/
 
 section Assembly
 
