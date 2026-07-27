@@ -500,26 +500,26 @@ lemma isMarkovChain_map_comp
     [MeasurableSpace C]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (T : Ω → Ω') (hT : Measurable T)
-    (Xs : Ω' → A) (hXs : Measurable Xs) (Zc : Ω' → C) (hZc : Measurable Zc)
-    (Yo : Ω' → B) (hYo : Measurable Yo)
+    (f : Ω' → A) (hf : Measurable f) (g : Ω' → C) (hg : Measurable g)
+    (h : Ω' → B) (hh : Measurable h)
     (ρ : Measure Ω') [IsFiniteMeasure ρ] (hρ : ρ = μ.map T)
-    (h : IsMarkovChain μ (fun ω ↦ Xs (T ω)) (fun ω ↦ Zc (T ω)) (fun ω ↦ Yo (T ω))) :
-    IsMarkovChain ρ Xs Zc Yo := by
+    (hchain : IsMarkovChain μ (fun ω ↦ f (T ω)) (fun ω ↦ g (T ω)) (fun ω ↦ h (T ω))) :
+    IsMarkovChain ρ f g h := by
   subst hρ
   haveI : IsProbabilityMeasure (μ.map T) := Measure.isProbabilityMeasure_map hT.aemeasurable
-  have hbase : (μ.map T).map Zc = μ.map (fun ω ↦ Zc (T ω)) := Measure.map_map hZc hT
-  have hjoint : (μ.map T).map (fun r ↦ (Zc r, Xs r, Yo r))
-      = μ.map (fun ω ↦ (Zc (T ω), Xs (T ω), Yo (T ω))) :=
-    Measure.map_map (hZc.prodMk (hXs.prodMk hYo)) hT
-  have hX := condDistrib_map_comp μ T hT Xs hXs Zc hZc
-  have hY := condDistrib_map_comp μ T hT Yo hYo Zc hZc
-  rw [hbase] at hX hY
-  unfold IsMarkovChain at h ⊢
-  rw [hjoint, h, hbase]
+  have hbase : (μ.map T).map g = μ.map (fun ω ↦ g (T ω)) := Measure.map_map hg hT
+  have hjoint : (μ.map T).map (fun r ↦ (g r, f r, h r))
+      = μ.map (fun ω ↦ (g (T ω), f (T ω), h (T ω))) :=
+    Measure.map_map (hg.prodMk (hf.prodMk hh)) hT
+  have hf' := condDistrib_map_comp μ T hT f hf g hg
+  have hh' := condDistrib_map_comp μ T hT h hh g hg
+  rw [hbase] at hf' hh'
+  unfold IsMarkovChain at hchain ⊢
+  rw [hjoint, hchain, hbase]
   refine Measure.compProd_congr ?_
-  filter_upwards [hX, hY] with a hax hay
+  filter_upwards [hf', hh'] with a haf hah
   ext s hs
-  rw [Kernel.prod_apply, Kernel.prod_apply, hax, hay]
+  rw [Kernel.prod_apply, Kernel.prod_apply, haf, hah]
 
 /-- `condMutualInfo_map_comp` phrased against any measure `ρ` propositionally equal to `μ.map T`.
 The equation hypothesis is substituted (transporting its `IsFiniteMeasure` instance), which

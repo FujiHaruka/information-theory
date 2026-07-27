@@ -73,7 +73,7 @@ theorem bcInfo₁_nonneg {U : Type*}
   simp only [bcInfo₁, ← hμ]
   linarith
 
-/-! ### The three informations as mutual informations -/
+/-! ### The three informations as (conditional) mutual informations -/
 
 theorem bcInfo₂_eq_mutualInfo_toReal {U : Type*}
     [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]

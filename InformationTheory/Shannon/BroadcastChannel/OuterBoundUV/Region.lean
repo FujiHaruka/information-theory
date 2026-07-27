@@ -276,7 +276,7 @@ lemma IsUVChannelLaw.map_U_X_Y₁_Y₂ {W : BCChannel α β₁ β₂} [IsMarkovK
   rw [← hpair, Measure.map_map MeasurableEquiv.prodAssoc.measurable hpairmeas]
   rfl
 
-/-! ### The Markov chains and the cloud quadruple -/
+/-! ### The Markov chains carried by a channel law -/
 
 section Transport
 
