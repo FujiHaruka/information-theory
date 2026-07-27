@@ -119,6 +119,7 @@ import InformationTheory.Shannon.BroadcastChannel.OuterBound
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Gateway
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Bridge
+import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Region
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Assembly
 import InformationTheory.Shannon.RelayCutset
 import InformationTheory.Shannon.BlockwiseChannel.Definition
