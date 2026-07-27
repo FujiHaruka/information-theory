@@ -39,6 +39,9 @@ each summand of the bound with an information slot of that law.
   bound, as functionals of a five-tuple law `(U, V, X, Y₁, Y₂)`.  The subscript of a sum-rate
   slot names the corner slot it extends, so `uvInfoSum₂` leads with `uvInfo₂` and `uvInfoSum₁`
   with `uvInfo₁`.
+* `uvInfoJoint` — the input-output information `I(X; Y₁)` of the same law.  It is not a slot of
+  the outer bound; it is the common upper bound the two comparison bounds of a more capable
+  channel take.
 * `bcUVTuple` — the letter-`i` five-tuple of the two padded auxiliaries, the input letter and
   the two output letters.
 * `bcUVJointDistribution` — the law of that five-tuple under the ambient.
@@ -92,6 +95,8 @@ inequalities.  `uvInfoSum₂` and `uvInfoSum₁` take `[IsFiniteMeasure ν]` sin
 `condMutualInfo` does, while the two corner slots need nothing beyond measurability.  The four
 are declared in the field order of `InBCOuterRegionUV` (`bound₁`, `bound₂`, `sumBound₂`,
 `sumBound₁`) rather than by subscript, so that an instantiation reads down the structure.
+`uvInfoJoint` comes after them because it mentions neither auxiliary and so answers to no field
+of that structure.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -763,7 +768,7 @@ end Pad
 
 section PerLetterInfo
 
-/-! ### The four information slots of a five-tuple law -/
+/-! ### The information slots of a five-tuple law -/
 
 section Slots
 
@@ -791,6 +796,10 @@ noncomputable def uvInfoSum₂ (ν : Measure (U × V × α × β₁ × β₂)) [
 @audit:ok -/
 noncomputable def uvInfoSum₁ (ν : Measure (U × V × α × β₁ × β₂)) [IsFiniteMeasure ν] : ℝ≥0∞ :=
   uvInfo₁ ν + condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.2.1)
+
+/-- The input-output information `I(X; Y₁)` of a five-tuple law `(U, V, X, Y₁, Y₂)`. -/
+noncomputable def uvInfoJoint (ν : Measure (U × V × α × β₁ × β₂)) : ℝ≥0∞ :=
+  mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
 
 end Slots
 

@@ -17,13 +17,13 @@ capable one needs.  The companion bound at the receiver-2 corner, `I(U; Y₂) �
 same comparison composed with the data processing inequality along `U → X → Y₂`; it is what the
 sum constraint degenerates to once the first rate is clamped at zero.
 
-The right-hand side of both bounds is `I(X; Y₁)`, the information the input carries about the
+The right-hand side of both bounds is `uvInfoJoint`, the information the input carries about the
 first output.  It is the slot of a five-tuple law that the two-constraint inner bound never
-needed, so this file names it and records the three facts the assembly asks of it: relabeling the
-auxiliaries leaves it alone, time sharing leaves it alone, and it is concave in the law, so a
-positive multiple of it survives the mixture that repairs full support.
+needed, and this file records the two facts the assembly asks of it beyond its invariance under
+relabeling: time sharing leaves it alone, and it is concave in the law, so a positive multiple of
+it survives the mixture that repairs full support.
 
-Naming that slot is what lets the inner bound keep the sum-rate constraint a general broadcast
+Keeping that slot is what lets the inner bound keep the sum-rate constraint a general broadcast
 channel needs, instead of the two-constraint region that is exact only over a less noisy one.
 Time sharing between a rate pair and the corner where the cloud auxiliary is constant meets the
 two separate constraints at once, and the sum constraint survives the segment because the
@@ -44,7 +44,6 @@ comparison bounds is spent.
 
 ## Main definitions
 
-* `uvInfoJoint ν` — the information `I(X; Y₁)` of a five-tuple law.
 * `bcSuperpositionRegionSumRate W` — the superposition inner bound with its sum-rate constraint
   kept, as a union over the auxiliary alphabets, restricted to the full-support indices.
 
@@ -220,28 +219,6 @@ theorem IsBCMoreCapable.condMutualInfo_le {W : BCChannel α β₁ β₂} [IsMark
 end Slots
 
 end Conditional
-
-/-! ## The input-output slot of a five-tuple law -/
-
-section JointSlot
-
-variable {α β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
-variable {U V U' V' : Type*} [MeasurableSpace U] [MeasurableSpace V]
-  [MeasurableSpace U'] [MeasurableSpace V']
-
-/-- The input-output information `I(X; Y₁)` of a five-tuple law `(U, V, X, Y₁, Y₂)`. -/
-noncomputable def uvInfoJoint (ν : Measure (U × V × α × β₁ × β₂)) : ℝ≥0∞ :=
-  mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
-
-lemma uvInfoJoint_map_uvRelabel (ν : Measure (U × V × α × β₁ × β₂))
-    {e₁ : U → U'} {e₂ : V → V'} (he₁ : Measurable e₁) (he₂ : Measurable e₂) :
-    uvInfoJoint (ν.map (uvRelabel e₁ e₂)) = uvInfoJoint ν := by
-  rw [uvInfoJoint, uvInfoJoint,
-    mutualInfo_map_comp ν (uvRelabel e₁ e₂) (measurable_uvRelabel he₁ he₂)
-      (fun q ↦ q.2.2.1) (by fun_prop) (fun q ↦ q.2.2.2.1) (by fun_prop)]
-  rfl
-
-end JointSlot
 
 section Collapse
 
@@ -567,9 +544,7 @@ lemma exists_bcInfo_ge_sumRate_of_tagged (W : BCChannel α β₁ β₂) [IsMarko
   refine ⟨2 * m + 1, uvCloudLaw ν', inferInstance, uvSatelliteKernel ν', inferInstance, ?_, ?_, ?_⟩
   · rw [bcInfo₁_uvCloudLaw W hlaw, hcmi]; exact h₁
   · rw [bcInfo₂_uvCloudLaw W hlaw, hinfo₂]; exact h₂
-  · rw [bcInfoJoint_uvCloudLaw W hlaw, show
-      mutualInfo ν' (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) = uvInfoJoint ν' from rfl, hjoint]
-    exact hJ
+  · rw [bcInfoJoint_uvCloudLaw W hlaw, hjoint]; exact hJ
 
 theorem exists_bcInfo_ge_sumRate_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {m : ℕ} {ν : Measure (Marton.bcAuxAlphabet.{u} m × V × α × β₁ × β₂)} [IsProbabilityMeasure ν]
@@ -775,8 +750,7 @@ theorem exists_fullSupport_bcInfo_ge_sumRate_of_isUVChannelLaw (W : BCChannel α
     have hge := mul_uvInfo₂_sub_binEntropy_le_uvInfo₂_uvPerturbLaw W (ν := ν) v₀ hlam1
     rw [hlamR, Real.binEntropy_one_sub, ← hB'] at hge
     nlinarith
-  · rw [bcInfoJoint_uvCloudLaw W hlaw,
-      show mutualInfo μ' (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) = uvInfoJoint μ' from rfl]
+  · rw [bcInfoJoint_uvCloudLaw W hlaw]
     have hge := mul_uvInfoJoint_le_uvInfoJoint_uvPerturbLaw W h v₀ hlam1
     have hfin : uvInfoJoint μ' ≠ ∞ :=
       mutualInfo_ne_top_of_fintype_right μ' _ _ (by fun_prop) (by fun_prop)

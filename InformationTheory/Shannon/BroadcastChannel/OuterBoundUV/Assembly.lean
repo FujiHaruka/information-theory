@@ -163,6 +163,14 @@ lemma uvInfo₂_map_uvRelabel (ν : Measure (U × V × α × β₁ × β₂)) [I
     (measurable_snd.comp (measurable_snd.comp (measurable_snd.comp measurable_snd)))
     he₁ hd₁ h₁
 
+lemma uvInfoJoint_map_uvRelabel (ν : Measure (U × V × α × β₁ × β₂))
+    {e₁ : U → U'} {e₂ : V → V'} (he₁ : Measurable e₁) (he₂ : Measurable e₂) :
+    uvInfoJoint (ν.map (uvRelabel e₁ e₂)) = uvInfoJoint ν := by
+  rw [uvInfoJoint, uvInfoJoint,
+    mutualInfo_map_comp ν (uvRelabel e₁ e₂) (measurable_uvRelabel he₁ he₂)
+      (fun q ↦ q.2.2.1) (by fun_prop) (fun q ↦ q.2.2.2.1) (by fun_prop)]
+  rfl
+
 section Sum
 
 variable [StandardBorelSpace α] [Nonempty α]

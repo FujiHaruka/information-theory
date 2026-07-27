@@ -354,7 +354,7 @@ omit [StandardBorelSpace U] [Nonempty U] [Fintype β₁] [MeasurableSingletonCla
 lemma condMutualInfo_uvTagConst (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
     (u₀ : U) :
     condMutualInfo (uvTagConst ν u₀) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
-      = mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) := by
+      = uvInfoJoint ν := by
   rw [condMutualInfo_map_comp' ν (uvRelabel (fun _ : U ↦ (false, u₀)) id)
     (measurable_uvRelabel measurable_const measurable_id) (uvTagConst ν u₀)
     (uvTagConst_eq_map ν u₀)
@@ -368,7 +368,7 @@ lemma condMutualInfo_uvTimeShareLaw (ν : Measure (U × V × α × β₁ × β�
     condMutualInfo (uvTimeShareLaw ν u₀ lam)
         (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
       = lam * condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
-        + (1 - lam) * mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) := by
+        + (1 - lam) * uvInfoJoint ν := by
   have hX : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.1) := by fun_prop
   have hY₁ : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.2.1) := by fun_prop
   have hU : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.1) := measurable_fst
@@ -474,8 +474,7 @@ theorem bcInfo₁_uvCloudLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
 
 theorem bcInfoJoint_uvCloudLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {ν : Measure (U × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) :
-    bcInfoJoint (uvCloudLaw ν) (uvSatelliteKernel ν) W
-      = (mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)).toReal := by
+    bcInfoJoint (uvCloudLaw ν) (uvSatelliteKernel ν) W = (uvInfoJoint ν).toReal := by
   rw [bcInfoJoint_eq_mutualInfo_toReal, bcJointDistribution_uvCloudLaw W h,
     mutualInfo_map_comp ν _ (by fun_prop) _ (by fun_prop) _ (by fun_prop)]
   congr 1
@@ -492,6 +491,7 @@ theorem bcInfoJoint_uvCloudLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     condMutualInfo_eq_zero_of_markov ν (fun q ↦ q.1) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
       (by fun_prop) (by fun_prop) (by fun_prop) h.isMarkovChain_U_X_Y₁
   rw [hswap, hchain, hzero, add_zero]
+  rfl
 
 end Bridge
 
@@ -582,11 +582,11 @@ theorem exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw (W : BCChannel α β₁ 
     have := uvInfoSum₂_ne_top ν
     simp only [uvInfoSum₂, ENNReal.add_ne_top] at this
     exact this.2
-  have hJfin : mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) ≠ ∞ :=
+  have hJfin : uvInfoJoint ν ≠ ∞ :=
     mutualInfo_ne_top_of_fintype_right ν _ _ (by fun_prop) (by fun_prop)
   set a := (condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)).toReal with ha'
   set b := (uvInfo₂ ν).toReal with hb'
-  set J := (mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)).toReal with hJ'
+  set J := (uvInfoJoint ν).toReal with hJ'
   have ha : 0 ≤ a := ENNReal.toReal_nonneg
   have hb : 0 ≤ b := ENNReal.toReal_nonneg
   -- The sum-rate slot splits into the two slots, both of which are finite.
