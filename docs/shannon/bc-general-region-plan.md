@@ -185,7 +185,7 @@ M0 在庫は [`bc-lessnoisy-equality-inventory.md`](bc-lessnoisy-equality-invent
 | step | 成果 | commit |
 |---|---|---|
 | **S0–S4** 達成側の factor out (`bc_achievability_of_rate_lt`、**レートの符号制約を撤廃**、`bc_achievability` の署名は逐語不変) + `Superposition/Region.lean` 新設 + スロット同定 3 本 **41 行** + 四つ組法 / Markov 鎖 3 本 **74 行** | **S3 / S4 は自作した数学 0 行** (既存部品の合成、S4 の親玉は 13 行)。F-a の上流移動が前提だった | `06817339`…`a97fde13` / `102d514a` `28aafa87` |
-| **S5 / S6** 有限量子化 + 裾評価 **289 行** (見積 280) / 時分割の補助への吸収 **545 行** (見積 440、判断ログ 23) | `Quantization.lean` / `Superposition/TimeShare.lean` 新設。S6 の自作は 3 本 45 行だけ | `c3508204`…`47933abd` / `70fc424e`…`dd981e01` |
+| **S5 / S6** 有限量子化 + 裾評価 **375 行** (style 後 382。在庫の見積 280 に対し **+34% の上振れ**) / 時分割の補助への吸収 **544 行** (flags 後 545。見積 440 = 帯 380–480 の**上端を +13% 超過**、判断ログ 23) | `Quantization.lean` / `Superposition/TimeShare.lean` 新設。S6 の自作は 3 本 45 行だけ | `c3508204`…`47933abd` / `70fc424e`…`dd981e01` |
 | **S7** 全支持への摂動 | **802 行** (plan の粗見積 ~120 は**約 6.5 倍の外れ**。在庫 probe が着手前に帯 720–850 へ上方修正し実測はその中、判断ログ 23)。`Superposition/FullSupport.lean` 新設 44 decl、M0 在庫 [`bc-s7-fullsupport-inventory.md`](bc-s7-fullsupport-inventory.md) | `560c3399` `069c6016` |
 | **S8** 逆包含の組み立て + headline 等号 | **新設 163 行 / 7 decl + 上流移動 15 行 = 合算 178 行** (plan の粗見積 `~90 行` は**約 2 倍の外れ**、在庫の帯 175–215 の下端)。M0 在庫 [`bc-s8-assembly-inventory.md`](bc-s8-assembly-inventory.md)。**自作した数学は 0 行** — 5 本すべてが既存資産の連結 | `7aac8226` `3ca197cd` `558b3fca` |
 
@@ -238,7 +238,7 @@ umbrella なし・namespace 不変。import 書換は予測どおり 7 行で外
 `uvLawOfInput` の dirac 特殊化に畳む (`bf8519c6`) / **F-22** S6 の分岐クラスタを一般混合 `uvMixLaw` に
 畳む (`d5a30401`) / **F-c** `ℝ≥0∞` の引き算形 4 箇所を Mathlib の `ENNReal.toReal_le_add`
 (`Mathlib/Data/ENNReal/Operations.lean:170`) の 1 呼び出しずつに置換 (`114d7654`)。
-refactor leg (F-19 / F-21 / F-22 / F-c) の実測は 5 ファイル / +196 −281 = **−85 行** (予測 −95 との差は
+refactor leg (F-19 / F-21 / F-22 / F-c) の実測は 5 ファイル / +199 −284 = **−85 行** (予測 −95 との差は
 F-22 が要求した新規 2 本 `uvCollapse` / `uvTagConst_eq_map` の +16 行)、style **PASS** (`d0ac3aed`)。
 **F-c は自作の共有補助を 1 本も書いていない**ので、置き場の判断は消滅し **F-15 の移設束に何も足さない**
 (`ENNReal.toReal_le_add` は置換前の in-project consumer が 0 だった = 誰も見つけていなかった)。
@@ -389,6 +389,20 @@ F-22 が要求した新規 2 本 `uvCollapse` / `uvTagConst_eq_map` の +16 行)
     (calc 形) と `MultipleAccess/TimeSharingConverse/Assembly.lean:123` (`rw [← ENNReal.toReal_add …]` 形)。
     どちらも `ENNReal.toReal_le_add` の 1 呼び出しに潰れる。refactor leg の brief 外だったので手を
     付けていない (**新しい数学 0 行、2 ファイル**)
+26. **2 本の在庫が誤った S5 行数を較正基準として引用している (⚠ 記録のみ — 在庫は編集しない)** —
+    `bc-s6-timesharing-inventory.md:338` は「S5 が 280→289 で的中したのと同じ構造だから**下振れ**は
+    期待できない」、`bc-s7-fullsupport-inventory.md:306` は「同じ構造だから**上振れ**は期待しない」と
+    書く。**同じ 1 つの数値が逆向きの 2 主張を支えている**のが徴候で、伝播したのは測定値ではなく
+    「的中した」という評価語 (S6 は直後に帯の上端を +13% 超過した)。真値は as-landed 375 / style 後
+    382 = **+34% の上振れ** ⟹ **次の在庫 leg はこの 2 文のどちらも較正基準として引かないこと**。
+    在庫は履歴記録なので本 family の規約どおり訂正しない (経緯は
+    [`proof-log-bc-lessnoisy-equality.md`](../proof-logs/proof-log-bc-lessnoisy-equality.md) §8)
+27. **行数の機械照合を `scripts/plan_lint.ts` に足す (本 plan の範囲外・記録のみ)** — commit hash と
+    併記された**ファイル単位**の行数は `git show <commit>:<path> | wc -l` で機械照合できるのに、
+    現行 linter は decl / `file:line` / wall slug しか突き合わせていない。F-26 の誤記はこの規則が
+    あれば書いた時点で落ちていた。**起票先は `scripts/` 側で BC の leg は実装しない** (F-9 / F-17 と
+    同じ扱い)。⚠ 射程はファイル単位まで — S0–S4 行の `41 行` / `74 行` のような**宣言クラスタ単位**の
+    数値は数え方が規約化されておらず機械照合できない (`102d514a` の実挿入は +59 / +102 行)
 
 以下は橋 S5 / S6 の style ゲートが提起 (F-a / F-c は完了済):
 
@@ -529,13 +543,18 @@ S0 factor out ✅ → S1 less noisy 接続 ✅ → S2 内界の集合化 ✅ →
     (どのクラスで発火するかまで詰めないと、下流に建てた目標が丸ごと偽になる)。(b) **「内界 ⊆ 容量
     領域」を持つことは「その内界で等号が狙える」を意味しない** — 等号の相手として使う前に、既知の
     到達点がその内界に入るかを 1 度数値で当たる。
-23. **plan の粗見積りは在庫 probe で必ず上書きする (S7 で 6.5 倍 / S8 で約 2 倍の外れ)**: S7 は
-    plan `~120 行` に対し在庫 probe が帯 720–850 と判定し実測 802 行、S8 は plan `~90 行` に対し
-    在庫が帯 175–215 と判定し実測 178 行 — **どちらも実測は在庫の帯の中で、plan の外**。
-    ⟹ **probe を持たない見積りは桁で外れうる** — 裏面として、probe があれば**数学の**行数は当たる
-    (S5 = probe 147 行 → 実測 289 行)。当たらないのは module doc や `omit` 最小化のための `variable`
-    束分割で、S6 は probe 295 行 → 実測 545 行 (+24%) の増分がほぼこれだった ⟹ **見積りは「数学」と
-    「散文・section 構造」を別枠で積む**。S7 では**署名の高さの予測も外れた**: plan の「摂動対象は `(pU, K)` では
+23. **plan の粗見積りは在庫 probe で必ず上書きする。ただし probe 行数は「下限」であって予測ではない
+    (S7 で 6.5 倍 / S8 で約 2 倍の外れ)**: S7 は plan `~120 行` に対し在庫 probe が帯 720–850 と判定し
+    実測 802 行、S8 は plan `~90 行` に対し在庫が帯 175–215 と判定し実測 178 行 — **どちらも実測は
+    在庫の帯の中で、plan の外** ⟹ **probe を持たない見積りは桁で外れうる**。
+    ⚠ **本項が以前書いていた「probe があれば数学の行数は当たる」は誤りだった** — 根拠にしていた
+    S5 の実測値が誤記 (`289 行` と記録。真値は as-landed **375**、style 後 382) で、正すと
+    probe 147 → 375 は **+155%**、S6 も probe 295 → 544 は **+84%** の上振れ。probe が覆うのは
+    **その probe に書いた分だけ**で、それが数学の全量である保証はどこにもない。帯が当たり始めたのは
+    S7 以降で、効いたのは probe の存在ではなく**見積り表を「数学 (probe 実測) / 散文・section」の
+    2 列に割り module doc を独立行に立てた**こと (S5 / S6 の在庫はこれを積んでいなかった) ⟹
+    **見積りは「数学」と「散文・section 構造」を別枠で積み、probe 行数は下限として読む**。
+    誤記の伝播経路と再発防止は §後続作業 F-26 / F-27。S7 では**署名の高さの予測も外れた**: plan の「摂動対象は `(pU, K)` では
     なく `ν'`」は内部実装としては真だが、S6 の到達点が `ν` を存在量化して捨てるため法 → 法では
     合成できず、headline は対レベルに置かざるを得なかった ⟹ **step をまたぐ設計判断は「何を
     摂動するか」ではなく「前 step の到達点が何を返すか」で決まる** (11-(g) の署名版)。
