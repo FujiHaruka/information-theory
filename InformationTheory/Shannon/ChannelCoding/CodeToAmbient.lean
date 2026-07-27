@@ -31,6 +31,14 @@ instantiates them by supplying its own encoder and channel.
   retracts onto the input letter, which is what lets a padded auxiliary variable sit there.
 * `compProd_comap_map_prodMap`: a composition product with a comapped kernel is the composition
   product of the pushed-forward measure with the kernel itself.
+* `compProd_map_prodMap`: the two-sided form of the previous item — a composition product
+  transported by a pair of maps, one on the base and one on the fibre, provided the kernel's
+  dependence on the base factors through the base map.
+* `pi_map_comp_injective`: a finite product measure reindexed along an injection is the product
+  measure of the reindexed family.
+* `piBlockKernel`, `pi_map_unzip_eq_compProd`: a product of laws each of which is its own first
+  marginal followed by a kernel `Q`, read as a pair of blocks, is the composition product of the
+  product of the first marginals with the blockwise product of `Q`.
 * `mutualInfo_map_comp`, `condDistrib_map_comp`, `condMutualInfo_map_comp`: information
   quantities and conditional distributions are invariant under a shared pushforward of all their
   arguments.
@@ -163,7 +171,7 @@ lemma isMarkovChain_of_compProd_encoder
     funext y; show G (g m, m) = _; rw [hG_def]
   rw [hRHSconst, lintegral_const, measure_univ, mul_one]
 
-/-! ### Marginalizing a product measure at one coordinate -/
+/-! ### Marginalizing and reindexing a product measure -/
 
 /-- Re-randomizing a single coordinate of a product of probability measures leaves the
 `Measure.pi`-integral unchanged.  Used to peel the `i`-th output letter off the block channel
@@ -197,6 +205,50 @@ lemma lintegral_pi_eval {γ : Type*} [MeasurableSpace γ]
   rw [lintegral_pi_reRandomize ζ i (fun y ↦ g (y i)) (hg.comp (measurable_pi_apply i))]
   simp only [Function.update_self]
   rw [lintegral_const, measure_univ, mul_one]
+
+lemma pi_map_comp_injective {γ : Type*} [MeasurableSpace γ] {k m : ℕ}
+    (ν : Fin m → Measure γ) [∀ j, IsProbabilityMeasure (ν j)]
+    (e : Fin k → Fin m) (he : Function.Injective e) :
+    (Measure.pi ν).map (fun y j ↦ y (e j)) = Measure.pi fun j ↦ ν (e j) := by
+  classical
+  have hmap : Measurable (fun (y : Fin m → γ) (j : Fin k) ↦ y (e j)) :=
+    measurable_pi_lambda _ fun j ↦ measurable_pi_apply (e j)
+  refine (Measure.pi_eq fun s hs ↦ ?_).symm
+  set t : Fin m → Set γ := Function.extend e s fun _ ↦ Set.univ with ht_def
+  have ht_mem : ∀ j : Fin k, t (e j) = s j := fun j ↦ he.extend_apply s _ j
+  have ht_not : ∀ i : Fin m, (¬ ∃ j, e j = i) → t i = Set.univ :=
+    fun i hi ↦ Function.extend_apply' s _ i hi
+  have hpre : (fun (y : Fin m → γ) (j : Fin k) ↦ y (e j)) ⁻¹' (Set.univ.pi s)
+      = Set.univ.pi t := by
+    ext y
+    simp only [Set.mem_preimage, Set.mem_pi, Set.mem_univ, forall_const]
+    constructor
+    · intro h i
+      by_cases hi : ∃ j, e j = i
+      · obtain ⟨j, rfl⟩ := hi
+        rw [ht_mem j]
+        exact h j
+      · rw [ht_not i hi]
+        trivial
+    · intro h j
+      rw [← ht_mem j]
+      exact h (e j)
+  have ht_meas : ∀ i, MeasurableSet (t i) := by
+    intro i
+    by_cases hi : ∃ j, e j = i
+    · obtain ⟨j, rfl⟩ := hi
+      rw [ht_mem j]
+      exact hs j
+    · rw [ht_not i hi]
+      exact MeasurableSet.univ
+  rw [Measure.map_apply hmap (MeasurableSet.univ_pi hs), hpre, Measure.pi_pi]
+  have hprod : ∏ i ∈ Finset.univ.image e, ν i (t i) = ∏ i : Fin m, ν i (t i) := by
+    refine Finset.prod_subset (Finset.subset_univ _) fun i _ hi ↦ ?_
+    have hi' : ¬ ∃ j, e j = i := fun ⟨j, hj⟩ ↦
+      hi (Finset.mem_image.mpr ⟨j, Finset.mem_univ j, hj⟩)
+    rw [ht_not i hi', measure_univ]
+  rw [← hprod, Finset.prod_image fun x _ y _ h ↦ he h]
+  exact Finset.prod_congr rfl fun j _ ↦ by rw [ht_mem j]
 
 /-! ### Per-letter conditional independence, memorylessness and the joint law -/
 
@@ -357,6 +409,18 @@ lemma compProd_comap_map_prodMap {A A' B : Type*} [MeasurableSpace A] [Measurabl
     Measure.lintegral_compProd hf, lintegral_map hin hg]
   rfl
 
+lemma compProd_map_prodMap {Z Z' B B' : Type*} [MeasurableSpace Z] [MeasurableSpace Z']
+    [MeasurableSpace B] [MeasurableSpace B']
+    (ρ : Measure Z) [SFinite ρ] (κ : Kernel Z B) [IsMarkovKernel κ]
+    {f : Z → Z'} (hf : Measurable f) {g : B → B'} (hg : Measurable g)
+    (κ' : Kernel Z' B') [IsMarkovKernel κ']
+    (hκ : κ.map g = κ'.comap f hf) :
+    (ρ ⊗ₘ κ).map (Prod.map f g) = (ρ.map f) ⊗ₘ κ' := by
+  have h1 : (Prod.map f g : Z × B → Z' × B')
+      = (fun z : Z × B' ↦ (f z.1, z.2)) ∘ (Prod.map id g) := rfl
+  rw [h1, ← Measure.map_map (by fun_prop) (by fun_prop), ← Measure.compProd_map hg, hκ,
+    compProd_comap_map_prodMap ρ κ' hf]
+
 /-- Per-letter joint pushforward of a product-channel `compProd`: for an ambient `ν ⊗ₘ κ`
 whose message-to-output kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)`, the
 joint law of the `i`-th input-output pair `(x ω.1 i, ω.2 i)` is the channel joint
@@ -426,6 +490,95 @@ lemma compProd_pi_map_pair_eq_of_update_invariant
     rw [Kernel.comap_apply, hgG (m, y)]
   rw [hker]
   exact lintegral_congr fun b ↦ by rw [hGupd m y b, Function.update_self i b y]
+
+/-! ### Unzipping a product of two-stage laws -/
+
+lemma measure_singleton_eq_mul_of_append {A B : Type*}
+    [Fintype A] [MeasurableSpace A] [MeasurableSingletonClass A]
+    [MeasurableSpace B] [MeasurableSingletonClass B]
+    (Q : Kernel A B) [IsMarkovKernel Q] (ρ : Measure (A × B))
+    (hρ : ρ = (ρ.map Prod.fst).bind fun a ↦ (Q a).map fun b ↦ (a, b))
+    (a : A) (b : B) :
+    ρ {(a, b)} = (ρ.map Prod.fst) {a} * Q a {b} := by
+  classical
+  have key : ∀ a' : A, ((Q a').map fun b' ↦ (a', b')) {(a, b)}
+      = if a' = a then Q a {b} else 0 := by
+    intro a'
+    rw [Measure.map_apply (by fun_prop) (measurableSet_singleton _)]
+    by_cases h : a' = a
+    · subst h
+      rw [if_pos rfl]
+      congr 1
+      ext b'
+      simp
+    · rw [if_neg h]
+      convert measure_empty (μ := Q a')
+      ext b'
+      simp [Prod.ext_iff, h]
+  conv_lhs => rw [hρ]
+  rw [Measure.bind_apply (measurableSet_singleton _) (measurable_of_countable _).aemeasurable,
+    lintegral_fintype, Finset.sum_eq_single a]
+  · rw [key a, if_pos rfl, mul_comm]
+  · intro a' _ hne
+    rw [key a', if_neg hne, zero_mul]
+  · intro h
+    simp at h
+
+/-- The blockwise product `u ↦ ∏ⱼ Q (u j)` of a kernel `Q` out of a finite alphabet.
+
+Mathlib has no `Kernel.pi`; over a countable alphabet with measurable singletons the family of
+product measures is a kernel for free, which is what `Kernel.ofFunOfCountable` supplies here. -/
+noncomputable def piBlockKernel {A B : Type*} [Fintype A] [MeasurableSpace A]
+    [MeasurableSingletonClass A] [MeasurableSpace B] {k : ℕ} (Q : Kernel A B) :
+    Kernel (Fin k → A) (Fin k → B) :=
+  Kernel.ofFunOfCountable fun u ↦ Measure.pi fun j ↦ Q (u j)
+
+instance piBlockKernel_isMarkovKernel {A B : Type*} [Fintype A] [MeasurableSpace A]
+    [MeasurableSingletonClass A] [MeasurableSpace B] {k : ℕ} (Q : Kernel A B) [IsMarkovKernel Q] :
+    IsMarkovKernel (piBlockKernel (k := k) Q) := by
+  refine ⟨fun u ↦ ?_⟩
+  change IsProbabilityMeasure (Measure.pi fun j ↦ Q (u j))
+  infer_instance
+
+lemma pi_map_unzip_eq_compProd {A B : Type*}
+    [Fintype A] [MeasurableSpace A] [MeasurableSingletonClass A]
+    [Fintype B] [MeasurableSpace B] [MeasurableSingletonClass B]
+    {k : ℕ} (Q : Kernel A B) [IsMarkovKernel Q]
+    (ρ : Fin k → Measure (A × B)) [∀ j, IsProbabilityMeasure (ρ j)]
+    (hρ : ∀ j, ρ j = ((ρ j).map Prod.fst).bind fun a ↦ (Q a).map fun b ↦ (a, b)) :
+    (Measure.pi ρ).map (fun y ↦ ((fun j ↦ (y j).1), (fun j ↦ (y j).2)))
+      = (Measure.pi fun j ↦ (ρ j).map Prod.fst) ⊗ₘ piBlockKernel Q := by
+  classical
+  refine Measure.ext_of_singleton fun p ↦ ?_
+  obtain ⟨u, v⟩ := p
+  have hmeas : Measurable
+      (fun y : Fin k → A × B ↦ ((fun j ↦ (y j).1), (fun j ↦ (y j).2))) := by fun_prop
+  have hpre : (fun y : Fin k → A × B ↦ ((fun j ↦ (y j).1), (fun j ↦ (y j).2))) ⁻¹' {(u, v)}
+      = {fun j ↦ (u j, v j)} := by
+    ext y
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.ext_iff, funext_iff, Prod.ext_iff]
+    constructor
+    · rintro ⟨h1, h2⟩; intro j; exact ⟨h1 j, h2 j⟩
+    · intro h; exact ⟨fun j ↦ (h j).1, fun j ↦ (h j).2⟩
+  rw [Measure.map_apply hmeas (measurableSet_singleton _), hpre, Measure.pi_singleton,
+    Measure.compProd_apply (measurableSet_singleton _)]
+  have hsec : ∀ w : Fin k → A, Prod.mk w ⁻¹' ({(u, v)} : Set ((Fin k → A) × (Fin k → B)))
+      = if w = u then {v} else ∅ := by
+    intro w
+    by_cases h : w = u
+    · subst h; ext z; simp
+    · ext z; simp [h]
+  simp_rw [hsec]
+  rw [lintegral_fintype, Finset.sum_eq_single u]
+  · rw [if_pos rfl, Measure.pi_singleton,
+      show (piBlockKernel Q) u = Measure.pi (fun j ↦ Q (u j)) from rfl, Measure.pi_singleton,
+      mul_comm, ← Finset.prod_mul_distrib]
+    exact Finset.prod_congr rfl fun j _ ↦
+      measure_singleton_eq_mul_of_append Q (ρ j) (hρ j) (u j) (v j)
+  · intro w _ hne
+    simp [hne]
+  · intro h
+    simp at h
 
 /-! ### Information transport under a shared pushforward -/
 

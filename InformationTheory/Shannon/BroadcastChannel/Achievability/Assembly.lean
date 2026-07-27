@@ -796,64 +796,6 @@ theorem bc_exists_codebook_le_avg
 
 /-! #### Degradedness and rate slack -/
 
-/-- Kernel identity: composing `κ` with a conditioner-only append `prodMkRight A' Q` equals
-the plain product kernel `κ ×ₖ Q`. -/
-private lemma kernel_compProd_prodMkRight_eq_prod
-    {Z' A' B' : Type*} [MeasurableSpace Z'] [MeasurableSpace A'] [MeasurableSpace B']
-    (κ : Kernel Z' A') [IsSFiniteKernel κ] (Q : Kernel Z' B') [IsSFiniteKernel Q] :
-    κ ⊗ₖ Kernel.prodMkRight A' Q = κ ×ₖ Q := by
-  rw [Kernel.ext_fun_iff]
-  intro z f hf
-  rw [Kernel.lintegral_compProd _ _ _ hf, Kernel.lintegral_prod _ _ _ hf]
-  rfl
-
-/-- If the target `Bs` is generated from the conditioner `Zc` by a Markov kernel `Q` (an
-append that ignores `As`), then `As → Zc → Bs` is a Markov chain.  This is the stochastic
-analogue of `isMarkovChain_comp_conditioner_right`, whose right endpoint is only a
-*deterministic* function of the conditioner. -/
-private lemma isMarkovChain_of_append
-    {Ω' A' Z' B' : Type*}
-    [MeasurableSpace Ω'] [MeasurableSpace A'] [MeasurableSpace Z'] [MeasurableSpace B']
-    [StandardBorelSpace A'] [Nonempty A']
-    [StandardBorelSpace B'] [Nonempty B']
-    (μ : Measure Ω') [IsProbabilityMeasure μ]
-    (As : Ω' → A') (Zc : Ω' → Z') (Bs : Ω' → B')
-    (hAs : Measurable As) (hZc : Measurable Zc) (hBs : Measurable Bs)
-    (Q : Kernel Z' B') [IsMarkovKernel Q]
-    (h_app : μ.map (fun ω ↦ ((Zc ω, As ω), Bs ω))
-           = (μ.map (fun ω ↦ (Zc ω, As ω))) ⊗ₘ (Kernel.prodMkRight A' Q)) :
-    IsMarkovChain μ As Zc Bs := by
-  haveI : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc.aemeasurable
-  have hZcAs : Measurable (fun ω ↦ (Zc ω, As ω)) := hZc.prodMk hAs
-  have hg : Measurable (fun p : (Z' × A') × B' ↦ (p.1.1, p.2)) :=
-    (measurable_fst.comp measurable_fst).prodMk measurable_snd
-  have hmarg : μ.map (fun ω ↦ (Zc ω, Bs ω)) = (μ.map Zc) ⊗ₘ Q := by
-    have e1 : μ.map (fun ω ↦ (Zc ω, Bs ω))
-        = (μ.map (fun ω ↦ ((Zc ω, As ω), Bs ω))).map (fun p : (Z' × A') × B' ↦ (p.1.1, p.2)) := by
-      rw [Measure.map_map hg (hZcAs.prodMk hBs)]; rfl
-    rw [e1, h_app]
-    refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
-    have hF : Measurable (fun z ↦ ∫⁻ b, f (z, b) ∂(Q z)) :=
-      hf.lintegral_kernel_prod_right'
-    have hF2 : Measurable (fun a : (Z' × A') × B' ↦ f (a.1.1, a.2)) := hf.comp hg
-    rw [lintegral_map hf hg, Measure.lintegral_compProd hF2,
-        Measure.lintegral_compProd hf]
-    have hfst : μ.map Zc = (μ.map (fun ω ↦ (Zc ω, As ω))).map Prod.fst := by
-      rw [Measure.map_map measurable_fst hZcAs]; rfl
-    rw [hfst, lintegral_map hF measurable_fst]
-    rfl
-  have hcd_B : condDistrib Bs Zc μ =ᵐ[μ.map Zc] Q :=
-    condDistrib_ae_eq_of_measure_eq_compProd Zc hBs.aemeasurable hmarg
-  unfold IsMarkovChain
-  have hLHS : μ.map (fun ω ↦ (Zc ω, As ω, Bs ω))
-      = (μ.map (fun ω ↦ ((Zc ω, As ω), Bs ω))).map MeasurableEquiv.prodAssoc := by
-    rw [Measure.map_map MeasurableEquiv.prodAssoc.measurable (hZcAs.prodMk hBs)]; rfl
-  rw [hLHS, h_app, ← compProd_map_condDistrib hAs.aemeasurable, Measure.compProd_assoc']
-  refine Measure.compProd_congr ?_
-  rw [kernel_compProd_prodMkRight_eq_prod]
-  filter_upwards [hcd_B] with z hz
-  rw [Kernel.prod_apply, Kernel.prod_apply, hz]
-
 /-- Under physical degradedness `W a = ((W a).map fst) >>= (append `Q`)`, the degraded output
 `Y₂` is appended to the `(Y₁, (U, X))` joint by the degrading kernel `Q` acting on `Y₁` alone. -/
 private lemma bcDegraded_append
