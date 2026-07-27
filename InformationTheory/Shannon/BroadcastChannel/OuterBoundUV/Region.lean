@@ -66,6 +66,11 @@ marginalization lemmas are each a rewrite chain; the first conjunct is recovered
 `IsUVChannelLaw.map_input_output`, and the second is the statement that the conditional law is
 read at the input coordinate only.
 
+`uvLawOfInput` is the construction appearing on the right of `isUVChannelLaw_iff`: together with
+`uvLawOfInput_isUVChannelLaw` it says that the channel laws are exactly the laws obtained by
+pushing a law of `(U, V, X)` through the channel, which is how a witness such as `uvConstLaw` is
+built and shown to index the union.
+
 Both auxiliary alphabets of `bcOuterRegionUV` are fixed to `ℕ` instead of being quantified over
 countable types, so the union ranges over measures rather than over types.  The closure is taken
 because a union of intersections of closed half-planes need not be closed, and because the

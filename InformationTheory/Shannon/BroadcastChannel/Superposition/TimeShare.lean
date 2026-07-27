@@ -24,11 +24,12 @@ The second endpoint is where a less noisy channel enters: it forces
 * `uvCloudLaw ν` and `uvSatelliteKernel ν` — the achievability pair read off a five-tuple law.
 * `boolLaw lam` — the Bernoulli tag law, clamped so that it is a probability measure for every
   weight.
-* `uvTagFalse σ`, `uvMixKernel ν σ` and `uvMixLaw ν σ lam` — two channel laws mixed along a
-  Bernoulli tag carried by the auxiliary.
-* `uvTagTrue ν`, `uvCollapse ν u₀` and `uvTagConst ν u₀` — the two branches, tagging the
-  auxiliary and collapsing it.
-* `uvTimeShareLaw ν u₀ lam` — the two branches mixed with weight `lam`.
+* `uvTagTrue ν`, `uvTagFalse σ`, `uvMixKernel ν σ` and `uvMixLaw ν σ lam` — two channel laws
+  mixed along a Bernoulli tag carried by the auxiliary, each of them keeping its auxiliary under
+  its own tag.
+* `uvCollapse ν u₀` and `uvTagConst ν u₀` — the law with its auxiliary collapsed to the constant
+  `u₀`, and its false-tagged copy.
+* `uvTimeShareLaw ν u₀ lam` — the law and its own collapsed copy mixed with weight `lam`.
 * `boolProdAuxEquiv m` — the tagged auxiliary alphabet re-encoded into `Marton.bcAuxAlphabet`.
 
 ## Main statements
@@ -41,6 +42,14 @@ The second endpoint is where a less noisy channel enters: it forces
 * `exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw` — over a less noisy channel, a rate pair
   satisfying the three UV outer inequalities of a channel law is dominated by the two
   informations of some achievability pair.
+
+## Implementation notes
+
+`uvMixLaw` mixes two arbitrary channel laws along the tag rather than a law and its own collapsed
+copy, because the same construction carries the perturbation toward the uniform law as well:
+forgetting the tag turns `uvMixLaw ν (uvUniformLaw W v₀) lam` into `uvPerturbLaw W ν v₀ lam`.
+Time sharing is the case where the second law is `uvCollapse ν u₀`, so `uvTimeShareLaw` is defined
+as that specialization and both mixtures share the lemmas about the tag.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -50,7 +59,7 @@ open scoped ENNReal Topology
 
 universe u
 
-/-! ## Time sharing on the auxiliary -/
+/-! ## Mixing two channel laws along a Bernoulli tag -/
 
 /-! ### The tag law -/
 
@@ -75,7 +84,7 @@ lemma lintegral_boolLaw (lam : ℝ≥0∞) (F : Bool → ℝ≥0∞) :
   rw [boolLaw, lintegral_add_measure, lintegral_smul_measure, lintegral_smul_measure,
     lintegral_dirac, lintegral_dirac, smul_eq_mul, smul_eq_mul]
 
-/-! ### The two branches and their mixture -/
+/-! ### The mixture of two tagged laws -/
 
 section Mixture
 
@@ -207,6 +216,13 @@ lemma uvMixLaw_map_tag (ν σ : Measure (U × V × α × β₁ × β₂)) [IsPro
     Measure.map_congr hae]
   exact Measure.fst_compProd _ _
 
+lemma uvInfo₂_uvTagTrue (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν] :
+    uvInfo₂ (uvTagTrue ν) = uvInfo₂ ν :=
+  uvInfo₂_map_uvRelabel ν (measurable_prodMk_left) measurable_id measurable_snd
+    (fun _ ↦ rfl)
+
+/-! ### Time sharing as the mixture with the collapsed law -/
+
 /-- The law with its auxiliary collapsed to the constant letter `u₀`. -/
 noncomputable def uvCollapse (ν : Measure (U × V × α × β₁ × β₂)) (u₀ : U) :
     Measure (U × V × α × β₁ × β₂) :=
@@ -253,11 +269,6 @@ lemma uvTimeShareLaw_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKern
     (u₀ : U) (lam : ℝ≥0∞) : IsUVChannelLaw W (uvTimeShareLaw ν u₀ lam) := by
   refine uvMixLaw_isUVChannelLaw W h ?_ lam
   exact h.map_auxiliaries measurable_const measurable_id
-
-lemma uvInfo₂_uvTagTrue (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν] :
-    uvInfo₂ (uvTagTrue ν) = uvInfo₂ ν :=
-  uvInfo₂_map_uvRelabel ν (measurable_prodMk_left) measurable_id measurable_snd
-    (fun _ ↦ rfl)
 
 end Mixture
 
