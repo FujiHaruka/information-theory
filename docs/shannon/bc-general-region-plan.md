@@ -10,11 +10,13 @@ Lean の 1 本の定理列として持つこと。
 ## 進捗
 
 - [x] Phase 1 操作的容量領域 (主語) ✅ `fd39ad95` `deb930a7`
-- [ ] Phase 2 補助変数 union (独立・park 可) 📋
+- [ ] Phase 2 補助変数 union 📋 **Phase 5 の等号の前提** (park 不可、判断ログ 11-(k))
 - [x] Phase 3 協調外界 (安い外界) ✅ `e9222d0a` `b9ba272a`
 - [x] Phase 4a UV 単一文字化 (floating 形) ✅ `5bf64adf` `f7023332` `bff554c2` `33ec3522` `54705cb3`
 - [x] Phase 4b UV 外界の集合化 + 操作的包含 ✅ `6ddb1a48` `bfdd55e1` `c768cc00` (**全平面版**)
 - [ ] Phase 5 一致クラスの拡張 🚧 ★現在の本線
+  - [x] 定義段 (符号規約の対称化 + 3 クラス + 包含鎖) ✅ `2c938fe0` `91fd8dcf` `e6ff1963` `42ac21e7`
+  - [ ] 等号 (容量領域の一致) 📋 — Phase 2 が前提
 
 ## 在庫
 
@@ -22,7 +24,8 @@ Lean の 1 本の定理列として持つこと。
 |---|---|---|
 | `BCAchievable` / `bcCapacityRegion` | `BroadcastChannel/Operational.lean:53` / `:68` | 主語。Phase 3/4b の包含の左辺 |
 | `bc_capacityRegion_isClosed` / `bc_achievable_mono` / `bc_mem_closure_of_strictly_below` | `Operational.lean:102` / `:71` / `:86` | 閉性・down-set 性・厳密不等号からの closure 回収 |
-| `martonRegion` / `marton_region_subset_capacity` | `Operational.lean:121` / `:149` | 内界の集合版と包含 (`@[entry_point]`) |
+| `martonRegion` / `bc_strict_interior_achievable` / `marton_region_subset_capacity` | `Operational.lean` (168 行 / 8 decl) | 内界の集合版と包含 (`@[entry_point]`)。**符号制約なしの全平面版** (`2c938fe0`、判断ログ 12) |
+| **比較クラス 3 本 + 包含鎖** | `BroadcastChannel/Classes.lean` (253 行 / 9 decl、import 2 本) | `IsBCLessNoisy:63` / `IsBCMoreCapable:75` / `IsBCSemiDeterministic:83` と `@[entry_point]` 4 本 `bc_lessNoisy_infoJoint_ge:95` / `IsBCDegraded.isBCLessNoisy:133` / `IsBCLessNoisy.isBCMoreCapable:218` / `IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero:236`。語彙橋 2 本 `bcJointDistribution_id_eq:166` / `mutualInfoOfChannel_map_eq_mutualInfo_bcJointDistribution:184` が `bcJointDistribution` 語彙と `mutualInfoOfChannel` 語彙を繋ぐ |
 | `bcOuterRegionCoop` / `bc_capacity_subset_coop` | `OuterBound.lean:380` / `:408` | 協調外界と包含 (`@[entry_point]`)。挟み込みの右辺 |
 | `BroadcastCode.restrict₁/₂` / `coop` + 誤り確率補題 | `OuterBound.lean:50`–`:262` | BC 符号 → 単一ユーザー符号への 3 通りの還元 |
 | `channelCoding_operational_rate_le_capacity` | `ChannelCoding/StrongConverseAsymptotic.lean:805` | 操作的レート ≤ 容量 (`@[entry_point]`)。Phase 3 の心臓 |
@@ -48,8 +51,13 @@ Lean の 1 本の定理列として持つこと。
 | `mac_avgPentagon_mem_convexHull` | `TimeSharingConverse/Bridge.lean:99` | n 文字平均を単一文字分布の凸包へ落とす先例。**4b では不採用** (案 A = 時間共有変数の補助変数への吸収を採ったため) |
 | `mac_capacity_region_reconciliation` | `MultipleAccess/Reconciliation.lean:292` | 内外を同じ言語に揃える先例 |
 
-**存在しないもの**: less noisy / more capable / semi-deterministic のクラス定義
-(project 全体で 0 hit) = Phase 5 の入口。Phase 4b が要求した資産は S1–S8-b で全部実在化した。
+**存在しないもの** (Phase 5 の等号が要求し、まだ書かれていないもの): (a) 内界側の補助変数 union
+(= Phase 2)、(b) more capable の 3 制約を受ける structure (`InBCCapacityRegion` は 2 field)、
+(c) `IsUVChannelLaw W (martonJointDistribution pV K W)` = 内外を同じ添字に載せる橋、
+(d) `IsBCDegraded W` から `bcConverseAmbient` 上の per-letter Markov 鎖 `h_deg_block` を出す補題
+(`bcConverse_deg*` は 0 hit)、(e) `(mutualInfo μ Xs Xs).toReal = entropy μ Xs` と決定的写像の条件付き
+エントロピー消失 (semi-deterministic の `H(Y₁)` 用)。**Mathlib 側の穴はゼロ** (在庫 §6、壁 0 件)。
+クラス定義そのものは `Classes.lean` で実在化済。
 
 ## ゴール / Approach
 
@@ -72,8 +80,9 @@ Approach は **「主語 → 安い外界で挟み込みの骨格 → 本命の�
 
 Phase 3 がこの分割を要求しなかったのは、Wolfowitz strong converse の対偶を使うことで **ambient
 の構成を丸ごと迂回できた**から。Fano ベースの UV 外界では同じ手が使えず、橋が不可避になる。
-なお degraded 版 `bc_converse` も floating 形で止まっているので、4b の橋は degraded 側にも効く
-共有資産になる。
+なお degraded 版 `bc_converse` も floating 形で止まっているが、**4b の橋がそのまま効くわけではない**
+— `bc_converse` は degradedness を ambient 上の per-letter Markov 鎖 `h_deg_block` で受けており、
+`bcConverse_*` にはこれを出す補題が無い (判断ログ 11-(n))。
 
 ## Phase 詳細
 
@@ -84,7 +93,7 @@ Phase 3 がこの分割を要求しなかったのは、Wolfowitz strong convers
 から使われていない正値仮説 2 本を除去 (定理が強くなる方向、consumer 0 件)。
 proof-log: no (MAC の写経で設計判断が無かったため)。
 
-### Phase 2 — 補助変数についての union (独立、park 可) 📋
+### Phase 2 — 補助変数についての union (**Phase 5 の等号の前提**) 📋
 
 `martonRegion` は `(pV, K)` を引数に取る。真の Marton 内界は補助変数の型と分布についての和集合。
 
@@ -94,7 +103,11 @@ proof-log: no (MAC の写経で設計判断が無かったため)。
       Mathlib にも in-repo にも無い。**自作コストが読めないので、濃度固定版で止めるのが honest**
 - [ ] time-sharing / convex hull が要るなら `MultipleAccess/TimeSharingConverse/` の資産を参照
 
-**Phase 3–5 の前提ではない**。挟み込みだけなら Phase 1 の点ごとの形で言える。
+**挟み込み (Phase 3 / 4b) の前提ではない** — そこは Phase 1 の点ごとの形で言える。だが
+**Phase 5 の等号の前提ではある**: 外界 `bcOuterRegionUV` は補助変数についての union の closure、
+内界 `martonRegion` は `(pV, K)` 1 個ぶんの四辺形なので、等号を述べるには内界側にも union が要る
+(判断ログ 11-(k))。等号を「∃ pV K」形で述べて union を回避する道もあるが、その形は教科書の内界より
+弱い主張になるので、採るなら plan に明記すること。
 proof-log: no。
 
 ### Phase 3 — 協調外界 (安い外界) ✅
@@ -161,32 +174,61 @@ proof-log: **yes** (`docs/proof-logs/proof-log-bc-uv-operational.md`、別 dispa
 4 つ — (a) 在庫予測の外れ 2 件 = MAC 雛形の前提誤り / 「極限を取るだけ」の誤り (判断ログ 11)、
 (b) 外界に符号制約を入れなかった判断が退化被覆を約 15 行に収めた機構 (判断ログ 1)、
 (c) S8-a の `h_ac` が `by_cases` で消えた経緯 (判断ログ 11 の 5 件目)、
-(d) 橋 (S1–S4) は degraded 側 `bc_converse` にも効く共有資産なので、MAC からの読み替えで
-何が効かなかったかを残す価値がある。
+(d) 橋 (S1–S4) を MAC から読み替えたときに何が効かなかったか (degraded 側 `bc_converse` への
+再利用も、仮説の表現が違うぶんそのままでは効かない = 判断ログ 11-(n))。
 
 ### Phase 5 — 一致するクラスを広げる 🚧 ★本線
 
 degraded は既に閉じている。その一般化を、Phase 1 の内界と Phase 4b の外界の組で回収する。
-**Phase 4b が前提だったのは満たされた** — 内界も外界も集合の言葉に載ったので `martonRegion` と
-`bcOuterRegionUV` を直接並べられる。
+Phase 5 は **定義段 (完遂) → 等号 (未着手)** の 2 段で、両段の間に Phase 2 が挟まる。
 
-- [ ] クラス定義の新設 (project に 0 hit): more capable / less noisy / semi-deterministic
-      — 等号を述べる前でも定義と基本性質は入る。ここから着手するのが安い
-- [ ] **semi-deterministic BC** (Marton 1979) — Marton 内界 = 容量領域が既知
-- [ ] more capable / less noisy — 外界が UV より単純な形を取る (El Gamal 1979)
-- [ ] degraded を新クラスの特殊化として既存 `bc_converse` / `bc_achievability` に接続。
-      `bc_converse` 自身も floating 形なので、ここでも 4b の橋 (S1–S4) が効く
-- [ ] **着手前に 1 度確認すること (S8-a / S8-b の honesty 監査 2 回分からの引き継ぎ)**:
-      `uvRegion` の 4 制約は `ℝ≥0∞` の `.toReal` を通るため、情報量が `⊤` になる状況では制約が
-      `≤ 0` に**強化**される = 領域が**狭くなる**側に倒れる。
-      - **有限アルファベットでは `⊤` は起きないので現状は無害**。外界 (converse) 方向では主張を
-        強める側なので安全でもある
-      - **逆向きに効く軸が 2 つある**: (i) 逆包含 (achievability / 領域 ⊆ operational) を証明する段、
-        (ii) `StandardBorelSpace` 側 (無限アルファベット) への拡張。後者では外界が不当に狭くなって
-        converse が偽になりうる。どちらかに進むなら `.toReal` を取る前の `ℝ≥0∞` 版制約への
-        移行を検討する価値がある
+#### 定義段 ✅ (`2c938fe0` `91fd8dcf` `e6ff1963` `42ac21e7`)
 
-proof-log: 未定 (クラス定義段は no、等号が閉じたら yes)。
+M0 在庫は [`bc-phase5-class-inventory.md`](bc-phase5-class-inventory.md) (Mathlib の壁 0 件)。
+
+| step | 成果 | commit |
+|---|---|---|
+| 符号規約の対称化 | `martonRegion` から `0 ≤ p.1 ∧ 0 ≤ p.2` を除去。`marton_region_subset_capacity` は署名無修正で通り、証明は 2 行が 1 行に畳まった。direct consumer 1 decl / 1 file (`dep_consumers.sh` 実測、在庫予測と一致)。**これをやるまで等号はどのクラスでも述べられなかった** (判断ログ 12) | `2c938fe0` |
+| クラス 3 本 + 包含鎖 | `Classes.lean` 新設。`IsBCLessNoisy` (補助変数を量化する結合法版) / `IsBCMoreCapable` (`mutualInfoOfChannel` によるチャネル版) / `IsBCSemiDeterministic` (`Kernel.fst W a = dirac (f a)`) + `degraded ⊆ less noisy ⊆ more capable` が機械可読に成立。**proof done** (0 sorry / 0 `@residual`) | `91fd8dcf` |
+| 両ゲート | honesty **all OK** (tier 5 なし、`@audit:ok` 9 箇所) / style PASS | `e6ff1963` `42ac21e7` |
+
+**等号 (容量領域の一致) はまだ述べていない**。README 定理表への登録は**保留** — 包含鎖は headline
+としては弱く、等号が閉じた段で `docs/readme-theorems.txt` に入れるのが自然 (現時点で未編集)。
+
+#### 等号 📋 — 攻略順は **less noisy → more capable → semi-deterministic**
+
+- [ ] **前提 = Phase 2 (内界側の union)**。外界は union、内界は四辺形 1 個なので、そのままでは
+      等号が型として並ばない (判断ログ 11-(k))
+- [ ] **内外を同じ添字に載せる橋**: `IsUVChannelLaw W (martonJointDistribution pV K W)`。型は完全一致
+      するが、補助変数の座標規約が内外でクロスしている (UV は第 1 スロット ↔ 受信機 2、Marton は
+      第 1 スロット ↔ 受信機 1) ので入替写像を挟む。`mac_capacity_region_reconciliation` の BC 版
+- [ ] **less noisy** (Körner–Marton 1975/1977) — 容量領域は degraded と**同じ 2 制約**に落ちる。
+      UV の 4 制約が corner 2 本に落ちるので、既存の結論形をそのまま再利用できる。
+      内界側の全支持仮説とも両立する (degraded の全支持例が存在) ⟹ **最も再利用率が高い**
+- [ ] **more capable** (El Gamal 1979) — **「単純化」ではなく「形が違う」**。制約は 4 → 3 に減るが、
+      うち 1 本 `R₁ + R₂ ≤ I(X;Y₁)` は**補助変数を含まない**新しい形で、`InBCCapacityRegion`
+      (2 field) では受けきれず **3 field の新 structure が要る**。UV の `uvInfoSum₁` の
+      `V = X` 特殊化で到達可能ではある
+- [ ] **semi-deterministic** (Marton 1979) — 定義は入ったが**内界の定理が適用できない**。
+      `marton_achievability` / `marton_region_subset_capacity` の全支持仮説
+      `hW : ∀ a b, 0 < (W a).real {b}` を定義上必ず破る (in-tree の証拠 =
+      `IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero`、判断ログ 13) ⟹ 等号は
+      **L-BCO7** で defer し、外界側だけで止める
+- [ ] **degraded との接続は「新規配線の作成」**。`bc_converse` / `bc_achievability` はどちらも
+      direct consumer 0 件 (`dep_consumers.sh` 実測) で、合流先の配線が存在しない。さらに
+      `bc_converse` の degradedness は `IsBCDegraded` (チャネルレベル) ではなく `h_deg_block`
+      (ambient 上の per-letter Markov 鎖) なので、**4b の橋 (S1–S4) はそのままでは効かない** —
+      `bcConverse_memoryless₁/₂` / `isMarkovChain₁/₂` に対応する degradedness 版が 0 hit で、
+      `isMarkovChain_of_compProd_pi` パターンの新規 ~120 行が要る (判断ログ 11-(n))
+- [ ] **`uvRegion` の `.toReal` について (S8-a / S8-b の honesty 監査からの引き継ぎ、在庫で決着)**:
+      4 制約は `ℝ≥0∞` の `.toReal` を通るので `⊤` では制約が `≤ 0` に**強化**される = 外界が
+      **狭くなる**。**Phase 5 (有限アルファベット) では `⊤` が起きないので無関係**。逆包含
+      (領域 ⊆ operational) の段でも `.toReal` は**保護側**に働く (外界が縮むぶん逆包含は易しく、
+      非正レート対は達成可能なので実害ゼロ) — 当初の「逆向きに効く」は符号が逆だった
+      (判断ログ 11-(m))。危険が残るのは `StandardBorelSpace` 側 (無限アルファベット) への拡張の
+      1 軸だけで、そこでは外界が不当に狭くなって converse が偽になりうる
+
+proof-log: 定義段は no。等号が閉じたら yes。
 
 ## 後続作業 (Phase 5 の前提ではない)
 
@@ -253,7 +295,11 @@ style / honesty ゲートが提起して当該 leg では見送った項目 + �
    module doc は Main statements を書き直すので、そこに載る宣言が新たに裸のまま増える。
    解は「真の headline に `@[entry_point]` を付ける (リンターが除外)」か
    「module doc に散文を持たせる現行慣行を追認する」の二択で、ファイル単体を超える方針判断
-   = **本 plan の範囲外** (`docs/rules/` 側の課題として起票)
+   = **本 plan の範囲外** (`docs/rules/` 側の課題として起票)。
+   **前者を実践した最初の事例が `Classes.lean`** — `## Main statements` に載る 4 本すべてに
+   `@[entry_point]` が付いており (リンターは entry_point を無条件で除外)、新規ファイル 9 宣言で
+   `internal-doc` ratchet への寄与は **0**、衝突は 1 本も発生しなかった (style ゲート実測)。
+   新規ファイルを切るときの既定手として使える
 
 ### D. 汎用補題の置換統合 (分割 A とは別 leg、未着手)
 
@@ -289,6 +335,23 @@ consumer に `MIChainRule.lean:73` 自身が含まれるため、置換すると
    (一括置換 + `lake build` 1 回) として別 leg にするのが筋で、BC 固有ではないので**本 plan の
    範囲外** (起票先は `docs/rules/` 側)
 
+### F. Phase 5 定義段が新たに立てた flag
+
+1. **`bcJointDistribution_id_eq` (`Classes.lean:166`) のリネーム (style ゲートが「今が最安」と推奨)** —
+   裸の `_eq` で右辺が名前に出ず、内部橋なので docstring も無い ⟹ 名前が statement を語れていない。
+   **consumer は同ファイル内 1 箇所のみ (外部参照ゼロ、`rg` 実測)**。代案
+   `bcJointDistribution_id_eq_map_compProd`。「1 行 docstring を足す」路は §C-5 の `internal-doc`
+   ratchet が増えて `--check` が落ちるので取れない ⟹ **リネームが唯一の解**
+2. `bc_lessNoisy_infoJoint_ge` (`Classes.lean:95`) / `bc_degraded_infoJoint_ge`
+   (`Achievability/Assembly.lean:965`) の `_of_` 化 — `docs/rules/naming.md` §2 の厳密形は
+   `bc_infoJoint_ge_of_lessNoisy`。**2 本同時リネームか両方現状維持かの二択** (対の名前が割れるのが
+   最悪。style の推奨は現状維持)
+3. 語彙橋 2 本 (`bcJointDistribution_id_eq` / `mutualInfoOfChannel_map_eq_mutualInfo_bcJointDistribution`)
+   を `private` にするか。将来 §5-5 の内外橋がこれらを引くなら public のまま。優先度低
+4. `IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero` に `_of_one_lt_card` を付けるか (任意)
+5. **README 定理表への登録は保留** (オーケストレーター判断) — 定義段の包含鎖は headline としては
+   弱く、等号が閉じた段で登録するのが自然。`docs/readme-theorems.txt` は未編集
+
 ## 未解決本体との距離 (正直な見積り)
 
 「Marton 内界 = 一般 BC の容量領域か」は **open**。数学が存在しないので形式化できない。本計画が
@@ -303,11 +366,14 @@ consumer に `MIChainRule.lean:73` 自身が含まれるため、置換すると
 
 ## 設計上の未決事項
 
-1. **補助変数 union の射程** (Phase 2) — 濃度固定で止めるか Carathéodory を自作するか
-2. **`uvRegion` の `.toReal` を `ℝ≥0∞` 版に移すか** (Phase 5、無限アルファベット拡張の前) →
-   Phase 5 の最終チェック項目
+1. **補助変数 union の射程** (Phase 2) — 濃度固定で止めるか Carathéodory を自作するか。
+   等号の前提になったので、決めるのを先送りできなくなった
+2. **more capable の容量領域を受ける structure** (Phase 5) — 3 制約 (うち 1 本は補助変数を
+   含まない `R₁ + R₂ ≤ I(X;Y₁)`) なので `InBCCapacityRegion` を拡張するか新 structure を建てるか
 
-Phase 4b の 2 件 (単一文字還元の形 / 結合 memoryless の持ち方) は決着済 (案 A 採用 / 構成側で
+`uvRegion` の `.toReal` を `ℝ≥0∞` 版に移すかは**決着** — Phase 5 (有限アルファベット) では
+無関係で、判断が要るのは `StandardBorelSpace` 側への拡張に進むときだけ (Phase 5 の項)。
+Phase 4b の 2 件 (単一文字還元の形 / 結合 memoryless の持ち方) も決着済 (案 A 採用 / 構成側で
 持つ、S3 で機械確認)。履歴は git。
 
 ## 撤退ライン (frozen slug)
@@ -315,13 +381,14 @@ Phase 4b の 2 件 (単一文字還元の形 / 結合 memoryless の持ち方) �
 | slug | 発動条件 | 退避先 |
 |---|---|---|
 | **L-BCO1** | Phase 4 の補助変数 identification が閉じない | **不発動** — Phase 4a で `uvAux` 1 本の 2 通り instantiation により閉じたため、Körner–Marton / Sato への後退は不要になった |
-| **L-BCO2** | Phase 2 の型量化 union が universe 問題で詰む | 濃度固定版で止め、union は取らない (Phase 3–5 は影響を受けない) |
-| **L-BCO3** | Phase 5 の等号が Phase 4 の外界の形と噛み合わない | クラス定義だけ入れて等号は defer |
+| **L-BCO2** | Phase 2 の型量化 union が universe 問題で詰む | 濃度固定版で止め、union は取らない。**「Phase 3–5 は影響を受けない」は誤りだったので撤回** — 影響を受けないのは Phase 3 / 4 (挟み込み) だけで、**Phase 5 の等号は union を前提とする** (判断ログ 11-(k))。この撤退を取ると等号は「∃ pV K」形の弱い主張に落ちる。**実質的に前倒しで解けている公算**: `IsBCLessNoisy` は補助を `U : Type u` (入力アルファベットと同 universe) に量化する形で着地し、honesty 監査が **`Type u` 版 ⟹ 任意 universe 版**を probe のコンパイルで確認した (ULift 経由の relabel 不変性 = `Fintype.equivFin` + `Equiv.ulift` + `compProd_comap_map_prodMap` 2 回 + `mutualInfo_map_comp`)。**この probe は in-tree に落ちていない = 未 in-tree の機械確認**なので、Phase 2 で同じ手を採るなら改めて書き下すこと |
+| **L-BCO3** | Phase 5 の等号が Phase 4 の外界の形と噛み合わない | クラス定義だけ入れて等号は defer。**発動条件の文言は実態とずれている** (在庫 §7): 噛み合わなさの本体は外界の形ではなく**内界の形** (符号制約 = `2c938fe0` で解消 / union なし = Phase 2 / 全支持仮説 = L-BCO7) だった。slug は凍結なので文言はそのまま残し、判定は内界側の 3 点で行う |
 | **L-BCO4** | Phase 4b の符号→ambient 橋または単一文字還元が閉じない | **不発動のまま Phase 4b が完遂** — 橋は S1–S4、集合化は S7、平均化は S8-a、極限と包含は S8-b でいずれも closure した |
 | **L-BCO5** | S5 の補助変数の型統一が `mutualInfo_chain_rule` 経由でも閉じない | **不発動** — 在庫の攻略路 (両向き DPI + `mutualInfo_chain_rule` + `ENNReal.add_right_inj`) がそのまま効いた。退避先だった「`n` を露出した族 `bcOuterRegionUVAt W n` + `⋂ n` 版」は採らない (slug は他文書参照のため凍結) |
 | **L-BCO6** | S8-b の退化レート被覆が MAC 同様 450 行級に膨らむ | **不発動** — 退避先だった第一象限交差版は採らず、`bc_capacity_subset_uv` は**全平面版**で closure した (退化被覆の実測は約 15 行 + `2 ≤ M` の穴埋め 55 行、判断ログ 1) |
+| **L-BCO7** | semi-deterministic の等号を狙う段で、`marton_achievability` の全支持仮説 `hW` が外せない (判断ログ 13) | **semi-deterministic はクラス定義 + 外界側だけで止め、等号は述べない**。外界 (`bc_capacity_subset_uv` の特殊化) は `hW` を要求しないので単独で成立する。退避の出口は `sorry` + `@residual(plan:bc-semideterministic-fullsupport)` (= `hW` を外す後継 plan のファイル名 stem)。**`IsSemiDeterministicAchievable` のような述語に核を束ねる形は取らない** |
 
-**active な撤退ラインは L-BCO2 / L-BCO3 の 2 本のみ** (どちらも Phase 2 / Phase 5 用)。
+**active な撤退ラインは L-BCO2 / L-BCO3 / L-BCO7 の 3 本** (Phase 2 用 1 本 + Phase 5 用 2 本)。
 
 **禁止事項**: どの撤退でも「外界が成立する」「補助変数が取れる」「符号から ambient が取れる」等を
 `*Hypothesis` 述語に束ねて仮説として渡す形は取らない (CLAUDE.md 検証の誠実性 tier 5)。退避は
@@ -330,9 +397,21 @@ Phase 4b の 2 件 (単一文字還元の形 / 結合 memoryless の持ち方) �
 
 ## 推奨実行順
 
-**次の本線は Phase 5 (クラス定義 → 等号)**。分割 A が済んで `Assembly.lean` に 650 行の余裕が
-できたので、着手を阻む前提は残っていない。Phase 2 は独立で、いつ入れてもよいし入れなくても本線は
-完結する。§後続作業 B–E はいずれも Phase 5 の前提ではない。
+Phase 5 の定義段まで到達した。**残りは等号で、そこは Phase 2 を通る**:
+
+```
+Phase 5 定義段 ✅ (符号規約の対称化 → 3 クラス + 包含鎖)
+  ↓
+内外を同じ添字に載せる橋 (IsUVChannelLaw at martonJointDistribution、座標入替)
+  ↓
+Phase 2 (内界側の補助変数 union)   ← 等号の前提。ここが park 可でなくなった
+  ↓
+less noisy の等号 → more capable の等号 (3 field の新 structure) → semi-deterministic は L-BCO7
+```
+
+**Phase 2 はもはや独立ではない** — 挟み込み (Phase 3 / 4b) の前提でないのは変わらないが、
+Phase 5 の等号の前提なので、等号に進むなら先に通す。§後続作業 B–F はいずれも前提ではない
+(F-1 のリネームだけは consumer が in-file 1 箇所の今が最安)。
 
 ## 判断ログ
 
@@ -361,7 +440,7 @@ Phase 4b の 2 件 (単一文字還元の形 / 結合 memoryless の持ち方) �
    **包含の右辺を縮める構造条件**」— 符号側で構成的に示す義務は
    `bcUVJointDistribution_isUVChannelLaw` として支払い済。**Phase 5 が外界の形を触るときは、この
    特徴づけが壊れないかが最初のチェック点**。
-11. **在庫予測の外れ (通算 10 件) — 在庫ファイル自体は編集しないので本エントリが記録の SoT**。
+11. **在庫予測の外れ (通算 16 件) — 在庫ファイル自体は編集しないので本エントリが記録の SoT**。
     S8-b までの 5 件は (a) 一般化の方向が 1 段広かった (S3、conditioner を任意の
     update 不変写像に開く形になり整形層が丸ごと消えた) / (b) `macConverseInput_eq` = `absent` は
     誤りで対一様性は受信機別の誤り確率同定**両方**に要った (S4) / (c) union の無制約化で外界が
@@ -407,3 +486,52 @@ Phase 4b の 2 件 (単一文字還元の形 / 結合 memoryless の持ち方) �
       実測で 4 本 (うち Mathlib 2 本) が dead になった (`69cc5b10`)。宣言が抜ければその宣言だけが
       使っていた import が浮くのは**規則的に起きる**。
       ⟹ 移設 leg には最初から「移動元の import 生死を実測する」step を入れる。
+
+    Phase 5 の M0 在庫 ([`bc-phase5-class-inventory.md`](bc-phase5-class-inventory.md) §10) が
+    挙げた 8 件のうち、2 件は独立の判断として下記 12 / 13 に立てた。残る 6 件:
+    - **(k) Phase 2 は Phase 5 の等号の前提だった**: plan は「Phase 2 は Phase 3–5 の前提ではない」
+      としていたが、正しいのは**挟み込みについてのみ**。外界は補助変数についての union、内界は
+      `(pV, K)` 1 個ぶんの四辺形なので、等号を述べる段では内界側にも union が要る。
+      ⟹ **「独立」「park 可」の判定は到達目標ごとに違う**。同じ Phase が、ある到達目標には
+      無関係で別の到達目標には前提になる。park 判定は目標を名指して書く。
+    - **(l) more capable は「単純化」ではなく「形が違う」+ 文献帰属が 1 件誤り**: plan は
+      「more capable / less noisy — 外界が UV より単純 (El Gamal 1979)」としていたが、less noisy は
+      **Körner–Marton 1975/1977** (El Gamal 1979 は more capable)。かつ more capable の容量領域は
+      3 制約で、うち `R₁ + R₂ ≤ I(X;Y₁)` は**補助変数を含まない新しい形** ⟹ 制約の本数は減るのに
+      受け皿の structure は新設が要る。「制約が減る = 簡単」ではない。
+    - **(m) `.toReal` の危険の向きが逆だった**: plan は逆包含 (領域 ⊆ operational) の段で
+      `.toReal` が「逆向きに効く」としていたが、`⊤ ↦ 0` は外界を**縮める**ので逆包含は易しくなる
+      = 保護側。危険は無限アルファベット拡張の 1 軸だけ。
+      ⟹ 「非対称性がある」と気づいた時点で止めず、**どちらの向きに倒れるかまで言い切る**こと。
+    - **(n) 4b の橋は degraded 側にそのままでは効かない**: plan は「`bc_converse` も floating 形
+      なので 4b の橋 (S1–S4) が効く」としていたが、`bc_converse` の degradedness は
+      `IsBCDegraded` (チャネルレベル) ではなく `h_deg_block` (ambient 上の per-letter Markov 鎖)。
+      `bcConverse_*` 4 本に対応する degradedness 版は 0 hit で、新規 ~120 行が要る。
+      ⟹ **「同じ floating 形だから橋が効く」は形の一致であって仮説の一致ではない**。
+      再利用可否は結論形ではなく**要求される仮説の表現**で決まる。
+    - **(o) 部品は在庫に載っていた**: 「クラス定義は project に 0 hit」は述語としては正しいが、
+      more capable の定義に要る `Kernel.fst W` / `Kernel.snd W` は `bcOuterRegionCoop` で既に
+      使用済だった (本 plan の §在庫 に記載が無かった)。定義コストは想定より小さかった。
+    - **(p) 「既存に接続」の実体は新規配線**: `bc_converse` / `bc_achievability` はどちらも
+      direct consumer 0 件 (`dep_consumers.sh` 実測)。合流先の配線が存在しないので、見積りは
+      「接続」ではなく「新規実装」で立てる。
+12. **片側で採った規約変更は、対になるもう片側にも適用したか確認する (P1、`2c938fe0` で解消)**:
+    判断ログ 1 は「外界に第一象限制約を入れない」判断を成功要因として記録しているが、**同じ判断を
+    内界に適用する step が無かった** — `martonRegion` だけが第一象限のまま残り、結果
+    `bcOuterRegionUV ⊆ martonRegion` は**どの `W` でも偽**だった (在庫が `(-1,-1)` で機械確認)。
+    Phase 5 の等号はどのクラスでも述べられない状態で、気づかずに等号へ着手すれば全チャネルで偽の
+    目標を追うことになっていた。修正は定義の 1 行削除で、consumer 1 decl は符号成分を既に捨てて
+    いたので署名も証明も壊れていない (`marton_region_subset_capacity` は**内界を広げる方向**なので
+    真のまま — 非正レートは単一メッセージ符号で達成可能)。
+    ⟹ 一般教訓: **規約 (符号制約・座標順・`ℝ` / `ℝ≥0∞` の別) を片側で変えたら、対になる側との
+    差分を必ず 1 度取る**。片側だけの規約変更は、両者を並べる定理を書こうとする段まで発覚しない。
+13. **semi-deterministic は内界の定理と構造的に非両立 (P3、L-BCO7 を新設)**:
+    plan は semi-deterministic を「Marton 内界 = 容量領域が既知」として Phase 5 の第一候補格に
+    挙げていたが、`marton_achievability` / `marton_region_subset_capacity` の全支持仮説
+    `hW : ∀ a b, 0 < (W a).real {b}` を **semi-deterministic は定義上必ず破る** (`Y₁ = f(X)` なので
+    到達しない出力対の質量が 0)。内界の包含そのものが使えないので、等号は閉じない。in-tree の証拠は
+    `IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero`。攻略順を
+    **less noisy → more capable → semi-deterministic** に変更し、最後の 1 本は L-BCO7 で defer する。
+    ⟹ 一般教訓: **「文献で容量領域が既知」と「in-project の内界定理が適用できる」は別**。
+    クラスを候補に挙げる前に、そのクラスが**既存定理の regularity 前提と両立するか**を先に見る
+    (CLAUDE.md textbook-object strength diff の適用先が、定理の強度ではなく**前提の両立性**だった例)。
