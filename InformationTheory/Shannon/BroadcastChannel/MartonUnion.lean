@@ -8,13 +8,6 @@ import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.MartonBridge
 outer region is a union over five-tuple laws.  This file takes the union on the inner side, so
 that the two regions can be compared as sets.
 
-The auxiliaries range over `ULift (Fin (k + 1))`, one cardinality at a time, in the universe of
-the input alphabet: fixing the cardinality avoids quantifying over types, and the universe lift
-is what lets the comparison classes be applied at a member of the union.  A countable auxiliary
-alphabet is not available here, unlike on the outer side: the dependence between the two
-auxiliaries is the one information slot reading no output letter, so it is the one that can be
-infinite, and the `toReal` convention would then drop the sum-rate penalty.
-
 ## Main definitions
 
 * `bcAuxAlphabet k` — the auxiliary alphabet of cardinality `k + 1`.
@@ -28,6 +21,15 @@ infinite, and the `toReal` convention would then drop the sum-rate penalty.
 * `martonRegionUnion_subset_uv` — the union sits inside the UV outer region.
 * `martonRegionUnionFS_subset_capacity` — the full-support union sits inside the operational
   capacity region.
+
+## Implementation notes
+
+The auxiliaries range over `ULift (Fin (k + 1))`, one cardinality at a time, in the universe of
+the input alphabet: fixing the cardinality avoids quantifying over types, and the universe lift
+is what lets the comparison classes be applied at a member of the union.  A countable auxiliary
+alphabet is not available here, unlike on the outer side: the dependence between the two
+auxiliaries is the one information slot reading no output letter, so it is the one that can be
+infinite, and the `toReal` convention would then drop the sum-rate penalty.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -44,11 +46,15 @@ variable {α : Type u} {β₁ β₂ : Type*}
   [Fintype β₁] [DecidableEq β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
   [Fintype β₂] [DecidableEq β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
 
-/-- The auxiliary alphabet of cardinality `k + 1`, in the universe of the input alphabet. -/
+/-- The auxiliary alphabet of cardinality `k + 1`, in the universe of the input alphabet.
+The successor form keeps every index of the union nonempty, which `martonRegion` requires of its
+auxiliary alphabets. -/
 abbrev bcAuxAlphabet (k : ℕ) : Type u := ULift.{u} (Fin (k + 1))
 
 /-- Marton's inner bound as a subset of the plane: the closure of the union of the
-quadrilaterals `martonRegion pV K W` over the auxiliary laws on `bcAuxAlphabet`. -/
+quadrilaterals `martonRegion pV K W` over the auxiliary laws on `bcAuxAlphabet`.
+The closure makes the union a closed set, as `bcCapacityRegion` and `bcOuterRegionUV` both are,
+and costs nothing in either inclusion because a closed superset absorbs it. -/
 noncomputable def martonRegionUnion (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k₁ : ℕ) (k₂ : ℕ)
     (pV : Measure (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂))
@@ -56,13 +62,18 @@ noncomputable def martonRegionUnion (W : BCChannel α β₁ β₂) : Set (ℝ ×
     (K : Kernel (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂) α)
     (_ : IsMarkovKernel K), martonRegion pV K W)
 
-/-- The union restricted to the indices on which the achievability theorem applies. -/
+/-- The same union over the full-support indices only: the auxiliary law and the auxiliary
+kernel charge every point.  Those are the regularity preconditions of
+`marton_region_subset_capacity`, so this is the form of the union that is achievable. -/
 noncomputable def martonRegionUnionFS (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k₁ : ℕ) (k₂ : ℕ)
     (pV : Measure (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂))
-    (_ : IsProbabilityMeasure pV) (_ : ∀ v, 0 < pV.real {v})
+    (_ : IsProbabilityMeasure pV)
+    (_ : ∀ v : bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂, 0 < pV.real {v})
     (K : Kernel (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂) α)
-    (_ : IsMarkovKernel K) (_ : ∀ v a, 0 < (K v).real {a}), martonRegion pV K W)
+    (_ : IsMarkovKernel K)
+    (_ : ∀ (v : bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂) (a : α), 0 < (K v).real {a}),
+    martonRegion pV K W)
 
 /-- Marton's inner bound is contained in the UV outer region, with no support hypothesis on the
 auxiliary law, the auxiliary kernel or the channel. -/
