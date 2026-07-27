@@ -16,6 +16,9 @@ Two-receiver broadcast channel (BC) primitives, following the single-user
   message pair and a separate decoder per receiver.
 * `BroadcastCode.errorProbAt₁` / `errorProbAt₂` — the pointwise per-receiver block-decoding
   error probabilities.
+* `BroadcastCode.padFirst`, `BroadcastCode.padSecond` — a second message attached to a receiver
+  that carries only one, which is what brings a code of a zero rate into the scope of a converse
+  asking for at least two messages per receiver.
 * `InBCCapacityRegion R₁ R₂ I₁ I₂` — the auxiliary-variable capacity-region predicate
   bundling the two corner inequalities `R₁ ≤ I₁`, `R₂ ≤ I₂` (degraded BC, Cover–Thomas
   Thm 15.6.2: `I₁ = I(X; Y₁ | U)`, `I₂ = I(U; Y₂)`).
@@ -113,6 +116,70 @@ theorem errorProbAt₂_le_one
   have : IsProbabilityMeasure (c.blockOutputLaw W m) := by
     unfold blockOutputLaw; infer_instance
   exact prob_le_one
+
+/-! ### Padding a code that carries a single message -/
+
+/-- A second receiver-1 message attached to a code that carries only one.  Both messages are sent
+with the single codeword of the original code, so receiver 1 cannot separate them, while receiver
+2 sees exactly the original code.  This is what puts a code of a nonpositive rate pair inside the
+scope of the converse, which asks for at least two messages per receiver.
+@audit:ok -/
+def padFirst (c : BroadcastCode 1 M₂ n α β₁ β₂) : BroadcastCode 2 M₂ n α β₁ β₂ where
+  encoder m := c.encoder (0, m.2)
+  decoder₁ _ := 0
+  decoder₂ := c.decoder₂
+
+/-- The mirror of `padFirst` at the second receiver.
+@audit:ok -/
+def padSecond (c : BroadcastCode M₁ 1 n α β₁ β₂) : BroadcastCode M₁ 2 n α β₁ β₂ where
+  encoder m := c.encoder (m.1, 0)
+  decoder₁ := c.decoder₁
+  decoder₂ _ := 0
+
+/-- @audit:ok -/
+lemma averageErrorProb₂_padFirst (c : BroadcastCode 1 M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) :
+    (c.padFirst).averageErrorProb₂ W = c.averageErrorProb₂ W := by
+  rcases Nat.eq_zero_or_pos M₂ with hM | hM
+  · subst hM; simp [averageErrorProb₂]
+  have hpt : ∀ m : Fin 2 × Fin M₂,
+      (c.padFirst).errorProbAt₂ W m = c.errorProbAt₂ W (0, m.2) := fun _ ↦ rfl
+  have hsum2 : (∑ m : Fin 2 × Fin M₂, (c.padFirst).errorProbAt₂ W m)
+      = 2 * ∑ b : Fin M₂, c.errorProbAt₂ W (0, b) := by
+    simp only [hpt, Fintype.sum_prod_type, Finset.sum_const, Finset.card_univ,
+      Fintype.card_fin, nsmul_eq_mul, Nat.cast_ofNat]
+  have hsum1 : (∑ m : Fin 1 × Fin M₂, c.errorProbAt₂ W m)
+      = ∑ b : Fin M₂, c.errorProbAt₂ W (0, b) := by
+    rw [Fintype.sum_prod_type, Fin.sum_univ_one]
+  have hcast : ((2 * M₂ : ℕ) : ℝ≥0∞) = 2 * (M₂ : ℝ≥0∞) := by push_cast; ring
+  unfold averageErrorProb₂
+  rw [if_neg (by simpa using hM.ne'), if_neg (by simpa using hM.ne'), hsum2, hsum1, hcast,
+    ENNReal.mul_inv (Or.inl (by norm_num)) (Or.inl (by norm_num)), one_mul,
+    show (2 : ℝ≥0∞)⁻¹ * (M₂ : ℝ≥0∞)⁻¹ * (2 * ∑ b : Fin M₂, c.errorProbAt₂ W (0, b))
+      = ((2 : ℝ≥0∞)⁻¹ * 2) * ((M₂ : ℝ≥0∞)⁻¹ * ∑ b : Fin M₂, c.errorProbAt₂ W (0, b)) by ring,
+    ENNReal.inv_mul_cancel (by norm_num) (by norm_num), one_mul]
+
+/-- @audit:ok -/
+lemma averageErrorProb₁_padSecond (c : BroadcastCode M₁ 1 n α β₁ β₂) (W : BCChannel α β₁ β₂) :
+    (c.padSecond).averageErrorProb₁ W = c.averageErrorProb₁ W := by
+  rcases Nat.eq_zero_or_pos M₁ with hM | hM
+  · subst hM; simp [averageErrorProb₁]
+  have hpt : ∀ m : Fin M₁ × Fin 2,
+      (c.padSecond).errorProbAt₁ W m = c.errorProbAt₁ W (m.1, 0) := fun _ ↦ rfl
+  have hsum2 : (∑ m : Fin M₁ × Fin 2, (c.padSecond).errorProbAt₁ W m)
+      = 2 * ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0) := by
+    simp only [hpt, Fintype.sum_prod_type, Finset.sum_const, Finset.card_univ,
+      Fintype.card_fin, nsmul_eq_mul, Nat.cast_ofNat, ← Finset.mul_sum]
+  have hsum1 : (∑ m : Fin M₁ × Fin 1, c.errorProbAt₁ W m)
+      = ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0) := by
+    rw [Fintype.sum_prod_type]
+    exact Finset.sum_congr rfl fun a _ ↦ Fin.sum_univ_one fun b ↦ c.errorProbAt₁ W (a, b)
+  have hcast : ((M₁ * 2 : ℕ) : ℝ≥0∞) = (M₁ : ℝ≥0∞) * 2 := by push_cast; ring
+  unfold averageErrorProb₁
+  rw [if_neg (by simpa using hM.ne'), if_neg (by simpa using hM.ne'), hsum2, hsum1, hcast,
+    ENNReal.mul_inv (Or.inr (by norm_num)) (Or.inr (by norm_num)), mul_one,
+    show (M₁ : ℝ≥0∞)⁻¹ * (2 : ℝ≥0∞)⁻¹ * (2 * ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0))
+      = ((2 : ℝ≥0∞)⁻¹ * 2) * ((M₁ : ℝ≥0∞)⁻¹ * ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0)) by ring,
+    ENNReal.inv_mul_cancel (by norm_num) (by norm_num), one_mul]
 
 end BroadcastCode
 

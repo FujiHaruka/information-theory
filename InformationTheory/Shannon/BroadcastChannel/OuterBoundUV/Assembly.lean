@@ -3,6 +3,7 @@ import InformationTheory.Shannon.BroadcastChannel.Operational
 import InformationTheory.Shannon.BroadcastChannel.OuterBound
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Bridge
 import InformationTheory.Shannon.CondKLIntegral
+import InformationTheory.Shannon.CondMutualInfoMixture
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.Topology.Algebra.Order.UpperLower
 
@@ -38,9 +39,6 @@ region is a closed lower set, so the limit and the rate pairs below it are in th
 * `uvRelabel` — re-encoding of the two auxiliary alphabets of a five-tuple.
 * `bcUVLetterKernel`, `bcUVLetterIndexLaw`, `bcUVTimeShare` — the letter laws of a code read as a
   Markov kernel from the letter index, the uniform law of that index, and the resulting mixture.
-* `BroadcastCode.padFirst`, `BroadcastCode.padSecond` — a second message attached to a receiver
-  that carries only one, which is what brings a code of a zero rate into the scope of a converse
-  asking for at least two messages per receiver.
 
 ## Main statements
 
@@ -63,9 +61,6 @@ region is a closed lower set, so the limit and the rate pairs below it are in th
   law a channel law, which is how a law on the auxiliaries of a code reaches the fixed ones.
 * `bcUVJointDistribution_isUVChannelLaw` — the letter-`i` law of a broadcast code is a channel
   law, so the letter laws of a code index the union.
-* `condMutualInfo_compProd_fst_eq_lintegral` and `condMutualInfo_compProd_snd_eq_lintegral` — the
-  tag-conditioned mutual information of a mixture is the tag average of the components, in the
-  unconditional and in the conditional form.
 * `bcUVTimeShare_uvInfo₁_ge` and its three companions — each information slot of the time-shared
   law dominates the average of the letter slots.
 * `bc_uv_shrunk_point_mem` — the rate pair of a code, shrunk by the Fano slack per letter, lies
@@ -105,13 +100,6 @@ the latter subtracts the sum of both Fano slacks from each coordinate, and a sla
 receiver is not controlled by the rate of this one, since the message counts of an achievable
 pair are bounded from below only.  Discounting each rate by its own error probability removes
 that coupling, and the residue is two bits per block whatever the message counts are.
-
-`compProd_comap_map_prodMap` and `compProd_pi_map_pair_eq_of_update_invariant` speak about a
-composition product of an arbitrary measure with an arbitrary Markov kernel and mention no
-broadcast-specific data.  The second generalizes `compProd_pi_map_pair_eq`: in place of the
-input letter `x · i`, the first component may be any map that is invariant under updating the
-`i`-th output coordinate and that retracts onto the input letter, which is what lets a padded
-auxiliary variable sit there.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -150,21 +138,6 @@ def IsUVChannelLaw (W : BCChannel α β₁ β₂) (ν : Measure (U × V × α ×
   ν.map (fun q ↦ ((q.1, q.2.1, q.2.2.1), q.2.2.2))
     = (ν.map fun q ↦ (q.1, q.2.1, q.2.2.1)) ⊗ₘ
         W.comap (fun r : U × V × α ↦ r.2.2) (measurable_snd.comp measurable_snd)
-
-/-- @audit:ok -/
-lemma compProd_comap_map_prodMap {A A' B : Type*} [MeasurableSpace A] [MeasurableSpace A']
-    [MeasurableSpace B] (μ : Measure A) [SFinite μ] (κ : Kernel A' B) [IsMarkovKernel κ]
-    {g : A → A'} (hg : Measurable g) :
-    (μ ⊗ₘ κ.comap g hg).map (fun z ↦ (g z.1, z.2)) = (μ.map g) ⊗ₘ κ := by
-  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
-  have hmap : Measurable (fun z : A × B ↦ (g z.1, z.2)) :=
-    (hg.comp measurable_fst).prodMk measurable_snd
-  have hin : Measurable (fun a : A' ↦ ∫⁻ b, f (a, b) ∂(κ a)) :=
-    Measurable.lintegral_kernel_prod_right' (κ := κ) hf
-  have hcomp : Measurable (fun z : A × B ↦ f (g z.1, z.2)) := hf.comp hmap
-  rw [lintegral_map hf hmap, Measure.lintegral_compProd hcomp,
-    Measure.lintegral_compProd hf, lintegral_map hin hg]
-  rfl
 
 private lemma measurable_uvFirstThree :
     Measurable (fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1)) :=
@@ -389,41 +362,6 @@ end Region
 
 section CodeLaw
 
-/-- @audit:ok -/
-lemma compProd_pi_map_pair_eq_of_update_invariant
-    {M A B C : Type*} [MeasurableSpace M] [MeasurableSpace A] [MeasurableSpace B]
-    [MeasurableSpace C] {k : ℕ}
-    (ν : Measure M) [IsProbabilityMeasure ν]
-    (x : M → Fin k → A)
-    (W : Kernel A B) [IsMarkovKernel W]
-    (κ : Kernel M (Fin k → B)) [IsMarkovKernel κ]
-    (hκ : ∀ m, κ m = Measure.pi (fun j ↦ W (x m j))) (i : Fin k)
-    (G : M × (Fin k → B) → C) (hG : Measurable G)
-    (hGupd : ∀ (m : M) (y : Fin k → B) (b : B), G (m, Function.update y i b) = G (m, y))
-    (g : C → A) (hg : Measurable g) (hgG : ∀ ω, g (G ω) = x ω.1 i) :
-    (ν ⊗ₘ κ).map (fun ω ↦ (G ω, ω.2 i)) = ((ν ⊗ₘ κ).map G) ⊗ₘ (W.comap g hg) := by
-  have hYo : Measurable (fun ω : M × (Fin k → B) ↦ ω.2 i) :=
-    (measurable_pi_apply i).comp measurable_snd
-  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
-  have hpair : Measurable (fun ω : M × (Fin k → B) ↦ (G ω, ω.2 i)) := hG.prodMk hYo
-  have hlhs : Measurable (fun ω : M × (Fin k → B) ↦ f (G ω, ω.2 i)) := hf.comp hpair
-  have hin : Measurable (fun c : C ↦ ∫⁻ b, f (c, b) ∂((W.comap g hg) c)) :=
-    Measurable.lintegral_kernel_prod_right' (κ := W.comap g hg) hf
-  have hrhs : Measurable
-      (fun ω : M × (Fin k → B) ↦ ∫⁻ b, f (G ω, b) ∂((W.comap g hg) (G ω))) := hin.comp hG
-  rw [lintegral_map hf hpair, Measure.lintegral_compProd hf, lintegral_map hin hG,
-    Measure.lintegral_compProd hlhs, Measure.lintegral_compProd hrhs]
-  refine lintegral_congr fun m ↦ ?_
-  rw [hκ]
-  have hFm : Measurable (fun y : Fin k → B ↦ f (G (m, y), y i)) :=
-    hf.comp ((hG.comp (measurable_const.prodMk measurable_id)).prodMk (measurable_pi_apply i))
-  rw [lintegral_pi_reRandomize (fun j ↦ W (x m j)) i (fun y ↦ f (G (m, y), y i)) hFm]
-  refine lintegral_congr fun y ↦ ?_
-  have hker : (W.comap g hg) (G (m, y)) = W (x m i) := by
-    rw [Kernel.comap_apply, hgG (m, y)]
-  rw [hker]
-  exact lintegral_congr fun b ↦ by rw [hGupd m y b, Function.update_self i b y]
-
 variable [Nonempty β₁] [Nonempty β₂]
 
 /-- @audit:ok -/
@@ -627,154 +565,6 @@ theorem not_isUVChannelLaw_uvAuxCopiesOutputLaw :
   simp at hval
 
 end NotVacuous
-
-/-! ## Averaging an information slot over a countable mixture
-
-A mixture of laws indexed by a countable tag is a composition product of the tag law with the
-kernel of the components, so the tag-conditioned mutual information of the mixture is the tag
-average of the mutual informations of the components.  Adding back the tag term of the chain rule
-turns that into an identity for the mutual information of the mixture itself, whenever the
-variable in question recovers the tag; dropping the tag term leaves the averaging inequality. -/
-
-section Averaging
-
-lemma mutualInfo_congr_ae {Ω A B : Type*} [MeasurableSpace Ω] [MeasurableSpace A]
-    [MeasurableSpace B] (μ : Measure Ω) {Xs Xs' : Ω → A} (Yo : Ω → B) (h : Xs =ᵐ[μ] Xs') :
-    mutualInfo μ Xs Yo = mutualInfo μ Xs' Yo := by
-  have hpair : μ.map (fun ω ↦ (Xs ω, Yo ω)) = μ.map (fun ω ↦ (Xs' ω, Yo ω)) := by
-    refine Measure.map_congr ?_
-    filter_upwards [h] with ω hω
-    rw [hω]
-  rw [mutualInfo, mutualInfo, hpair, Measure.map_congr h]
-
-lemma condMutualInfo_eq_of_leftInverse_cond {Ω A B C C' : Type*} [MeasurableSpace Ω]
-    [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
-    [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]
-    [MeasurableSpace C] [MeasurableSpace C']
-    (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Ω → A) (Yo : Ω → B) (Zc : Ω → C)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc)
-    {f : C → C'} {g : C' → C} (hf : Measurable f) (hg : Measurable g) (hgf : ∀ c, g (f c) = c)
-    (hfin : mutualInfo μ Zc Yo ≠ ∞) :
-    condMutualInfo μ Xs Yo (fun ω ↦ f (Zc ω)) = condMutualInfo μ Xs Yo Zc := by
-  have hpair : mutualInfo μ (fun ω ↦ (f (Zc ω), Xs ω)) Yo
-      = mutualInfo μ (fun ω ↦ (Zc ω, Xs ω)) Yo :=
-    mutualInfo_eq_of_leftInverse μ (fun ω ↦ (Zc ω, Xs ω)) Yo (hZc.prodMk hXs) hYo
-      (f := fun p ↦ (f p.1, p.2)) (g := fun p ↦ (g p.1, p.2))
-      ((hf.comp measurable_fst).prodMk measurable_snd)
-      ((hg.comp measurable_fst).prodMk measurable_snd) (fun p ↦ by rw [hgf p.1])
-  have hz : mutualInfo μ (fun ω ↦ f (Zc ω)) Yo = mutualInfo μ Zc Yo :=
-    mutualInfo_eq_of_leftInverse μ Zc Yo hZc hYo hf hg hgf
-  rw [mutualInfo_chain_rule μ Xs Yo (fun ω ↦ f (Zc ω)) hXs hYo (hf.comp hZc),
-    mutualInfo_chain_rule μ Xs Yo Zc hXs hYo hZc, hz] at hpair
-  exact (ENNReal.add_right_inj hfin).mp hpair
-
-variable {T S A B : Type*} [MeasurableSpace T] [MeasurableSpace S]
-variable [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
-variable [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]
-
-private lemma condDistrib_compProd_fst_ae_eq {C : Type*} [MeasurableSpace C]
-    [StandardBorelSpace C] [Nonempty C] (μ : Measure T) [IsProbabilityMeasure μ]
-    (κ : Kernel T S) [IsMarkovKernel κ] {h : S → C} (hh : Measurable h) :
-    condDistrib (fun p : T × S ↦ h p.2) Prod.fst (μ ⊗ₘ κ) =ᵐ[μ] κ.map h := by
-  haveI : IsMarkovKernel (κ.map h) := Kernel.IsMarkovKernel.map _ hh
-  have hbase : (μ ⊗ₘ κ).map Prod.fst = μ := Measure.fst_compProd μ κ
-  have hkey := condDistrib_ae_eq_of_measure_eq_compProd (μ := μ ⊗ₘ κ) Prod.fst
-    (hh.comp measurable_snd).aemeasurable (κ := κ.map h)
-    (by rw [hbase, Measure.compProd_map hh]; rfl)
-  rwa [hbase] at hkey
-
-lemma condMutualInfo_compProd_fst_eq_lintegral [Countable T] [MeasurableSingletonClass T]
-    (μ : Measure T) [IsProbabilityMeasure μ] (κ : Kernel T S) [IsMarkovKernel κ]
-    {f : S → A} {g : S → B} (hf : Measurable f) (hg : Measurable g) :
-    condMutualInfo (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) Prod.fst
-      = ∫⁻ t, mutualInfo (κ t) f g ∂μ := by
-  have hbase : (μ ⊗ₘ κ).map Prod.fst = μ := Measure.fst_compProd μ κ
-  haveI : IsMarkovKernel (κ.map fun s ↦ (f s, g s)) := Kernel.IsMarkovKernel.map _ (hf.prodMk hg)
-  haveI : IsMarkovKernel (κ.map f) := Kernel.IsMarkovKernel.map _ hf
-  haveI : IsMarkovKernel (κ.map g) := Kernel.IsMarkovKernel.map _ hg
-  have hslice : ∀ t, mutualInfo (κ t) f g
-      = klDiv ((κ.map fun s ↦ (f s, g s)) t) (((κ.map f) ×ₖ (κ.map g)) t) := by
-    intro t
-    rw [Kernel.map_apply _ (hf.prodMk hg), Kernel.prod_apply, Kernel.map_apply _ hf,
-      Kernel.map_apply _ hg]
-    rfl
-  have hJ := condDistrib_compProd_fst_ae_eq μ κ (hf.prodMk hg)
-  have hF := condDistrib_compProd_fst_ae_eq μ κ hf
-  have hG := condDistrib_compProd_fst_ae_eq μ κ hg
-  have hP : (condDistrib (fun p : T × S ↦ f p.2) Prod.fst (μ ⊗ₘ κ) ×ₖ
-      condDistrib (fun p : T × S ↦ g p.2) Prod.fst (μ ⊗ₘ κ)) =ᵐ[μ] (κ.map f) ×ₖ (κ.map g) := by
-    filter_upwards [hF, hG] with t htF htG
-    rw [Kernel.prod_apply, Kernel.prod_apply, htF, htG]
-  rw [condMutualInfo, hbase, Measure.compProd_congr hJ, Measure.compProd_congr hP]
-  by_cases hac : μ ⊗ₘ (κ.map fun s ↦ (f s, g s)) ≪ μ ⊗ₘ ((κ.map f) ×ₖ (κ.map g))
-  · rw [klDiv_compProd_lintegral hac]
-    exact lintegral_congr fun t ↦ (hslice t).symm
-  · rw [klDiv_of_not_ac hac]
-    simp_rw [hslice]
-    refine (lintegral_eq_top_of_measure_eq_top_ne_zero
-      (measurable_of_countable _).aemeasurable ?_).symm
-    intro hzero
-    refine hac (Measure.absolutelyContinuous_compProd_right_iff.mpr ?_)
-    have hne : ∀ᵐ t ∂μ, klDiv ((κ.map fun s ↦ (f s, g s)) t)
-        (((κ.map f) ×ₖ (κ.map g)) t) ≠ ∞ := by
-      rw [MeasureTheory.ae_iff]
-      simpa using hzero
-    filter_upwards [hne] with t ht
-    by_contra hnot
-    exact ht (klDiv_of_not_ac hnot)
-
-lemma mutualInfo_compProd_eq_add_lintegral [Countable T] [MeasurableSingletonClass T]
-    (μ : Measure T) [IsProbabilityMeasure μ] (κ : Kernel T S) [IsMarkovKernel κ]
-    {f : S → A} {g : S → B} (hf : Measurable f) (hg : Measurable g)
-    {tag : A → T} (htag : Measurable tag) (hrec : ∀ᵐ p ∂(μ ⊗ₘ κ), tag (f p.2) = p.1) :
-    mutualInfo (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2)
-      = mutualInfo (μ ⊗ₘ κ) Prod.fst (fun p ↦ g p.2)
-        + ∫⁻ t, mutualInfo (κ t) f g ∂μ := by
-  have hfsnd : Measurable (fun p : T × S ↦ f p.2) := hf.comp measurable_snd
-  have hgsnd : Measurable (fun p : T × S ↦ g p.2) := hg.comp measurable_snd
-  have hpad : mutualInfo (μ ⊗ₘ κ) (fun p : T × S ↦ (tag (f p.2), f p.2)) (fun p ↦ g p.2)
-      = mutualInfo (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) :=
-    mutualInfo_eq_of_leftInverse (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) hfsnd hgsnd
-      (f := fun a ↦ (tag a, a)) (g := Prod.snd) (htag.prodMk measurable_id) measurable_snd
-      (fun _ ↦ rfl)
-  have hae : (fun p : T × S ↦ (tag (f p.2), f p.2)) =ᵐ[μ ⊗ₘ κ] fun p ↦ (p.1, f p.2) := by
-    filter_upwards [hrec] with p hp
-    rw [hp]
-  rw [← hpad, mutualInfo_congr_ae (μ ⊗ₘ κ) (fun p ↦ g p.2) hae,
-    mutualInfo_chain_rule (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) Prod.fst hfsnd hgsnd
-      measurable_fst,
-    condMutualInfo_compProd_fst_eq_lintegral μ κ hf hg]
-
-lemma condMutualInfo_compProd_snd_eq_lintegral [Countable T] [MeasurableSingletonClass T]
-    {C : Type*} [MeasurableSpace C] [StandardBorelSpace C] [Nonempty C]
-    (μ : Measure T) [IsProbabilityMeasure μ] (κ : Kernel T S) [IsMarkovKernel κ]
-    {f : S → A} {g : S → B} {h : S → C} (hf : Measurable f) (hg : Measurable g)
-    (hh : Measurable h) {tag : C → T} (htag : Measurable tag)
-    (hrec : ∀ᵐ p ∂(μ ⊗ₘ κ), tag (h p.2) = p.1)
-    (htagfin : mutualInfo (μ ⊗ₘ κ) Prod.fst (fun p ↦ g p.2) ≠ ∞)
-    (hmargfin : (∫⁻ t, mutualInfo (κ t) h g ∂μ) ≠ ∞) :
-    condMutualInfo (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) (fun p ↦ h p.2)
-      = ∫⁻ t, condMutualInfo (κ t) f g h ∂μ := by
-  have hb := mutualInfo_chain_rule (μ ⊗ₘ κ) (fun p ↦ f p.2) (fun p ↦ g p.2) (fun p ↦ h p.2)
-    (hf.comp measurable_snd) (hg.comp measurable_snd) (hh.comp measurable_snd)
-  have hc := mutualInfo_compProd_eq_add_lintegral μ κ (hh.prodMk hf) hg
-    (tag := fun w ↦ tag w.1) (htag.comp measurable_fst)
-    (by filter_upwards [hrec] with p hp using hp)
-  have hd := mutualInfo_compProd_eq_add_lintegral μ κ hh hg htag hrec
-  have hsplit : ∫⁻ t, mutualInfo (κ t) (fun q ↦ (h q, f q)) g ∂μ
-      = (∫⁻ t, mutualInfo (κ t) h g ∂μ) + ∫⁻ t, condMutualInfo (κ t) f g h ∂μ := by
-    have he : ∀ t, mutualInfo (κ t) (fun q ↦ (h q, f q)) g
-        = mutualInfo (κ t) h g + condMutualInfo (κ t) f g h :=
-      fun t ↦ mutualInfo_chain_rule (κ t) f g h hf hg hh
-    simp_rw [he]
-    exact lintegral_add_left (measurable_of_countable _) _
-  have hfin : mutualInfo (μ ⊗ₘ κ) Prod.fst (fun p ↦ g p.2) + ∫⁻ t, mutualInfo (κ t) h g ∂μ ≠ ∞ :=
-    ENNReal.add_ne_top.mpr ⟨htagfin, hmargfin⟩
-  refine (((ENNReal.add_right_inj hfin).mp ?_).symm)
-  conv_lhs => rw [add_assoc, ← hsplit, ← hc]
-  rw [hb, hd]
-
-end Averaging
 
 /-! ## Re-encoding the auxiliary alphabets -/
 
@@ -1079,17 +869,6 @@ lemma bcUVTimeShare_uvInfoSum₁_ge (c : BroadcastCode M₁ M₂ n α β₁ β�
 
 /-! ### The shrunk rate point -/
 
-lemma le_toReal_of_inv_mul_le {S J : ℝ≥0∞} {m : ℕ} (hm : 0 < m)
-    (hSJ : (m : ℝ≥0∞)⁻¹ * S ≤ J) (hJ : J ≠ ∞) {r : ℝ} (hr : (m : ℝ) * r ≤ S.toReal) :
-    r ≤ J.toReal := by
-  have hm0 : (0 : ℝ) < (m : ℝ) := by exact_mod_cast hm
-  have hminv : ((m : ℝ≥0∞))⁻¹ ≠ 0 :=
-    ENNReal.inv_ne_zero.mpr (ENNReal.natCast_ne_top m)
-  have hmono := ENNReal.toReal_mono hJ hSJ
-  rw [ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast, inv_mul_eq_div] at hmono
-  have hkey : r ≤ S.toReal / (m : ℝ) := (le_div_iff₀ hm0).mpr (by linarith)
-  linarith
-
 /-- @audit:ok -/
 lemma bc_uv_mixture_point_mem
     [NeZero M₁] [NeZero M₂]
@@ -1316,78 +1095,6 @@ lemma bc_uv_rate_point_mem [NeZero M₁] [NeZero M₂]
     linarith
 
 end TimeSharing
-
-/-! ## Padding a code that carries a single message -/
-
-section Padding
-
-namespace BroadcastCode
-
-/-- A second receiver-1 message attached to a code that carries only one.  Both messages are sent
-with the single codeword of the original code, so receiver 1 cannot separate them, while receiver
-2 sees exactly the original code.  This is what puts a code of a nonpositive rate pair inside the
-scope of the converse, which asks for at least two messages per receiver.
-@audit:ok -/
-def padFirst (c : BroadcastCode 1 M₂ n α β₁ β₂) : BroadcastCode 2 M₂ n α β₁ β₂ where
-  encoder m := c.encoder (0, m.2)
-  decoder₁ _ := 0
-  decoder₂ := c.decoder₂
-
-/-- The mirror of `padFirst` at the second receiver.
-@audit:ok -/
-def padSecond (c : BroadcastCode M₁ 1 n α β₁ β₂) : BroadcastCode M₁ 2 n α β₁ β₂ where
-  encoder m := c.encoder (m.1, 0)
-  decoder₁ := c.decoder₁
-  decoder₂ _ := 0
-
-/-- @audit:ok -/
-lemma averageErrorProb₂_padFirst (c : BroadcastCode 1 M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) :
-    (c.padFirst).averageErrorProb₂ W = c.averageErrorProb₂ W := by
-  rcases Nat.eq_zero_or_pos M₂ with hM | hM
-  · subst hM; simp [averageErrorProb₂]
-  have hpt : ∀ m : Fin 2 × Fin M₂,
-      (c.padFirst).errorProbAt₂ W m = c.errorProbAt₂ W (0, m.2) := fun _ ↦ rfl
-  have hsum2 : (∑ m : Fin 2 × Fin M₂, (c.padFirst).errorProbAt₂ W m)
-      = 2 * ∑ b : Fin M₂, c.errorProbAt₂ W (0, b) := by
-    simp only [hpt, Fintype.sum_prod_type, Finset.sum_const, Finset.card_univ,
-      Fintype.card_fin, nsmul_eq_mul, Nat.cast_ofNat]
-  have hsum1 : (∑ m : Fin 1 × Fin M₂, c.errorProbAt₂ W m)
-      = ∑ b : Fin M₂, c.errorProbAt₂ W (0, b) := by
-    rw [Fintype.sum_prod_type, Fin.sum_univ_one]
-  have hcast : ((2 * M₂ : ℕ) : ℝ≥0∞) = 2 * (M₂ : ℝ≥0∞) := by push_cast; ring
-  unfold averageErrorProb₂
-  rw [if_neg (by simpa using hM.ne'), if_neg (by simpa using hM.ne'), hsum2, hsum1, hcast,
-    ENNReal.mul_inv (Or.inl (by norm_num)) (Or.inl (by norm_num)), one_mul,
-    show (2 : ℝ≥0∞)⁻¹ * (M₂ : ℝ≥0∞)⁻¹ * (2 * ∑ b : Fin M₂, c.errorProbAt₂ W (0, b))
-      = ((2 : ℝ≥0∞)⁻¹ * 2) * ((M₂ : ℝ≥0∞)⁻¹ * ∑ b : Fin M₂, c.errorProbAt₂ W (0, b)) by ring,
-    ENNReal.inv_mul_cancel (by norm_num) (by norm_num), one_mul]
-
-/-- @audit:ok -/
-lemma averageErrorProb₁_padSecond (c : BroadcastCode M₁ 1 n α β₁ β₂) (W : BCChannel α β₁ β₂) :
-    (c.padSecond).averageErrorProb₁ W = c.averageErrorProb₁ W := by
-  rcases Nat.eq_zero_or_pos M₁ with hM | hM
-  · subst hM; simp [averageErrorProb₁]
-  have hpt : ∀ m : Fin M₁ × Fin 2,
-      (c.padSecond).errorProbAt₁ W m = c.errorProbAt₁ W (m.1, 0) := fun _ ↦ rfl
-  have hsum2 : (∑ m : Fin M₁ × Fin 2, (c.padSecond).errorProbAt₁ W m)
-      = 2 * ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0) := by
-    simp only [hpt, Fintype.sum_prod_type, Finset.sum_const, Finset.card_univ,
-      Fintype.card_fin, nsmul_eq_mul, Nat.cast_ofNat, ← Finset.mul_sum]
-  have hsum1 : (∑ m : Fin M₁ × Fin 1, c.errorProbAt₁ W m)
-      = ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0) := by
-    rw [Fintype.sum_prod_type]
-    exact Finset.sum_congr rfl fun a _ ↦ Fin.sum_univ_one fun b ↦ c.errorProbAt₁ W (a, b)
-  have hcast : ((M₁ * 2 : ℕ) : ℝ≥0∞) = (M₁ : ℝ≥0∞) * 2 := by push_cast; ring
-  unfold averageErrorProb₁
-  rw [if_neg (by simpa using hM.ne'), if_neg (by simpa using hM.ne'), hsum2, hsum1, hcast,
-    ENNReal.mul_inv (Or.inr (by norm_num)) (Or.inr (by norm_num)), mul_one,
-    show (M₁ : ℝ≥0∞)⁻¹ * (2 : ℝ≥0∞)⁻¹ * (2 * ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0))
-      = ((2 : ℝ≥0∞)⁻¹ * 2) * ((M₁ : ℝ≥0∞)⁻¹ * ∑ a : Fin M₁, c.errorProbAt₁ W (a, 0)) by ring,
-    ENNReal.inv_mul_cancel (by norm_num) (by norm_num), one_mul]
-
-end BroadcastCode
-
-end Padding
 
 /-! ## The operational region lies in the UV outer region -/
 

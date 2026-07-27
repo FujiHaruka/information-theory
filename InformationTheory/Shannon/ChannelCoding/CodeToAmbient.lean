@@ -26,11 +26,18 @@ instantiates them by supplying its own encoder and channel.
   of a channel applied to a deterministic codeword, the ambient is a memoryless channel.
 * `compProd_pi_map_pair_eq`: the joint law of the `i`-th input-output pair is the channel joint
   `(ν.map fun m ↦ x m i) ⊗ₘ W`.
+* `compProd_pi_map_pair_eq_of_update_invariant`: the same identity with the input letter `x · i`
+  replaced by any map that is invariant under updating the `i`-th output coordinate and that
+  retracts onto the input letter, which is what lets a padded auxiliary variable sit there.
+* `compProd_comap_map_prodMap`: a composition product with a comapped kernel is the composition
+  product of the pushed-forward measure with the kernel itself.
 * `mutualInfo_map_comp`, `condDistrib_map_comp`, `condMutualInfo_map_comp`: information
   quantities and conditional distributions are invariant under a shared pushforward of all their
   arguments.
 * `le_log_of_ceil_exp_le`: `⌈exp x⌉₊ ≤ M` implies `x ≤ log M`, turning a message count into a
   rate bound.
+* `le_toReal_of_inv_mul_le`: an averaged bound `m⁻¹ · S ≤ J` in `ℝ≥0∞` together with
+  `m · r ≤ S.toReal` gives `r ≤ J.toReal`, which is how a per-letter bound becomes a rate bound.
 -/
 
 namespace InformationTheory.Shannon
@@ -335,6 +342,21 @@ lemma isMemorylessChannel_of_compProd_pi
     fun m y b ↦ ?_
   exact Prod.ext rfl (funext fun j ↦ Function.update_of_ne j.2 b y)
 
+/-- @audit:ok -/
+lemma compProd_comap_map_prodMap {A A' B : Type*} [MeasurableSpace A] [MeasurableSpace A']
+    [MeasurableSpace B] (μ : Measure A) [SFinite μ] (κ : Kernel A' B) [IsMarkovKernel κ]
+    {g : A → A'} (hg : Measurable g) :
+    (μ ⊗ₘ κ.comap g hg).map (fun z ↦ (g z.1, z.2)) = (μ.map g) ⊗ₘ κ := by
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
+  have hmap : Measurable (fun z : A × B ↦ (g z.1, z.2)) :=
+    (hg.comp measurable_fst).prodMk measurable_snd
+  have hin : Measurable (fun a : A' ↦ ∫⁻ b, f (a, b) ∂(κ a)) :=
+    Measurable.lintegral_kernel_prod_right' (κ := κ) hf
+  have hcomp : Measurable (fun z : A × B ↦ f (g z.1, z.2)) := hf.comp hmap
+  rw [lintegral_map hf hmap, Measure.lintegral_compProd hcomp,
+    Measure.lintegral_compProd hf, lintegral_map hin hg]
+  rfl
+
 /-- Per-letter joint pushforward of a product-channel `compProd`: for an ambient `ν ⊗ₘ κ`
 whose message-to-output kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)`, the
 joint law of the `i`-th input-output pair `(x ω.1 i, ω.2 i)` is the channel joint
@@ -369,6 +391,41 @@ lemma compProd_pi_map_pair_eq
   rw [hκ]
   exact lintegral_pi_eval (fun j ↦ W (x m j)) i (fun b ↦ f (x m i, b))
     (hf.comp (measurable_const.prodMk measurable_id))
+
+/-- @audit:ok -/
+lemma compProd_pi_map_pair_eq_of_update_invariant
+    {M A B C : Type*} [MeasurableSpace M] [MeasurableSpace A] [MeasurableSpace B]
+    [MeasurableSpace C] {k : ℕ}
+    (ν : Measure M) [IsProbabilityMeasure ν]
+    (x : M → Fin k → A)
+    (W : Kernel A B) [IsMarkovKernel W]
+    (κ : Kernel M (Fin k → B)) [IsMarkovKernel κ]
+    (hκ : ∀ m, κ m = Measure.pi (fun j ↦ W (x m j))) (i : Fin k)
+    (G : M × (Fin k → B) → C) (hG : Measurable G)
+    (hGupd : ∀ (m : M) (y : Fin k → B) (b : B), G (m, Function.update y i b) = G (m, y))
+    (g : C → A) (hg : Measurable g) (hgG : ∀ ω, g (G ω) = x ω.1 i) :
+    (ν ⊗ₘ κ).map (fun ω ↦ (G ω, ω.2 i)) = ((ν ⊗ₘ κ).map G) ⊗ₘ (W.comap g hg) := by
+  have hYo : Measurable (fun ω : M × (Fin k → B) ↦ ω.2 i) :=
+    (measurable_pi_apply i).comp measurable_snd
+  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
+  have hpair : Measurable (fun ω : M × (Fin k → B) ↦ (G ω, ω.2 i)) := hG.prodMk hYo
+  have hlhs : Measurable (fun ω : M × (Fin k → B) ↦ f (G ω, ω.2 i)) := hf.comp hpair
+  have hin : Measurable (fun c : C ↦ ∫⁻ b, f (c, b) ∂((W.comap g hg) c)) :=
+    Measurable.lintegral_kernel_prod_right' (κ := W.comap g hg) hf
+  have hrhs : Measurable
+      (fun ω : M × (Fin k → B) ↦ ∫⁻ b, f (G ω, b) ∂((W.comap g hg) (G ω))) := hin.comp hG
+  rw [lintegral_map hf hpair, Measure.lintegral_compProd hf, lintegral_map hin hG,
+    Measure.lintegral_compProd hlhs, Measure.lintegral_compProd hrhs]
+  refine lintegral_congr fun m ↦ ?_
+  rw [hκ]
+  have hFm : Measurable (fun y : Fin k → B ↦ f (G (m, y), y i)) :=
+    hf.comp ((hG.comp (measurable_const.prodMk measurable_id)).prodMk (measurable_pi_apply i))
+  rw [lintegral_pi_reRandomize (fun j ↦ W (x m j)) i (fun y ↦ f (G (m, y), y i)) hFm]
+  refine lintegral_congr fun y ↦ ?_
+  have hker : (W.comap g hg) (G (m, y)) = W (x m i) := by
+    rw [Kernel.comap_apply, hgG (m, y)]
+  rw [hker]
+  exact lintegral_congr fun b ↦ by rw [hGupd m y b, Function.update_self i b y]
 
 /-! ### Information transport under a shared pushforward -/
 
@@ -465,5 +522,18 @@ lemma le_log_of_ceil_exp_le {x : ℝ} {M : ℕ}
   have h3 : Real.exp x ≤ (M : ℝ) := h1.trans h2
   calc x = Real.log (Real.exp x) := (Real.log_exp x).symm
     _ ≤ Real.log (M : ℝ) := Real.log_le_log (Real.exp_pos x) h3
+
+/-! ### From an averaged bound to a real inequality -/
+
+lemma le_toReal_of_inv_mul_le {S J : ℝ≥0∞} {m : ℕ} (hm : 0 < m)
+    (hSJ : (m : ℝ≥0∞)⁻¹ * S ≤ J) (hJ : J ≠ ∞) {r : ℝ} (hr : (m : ℝ) * r ≤ S.toReal) :
+    r ≤ J.toReal := by
+  have hm0 : (0 : ℝ) < (m : ℝ) := by exact_mod_cast hm
+  have hminv : ((m : ℝ≥0∞))⁻¹ ≠ 0 :=
+    ENNReal.inv_ne_zero.mpr (ENNReal.natCast_ne_top m)
+  have hmono := ENNReal.toReal_mono hJ hSJ
+  rw [ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast, inv_mul_eq_div] at hmono
+  have hkey : r ≤ S.toReal / (m : ℝ) := (le_div_iff₀ hm0).mpr (by linarith)
+  linarith
 
 end InformationTheory.Shannon

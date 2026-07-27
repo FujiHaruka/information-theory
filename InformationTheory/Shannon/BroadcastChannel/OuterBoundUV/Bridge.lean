@@ -3,6 +3,7 @@ import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV
 import InformationTheory.Shannon.ChannelCoding.CodeToAmbient
 import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.CondMutualInfo
+import InformationTheory.Shannon.CondMutualInfoMixture
 import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.MutualInfo
 
@@ -709,22 +710,6 @@ lemma measurable_uvAuxPad [Nonempty β₁] [Nonempty β₂]
     (i : Fin n) :
     Measurable (uvAuxPad W Y₁s Y₂s i) :=
   (measurable_uvPadMap i).comp (measurable_uvAux W Y₁s Y₂s hW hY₁s hY₂s i)
-
-lemma mutualInfo_eq_of_leftInverse {A B : Type*} [MeasurableSpace A] [MeasurableSpace B]
-    (μ : Measure Ω) [IsFiniteMeasure μ] (U : Ω → A) (Yo : Ω → γ)
-    (hU : Measurable U) (hYo : Measurable Yo)
-    {f : A → B} {g : B → A} (hf : Measurable f) (hg : Measurable g)
-    (hgf : ∀ a, g (f a) = a) :
-    mutualInfo μ (fun ω ↦ f (U ω)) Yo = mutualInfo μ U Yo := by
-  have hfU : Measurable (fun ω ↦ f (U ω)) := hf.comp hU
-  refine le_antisymm ?_ ?_
-  · rw [mutualInfo_comm μ _ Yo hfU hYo, mutualInfo_comm μ U Yo hU hYo]
-    exact mutualInfo_le_of_postprocess μ Yo U hYo hU hf
-  · have hUg : U = fun ω ↦ g (f (U ω)) := funext fun ω ↦ (hgf (U ω)).symm
-    rw [mutualInfo_comm μ U Yo hU hYo, mutualInfo_comm μ _ Yo hfU hYo]
-    calc mutualInfo μ Yo U = mutualInfo μ Yo (fun ω ↦ g (f (U ω))) := by rw [← hUg]
-      _ ≤ mutualInfo μ Yo (fun ω ↦ f (U ω)) :=
-          mutualInfo_le_of_postprocess μ Yo _ hYo hfU hg
 
 lemma uvAux_pad_mutualInfo_eq [Nonempty β₁] [Nonempty β₂]
     (μ : Measure Ω) [IsFiniteMeasure μ]
