@@ -73,6 +73,65 @@ theorem bcInfo₁_nonneg {U : Type*}
   simp only [bcInfo₁, ← hμ]
   linarith
 
+/-! ### The three informations as mutual informations -/
+
+theorem bcInfo₂_eq_mutualInfo_toReal {U : Type*}
+    [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    bcInfo₂ pU K W
+      = (mutualInfo (bcJointDistribution pU K W)
+          (fun q ↦ q.1) (fun q ↦ q.2.2.2)).toReal := by
+  rw [MAC.mutualInfo_toReal_eq_entropy_form (bcJointDistribution pU K W)
+    (fun q ↦ q.1) (fun q ↦ q.2.2.2) (by fun_prop) (by fun_prop)]
+  rfl
+
+theorem bcInfoJoint_eq_mutualInfo_toReal {U : Type*}
+    [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    bcInfoJoint pU K W
+      = (mutualInfo (bcJointDistribution pU K W)
+          (fun q ↦ (q.1, q.2.1)) (fun q ↦ q.2.2.1)).toReal := by
+  -- The nested triple carries the same entropy as the flat one appearing in `bcInfoJoint`.
+  have hflat : entropy (bcJointDistribution pU K W)
+        (fun q : U × α × β₁ × β₂ ↦ ((q.1, q.2.1), q.2.2.1))
+      = entropy (bcJointDistribution pU K W)
+        (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1)) :=
+    entropy_measurableEquiv_comp _ (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1))
+      (by fun_prop) (MeasurableEquiv.prodAssoc (α := U) (β := α) (γ := β₁)).symm
+  rw [MAC.mutualInfo_toReal_eq_entropy_form (bcJointDistribution pU K W)
+    (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1)) (fun q ↦ q.2.2.1) (by fun_prop) (by fun_prop),
+    hflat]
+  rfl
+
+theorem bcInfo₁_eq_condMutualInfo_toReal {U : Type*}
+    [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    bcInfo₁ pU K W
+      = (condMutualInfo (bcJointDistribution pU K W)
+          (fun q ↦ q.2.1) (fun q ↦ q.2.2.1) (fun q ↦ q.1)).toReal := by
+  -- `I((U, X); Y₁) = I(U; Y₁) + I(X; Y₁ ∣ U)`, read in `ℝ` against the two identified slots.
+  have hchain := mutualInfo_chain_rule (bcJointDistribution pU K W)
+    (fun q : U × α × β₁ × β₂ ↦ q.2.1) (fun q ↦ q.2.2.1) (fun q ↦ q.1)
+    (by fun_prop) (by fun_prop) (by fun_prop)
+  have hfinU : mutualInfo (bcJointDistribution pU K W)
+      (fun q : U × α × β₁ × β₂ ↦ q.1) (fun q ↦ q.2.2.1) ≠ ∞ :=
+    mutualInfo_ne_top _ _ _ (by fun_prop) (by fun_prop)
+  have hfinX : condMutualInfo (bcJointDistribution pU K W)
+      (fun q : U × α × β₁ × β₂ ↦ q.2.1) (fun q ↦ q.2.2.1) (fun q ↦ q.1) ≠ ∞ :=
+    condMutualInfo_ne_top _ _ _ _ (by fun_prop) (by fun_prop) (by fun_prop)
+  have htoReal := congrArg ENNReal.toReal hchain
+  rw [ENNReal.toReal_add hfinU hfinX, ← bcInfoJoint_eq_mutualInfo_toReal pU K W,
+    MAC.mutualInfo_toReal_eq_entropy_form (bcJointDistribution pU K W)
+      (fun q : U × α × β₁ × β₂ ↦ q.1) (fun q ↦ q.2.2.1) (by fun_prop) (by fun_prop)] at htoReal
+  simp only [bcInfoJoint, bcInfo₁] at htoReal ⊢
+  linarith
+
 /-! ### Achievability over a less noisy channel -/
 
 /-- Achievability half of the superposition inner bound over a less noisy broadcast channel.

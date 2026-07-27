@@ -261,34 +261,6 @@ lemma martonInfoV₁V₂_eq_mutualInfo_toReal
 
 /-! ## The Markov chains carried by the Marton joint law -/
 
-private lemma isMarkovChain_map_comp {Ω Ω' A B C : Type*}
-    [MeasurableSpace Ω] [MeasurableSpace Ω']
-    [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
-    [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]
-    [MeasurableSpace C]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (T : Ω → Ω') (hT : Measurable T)
-    (Xs : Ω' → A) (hXs : Measurable Xs) (Zc : Ω' → C) (hZc : Measurable Zc)
-    (Yo : Ω' → B) (hYo : Measurable Yo)
-    (ρ : Measure Ω') [IsFiniteMeasure ρ] (hρ : ρ = μ.map T)
-    (h : IsMarkovChain μ (fun ω ↦ Xs (T ω)) (fun ω ↦ Zc (T ω)) (fun ω ↦ Yo (T ω))) :
-    IsMarkovChain ρ Xs Zc Yo := by
-  subst hρ
-  haveI : IsProbabilityMeasure (μ.map T) := Measure.isProbabilityMeasure_map hT.aemeasurable
-  have hbase : (μ.map T).map Zc = μ.map (fun ω ↦ Zc (T ω)) := Measure.map_map hZc hT
-  have hjoint : (μ.map T).map (fun r ↦ (Zc r, Xs r, Yo r))
-      = μ.map (fun ω ↦ (Zc (T ω), Xs (T ω), Yo (T ω))) :=
-    Measure.map_map (hZc.prodMk (hXs.prodMk hYo)) hT
-  have hX := condDistrib_map_comp μ T hT Xs hXs Zc hZc
-  have hY := condDistrib_map_comp μ T hT Yo hYo Zc hZc
-  rw [hbase] at hX hY
-  unfold IsMarkovChain at h ⊢
-  rw [hjoint, h, hbase]
-  refine Measure.compProd_congr ?_
-  filter_upwards [hX, hY] with a hax hay
-  ext s hs
-  rw [Kernel.prod_apply, Kernel.prod_apply, hax, hay]
-
 private lemma martonJointDistribution_eq_map
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]

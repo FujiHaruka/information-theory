@@ -39,6 +39,12 @@ product identity, `IsUVChannelLaw`.
 * `IsUVChannelLaw.map_input_output` — a channel law has the channel joint `(ν.map X) ⊗ₘ W` as
   its input-output pair law, which is the constraint a law copying the input letter into the
   outputs violates.
+* `IsUVChannelLaw.map_U_X_Y₁_Y₂` — dropping the second auxiliary leaves the law of the first
+  auxiliary, the input letter and the two outputs in the shape a superposition ensemble has: the
+  law of the pair `(U, X)` pushed through the channel.
+* `IsUVChannelLaw.isMarkovChain_UV_X_Y` — the two auxiliaries reach the output pair through the
+  input letter only, with `IsUVChannelLaw.isMarkovChain_U_X_Y₁` and
+  `IsUVChannelLaw.isMarkovChain_V_X_Y₁` reading one auxiliary and one output off it.
 * `not_isUVChannelLaw_uvOutputCopiesInputLaw` and `not_isUVChannelLaw_uvAuxCopiesOutputLaw` — the
   constraint rejects two structurally different degenerate laws, one whose outputs copy the input
   letter and one whose auxiliary copies an output over a one-letter input alphabet.
@@ -241,6 +247,102 @@ lemma IsUVChannelLaw.map_input_output {W : BCChannel α β₁ β₂} [IsMarkovKe
     compProd_comap_map_prodMap (ν.map fun q ↦ (q.1, q.2.1, q.2.2.1)) W hg,
     Measure.map_map hg hπ] at hcong
   exact hcong
+
+lemma IsUVChannelLaw.map_U_X_Y₁_Y₂ {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
+    {ν : Measure (U × V × α × β₁ × β₂)} [SFinite ν] (h : IsUVChannelLaw W ν) :
+    ν.map (fun q ↦ (q.1, q.2.2.1, q.2.2.2.1, q.2.2.2.2))
+      = ((ν.map fun q ↦ (q.1, q.2.2.1)) ⊗ₘ
+          (W.comap (Prod.snd : U × α → α) measurable_snd)).map MeasurableEquiv.prodAssoc := by
+  have hg : Measurable (fun r : U × V × α ↦ r.2.2) := measurable_snd.comp measurable_snd
+  have hφ : Measurable (fun r : U × V × α ↦ (r.1, r.2.2)) := measurable_fst.prodMk hg
+  have hΦ : Measurable (fun z : (U × V × α) × (β₁ × β₂) ↦ ((z.1.1, z.1.2.2), z.2)) :=
+    (hφ.comp measurable_fst).prodMk measurable_snd
+  have hpairmeas : Measurable
+      (fun q : U × V × α × β₁ × β₂ ↦ ((q.1, q.2.2.1), q.2.2.2)) :=
+    (measurable_fst.prodMk (measurable_fst.comp (measurable_snd.comp measurable_snd))).prodMk
+      (measurable_snd.comp (measurable_snd.comp measurable_snd))
+  have hkernel : W.comap (fun r : U × V × α ↦ r.2.2) hg
+      = (W.comap (Prod.snd : U × α → α) measurable_snd).comap
+        (fun r : U × V × α ↦ (r.1, r.2.2)) hφ := Kernel.ext fun _ ↦ rfl
+  have hcong := congrArg
+    (Measure.map (fun z : (U × V × α) × (β₁ × β₂) ↦ ((z.1.1, z.1.2.2), z.2))) h
+  rw [Measure.map_map hΦ measurable_uvSplit, hkernel,
+    compProd_comap_map_prodMap (ν.map fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1))
+      (W.comap (Prod.snd : U × α → α) measurable_snd) hφ,
+    Measure.map_map hφ measurable_uvFirstThree] at hcong
+  have hpair : ν.map (fun q ↦ ((q.1, q.2.2.1), q.2.2.2))
+      = (ν.map fun q ↦ (q.1, q.2.2.1)) ⊗ₘ
+        (W.comap (Prod.snd : U × α → α) measurable_snd) := hcong
+  rw [← hpair, Measure.map_map MeasurableEquiv.prodAssoc.measurable hpairmeas]
+  rfl
+
+/-! ### The Markov chains and the cloud quadruple -/
+
+section Transport
+
+variable [StandardBorelSpace U] [Nonempty U] [StandardBorelSpace V] [Nonempty V]
+variable [StandardBorelSpace α] [Nonempty α]
+variable [StandardBorelSpace β₁] [Nonempty β₁] [StandardBorelSpace β₂] [Nonempty β₂]
+
+lemma IsUVChannelLaw.isMarkovChain_UV_X_Y {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
+    {ν : Measure (U × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) :
+    IsMarkovChain ν (fun q ↦ (q.1, q.2.1)) (fun q ↦ q.2.2.1)
+      (fun q ↦ (q.2.2.2.1, q.2.2.2.2)) := by
+  have hg : Measurable (fun r : U × V × α ↦ r.2.2) := measurable_snd.comp measurable_snd
+  haveI : IsProbabilityMeasure (ν.map fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1)) :=
+    Measure.isProbabilityMeasure_map measurable_uvFirstThree.aemeasurable
+  have hZc : Measurable (fun ω : (U × V × α) × (β₁ × β₂) ↦ ω.1.2.2) := hg.comp measurable_fst
+  have h₀ := isMarkovChain_of_compProd_encoder
+    (ν.map fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1))
+    (fun r : U × V × α ↦ r.2.2) hg (W.comap (fun r : U × V × α ↦ r.2.2) hg) W fun _ ↦ rfl
+  have h₁ := isMarkovChain_map_left _ (Prod.fst : (U × V × α) × (β₁ × β₂) → U × V × α)
+    (fun ω : (U × V × α) × (β₁ × β₂) ↦ ω.1.2.2)
+    (Prod.snd : (U × V × α) × (β₁ × β₂) → β₁ × β₂) measurable_fst hZc measurable_snd
+    (f := fun r : U × V × α ↦ (r.1, r.2.1)) (by fun_prop) h₀
+  exact isMarkovChain_map_comp _ _ measurable_uvUnsplit _ (by fun_prop) _ (by fun_prop) _
+    (by fun_prop) ν ((isUVChannelLaw_iff W ν).mp h) h₁
+
+lemma IsUVChannelLaw.isMarkovChain_U_X_Y₁ {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
+    {ν : Measure (U × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) :
+    IsMarkovChain ν (fun q ↦ q.1) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) := by
+  have hX : Measurable (fun q : U × V × α × β₁ × β₂ ↦ q.2.2.1) := by fun_prop
+  have hU : Measurable (fun q : U × V × α × β₁ × β₂ ↦ q.1) := by fun_prop
+  have hY : Measurable (fun q : U × V × α × β₁ × β₂ ↦ (q.2.2.2.1, q.2.2.2.2)) := by fun_prop
+  have hY₁ : Measurable (fun q : U × V × α × β₁ × β₂ ↦ q.2.2.2.1) := by fun_prop
+  have h₁ : IsMarkovChain ν (fun q ↦ q.1) (fun q ↦ q.2.2.1)
+      (fun q ↦ (q.2.2.2.1, q.2.2.2.2)) :=
+    isMarkovChain_map_left ν (fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.1))
+      (fun q ↦ q.2.2.1) (fun q ↦ (q.2.2.2.1, q.2.2.2.2)) (by fun_prop) hX hY
+      (f := (Prod.fst : U × V → U)) measurable_fst h.isMarkovChain_UV_X_Y
+  have h₂ : IsMarkovChain ν (fun q ↦ (q.2.2.2.1, q.2.2.2.2)) (fun q ↦ q.2.2.1) (fun q ↦ q.1) :=
+    isMarkovChain_swap ν _ _ _ hU hX hY h₁
+  have h₃ : IsMarkovChain ν (fun q ↦ q.2.2.2.1) (fun q ↦ q.2.2.1) (fun q ↦ q.1) :=
+    isMarkovChain_map_left ν (fun q : U × V × α × β₁ × β₂ ↦ (q.2.2.2.1, q.2.2.2.2))
+      (fun q ↦ q.2.2.1) (fun q ↦ q.1) hY hX hU
+      (f := (Prod.fst : β₁ × β₂ → β₁)) measurable_fst h₂
+  exact isMarkovChain_swap ν _ _ _ hY₁ hX hU h₃
+
+lemma IsUVChannelLaw.isMarkovChain_V_X_Y₁ {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
+    {ν : Measure (U × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) :
+    IsMarkovChain ν (fun q ↦ q.2.1) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) := by
+  have hX : Measurable (fun q : U × V × α × β₁ × β₂ ↦ q.2.2.1) := by fun_prop
+  have hV : Measurable (fun q : U × V × α × β₁ × β₂ ↦ q.2.1) := by fun_prop
+  have hY : Measurable (fun q : U × V × α × β₁ × β₂ ↦ (q.2.2.2.1, q.2.2.2.2)) := by fun_prop
+  have hY₁ : Measurable (fun q : U × V × α × β₁ × β₂ ↦ q.2.2.2.1) := by fun_prop
+  have h₁ : IsMarkovChain ν (fun q ↦ q.2.1) (fun q ↦ q.2.2.1)
+      (fun q ↦ (q.2.2.2.1, q.2.2.2.2)) :=
+    isMarkovChain_map_left ν (fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.1))
+      (fun q ↦ q.2.2.1) (fun q ↦ (q.2.2.2.1, q.2.2.2.2)) (by fun_prop) hX hY
+      (f := (Prod.snd : U × V → V)) measurable_snd h.isMarkovChain_UV_X_Y
+  have h₂ : IsMarkovChain ν (fun q ↦ (q.2.2.2.1, q.2.2.2.2)) (fun q ↦ q.2.2.1) (fun q ↦ q.2.1) :=
+    isMarkovChain_swap ν _ _ _ hV hX hY h₁
+  have h₃ : IsMarkovChain ν (fun q ↦ q.2.2.2.1) (fun q ↦ q.2.2.1) (fun q ↦ q.2.1) :=
+    isMarkovChain_map_left ν (fun q : U × V × α × β₁ × β₂ ↦ (q.2.2.2.1, q.2.2.2.2))
+      (fun q ↦ q.2.2.1) (fun q ↦ q.2.1) hY hX hV
+      (f := (Prod.fst : β₁ × β₂ → β₁)) measurable_fst h₂
+  exact isMarkovChain_swap ν _ _ _ hY₁ hX hV h₃
+
+end Transport
 
 end ChannelLaw
 
