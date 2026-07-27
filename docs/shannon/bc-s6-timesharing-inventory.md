@@ -185,7 +185,8 @@ S4 の Markov 鎖がそのまま鍵**だった (判断ログ 16-(c) の 4 度目
 定数に潰す**設計なので `pU'` は構造的に全支持を破る (潰さなくても `λ = 1` で破れる)
 ⟹ **S6 の署名に全支持を混ぜない**。**責任分界の提案 (これが一番安い)**:
 
-- **S6** は全支持を主張しない存在命題まで出す (§Q3 の `exists_bcInfo_ge_of_isUVChannelLaw`)。
+- **S6** は全支持を主張しない存在命題まで出す
+  (§Q3 の `exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw`)。
 - **S7 は `(pU, K)` ではなく `ν'` (時分割済の五つ組法) を摂動する**。理由は 3 つ:
   (a) `IsUVChannelLaw` が `.smul` / `.add` で閉じるので摂動後も channel law のまま、(b) S6-a の橋を
   そのまま再利用でき `(pU, K)` を作り直さずに済む、(c) 連続性の議論が `ℝ≥0∞` の `uvInfo₂` /
@@ -257,9 +258,9 @@ theorem condMutualInfo_uvTimeShareLaw … (hlam : lam ≤ 1) :
 noncomputable def boolProdAuxEquiv (m : ℕ) :
     Bool × ULift.{u} (Fin (m + 1)) ≃ Marton.bcAuxAlphabet.{u} (2 * m + 1)
 
-theorem exists_bcInfo_ge_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+theorem exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hln : IsBCLessNoisy W) {m : ℕ}
-    {ν : Measure (Marton.bcAuxAlphabet.{u} m × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν]
+    {ν : Measure (Marton.bcAuxAlphabet.{u} m × V × α × β₁ × β₂)} [IsProbabilityMeasure ν]
     (h : IsUVChannelLaw W ν) {R₁ R₂ : ℝ}
     (h₁ : R₁ ≤ (uvInfo₁ ν).toReal) (h₂ : R₂ ≤ (uvInfo₂ ν).toReal)
     (hsum : R₁ + R₂ ≤ (uvInfoSum₂ ν).toReal) :
