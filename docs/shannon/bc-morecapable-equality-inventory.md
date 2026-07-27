@@ -30,7 +30,7 @@
   (CLAUDE.md「Mathlib-shape-driven Definitions」)。到達点 `bc_achievability_of_rate_lt`
   (`Achievability/Assembly.lean:1103`) の仮説が逐語で `hJlt : max R₁ 0 + R₂ < bcInfoJoint` だから。
   この形にすると **内界の達成可能性が比較クラス仮説をまったく要求しない**
-  (`bcSuperposition3Region_subset_capacity` は `hW` のみ、probe MC5 で機械確認)。素直な
+  (`bcSuperpositionRegionSumRate_subset_capacity` は `hW` のみ、probe MC5 で機械確認)。素直な
   `p.1 + p.2` 形にすると負レート枝で `bcInfo₂ ≤ bcInfoJoint` が必要になり、クラス仮説が達成側に漏れる。
 - **plan の「`uvInfoSum₁` の `V = X` 特殊化で到達可能」は方向が逆** — `V = X` 特殊化は
   「内界 ⊆ 外界」を示す道具で、headline (`bcCapacityRegion = bcOuterRegionUV`) の
@@ -58,7 +58,7 @@
 ### Q1-1 内界 (新規 def、**`structure` は不要**)
 
 ```lean
-noncomputable def bcSuperposition3Region (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
+noncomputable def bcSuperpositionRegionSumRate (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k))
     (_ : IsProbabilityMeasure pU) (_ : ∀ x : Marton.bcAuxAlphabet.{u} k, 0 < pU.real {x})
     (K : Kernel (Marton.bcAuxAlphabet.{u} k) α) (_ : IsMarkovKernel K)
@@ -90,13 +90,13 @@ noncomputable def bcSuperposition3Region (W : BCChannel α β₁ β₂) : Set (�
 ### Q1-2 達成側 (**比較クラス仮説なし**、probe で証明済)
 
 ```lean
-theorem bcSuperposition3Region_isClosed (W : BCChannel α β₁ β₂) :
-    IsClosed (bcSuperposition3Region.{u} W) := isClosed_closure
+theorem bcSuperpositionRegionSumRate_isClosed (W : BCChannel α β₁ β₂) :
+    IsClosed (bcSuperpositionRegionSumRate.{u} W) := isClosed_closure
 
 @[entry_point]
-theorem bcSuperposition3Region_subset_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+theorem bcSuperpositionRegionSumRate_subset_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) :
-    bcSuperposition3Region.{u} W ⊆ bcCapacityRegion W
+    bcSuperpositionRegionSumRate.{u} W ⊆ bcCapacityRegion W
 ```
 
 ⚠ less noisy 版 `bcSuperpositionRegionFullSupport_subset_capacity` (`Superposition/Region.lean:193`)
@@ -109,7 +109,7 @@ theorem bcSuperposition3Region_subset_capacity (W : BCChannel α β₁ β₂) [I
 @[entry_point]
 theorem bc_moreCapable_uv_subset_superposition (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hmc : IsBCMoreCapable W) :
-    bcOuterRegionUV W ⊆ bcSuperposition3Region.{u} W
+    bcOuterRegionUV W ⊆ bcSuperpositionRegionSumRate.{u} W
 
 @[entry_point]
 theorem bc_moreCapable_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
@@ -118,7 +118,7 @@ theorem bc_moreCapable_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKe
 
 theorem bc_moreCapable_superposition_eq_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) (hmc : IsBCMoreCapable W) :
-    bcSuperposition3Region.{u} W = bcCapacityRegion W
+    bcSuperpositionRegionSumRate.{u} W = bcCapacityRegion W
 ```
 
 `hW` の要る場所は less noisy とまったく同じ = **逆包含ではなく内界を符号に落とす段だけ**
@@ -256,8 +256,8 @@ probe は一般形 (任意の `U`/`V`、任意の `IsUVChannelLaw` な `ν`) で
 | **S8** 逆包含 + 等号 | `Superposition/Assembly.lean` 7 本 | **変種 (逐語再利用は 0 本、骨格は逐語)** | 裾の `.toReal` 引き算 2 本 (`:54` `:64`) はそのまま使える。点レベル 2 本 (`:74` `:92`) と逆包含 (`:117`) と headline 2 本 (`:142` `:150`) は 3 スロット版を書き直す。**2 重極限の対角線 1 本 (`m := k`, `δ := 1/(k+1)`) はそのまま**、第 3 スロットは量子化で不変・摂動で `δ` 1 回なので帳簿は増えない |
 
 **`hW` の要る場所は less noisy と同一** (brief の問い): 逆包含側には 1 本も要らず、
-`bcSuperposition3Region ⊆ bcCapacityRegion` (内界を符号に落とす段) にだけ要る。probe MC5 の
-`bcSuperposition3Region_subset_capacity` が `hW` だけを取ることで機械確認済。
+`bcSuperpositionRegionSumRate ⊆ bcCapacityRegion` (内界を符号に落とす段) にだけ要る。probe MC5 の
+`bcSuperpositionRegionSumRate_subset_capacity` が `hW` だけを取ることで機械確認済。
 
 ---
 
@@ -327,20 +327,20 @@ probe は一般形 (任意の `U`/`V`、任意の `IsUVChannelLaw` な `ν`) で
 
 | # | 宣言 | 内容 | probe 実測 | 置き場 (推奨) |
 |---|---|---|---|---|
-| 1 | `condMutualInfo_congr_measure` | `(h : μ = ρ) : condMutualInfo μ Xs Yo Zc = condMutualInfo ρ Xs Yo Zc`。`subst h; rfl` **2 行**。⚠ `rw` では `motive is not type correct` (`condMutualInfo` が `[IsFiniteMeasure μ]` を持つ) | **8** | 汎用 ⟹ `Shannon/CondMutualInfo.lean` (F-15 の轍を踏まない) |
-| 2 | `mutualInfo_congr_pair` | 結合周辺分布が一致すれば `mutualInfo` が一致 | **18** | 汎用 ⟹ `Shannon/MutualInfo.lean` |
-| 3 | `mutualInfo_compProd_out₁` / `_out₂` | `mutualInfo (p ⊗ₘ W) Prod.fst (fun s ↦ s.2.1) = mutualInfoOfChannel p (Kernel.fst W)` / `snd` 版 | **20** | 汎用寄り ⟹ `ChannelCoding/Basic.lean` か BC 側 (判断は F-15 と同軸) |
+| 1 | `condMutualInfo_congr_measure` | `(h : μ = ρ) : condMutualInfo μ Xs Yo Zc = condMutualInfo ρ Xs Yo Zc`。`subst h; rfl` **2 行**。⚠ `rw` では `motive is not type correct` (`condMutualInfo` が `[IsFiniteMeasure μ]` を持つ) | **8** | 汎用 ⟹ `Shannon/CondMutualInfo.lean` (F-15 の轍を踏まない)。✅ **採用 `:76`** (`730844a1`。移設前に結論形でも検索し同等物の不在を確認 — 最近縁は `mutualInfo_congr_ae` / `entropy_eq_of_identDistrib` でどちらも包含しない) |
+| 2 | `mutualInfo_congr_pair` | 結合周辺分布が一致すれば `mutualInfo` が一致 | **18** | 汎用 ⟹ `Shannon/MutualInfo.lean`。✅ **採用 `:46`** (同上) |
+| 3 | `mutualInfo_compProd_out₁` / `_out₂` | `mutualInfo (p ⊗ₘ W) Prod.fst (fun s ↦ s.2.1) = mutualInfoOfChannel p (Kernel.fst W)` / `snd` 版 | **20** | 汎用寄り ⟹ `ChannelCoding/Basic.lean` か BC 側 (判断は F-15 と同軸)。✅ **BC 側に留置** (`MoreCapable.lean:97` / `:106`) — 結論が `mutualInfoOfChannel` × BC の出力射影という組で、単独の汎用 API にならない |
 | 4 | `bcJointDistribution_eq_compProd` + `kernel_slice` | `bcJointDistribution pU K W = pU ⊗ₘ (K ⊗ₖ W.comap Prod.snd)` (`Measure.compProd_assoc'` **1 行**) + スライス | **12** | `Classes.lean` |
 | 5 | ★ `condMutualInfo_bcJoint_out₁` / `_out₂` + **`IsBCMoreCapable.condMutualInfo_le`** | §Q2-1。`IsBCMoreCapable` の条件付き版 | **40** | `Classes.lean` (`IsBCMoreCapable` の隣)。**`import InformationTheory.Shannon.CondMutualInfoMixture` を 1 行追加** |
-| 6 | `uvInfoJoint` (def) + `uvInfoJoint_map_uvRelabel` | `mutualInfo ν X Y₁` に名前を付ける + 補助の付け替え不変性 | **14** | `OuterBoundUV/Bridge.lean` の 4 スロットの隣 (def) / `OuterBoundUV/Assembly.lean:143` の隣 (不変性)。⚠ 現状この項は **`TimeShare.lean` の 5 箇所でベタ書き**されており (`:357` `:371` `:478` `:585` `:589`)、def が無い = F-6「`martonInfoSum` が実在しない識別子」と同じ失敗モード |
+| 6 | `uvInfoJoint` (def) + `uvInfoJoint_map_uvRelabel` | `mutualInfo ν X Y₁` に名前を付ける + 補助の付け替え不変性 | **14** | `OuterBoundUV/Bridge.lean` の 4 スロットの隣 (def) / `OuterBoundUV/Assembly.lean:143` の隣 (不変性)。⚠ 現状この項は **`TimeShare.lean` の 5 箇所でベタ書き**されており (`:357` `:371` `:478` `:585` `:589`)、def が無い = F-6「`martonInfoSum` が実在しない識別子」と同じ失敗モード。**実測では置換対象が 7 箇所**だった — この 5 箇所に加え、**def を作った leg 自身が `MoreCapable.lean` に 2 箇所ベタ書きを残した** ⟹ 「def 化 leg」のチェックリストは既存箇所だけでなく**同 leg の新規コードも走査対象**にする |
 | 7 | `uvInfoJoint_smul_add_smul` + `uvInfoJoint_uvTimeShareLaw` | 時分割は `I(X;Y₁)` を**等式で**保つ | **35** | 上と同じ束 (混合を使うので `Superposition/TimeShare.lean` 側) |
 | 8 | `mutualInfo_pair_out₁_eq_uvInfoJoint` | 「`X` に何を足しても `Y₁` への情報は増えない」(`bcInfoJoint_uvCloudLaw:481`–`:494` の中身を総称化) | **20** | `OuterBoundUV/Region.lean` の `section Transport` の隣。**`bcInfoJoint_uvCloudLaw` はこれを使う形にリファクタできる** |
 | 9 | `IsUVChannelLaw.isMarkovChain_U_X_Y₂` | `_U_X_Y₁:311` の逐語ミラー | **18** | `OuterBoundUV/Region.lean` `_U_X_Y₁` の直後 |
 | 10 | ★ `uvInfoJoint_eq_uvInfo₁_add_cond` + `condMutualInfo_out₂_le_out₁_of_moreCapable` + **`uvInfoSum₁_le_uvInfoJoint_of_moreCapable`** | §Q2-1 の ν レベル | **85** | 新ファイル |
 | 11 | `mutualInfo_out₂_le_out₁_of_moreCapable` + **`uvInfo₂_le_uvInfoJoint_of_moreCapable`** | §Q2-2 の ν レベル | **45** | 新ファイル |
 | 12 | ★ `mul_uvInfoJoint_le_uvInfoJoint_uvMixLaw` + `_uvPerturbLaw` | `I(X;Y₁)` の入力法についての凹性 (tag の連鎖律経由)。`mul_uvInfo₂_le_uvInfo₂_uvMixLaw:224` と**骨格が逐語** | **55** | 新ファイル (`uvMixLaw` の下流) |
-| 13 | S6 変種 `exists_bcInfo3_ge_of_tagged` + `exists_bcInfo3_ge_of_isUVChannelLaw` | §Q3 の S6 行 | **95** | 新ファイル |
-| 14 | 領域 `bcSuperposition3Region` + `_isClosed` + `_subset_capacity` | §Q1-1 / Q1-2 | **45** | 新ファイル |
+| 13 | S6 変種 `exists_bcInfo_ge_sumRate_of_tagged` + `exists_bcInfo_ge_sumRate_of_isUVChannelLaw` | §Q3 の S6 行 | **95** | 新ファイル |
+| 14 | 領域 `bcSuperpositionRegionSumRate` + `_isClosed` + `_subset_capacity` | §Q1-1 / Q1-2 | **45** | 新ファイル |
 
 **未 probe (見積りのみ)**: S7 変種の組み立て (~45) / S7 の pair-level + compose (~35) /
 S8 変種一式 (`uvInfoJoint_uvQuantizeLaw` 3 行 + `.toReal` 橋 + 点レベル 2 本 + 2 重極限 +
@@ -374,8 +374,10 @@ S8 変種一式 (`uvInfoJoint_uvQuantizeLaw` 3 行 + `.toReal` 橋 + 点レベ�
   `have hflat : … = uvPerturbLaw … := rfl` を挟む (`FullSupport.lean:421` と同じ手)。
 - **`exists_perturb_weight` は 2 引数のまま `A := A + J` で 3 量に流用できる**
   (`ε*A + h(ε) ≤ ε*(A+J) + h(ε) < δ` と `ε*J + h(ε) < δ` が同時に出る)。**3 引数版を新設しない**。
-- **`add_le_add_left` は本 Mathlib では右加算の向き** — `a + c ≤ b + c` を出す。
-  `uvInfo₁ ν + _ ≤ uvInfo₁ ν + _` が要るときは **`add_le_add le_rfl h`** を使う (probe で 1 度踏んだ)。
+- ★ **`add_le_add_left` / `add_le_add_right` は 2 本とも名前から期待する向きの逆** (`#check` で逐語
+  確認: `add_le_add_left : b ≤ c → ∀ a, b + a ≤ c + a` / `add_le_add_right : b ≤ c → ∀ a, a + b ≤ a + c`)。
+  **本在庫は当初 `add_le_add_left` の側だけを注記しており、実装 leg は逆側で同じ罠を踏んだ**。
+  回避は向きを問わず **`add_le_add le_rfl h`** (左固定) / **`add_le_add h le_rfl`** (右固定)。
 - **S6 変種の凸結合は `nlinarith` に 2 本のヒントが要る**:
   `mul_le_mul_of_nonneg_left hsum' hlam0.le` と `mul_le_mul_of_nonneg_left hs₁' (1-lam ≥ 0)`。
   `linarith` 単独では通らない (積が入るため)。
@@ -415,6 +417,12 @@ scratchpad = `/private/tmp/claude-502/-Users-haruka-dev-lean-projects/7f8f7cc1-4
 自作 #6 `uvInfoJoint` は非 reducible な `def` になるので、`condMutualInfo_uvTimeShareLaw` の
 ベタ書き項との照合は **`have hexp : … := condMutualInfo_uvTimeShareLaw …` と明示型で受ける**
 必要がある (probe で 1 度踏んだ。`rw` の pattern match は通らない)。
+
+⚠ **その `rw` 失敗リスクは実測で向きが逆だった** — 本在庫は「**consumer** が旧ベタ書き形に `rw`
+していると落ちる」と予測したが、F-28 の実測では **consumer 側の修正は 0 箇所**で、落ちたのは
+`bcInfoJoint_uvCloudLaw` **自身の証明本文** (`rfl` 1 行で解決)。逆に副産物として、leg B が置いた
+`show … from rfl` 2 箇所が不要になり削除された。⟹ **予測が及ばないのは「個数」と「自動性」だけで
+なく「波及の向き」も**であり、非 reducible 化の影響範囲は下流とは限らない。
 
 ---
 
@@ -501,9 +509,17 @@ more capable のみ (親 plan `:442`)。
 S7 / S8 の組み立ては less noisy 版の**逐語同型**なので上振れは限定的と見るが、
 **probe 行数は下限であって予測ではない** (判断ログ 23) — 上限側に S8 変種のスロット 1 本増が効く。
 
+✅ **as-landed 909 行 = 帯の中** (leg A +8% / leg B +17%)。2 列見積りは 3 leg 連続で ±20% 以内。
+
 **ファイル配置の提案**: 新規は 1 本 (`Superposition/MoreCapable.lean`、区分 D–G で ~650 行)。
-600 行を超えたら `MoreCapable/{Slot,Assembly}.lean` の 2 分割 (先例は `Superposition/` 自身)。
 import は `Superposition.FullSupport` の **1 本**で足りる (`Classes` / `OuterBoundUV/*` は推移的)。
+
+⚠ **本節にあった「600 行を超えたら 2 分割」は無効 (自前ルールの誤り)** — `docs/rules/module-structure.md`
+§3 の拘束条件は行数ではなく**関心の混在**で、閾値も 1500 行。909 行の as-landed は module doc が
+1 本の筋として書けているため style ゲートが**分割不要**と判定した。規約の SoT は `docs/rules/` 側。
+**将来の切れ目だけ決定済**: `MoreCapable/{Comparison,Equality}.lean`
+(`{Region,Assembly}` は `Superposition/Region.lean` / `Superposition/Assembly.lean` と
+紛らわしいので使わない)。
 
 ⚠ **`Classes.lean` を触ると BC 族がほぼ全再ビルドになる** (`Superposition/*` / `OuterBoundUV/*`
 の全部が下流)。実装順としては**新ファイルに全部書いて通してから上流へ移す**のが安全
@@ -526,7 +542,7 @@ import は `Superposition.FullSupport` の **1 本**で足りる (`Classes` / `O
 **着手順**: 自作 #1–#5 (条件付き more capable) → **#10 (gateway)** → #6 #7 #8 #9 (スロット API) →
 #11 → #12 → #13 (S6 変種) → #14 (領域) → S7 変種 → S8 変種 → headline。
 
-### 親 plan で書き換えが要る箇所 (編集は plan の担当)
+### 親 plan で書き換えが要る箇所 (編集は plan の担当) — ✅ **8 件すべて反映済** (`9eb87b38` / 本 leg)
 
 1. **§残る 2 クラス / §設計上の未決事項 2 / §撤退ライン L-BCO3 の「3 field の新 structure が要る」を撤回** —
    内界は `InBCCapacityRegion` を使っていないので **`structure` は不要**、3 連言の集合内包で足りる
@@ -544,6 +560,8 @@ import は `Superposition.FullSupport` の **1 本**で足りる (`Classes` / `O
    `bc_moreCapable_capacity_eq_uv` の系に畳む (§Q1-4、**本 leg ではやらない**)。
    (b) `bcInfoJoint_uvCloudLaw` を自作 #8 の総称形で書き直す (重複 15 行)。
    (c) S6 の `exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw` をクラス free な変種の系に畳む。
+   ⟹ 親 plan §後続作業 **G-1 / G-3 / G-4**。実測でさらに 3 件増えた (**G-2** `FullSupport` の誤称 /
+   **G-5** 規約衝突の起票 / **G-6** ファイル移動を伴う leg は `gen_readme_table.ts --write` を回す)。
 8. **§判断ログに 1 件** — 「**plan が『既存の structure では受けきれない』と書いたら、
    その structure を実際に消費しているのが誰かを `rg` で確かめる**」: 内界
    `bcSuperpositionRegionFullSupport` は `InBCCapacityRegion` を使っておらず、
@@ -552,20 +570,23 @@ import は `Superposition.FullSupport` の **1 本**で足りる (`Classes` / `O
 
 ### 命名の提案 (`docs/rules/naming.md` に合わせる)
 
-`bcSuperposition3Region` / `_isClosed` / `_subset_capacity` /
+`bcSuperpositionRegionSumRate` / `_isClosed` / `_subset_capacity` /
 `bc_moreCapable_uv_subset_superposition` / `bc_moreCapable_capacity_eq_uv` /
 `bc_moreCapable_superposition_eq_capacity` (クラス限定の定理は名前にクラスを入れる = 判断ログ 25) /
 `uvInfoJoint` / `uvInfoJoint_map_uvRelabel` / `uvInfoJoint_uvQuantizeLaw` /
 `uvInfoJoint_uvTimeShareLaw` / `mul_uvInfoJoint_le_uvInfoJoint_uvMixLaw` /
 `IsBCMoreCapable.condMutualInfo_le` / `uvInfoSum₁_le_uvInfoJoint_of_moreCapable` /
 `uvInfo₂_le_uvInfoJoint_of_moreCapable` / `IsUVChannelLaw.isMarkovChain_U_X_Y₂` /
-`exists_bcInfo3_ge_of_isUVChannelLaw`。
+`exists_bcInfo_ge_sumRate_of_isUVChannelLaw`。
 
-⚠ **`bcSuperposition3Region` の `3` は数字混じりで先例が無い**。代案は
-`bcSuperpositionRegionFullSupportSum` / `bcSuperpositionSumRegion`。ただし現行の
-`bcSuperpositionRegionFullSupport` は「全支持」を名前に持ちながら本質は 2 制約なので、
-**両方を同時に見直す別 leg** の方が筋が良い (本 leg では `bcSuperposition3Region` で入れて
-style ゲートの判断に委ねる)。
+⚠ **決着 (style ゲート判定、`506c5184`)**: `bcSuperpositionRegionSumRate` の `3` は制約の本数という
+**statement に現れないメタデータ**で `docs/rules/naming.md` 逸脱 ⟹ 一族 8 本を
+`bcSuperpositionRegionSumRate` / `exists_bcInfo_ge_sumRate_*` へ改名した (本在庫の記述は追随済)。
+上で挙げた代案 `bcSuperpositionRegionFullSupportSum` / `bcSuperpositionSumRegion` は
+**どちらも不採用**。`bcSuperpositionRegionFullSupport` が「全支持」を名乗って本質は 2 制約という
+指摘は生きており、**それだけが別 leg に残った** (親 plan §後続作業 G-2)。
+⚠ **改名対象は本節が予告した 6 本ではなく 8 本**だった — 本節の一覧に無い S7 変種側の 2 本
+(`exists_fullSupport_bcInfo_ge_sumRate` / `_of_isUVChannelLaw`) も同じ `3` 混じりで生まれた。
 
 ### 検証バー (親 plan F-20)
 
@@ -575,3 +596,18 @@ style ゲートの判断に委ねる)。
 (`unusedSectionVars` / `unusedDecidableInType` の指摘は probe の variable 束が広すぎるだけで、
 実装時は束を絞れば消える — 該当は 12 件、すべて「使っていない `[DecidableEq _]` /
 `[StandardBorelSpace _]` を落とせ」)。
+
+⚠ **「warning 0」を実装 leg のバーにしてはいけない (実測が本節を訂正)** — 本在庫が想定していない
+既存 warning が BC 家系の他ファイルに実在する (`Superposition/TimeShare.lean` /
+`Shannon/CondMutualInfo.lean` / `OuterBoundUV/Bridge.lean`)。**正しいバーは「既存からの増分 0」**で、
+確認手順は **HEAD 版を `git show` で取り出して同一設定で lint し、warning 集合が完全一致することを
+見る** (件数は触るたび動く機械再導出可能値なので暗記しない)。
+
+**probe の型クラス束は広すぎた (実測が 6 宣言で狭化)** — 例: gateway 中段
+`condMutualInfo_out₂_le_out₁_of_moreCapable` は `[Countable V] [MeasurableSingletonClass V]` だけで
+足り、`U` / `V` の `[StandardBorelSpace _]` / `[Nonempty _]` は要らない。⟹ 実務則 2 つ:
+(a) **`set_option linter.unusedSectionVars false` で抑止せず section を入れ子に割って消す** —
+抑止と分割は warning が消える点では同じでも、後者は**必要な型クラス束の実測値が副産物として残る**。
+(b) **証明冒頭に `classical` を置けば `DecidableEq` は埋まる** (`bcInfo₁_uvCloudLaw` /
+`bc_achievability_of_rate_lt` 側)。実測では新規 12 宣言の型クラス束から `DecidableEq` が完全に消え、
+`set_option` 0 行 / `omit` 2 箇所で済んだ。
