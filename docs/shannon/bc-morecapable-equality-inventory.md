@@ -579,14 +579,14 @@ import は `Superposition.FullSupport` の **1 本**で足りる (`Classes` / `O
 `uvInfo₂_le_uvInfoJoint_of_moreCapable` / `IsUVChannelLaw.isMarkovChain_U_X_Y₂` /
 `exists_bcInfo_ge_sumRate_of_isUVChannelLaw`。
 
-⚠ **決着 (style ゲート判定、`506c5184`)**: `bcSuperpositionRegionSumRate` の `3` は制約の本数という
-**statement に現れないメタデータ**で `docs/rules/naming.md` 逸脱 ⟹ 一族 8 本を
+⚠ **決着 (style ゲート判定、`506c5184`)**: 旧名 `bcSuperposition3Region` の `3` は制約の本数という
+**statement に現れないメタデータ**で `docs/rules/naming.md` 逸脱 ⟹ 一族 **10 本**を
 `bcSuperpositionRegionSumRate` / `exists_bcInfo_ge_sumRate_*` へ改名した (本在庫の記述は追随済)。
 上で挙げた代案 `bcSuperpositionRegionFullSupportSum` / `bcSuperpositionSumRegion` は
 **どちらも不採用**。`bcSuperpositionRegionFullSupport` が「全支持」を名乗って本質は 2 制約という
 指摘は生きており、**それだけが別 leg に残った** (親 plan §後続作業 G-2)。
-⚠ **改名対象は本節が予告した 6 本ではなく 8 本**だった — 本節の一覧に無い S7 変種側の 2 本
-(`exists_fullSupport_bcInfo_ge_sumRate` / `_of_isUVChannelLaw`) も同じ `3` 混じりで生まれた。
+⚠ **本節が名指した `3` 入りの名は 5 本、実測の改名は 10 本** — S7 変種 / `sub_mem_*` / `mem_*` が
+「同様に追随」で暗黙に改名された分は数から漏れる。再導出と一般則は親 plan F-26-(c)。
 
 ### 検証バー (親 plan F-20)
 
