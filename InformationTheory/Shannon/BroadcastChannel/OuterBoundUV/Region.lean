@@ -46,8 +46,8 @@ product identity, `IsUVChannelLaw`.
   averaging the letter laws of a code stays inside the index of the union.
 * `IsUVChannelLaw.map_auxiliaries` — re-encoding the two auxiliary alphabets keeps a channel
   law a channel law, which is how a law on the auxiliaries of a code reaches the fixed ones.
-* `IsUVChannelLaw.swap_auxiliaries` — exchanging the two auxiliary alphabets keeps a channel law
-  a channel law, so a law indexing its auxiliaries in the opposite order indexes the union too.
+* `IsUVChannelLaw.swap_auxiliaries` — exchanging the two auxiliaries keeps a channel law a
+  channel law, so a law indexing them in the opposite order indexes the union too.
 
 ## Implementation notes
 

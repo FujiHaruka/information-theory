@@ -6,11 +6,13 @@ import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Assembly
 
 Marton's inner bound and the UV outer bound both live over five-tuple laws
 `(V₁, V₂, X, Y₁, Y₂)` of the same type, but they index the two auxiliaries in opposite order: an
-outer information slot pairs the second auxiliary with the first receiver, an inner one pairs the
-first auxiliary with the first receiver.  This file puts the two on one index.  The Marton joint
-law is a channel law of `W`; exchanging its two auxiliaries preserves that, and re-encoding the
-two finite auxiliary alphabets into `ℕ` lands the law in the family indexing the UV outer region.
-The three informations of the inner bound are then the corresponding slots of the exchanged law.
+outer information slot pairs the second auxiliary with the first receiver, while an inner one
+pairs the first auxiliary with it.  This file puts the two on one index.  The Marton joint law is
+a channel law of `W`; exchanging its two auxiliaries preserves that, and re-encoding the two
+finite auxiliary alphabets into `ℕ` lands the law in the family indexing the UV outer region.
+The two corner informations of the inner bound are then the corresponding slots of the exchanged
+law, and its auxiliary dependence is the mutual information of the two auxiliaries of the joint
+law.
 
 ## Main definitions
 
@@ -25,9 +27,11 @@ The three informations of the inner bound are then the corresponding slots of th
   support hypothesis on the input law, the auxiliary kernel or the channel is needed.
 * `martonUVLaw_isUVChannelLaw` — so is its exchanged and re-encoded form, which is therefore one
   of the laws the union defining `bcOuterRegionUV` ranges over.
-* `martonInfo₁_eq_uvInfo₁_toReal`, `martonInfo₂_eq_uvInfo₂_toReal` and
-  `martonInfoV₁V₂_eq_mutualInfo_toReal` — the three informations of the inner bound, defined as
-  entropy differences over `ℝ`, are the corresponding slots of the exchanged law.
+* `martonInfo₁_eq_uvInfo₁_toReal` and `martonInfo₂_eq_uvInfo₂_toReal` — the two corner
+  informations of the inner bound, defined as entropy differences over `ℝ`, are the corresponding
+  slots of the exchanged law.
+* `martonInfoV₁V₂_eq_mutualInfo_toReal` — the auxiliary dependence of the inner bound is the
+  mutual information of the two auxiliaries of the Marton joint law.
 
 ## Implementation notes
 
