@@ -54,8 +54,8 @@ that coupling, and the residue is two bits per block whatever the message counts
 
 namespace InformationTheory.Shannon.BroadcastChannel
 
-open MeasureTheory ProbabilityTheory InformationTheory InformationTheory.Shannon
-open scoped ENNReal NNReal BigOperators Topology
+open MeasureTheory ProbabilityTheory
+open scoped ENNReal BigOperators
 
 variable {α : Type*} [MeasurableSpace α]
 variable {β₁ : Type*} [MeasurableSpace β₁]

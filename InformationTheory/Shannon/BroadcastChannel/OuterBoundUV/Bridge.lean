@@ -96,8 +96,8 @@ are declared in the field order of `InBCOuterRegionUV` (`bound₁`, `bound₂`, 
 
 namespace InformationTheory.Shannon.BroadcastChannel
 
-open MeasureTheory ProbabilityTheory InformationTheory InformationTheory.Shannon
-open scoped ENNReal NNReal BigOperators
+open MeasureTheory ProbabilityTheory
+open scoped ENNReal BigOperators
 
 variable {α : Type*} [MeasurableSpace α]
 variable {β₁ : Type*} [MeasurableSpace β₁]
