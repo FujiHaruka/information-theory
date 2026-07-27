@@ -21,7 +21,7 @@
   親 plan の `~160 行` は**上方修正が要る**。step 内分割は §Q5。**L-BCO9 は不発動の見込み**。
 - **最初に切るべきは S5-a (共有の有限性補題 3 本、~45 行)**。`mutualInfo_ne_top` が
   **両側 `[Fintype]` を要求する**ため `U = ℕ` のスロットには既存の有限性補題が 1 本も当たらず、
-  ここを開ける `mutualInfo_ne_top_of_right` が claim 1 / claim 2 / `uvInfoSum₂ ν ≠ ∞` の
+  ここを開ける `mutualInfo_ne_top_of_fintype_right` が claim 1 / claim 2 / `uvInfoSum₂ ν ≠ ∞` の
   **3 箇所すべてで前提**になる (§最も危ない発見)。
 
 ### 最も危ない発見 (1 行)
@@ -133,7 +133,7 @@ load-bearing hyp ではない。**claim 2 / claim 3 は `IsUVChannelLaw` も `W`
 | **有限性 (片側)** | ❌ 不在。`mutualInfo_ne_top` (`MutualInfo.lean:174`) は `[Fintype X]` **と** `[Fintype Y]`、`condMutualInfo_ne_top` (`CondMutualInfo.lean:320`) は `[Fintype X] [Fintype Y] [Fintype Z]` を要求 | — |
 | 有限性の出口 | `lemma isMarkovChain_comp_conditioner_right {A' Z' W' : Type*} [MeasurableSpace A'] [MeasurableSpace Z'] [MeasurableSpace W'] [StandardBorelSpace A'] [Nonempty A'] [StandardBorelSpace W'] [Nonempty W'] (μ : Measure Ω) [IsProbabilityMeasure μ] (As : Ω → A') (Zc : Ω → Z') {f : Z' → W'} (hAs hZc hf) : IsMarkovChain μ As Zc (fun ω ↦ f (Zc ω))` を `f := id` で + `mutualInfo_le_of_markov` (`CondMutualInfo.lean:356`) | `CondEntropyMemoryless.lean:371` (`@[entry_point]`) |
 
-⟹ 自作すべきは **`mutualInfo_ne_top_of_right` (5 行) + `mutualInfo_le_ofReal_log_card` (17 行)** の 2 本。
+⟹ 自作すべきは **`mutualInfo_ne_top_of_fintype_right` (5 行) + `mutualInfo_le_ofReal_log_card` (17 行)** の 2 本。
 両方 probe 通過。**`uvInfoSum₂ ν ≠ ∞` (10 行) も同じ 2 本から出る** (probe `ProbeS5Finite`)。
 
 ### 6. `ν` を `(ν.map U_m) ⊗ₘ κ` に開く — ✅ 既存
@@ -169,7 +169,7 @@ load-bearing hyp ではない。**claim 2 / claim 3 は `IsUVChannelLaw` も `W`
 (当たったら `a_m = a` になってしまう)。S5 が足すのは同じ 4 本の**不等式版 2 本**。
 ⚠ `uvInfoSum₂_map_uvRelabel` は `[Fintype U] [MeasurableSingletonClass U]` を要求する
 (`mutualInfo_ne_top` を内部で使うため) ので `U = ℕ` には当たらない。obligation 5 の
-`mutualInfo_ne_top_of_right` を入れると**この `[Fintype U]` は落とせる** (任意の整頓、§Q5)。
+`mutualInfo_ne_top_of_fintype_right` を入れると**この `[Fintype U]` は落とせる** (任意の整頓、§Q5)。
 
 ### 9. `IsUVChannelLaw.map_auxiliaries` — ✅ **そのまま使える (probe P1 で機械確認)**
 
@@ -184,7 +184,7 @@ load-bearing hyp ではない。**claim 2 / claim 3 は `IsUVChannelLaw` も `W`
 ## 前提が事故りやすい箇所 (key-preconditions box)
 
 - **`mutualInfo_ne_top` / `condMutualInfo_ne_top` は全変数に `[Fintype]` を要求する**。`U = ℕ` の
-  スロットには 1 本も当たらない ⟹ `mutualInfo_ne_top_of_right` を**最初に**入れる。
+  スロットには 1 本も当たらない ⟹ `mutualInfo_ne_top_of_fintype_right` を**最初に**入れる。
 - **`condMutualInfo_chain_rule_X_2var` の `hWcY_fin` は条件付け側の MI** (`Wc := U_m` / `X` の
   どちらでも両側有限で OK)。一方 **`condMutualInfo_eq_of_leftInverse_cond` の `hfin` は
   `mutualInfo ν U Y₁`** = 量子化**前**の `ℕ` 側で、DPI (`isMarkovChain_U_X_Y₁`) 経由でしか出ない。
@@ -238,11 +238,11 @@ theorem uvQuantizeLaw_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKer
     {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [SFinite ν] (h : IsUVChannelLaw W ν) (m : ℕ) :
     IsUVChannelLaw W (uvQuantizeLaw ν m)
 
-theorem uvInfo₂_le_uvQuantizeLaw (ν : Measure (ℕ × ℕ × α × β₁ × β₂))
+theorem uvInfo₂_le_uvQuantizeLaw_add_slack (ν : Measure (ℕ × ℕ × α × β₁ × β₂))
     [IsProbabilityMeasure ν] (m : ℕ) :
     uvInfo₂ ν ≤ uvInfo₂ (uvQuantizeLaw ν m) + uvQuantizeSlack ν m
 
-theorem uvInfoSum₂_le_uvQuantizeLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+theorem uvInfoSum₂_le_uvQuantizeLaw_add_slack (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν]
     (h : IsUVChannelLaw W ν) (m : ℕ) :
     uvInfoSum₂ ν ≤ uvInfoSum₂ (uvQuantizeLaw ν m) + uvQuantizeSlack ν m
@@ -278,7 +278,7 @@ scratchpad = `/private/tmp/claude-502/-Users-haruka-dev-lean-projects/abc83ceb-8
 | **claim 1** | `condMutualInfo ν X Y₁ U ≤ condMutualInfo ν X Y₁ U_m` **完全証明** | ✅ | **56** |
 | **claim 3** | 裾 `Tendsto (fun m ↦ ν {q \| m ≤ q.1}) atTop (𝓝 0)` **完全証明** | ✅ | 14 |
 | **claim 2-a/b** | `(ν.map U_m) ⊗ₘ condDistrib id U_m ν = ν.map (fun q ↦ (U_m q, q))` (本体 **1 行**) と `b = b_m + ∫⁻ t, I_{κ t}(U;Y₂)` | ✅ | 13 |
-| **claim 2-c/d** | 片側有限性 `mutualInfo_ne_top_of_right` と `mutualInfo μ Xs Yo ≤ ENNReal.ofReal (Real.log (Fintype.card B))` (`B` だけ有限) | ✅ | 22 |
+| **claim 2-c/d** | 片側有限性 `mutualInfo_ne_top_of_fintype_right` と `mutualInfo μ Xs Yo ≤ ENNReal.ofReal (Real.log (Fintype.card B))` (`B` だけ有限) | ✅ | 22 |
 | **claim 2-e/f/g** | a.s. 定数の変数は MI 0 / fiber 性 `∀ᵐ t, ∀ᵐ q ∂(κ t), qm m q.1 = t` / 頭部スライスで `U` が a.s. 定数 | ✅ | 25 |
 | **finite** | `uvInfoSum₂ ν ≠ ∞` (`U = ℕ`) | ✅ | 10 |
 | **P6** | 置き場所 (import 3 本) の cycle 無し + 必要な 5 宣言が可視 | ✅ | — |
@@ -319,7 +319,7 @@ scratchpad = `/private/tmp/claude-502/-Users-haruka-dev-lean-projects/abc83ceb-8
 | step | 内容 | 見積り | 根拠 |
 |---|---|---|---|
 | **S5-0** | F-12 リネーム `IsUVChannelLaw.map_U_X_Y₁_Y₂` → `map_auxiliary_input_output` | ~2 | **direct consumer 0 decl / 0 file** (`dep_consumers.sh` 実測)。触るのは `Region.lean:251` (宣言) と `:42` (module doc) の 2 箇所のみ |
-| **S5-a** | 共有の有限性 3 本 (`mutualInfo_ne_top_of_right` / `mutualInfo_le_ofReal_log_card` / `uvInfoSum₂_ne_top`) | ~45 | probe 実測 32 行 + docstring |
+| **S5-a** | 共有の有限性 3 本 (`mutualInfo_ne_top_of_fintype_right` / `mutualInfo_le_ofReal_log_card` / `uvInfoSum₂_ne_top`) | ~45 | probe 実測 32 行 + docstring |
 | **S5-b** | claim 1 `a ≤ a_m` (`ν` 上の形) | ~60 | **probe 実測 56 行** |
 | **S5-c** | claim 2 裾評価 (分解 + fiber + スライス + lintegral 評価) | ~110 | 実測 38 行 + 未実測の lintegral 指示関数評価 ~50 + `ν {q\|m ≤ q.1}` との同定 ~10 |
 | **S5-d** | スロット水準への包装 (`uvQuantizeLaw` の定義 / `IsUVChannelLaw` 保存 / 不等式 2 本、押し出し transport 込み) | ~50 | `uvInfo₂_map_uvRelabel` (`Assembly.lean:155`) の不等式版で雛形あり |
@@ -340,7 +340,7 @@ scratchpad = `/private/tmp/claude-502/-Users-haruka-dev-lean-projects/abc83ceb-8
 2. **§Phase 5 S5 の「部品は `entropy_le_log_card` + `condMutualInfo_compProd_fst_eq_lintegral` で
    全部既存」は 3/4 だけ正しい** — 裾評価で実際に効くのは
    `mutualInfo_compProd_eq_add_lintegral` (`:142`) の方 (`:102` ではない)。さらに
-   **片側有限性 `mutualInfo_ne_top_of_right` が 3 箇所で前提**になる点が欠けている
+   **片側有限性 `mutualInfo_ne_top_of_fintype_right` が 3 箇所で前提**になる点が欠けている
    (`mutualInfo_ne_top` は両側 `[Fintype]` を要求)。
 3. **「条件付き連鎖律は自作」相当の含意を消す** — `condMutualInfo_chain_rule_X_2var`
    (`ConverseMemorylessChainRule.lean:164`) が**要求どおりの形で既存**。前段在庫が「S5 予備」と
