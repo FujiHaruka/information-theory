@@ -21,8 +21,8 @@ here and shown to sit inside the operational region.
 * `bcCapacityRegion W` — the operational capacity region, the topological closure of the
   achievable set.  (The achievable set is described by strict inequalities and is not closed, so
   the region is defined as its closure.)
-* `martonRegion pV K W` — Marton's inner bound as a subset of the plane: the first-quadrant part
-  of `InMartonRegion` for the three informations of the auxiliary law `pV`, input kernel `K` and
+* `martonRegion pV K W` — Marton's inner bound as a subset of the plane, cut out by
+  `InMartonRegion` for the three informations of the auxiliary law `pV`, input kernel `K` and
   channel `W`.
 
 ## Main statements
@@ -113,15 +113,19 @@ variable {V₁ V₂ α β₁ β₂ : Type*}
   [Fintype β₁] [DecidableEq β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
   [Fintype β₂] [DecidableEq β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
 
-/-- Marton's inner bound as a subset of the plane: the rate pairs in the first quadrant that
-satisfy the three inequalities of `InMartonRegion` for the informations `martonInfo₁`,
-`martonInfo₂` and `martonInfoV₁V₂` of the auxiliary law `pV`, input kernel `K` and channel `W`.
+/-- Marton's inner bound as a subset of the plane: the rate pairs satisfying the three
+inequalities of `InMartonRegion` for the informations `martonInfo₁`, `martonInfo₂` and
+`martonInfoV₁V₂` of the auxiliary law `pV`, input kernel `K` and channel `W`.
 This is the region of one fixed choice of `pV`, `K` and `W`; the union over auxiliary alphabets
-is not taken. -/
+is not taken.
+
+Like `bcCapacityRegion` and the outer bounds, the region carries no sign constraint: a
+nonpositive rate asks only for a single message and is achievable, so cutting the bound down to
+the first quadrant would place it strictly inside the capacity region for no gain and would
+break every comparison against a region of the whole plane. -/
 def martonRegion (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) :
     Set (ℝ × ℝ) :=
-  {p | 0 ≤ p.1 ∧ 0 ≤ p.2 ∧
-    InMartonRegion p.1 p.2 (martonInfo₁ pV K W) (martonInfo₂ pV K W) (martonInfoV₁V₂ pV K W)}
+  {p | InMartonRegion p.1 p.2 (martonInfo₁ pV K W) (martonInfo₂ pV K W) (martonInfoV₁V₂ pV K W)}
 
 theorem bc_strict_interior_achievable
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
@@ -153,8 +157,7 @@ theorem marton_region_subset_capacity
     (hpV : ∀ v : V₁ × V₂, 0 < pV.real {v}) (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) :
     martonRegion pV K W ⊆ bcCapacityRegion W := by
-  intro p hp
-  obtain ⟨-, -, hM⟩ := hp
+  intro p hM
   refine bc_mem_closure_of_strictly_below W p fun ε hε ↦ ?_
   exact bc_strict_interior_achievable pV K W hpV hK hW
     (by linarith [hM.bound₁]) (by linarith [hM.bound₂]) (by linarith [hM.boundSum])
