@@ -34,8 +34,8 @@ of its variables.
 
 namespace InformationTheory.Shannon
 
-open MeasureTheory ProbabilityTheory InformationTheory
-open scoped ENNReal NNReal BigOperators
+open MeasureTheory ProbabilityTheory
+open scoped ENNReal
 
 lemma mutualInfo_eq_of_leftInverse {Ω γ A B : Type*} [MeasurableSpace Ω] [MeasurableSpace γ]
     [MeasurableSpace A] [MeasurableSpace B]

@@ -4,7 +4,6 @@ import InformationTheory.Shannon.ChannelCoding.CodeToAmbient
 import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.CondMutualInfoMixture
-import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.MutualInfo
 
 /-!

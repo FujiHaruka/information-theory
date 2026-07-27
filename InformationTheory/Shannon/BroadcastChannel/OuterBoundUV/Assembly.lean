@@ -2,7 +2,6 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.BroadcastChannel.Operational
 import InformationTheory.Shannon.BroadcastChannel.OuterBound
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Bridge
-import InformationTheory.Shannon.CondKLIntegral
 import InformationTheory.Shannon.CondMutualInfoMixture
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.Topology.Algebra.Order.UpperLower
