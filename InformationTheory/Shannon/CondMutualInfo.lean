@@ -73,6 +73,14 @@ theorem condMutualInfo_nonneg
     (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z) :
     0 ≤ condMutualInfo μ Xs Yo Zc := bot_le
 
+lemma condMutualInfo_congr_measure
+    [StandardBorelSpace X] [Nonempty X]
+    [StandardBorelSpace Y] [Nonempty Y]
+    {μ ρ : Measure Ω} [IsFiniteMeasure μ] [IsFiniteMeasure ρ] (h : μ = ρ)
+    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z) :
+    condMutualInfo μ Xs Yo Zc = condMutualInfo ρ Xs Yo Zc := by
+  subst h; rfl
+
 /-- Markov chain `Xs → Zc → Yo` (γ-form, joint factorization): the joint distribution
 factors through `Zc` as the product of the conditional marginals.
 

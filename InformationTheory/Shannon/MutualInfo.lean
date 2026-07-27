@@ -43,6 +43,24 @@ noncomputable def mutualInfo
 theorem mutualInfo_nonneg (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) :
     0 ≤ mutualInfo μ Xs Yo := bot_le
 
+lemma mutualInfo_congr_pair {Ω' : Type*} [MeasurableSpace Ω']
+    (μ : Measure Ω) (μ' : Measure Ω') {Xs : Ω → X} {Yo : Ω → Y} {Xs' : Ω' → X} {Yo' : Ω' → Y}
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (hXs' : Measurable Xs') (hYo' : Measurable Yo')
+    (h : μ.map (fun ω ↦ (Xs ω, Yo ω)) = μ'.map (fun ω ↦ (Xs' ω, Yo' ω))) :
+    mutualInfo μ Xs Yo = mutualInfo μ' Xs' Yo' := by
+  have e1 : (μ.map fun ω ↦ (Xs ω, Yo ω)).map Prod.fst = μ.map Xs :=
+    Measure.map_map measurable_fst (hXs.prodMk hYo)
+  have e1' : (μ'.map fun ω ↦ (Xs' ω, Yo' ω)).map Prod.fst = μ'.map Xs' :=
+    Measure.map_map measurable_fst (hXs'.prodMk hYo')
+  have e2 : (μ.map fun ω ↦ (Xs ω, Yo ω)).map Prod.snd = μ.map Yo :=
+    Measure.map_map measurable_snd (hXs.prodMk hYo)
+  have e2' : (μ'.map fun ω ↦ (Xs' ω, Yo' ω)).map Prod.snd = μ'.map Yo' :=
+    Measure.map_map measurable_snd (hXs'.prodMk hYo')
+  have h1 : μ.map Xs = μ'.map Xs' := by rw [← e1, ← e1', h]
+  have h2 : μ.map Yo = μ'.map Yo' := by rw [← e2, ← e2', h]
+  unfold mutualInfo
+  rw [h, h1, h2]
+
 /-- KL divergence is invariant under pushforward by a `MeasurableEquiv`. -/
 theorem klDiv_map_measurableEquiv {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]

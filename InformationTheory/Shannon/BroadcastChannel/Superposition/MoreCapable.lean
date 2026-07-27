@@ -88,39 +88,6 @@ open scoped ENNReal
 
 universe u
 
-/-! ## Rewriting the arguments of an information -/
-
-section Congr
-
-lemma condMutualInfo_congr_measure {Ω A B C : Type*} [MeasurableSpace Ω]
-    [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
-    [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B] [MeasurableSpace C]
-    {μ ρ : Measure Ω} [IsFiniteMeasure μ] [IsFiniteMeasure ρ] (h : μ = ρ)
-    (Xs : Ω → A) (Yo : Ω → B) (Zc : Ω → C) :
-    condMutualInfo μ Xs Yo Zc = condMutualInfo ρ Xs Yo Zc := by
-  subst h; rfl
-
-lemma mutualInfo_congr_pair {Ω Ω' A B : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω']
-    [MeasurableSpace A] [MeasurableSpace B] (μ : Measure Ω) (μ' : Measure Ω')
-    {f : Ω → A} {g : Ω → B} {f' : Ω' → A} {g' : Ω' → B}
-    (hf : Measurable f) (hg : Measurable g) (hf' : Measurable f') (hg' : Measurable g')
-    (h : μ.map (fun ω ↦ (f ω, g ω)) = μ'.map (fun ω ↦ (f' ω, g' ω))) :
-    mutualInfo μ f g = mutualInfo μ' f' g' := by
-  have e1 : (μ.map fun ω ↦ (f ω, g ω)).map Prod.fst = μ.map f :=
-    Measure.map_map measurable_fst (hf.prodMk hg)
-  have e1' : (μ'.map fun ω ↦ (f' ω, g' ω)).map Prod.fst = μ'.map f' :=
-    Measure.map_map measurable_fst (hf'.prodMk hg')
-  have e2 : (μ.map fun ω ↦ (f ω, g ω)).map Prod.snd = μ.map g :=
-    Measure.map_map measurable_snd (hf.prodMk hg)
-  have e2' : (μ'.map fun ω ↦ (f' ω, g' ω)).map Prod.snd = μ'.map g' :=
-    Measure.map_map measurable_snd (hf'.prodMk hg')
-  have h1 : μ.map f = μ'.map f' := by rw [← e1, ← e1', h]
-  have h2 : μ.map g = μ'.map g' := by rw [← e2, ← e2', h]
-  unfold mutualInfo
-  rw [h, h1, h2]
-
-end Congr
-
 /-! ## The two marginal channels under a single input law -/
 
 section Pointwise
