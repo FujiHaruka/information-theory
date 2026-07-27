@@ -1306,13 +1306,15 @@ namespace BroadcastCode
 /-- A second receiver-1 message attached to a code that carries only one.  Both messages are sent
 with the single codeword of the original code, so receiver 1 cannot separate them, while receiver
 2 sees exactly the original code.  This is what puts a code of a nonpositive rate pair inside the
-scope of the converse, which asks for at least two messages per receiver. -/
+scope of the converse, which asks for at least two messages per receiver.
+@audit:ok -/
 def padFirst (c : BroadcastCode 1 M₂ n α β₁ β₂) : BroadcastCode 2 M₂ n α β₁ β₂ where
   encoder m := c.encoder (0, m.2)
   decoder₁ _ := 0
   decoder₂ := c.decoder₂
 
-/-- The mirror of `padFirst` at the second receiver. -/
+/-- The mirror of `padFirst` at the second receiver.
+@audit:ok -/
 def padSecond (c : BroadcastCode M₁ 1 n α β₁ β₂) : BroadcastCode M₁ 2 n α β₁ β₂ where
   encoder m := c.encoder (m.1, 0)
   decoder₁ := c.decoder₁
@@ -1536,7 +1538,8 @@ between Marton's inner bound and the UV outer bound as subsets of the plane.
 
 Nonpositive rates are covered without a sign hypothesis: clamping a rate pair into the first
 quadrant leaves achievability unchanged, and the outer region is a lower set, so the clamped pair
-carries the original one. -/
+carries the original one.
+@audit:ok -/
 @[entry_point]
 theorem bc_capacity_subset_uv (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     bcCapacityRegion W ⊆ bcOuterRegionUV W := by
