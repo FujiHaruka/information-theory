@@ -221,6 +221,11 @@ section Slots
 variable (ν : Measure (ℕ × ℕ × α × β₁ × β₂)) [IsProbabilityMeasure ν] (m : ℕ)
 
 omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β₁] [Nonempty β₁]
+  [MeasurableSingletonClass β₁] [Fintype β₂] [Nonempty β₂] [MeasurableSingletonClass β₂] in
+theorem uvInfo₁_uvQuantizeLaw : uvInfo₁ (uvQuantizeLaw.{u} ν m) = uvInfo₁ ν :=
+  uvInfo₁_map_uvRelabel ν (measurable_uvQuantize.{u} m) measurable_id measurable_id fun _ ↦ rfl
+
+omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β₁] [Nonempty β₁]
   [MeasurableSingletonClass β₁] [Fintype β₂] [Nonempty β₂] [MeasurableSingletonClass β₂]
   [IsProbabilityMeasure ν] in
 theorem uvInfo₂_uvQuantizeLaw :
@@ -239,6 +244,12 @@ theorem condMutualInfo_uvQuantizeLaw :
     (measurable_uvRelabel (measurable_uvQuantize.{u} m) measurable_id)
     (fun q ↦ q.2.2.1) (by fun_prop) (fun q ↦ q.2.2.2.1) (by fun_prop) (fun q ↦ q.1)
     measurable_fst
+
+omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β₁] [Nonempty β₁]
+  [MeasurableSingletonClass β₁] [Nonempty β₂] [MeasurableSingletonClass β₂]
+  [IsProbabilityMeasure ν] in
+theorem uvQuantizeSlack_ne_top [IsFiniteMeasure ν] : uvQuantizeSlack ν m ≠ ∞ :=
+  ENNReal.mul_ne_top (measure_ne_top _ _) ENNReal.ofReal_ne_top
 
 end Slots
 

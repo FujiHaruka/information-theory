@@ -182,6 +182,10 @@ noncomputable def bcSuperpositionRegionFullSupport (W : BCChannel α β₁ β₂
     (_ : ∀ (x : Marton.bcAuxAlphabet.{u} k) (a : α), 0 < (K x).real {a}),
     {p : ℝ × ℝ | p.1 ≤ bcInfo₁ pU K W ∧ p.2 ≤ bcInfo₂ pU K W})
 
+omit [DecidableEq α] [DecidableEq β₁] [DecidableEq β₂] in
+theorem bcSuperpositionRegionFullSupport_isClosed (W : BCChannel α β₁ β₂) :
+    IsClosed (bcSuperpositionRegionFullSupport.{u} W) := isClosed_closure
+
 /-- The superposition inner bound of a less noisy broadcast channel is achievable: it is
 contained in the operational capacity region.
 @audit:ok -/
