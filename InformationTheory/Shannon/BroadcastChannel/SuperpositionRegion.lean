@@ -79,7 +79,7 @@ theorem bcInfo₁_nonneg {U : Type*}
 Degradedness enters `bc_achievability` only through the rate-sum inequality
 `I(X; Y₁ ∣ U) + I(U; Y₂) ≤ I((U, X); Y₁)`, which `bc_lessNoisy_infoJoint_ge` supplies from the
 weaker class hypothesis, so the same two-tier random-coding argument applies verbatim.
--/
+@audit:ok -/
 @[entry_point]
 theorem bc_lessNoisy_achievability {U : Type u}
     [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]
@@ -108,7 +108,8 @@ full-support auxiliary laws on `Marton.bcAuxAlphabet`, of the rectangles cut out
 
 The full-support indices are the ones the achievability theorem applies to, so this is the form
 of the union that is achievable.  As for `bcCapacityRegion` and the outer bounds, no sign
-constraint is imposed: a nonpositive rate asks only for a single message. -/
+constraint is imposed: a nonpositive rate asks only for a single message.
+@audit:ok -/
 noncomputable def bcSuperpositionRegionFullSupport (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k))
     (_ : IsProbabilityMeasure pU) (_ : ∀ x : Marton.bcAuxAlphabet.{u} k, 0 < pU.real {x})
@@ -117,7 +118,8 @@ noncomputable def bcSuperpositionRegionFullSupport (W : BCChannel α β₁ β₂
     {p : ℝ × ℝ | p.1 ≤ bcInfo₁ pU K W ∧ p.2 ≤ bcInfo₂ pU K W})
 
 /-- The superposition inner bound of a less noisy broadcast channel is achievable: it is
-contained in the operational capacity region. -/
+contained in the operational capacity region.
+@audit:ok -/
 @[entry_point]
 theorem bcSuperpositionRegionFullSupport_subset_capacity (W : BCChannel α β₁ β₂)
     [IsMarkovKernel W] (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
