@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Quantization
-import InformationTheory.Shannon.BroadcastChannel.SuperpositionRegion
+import InformationTheory.Shannon.BroadcastChannel.Superposition.Region
 
 /-!
 # Broadcast channel — absorbing a time-sharing variable into the superposition cloud

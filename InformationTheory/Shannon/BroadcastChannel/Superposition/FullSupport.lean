@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.BroadcastChannel.SuperpositionTimeShare
+import InformationTheory.Shannon.BroadcastChannel.Superposition.TimeShare
 import Mathlib.Probability.Distributions.Uniform
 
 /-!

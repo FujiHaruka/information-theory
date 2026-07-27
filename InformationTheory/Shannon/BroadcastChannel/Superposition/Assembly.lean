@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.BroadcastChannel.SuperpositionFullSupport
+import InformationTheory.Shannon.BroadcastChannel.Superposition.FullSupport
 
 /-!
 # Broadcast channel — the UV outer region of a less noisy channel is achievable
