@@ -4,6 +4,7 @@
 > §撤退ライン L-BCO7 / L-BCO8 / §判断ログ 11-(l)(m)(n) / 12 / 17。直前 leg の在庫:
 > [`bc-inner-outer-bridge-inventory.md`](bc-inner-outer-bridge-inventory.md) /
 > [`bc-phase2-union-inventory.md`](bc-phase2-union-inventory.md)。
+> ⚠ **改名**: 本ファイル中の `bc_uv_subset_superposition` は現行名 `bc_lessNoisy_uv_subset_superposition` (親 plan 判断ログ 25)。以下は改名前の履歴記録なので本文は訂正しない。
 
 ---
 

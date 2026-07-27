@@ -9,6 +9,7 @@
 > **`ProbeS8All.lean` (146 行 / 8 decl / sorry 0) が S8 を端から端まで通しており、到達点 3 本は
 > `#print axioms` が `[propext, Classical.choice, Quot.sound]`** (sorryAx 無し)。しかも
 > **`lake build` と同じ linter 設定 (`linter.mathlibStandardSet=true`) で warning 0**。
+> ⚠ **改名**: 本ファイル中の `bc_uv_subset_superposition` は現行名 `bc_lessNoisy_uv_subset_superposition` (親 plan 判断ログ 25)。以下は改名前の履歴記録なので本文は訂正しない。
 
 ## 結論サマリ
 

@@ -5,6 +5,7 @@
 > [`bc-lessnoisy-equality-inventory.md`](bc-lessnoisy-equality-inventory.md) §Q2-3。
 > probe は `scratchpad/ProbeS5Quantize.lean` / `ProbeS5Claims.lean` / `ProbeS5Tail.lean` /
 > `ProbeS5Finite.lean` / `ProbeS5Placement.lean` (すべて `lake env lean` silent)。
+> ⚠ **改名**: 本ファイル中の `bc_uv_subset_superposition` は現行名 `bc_lessNoisy_uv_subset_superposition` (親 plan 判断ログ 25)。以下は改名前の履歴記録なので本文は訂正しない。
 
 ---
 

@@ -7,6 +7,7 @@
 > probe は scratchpad の `ProbeS7{Setup,Sigma,Support,Mix,Slots,Unif,Unif2,All}.lean`。
 > **`ProbeS7All.lean` (745 行 / 46 decl / sorry 0) が S7 全体を端から端まで通しており、到達点 2 本は
 > `#print axioms` が `[propext, Classical.choice, Quot.sound]`** (sorryAx 無し)。
+> ⚠ **改名**: 本ファイル中の `bc_uv_subset_superposition` は現行名 `bc_lessNoisy_uv_subset_superposition` (親 plan 判断ログ 25)。以下は改名前の履歴記録なので本文は訂正しない。
 
 ## 結論サマリ
 
