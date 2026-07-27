@@ -1075,30 +1075,38 @@ theorem bc_Ec_lt_of_rate {Ijoint R₁ R₂ ε ε' : ℝ}
     _ = 2 * Real.exp (-(n : ℝ) * (Ijoint - (R₁ + R₂) - 3 * ε)) := hrw
     _ < ε' := by linarith [hN n hn]
 
-/-! ### Headline: degraded broadcast achievability -/
+theorem bc_ceil_exp_max_zero (R : ℝ) (n : ℕ) :
+    ⌈Real.exp ((n : ℝ) * max R 0)⌉₊ = ⌈Real.exp ((n : ℝ) * R)⌉₊ := by
+  rcases le_or_gt 0 R with hR | hR
+  · rw [max_eq_left hR]
+  · rw [max_eq_right hR.le, mul_zero, Real.exp_zero, Nat.ceil_one]
+    have hle : Real.exp ((n : ℝ) * R) ≤ ((1 : ℕ) : ℝ) := by
+      rw [Nat.cast_one, ← Real.exp_zero]
+      exact Real.exp_le_exp.mpr (mul_nonpos_of_nonneg_of_nonpos (Nat.cast_nonneg n) hR.le)
+    exact (le_antisymm (Nat.ceil_le.mpr hle) (Nat.ceil_pos.mpr (Real.exp_pos _))).symm
 
-/-- Achievability half of the degraded broadcast channel coding theorem, in the superposition
-inner-bound form of Cover–Thomas *Elements of Information Theory* Thm 15.6.2.  Over a physically
-degraded broadcast channel `W` with cloud law `pU` and conditional input kernel `K`, any
-rate pair strictly inside the auxiliary-variable region
+theorem bc_Ec_lt_of_clamped_rate {Ijoint R₁ R₂ ε ε' : ℝ}
+    (hgap : 0 < Ijoint - (max R₁ 0 + R₂) - 3 * ε) (hε' : 0 < ε') :
+    ∃ N : ℕ, ∀ n ≥ N,
+      ((Nat.ceil (Real.exp ((n : ℝ) * R₂)) : ℝ) - 1) *
+        (Nat.ceil (Real.exp ((n : ℝ) * R₁)) : ℝ) *
+        Real.exp ((n : ℝ) * (-Ijoint + 3 * ε)) < ε' := by
+  obtain ⟨N, hN⟩ := bc_Ec_lt_of_rate (R₁ := max R₁ 0) (le_max_right R₁ 0) hgap hε'
+  refine ⟨N, fun n hn ↦ ?_⟩
+  have h := hN n hn
+  rwa [bc_ceil_exp_max_zero R₁ n] at h
 
-* `R₁ < I(X; Y₁ ∣ U)` (`= bcInfo₁`, the strong receiver), and
-* `R₂ < I(U; Y₂)` (`= bcInfo₂`, the degraded receiver)
+/-! ### Headline: superposition achievability -/
 
-is achievable: for all large enough block lengths `n` there is a `BroadcastCode` whose two
-per-receiver average error probabilities are both below any prescribed `ε' > 0`.  The proof
-is the two-tier superposition random-coding argument; degradedness `X → Y₁ → Y₂` is a
-structural precondition ensuring the receiver-1 joint-decoding rate sum is met automatically.
-@audit:ok -/
-theorem bc_achievability
+theorem bc_achievability_of_rate_lt
     (pU : Measure U) [IsProbabilityMeasure pU]
     (K : Kernel U α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hpU : ∀ u : U, 0 < pU.real {u}) (hK : ∀ (u : U) (a : α), 0 < (K u).real {a})
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
-    (hdeg : IsBCDegraded W)
-    {R₁ R₂ : ℝ} (hR₁ : 0 < R₁) (_hR₂ : 0 < R₂)
+    {R₁ R₂ : ℝ}
     (hR₁lt : R₁ < bcInfo₁ pU K W) (hR₂lt : R₂ < bcInfo₂ pU K W)
+    (hJlt : max R₁ 0 + R₂ < bcInfoJoint pU K W)
     {ε' : ℝ} (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n, N ≤ n →
       ∃ (M₁ M₂ : ℕ) (_hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
@@ -1106,22 +1114,20 @@ theorem bc_achievability
         (c : BroadcastCode M₁ M₂ n α β₁ β₂),
         (c.averageErrorProb₁ W).toReal < ε' ∧ (c.averageErrorProb₂ W).toReal < ε' := by
   classical
-  -- Degradedness supplies the joint-decoding rate-sum constraint `R₁ + R₂ < I((U, X); Y₁)`.
-  have hdeg_sum : bcInfo₁ pU K W + bcInfo₂ pU K W ≤ bcInfoJoint pU K W :=
-    bc_degraded_infoJoint_ge pU K W hdeg
-  have hRsum : R₁ + R₂ < bcInfoJoint pU K W := by linarith
   -- Rate slack `ε = gap/8` (the receiver-1 wrong-satellite window is `4ε`, hence `/8`, not `/6`).
+  -- The wrong-cloud slack is measured at the clamped rate `max R₁ 0`, since a nonpositive `R₁`
+  -- asks for a single satellite codeword and so contributes no factor to that error event.
   set gap : ℝ := min (min (bcInfo₁ pU K W - R₁) (bcInfo₂ pU K W - R₂))
-      (bcInfoJoint pU K W - (R₁ + R₂)) with hgap_def
+      (bcInfoJoint pU K W - (max R₁ 0 + R₂)) with hgap_def
   have hgapA : gap ≤ bcInfo₁ pU K W - R₁ := le_trans (min_le_left _ _) (min_le_left _ _)
   have hgapB : gap ≤ bcInfo₂ pU K W - R₂ := le_trans (min_le_left _ _) (min_le_right _ _)
-  have hgapC : gap ≤ bcInfoJoint pU K W - (R₁ + R₂) := min_le_right _ _
+  have hgapC : gap ≤ bcInfoJoint pU K W - (max R₁ 0 + R₂) := min_le_right _ _
   have hgap_pos : 0 < gap := lt_min (lt_min (by linarith) (by linarith)) (by linarith)
   set ε : ℝ := gap / 8 with hε_def
   have hε_pos : 0 < ε := by rw [hε_def]; linarith
   have hgapb : 0 < bcInfo₁ pU K W - R₁ - 4 * ε := by rw [hε_def]; linarith
   have hgap₂ : 0 < bcInfo₂ pU K W - R₂ - 3 * ε := by rw [hε_def]; linarith
-  have hgapc : 0 < bcInfoJoint pU K W - (R₁ + R₂) - 3 * ε := by rw [hε_def]; linarith
+  have hgapc : 0 < bcInfoJoint pU K W - (max R₁ 0 + R₂) - 3 * ε := by rw [hε_def]; linarith
   have hε'5 : 0 < ε' / 5 := by linarith
   -- Threshold indices for the five vanishing contributions.
   obtain ⟨N₀₂, hN₀₂⟩ := Filter.eventually_atTop.mp
@@ -1134,8 +1140,8 @@ theorem bc_achievability
     (ε := 4 * ε / 3) (ε' := ε' / 5)
     (by have h34 : 3 * (4 * ε / 3) = 4 * ε := by ring
         rw [h34]; exact hgapb) hε'5
-  obtain ⟨Nc, hNc⟩ := bc_Ec_lt_of_rate (Ijoint := bcInfoJoint pU K W) (R₁ := R₁) (R₂ := R₂)
-    (ε := ε) (ε' := ε' / 5) hR₁.le hgapc hε'5
+  obtain ⟨Nc, hNc⟩ := bc_Ec_lt_of_clamped_rate (Ijoint := bcInfoJoint pU K W) (R₁ := R₁)
+    (R₂ := R₂) (ε := ε) (ε' := ε' / 5) hgapc hε'5
   refine ⟨max (max N₀₂ N₀₁) (max (max N₂ Nb) Nc), fun n hn ↦ ?_⟩
   have hn₀₂ : N₀₂ ≤ n := le_trans (le_trans (le_max_left _ _) (le_max_left _ _)) hn
   have hn₀₁ : N₀₁ ≤ n := le_trans (le_trans (le_max_right _ _) (le_max_left _ _)) hn
@@ -1227,5 +1233,54 @@ theorem bc_achievability
   refine ⟨M₁, M₂, le_refl _, le_refl _, bcCodebookToCode pU K W hM₁_pos hM₂_pos ε cU cX, ?_, ?_⟩
   · linarith
   · linarith
+
+theorem bc_achievability_of_infoJoint_ge
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hpU : ∀ u : U, 0 < pU.real {u}) (hK : ∀ (u : U) (a : α), 0 < (K u).real {a})
+    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
+    (hsum : bcInfo₁ pU K W + bcInfo₂ pU K W ≤ bcInfoJoint pU K W)
+    {R₁ R₂ : ℝ} (hR₁ : 0 < R₁) (_hR₂ : 0 < R₂)
+    (hR₁lt : R₁ < bcInfo₁ pU K W) (hR₂lt : R₂ < bcInfo₂ pU K W)
+    {ε' : ℝ} (hε' : 0 < ε') :
+    ∃ N : ℕ, ∀ n, N ≤ n →
+      ∃ (M₁ M₂ : ℕ) (_hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
+        (_hM₂ : Nat.ceil (Real.exp ((n : ℝ) * R₂)) ≤ M₂)
+        (c : BroadcastCode M₁ M₂ n α β₁ β₂),
+        (c.averageErrorProb₁ W).toReal < ε' ∧ (c.averageErrorProb₂ W).toReal < ε' :=
+  bc_achievability_of_rate_lt pU K W hpU hK hW hR₁lt hR₂lt
+    (by rw [max_eq_left hR₁.le]; linarith) hε'
+
+/-- Achievability half of the degraded broadcast channel coding theorem, in the superposition
+inner-bound form of Cover–Thomas *Elements of Information Theory* Thm 15.6.2.  Over a physically
+degraded broadcast channel `W` with cloud law `pU` and conditional input kernel `K`, any
+rate pair strictly inside the auxiliary-variable region
+
+* `R₁ < I(X; Y₁ ∣ U)` (`= bcInfo₁`, the strong receiver), and
+* `R₂ < I(U; Y₂)` (`= bcInfo₂`, the degraded receiver)
+
+is achievable: for all large enough block lengths `n` there is a `BroadcastCode` whose two
+per-receiver average error probabilities are both below any prescribed `ε' > 0`.  The proof
+is the two-tier superposition random-coding argument; degradedness `X → Y₁ → Y₂` is a
+structural precondition ensuring the receiver-1 joint-decoding rate sum is met automatically.
+@audit:ok -/
+theorem bc_achievability
+    (pU : Measure U) [IsProbabilityMeasure pU]
+    (K : Kernel U α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hpU : ∀ u : U, 0 < pU.real {u}) (hK : ∀ (u : U) (a : α), 0 < (K u).real {a})
+    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
+    (hdeg : IsBCDegraded W)
+    {R₁ R₂ : ℝ} (hR₁ : 0 < R₁) (_hR₂ : 0 < R₂)
+    (hR₁lt : R₁ < bcInfo₁ pU K W) (hR₂lt : R₂ < bcInfo₂ pU K W)
+    {ε' : ℝ} (hε' : 0 < ε') :
+    ∃ N : ℕ, ∀ n, N ≤ n →
+      ∃ (M₁ M₂ : ℕ) (_hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
+        (_hM₂ : Nat.ceil (Real.exp ((n : ℝ) * R₂)) ≤ M₂)
+        (c : BroadcastCode M₁ M₂ n α β₁ β₂),
+        (c.averageErrorProb₁ W).toReal < ε' ∧ (c.averageErrorProb₂ W).toReal < ε' :=
+  bc_achievability_of_infoJoint_ge pU K W hpU hK hW
+    (bc_degraded_infoJoint_ge pU K W hdeg) hR₁ _hR₂ hR₁lt hR₂lt hε'
 
 end InformationTheory.Shannon.BroadcastChannel
