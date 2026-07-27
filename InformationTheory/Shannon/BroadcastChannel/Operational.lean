@@ -122,7 +122,8 @@ is not taken.
 Like `bcCapacityRegion` and the outer bounds, the region carries no sign constraint: a
 nonpositive rate asks only for a single message and is achievable, so cutting the bound down to
 the first quadrant would place it strictly inside the capacity region for no gain and would
-break every comparison against a region of the whole plane. -/
+break every comparison against a region of the whole plane.
+@audit:ok -/
 def martonRegion (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α) (W : BCChannel α β₁ β₂) :
     Set (ℝ × ℝ) :=
   {p | InMartonRegion p.1 p.2 (martonInfo₁ pV K W) (martonInfo₂ pV K W) (martonInfoV₁V₂ pV K W)}

@@ -52,7 +52,12 @@ variable {α : Type u} {β₁ β₂ : Type*}
 /-- The first receiver is less noisy than the second: for every auxiliary variable `U` feeding
 the input letter through a Markov kernel, the first output carries at least as much information
 about `U` as the second does.  Unlike `IsBCDegraded`, this is a condition on the two output
-marginals of `W` only, not on their joint law. -/
+marginals of `W` only, not on their joint law.
+
+Quantifying the auxiliary alphabet over the input alphabet's universe is no restriction: every
+finite type is measurably isomorphic to one of this universe, and mutual information is invariant
+under such a relabelling.
+@audit:ok -/
 def IsBCLessNoisy (W : BCChannel α β₁ β₂) : Prop :=
   ∀ (U : Type u) [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U]
       [MeasurableSingletonClass U] (pU : Measure U) [IsProbabilityMeasure pU]
@@ -63,14 +68,16 @@ def IsBCLessNoisy (W : BCChannel α β₁ β₂) : Prop :=
 /-- The first receiver is more capable than the second: under every input law the first output
 carries at least as much information about the input as the second does.  Stated on the two
 marginal channels `Kernel.fst W` and `Kernel.snd W` so that the channel-side vocabulary of
-`mutualInfoOfChannel` applies directly. -/
+`mutualInfoOfChannel` applies directly.
+@audit:ok -/
 def IsBCMoreCapable (W : BCChannel α β₁ β₂) : Prop :=
   ∀ (p : Measure α) [IsProbabilityMeasure p],
     mutualInfoOfChannel p (Kernel.snd W) ≤ mutualInfoOfChannel p (Kernel.fst W)
 
 /-- The channel is semi-deterministic: the first output is a function of the input letter, while
 the second output stays arbitrary.  Stated as an equality of the first marginal channel with a
-Dirac kernel, matching the `∃ kernel, ∀ letter, equality` shape of `IsBCDegraded`. -/
+Dirac kernel, matching the `∃ kernel, ∀ letter, equality` shape of `IsBCDegraded`.
+@audit:ok -/
 def IsBCSemiDeterministic (W : BCChannel α β₁ β₂) : Prop :=
   ∃ f : α → β₁, ∀ a : α, Kernel.fst W a = Measure.dirac (f a)
 
@@ -80,7 +87,8 @@ def IsBCSemiDeterministic (W : BCChannel α β₁ β₂) : Prop :=
 the sum of the two per-receiver informations `I(X; Y₁ ∣ U) + I(U; Y₂)`.  Chain rule
 `I((U, X); Y₁) = I(U; Y₁) + I(X; Y₁ ∣ U)` plus the defining inequality `I(U; Y₁) ≥ I(U; Y₂)`.
 This generalizes `bc_degraded_infoJoint_ge`, whose degradedness hypothesis is used only through
-that inequality. -/
+that inequality.
+@audit:ok -/
 @[entry_point]
 theorem bc_lessNoisy_infoJoint_ge {U : Type u}
     [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]
@@ -117,7 +125,8 @@ theorem bc_lessNoisy_infoJoint_ge {U : Type u}
 `(U, X) → Y₁ → Y₂` on the per-coordinate joint law for every auxiliary; post-processing the
 source to `U` and applying data processing along the reversed chain yields the defining
 inequality.  The reverse implication is not available: less noisy constrains only the two
-output marginals, degradedness their joint law. -/
+output marginals, degradedness their joint law.
+@audit:ok -/
 @[entry_point]
 theorem IsBCDegraded.isBCLessNoisy {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
     (hdeg : IsBCDegraded W) : IsBCLessNoisy W := by
@@ -201,7 +210,8 @@ theorem mutualInfoOfChannel_map_eq_mutualInfo_bcJointDistribution {γ : Type*}
 /-- A less noisy channel is more capable: take the input itself as the auxiliary variable, so
 that the defining inequality of `IsBCLessNoisy` at the identity kernel is the comparison of the
 two marginal channels.  The reverse implication is not available: more capable compares the
-input alone, less noisy every auxiliary. -/
+input alone, less noisy every auxiliary.
+@audit:ok -/
 @[entry_point]
 theorem IsBCLessNoisy.isBCMoreCapable {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
     (hln : IsBCLessNoisy W) : IsBCMoreCapable W := by
@@ -218,7 +228,8 @@ theorem IsBCLessNoisy.isBCMoreCapable {W : BCChannel α β₁ β₂} [IsMarkovKe
 /-- A semi-deterministic channel with at least two letters at the first output puts zero mass on
 some output pair: the first output is concentrated on `f a`, so every pair whose first component
 differs from `f a` is null.  The full-support hypothesis of `marton_achievability` therefore
-fails on this class. -/
+fails on this class, so `marton_region_subset_capacity` is unavailable on it.
+@audit:ok -/
 @[entry_point]
 theorem IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero {W : BCChannel α β₁ β₂}
     (hsd : IsBCSemiDeterministic W) (hcard : 1 < Fintype.card β₁) (a : α) :
