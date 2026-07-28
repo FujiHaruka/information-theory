@@ -32,10 +32,10 @@ instantiates them by supplying its own encoder and channel.
 * `compProd_comap_map_prodMap`: a composition product with a comapped kernel is the composition
   product of the pushed-forward measure with the kernel itself.
 * `compProd_map_prodMap`: the two-sided form of the previous item — a composition product
-  transported by a pair of maps, one on the base and one on the fibre, provided the kernel's
+  transported by a pair of maps, one on the base and one on the fiber, provided the kernel's
   dependence on the base factors through the base map.
-* `pi_map_comp_injective`: a finite product measure reindexed along an injection is the product
-  measure of the reindexed family.
+* `pi_map_comp_of_injective`: a finite product measure reindexed along an injection is the
+  product measure of the reindexed family.
 * `piBlockKernel`, `pi_map_unzip_eq_compProd`: a product of laws each of which is its own first
   marginal followed by a kernel `Q`, read as a pair of blocks, is the composition product of the
   product of the first marginals with the blockwise product of `Q`.
@@ -206,7 +206,7 @@ lemma lintegral_pi_eval {γ : Type*} [MeasurableSpace γ]
   simp only [Function.update_self]
   rw [lintegral_const, measure_univ, mul_one]
 
-lemma pi_map_comp_injective {γ : Type*} [MeasurableSpace γ] {k m : ℕ}
+lemma pi_map_comp_of_injective {γ : Type*} [MeasurableSpace γ] {k m : ℕ}
     (ν : Fin m → Measure γ) [∀ j, IsProbabilityMeasure (ν j)]
     (e : Fin k → Fin m) (he : Function.Injective e) :
     (Measure.pi ν).map (fun y j ↦ y (e j)) = Measure.pi fun j ↦ ν (e j) := by

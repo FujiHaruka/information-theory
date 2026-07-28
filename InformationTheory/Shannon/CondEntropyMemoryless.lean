@@ -425,8 +425,10 @@ lemma kernel_compProd_prodMkRight_eq_prod
   rw [Kernel.lintegral_compProd _ _ _ hf, Kernel.lintegral_prod _ _ _ hf]
   rfl
 
--- The stochastic analogue of `isMarkovChain_comp_conditioner_right`, whose right endpoint is
--- only a deterministic function of the conditioner.
+/-- If the target `Bs` is generated from the conditioner `Zc` by a Markov kernel `Q` that ignores
+`As`, then `As → Zc → Bs` is a Markov chain.  This is the stochastic analogue of
+`isMarkovChain_comp_conditioner_right`, whose right endpoint is only a deterministic function of
+the conditioner. -/
 lemma isMarkovChain_of_append
     {A' Z' B' : Type*}
     [MeasurableSpace A'] [MeasurableSpace Z'] [MeasurableSpace B']
