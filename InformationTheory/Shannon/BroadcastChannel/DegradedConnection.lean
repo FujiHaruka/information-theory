@@ -17,9 +17,20 @@ hypothesis of the degraded converse, which therefore lands at a bare broadcast c
 
 * `bcConverse_degradedBlock` — under physical degradedness the letter-`i` output of receiver 1
   is conditionally independent of the receiver-2 prefix given message 2 and the receiver-1
-  prefix, on the ambient measure of a broadcast code.
-* `bc_converse_from_code` — the degraded outer bound (Cover–Thomas Thm 15.6.2) at a bare
-  broadcast code, with the auxiliary `Uᵢ = (W₂, Y₂^{i-1})` read off the ambient.
+  prefix, on the ambient measure of a broadcast code.  This is the hypothesis `h_deg_block` of
+  `bc_converse` at `bcConverseAmbient`.
+* `bc_degraded_converse_from_code` — the degraded outer bound (Cover–Thomas Thm 15.6.2) at a
+  bare broadcast code, with the auxiliary `Uᵢ = (W₂, Y₂^{i-1})` read off the ambient.
+
+## Implementation notes
+
+Degradedness enters only through the degrading kernel it provides, and that kernel is applied
+to the whole output block before the block identity is cut down to a prefix:
+`bcConverse_block_append` appends the entire receiver-2 block to `(messages, Y₁ⁿ)` by the
+blockwise product `piBlockKernel` of that kernel, and `bcConverse_prefix_append` reindexes the
+resulting identity along the injection of `Fin i` into `Fin n`.  The block form is the one the
+product structure of the ambient gives directly, so keeping the two steps apart separates the
+product-measure recombination from the reindexing.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -156,7 +167,16 @@ lemma bcConverse_degradedBlock
     (Kernel.prodMkLeft (Fin M₂) (piBlockKernel Q))
     (bcConverse_prefix_append c W Q hQ i)
 
-theorem bc_converse_from_code
+/-- The degraded outer bound instantiated at a bare broadcast code (Cover–Thomas Thm 15.6.2):
+for a physically degraded Markov channel `W` and any two-receiver block code `c`, the canonical
+ambient measure `bcConverseAmbient c W` discharges every hypothesis of the message-level
+converse `bc_converse`, so the rate pair `(log M₁, log M₂)` lies in the auxiliary-variable
+capacity region whose information bounds are the per-letter sums `∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` and
+`∑ᵢ I(Uᵢ; Y_{2,i})` with `Uᵢ = (W₂, Y₂^{i-1})`.  Degradedness is consumed only through
+`bcConverse_degradedBlock`, so beyond it the hypotheses are the two message counts.  The Fano
+slack is still carried here; it vanishes only in the `n → ∞` limit. -/
+@[entry_point]
+theorem bc_degraded_converse_from_code
     [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hdeg : IsBCDegraded W) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :
