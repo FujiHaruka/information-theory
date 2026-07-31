@@ -65,6 +65,8 @@ comparison bounds is spent.
 * `bc_moreCapable_capacity_eq_uv` — the single-letter characterization: the capacity region of a
   more capable broadcast channel whose transition law gives every output pair positive mass is
   its UV outer region `bcOuterRegionUV`.
+* `bc_degraded_capacity_eq_uv` — the same characterization for a physically degraded channel,
+  degradedness being the strongest of the three comparisons.
 * `bc_moreCapable_superposition_eq_capacity` — the same capacity region read off the
   superposition inner bound instead of the outer bound.
 
@@ -896,6 +898,17 @@ theorem bc_moreCapable_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKe
   exact Set.Subset.antisymm (bc_capacity_subset_uv W)
     ((bc_moreCapable_uv_subset_superposition.{u} W hmc).trans
       (bcSuperpositionRegionSumRate_subset_capacity W hW))
+
+/-- The capacity region of a physically degraded broadcast channel whose transition law gives
+every output pair positive mass is its UV outer region.  Degradedness is the strongest of the
+three comparisons, so the single-letter characterization of a more capable channel applies with
+no further analysis. -/
+@[entry_point]
+theorem bc_degraded_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) (hdeg : IsBCDegraded W) :
+    bcCapacityRegion W = bcOuterRegionUV W := by
+  classical
+  exact bc_moreCapable_capacity_eq_uv W hW hdeg.isBCLessNoisy.isBCMoreCapable
 
 theorem bc_moreCapable_superposition_eq_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) (hmc : IsBCMoreCapable W) :

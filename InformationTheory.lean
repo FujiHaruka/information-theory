@@ -130,6 +130,7 @@ import InformationTheory.Shannon.BroadcastChannel.Superposition.TimeShare
 import InformationTheory.Shannon.BroadcastChannel.Superposition.FullSupport
 import InformationTheory.Shannon.BroadcastChannel.Superposition.Assembly
 import InformationTheory.Shannon.BroadcastChannel.Superposition.MoreCapable
+import InformationTheory.Shannon.BroadcastChannel.DegradedConnection
 import InformationTheory.Shannon.RelayCutset
 import InformationTheory.Shannon.BlockwiseChannel.Definition
 import InformationTheory.Shannon.BlockwiseChannel.MemorylessCapacity
