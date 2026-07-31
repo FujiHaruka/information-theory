@@ -191,7 +191,7 @@ end BroadcastCode
 
 * **message level** (`bc_converse_message_level`): `I₁ = I(W₁; (W₂, Y₁ⁿ))`,
   `I₂ = I(W₂; Y₂ⁿ)` plus Fano terms.
-* **single letter** (the standard Cover–Thomas Thm 15.6.2 form, `bc_converse`): with an
+* **single letter** (the standard Cover–Thomas Thm 15.6.2 form, `bc_degraded_converse`): with an
   auxiliary `U`, `I₁ = ∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)`, `I₂ = ∑ᵢ I(Uᵢ; Y_{2,i})`.
 
 Unlike the symmetric MAC region, the two receivers are asymmetric (receiver 2 is the degraded

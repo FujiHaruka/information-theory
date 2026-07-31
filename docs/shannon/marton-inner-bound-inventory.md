@@ -181,7 +181,7 @@ second moment の交差項は
   - `InformationTheory.Shannon.BroadcastChannel.BroadcastCode` → **direct consumers 19 decl / 5 file**
     (Basic 10 / Converse 5 / ErrorAnalysis 2 / Setup 1 / Assembly 1)。→ 触らないので blast radius 0。
   - `InformationTheory.Shannon.BroadcastChannel.InBCCapacityRegion` → **direct consumers 3 decl / 2 file**
-    (`Basic.lean:139 .mono`, `Converse.lean:179 bc_converse_message_level`, `Converse.lean:583 bc_converse`)。
+    (`Basic.lean:139 .mono`, `Converse.lean:179 bc_converse_message_level`, `Converse.lean:583 bc_degraded_converse`)。
     → **既存述語を 3 本制約に改修すると converse 2 本が壊れる**ので、`InMartonRegion` を**新規に足す**のが正解 (§5-3)。
 
 ### 4.2 ただし `hpos` (full support) が原理的に壊れる ← **最重要所見**

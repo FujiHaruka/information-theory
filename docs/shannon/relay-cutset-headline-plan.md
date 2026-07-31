@@ -17,7 +17,7 @@
 `InformationTheory/Shannon/RelayCutset.lean` に operational headline
 `relay_cutset_outer_bound : Real.log (M:ℝ) ≤ relayCutsetBound Ib Im` (= `min Ib Im`) を追加する。
 DONE 資産 (構造定義 + 2 本の single-letterization, `@audit:ok`) に乗せ、雛形は Line A
-`bc_converse` (message-level Fano を single-letterization と `.mono`/`le_min` で合成)。
+`bc_degraded_converse` (message-level Fano を single-letterization と `.mono`/`le_min` で合成)。
 
 **全体の形**: 単一メッセージ `W` + 単一 destination なので
 1. **destination Fano** (`shannon_converse_single_shot`): `log M ≤ I(W;Yⁿ).toReal + Fano`。

@@ -18,7 +18,7 @@ hypothesis of the degraded converse, which therefore lands at a bare broadcast c
 * `bcConverse_degradedBlock` — under physical degradedness the letter-`i` output of receiver 1
   is conditionally independent of the receiver-2 prefix given message 2 and the receiver-1
   prefix, on the ambient measure of a broadcast code.  This is the hypothesis `h_deg_block` of
-  `bc_converse` at `bcConverseAmbient`.
+  `bc_degraded_converse` at `bcConverseAmbient`.
 * `bc_degraded_converse_from_code` — the degraded outer bound (Cover–Thomas Thm 15.6.2) at a
   bare broadcast code, with the auxiliary `Uᵢ = (W₂, Y₂^{i-1})` read off the ambient.
 
@@ -170,7 +170,7 @@ lemma bcConverse_degradedBlock
 /-- The degraded outer bound instantiated at a bare broadcast code (Cover–Thomas Thm 15.6.2):
 for a physically degraded Markov channel `W` and any two-receiver block code `c`, the canonical
 ambient measure `bcConverseAmbient c W` discharges every hypothesis of the message-level
-converse `bc_converse`, so the rate pair `(log M₁, log M₂)` lies in the auxiliary-variable
+converse `bc_degraded_converse`, so the rate pair `(log M₁, log M₂)` lies in the auxiliary-variable
 capacity region whose information bounds are the per-letter sums `∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` and
 `∑ᵢ I(Uᵢ; Y_{2,i})` with `Uᵢ = (W₂, Y₂^{i-1})`.  Degradedness is consumed only through
 `bcConverse_degradedBlock`, so beyond it the hypotheses are the two message counts.  The Fano
@@ -192,7 +192,7 @@ theorem bc_degraded_converse_from_code
               fun (j : Fin i.val) ↦ bcConverseY₂s ⟨j.val, j.isLt.trans i.isLt⟩ ω))
             (bcConverseY₂s i)).toReal
         + bcConverseFanoSlack₂ c W) := by
-  have h := bc_converse (bcConverseAmbient c W) bcConverseMsg₁ bcConverseMsg₂
+  have h := bc_degraded_converse (bcConverseAmbient c W) bcConverseMsg₁ bcConverseMsg₂
     bcConverseY₁s bcConverseY₂s c
     measurable_bcConverseMsg₁ measurable_bcConverseMsg₂
     measurable_bcConverseY₁s measurable_bcConverseY₂s

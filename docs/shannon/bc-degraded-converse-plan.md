@@ -3,14 +3,14 @@
 > **Parent**: [`broadcast-channel-moonshot-plan.md`](broadcast-channel-moonshot-plan.md) — 凍結退避線 **L-BC2「Fano + chain rule」を再開し genuine closure 済**
 
 **Status**: CLOSED ✅ — degraded broadcast channel の converse single-letterization
-(Cover–Thomas Thm 15.6.2) を genuine closure。headline `bc_converse`
+(Cover–Thomas Thm 15.6.2) を genuine closure。headline `bc_degraded_converse`
 (auxiliary-variable 容量領域 membership) + 核 `bc_input_singleletterize` /
 `bc_singleletterize_bound₁` は全て `@audit:ok`・`InformationTheory.lean` 登録済。
 **SoT**: code (`InformationTheory/Shannon/BroadcastChannel/{Converse,ConverseGateway,Basic}.lean`
 + `InformationTheory/Shannon/CondMIChainRule.lean`)。詳細履歴は git。
 **再検証** (prose にキャッシュしない):
 `scripts/sig_view.ts --sorry InformationTheory/Shannon/BroadcastChannel/Converse.lean` (0 件) /
-`#print axioms InformationTheory.Shannon.BroadcastChannel.bc_converse` (sorryAx-free)。
+`#print axioms InformationTheory.Shannon.BroadcastChannel.bc_degraded_converse` (sorryAx-free)。
 
 ## 進捗
 
@@ -22,13 +22,13 @@
   (下記 Approach / 判断ログ #1)
 - [x] Phase 3 — 入力単一文字化 (degraded core) ✅ → `bc_input_singleletterize` + message-level
   `bc_singleletterize_bound₁`
-- [x] Phase 4 — `bc_converse` headline + `InBCCapacityRegion` 領域述語 ✅ (`Basic.lean` の
+- [x] Phase 4 — `bc_degraded_converse` headline + `InBCCapacityRegion` 領域述語 ✅ (`Basic.lean` の
   `InBCCapacityRegion` + `InBCCapacityRegion.mono`)
 - [x] Phase 5 — 独立監査 (`@audit:ok`) + root 登録 + roadmap Ch.15 同期 ✅
 
 ## ゴール / Approach (達成)
 
-**達成状態**: degraded BC converse の single-letter 領域 membership headline `bc_converse` を
+**達成状態**: degraded BC converse の single-letter 領域 membership headline `bc_degraded_converse` を
 proof done で publish。rate pair `(log M₁, log M₂)` が、per-letter channel 和
 `∑ᵢ I(Xᵢ;Y_{1,i}|Uᵢ)` (receiver 1) / `∑ᵢ I(Uᵢ;Y_{2,i})` (receiver 2、`Uᵢ=(W₂,Y₂^{i-1})`)
 + Fano error slack で定まる auxiliary-variable 容量領域 (`InBCCapacityRegion`) に入ることを示す。

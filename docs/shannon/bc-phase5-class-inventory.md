@@ -20,7 +20,7 @@
 | **D4** | 補助変数の**座標規約が内外でクロスしている**。UV は「第 1 スロット ↔ 受信機 2 / 第 2 スロット ↔ 受信機 1」、Marton は「第 1 スロット ↔ 受信機 1」 | **逐語確認** | `Bridge.lean:777`/`:782` vs `Marton/Setup.lean:244`/`:252` |
 | **D5** | `martonJointDistribution` の型は `IsUVChannelLaw` の第 2 引数の型と**完全一致**する (`Measure (V₁ × V₂ × α × β₁ × β₂)`)。内外を同じ添字で並べる橋が存在しうる | **機械確認 (probe8, EXIT=0)** | `Marton/Setup.lean:57` vs `Region.lean:102` |
 | **D6** | plan の「Phase 2 は Phase 3–5 の前提ではない」は Phase 5 については**成り立たない**。`bcOuterRegionUV` は union だが `martonRegion` は 1 個の四辺形なので、等号は補助変数についての union を内界側にも要求する | 構造上の帰結 (D1 と独立) | plan:97 vs `Region.lean:245` |
-| **D7** | `bc_converse` / `bc_achievability` は **direct consumer 0 件**。「既存に接続」は配線を新規に作ることを意味する | **`dep_consumers.sh` 実測** | Converse.lean:571 / Achievability/Assembly.lean:1093 |
+| **D7** | `bc_degraded_converse` / `bc_achievability` は **direct consumer 0 件**。「既存に接続」は配線を新規に作ることを意味する | **`dep_consumers.sh` 実測** | Converse.lean:571 / Achievability/Assembly.lean:1093 |
 | **D8** | `[Fintype X] [MeasurableSpace X] [MeasurableSingletonClass X]` から `StandardBorelSpace X` は**自動で出る**。BC 各ファイルの明示 `[StandardBorelSpace _]` は冗長 | **機械確認 (probe1, EXIT=0)** | — |
 
 ---
@@ -73,13 +73,13 @@
 | `bcMarkovChain_UX_Y₁_Y₂` | `Achievability/Assembly.lean:939` | `(pU : Measure U) [IsProbabilityMeasure pU] (K : Kernel U α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W] (hdeg : IsBCDegraded W)` | `IsMarkovChain (bcJointDistribution pU K W) (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1)) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2)` |
 | `bc_degraded_infoJoint_ge` | `Achievability/Assembly.lean:965` | 同上 (`hdeg : IsBCDegraded W`) | `bcInfo₁ pU K W + bcInfo₂ pU K W ≤ bcInfoJoint pU K W` |
 | `bc_achievability` | `Achievability/Assembly.lean:1093` | `(pU) [IsProbabilityMeasure pU] (K) [IsMarkovKernel K] (W) [IsMarkovKernel W] (hpU : ∀ u : U, 0 < pU.real {u}) (hK : ∀ (u : U) (a : α), 0 < (K u).real {a}) (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) (hdeg : IsBCDegraded W) {R₁ R₂ : ℝ} (hR₁ : 0 < R₁) (_hR₂ : 0 < R₂) (hR₁lt : R₁ < bcInfo₁ pU K W) (hR₂lt : R₂ < bcInfo₂ pU K W) {ε' : ℝ} (hε' : 0 < ε')` | `∃ N : ℕ, ∀ n, N ≤ n → ∃ (M₁ M₂ : ℕ) (_hM₁ …) (_hM₂ …) (c : BroadcastCode M₁ M₂ n α β₁ β₂), (c.averageErrorProb₁ W).toReal < ε' ∧ (c.averageErrorProb₂ W).toReal < ε'` — **direct consumer 0 件** |
-| `bc_converse` | `Converse.lean:571` | 下記「floating 形の実体」 | `InBCCapacityRegion (Real.log (M₁:ℝ)) (Real.log (M₂:ℝ)) ((∑ i, condMutualInfo μ (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i) (fun ω ↦ (W₂ ω, fun j : Fin i.val ↦ Y₂s ⟨j.val, _⟩ ω))).toReal + …Fano) ((∑ i, mutualInfo μ (fun ω ↦ (W₂ ω, fun j : Fin i.val ↦ Y₂s ⟨j.val,_⟩ ω)) (Y₂s i)).toReal + …Fano)` — **direct consumer 0 件** |
+| `bc_degraded_converse` | `Converse.lean:571` | 下記「floating 形の実体」 | `InBCCapacityRegion (Real.log (M₁:ℝ)) (Real.log (M₂:ℝ)) ((∑ i, condMutualInfo μ (fun ω ↦ c.encoder (W₁ ω, W₂ ω) i) (Y₁s i) (fun ω ↦ (W₂ ω, fun j : Fin i.val ↦ Y₂s ⟨j.val, _⟩ ω))).toReal + …Fano) ((∑ i, mutualInfo μ (fun ω ↦ (W₂ ω, fun j : Fin i.val ↦ Y₂s ⟨j.val,_⟩ ω)) (Y₂s i)).toReal + …Fano)` — **direct consumer 0 件** |
 | `marton_achievability` | `Marton/Achievability.lean:767` | `(pV) [IsProbabilityMeasure pV] (K) [IsMarkovKernel K] (W) [IsMarkovKernel W] (hpV : ∀ v : V₁ × V₂, 0 < pV.real {v}) (hK : ∀ (v : V₁ × V₂) (a : α), 0 < (K v).real {a}) (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) {R₁ R₂ : ℝ} (hR₁lt …) (hR₂lt …) (hRsum …) {ε' : ℝ} (hε' : 0 < ε')` | `BCAchievable` の中身と同型 |
 
-**`bc_converse` の「floating 形」とは具体的に何か (逐語)**:
+**`bc_degraded_converse` の「floating 形」とは具体的に何か (逐語)**:
 
 ```lean
-theorem bc_converse
+theorem bc_degraded_converse
     [NeZero M₁] [NeZero M₂]
     (μ : Measure Ω) [IsProbabilityMeasure μ]                    -- ← 与えられた ambient
     (W₁ : Ω → Fin M₁) (W₂ : Ω → Fin M₂) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
@@ -98,7 +98,7 @@ theorem bc_converse
 ```
 
 - **floating 形の 2 つの意味**: (a) ambient `μ` を**構成せず引数で受ける**、(b) 結論が `InBCCapacityRegion (log M₁) (log M₂) …` の**メッセージレベル**で、`bcCapacityRegion W ⊆ _` の集合レベルではない。
-- **重要な実測**: `bc_converse` の degradedness は `IsBCDegraded W` (チャネルレベル) **ではなく** `h_deg_block` = **ambient 上の per-letter Markov 鎖**。つまり **達成側 (`IsBCDegraded`) と逆側 (`h_deg_block`) で degradedness の表現が既に食い違っている**。Phase 5 で新クラスを 1 本の述語で定義するなら、両方に降ろす補題が要る。
+- **重要な実測**: `bc_degraded_converse` の degradedness は `IsBCDegraded W` (チャネルレベル) **ではなく** `h_deg_block` = **ambient 上の per-letter Markov 鎖**。つまり **達成側 (`IsBCDegraded`) と逆側 (`h_deg_block`) で degradedness の表現が既に食い違っている**。Phase 5 で新クラスを 1 本の述語で定義するなら、両方に降ろす補題が要る。
 - **4b の橋 (S1–S4) がどう繋がるか (実測)**: `bcConverseAmbient c W` (`Bridge.lean:141`) が `μ` を供給し、`bcConverseMsg₁_uniform` (`:229`) / `bcConverseMsg₂_uniform` (`:241`) / `bcConverse_mutualInfo_eq_zero` (`:253`) が uniform + 独立を、`bcConverse_memoryless₁/₂` (`:301`/`:348`) が `h_memo` を、`bcConverse_isMarkovChain₁/₂` (`:394`/`:428`) が `hmarkov` を出す。`bc_uv_converse_from_code` (`:562`, `@[entry_point]`) がその合成。
   **ただし `h_deg_block` に対応する補題は存在しない** (`bcConverse_deg*` は 0 hit)。degraded 側に橋を効かせるには **`IsBCDegraded W` → `bcConverseAmbient` 上の `h_deg_block`** を新規に書く必要がある。これが「4b の橋が degraded 側にも効く」の実際のコスト。
 
@@ -110,7 +110,7 @@ theorem bc_converse
 | `bcCapacityRegion` | 4 decl / 3 file — `bc_capacityRegion_isClosed` / `marton_region_subset_capacity` / `bc_capacity_subset_coop` / `bc_capacity_subset_uv` |
 | `bcOuterRegionUV` | 10 decl / 2 file — `Assembly.lean` の `*_point_mem` 5 本 + `bc_uv_quadrant_mem_of_achievable` + `bc_capacity_subset_uv`、`Region.lean` の `_isClosed`/`_isLowerSet`/`_nonempty` |
 | `IsBCDegraded` | 3 decl / 1 file — `bcMarkovChain_UX_Y₁_Y₂` / `bc_degraded_infoJoint_ge` / `bc_achievability` |
-| `bc_converse` | **0 decl / 0 file** |
+| `bc_degraded_converse` | **0 decl / 0 file** |
 | `bc_achievability` | **0 decl / 0 file** |
 
 ⟹ **`martonRegion` の第一象限制約を外す修正の波及は 1 decl**。しかもその 1 decl (`marton_region_subset_capacity`) の証明は `obtain ⟨-, -, hM⟩ := hp` (`Operational.lean:157`) で **符号成分を捨てている** ので、除去は証明を壊さない。
@@ -387,7 +387,7 @@ def uvRegion {U V : Type*} [MeasurableSpace U] [MeasurableSpace V]
 
 | 順位 | クラス | 根拠 (実測) |
 |---|---|---|
-| **1** | **less noisy** | (a) **gateway atom が通っている** — 定義 B から `bc_degraded_infoJoint_ge` の結論が既存証明の末尾流用 ~25 行で出る (probe5)。(b) **`degraded ⊆ less noisy` が新規補助補題ゼロで ~25 行** (probe7)。(c) 容量領域が degraded と**同じ形** (`InBCCapacityRegion` の 2 制約) なので、既存の `bc_converse` / `bc_achievability` の結論形をそのまま再利用できる。(d) `marton_achievability` の全支持仮説と両立する (degraded の全支持例が存在)。**既存資産の再利用率が最も高い** |
+| **1** | **less noisy** | (a) **gateway atom が通っている** — 定義 B から `bc_degraded_infoJoint_ge` の結論が既存証明の末尾流用 ~25 行で出る (probe5)。(b) **`degraded ⊆ less noisy` が新規補助補題ゼロで ~25 行** (probe7)。(c) 容量領域が degraded と**同じ形** (`InBCCapacityRegion` の 2 制約) なので、既存の `bc_degraded_converse` / `bc_achievability` の結論形をそのまま再利用できる。(d) `marton_achievability` の全支持仮説と両立する (degraded の全支持例が存在)。**既存資産の再利用率が最も高い** |
 | **2** | **more capable** | (a) `Kernel.fst`/`Kernel.snd` + `mutualInfoOfChannel` + `capacity` が `bcOuterRegionCoop` (`OuterBound.lean:381`) で既に使われており、定義に必要な部品はゼロコスト。(b) ただし容量領域に **`R₁+R₂ ≤ I(X;Y₁)`** という新しい形の制約が入る (§3-c) ので、`InBCCapacityRegion` (2 制約) では受けきれず **3 制約の新 structure が要る**。(c) `less noisy ⊆ more capable` に語彙橋 (L11) が 1 本要る |
 | **3** | **semi-deterministic** | (a) **`marton_achievability` の `hW` と構造的に非両立 (probe9 で機械確認)**。内界を適用できないので等号が閉じない。(b) 容量領域の記述に `H(Y₁)` / `H(Y₁\|U)` が出るため §5-3 / §5-4 の自作 2 本 (~70 行) が前提。(c) 定義自体 (D1) は 3 行で入るので、**定義だけ先に入れて等号は L-BCO7 で defer するのが honest** |
 
@@ -490,6 +490,6 @@ end InformationTheory.Shannon.BroadcastChannel
 | **P3** | 「semi-deterministic BC — Marton 内界 = 容量領域が既知」(plan:175) | **文献としては正しいが in-project では実現不能**。`marton_achievability` の `hW` が semi-deterministic と非両立 (probe9) | 攻略順で最後。L-BCO7 の新設を提案 |
 | **P4** | 「more capable / less noisy — 外界が UV より単純 (El Gamal 1979)」(plan:176) | less noisy は**正しい** (2 制約)。more capable は 3 制約で**形が違う**。帰属は less noisy = Körner–Marton 1975/1977 | more capable には `InBCCapacityRegion` (2 field) ではなく 3 field の新 structure が要る |
 | **P5** | 「`uvRegion` の `.toReal` が逆包含の段で逆向きに効く」(plan:183–186 の (i)) | **符号が逆**。`.toReal` の `⊤ ↦ 0` は外界を縮めるので逆包含は**易しくなる**。危険なのは (ii) の無限アルファベットのみ | Phase 5 (有限アルファベット) では `.toReal` は無関係 |
-| **P6** | 「`bc_converse` 自身も floating 形なので 4b の橋 (S1–S4) が効く」(plan:178) | **そのままでは効かない**。`bc_converse` の degradedness は `h_deg_block` = ambient 上の per-letter Markov 鎖で、`bcConverse_*` の 4 本にはこれに対応する補題が**無い** (0 hit)。§5-6 の新規 ~120 行が要る | 「橋が効く」の実際のコストが plan の想定より大きい |
+| **P6** | 「`bc_degraded_converse` 自身も floating 形なので 4b の橋 (S1–S4) が効く」(plan:178) | **そのままでは効かない**。`bc_degraded_converse` の degradedness は `h_deg_block` = ambient 上の per-letter Markov 鎖で、`bcConverse_*` の 4 本にはこれに対応する補題が**無い** (0 hit)。§5-6 の新規 ~120 行が要る | 「橋が効く」の実際のコストが plan の想定より大きい |
 | **P7** | 「クラス定義は project に 0 hit」(plan:51, 173) | **述語としては正しい (0 hit を名前検索・結論形検索の両方で確認)**。ただし**部品は在庫にある**: `Kernel.fst W` / `Kernel.snd W` が `bcOuterRegionCoop` (`OuterBound.lean:381`) で既に使用済。plan の §在庫 にこの記載が無い | more capable の定義コストが plan の想定より小さい |
-| **P8** | 「degraded を新クラスの特殊化として既存 `bc_converse` / `bc_achievability` に接続」(plan:177) | 両方とも **direct consumer 0 件** (`dep_consumers.sh` 実測)。「接続」は既存配線への合流ではなく**新規配線の作成** | 見積りは「接続」ではなく「新規実装」で立てるべき |
+| **P8** | 「degraded を新クラスの特殊化として既存 `bc_degraded_converse` / `bc_achievability` に接続」(plan:177) | 両方とも **direct consumer 0 件** (`dep_consumers.sh` 実測)。「接続」は既存配線への合流ではなく**新規配線の作成** | 見積りは「接続」ではなく「新規実装」で立てるべき |

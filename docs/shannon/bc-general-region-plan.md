@@ -47,7 +47,7 @@
 | **時間共有 + 平均化 + 極限 + headline** | `OuterBoundUV/Assembly.lean` (859 行 / 36 decl) | 混合法 `bcUVTimeShare:266` (+ `_isUVChannelLaw:292` / `_eq_sum:280`) と 4 スロット平均化 `bcUVTimeShare_uvInfo₁_ge:323` 系。再ラベル一族 `uvRelabel:134`–`:203` (S5 / S6 / S7 が全部使う。`uvInfoSum₂_map_uvRelabel` は `[Fintype U]` を要求。**`uvInfo₁_map_uvRelabel:143` が `e₂ := id` で量子化に等式のまま当たる** = S8 のスロット 1 の担い手。`uvInfoJoint_map_uvRelabel:166` が more capable の第 3 スロット版)。縮小点の**乗法形** `bc_uv_code_point_mem:617` → `bc_uv_rate_point_mem:643` → `bc_uv_shifted_point_mem:704` → `bc_uv_quadrant_mem_of_achievable:792` → headline `bc_capacity_subset_uv:847` (`@[entry_point]`) |
 | 汎用資産 (BC 非依存、自作) | `CodeToAmbient.lean` の 3 本 / `Shannon/CondMutualInfoMixture.lean` (193 行 / 7 decl) | 再符号化不変 3 本 `mutualInfo_eq_of_leftInverse:40` / `mutualInfo_congr_ae:57` / `condMutualInfo_eq_of_leftInverse_cond:66` + 混合法 3 本 `condMutualInfo_compProd_fst_eq_lintegral:102` / `mutualInfo_compProd_eq_add_lintegral:142` / `condMutualInfo_compProd_snd_eq_lintegral:164` (**S6 の核**)。混合法は**絶対連続性の仮説を持たない等式** |
 | `csiszar_sum_identity_cond` / `csiszar_sum_identity` | `OuterBoundUV/Gateway.lean:246` / `BroadcastChannel/ConverseGateway.lean:142` | 条件付き Csiszár 和恒等式 (Phase 4a の核) と無条件版 |
-| `bc_converse` / `bc_input_singleletterize` | `BroadcastChannel/Converse.lean:571` / `:316` | degraded 限定の converse (floating 形)。**degradedness を `h_deg_block` で受ける**ので 4b の橋はそのままでは効かない (判断ログ 11-(n)) |
+| `bc_degraded_converse` / `bc_input_singleletterize` | `BroadcastChannel/Converse.lean:571` / `:316` | degraded 限定の converse (floating 形)。**degradedness を `h_deg_block` で受ける**ので 4b の橋はそのままでは効かない (判断ログ 11-(n)) |
 | **達成側の共通形 3 本 + degraded headline** | `BroadcastChannel/Achievability/Assembly.lean` | `bc_ceil_exp_max_zero:1080` / `bc_Ec_lt_of_clamped_rate:1090` / **`bc_achievability_of_rate_lt:1103`** (レートの符号制約なし、`hJlt : max R₁ 0 + R₂ < bcInfoJoint`) / `bc_achievability_of_infoJoint_ge:1239` (`hsum` 形) / `bc_achievability:1270` (**署名・結論は逐語不変**) / `bc_degraded_infoJoint_ge:967` |
 | **superposition 内界 (S0–S2)** | `BroadcastChannel/Superposition/Region.lean` (213 行 / 8 decl、import 3 本) | `bcInfo₁_nonneg:50` / `@[entry_point]` `bc_lessNoisy_achievability:143` / def `bcSuperpositionRegionFullSupport:178` / `_isClosed:186` (S8 で上流移動、4 行) / `@[entry_point]` `bcSuperpositionRegionFullSupport_subset_capacity:193` (仮説は `hW` + `hln` のみ)。**less noisy の言葉で挟み込みが並ぶ** |
 | **S3 = 情報量スロットの同定 3 本** | 同上 `### The three informations as (conditional) mutual informations` | `bcInfo₂_eq_mutualInfo_toReal:78` (`= I(U;Y₂).toReal`) / `bcInfoJoint_eq_mutualInfo_toReal:90` (`= I((U,X);Y₁).toReal`) / `bcInfo₁_eq_condMutualInfo_toReal:110` (`= I(X;Y₁∣U).toReal`)。`U` は `Type*` 総称 ⟹ **more capable でも再利用可**。型クラス前提は逐語 `[Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]` + `[IsProbabilityMeasure pU]` / `[IsMarkovKernel K]` / `[IsMarkovKernel W]` |
@@ -217,8 +217,8 @@ launch 条件外 (新規 `sorry` 0)。README 定理表に登録済。
 - [ ] **semi-deterministic** (Marton 1979) — 定義は入ったが**内界の定理が適用できない**
       (全支持仮説を定義上必ず破る、判断ログ 13) ⟹ 等号は **L-BCO7** で defer し外界側だけで止める。
       判定対象は `bc_achievability_of_rate_lt` の `hpU` / `hK` / `hW` の 3 本。**新規作業なし**
-- [ ] **degraded との接続は「新規配線の作成」**。`bc_converse` / `bc_achievability` はどちらも
-      direct consumer 0 件で合流先の配線が存在せず、`bc_converse` の degradedness は `h_deg_block`
+- [ ] **degraded との接続は「新規配線の作成」**。`bc_degraded_converse` / `bc_achievability` はどちらも
+      direct consumer 0 件で合流先の配線が存在せず、`bc_degraded_converse` の degradedness は `h_deg_block`
       (ambient 上の per-letter Markov 鎖) なので **4b の橋はそのままでは効かない** (判断ログ 11-(n))
 
 proof-log: 個別 leg は no、族としての 1 本は ✅ 完了 (`3d680d3e`、
@@ -484,7 +484,7 @@ S0 factor out ✅ → S1 less noisy 接続 ✅ → S2 内界の集合化 ✅ →
 |---|---|---|---|---|
 | **1** | **proof-log** ✅ 完了 `3d680d3e` | — | [`proof-log-bc-lessnoisy-equality.md`](../proof-logs/proof-log-bc-lessnoisy-equality.md) | — |
 | **2** | **more capable の等号** ✅ 完了 `4a01dff8`…`594887a4` | M0 在庫 [`bc-morecapable-equality-inventory.md`](bc-morecapable-equality-inventory.md) (`6527722b`) | 見積り ~925 (帯 820–980) に対し**実測 909 行** | — |
-| **3** | **degraded との接続 ★次の一手** (判断ログ 11-(n)) | 「存在しないもの」(d) = `IsBCDegraded W` から `h_deg_block` を出す補題 | **新規配線の作成** ~120 行 | 独立。`bc_converse` / `bc_achievability` は direct consumer 0 件 |
+| **3** | **degraded との接続 ★次の一手** (判断ログ 11-(n)) | 「存在しないもの」(d) = `IsBCDegraded W` から `h_deg_block` を出す補題 | **新規配線の作成** ~120 行 | 独立。`bc_degraded_converse` / `bc_achievability` は direct consumer 0 件 |
 | **4** | **Phase 2 の P4–P7** | なし | §Phase 2 の見積り (P6 が本命 ~110 行) | 等号の前提ではない。**P6 が閉じたら L-BCO2 が「答えた」になる** |
 | **5** | **semi-deterministic** | — | **新規作業なし** | L-BCO7 で判断済 — 等号は defer し外界側だけで止める |
 
@@ -515,7 +515,7 @@ S0 factor out ✅ → S1 less noisy 接続 ✅ → S2 内界の集合化 ✅ →
       Phase 2 は「等号の前提」だったが内界が superposition に移って前提でなくなった ⟹
       **目標側が差し替わると依存関係の宣言は失効する**。
     - **(n) 「同じ floating 形だから橋が効く」は形の一致であって仮説の一致ではない** —
-      `bc_converse` の degradedness は `h_deg_block` で、対応版は 0 hit、新規 ~120 行が要る。
+      `bc_degraded_converse` の degradedness は `h_deg_block` で、対応版は 0 hit、新規 ~120 行が要る。
       再利用可否は結論形ではなく**要求される仮説の表現**で決まる。
     - **(o) 在庫の依存の向きが 1 本ずれた (S5)** — 「`uvInfo₂` の有限性は DPI 経由でしか出ない」は
       誤りで、片側有限性 `mutualInfo_ne_top_of_fintype_right` を先に入れればチャネル法を使わず直接

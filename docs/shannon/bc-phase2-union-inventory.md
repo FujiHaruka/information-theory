@@ -320,7 +320,7 @@ def IsBCLessNoisy (W : BCChannel α β₁ β₂) : Prop :=
 
 `rg` 実測: `Set (ℝ × ℝ)` レベルの degraded 容量領域は in-repo に**無い**。あるのは
 点ごとの述語 `InBCCapacityRegion` (`BroadcastChannel/Basic.lean:200`、2 field) と、
-それを使う floating 形の `bc_converse` (`Converse.lean:571`) / `bc_achievability`
+それを使う floating 形の `bc_degraded_converse` (`Converse.lean:571`) / `bc_achievability`
 (`Achievability/Assembly.lean:1093`)。両者とも direct consumer 0 (plan 判断ログ 11-(p))。
 ⟹ **「degraded の形をそのまま一般化する」道は存在しない**。等号は Phase 4b/5 の集合語彙で
 新規に立てるしかない (plan 判断ログ 11-(p) の「接続ではなく新規実装」がここでも当てはまる)。

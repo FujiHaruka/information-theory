@@ -22,9 +22,9 @@ The structure mirrors the multiple-access converse `mac_converse`:
 * **message level** (`bc_converse_message_level`): each rate is bounded by the relevant
   n-letter message–output mutual information plus the Fano slack, obtained from the
   single-shot Fano converse `shannon_converse_single_shot`.
-* **single letter** (`bc_converse`): the message-level mutual informations are bridged to the
-  per-letter channel quantities `∑ᵢ I(Uᵢ; Y_{2,i})` (receiver 2, the easy chain-rule half
-  `bc_singleletterize_bound₂`) and `∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` (receiver 1, the Csiszár-sum
+* **single letter** (`bc_degraded_converse`): the message-level mutual informations are bridged
+  to the per-letter channel quantities `∑ᵢ I(Uᵢ; Y_{2,i})` (receiver 2, the easy chain-rule
+  half `bc_singleletterize_bound₂`) and `∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)` (receiver 1, the Csiszár-sum
   single-letterization `bc_singleletterize_bound₁`), combined via `InBCCapacityRegion.mono`.
 
 The degradedness `X → Y₁ → Y₂` and the memoryless block structure are taken as
@@ -154,7 +154,7 @@ omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempt
 /-- Message-level Fano outer bound for the broadcast channel: for uniform messages decoded by
 per-receiver decoders, the rate pair satisfies the two message-level Fano information bounds,
 packaged as `InBCCapacityRegion`. The single-letterization that turns this into the textbook
-degraded-BC converse is `bc_converse`. -/
+degraded-BC converse is `bc_degraded_converse`. -/
 theorem bc_converse_message_level
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W₁ : Ω → Fin M₁) (W₂ : Ω → Fin M₂) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
@@ -568,7 +568,7 @@ instantiation — building `μ` from uniform messages through the encoder and th
 separate wrapper, not part of this statement.
 
 @audit:ok -/
-theorem bc_converse
+theorem bc_degraded_converse
     [NeZero M₁] [NeZero M₂]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (W₁ : Ω → Fin M₁) (W₂ : Ω → Fin M₂) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)

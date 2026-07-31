@@ -18,7 +18,7 @@
   `bcConverse_memoryless₁` の骨格（`isMarkovChain_of_compProd_pi` 一族）は **効かない**。
   効くのは**達成側の degradedness 雛形** `bcMarkovChain_UX_Y₁_Y₂` / `bcDegraded_append` /
   `isMarkovChain_of_append`（`Achievability/Assembly.lean`）で、**後 2 者は `private`** ⟹ **移設が要る**。
-- 型クラス前提は **`bc_converse` の束（Converse.lean:39–48）のままで足りる**。
+- 型クラス前提は **`bc_degraded_converse` の束（Converse.lean:39–48）のままで足りる**。
   `IsBCDegraded` は `[MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]` **だけ**を要求する
   （`#check` 実測。`Fintype` / `DecidableEq` / `Nonempty` は**混入しない**）。
   `[StandardBorelSpace β₁]` 等の追加も**不要**。
@@ -38,7 +38,7 @@ direct consumer は `rg` 実測で **各 1 箇所**（`Assembly.lean:853` / `:95
 
 ### Q1-1 主目標（新しい数学 + 配線の終点）
 
-`bc_converse` の `h_deg_block`（`Converse.lean:588`–`:592` の逐語）を ambient で担う 1 本:
+`bc_degraded_converse` の `h_deg_block`（`Converse.lean:588`–`:592` の逐語）を ambient で担う 1 本:
 
 ```lean
 lemma bcConverse_degBlock
@@ -86,7 +86,7 @@ theorem bc_converse_from_code
         + bcConverseFanoSlack₂ c W)
 ```
 
-**probe で確認した当たり**（見積りを 1 段下げる）: `bc_converse` の結論に出る Fano 項
+**probe で確認した当たり**（見積りを 1 段下げる）: `bc_degraded_converse` の結論に出る Fano 項
 
 ```lean
 MeasureFano.errorProb μ W₁ (fun ω ↦ (W₂ ω, fun i ↦ Y₁s i ω)) (fun p ↦ c.decoder₁ p.2)
@@ -102,8 +102,8 @@ probe `example … := rfl` が通っている（§Q6 probe 3）⟹ **Fano 項の
 
 | 段 | 内容 | 推奨 | 理由 |
 |---|---|---|---|
-| (a) | `bcConverse_degBlock` のみ | ❌ | consumer 0 のまま。`bc_converse` は今も direct consumer **0 decl / 0 file**（`dep_consumers.sh` 実測）で、それが解消しない |
-| (b) | (a) + `bc_converse_from_code` | ✅ **本 leg のスコープ** | `bc_uv_converse_from_code` と同じ高さに degraded 版が並ぶ。`bc_converse` に consumer が 1 本付く |
+| (a) | `bcConverse_degBlock` のみ | ❌ | consumer 0 のまま。`bc_degraded_converse` は今も direct consumer **0 decl / 0 file**（`dep_consumers.sh` 実測）で、それが解消しない |
+| (b) | (a) + `bc_converse_from_code` | ✅ **本 leg のスコープ** | `bc_uv_converse_from_code` と同じ高さに degraded 版が並ぶ。`bc_degraded_converse` に consumer が 1 本付く |
 | (c) | (b) + レート抽出 `bc_converse_rate_extract` | ⚠ 見送り推奨 | 雛形の `bc_uv_rate_extract` が**現に dead**（親 plan §後続作業 B-1、direct consumer 0）。**dead な双子を増やすだけ** |
 | (d) | (b) + `bcCapacityRegion` への着地 | ❌ 別 leg | 領域レベルは **more capable で既に閉じている**（下記） |
 
@@ -151,7 +151,7 @@ theorem bc_degraded_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKerne
 `Y₂^{<i}` → `X^{<i}` → `W₁` → `Xᵢ` → `Y₁ᵢ` の情報経路が残り、条件付き独立は破れる。
 ⟹ `hdeg` は**チャネルの構造前提**であって「証明の核を束ねた仮説」ではない
 （`IsBCDegraded` の docstring も "A structural precondition … not a load-bearing hypothesis" と明言）。
-`bc_converse` 側も `h_deg_block` を precondition として受けており（`@audit:ok`）、本 leg はその
+`bc_degraded_converse` 側も `h_deg_block` を precondition として受けており（`@audit:ok`）、本 leg はその
 **担い手を実際に構成する**側なので、誠実性の階層は Tier 1 を狙える（`sorry` 不要の見込み）。
 
 ---
@@ -208,7 +208,7 @@ lemma pi_unzip_eq_compProd {k : ℕ} (Q : Kernel β₁ β₂) [IsMarkovKernel Q]
   `{α β₁ β₂} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂] → BCChannel α β₁ β₂ → Prop`。
   置き場の `variable` 束（`Setup.lean:31`–`:35` の `Fintype`/`DecidableEq`/`Nonempty`/
   `MeasurableSingletonClass`）は**この def には 1 つも含まれない**。
-- `bc_converse` 側は α / β₁ / β₂ すべてに
+- `bc_degraded_converse` 側は α / β₁ / β₂ すべてに
   `[Fintype _] [MeasurableSpace _] [MeasurableSingletonClass _] [StandardBorelSpace _] [Nonempty _]`
   （`Converse.lean:39`–`:48` 逐語）。**`bcConverse_degBlock` はこの束のままで elaborate する**（probe 1）。
 - `[StandardBorelSpace β₁]` 等の**追加は不要**。`Q : Kernel β₁ β₂` を扱うが、
@@ -252,7 +252,7 @@ lintegral 版の `integral_fintype_prod_eq_prod`（`Mathlib/MeasureTheory/Integr
 
 | 資産 | file:line | 本 leg での役割 |
 |---|---|---|
-| `bc_converse` | `Converse.lean:571` | 配線先。**direct consumer 0 decl / 0 file**（`dep_consumers.sh` 実測）|
+| `bc_degraded_converse` | `Converse.lean:571` | 配線先。**direct consumer 0 decl / 0 file**（`dep_consumers.sh` 実測）|
 | `bcConverseAmbient` / `bcConverseInput` / `bcConverseKernel` | `Bridge.lean:146` / `:117` / `:128` | ambient 本体。`bcConverseKernel c W m = Measure.pi (fun i ↦ W (c.encoder m i))`（`:131` 逐語）|
 | `bcConverseMsg₁/₂` `bcConverseY₁s/Y₂s` + 可測性 5 本 | `Bridge.lean:160`–`:195` | 射影 |
 | `bcConverseMsg₁_uniform` / `bcConverseMsg₂_uniform` | `Bridge.lean:234` / `:246` | `hW₁_uniform` / `hW₂_uniform` の担い手 ✅ |
@@ -281,7 +281,7 @@ lintegral 版の `integral_fintype_prod_eq_prod`（`Mathlib/MeasureTheory/Integr
 | 6 | `bcConverse_block_append`（P3） | ambient のブロック append（`(m, Y₁ⁿ)` に `Y₂ⁿ` が `qBlock` で付く）| 署名のみ elaborate | 60–90 |
 | 7 | `bcConverse_prefix_append`（P4） | 文字 `i` の前置きへの射影（#4 を 1 回叩く）| 署名のみ elaborate | 35–50 |
 | 8 | **`bcConverse_degBlock`（P5、主目標）** | `isMarkovChain_of_append` + 可測性 | 署名のみ elaborate | 25–35 |
-| 9 | `bc_converse_from_code`（P6、配線） | `bc_converse` の instantiate | 署名のみ elaborate | 50–65 |
+| 9 | `bc_converse_from_code`（P6、配線） | `bc_degraded_converse` の instantiate | 署名のみ elaborate | 50–65 |
 | M | **移設**: `isMarkovChain_of_append` + `kernel_compProd_prodMkRight_eq_prod` | `private` を外して上流へ | — | 移動 58 行（**純増 0**）+ import 調整 |
 
 ---
@@ -292,7 +292,7 @@ lintegral 版の `integral_fintype_prod_eq_prod`（`Mathlib/MeasureTheory/Integr
   `μ.map (fun ω ↦ ((Zc ω, As ω), Bs ω)) = (μ.map (fun ω ↦ (Zc ω, As ω))) ⊗ₘ (Kernel.prodMkRight A' Q)`。
   `Zc` と `As` の**順序を取り違えると別の命題**になる（`prodMkRight` は第 1 成分だけ見る）。
 - **`IsMarkovChain μ Xs Zc Yo` の第 2 引数が条件付け**（`CondMutualInfo.lean:90`–`:95`）。
-  `bc_converse` の `h_deg_block` は `(Y₁s i) (W₂, Y₁^{<i}) (Y₂^{<i})` の順で、**中央が条件**。
+  `bc_degraded_converse` の `h_deg_block` は `(Y₁s i) (W₂, Y₁^{<i}) (Y₂^{<i})` の順で、**中央が条件**。
 - **`Measure.compProd_map` は第 2 成分だけ**（`Prod.map id f`）。第 1 成分は
   in-project の `compProd_comap_map_prodMap` が要る。**両方を合成して初めて `Prod.map f g` になる**（= P0）。
 - **`Measure.pi_singleton` / `pi_pi` は `[∀ i, SigmaFinite (μ i)]`**。probability measure なら自動だが、
@@ -304,7 +304,7 @@ lintegral 版の `integral_fintype_prod_eq_prod`（`Mathlib/MeasureTheory/Integr
 - **`condDistrib_ae_eq_of_measure_eq_compProd` は `[IsFiniteKernel κ]`**。
   `isMarkovChain_of_append` の内部要求なので、移設先ファイルの import 閉包に
   `Mathlib/Probability/Kernel/CondDistrib.lean` が届いている必要がある。
-- **`Fin i.val` の埋め込みは `⟨j.val, j.isLt.trans i.isLt⟩`**。`bc_converse` の逐語と 1 文字でも違うと
+- **`Fin i.val` の埋め込みは `⟨j.val, j.isLt.trans i.isLt⟩`**。`bc_degraded_converse` の逐語と 1 文字でも違うと
   `exact` が落ちる。P4 / P5 の署名は `Converse.lean:588`–`:592` からコピーすること。
 
 ---
@@ -347,7 +347,7 @@ probe では全部潰して warning 0 まで持っていった（親 plan 判断
 
 **`Kernel.pi` 不在の射程（過小評価を防ぐための明記）**: β₁ が**可算でない**場合、
 `u ↦ Measure.pi (fun j ↦ Q (u j))` の可測性が出せず `qBlock` が構成できない。
-本 leg は `bc_converse` の型クラス束（β₁ は `Fintype`）に居るので**発火しない**が、
+本 leg は `bc_degraded_converse` の型クラス束（β₁ は `Fintype`）に居るので**発火しない**が、
 将来 BC を連続アルファベットに広げるときは**ここが最初に壊れる**（自作見積り: 有限次元 `Kernel.pi` の
 自作は Mathlib PR 級で 150–300 行）。共有 sorry 補題は**不要**（本 leg に `sorry` は入らない見込み）。
 
@@ -472,7 +472,7 @@ import InformationTheory.Shannon.BroadcastChannel.Achievability.Setup
 
 ### 命名（`docs/rules/naming.md`）
 
-- `bcConverse_degBlock` は `bc_converse` の仮説名 `h_deg_block` と対応が読めるので可。
+- `bcConverse_degBlock` は `bc_degraded_converse` の仮説名 `h_deg_block` と対応が読めるので可。
   ただし family 既定は `bcConverse_<性質>`（`bcConverse_memoryless₁` / `bcConverse_isMarkovChain₁`）なので、
   **`bcConverse_isMarkovChain_degraded` も候補**。判断ログ 25「クラス限定の定理は名前にクラスを入れる」に従うなら
   degraded を名前に入れる方が筋。
@@ -518,7 +518,7 @@ import InformationTheory.Shannon.BroadcastChannel.Achievability.Setup
 # Broadcast channel — the degraded converse at the ambient of a code
 
 The block-degradedness Markov chain read off `bcConverseAmbient`, and the degraded converse
-`bc_converse` instantiated there.
+`bc_degraded_converse` instantiated there.
 
 ## Main statements
 
