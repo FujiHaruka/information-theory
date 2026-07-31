@@ -106,7 +106,7 @@ mac_converse | MAC capacity-region outer bound (per-letter conditional MI sum fo
 mac_achievability | MAC achievability (corner-point form)
 mac_capacity_region_reconciliation | MAC reconciliation: achievability corner informations = converse conditional/joint MI on the same single-letter law
 mac_timesharing_capacity_region | MAC time-sharing capacity region = closed convex hull of per-input pentagons (Cover–Thomas Thm 15.3.1, convex-hull form)
-bc_converse | degraded broadcast-channel converse, single-letter auxiliary-variable capacity-region outer bound (Cover–Thomas Thm 15.6.2)
+bc_degraded_converse_from_code | degraded broadcast-channel converse at a broadcast code, single-letter auxiliary-variable capacity-region outer bound (Cover–Thomas Thm 15.6.2)
 bc_achievability | degraded broadcast-channel achievability, superposition-coding inner bound (Cover–Thomas Thm 15.6.2)
 marton_achievability | general broadcast-channel achievability, Marton inner bound at U = ∅ (El Gamal–Kim Thm 8.3)
 marton_region_subset_capacity | general broadcast-channel inner bound in set form, Marton region ⊆ capacity region
@@ -114,6 +114,7 @@ bc_capacity_subset_coop | general broadcast-channel converse by receiver coopera
 bc_capacity_subset_uv | general broadcast-channel converse, capacity region ⊆ UV outer region (Nair–El Gamal, El Gamal–Kim Ch. 8)
 bc_lessNoisy_capacity_eq_uv | less noisy broadcast channel, capacity region = UV outer region (equality, for a transition law giving every output pair positive mass; Nair–El Gamal, El Gamal–Kim Ch. 8)
 bc_moreCapable_capacity_eq_uv | more capable broadcast channel, capacity region = UV outer region (equality, for a transition law giving every output pair positive mass; Nair–El Gamal, El Gamal–Kim Ch. 8)
+bc_degraded_capacity_eq_uv | physically degraded broadcast channel, capacity region = UV outer region (equality, for a transition law giving every output pair positive mass; Cover–Thomas Thm 15.6.2)
 relay_cutset_outer_bound | relay-channel cut-set outer bound, min of broadcast-cut and MAC-cut per-letter sums (Cover–Thomas Thm 15.10.1)
 
 @ 16 | Log-optimal portfolio
