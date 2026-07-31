@@ -42,7 +42,7 @@ kernel, and the append identity
 `μ.map ((As, U), Cs) = (μ.map (As, U)) ⊗ₘ prodMkRight K Q` is verified by pushing
 everything through the product law `μ.map ((As, Cs), Ws) = ρ.prod π` (from `hindep`),
 `ρ = (μ.map As) ⊗ₘ Q` (`compProd_map_condDistrib`), and Fubini; the append form then
-lands the chain via `wzIsMarkovChain_of_append`. -/
+lands the chain via `isMarkovChain_of_append`. -/
 private lemma wz_isMarkovChain_of_indepFun_side
     {Ω A B K W : Type*}
     [MeasurableSpace Ω]
@@ -126,7 +126,7 @@ private lemma wz_isMarkovChain_of_indepFun_side
     exact lintegral_lintegral_swap
       (hf.comp ((measurable_const.prodMk
         (hg.comp (measurable_const.prodMk measurable_snd))).prodMk measurable_fst)).aemeasurable
-  exact wzIsMarkovChain_of_append μ (fun ω ↦ g (As ω) (Ws ω)) As Cs hU hAs hCs Q h_app
+  exact isMarkovChain_of_append μ (fun ω ↦ g (As ω) (Ws ω)) As Cs hU hAs hCs Q h_app
 
 /-- Per-letter Markov chain of a memoryless Wyner–Ziv source.
 For a memoryless source `(Xⁿ, Yⁿ)` (mutual independence `hindep`) and a fixed
