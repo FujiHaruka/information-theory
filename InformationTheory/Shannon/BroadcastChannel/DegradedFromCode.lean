@@ -1,6 +1,5 @@
 import InformationTheory.Shannon.BroadcastChannel.Converse
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Bridge
-import InformationTheory.Shannon.BroadcastChannel.Achievability.Setup
 
 /-!
 # Broadcast channel — the degraded converse at the ambient of a code

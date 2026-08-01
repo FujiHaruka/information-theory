@@ -11,7 +11,7 @@ import InformationTheory.Shannon.SlepianWolf.ConditionalTypicalSlice
 /-!
 # Degraded broadcast channel — achievability setup and infrastructure
 
-Cover–Thomas §15.6.2 superposition coding. The structural setup: physical degradedness, the
+Cover–Thomas §15.6.2 superposition coding. The structural setup: the
 per-coordinate joint distribution and its i.i.d. ambient measure, the auxiliary-variable
 informations, the two-tier (cloud / satellite) random codebook, the i.i.d. coordinate facts and
 positivity of the BC ambient law, the `(U, X)` marginal factorization, typical-set relabeling
@@ -33,18 +33,6 @@ variable {U α β₁ β₂ : Type*}
   [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β₁] [DecidableEq β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
   [Fintype β₂] [DecidableEq β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
-
-/-! ### Physical degradedness -/
-
-/-- Physical degradedness `X → Y₁ → Y₂`: the second (degraded) output is a stochastic
-function of the first output alone.  There is a Markov kernel `Q : Kernel β₁ β₂` (the
-degrading channel) such that sampling `(y₁, y₂) ∼ W x` is the same as sampling
-`y₁ ∼ (W x).map Prod.fst` and then `y₂ ∼ Q y₁`.  A structural precondition of the
-degraded-BC achievability theorem (parity with the converse's block-prefix degradedness),
-not a load-bearing hypothesis. -/
-def IsBCDegraded (W : BCChannel α β₁ β₂) : Prop :=
-  ∃ Q : Kernel β₁ β₂, IsMarkovKernel Q ∧
-    ∀ a : α, W a = ((W a).map Prod.fst).bind (fun y₁ ↦ (Q y₁).map (fun y₂ ↦ (y₁, y₂)))
 
 /-! ### Per-coordinate joint distribution -/
 

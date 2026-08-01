@@ -19,7 +19,6 @@ product law `Πᵢ K(Uᵢ)` steered by the cloud codeword, rather than a flat pr
 * `bcInfo₂ pU K W` — the cloud information `I(U; Y₂) = H(U) + H(Y₂) − H(U, Y₂)`.
 * `bcInfo₁ pU K W` — the satellite conditional information
   `I(X; Y₁ ∣ U) = H(U, X) + H(U, Y₁) − H(U, X, Y₁) − H(U)`.
-* `IsBCDegraded W` — physical degradedness `X → Y₁ → Y₂` (there is a degrading kernel).
 * `BCCloudCodebook` / `BCSatelliteCodebook` and their random-coding measures
   `bcCloudCodebookMeasure`, `bcSatelliteCodebookMeasure`, `bcCodebookMeasure` — the
   two-tier ensemble; the satellite law is a **conditional product** `Πᵢ K(Uᵢ)`.
@@ -35,7 +34,7 @@ product law `Πᵢ K(Uᵢ)` steered by the cloud codeword, rather than a flat pr
 
 Umbrella of the `Shannon/BroadcastChannel/Achievability/` family, re-exporting:
 
-* `Achievability.Setup` — degradedness, the ambient measure, the auxiliary-variable informations,
+* `Achievability.Setup` — the ambient measure, the auxiliary-variable informations,
   the two-tier codebook, the positivity / marginal / relabeling infrastructure, the covering-bound
   ingredients, and the two-tier decoders.
 * `Achievability.ErrorAnalysis` — the receiver-2 (cloud) and receiver-1 (strong) error analyses
