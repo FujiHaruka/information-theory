@@ -152,7 +152,7 @@ theorem mutualInfo_chain_rule_fin
       apply Prod.ext
       · rfl
       · funext j
-        show Xs ((Fin.last n).succAbove j) ω = Xs j.castSucc ω
+        change Xs ((Fin.last n).succAbove j) ω = Xs j.castSucc ω
         rw [Fin.succAbove_last]
     have hpi_meas : Measurable (fun ω (i : Fin (n + 1)) ↦ Xs i ω) :=
       measurable_pi_iff.mpr (fun i ↦ hXs i)
@@ -191,7 +191,8 @@ theorem mutualInfo_chain_rule_fin
             condMutualInfo μ (Xs i.castSucc) Yo
               (fun ω (j : Fin i.val) ↦
                 Xs ⟨j.val, j.isLt.trans i.castSucc.isLt⟩ ω) := by
-      convert IH' using 2 <;> rfl
+      convert IH' using 2
+      rfl
     rw [h_mi_f]
     -- Rewrite RHS via Fin.sum_univ_castSucc.
     rw [Fin.sum_univ_castSucc]
@@ -405,7 +406,7 @@ variable {α β : Type*}
   [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
-omit [DecidableEq α] [DecidableEq β] in
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] in
 /-- The mutual-information ↔ entropy three-term identity (joint-distribution level).
 For any probability measure `joint` on a finite-alphabet product `α × β`, the
 `klDiv`-based mutual information of its coordinates equals the standard three-term

@@ -75,16 +75,16 @@ def bcUs : ℕ → (ℕ → U × α × β₁ × β₂) → U := fun i ω ↦ (ω
 /-- The satellite input coordinate `ω ↦ (ω i).2.1`. -/
 def bcXs : ℕ → (ℕ → U × α × β₁ × β₂) → α := fun i ω ↦ (ω i).2.1
 
-/-- The strong-receiver output coordinate `ω ↦ (ω i).2.2.1`. -/
+/-- The first-receiver output coordinate `ω ↦ (ω i).2.2.1`. -/
 def bcY₁s : ℕ → (ℕ → U × α × β₁ × β₂) → β₁ := fun i ω ↦ (ω i).2.2.1
 
-/-- The degraded-receiver output coordinate `ω ↦ (ω i).2.2.2`. -/
+/-- The second-receiver output coordinate `ω ↦ (ω i).2.2.2`. -/
 def bcY₂s : ℕ → (ℕ → U × α × β₁ × β₂) → β₂ := fun i ω ↦ (ω i).2.2.2
 
 /-! ### Auxiliary-variable informations -/
 
 /-- The cloud information `I(U; Y₂) = H(U) + H(Y₂) − H(U, Y₂)` of the per-coordinate joint
-law.  This is the achievable rate of receiver 2 (the degraded receiver). -/
+law.  This is the achievable rate of receiver 2, which decodes the cloud tier alone. -/
 noncomputable def bcInfo₂
     (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) : ℝ :=
   entropy (bcJointDistribution pU K W) Prod.fst
@@ -93,7 +93,8 @@ noncomputable def bcInfo₂
 
 /-- The satellite conditional information
 `I(X; Y₁ ∣ U) = H(U, X) + H(U, Y₁) − H(U, X, Y₁) − H(U)` of the per-coordinate joint law.
-This is the achievable rate of receiver 1 (the strong receiver) given the cloud `U`.  Unlike
+This is the achievable rate of receiver 1, which decodes the satellite tier on top of the
+cloud `U`.  Unlike
 the MAC `macInfo`, this is a genuine four-entropy *conditional* mutual information, not a
 plain three-term unconditional one. -/
 noncomputable def bcInfo₁
@@ -629,7 +630,7 @@ theorem bc_conditional_slice_prob_le
 
 /-! ### Two-tier decoders and the assembled broadcast code -/
 
-/-- Receiver-2 (cloud / degraded receiver) joint-typical decoder.  Given a received word
+/-- Receiver-2 (cloud tier) joint-typical decoder.  Given a received word
 `y₂`, returns the unique cloud message `w₂` whose codeword `Uⁿ(w₂)` is jointly typical with
 `y₂`, falling back to `⟨0, hM₂⟩` if no such `w₂` exists or it is not unique.  This is a
 single-user joint-typical decoder over the cloud codebook — receiver 2 never needs the
@@ -646,7 +647,7 @@ noncomputable def bcCloudTypicalDecoder
     then Classical.choose h.exists
     else ⟨0, hM₂⟩
 
-/-- Receiver-1 (strong receiver) superposition joint-typical decoder.  Given a received word
+/-- Receiver-1 superposition joint-typical decoder.  Given a received word
 `y₁`, returns the unique message pair `(w₁, w₂)` such that the cloud/satellite/output triple
 `(Uⁿ(w₂), Xⁿ(w₁, w₂), y₁)` is jointly typical, falling back to `(⟨0, hM₁⟩, ⟨0, hM₂⟩)`
 otherwise.  The typical-set argument order `bcUs, bcXs, bcY₁s` matches the covering bound

@@ -3,9 +3,9 @@ import InformationTheory.Shannon.BroadcastChannel.Achievability.Setup
 /-!
 # Broadcast channel — per-receiver error analysis
 
-The receiver-2 (cloud) error analysis with its random-codebook averaging (channel fold and
-wrong-cloud swap), and the receiver-1 (strong) error analysis with its random-coding averaged
-swaps (`E_b`, `E_c`).
+The receiver-2 (cloud tier) error analysis with its random-codebook averaging (channel fold and
+wrong-cloud swap), and the receiver-1 (superposition) error analysis with its random-coding
+averaged swaps (`E_b`, `E_c`).
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -180,7 +180,7 @@ marginal after marginalizing `β₂`; the wrong-cloud swap (`bc_random_codebook_
 recognizes the codebook average of a wrong cloud alias as the independent product law
 `(U-block) ⊗ (Y₂-block)` and applies `bc_cloud_indep_prob_le`. -/
 
-/-- The strong/degraded output *pair* coordinate `ω ↦ (ω i).2.2 : β₁ × β₂`. -/
+/-- The two-receiver output *pair* coordinate `ω ↦ (ω i).2.2 : β₁ × β₂`. -/
 def bcYPs : ℕ → (ℕ → U × α × β₁ × β₂) → β₁ × β₂ := fun i ω ↦ (ω i).2.2
 
 /-- Finite-sum change of variables under a pushforward. -/
@@ -924,7 +924,7 @@ lemma bc_chan_fold_Y₁_set
 /-- The joint information `I((U, X); Y₁) = H(U, X) + H(Y₁) − H(U, X, Y₁)` of the per-coordinate
 joint law.  This is the exponent of the receiver-1 wrong-cloud error: a wrong cloud alias
 carries an *independent* `(U, X)` pair, so the false-alarm exponent is the full joint
-information `I((U, X); Y₁)` (which under degradedness dominates `R₁ + R₂`).
+information `I((U, X); Y₁)`, and it is this quantity that caps the rate sum `R₁ + R₂`.
 @audit:ok -/
 noncomputable def bcInfoJoint
     (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) : ℝ :=
