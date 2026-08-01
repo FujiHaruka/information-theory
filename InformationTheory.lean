@@ -307,6 +307,7 @@ import InformationTheory.Shannon.WynerZiv.FactorizableRate
 -- Wave7 parallel-10 + gap-close
 import InformationTheory.Shannon.AWGN.MutualInfoBridge
 import InformationTheory.Shannon.CondKLIntegral
+import InformationTheory.Shannon.MutualInfoReencoding
 import InformationTheory.Shannon.CondMutualInfoMixture
 import InformationTheory.Shannon.MutualInfoFiniteRange
 import InformationTheory.Shannon.EPI.G2.BridgeDensityHelpers

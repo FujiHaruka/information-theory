@@ -1,6 +1,6 @@
 import InformationTheory.Shannon.CondEntropyMemoryless
-import InformationTheory.Shannon.CondMutualInfoMixture
 import InformationTheory.Shannon.MaxEntropy.Basic
+import InformationTheory.Shannon.MutualInfoReencoding
 
 /-!
 # Mutual information against a variable of finite range
