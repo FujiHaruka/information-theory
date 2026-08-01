@@ -109,7 +109,7 @@ mac_timesharing_capacity_region | MAC time-sharing capacity region = closed conv
 bc_degraded_converse_from_code | degraded broadcast-channel converse at a broadcast code, single-letter auxiliary-variable capacity-region outer bound (Cover–Thomas Thm 15.6.2)
 bc_achievability | degraded broadcast-channel achievability, superposition-coding inner bound (Cover–Thomas Thm 15.6.2)
 marton_achievability | general broadcast-channel achievability, Marton inner bound at U = ∅ (El Gamal–Kim Thm 8.3)
-marton_region_subset_capacity | general broadcast-channel inner bound in set form, Marton region ⊆ capacity region
+martonRegionUnion_subset_capacity | general broadcast-channel inner bound in set form, Marton region at U = ∅ as a union over auxiliary alphabets ⊆ capacity region (for a transition law giving every output pair positive mass; El Gamal–Kim Thm 8.3)
 bc_capacity_subset_coop | general broadcast-channel converse by receiver cooperation, capacity region ⊆ cooperative outer region
 bc_capacity_subset_uv | general broadcast-channel converse, capacity region ⊆ UV outer region (Nair–El Gamal, El Gamal–Kim Ch. 8)
 bc_lessNoisy_capacity_eq_uv | less noisy broadcast channel, capacity region = UV outer region (equality, for a transition law giving every output pair positive mass; Nair–El Gamal, El Gamal–Kim Ch. 8)
