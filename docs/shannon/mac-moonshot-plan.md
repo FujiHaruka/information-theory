@@ -21,6 +21,15 @@
 - [x] Phase D-2 — 2-codebook averaging（`mac_random_codebook_average_le`）✅ CLOSED → [mac-achievability-bonferroni-plan.md](mac-achievability-bonferroni-plan.md)（gateway-atom-first E1 swap genuine、4-event 分配 + 集約 + 組立で averaging 補題 sorryAx-free 化、headline `mac_achievability` 推移的 proof done）
 - [x] Phase V — verify ✅ (`#print axioms mac_converse`/`mac_achievability` = `[propext, Classical.choice, Quot.sound]` sorryAx-free、独立 honesty 監査 `@audit:ok`、`InformationTheory.lean` に 5 MAC ファイル wire-in 済、`lake build InformationTheory` clean)
 
+## Sub-plan 一覧 (子の Parent ヘッダに対応する backlink 点)
+
+| 子 plan | 担当範囲 | 状態 |
+|---|---|---|
+| [`mac-timesharing-plan.md`](mac-timesharing-plan.md) | 撤退ライン L-MAC5 (time-sharing 全凸包形)。CV/V は更にその子 [`mac-timesharing-converse-plan.md`](mac-timesharing-converse-plan.md) が SoT | CLOSED (2026-07-05) |
+| [`mac-achievability-bonferroni-plan.md`](mac-achievability-bonferroni-plan.md) | §Phase D-2 (2-codebook averaging) | CLOSED (2026-06-28) |
+| [`mac-rate-bound-proof-done-plan.md`](mac-rate-bound-proof-done-plan.md) | MAC 3 rate-bound declaration の body proof done 化 | CLOSED |
+| [`mac-bc-sorry-migration-plan.md`](mac-bc-sorry-migration-plan.md) | MAC/BC legacy tag → sorry-based 移行 (BC 側 moonshot と共同親) | CLOSED |
+
 ## ゴール / Approach
 
 ### Goal (最終定理 signature)
@@ -77,7 +86,7 @@ variable {α₁ α₂ β : Type*}
 - [ ] `abbrev MACChannel α₁ α₂ β := Kernel (α₁ × α₂) β`
 - [ ] `structure MACCode (M₁ M₂ n) (α₁ α₂ β)` — `encoder₁ : Fin M₁ → (Fin n → α₁)` / `encoder₂ : Fin M₂ → (Fin n → α₂)` / `decoder : (Fin n → β) → Fin M₁ × Fin M₂`
 - [ ] error event + per-pair 誤り確率: `MACCode.errorProbAt c W (m₁,m₂) := Measure.pi (fun i ↦ W (enc₁ m₁ i, enc₂ m₂ i)) (errorEvent …)` (3 誤り事象 = decoder が (m₁,m₂) 以外を返す)、`averageErrorProb` (M₁·M₂ 正規化)
-- [ ] 基本性質: `mac_errorProbAt_le_one` / `mac_averageErrorProb_le_one` / `mac_averageErrorProb_ne_top` (単一ユーザ `averageErrorProb_le_one` 同型)
+- [ ] 基本性質: `MACCode.errorProbAt_le_one` / `MACCode.averageErrorProb_le_one` / `MACCode.averageErrorProb_ne_top` (単一ユーザ `averageErrorProb_le_one` 同型)
 - [ ] **corner cut rate 定義** (Mathlib-shape-driven、`condMutualInfo` 結論形を直接返す): `I₁ = condMutualInfo μ X₁ Y X₂` / `I₂ = condMutualInfo μ X₂ Y X₁` / `Iboth = mutualInfo μ (fun ω ↦ (X₁ ω, X₂ ω)) Y`
 - [ ] `structure InMACCapacityRegion (R₁ R₂ I₁ I₂ Iboth : ℝ) : Prop` (3 field) + `mk'` / `iff_and` / `mono` 等の基本 lemma
 
@@ -217,6 +226,8 @@ InformationTheory/Shannon/MultipleAccess/
 ```
 
 import 連鎖: `Basic` ← {`Converse`, `JointTypicality`}; `JointTypicality` ← `AchievabilityCore` ← `Achievability`。各実装 agent は `InformationTheory.lean` を編集せず、orchestrator が最後に import 5 本をまとめて追加。
+
+**MAC 非依存な汎用 API は `Probability/` へ昇格済** (commits `71965d3f` / `08cfde86`): 混合測度は `InformationTheory/Probability/Mixture.lean` (`mixLaw` 一族、旧 `MAC.macMix*` から `mac` 接頭辞を除去)、singleton 質量和は `InformationTheory/Probability/SingletonMass.lean` (旧 `MAC.map_real_singleton_fiber_sum` ほか) が持つ。BC → MAC の import 辺はこれで消滅ゆえ、MAC namespace 側で同種の汎用補題を再定義しないこと。
 
 ---
 
