@@ -9,6 +9,12 @@
 > (どの宣言が sorryAx-free か、どの包含が無条件か等) は**キャッシュせず毎回引き直す** (re-derive > cache)。
 > 親 plan: [`bc-general-region-plan.md`](bc-general-region-plan.md)。
 
+## Mathlib の不在 (loogle 否定 — クエリの組み立てが高価ゆえ台帳に置く)
+
+| claim | confidence | 再検証コマンド | last-verified | notes |
+|---|---|---|---|---|
+| **`ProbabilityTheory.Kernel.pi` は Mathlib に存在しない** (測度の `Measure.pi` はあるがカーネルの有限積は無い) | `loogle-neg` | `./.lake/packages/loogle/.lake/build/bin/loogle --read-index .lake/build/loogle.index "ProbabilityTheory.Kernel.pi _ _"` → 逐語 ``Unknown constant `ProbabilityTheory.Kernel.pi` ``。裏取りは `rg 'Kernel\.pi\b' .lake/packages/mathlib/Mathlib/` → **0 hit** | `86b90af1` | ⚠ **名前だけのクエリ (`ProbabilityTheory.Kernel.pi`) は否定的回答にならない** — loogle が `unknown identifier` + `Maybe you meant: "ProbabilityTheory.Kernel.pi"` を返し、クエリが走っていない。引数パターン `_ _` を付けて初めて `Unknown constant` = 定数が実在しないという判定になる。**有限アルファベットでは回避可能**で、degraded 接続 leg は `Kernel.ofFunOfCountable` で組んだ `piBlockKernel` (`ChannelCoding/CodeToAmbient.lean:531`) がその形。**射程 (過小評価防止)**: β₁ が可算でない場合 `u ↦ Measure.pi (fun j ↦ Q (u j))` の可測性が出せず `piBlockKernel` が構成できない ⟹ **BC を連続アルファベットへ一般化するとき最初に壊れるのはここ**。自作見積りは有限次元 `Kernel.pi` で Mathlib PR 級 150–300 行 (`human-judgment`)。壁ではないので `@residual(wall:…)` は立てていない |
+
 ## 負の判定 (目標命題が偽 — 再導出が高価ゆえ台帳に置く)
 
 | claim | confidence | 再検証コマンド | last-verified | notes |
