@@ -36,7 +36,8 @@ Finiteness of the mutual information is taken as a hypothesis.
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 10.4.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+  Theorem 10.4.
 -/
 
 namespace InformationTheory.Shannon

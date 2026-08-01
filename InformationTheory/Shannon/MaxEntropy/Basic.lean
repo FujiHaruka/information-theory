@@ -9,11 +9,9 @@ import Mathlib.MeasureTheory.Measure.Dirac
 /-!
 # Maximum entropy (Gibbs inequality)
 
-For a finite-alphabet random variable `X : Ω → α`,
-`entropy μ X ≤ Real.log (Fintype.card α)`,
-with equality if and only if `μ.map X = uniformOn Set.univ`.
-
-## Main definitions
+For a finite-alphabet random variable `X : Ω → α` under an arbitrary probability
+measure `μ`, `entropy μ X ≤ Real.log (Fintype.card α)`, with equality if and only if
+`μ.map X = uniformOn Set.univ`.
 
 ## Main statements
 
@@ -28,8 +26,14 @@ The main results follow directly from concavity of `negMulLog` on `Set.Ici 0` vi
 finite-sum Jensen inequality (`ConcaveOn.le_map_sum` and
 `StrictConcaveOn.map_sum_eq_iff`), with uniform weights `1/N` (`N = |α|`).
 No KL-divergence machinery is needed; `klDiv_uniformOn_univ_toReal_eq` is a secondary
-identity derived from the same computation. This is the general-measure analogue of
-`LoomisWhitney.entropy_le_log_image_card`.
+identity derived from the same computation.
+
+No uniformity assumption is placed on the law of `X`: the bound holds for an arbitrary
+probability measure `μ`, which is what makes `entropy_le_log_card` usable as the
+log-cardinality bound on the entropy of an arbitrary encoder output.
+`entropy_le_log_image_card` (`LoomisWhitney.lean`) is the counterpart specialized to
+`μ = uniformOn A`, where the bound is the image cardinality `#(A.image f)` instead
+of `|α|`.
 -/
 
 namespace InformationTheory.Shannon.MaxEntropy
@@ -224,7 +228,7 @@ theorem klDiv_uniformOn_univ_toReal_eq
 
 omit [DecidableEq α] in
 /-- **Gibbs' inequality** (uniform bound): the Shannon entropy of a finite-alphabet
-random variable is at most `log |α|`. -/
+random variable is at most `log |α|`, for an arbitrary probability measure `μ`. -/
 @[entry_point]
 theorem entropy_le_log_card
     (μ : Measure Ω) [IsProbabilityMeasure μ]
