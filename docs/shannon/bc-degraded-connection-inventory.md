@@ -104,7 +104,7 @@ probe `example … := rfl` が通っている（§Q6 probe 3）⟹ **Fano 項の
 |---|---|---|---|
 | (a) | `bcConverse_degBlock` のみ | ❌ | consumer 0 のまま。`bc_degraded_converse` は今も direct consumer **0 decl / 0 file**（`dep_consumers.sh` 実測）で、それが解消しない |
 | (b) | (a) + `bc_converse_from_code` | ✅ **本 leg のスコープ** | `bc_uv_converse_from_code` と同じ高さに degraded 版が並ぶ。`bc_degraded_converse` に consumer が 1 本付く |
-| (c) | (b) + レート抽出 `bc_converse_rate_extract` | ⚠ 見送り推奨 | 雛形の `bc_uv_rate_extract` が**現に dead**（親 plan §後続作業 B-1、direct consumer 0）。**dead な双子を増やすだけ** |
+| (c) | (b) + レート抽出 `bc_converse_rate_extract` | ⚠ 見送り推奨 | 雛形の `bc_uv_rate_extract` は direct consumer 0 の dead 宣言で、後続作業 B-1 で**削除された**（MAC 側の対応物 `mac_converse_rate_extract` は現存）。**dead な双子を増やすだけ** |
 | (d) | (b) + `bcCapacityRegion` への着地 | ❌ 別 leg | 領域レベルは **more capable で既に閉じている**（下記） |
 
 **重要（本 leg の位置づけの正確な把握）**: 領域レベルの degraded 等号は**すでに手に入っている**。
@@ -499,7 +499,7 @@ import InformationTheory.Shannon.BroadcastChannel.Achievability.Setup
    （§Q3-2）。判断ログ 11-(o)「在庫の *順序* は引き継ぎ *理由* は引き直す」の再現。
 4. §在庫の `Bridge.lean` 行番号が docstring 行と decl 行で混在している（`bcConverseAmbient:141` は
    decl が `:146`、`bcConverseFanoSlack₁:532` は `:537`、`bc_uv_converse_from_code:562` は `:567`、
-   `bc_uv_rate_extract:602` は `:607`、構造前提 4 本 `:301`–`:428` は `:306`/`:353`/`:399`/`:433`）。
+   構造前提 4 本 `:301`–`:428` は `:306`/`:353`/`:399`/`:433`）。
    `uvInfo₁:782` 等は decl 行で一致しているので**規約の不統一**であってファイルの drift ではない。優先度低。
 5. §Phase 5「残るクラス」に **「領域レベルの degraded 等号は more capable の系として既に取れている
    （実測 2 行）。本 leg の価値は古典形 converse の操作的着地」** を 1 行足すと、

@@ -284,8 +284,9 @@ UV 側の対応は `a i = I(Vᵢ;Y₁ᵢ)`, `b i = I(Uᵢ;Y₂ᵢ)`,
 3. **L9 — 退化レートの被覆** (~150 行、**plan 未記載**)。
    `bc_uv_converse` は `hcard₁ : 2 ≤ Fintype.card ξ₁` を要求するが、`R₁ ≤ 0` では
    `BCAchievable` が `M₁ = 1` の符号しか保証しない。MAC はここに
-   `mac_converse_from_code_bound₁/₂` + `mac_converse_shrunk_point_mem_axis1/2` +
-   `mac_timesharing_converse_axis1/2` (`Assembly.lean:397`–`:817`) で**約 450 行**を費やしている。
+   `mac_converse_from_code_bound₁/₂` + `mac_converse_rate₁/₂_mul_one_sub_errorProb_mem_of_ceil_exp_le` +
+   `mac_timesharing_converse_rate₁/₂` (`Shannon/MultipleAccess/TimeSharingConverse/Assembly.lean`) で
+   **約 450 行**を費やしている。
    案 A では領域が下方閉で第三象限を含むため、非正レートは単調性で潰せる見込みで
    150 行程度に収まるはずだが、**plan の checklist には 1 行も現れていない**ので明示しておく。
 
@@ -299,7 +300,7 @@ UV 側の対応は `a i = I(Vᵢ;Y₁ᵢ)`, `b i = I(Uᵢ;Y₂ᵢ)`,
 | **4b-S4** | `bc_uv_converse_from_code` + `bcConverse_errorProb₁_eq` / `₂_eq` + `bc_uv_rate_extract` | S3 | 185 | `bc_uv_converse` をここで初めて呼ぶ。`InBCOuterRegionUV (log M₁) (log M₂) …` が出る |
 | **4b-S5** | `uvAuxPad` + `uvAux_pad_mutualInfo_eq` + `uvAux_pad_condMutualInfo_eq` | S1 (S2–S4 と独立に着手可) | 100 | **難所 2**。`OuterBoundUV.lean` の隣に置くのが自然 |
 | **4b-S6** | `bcUVJointDistribution` + `uvInfo₁` / `uvInfo₂` / `uvInfoSum₁` / `uvInfoSum₂` + 5 つ組 map + 同定 4 本 | S4, S5 | 220 | 定義は `bc_uv_converse` の結論形に合わせて決める (Mathlib-shape-driven) |
-| **4b-S7** | `bcOuterRegionUV` + `bcOuterRegionUV_isClosed` + 時間共有吸収 (`bc_uv_shrunk_point_mem` 相当) | S6 | 250 | 案 A。第一象限制約は入れない |
+| **4b-S7** | `bcOuterRegionUV` + `bcOuterRegionUV_isClosed` + 時間共有吸収 (`bc_uv_rate_sub_fanoSlack_mem_of_ceil_exp_le` 相当) | S6 | 250 | 案 A。第一象限制約は入れない |
 | **4b-S8** | Fano slack → 0 の極限 + 退化レート被覆 + `bc_capacity_subset_uv` | S7 | 275 | **難所 3**。ここだけ 2 dispatch に割れる可能性あり |
 
 依存順序: `S1 → S2 → S3 → S4 → S6 → S7 → S8`、`S5` は `S1` の直後に並行着手可。

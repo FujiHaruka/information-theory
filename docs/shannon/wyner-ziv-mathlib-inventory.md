@@ -126,7 +126,7 @@ theorem wynerZiv_converse_single_shot
 | condMI ≤ → condMI 橋 | `condMutualInfo_eq_condEntropy_sub_condEntropy` | `InformationTheory/Shannon/Entropy.lean:208` | ✅ | converse の Real 化 |
 | 条件付き entropy | `MeasureFano.condEntropy` | `InformationTheory/Fano/Measure.lean:68` | ✅ | textbook 式と直接対応 |
 | Fano 不等式 (side info paired form) | `fano_inequality_measure_theoretic` | `InformationTheory/Fano/Measure.lean:224` | ✅ (`Yo := (Y, sideinfo)` で paired) | Phase C `H(X^n \| dec, Y^n) ≤ n·δ(ε)` |
-| `entropy_le_log_card` | `entropy_le_log_card` (in `MaxEntropy` namespace) | `InformationTheory/Shannon/SlepianWolf.lean:45` (and re-exposed `MaxEntropy.entropy_le_log_card`) | ✅ | Phase C `log M ≥ H(W)` |
+| `entropy_le_log_card` | `MaxEntropy.entropy_le_log_card` | `Shannon/MaxEntropy/Basic.lean` (単一の定義。かつて `SlepianWolf.lean` にあった重複はこちらへ集約済) | ✅ | Phase C `log M ≥ H(W)` |
 
 ### 2.2 既存 InformationTheory — Slepian–Wolf binning + jointly typical (Wyner-Ziv で再利用)
 

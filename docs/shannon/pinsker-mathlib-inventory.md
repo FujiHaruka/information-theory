@@ -123,7 +123,7 @@
 
 ## 6. 既存 InformationTheory API
 
-- **`InformationTheory/Shannon/MaxEntropy.lean:123`** — Bochner per-element rnDeriv 識別パターンの完全実例
+- **`Shannon/MaxEntropy/Basic.lean`** — Bochner per-element rnDeriv 識別パターンの完全実例
   (Pinsker でほぼ同形を踏襲、`P.real{x} / Q.real{x}` で書き換える)
 
 - **`InformationTheory/Shannon/Bridge.lean:216`** — `klDiv_discrete_toReal_eq_sum` (private、参考のみ)

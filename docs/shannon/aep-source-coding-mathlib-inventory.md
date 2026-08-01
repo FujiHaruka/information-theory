@@ -37,7 +37,7 @@ AEP Phase D (源符号化定理 weak converse) 着手前に、5 軸で **新規�
 - **軸 2 (i.i.d. 強化) は確認必須の判断点** ─ AEP Phase A〜C は `Pairwise IndepFun` で済んでいる (強法則がそれだけで動く) が、Phase D の `H(X^n) = n · H(X)` は **真の (mutual) 独立性 = `iIndepFun`** が必要。Mathlib に `Pairwise IndepFun → iIndepFun` 一般変換は **不在** (Pairwise は弱い)。したがって **Phase D は `iIndepFun` 仮定を Phase A〜C と独立に追加で受ける** 設計。
 - **軸 3 (Pi 化 entropy chain rule) は 完全不在** ─ `entropy μ (jointRV Xs n) = n · entropy μ (Xs 0)` 形は InformationTheory にも Mathlib にも無し。Han `jointEntropy_chain_rule` は `H(X_0,...,X_{n-1}) = ∑ H(X_i | prefix)` を提供するが、i.i.d. への閉じ込みには **`condEntropy_eq_entropy_of_indepFun`** (1 段補題、自前 30〜50 行) を別途要する。あるいは Stein の `klDiv_pi_eq_n_smul` と平行な induction を直接書く (40〜80 行)。
 - **軸 4 (ソース符号化 formalism) は 完全不在** ─ encoder `c : (Fin n → α) → Fin M`、decoder `d : Fin M → (Fin n → α)`、error rate `μ {ω | d (c (X^n ω)) ≠ X^n ω}` は **すべて自前で書き下す**。既存の `MeasureFano.errorProb` は `decoder : Y → X` 形なので、`X^n` の自己復号にそのまま `Yo := c ∘ X^n` で当てはめられる。`SourceCode` 構造体は導入せず、Phase D では **直接 `c`, `d`, `Pe_n` を引数で渡す** 形 (Slepian–Wolf converse の流儀と一致)。
-- **軸 5 (既存資産の再利用判定)** ─ `shannon_converse_single_shot` は **uniform `Msg` 仮定** で立っており、X^n は uniform でないため **直接呼べない**。したがって Phase D は `shannon_converse_single_shot` を **呼ばず**、その証明骨格 (`entropy = mutualInfo + condEntropy`、Fano、DPI、`entropy_le_log_card`) を `X^n` 上で **再演** する (= SlepianWolf converse の流儀)。再利用するのは **Phase 4-β bridge** (`mutualInfo_eq_entropy_sub_condEntropy`)、**`entropy_le_log_card`** (SlepianWolf.lean)、**`fano_inequality_measure_theoretic`** (Fano/Measure.lean)、**`mutualInfo_le_of_postprocess`** (DPI.lean) の 4 本。
+- **軸 5 (既存資産の再利用判定)** ─ `shannon_converse_single_shot` は **uniform `Msg` 仮定** で立っており、X^n は uniform でないため **直接呼べない**。したがって Phase D は `shannon_converse_single_shot` を **呼ばず**、その証明骨格 (`entropy = mutualInfo + condEntropy`、Fano、DPI、`entropy_le_log_card`) を `X^n` 上で **再演** する (= SlepianWolf converse の流儀)。再利用するのは **Phase 4-β bridge** (`mutualInfo_eq_entropy_sub_condEntropy`)、**`entropy_le_log_card`** (`Shannon/MaxEntropy/Basic.lean`)、**`fano_inequality_measure_theoretic`** (Fano/Measure.lean)、**`mutualInfo_le_of_postprocess`** (DPI.lean) の 4 本。
 
 ---
 
@@ -319,20 +319,20 @@ theorem source_coding_converse
 
 ### 再演に再利用する 4 部品
 
-#### `entropy_le_log_card` (SlepianWolf.lean)
+#### `entropy_le_log_card` (`Shannon/MaxEntropy/Basic.lean`)
 
-- **file:line**: `InformationTheory/Shannon/SlepianWolf.lean:45`
+- **file**: `Shannon/MaxEntropy/Basic.lean` (かつて `SlepianWolf.lean` にあった重複はこちらへ集約済)
 - **完全署名 verbatim**:
   ```lean
+  -- section 変数: {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+  --   [MeasurableSpace α] [MeasurableSingletonClass α] / {Ω : Type*} [MeasurableSpace Ω]
+  omit [DecidableEq α] in
   theorem entropy_le_log_card
-      {Ω : Type*} [MeasurableSpace Ω]
-      {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
-        [MeasurableSpace α] [MeasurableSingletonClass α]
       (μ : Measure Ω) [IsProbabilityMeasure μ]
-      (Xs : Ω → α) (hXs : Measurable Xs) :
-      entropy μ Xs ≤ Real.log (Fintype.card α)
+      (X : Ω → α) (hX : Measurable X) :
+      entropy μ X ≤ Real.log (Fintype.card α)
   ```
-- **`[..]` プレリク verbatim**: `[MeasurableSpace Ω]` `[Fintype α]` `[DecidableEq α]` `[Nonempty α]` `[MeasurableSpace α]` `[MeasurableSingletonClass α]` `[IsProbabilityMeasure μ]`
+- **`[..]` プレリク verbatim** (`#check` 実測、`DecidableEq α` は `omit` で落ちる): `[Fintype α]` `[Nonempty α]` `[MeasurableSpace α]` `[MeasurableSingletonClass α]` `[MeasurableSpace Ω]` `[IsProbabilityMeasure μ]`
 - **本 plan での用途**: `H(c n ∘ X^n) ≤ log (M n)` ─ `c n ∘ X^n : Ω → Fin (M n)` で適用、`Fintype.card (Fin (M n)) = M n` (`Fintype.card_fin`)。**Slepian–Wolf converse とまったく同じ使い方**。
 
 #### `mutualInfo_eq_entropy_sub_condEntropy` (Bridge.lean)

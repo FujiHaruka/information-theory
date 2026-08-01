@@ -101,7 +101,7 @@ theorem exists_fullSupport_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw (W : BCChann
 ```
 
 本体は **3 行** (S6 を obtain → 案 A を obtain → 組み直す)。さらに内界 union への着地
-`(R₁ - δ, R₂ - δ) ∈ bcSuperpositionRegionFullSupport W` が **4 行** (`subset_closure` +
+`(R₁ - δ, R₂ - δ) ∈ bcSuperpositionRegionNoSumRate W` が **4 行** (`subset_closure` +
 `Set.mem_iUnion` + 実際の witness、probe 通過) ⟹ **S8 に残るのは m → ∞ と δ → 0 の 2 重極限だけ**。
 
 ## Q2 目標の真偽判定
@@ -203,12 +203,12 @@ R₂ - δ ≤ B - (εB + binEntropy ε) ≤ bcInfo₂ (摂動後)
 | ペナルティの上界 (2) | `mutualInfo_eq_entropy_sub_condEntropy` | `(μ) [IsProbabilityMeasure μ] (Xs : Ω → X) (Yo : Ω → Y) (hXs hYo) : (mutualInfo μ Xs Yo).toReal = entropy μ Xs - condEntropy μ Xs Yo` | `Shannon/Bridge.lean:545` |
 | ペナルティの上界 (3) | `condEntropy_nonneg` | `{W : Type*} [Fintype W] [Nonempty W] [MeasurableSpace W] [MeasurableSingletonClass W] {Y : Type*} [MeasurableSpace Y] (μ) [IsProbabilityMeasure μ] (Ws Yo) : 0 ≤ condEntropy μ Ws Yo` | `Shannon/Pi.lean:95` |
 | エントロピーの定義 (2 点計算) | `entropy` | `noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ := ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})` | `Shannon/Bridge.lean:40` |
-| **S6 から逐語再利用する 5 本** | `boolLaw` / `lintegral_boolLaw` / `uvTagTrue` / `uvInfo₂_uvTagTrue` / `condMutualInfo_uvTagTrue` | `boolLaw lam = (lam ⊓ 1) • dirac true + (1 - lam) • dirac false` ほか | `SuperpositionTimeShare.lean:58` `:70` `:83` `:169` `:242` |
+| **S6 から逐語再利用する 5 本** | `boolLaw` / `lintegral_boolLaw` / `uvTagTrue` / `uvInfo₂_uvTagTrue` / `condMutualInfo_uvTagTrue` | `boolLaw lam = (lam ⊓ 1) • dirac true + (1 - lam) • dirac false` ほか | `boolLaw` / `lintegral_boolLaw` は `Shannon/BoolLaw.lean`、残り 3 本は `Shannon/BroadcastChannel/Superposition/TimeShare.lean` |
 | S6-a の橋 (対を読む) | `bcInfo₁_uvCloudLaw` / `bcInfo₂_uvCloudLaw` | `bcInfo₁ (uvCloudLaw ν) (uvSatelliteKernel ν) W = (condMutualInfo ν X Y₁ U).toReal` / `bcInfo₂ … = (uvInfo₂ ν).toReal` | 同 `:366` / `:359` |
-| 対 → 情報量の同定 | `bcInfo₁_eq_condMutualInfo_toReal` / `bcInfo₂_eq_mutualInfo_toReal` | `bcInfo₁ pU K W = (condMutualInfo (bcJointDistribution pU K W) (fun q ↦ q.2.1) (fun q ↦ q.2.2.1) (fun q ↦ q.1)).toReal` ほか | `SuperpositionRegion.lean:110` / `:78` |
+| 対 → 情報量の同定 | `bcInfo₁_eq_condMutualInfo_toReal` / `bcInfo₂_eq_mutualInfo_toReal` | `bcInfo₁ pU K W = (condMutualInfo (bcJointDistribution pU K W) (fun q ↦ q.2.1) (fun q ↦ q.2.2.1) (fun q ↦ q.1)).toReal` ほか | `Shannon/BroadcastChannel/Superposition/Region.lean` |
 | 法の構成の雛形 | `uvConstLaw` / `uvConstLaw_isUVChannelLaw` | `((Measure.dirac (0,0,x₀)) ⊗ₘ W.comap (fun r ↦ r.2.2) _).map (fun z ↦ (z.1.1, z.1.2.1, z.1.2.2, z.2.1, z.2.2))` | `OuterBoundUV/Region.lean:401` / `:424` |
 | 混合の閉包性 | `IsUVChannelLaw.smul` / `.add` / `.map_auxiliaries` | (S6 在庫 §Q2-4 に逐語) | `Region.lean:153` / `:160` / `:183` |
-| 内界の union | `bcSuperpositionRegionFullSupport` | 添字は `(k)(pU)(IsProbabilityMeasure pU)(∀ x, 0 < pU.real {x})(K)(IsMarkovKernel K)(∀ x a, 0 < (K x).real {a})` | `SuperpositionRegion.lean:178` |
+| 内界の union | `bcSuperpositionRegionNoSumRate` | 添字は `(k)(pU)(IsProbabilityMeasure pU)(∀ x, 0 < pU.real {x})(K)(IsMarkovKernel K)(∀ x a, 0 < (K x).real {a})` | `Shannon/BroadcastChannel/Superposition/Region.lean` |
 
 ### 4-3 **向きが逆で使えない資産** (prose ではなく数値で棄却済)
 

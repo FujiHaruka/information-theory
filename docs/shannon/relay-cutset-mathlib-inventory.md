@@ -125,7 +125,7 @@ theorem relay_cutset_outer_bound
 | DPI (post-processing) | `mutualInfo_le_of_postprocess` | `InformationTheory/Shannon/DPI.lean:139` | ✅ | `I(W; \hat W) ≤ I(W; Y^n)` |
 | MI ↔ entropy 橋 | `mutualInfo_eq_entropy_sub_condEntropy` | `InformationTheory/Shannon/Bridge.lean:588` | ✅ | broadcast / MAC cut の展開 |
 | Fano 不等式 (paired form) | `fano_inequality_measure_theoretic` | `InformationTheory/Fano/Measure.lean:224` | ✅ | `H(W \| Y^n, hatW) ≤ n·δ(ε)` |
-| `entropy_le_log_card` | `entropy_le_log_card` | `InformationTheory/Shannon/SlepianWolf.lean:45` | ✅ | `log M ≥ H(W)` |
+| `entropy_le_log_card` | `MaxEntropy.entropy_le_log_card` | `Shannon/MaxEntropy/Basic.lean` (かつての `SlepianWolf.lean` の重複はこちらへ集約済) | ✅ | `log M ≥ H(W)` |
 | Channel structure | `Channel α β := Kernel α β` | `InformationTheory/Shannon/ChannelCoding.lean:49` | ✅ | `RelayChannel α α₁ β β₁ := Kernel (α × α₁) (β × β₁)` の雛形 |
 | Code structure | `Code M n α β` | `InformationTheory/Shannon/ChannelCoding.lean:151` | ✅ | `RelayCode` 雛形 (encoder + decoder + relay field 追加) |
 | Pointwise error prob | `Code.errorProbAt` | `InformationTheory/Shannon/ChannelCoding.lean:204` | ✅ | relay 版 `RelayCode.errorProbAt` に拡張 |

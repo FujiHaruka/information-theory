@@ -104,5 +104,5 @@ theorem Real.log_le_sub_one_of_pos {x : ℝ} (hx : 0 < x) : Real.log x ≤ x - 1
 ## 5. 既存 InformationTheory API (関連)
 
 - `InformationTheory/Shannon/Sanov.lean:73` `klDivSumForm P Q := ∑ a, P.real {a} * (log P {a} - log Q {a})` — finite-sum KL の textbook 形。Shannon code の lower bound 証明と同じ Gibbs パターンだが log 規約が違うため (`logb` vs `log`) 直接再利用はしない。
-- `InformationTheory/Shannon/MaxEntropy.lean:229` `entropy_le_log_card`: `entropy μ X ≤ Real.log (Fintype.card α)`. これは base-`e` の `entropy` 形で、本シードの D-ary とは independent (将来 unify する場合は `log_div_log` 経由)。
+- `Shannon/MaxEntropy/Basic.lean` `entropy_le_log_card`: `entropy μ X ≤ Real.log (Fintype.card α)`. これは base-`e` の `entropy` 形で、本シードの D-ary とは independent (将来 unify する場合は `log_div_log` 経由)。
 - `InformationTheory/Shannon/AEP.lean` block source coding (`source_coding_theorem`): block-asymptotic 形、本シードは per-symbol 相補形。

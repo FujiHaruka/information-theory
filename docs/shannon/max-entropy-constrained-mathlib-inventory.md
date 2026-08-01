@@ -2,7 +2,7 @@
 
 > 親計画: textbook roadmap T3-A (`docs/textbook-roadmap.md:206-213`)。
 >
-> 既存基盤: `MaxEntropy.lean` (269 行) + `CsiszarProjection.lean` (488 行) + `DifferentialEntropy.lean` Phase D (Gaussian max-entropy with variance 制約 ~250 行)。
+> 既存基盤: `Shannon/MaxEntropy/Basic.lean` (269 行) + `CsiszarProjection.lean` (488 行) + `DifferentialEntropy.lean` Phase D (Gaussian max-entropy with variance 制約 ~250 行)。
 
 ## 一行サマリ
 
@@ -124,9 +124,9 @@ linarith   -- ⟹ entropy μ X ≤ ψ(λ) - ∑ λ i * c i (+ log|α| 項相殺)
 |---|---|---|---|
 | **`entropy`** | `InformationTheory/Shannon/Bridge.lean:43` | `noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ := ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})` | 主定理 LHS |
 | `entropy_nonneg` | `InformationTheory/Shannon/Bridge.lean:47` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Ω → X) (hXs : Measurable Xs) : 0 ≤ entropy μ Xs` | 補助 |
-| **`klDiv_uniformOn_univ_toReal_eq`** | `InformationTheory/Shannon/MaxEntropy.lean:123` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : (klDiv (μ.map X) (uniformOn (Set.univ : Set α))).toReal = Real.log (Fintype.card α) - entropy μ X` | **T3-A 制約なし (uniform) 退化形**。`f := 0` で T3-A から出るはず |
-| **`entropy_le_log_card`** | `InformationTheory/Shannon/MaxEntropy.lean:229` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : entropy μ X ≤ Real.log (Fintype.card α)` | uniform 制約退化形 |
-| **`entropy_eq_log_card_iff`** | `InformationTheory/Shannon/MaxEntropy.lean:241` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : entropy μ X = Real.log (Fintype.card α) ↔ μ.map X = uniformOn (Set.univ : Set α)` | 退化形 uniqueness |
+| **`klDiv_uniformOn_univ_toReal_eq`** | `Shannon/MaxEntropy/Basic.lean` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : (klDiv (μ.map X) (uniformOn (Set.univ : Set α))).toReal = Real.log (Fintype.card α) - entropy μ X` | **T3-A 制約なし (uniform) 退化形**。`f := 0` で T3-A から出るはず |
+| **`entropy_le_log_card`** | `Shannon/MaxEntropy/Basic.lean` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : entropy μ X ≤ Real.log (Fintype.card α)` | uniform 制約退化形 |
+| **`entropy_eq_log_card_iff`** | `Shannon/MaxEntropy/Basic.lean` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : entropy μ X = Real.log (Fintype.card α) ↔ μ.map X = uniformOn (Set.univ : Set α)` | 退化形 uniqueness |
 | **`differentialEntropy_le_gaussian_of_variance_le`** | `InformationTheory/Shannon/DifferentialEntropy.lean:510` | `{μ : Measure ℝ} [IsProbabilityMeasure μ] (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (h_mean : ∫ x, x ∂μ = m) (h_var : ∫ x, (x - m)^2 ∂μ ≤ (v : ℝ)) (h_var_int : Integrable (fun x => (x - m)^2) μ) (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) : differentialEntropy μ ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | **T3-A の連続版・variance 制約特例**。証明テンプレ写経で finite-alphabet 版が書ける (~150 行) |
 | **`differentialEntropy_eq_gaussian_iff`** | `InformationTheory/Shannon/DifferentialEntropy.lean:659` | `{μ : Measure ℝ} [IsProbabilityMeasure μ] (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (h_mean : ∫ x, x ∂μ = m) (h_var : ∫ x, (x - m)^2 ∂μ = (v : ℝ)) (h_var_int : Integrable (fun x => (x - m)^2) μ) (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) : differentialEntropy μ = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v) ↔ μ = gaussianReal m v` | uniqueness テンプレ (klDiv_eq_zero_iff 経由) |
 | **`klDivSumForm`** | `InformationTheory/Shannon/Sanov.lean:73` | `noncomputable def klDivSumForm (P Q : Measure α) : ℝ := ∑ a : α, P.real {a} * (Real.log (P.real {a}) - Real.log (Q.real {a}))` | Measure 形 sum 形 KL (T3-A pmf ↔ measure 翻訳橋) |

@@ -310,7 +310,7 @@ theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0)
 - 既存 finite-alphabet 版 `mutualInfo_ne_top`（`MutualInfo.lean:197`）は `[Fintype X][Fintype Y]` +
   helper が `lintegral_fintype` / singleton 分解依存（`:189,151`）→ **連続 Y=ℝ では reuse 不可**を
   verbatim 確認。連続版は本 inventory の §B+C route で独立に構築する。
-- 既存 `klDiv_ne_top` 呼出 3 site（`Stein.lean:949`, `Bridge.lean:447`, `MaxEntropy.lean:119`）は
+- 既存 `klDiv_ne_top` 呼出 3 site（`Stein.lean:949`, `Bridge.lean:447`, `Shannon/MaxEntropy/Basic.lean`）は
   すべて Fintype 上で `lintegral_fintype` により llr integrability を供給（連続版に直接 reuse 不可、
   パターンのみ参照）。
 ```

@@ -6,6 +6,12 @@
 >
 > 本ファイルは在庫のみ。`InformationTheory/` と plan は 1 バイトも編集していない。
 > probe は scratchpad (`probe1`–`probe6`) で、記載の EXIT=0 はすべて `lake env lean` の実測。
+>
+> ⚠ **改名**: 本ファイル中の `martonRegionUnionFS` は現行名 `martonRegionUnionFullSupport`、
+> `martonRegionUnionFS_subset_union` は `martonRegionUnionFullSupport_subset_union`。
+> `martonRegionUnionFS_subset_capacity` に対応する現行宣言は `martonRegionUnion_subset_capacity`
+> (`Shannon/BroadcastChannel/MartonFullSupport.lean`) で、全支持に限らない union 全体について
+> 成立する真に一般な形で入った。以下は着地前の提案記録なので本文は訂正しない。
 
 ## 一行サマリ
 
@@ -397,7 +403,7 @@ section 変数 (`Operational.lean:109`–`:114`、`martonRegion` / `marton_regio
 |---|---|---|---|---|
 | 順包含 (橋 S6) | `theorem marton_region_subset_uv (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV] (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W] : martonRegion pV K W ⊆ bcOuterRegionUV W` (`@[entry_point]`) | `OuterBoundUV/MartonBridge.lean:530` | ✅ 既存 | **そのまま `exact` で使う** (§4-A)。全支持仮説を 1 本も要求しない (判断ログ 15) |
 | `ℕ` 化した Marton 法 | `noncomputable def martonUVLaw (pV) (K) (W) : Measure (ℕ × ℕ × α × β₁ × β₂)` + `theorem martonUVLaw_isUVChannelLaw` (`@[entry_point]`) | `MartonBridge.lean:160` / `:177` | ✅ 既存 | 橋の内部。Phase 2 は触らない |
-| 補助の `ℕ` 符号化 | `noncomputable def auxNatIndex (X : Type*) [Fintype X] (x : X) : ℕ := Fintype.equivFin X x` / `auxNatIndex_injective` | `MartonBridge.lean:153` / `:155` | ✅ 既存 | `ULift (Fin (k+1))` に対しても `[Fintype]` だけで通る |
+| 補助の `ℕ` 符号化 | `noncomputable def natIndex (X : Type*) [Fintype X] (x : X) : ℕ := Fintype.equivFin X x` / `natIndex_injective` | `Shannon/BroadcastChannel/OuterBoundUV/MartonBridge.lean` | ✅ 既存 | `ULift (Fin (k+1))` に対しても `[Fintype]` だけで通る |
 | 情報量の同定 3 本 | `martonInfo₁_eq_uvInfo₁_toReal` / `martonInfo₂_eq_uvInfo₂_toReal` / `martonInfoV₁V₂_eq_mutualInfo_toReal` | `MartonBridge.lean:228` / `:240` / `:252` | ✅ 既存 | 案 C が「安そうに見えた」原因。Phase 2 では使わない |
 | 和レート 2 本 (橋 S5) | `martonInfoSum_le_uvInfoSum₂_toReal` / `…₁_toReal` | `MartonBridge.lean:493` / `:509` | ✅ 既存 | 同上 |
 

@@ -163,7 +163,7 @@ load-bearing hyp ではない。**claim 2 / claim 3 は `IsUVChannelLaw` も `W`
 名前検索 (`rg -ni "quantiz|truncat"`) のヒットは EPI / LZ78 / ArithmeticCoding のみで
 **補助変数の有限量子化は 0 件**。loogle 側の 0-hit は §Q5 の表。**しかし外側の枠は既存**:
 
-`def uvRelabel (e₁ : U → U') (e₂ : V → V') : U × V × α × β₁ × β₂ → U' × V' × α × β₁ × β₂ := fun q ↦ (e₁ q.1, e₂ q.2.1, q.2.2)` (`OuterBoundUV/Assembly.lean:134`、`[MeasurableSpace U] [MeasurableSpace V] [MeasurableSpace U'] [MeasurableSpace V']`) + `measurable_uvRelabel` (`:138`) + スロット不変 4 本 `uvInfo₁_map_uvRelabel:143` / `uvInfo₂_map_uvRelabel:155` / `uvInfoSum₂_map_uvRelabel:175` / `uvInfoSum₁_map_uvRelabel:195`。逆向き (有限 → `ℕ`) の実例が `auxNatIndex` (`MartonBridge.lean:153`)。
+`def uvRelabel (e₁ : U → U') (e₂ : V → V') : U × V × α × β₁ × β₂ → U' × V' × α × β₁ × β₂ := fun q ↦ (e₁ q.1, e₂ q.2.1, q.2.2)` (`OuterBoundUV/Assembly.lean:134`、`[MeasurableSpace U] [MeasurableSpace V] [MeasurableSpace U'] [MeasurableSpace V']`) + `measurable_uvRelabel` (`:138`) + スロット不変 4 本 `uvInfo₁_map_uvRelabel:143` / `uvInfo₂_map_uvRelabel:155` / `uvInfoSum₂_map_uvRelabel:175` / `uvInfoSum₁_map_uvRelabel:195`。逆向き (有限 → `ℕ`) の実例が `natIndex` (`Shannon/BroadcastChannel/OuterBoundUV/MartonBridge.lean`)。
 
 ⟹ **`uvRelabel` を再利用すること** (S5 の量子化法は `ν.map (uvRelabel (qm m) id)`)。
 ただしスロット不変 4 本は `hd : ∀ v, d (e v) = v` (= 単射) を要求するので**量子化には当たらない**
@@ -196,8 +196,8 @@ load-bearing hyp ではない。**claim 2 / claim 3 は `IsUVChannelLaw` も `W`
   `map_auxiliaries` / `map_U_X_Y₁_Y₂` は要求しない (`[SFinite ν]` のみ)。
 - **`condMutualInfo_chain_rule_X_2var` の namespace は
   `InformationTheory.Shannon.ChannelCodingConverseGeneral`**。`open` 忘れで「不在」に見える。
-- **`bcSuperpositionRegionFullSupport` は全支持 `∀ x, 0 < pU.real {x}` を要求する**
-  (`SuperpositionRegion.lean:178`)。量子化法の `U` 周辺は台に穴が空きうるので
+- **`bcSuperpositionRegionNoSumRate` は全支持 `∀ x, 0 < pU.real {x}` を要求する**
+  (`Shannon/BroadcastChannel/Superposition/Region.lean`)。量子化法の `U` 周辺は台に穴が空きうるので
   **S5 は全支持を作らない** — それは S7 の仕事。S5 の署名に全支持を混ぜないこと。
 
 ---
@@ -215,13 +215,13 @@ import InformationTheory.Shannon.MaxEntropy.Basic
 ```
 
 - `Region.lean` に直接足すのは**不可** — `uvRelabel` は `Assembly.lean:134` にあり Region の**下流**。
-- `Assembly.lean` に足すのも避ける (851 → ~1150 行)。`SuperpositionRegion.lean` は**不適** —
+- `Assembly.lean` に足すのも避ける (851 → ~1150 行)。`Shannon/BroadcastChannel/Superposition/Region.lean` は**不適** —
   `Classes` (⊃ `Achievability/`) と `MartonUnion` の下流で、S5 は達成側を 1 本も使わない。
   S8 が両方 import すればよい (Quantization は葉なので cycle なし)。
 - **補助アルファベットの型は `ULift.{u_α} (Fin (m + 1))` を直書き**。
   `Marton.bcAuxAlphabet` (`MartonUnion.lean:52`) は `abbrev` = reducible な同義語なので S8 で
   型は一致する (S8 の第 1 step で `rfl` 確認)。universe は **α と同じ**に固定すること
-  (`SuperpositionRegion.lean:42` の `α : Type u` と揃える。浮かせると S8 で
+  (`Shannon/BroadcastChannel/Superposition/Region.lean` の `α : Type u` と揃える。浮かせると S8 で
   `IsBCLessNoisy` の `∀ (U : Type u)` に当たらない)。
 
 ### `ε_m` の型: **`ℝ≥0∞`** (`.toReal` は S8 の最後だけ)

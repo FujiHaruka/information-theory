@@ -16,7 +16,7 @@
 | `InformationTheory/Shannon/Stein.lean:368` | `h_pi_singleton_Q : (Pi Q).real {x} = ∏ Q.real {x i}` (inline) | Pi-measure singleton の積分解 (Mathlib `Measure.pi_singleton` + `ENNReal.toReal_prod`) |
 | `InformationTheory/Shannon/Stein.lean:420` | `h_exp_neg_llr` (inline) | `exp(-llrPmf P Q x) = Q.real{x}/P.real{x}` |
 | `InformationTheory/Shannon/Stein.lean:430` | `h_prod_ratio` (inline) | `∏ Q/P = exp(-∑ llrPmf)` |
-| `InformationTheory/Shannon/MaxEntropy.lean:123` | `klDiv_uniformOn_univ_toReal_eq` | `(klDiv P U).toReal = ∫ llr P U ∂P` 経由で `klDiv.toReal` を finite alphabet sum に展開する **template** |
+| `Shannon/MaxEntropy/Basic.lean` | `klDiv_uniformOn_univ_toReal_eq` | `(klDiv P U).toReal = ∫ llr P U ∂P` 経由で `klDiv.toReal` を finite alphabet sum に展開する **template** |
 | `InformationTheory/Shannon/MIChainRule.lean:268` | `klDiv_pi_eq_sum` | i.i.d. でない `Q^n` には不使用、ただし `Measure.pi` 同型変形のテンプレ |
 | `InformationTheory/Shannon/AEP.lean:229` | `typicalSet`, `typicalSet_card_le` | type class **size bound** との対比 (本 plan A 形は size bound を回避するが Phase D で必要になる場合の参照) |
 
@@ -28,7 +28,7 @@
 |---|---|---|
 | 164 | `toReal_klDiv_of_measure_eq (h : μ ≪ ν) (h_eq : μ univ = ν univ) : (klDiv μ ν).toReal = ∫ a, llr μ ν a ∂μ` | `klDivSumForm = (klDiv P̂ Q).toReal` の等値性証明 — 両方 prob measure ⇒ `univ` 一致 |
 | (有り) | `klDiv_self`, `klDiv_eq_zero_iff` | 端 case |
-| (Mathlib) | `llr_def`: `llr μ ν x = Real.log (μ.rnDeriv ν x).toReal` | Bochner integral 形 (MaxEntropy.lean:202 でテンプレ済) |
+| (Mathlib) | `llr_def`: `llr μ ν x = Real.log (μ.rnDeriv ν x).toReal` | Bochner integral 形 (`Shannon/MaxEntropy/Basic.lean` でテンプレ済) |
 
 ### Measure.pi — `Mathlib/MeasureTheory/Constructions/Pi.lean`
 
@@ -58,7 +58,7 @@ textbook では `T(P̂) = { x | empirical(x) = P̂ }` で `P̂ : 𝒫(α)` を *
 主定理 `typeClass_Qn_le` は `klDivSumForm P̂ Q := ∑ a, P̂.real{a} * (log P̂.real{a} - log Q.real{a})` の形で書き、`.toReal` 形は corollary。**理由**:
 - 内側証明は `∑ a` の代数操作 (= `∑ i, log(Q/P̂)(x_i) = -n · ∑ a, P̂(a) · log(Q/P̂)(a)`) で完結
 - `klDiv.toReal` の Bochner-integral 展開を毎回挟むと plumbing が増える
-- 等値性 `klDivSumForm = (klDiv P̂ Q).toReal` (`klDivSumForm_eq_toReal_klDiv`) は MaxEntropy.lean:123 のテンプレで 50–80 行で立つ
+- 等値性 `klDivSumForm = (klDiv P̂ Q).toReal` (`klDivSumForm_eq_toReal_klDiv`) は `Shannon/MaxEntropy/Basic.lean` のテンプレで 50–80 行で立つ
 
 ### 3. ratio 評価の集約形
 

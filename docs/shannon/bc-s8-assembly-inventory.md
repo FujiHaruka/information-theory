@@ -45,7 +45,7 @@ S6/S7 が要求する `h₁ : R₁ ≤ (uvInfo₁ ν').toReal` の担い手が S
 ```lean
 theorem bc_uv_subset_superposition (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hln : IsBCLessNoisy W) :
-    bcOuterRegionUV W ⊆ bcSuperpositionRegionFullSupport.{u} W
+    bcOuterRegionUV W ⊆ bcSuperpositionRegionNoSumRate.{u} W
 ```
 
 型クラス前提は逐語 (probe の section 変数、`α` は universe `u`、**`DecidableEq` は 1 本も要らない**):
@@ -61,7 +61,7 @@ theorem bc_uv_subset_superposition (W : BCChannel α β₁ β₂) [IsMarkovKerne
 
 ⚠ **`hW : ∀ a b, 0 < (W a).real {b}` はこの包含に要らない** (plan の想定と一致するが、
 plan は「逆包含側だけに要る」と書いており、正確には「**逆包含そのものではなく
-`bcSuperpositionRegionFullSupport ⊆ bcCapacityRegion` の側**にだけ要る」)。⟹ 逆包含は
+`bcSuperpositionRegionNoSumRate ⊆ bcCapacityRegion` の側**にだけ要る」)。⟹ 逆包含は
 **外界 ⊆ 内界**という純粋に情報量レベルの主張で、達成可能性の regularity から独立している。
 
 ### headline (probe で証明済)
@@ -74,7 +74,7 @@ theorem bc_lessNoisy_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKern
 ```
 
 ⚠ **headline 側だけ `[DecidableEq α] [DecidableEq β₁] [DecidableEq β₂]` が要る**
-(`bcSuperpositionRegionFullSupport_subset_capacity` 経由。実測: `DecidableEq α` と `DecidableEq β₁`
+(`bcSuperpositionRegionNoSumRate_subset_capacity` 経由。実測: `DecidableEq α` と `DecidableEq β₁`
 の 2 本が instance 解決で必要、`DecidableEq β₂` は束の対称性で足す)。**型には現れない**ので
 `linter.unusedDecidableInType` が鳴る ⟹ **`by classical exact …` にすると variable 束から
 `DecidableEq` を落とせて warning 0 になる** (probe で実測、§Q6)。
@@ -93,7 +93,7 @@ theorem bc_lessNoisy_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKern
 ```lean
 theorem bc_lessNoisy_superposition_eq_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) (hln : IsBCLessNoisy W) :
-    bcSuperpositionRegionFullSupport.{u} W = bcCapacityRegion W
+    bcSuperpositionRegionNoSumRate.{u} W = bcCapacityRegion W
 ```
 
 ## Q2 目標の真偽判定 (brief の 1–5)
@@ -159,9 +159,9 @@ q k → p                                                                      (
 uvRegion ↑ν)` (`Region.lean:373`) に対し、
 
 ```lean
-refine closure_minimal ?_ (bcSuperpositionRegionFullSupport_isClosed W)
+refine closure_minimal ?_ (bcSuperpositionRegionNoSumRate_isClosed W)
 refine Set.iUnion_subset fun ν ↦ Set.iUnion_subset fun hν ↦ fun p hp ↦ ?_
-exact mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion W hln hν hp
+exact mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion W hln hν hp
 ```
 
 の 3 行で通る (probe 実測)。`hν : IsUVChannelLaw W ↑ν` と `hp : p ∈ uvRegion ↑ν` が
@@ -174,8 +174,8 @@ ENNReal.toReal_nonneg` のように**項を書かない形**にすると通る�
 
 ### Q2-5 等号の組み立て — 3 本立てだが `@[entry_point]` は 2 本 (§Q1)
 
-`bcSuperpositionRegionFullSupport ⊆ bcCapacityRegion ⊆ bcOuterRegionUV ⊆
-bcSuperpositionRegionFullSupport` の 3 本が揃うと 3 集合が一致する。左 2 本は既存
+`bcSuperpositionRegionNoSumRate ⊆ bcCapacityRegion ⊆ bcOuterRegionUV ⊆
+bcSuperpositionRegionNoSumRate` の 3 本が揃うと 3 集合が一致する。左 2 本は既存
 (`SuperpositionRegion.lean:189` / `OuterBoundUV/Assembly.lean:839`)、3 本目が S8。
 `Set.Subset.antisymm` 2 発 (各 4 行) で 2 つの等式が出る。
 
@@ -213,7 +213,7 @@ bcSuperpositionRegionFullSupport` の 3 本が揃うと 3 集合が一致する�
 | — (ゼロ) | S5 の量子化 | **スロット 1 `I(V;Y₁)` の損失** | **引かれない** (等式で保存、§Q2-1) | 不要 |
 | `(uvQuantizeSlack ν m).toReal` | S5 (`Quantization.lean:202`) | 可算補助 `U` を `m` で切り詰めたときの **`I(U;Y₂)` の損失**と、それを含む **`I(U;Y₂)+I(X;Y₁∣U)` の損失** | **`R₂` からだけ** 1 回 | `m → ∞`。`tendsto_uvQuantizeSlack` (`:363`) を `ENNReal.tendsto_toReal` で `ℝ` に降ろす |
 | `δ` | S7 (`SuperpositionFullSupport.lean:786`) | 全支持への摂動: 2 スロットの乗法損失 `(1-ε)` + スロット 2 の加法罰則 `Real.binEntropy ε` | **`R₁` と `R₂` の両方**から | `δ := 1/(k+1) → 0` |
-| — | closure | 内界の union が閉じていないこと | — | `bcSuperpositionRegionFullSupport` が定義上 `closure` なので `IsClosed` は無料 |
+| — | closure | 内界の union が閉じていないこと | — | `bcSuperpositionRegionNoSumRate` が定義上 `closure` なので `IsClosed` は無料 |
 
 **帳簿の要点 (これが S8 を短くしている)**: 裾 `slack` を **`R₂` にだけ 1 回**課すと、
 和制約 `R₁ + (R₂ - slack) ≤ (uvInfoSum₂ ν_m).toReal` も**同じ 1 回で払える**
@@ -250,7 +250,7 @@ bcSuperpositionRegionFullSupport` の 3 本が揃うと 3 集合が一致する�
 
 | 用途 | 宣言 | 逐語署名 / 結論形 | file:line |
 |---|---|---|---|
-| **S7 の着地点 (S8 の入口)** | `sub_mem_bcSuperpositionRegionFullSupport_of_lessNoisy_of_isUVChannelLaw` | `(W : BCChannel α β₁ β₂) [IsMarkovKernel W] (hln : IsBCLessNoisy W) {m : ℕ} {ν : Measure (Marton.bcAuxAlphabet.{u} m × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) {R₁ R₂ δ : ℝ} (hδ : 0 < δ) (h₁ : R₁ ≤ (uvInfo₁ ν).toReal) (h₂ : R₂ ≤ (uvInfo₂ ν).toReal) (hsum : R₁ + R₂ ≤ (uvInfoSum₂ ν).toReal) : ((R₁ - δ, R₂ - δ) : ℝ × ℝ) ∈ bcSuperpositionRegionFullSupport.{u} W`。section 変数は `{α : Type u} [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] [StandardBorelSpace α]` + β₁ β₂ 同型 + `{V : Type*} [MeasurableSpace V] [StandardBorelSpace V] [Nonempty V]` (`:756`–`:762`) | `SuperpositionFullSupport.lean:786` |
+| **S7 の着地点 (S8 の入口)** | `sub_mem_bcSuperpositionRegionNoSumRate_of_lessNoisy_of_isUVChannelLaw` | `(W : BCChannel α β₁ β₂) [IsMarkovKernel W] (hln : IsBCLessNoisy W) {m : ℕ} {ν : Measure (Marton.bcAuxAlphabet.{u} m × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) {R₁ R₂ δ : ℝ} (hδ : 0 < δ) (h₁ : R₁ ≤ (uvInfo₁ ν).toReal) (h₂ : R₂ ≤ (uvInfo₂ ν).toReal) (hsum : R₁ + R₂ ≤ (uvInfoSum₂ ν).toReal) : ((R₁ - δ, R₂ - δ) : ℝ × ℝ) ∈ bcSuperpositionRegionNoSumRate.{u} W`。section 変数は `{α : Type u} [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] [StandardBorelSpace α]` + β₁ β₂ 同型 + `{V : Type*} [MeasurableSpace V] [StandardBorelSpace V] [Nonempty V]` (`:756`–`:762`) | `SuperpositionFullSupport.lean:786` |
 | ★ **スロット 1 の運搬** | `uvInfo₁_map_uvRelabel` | `(ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν] {e₁ : U → U'} {e₂ : V → V'} {d₂ : V' → V} (he₁ : Measurable e₁) (he₂ : Measurable e₂) (hd₂ : Measurable d₂) (h₂ : ∀ v, d₂ (e₂ v) = v) : uvInfo₁ (ν.map (uvRelabel e₁ e₂)) = uvInfo₁ ν`。型クラスは `{U V U' V' : Type*} [MeasurableSpace U] [MeasurableSpace V] [MeasurableSpace U'] [MeasurableSpace V']` + `{α β₁ β₂ : Type*} [MeasurableSpace _]` のみ (**`StandardBorelSpace` / `Fintype` を要求しない**、probe 実測) | `OuterBoundUV/Assembly.lean:143` |
 | S5 裾評価 (corner) | `uvInfo₂_le_uvQuantizeLaw_add_slack` | `(ν : Measure (ℕ × ℕ × α × β₁ × β₂)) [IsProbabilityMeasure ν] (m : ℕ) : uvInfo₂ ν ≤ uvInfo₂ (uvQuantizeLaw.{u} ν m) + uvQuantizeSlack ν m`。**`W` も `h : IsUVChannelLaw` も取らない** (意図的な非対称、plan §S5) | `OuterBoundUV/Quantization.lean:341` |
 | S5 裾評価 (和) | `uvInfoSum₂_le_uvQuantizeLaw_add_slack` | `(W : BCChannel α β₁ β₂) [IsMarkovKernel W] {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) (m : ℕ) : uvInfoSum₂ ν ≤ uvInfoSum₂ (uvQuantizeLaw.{u} ν m) + uvQuantizeSlack ν m` | 同 `:347` |
@@ -261,8 +261,8 @@ bcSuperpositionRegionFullSupport` の 3 本が揃うと 3 集合が一致する�
 | 外界の領域 | `bcOuterRegionUV` / `uvRegion` | `closure (⋃ (ν : ProbabilityMeasure (ℕ × ℕ × α × β₁ × β₂)) (_ : IsUVChannelLaw W ↑ν), uvRegion ↑ν)` / `{p \| InBCOuterRegionUV p.1 p.2 (uvInfo₁ ν).toReal (uvInfo₂ ν).toReal (uvInfoSum₂ ν).toReal (uvInfoSum₁ ν).toReal}` | `OuterBoundUV/Region.lean:373` / `:361` |
 | 外界の 4 制約 | `InBCOuterRegionUV` | `structure InBCOuterRegionUV (R₁ R₂ I₁ I₂ J₂ J₁ : ℝ) : Prop where bound₁ : R₁ ≤ I₁; bound₂ : R₂ ≤ I₂; sumBound₂ : R₁ + R₂ ≤ J₂; sumBound₁ : R₁ + R₂ ≤ J₁` | `OuterBoundUV.lean:735` |
 | 4 スロットの定義 | `uvInfo₁` / `uvInfo₂` / `uvInfoSum₂` / `uvInfoSum₁` | `I(V;Y₁)` / `I(U;Y₂)` / `uvInfo₂ ν + condMutualInfo ν X Y₁ U` / `uvInfo₁ ν + condMutualInfo ν X Y₂ V` | `OuterBoundUV/Bridge.lean:777` / `:782` / `:787` / `:792` |
-| 内界の union | `bcSuperpositionRegionFullSupport` | `closure (⋃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k)) (_ : IsProbabilityMeasure pU) (_ : ∀ x, 0 < pU.real {x}) (K : Kernel (Marton.bcAuxAlphabet.{u} k) α) (_ : IsMarkovKernel K) (_ : ∀ x a, 0 < (K x).real {a}), {p \| p.1 ≤ bcInfo₁ pU K W ∧ p.2 ≤ bcInfo₂ pU K W})` | `SuperpositionRegion.lean:178` |
-| 内界 ⊆ 容量領域 | `bcSuperpositionRegionFullSupport_subset_capacity` | `(W : BCChannel α β₁ β₂) [IsMarkovKernel W] (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) (hln : IsBCLessNoisy W) : bcSuperpositionRegionFullSupport W ⊆ bcCapacityRegion W` (`@[entry_point]`)。**`[DecidableEq α]` を instance で要求する** (probe 実測) | 同 `:189` |
+| 内界の union | `bcSuperpositionRegionNoSumRate` | `closure (⋃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k)) (_ : IsProbabilityMeasure pU) (_ : ∀ x, 0 < pU.real {x}) (K : Kernel (Marton.bcAuxAlphabet.{u} k) α) (_ : IsMarkovKernel K) (_ : ∀ x a, 0 < (K x).real {a}), {p \| p.1 ≤ bcInfo₁ pU K W ∧ p.2 ≤ bcInfo₂ pU K W})` | `SuperpositionRegion.lean:178` |
+| 内界 ⊆ 容量領域 | `bcSuperpositionRegionNoSumRate_subset_capacity` | `(W : BCChannel α β₁ β₂) [IsMarkovKernel W] (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) (hln : IsBCLessNoisy W) : bcSuperpositionRegionNoSumRate W ⊆ bcCapacityRegion W` (`@[entry_point]`)。**`[DecidableEq α]` を instance で要求する** (probe 実測) | 同 `:189` |
 | 順包含 | `bc_capacity_subset_uv` | `(W : BCChannel α β₁ β₂) [IsMarkovKernel W] : bcCapacityRegion W ⊆ bcOuterRegionUV W` (`@[entry_point]`、**明示仮説ゼロ**) | `OuterBoundUV/Assembly.lean:839` |
 | 極限の骨格の雛形 | `bc_uv_quadrant_mem_of_achievable` の末尾 | `(bcOuterRegionUV_isClosed W).mem_of_tendsto (h1.prodMk_nhds h2) (Filter.Eventually.of_forall fun k ↦ key _ (by positivity))` | 同 `:821`–`:828` |
 | クラス述語 | `IsBCLessNoisy` | `def IsBCLessNoisy (W : BCChannel α β₁ β₂) : Prop := ∀ (U : Type u) [Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U] (pU : Measure U) [IsProbabilityMeasure pU] (K : Kernel U α) [IsMarkovKernel K], mutualInfo (bcJointDistribution pU K W) Prod.fst (fun q ↦ q.2.2.2) ≤ mutualInfo (bcJointDistribution pU K W) Prod.fst (fun q ↦ q.2.2.1)` | `Classes.lean:63` |
@@ -272,7 +272,7 @@ bcSuperpositionRegionFullSupport` の 3 本が揃うと 3 集合が一致する�
 
 | # | 宣言 | 内容 | 行数 | 置き場 |
 |---|---|---|---|---|
-| 1 | `bcSuperpositionRegionFullSupport_isClosed` | `IsClosed (bcSuperpositionRegionFullSupport.{u} W) := isClosed_closure` | **2** | `SuperpositionRegion.lean` (`bcOuterRegionUV_isClosed:379` と対になる位置) |
+| 1 | `bcSuperpositionRegionNoSumRate_isClosed` | `IsClosed (bcSuperpositionRegionNoSumRate.{u} W) := isClosed_closure` | **2** | `SuperpositionRegion.lean` (`bcOuterRegionUV_isClosed:379` と対になる位置) |
 | 2 | `uvQuantizeSlack_ne_top` | `uvQuantizeSlack ν m ≠ ∞ := ENNReal.mul_ne_top (measure_ne_top _ _) ENNReal.ofReal_ne_top` | **2** | `Quantization.lean` (`uvQuantizeSlack:202` の直後) |
 | 3 | ★ `uvInfo₁_uvQuantizeLaw` | `uvInfo₁ (uvQuantizeLaw.{u} ν m) = uvInfo₁ ν` | **3** | `Quantization.lean` `### The slots of the truncated law` (`:217`–`:243`、兄弟 2 本の隣) |
 | 4 | `uvInfo₂_toReal_sub_slack_le` | `(uvInfo₂ ν).toReal - (uvQuantizeSlack ν m).toReal ≤ (uvInfo₂ (uvQuantizeLaw.{u} ν m)).toReal` | **9** | S8 のファイル (または `Quantization.lean` の `### The truncation estimates` 節) |
@@ -301,7 +301,7 @@ S6/S7 が再ビルドされるので、**leg の実装順としては S8 のフ�
 - **第 2 補助は `V := ℕ` で通る** — S6/S7 が要求する `[MeasurableSpace V] [StandardBorelSpace V]
   [Nonempty V]` はすべて `ℕ` の既存 instance で埋まる (probe で `inferInstance` を機械確認)。
 - **`DecidableEq` の非対称** (実測): 逆包含側は 1 本も要らないが、headline は
-  `bcSuperpositionRegionFullSupport_subset_capacity` 経由で `DecidableEq α` / `DecidableEq β₁` を
+  `bcSuperpositionRegionNoSumRate_subset_capacity` 経由で `DecidableEq α` / `DecidableEq β₁` を
   instance 解決に要求する。**variable 束に足すと `linter.unusedDecidableInType` が鳴る**
   (型に現れないため) ⟹ **束からは落とし、headline の証明を `by classical exact …` にする**と
   `lake build` 相当の linter でも warning 0 (probe 実測)。
@@ -330,7 +330,7 @@ scratchpad =
 2. `linarith [ENNReal.toReal_nonneg (a := uvInfo₁ (uvConstLaw W x₀))]` が
    `↑⟨uvConstLaw W x₀, _⟩` の coe と一致せず失敗 → `le_trans (by norm_num) ENNReal.toReal_nonneg`。
 3. `example … := uvQuantizeLaw ν m` に `noncomputable` が要る (probe 固有、実装には出ない)。
-4. `bcSuperpositionRegionFullSupport` の variable 束を削りすぎて `Fintype α` の instance 解決失敗。
+4. `bcSuperpositionRegionNoSumRate` の variable 束を削りすぎて `Fintype α` の instance 解決失敗。
 5. headline の `DecidableEq α` / `DecidableEq β₁` 解決失敗 → §Q5 の `classical` 解。
 
 **linter 検証コマンド** (親 plan F-20 = 「`lake env lean` は一部 linter に盲目」への対応):
@@ -352,7 +352,7 @@ lake env lean -D linter.mathlibStandardSet=true -D linter.unusedFintypeInType=fa
 | loogle `tendsto_one_div_add_atTop_nhds_zero_nat` | `Found one declaration` | `δ` の列は既存 |
 | loogle `ENNReal.Tendsto.toReal` | **`Found 0 declarations`** | dot-notation 版は無い。**しかし壁ではない** — 結論形検索 `\|- Filter.Tendsto (fun _ => ENNReal.toReal _) _ _` で `ENNReal.tendsto_toReal` が 1 件出て、`.comp` 1 発で足りる (probe 通過)。**0-hit は検索軸の問題**、判断ログ 16 の 4 度目 |
 | loogle `ENNReal.tendsto_toReal` | `Found one declaration` | 同上 |
-| `rg 'bcSuperpositionRegionFullSupport'` (in-project) | 定義 1 + 消費 3 | `_isClosed` は未存在 (自作 2 行) |
+| `rg 'bcSuperpositionRegionNoSumRate'` (in-project) | 定義 1 + 消費 3 | `_isClosed` は未存在 (自作 2 行) |
 | `rg 'IsClosed \(bc'` (in-project) | 3 件 (`bcOuterRegionUV` / `bcCapacityRegion` / `bcOuterRegionCoop`) | 内界版だけが欠けている ⟹ 自作 #1 は重複ではない |
 | `rg 'uvInfo₁'` (in-project) | `uvInfo₁_map_uvRelabel` が唯一の運搬補題 | **自作予定を 1 件取り消した** (§Q2-1) |
 
@@ -406,7 +406,7 @@ import は `…Superposition.FullSupport` の **1 本だけ** (probe で cycle �
 
 ### 着手順 (gateway atom = **S8-c**)
 
-**`sub_mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion` (S8-c) を最初に切る**。理由:
+**`sub_mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion` (S8-c) を最初に切る**。理由:
 
 - (a) ここが **S5 の帳簿と S6/S7 の入口の唯一の接点**で、`h₁` / `h₂` / `hsum` の 3 本を
   どの誤差でずらすかが決まる。ここが通れば残りは極限の取り回しと 3 行の組み立てだけ。
@@ -422,7 +422,7 @@ import は `…Superposition.FullSupport` の **1 本だけ** (probe で cycle �
 2. **§Phase 5 S8 の擬似 Lean にスロット 1 の行を足す** — 現状は「`uvInfo₂` の裾を `ε_m` で払う」
    しか書いておらず、`h₁` の担い手 (`uvInfo₁` が量子化で不変であること) が落ちている。
 3. **§Phase 5 の到達目標の但し書き**: 「`hW` は逆包含側だけに要る」→ 正確には
-   「**逆包含そのものには要らず、`bcSuperpositionRegionFullSupport ⊆ bcCapacityRegion` にだけ要る**」。
+   「**逆包含そのものには要らず、`bcSuperpositionRegionNoSumRate ⊆ bcCapacityRegion` にだけ要る**」。
 4. **§撤退ライン L-BCO9**: **S8 でも不発動が確定**した (逆包含が probe で sorryAx-free)。
    4 段連続不発動で判定の担い手が居なくなる ⟹ 等号が landing したら retire できる。
 5. **§在庫 に新規行 1 本**: `Superposition/Assembly.lean` (F-19 後の位置、import 1 本)。
@@ -437,10 +437,10 @@ import は `…Superposition.FullSupport` の **1 本だけ** (probe で cycle �
 
 ### 命名の提案 (`docs/rules/naming.md` に合わせる)
 
-`bcSuperpositionRegionFullSupport_isClosed` / `uvQuantizeSlack_ne_top` / `uvInfo₁_uvQuantizeLaw`
+`bcSuperpositionRegionNoSumRate_isClosed` / `uvQuantizeSlack_ne_top` / `uvInfo₁_uvQuantizeLaw`
 (兄弟 `uvInfo₂_uvQuantizeLaw` に揃える) / `uvInfo₂_toReal_sub_slack_le` /
-`uvInfoSum₂_toReal_sub_slack_le` / `sub_mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion` /
-`mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion` / `bc_uv_subset_superposition` /
+`uvInfoSum₂_toReal_sub_slack_le` / `sub_mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion` /
+`mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion` / `bc_uv_subset_superposition` /
 `bc_lessNoisy_capacity_eq_uv` / `bc_lessNoisy_superposition_eq_capacity`。
 
 ## Q10 F-19 — `Superposition*` のサブディレクトリ昇格
@@ -616,10 +616,10 @@ needed: this inclusion is the information-theoretic half of the equality. -/
 @[entry_point]
 theorem bc_uv_subset_superposition (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hln : IsBCLessNoisy W) :
-    bcOuterRegionUV W ⊆ bcSuperpositionRegionFullSupport.{u} W := by
-  refine closure_minimal ?_ (bcSuperpositionRegionFullSupport_isClosed W)
+    bcOuterRegionUV W ⊆ bcSuperpositionRegionNoSumRate.{u} W := by
+  refine closure_minimal ?_ (bcSuperpositionRegionNoSumRate_isClosed W)
   refine Set.iUnion_subset fun ν ↦ Set.iUnion_subset fun hν ↦ fun p hp ↦ ?_
-  exact mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion W hln hν hp
+  exact mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion W hln hν hp
 
 end Converse
 

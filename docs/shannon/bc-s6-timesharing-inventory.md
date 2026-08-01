@@ -39,7 +39,7 @@
 | `a` | `uvInfoSum₂ ν = uvInfo₂ ν + condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)` の第 2 項 | `Bridge.lean:787` |
 | `c` | `uvInfo₁ ν = mutualInfo ν (fun q ↦ q.2.1) (fun q ↦ q.2.2.2.1)` (= `I(V;Y₁)`) | `Bridge.lean:777` |
 | 外界の点 | `structure InBCOuterRegionUV (R₁ R₂ I₁ I₂ J₂ J₁ : ℝ) : Prop where bound₁ : R₁ ≤ I₁ ; bound₂ : R₂ ≤ I₂ ; sumBound₂ : R₁ + R₂ ≤ J₂ ; sumBound₁ : R₁ + R₂ ≤ J₁` | `OuterBoundUV.lean:735` |
-| 内界の矩形 | `{p : ℝ × ℝ \| p.1 ≤ bcInfo₁ pU K W ∧ p.2 ≤ bcInfo₂ pU K W}` の全支持 union の closure | `SuperpositionRegion.lean:178` |
+| 内界の矩形 | `{p : ℝ × ℝ \| p.1 ≤ bcInfo₁ pU K W ∧ p.2 ≤ bcInfo₂ pU K W}` の全支持 union の closure | `Shannon/BroadcastChannel/Superposition/Region.lean` |
 
 ⟹ ブリーフの `a := I(X;Y₁∣U)` / `b := I(U;Y₂)` は実 def と逐語一致 ✅。外界の点が持つ 4 本のうち
 S6 が使うのは `bound₁` / `bound₂` / `sumBound₂` の 3 本 (`sumBound₁` は使わない)。
@@ -111,7 +111,7 @@ bcInfoJoint = entropy μ (fun q ↦ (q.1, q.2.1)) + entropy μ (fun q ↦ q.2.2.
                - entropy μ (fun q ↦ (q.1, q.2.1, q.2.2.1))          -- ErrorAnalysis.lean:929
 ```
 
-`mutualInfo` 形ではないので、S3 の 3 本 (`SuperpositionRegion.lean:78` / `:90` / `:110`) が
+`mutualInfo` 形ではないので、S3 の 3 本 (`Shannon/BroadcastChannel/Superposition/Region.lean`) が
 `.toReal` 形へ橋渡しする — S6 はこの 3 本を**全部使う**。型クラス前提は 3 本とも逐語
 `[Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]` +
 `[IsProbabilityMeasure pU]` / `[IsMarkovKernel K]` / `[IsMarkovKernel W]`。
@@ -180,7 +180,7 @@ S4 の Markov 鎖がそのまま鍵**だった (判断ログ 16-(c) の 4 度目
 
 ### 6. 全支持要求 — **S6 は作らない。S7 の担当**
 
-`bcSuperpositionRegionFullSupport` (`SuperpositionRegion.lean:178`) の union 添字は
+`bcSuperpositionRegionNoSumRate` (`Shannon/BroadcastChannel/Superposition/Region.lean`) の union 添字は
 `∀ x, 0 < pU.real {x}` と `∀ x a, 0 < (K x).real {a}` を要求する。時分割法は**枝 0 の補助を
 定数に潰す**設計なので `pU'` は構造的に全支持を破る (潰さなくても `λ = 1` で破れる)
 ⟹ **S6 の署名に全支持を混ぜない**。**責任分界の提案 (これが一番安い)**:
@@ -225,7 +225,7 @@ import は `OuterBoundUV.Quantization` と `SuperpositionRegion` の 2 本
 - **`OuterBoundUV/` の下には置けない** — 達成側 (`SuperpositionRegion` ⊃ `Classes` ⊃
   `Achievability/`) を import するので `OuterBoundUV/` から達成側への依存が生まれ、
   `module-structure.md` §5 の双方向依存になる。`MartonUnion.lean` をトップ直下にした判断
-  (plan §Phase 2) と同じ理由・同じ解。`SuperpositionRegion.lean` に足すのも不可 (上流)。
+  (plan §Phase 2) と同じ理由・同じ解。`Shannon/BroadcastChannel/Superposition/Region.lean` に足すのも不可 (上流)。
 - S7 / S8 が乗ると 600 行級になるので、S8 着手時に
   `BroadcastChannel/SuperpositionConverse/` への昇格を判定する。
 

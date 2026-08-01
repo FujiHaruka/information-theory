@@ -201,7 +201,7 @@ $X$ が一様分布のときに限る。$\qquad\blacksquare$
 > それには依存しない。
 >
 > **形式化**: 主定理 `entropy_le_log_card`、等号条件 `entropy_eq_log_card_iff`
-> (`InformationTheory/Shannon/MaxEntropy.lean`)
+> (`InformationTheory/Shannon/MaxEntropy/Basic.lean`)
 
 ---
 

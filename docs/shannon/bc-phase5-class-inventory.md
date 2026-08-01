@@ -323,7 +323,7 @@ def uvRegion {U V : Type*} [MeasurableSpace U] [MeasurableSpace V]
 | `bcOuterRegionUV` (定義) | `Region.lean:225`–`:227`: `[StandardBorelSpace α] [Nonempty α]` + β₁/β₂ 同様。**`Fintype` なし**、補助は `ℕ` 固定 | `uvInfo₁ ν = mutualInfo ν (V:ℕ) (Y₁:β₁)` に **L5 は適用できない** (`Fintype ℕ` が無い)。`uvInfoSum₂` の条件付け側も `ℕ` なので **L6 も適用できない**。数学的には `I(V;Y₁) ≤ H(Y₁) < ∞` だが、**その片側有界性補題は in-repo に無い** (`rg` で確認) |
 | `martonRegion` | `Operational.lean:109`–`:114`: 5 型すべて `[Fintype _] [DecidableEq _] [Nonempty _] [MeasurableSpace _] [MeasurableSingletonClass _]` | **起きない** |
 
-**既存実装がこの穴をどう回避しているか (実測)**: `bc_uv_mixture_point_mem` (`Assembly.lean:429`) は有限補助の法 `bcUVTimeShare c W` の上で L5 により有限性を出し、`uvRelabel` の**スロット不変性 4 本** (`uvInfo₁_map_uvRelabel` 等) で値ごと `ℕ` 側へ運んでいる。つまり **`ℕ` 上で有限性を示す必要が一度も生じない設計**になっている。
+**既存実装がこの穴をどう回避しているか (実測)**: `bc_uv_mem_of_mul_le_slot_sums` (`Shannon/BroadcastChannel/OuterBoundUV/Assembly.lean`) は有限補助の法 `bcUVTimeShare c W` の上で L5 により有限性を出し、`uvRelabel` の**スロット不変性 4 本** (`uvInfo₁_map_uvRelabel` 等) で値ごと `ℕ` 側へ運んでいる。つまり **`ℕ` 上で有限性を示す必要が一度も生じない設計**になっている。
 
 ### 4-d. Phase 5 で効くかどうかの判定 — **plan の (i) は符号が逆**
 

@@ -11,8 +11,8 @@
 > 本プロジェクトの完成判定 **proof done**（当該 declaration を含むファイルが
 > `0 sorry` かつ `0 @residual`、すなわち無条件機械検証済み）を満たす。
 > 紐付けた定理が属するファイル
-> (`MaxEntropy.lean` / `MaxEntropyConstrained.lean` /
-> `MaxEntropyConstrainedKKT.lean`) は本章作成時点で `sorry` / `@residual` を
+> (`MaxEntropy/Basic.lean` / `MaxEntropy/Constrained.lean` /
+> `MaxEntropy/ConstrainedKKT.lean`) は `sorry` / `@residual` を
 > 含まない。
 >
 > **形式化の枠組み** — 本章は二つの表現を併用する。
@@ -59,7 +59,7 @@ p^*(x) = \frac{\exp\!\big(\sum_i \lambda_i f_i(x)\big)}{\sum_y \exp\!\big(\sum_i
 の帰結であり、第2章でも引用した結果である。本章では制約付き理論の特殊ケース
 （空制約）として再掲する。
 
-**Verified**: `entropy_le_log_card` (`InformationTheory/Shannon/MaxEntropy.lean`)
+**Verified**: `entropy_le_log_card` (`InformationTheory/Shannon/MaxEntropy/Basic.lean`)
 
 ```lean
 theorem entropy_le_log_card
@@ -70,7 +70,7 @@ theorem entropy_le_log_card
 
 等号成立条件（像測度が一様分布であること）も形式化済み。
 
-**Verified**: `entropy_eq_log_card_iff` (`InformationTheory/Shannon/MaxEntropy.lean`)
+**Verified**: `entropy_eq_log_card_iff` (`InformationTheory/Shannon/MaxEntropy/Basic.lean`)
 
 ```lean
 theorem entropy_eq_log_card_iff

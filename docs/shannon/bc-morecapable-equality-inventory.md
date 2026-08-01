@@ -23,7 +23,7 @@
   `uvInfoSum₁ ≤ I(X;Y₁)` / `uvInfo₂ ≤ I(X;Y₁)` / 3 スロット版の時分割 / 摂動下の `I(X;Y₁)` の凹性。
   いずれも `sorry` 0 でコンパイル通過。
 - **plan の「3 field の新 `structure` が要る」は誤り** — less noisy の内界
-  `bcSuperpositionRegionFullSupport` (`Superposition/Region.lean:178`) は `InBCCapacityRegion` を
+  `bcSuperpositionRegionNoSumRate` (`Superposition/Region.lean`) は `InBCCapacityRegion` を
   **使っていない**。素の `{p | p.1 ≤ … ∧ p.2 ≤ …}` である。more capable も 3 連言の集合内包で足り、
   **新 `structure` は 1 本も要らない** (§Q1、probe MC5 で機械確認)。
 - **第 3 制約は `p.1 + p.2 ≤ bcInfoJoint` ではなく `max p.1 0 + p.2 ≤ bcInfoJoint` と書く**
@@ -67,8 +67,8 @@ noncomputable def bcSuperpositionRegionSumRate (W : BCChannel α β₁ β₂) : 
       ∧ max p.1 0 + p.2 ≤ bcInfoJoint pU K W})
 ```
 
-型クラス前提は `bcSuperpositionRegionFullSupport` と**逐語同一**
-(`Superposition/Region.lean:43`–`:46`):
+型クラス前提は `bcSuperpositionRegionNoSumRate` と**逐語同一**
+(`Superposition/Region.lean`):
 
 ```
 {α : Type u} {β₁ β₂ : Type*}
@@ -99,7 +99,7 @@ theorem bcSuperpositionRegionSumRate_subset_capacity (W : BCChannel α β₁ β�
     bcSuperpositionRegionSumRate.{u} W ⊆ bcCapacityRegion W
 ```
 
-⚠ less noisy 版 `bcSuperpositionRegionFullSupport_subset_capacity` (`Superposition/Region.lean:193`)
+⚠ less noisy 版 `bcSuperpositionRegionNoSumRate_subset_capacity` (`Superposition/Region.lean`)
 は `hln : IsBCLessNoisy W` を要求するが、**3 制約版は要求しない**。第 3 制約を領域が自分で
 持つようになったので、`bc_lessNoisy_infoJoint_ge` を呼ぶ必要が消えた (probe MC5 実測)。
 
@@ -247,7 +247,7 @@ probe は一般形 (任意の `U`/`V`、任意の `IsUVChannelLaw` な `ν`) で
 |---|---|---|---|
 | **S0** 達成側の factor out | `bc_achievability_of_rate_lt` (`Achievability/Assembly.lean:1103`) | **逐語再利用** | **すでに第 3 仮説 `hJlt : max R₁ 0 + R₂ < bcInfoJoint` を持っている** (probe MC0 で機械確認)。more capable のために新しい達成側の数学は **0 行** |
 | **S1** less noisy 接続 | `bc_lessNoisy_infoJoint_ge` (`Classes.lean:95`) | **使わない** | more capable では `bcInfo₁ + bcInfo₂ ≤ bcInfoJoint` が**偽になりうる**。代わりに第 3 制約を領域が持つ |
-| **S2** 内界の集合化 | `bcSuperpositionRegionFullSupport` (`Superposition/Region.lean:178`) | **変種** | 第 3 連言を足すだけ。`_isClosed` は `isClosed_closure` のまま (2 行)。`_subset_capacity` は**クラス仮説が落ちる** (§Q1-2) |
+| **S2** 内界の集合化 | `bcSuperpositionRegionNoSumRate` (`Superposition/Region.lean`) | **変種** | 第 3 連言を足すだけ。`_isClosed` は `isClosed_closure` のまま (2 行)。`_subset_capacity` は**クラス仮説が落ちる** (§Q1-2) |
 | **S3** スロット同定 3 本 | `bcInfo₂_eq_mutualInfo_toReal:78` / `bcInfoJoint_eq_mutualInfo_toReal:90` / `bcInfo₁_eq_condMutualInfo_toReal:110` (`Superposition/Region.lean`) | **逐語再利用** ✅ | `{U : Type*}` 総称。probe MC0 で `bcInfoJoint_eq_mutualInfo_toReal` を実際に適用して確認。型クラス前提は逐語 `[Fintype U] [DecidableEq U] [Nonempty U] [MeasurableSpace U] [MeasurableSingletonClass U]` + `[IsProbabilityMeasure pU]` / `[IsMarkovKernel K]` / `[IsMarkovKernel W]` |
 | **S4** 四つ組法 + Markov 鎖 | `IsUVChannelLaw.map_auxiliary_input_output:257` / `.isMarkovChain_UV_X_Y:293` / `_U_X_Y₁:311` / `_V_X_Y₁:331` (`OuterBoundUV/Region.lean`) | **逐語再利用 + 1 本追加** | 既存 3 本はそのまま。**`_U_X_Y₂` を新設**(§Q2-2、既存 `_U_X_Y₁` の逐語ミラー 18 行)。`section Transport` の前提 `[StandardBorelSpace _] [Nonempty _]` × 5 型 + `[IsProbabilityMeasure ν]` は変わらない |
 | **S5** 有限量子化 | `uvQuantizeLaw:196` / `_isUVChannelLaw:212` / `uvInfo₁_uvQuantizeLaw:225` / `uvQuantizeSlack_ne_top:251` / 裾 3 本 `:352` `:358` `:374` (`OuterBoundUV/Quantization.lean`) | **逐語再利用 + 1 本追加** | 既存はすべてそのまま。第 3 スロットは **`uvInfoJoint (uvQuantizeLaw ν m) = uvInfoJoint ν` (等式)** で運ばれる。量子化は第 1 補助しか触らず `I(X;Y₁)` は補助を見ないため。probe MC1 の `uvInfoJoint_map_uvRelabel` を `e₁ := uvQuantize m`, `e₂ := id` で叩く **3 行**。裾 `uvQuantizeSlack` は第 3 スロットには**課されない** |
@@ -564,7 +564,7 @@ import は `Superposition.FullSupport` の **1 本**で足りる (`Classes` / `O
    **G-5** 規約衝突の起票 / **G-6** ファイル移動を伴う leg は `gen_readme_table.ts --write` を回す)。
 8. **§判断ログに 1 件** — 「**plan が『既存の structure では受けきれない』と書いたら、
    その structure を実際に消費しているのが誰かを `rg` で確かめる**」: 内界
-   `bcSuperpositionRegionFullSupport` は `InBCCapacityRegion` を使っておらず、
+   `bcSuperpositionRegionNoSumRate` は `InBCCapacityRegion` を使っておらず、
    `InBCCapacityRegion` の消費者は converse 側 2 箇所 (`Converse.lean:167` / `:596`) だけだった。
    ⟹ 「受け皿の structure が新設で要る」という plan の見立ては**消費者を確認していれば消えていた**。
 
@@ -583,8 +583,8 @@ import は `Superposition.FullSupport` の **1 本**で足りる (`Classes` / `O
 **statement に現れないメタデータ**で `docs/rules/naming.md` 逸脱 ⟹ 一族 **10 本**を
 `bcSuperpositionRegionSumRate` / `exists_bcInfo_ge_sumRate_*` へ改名した (本在庫の記述は追随済)。
 上で挙げた代案 `bcSuperpositionRegionFullSupportSum` / `bcSuperpositionSumRegion` は
-**どちらも不採用**。`bcSuperpositionRegionFullSupport` が「全支持」を名乗って本質は 2 制約という
-指摘は生きており、**それだけが別 leg に残った** (親 plan §後続作業 G-2)。
+**どちらも不採用**。旧名 `bcSuperpositionRegionFullSupport` が「全支持」を名乗って本質は 2 制約という
+指摘は**別 leg (親 plan §後続作業 G-2) で決着し、現行名は `bcSuperpositionRegionNoSumRate`**。
 ⚠ **本節が名指した `3` 入りの名は 5 本、実測の改名は 10 本** — S7 変種 / `sub_mem_*` / `mem_*` が
 「同様に追随」で暗黙に改名された分は数から漏れる。再導出と一般則は親 plan F-26-(c)。
 
