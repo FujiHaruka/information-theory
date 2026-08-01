@@ -57,9 +57,9 @@ universe u
 section Union
 
 variable {α : Type u} {β₁ β₂ : Type*}
-  [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
-  [Fintype β₁] [DecidableEq β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
-  [Fintype β₂] [DecidableEq β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
+  [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [Fintype β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
+  [Fintype β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
 
 /-- The auxiliary alphabet of cardinality `k + 1`, in the universe of the input alphabet.
 The successor form keeps every index of the union nonempty, which `martonRegion` requires of its
@@ -95,14 +95,14 @@ auxiliary law, the auxiliary kernel or the channel. -/
 @[entry_point]
 theorem martonRegionUnion_subset_uv (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     martonRegionUnion W ⊆ bcOuterRegionUV W := by
+  classical
   refine closure_minimal ?_ (bcOuterRegionUV_isClosed W)
   refine Set.iUnion_subset fun k₁ ↦ Set.iUnion_subset fun k₂ ↦ Set.iUnion_subset fun pV ↦
     Set.iUnion_subset fun hpV ↦ Set.iUnion_subset fun K ↦ Set.iUnion_subset fun hK ↦ ?_
   exact marton_region_subset_uv pV K W
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [DecidableEq β₁]
-  [Nonempty β₁] [MeasurableSingletonClass β₁] [DecidableEq β₂] [Nonempty β₂]
-  [MeasurableSingletonClass β₂] in
+omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] [Nonempty β₁]
+  [MeasurableSingletonClass β₁] [Nonempty β₂] [MeasurableSingletonClass β₂] in
 theorem martonRegionUnionFS_subset_union (W : BCChannel α β₁ β₂) :
     martonRegionUnionFS W ⊆ martonRegionUnion W := by
   refine closure_mono ?_
@@ -119,6 +119,7 @@ operational capacity region. -/
 theorem martonRegionUnionFS_subset_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) :
     martonRegionUnionFS W ⊆ bcCapacityRegion W := by
+  classical
   refine closure_minimal ?_ (bc_capacityRegion_isClosed W)
   refine Set.iUnion_subset fun k₁ ↦ Set.iUnion_subset fun k₂ ↦ Set.iUnion_subset fun pV ↦
     Set.iUnion_subset fun hpV ↦ Set.iUnion_subset fun hpVpos ↦ Set.iUnion_subset fun K ↦
@@ -202,14 +203,6 @@ end Nonemptiness
 end Shape
 
 /-! ## Relabeling the auxiliary alphabets -/
-
-private lemma entropy_map_comp {Ω Ω' A : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω']
-    [Fintype A] [MeasurableSpace A]
-    (μ : Measure Ω) {f : Ω → Ω'} (hf : Measurable f) {X : Ω' → A} (hX : Measurable X) :
-    entropy (μ.map f) X = entropy μ (fun ω ↦ X (f ω)) := by
-  unfold entropy
-  rw [Measure.map_map hX hf]
-  rfl
 
 section Relabel
 

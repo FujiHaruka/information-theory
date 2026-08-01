@@ -49,6 +49,14 @@ lemma entropy_nonneg (μ : Measure Ω) [IsProbabilityMeasure μ]
   exact Finset.sum_nonneg fun x _ ↦
     Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
 
+omit [DecidableEq X] [Nonempty X] [MeasurableSingletonClass X] in
+lemma entropy_map_comp {Ω' : Type*} [MeasurableSpace Ω']
+    (μ : Measure Ω) {f : Ω → Ω'} (hf : Measurable f) {Xs : Ω' → X} (hXs : Measurable Xs) :
+    entropy (μ.map f) Xs = entropy μ (fun ω ↦ Xs (f ω)) := by
+  unfold entropy
+  rw [Measure.map_map hXs hf]
+  rfl
+
 omit [DecidableEq X] [Nonempty X] in
 private theorem absolutelyContinuous_joint_prod_marginals
     (μ : Measure Ω) [IsProbabilityMeasure μ]

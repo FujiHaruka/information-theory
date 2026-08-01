@@ -20,8 +20,8 @@ that limit and removes the two auxiliary hypotheses.
 
 ## Main statements
 
-* `marton_region_subset_capacity_of_channel` — a Marton quadrilateral is contained in the
-  operational capacity region, under a support hypothesis on the channel alone.
+* `marton_region_subset_capacity_of_channel_fullSupport` — a Marton quadrilateral is contained
+  in the operational capacity region, under a support hypothesis on the channel alone.
 * `martonRegionUnion_subset_capacity` — the whole union, not only its full-support part, is
   contained in the operational capacity region.
 -/
@@ -167,7 +167,7 @@ along that smoothing, so the two support hypotheses that `marton_region_subset_c
 them are not needed.  The channel hypothesis `hW` is a regularity precondition of the coding
 argument and carries no part of it. -/
 @[entry_point]
-theorem marton_region_subset_capacity_of_channel
+theorem marton_region_subset_capacity_of_channel_fullSupport
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
@@ -235,7 +235,7 @@ theorem martonRegionUnion_subset_capacity (W : BCChannel α β₁ β₂) [IsMark
   refine closure_minimal ?_ (bc_capacityRegion_isClosed W)
   refine Set.iUnion_subset fun k₁ ↦ Set.iUnion_subset fun k₂ ↦ Set.iUnion_subset fun pV ↦
     Set.iUnion_subset fun hpV ↦ Set.iUnion_subset fun K ↦ Set.iUnion_subset fun hK ↦ ?_
-  exact marton_region_subset_capacity_of_channel pV K W hW
+  exact marton_region_subset_capacity_of_channel_fullSupport pV K W hW
 
 end Union
 
