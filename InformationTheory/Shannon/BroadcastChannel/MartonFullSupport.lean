@@ -161,14 +161,11 @@ private lemma uniformOfFintype_real_singleton_pos {X : Type*} [Fintype X] [Nonem
   exact inv_pos.mpr (by exact_mod_cast Fintype.card_pos)
 
 /-- Marton's inner bound sits inside the operational capacity region under a support hypothesis
-on the channel alone.  The auxiliary law and the input kernel are smoothed toward the uniform
-ones, which makes them charge every letter; the three informations of the quadrilateral are
-continuous along the smoothing, so a rate pair strictly below the unsmoothed quadrilateral is
-strictly below a smoothed one and `bc_strict_interior_achievable` applies there.
-
-The channel hypothesis `hW` is a regularity precondition of the coding argument and carries no
-part of it; the smoothing removes the other two, which `marton_region_subset_capacity`
-requires. -/
+on the channel alone.  Smoothing the auxiliary law and the input kernel toward the uniform ones
+makes them charge every letter, and the three informations of the quadrilateral are continuous
+along that smoothing, so the two support hypotheses that `marton_region_subset_capacity` asks of
+them are not needed.  The channel hypothesis `hW` is a regularity precondition of the coding
+argument and carries no part of it. -/
 @[entry_point]
 theorem marton_region_subset_capacity_of_channel
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
