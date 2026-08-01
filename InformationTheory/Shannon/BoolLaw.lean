@@ -24,8 +24,8 @@ in the weight.
   values.
 * `entropy_eq_binEntropy_of_map_boolLaw` — a variable distributed as the two-point law has the
   binary entropy of the weight.
-* `exists_perturb_weight` — a positive weight below `1` whose linear cost and binary entropy stay
-  under any positive slack, for two nonnegative coefficients at once.
+* `exists_mul_add_binEntropy_lt` — a positive weight below `1` whose linear cost and binary
+  entropy stay under any positive slack, for two nonnegative coefficients at once.
 -/
 
 namespace InformationTheory.Shannon
@@ -76,7 +76,7 @@ lemma entropy_eq_binEntropy_of_map_boolLaw {Ω : Type*} [MeasurableSpace Ω] (μ
 
 /-! ## Choosing the mixing weight -/
 
-lemma exists_perturb_weight {A B δ : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B) (hδ : 0 < δ) :
+lemma exists_mul_add_binEntropy_lt {A B δ : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B) (hδ : 0 < δ) :
     ∃ ε : ℝ, 0 < ε ∧ ε < 1 ∧ ε * A + Real.binEntropy ε < δ ∧ ε * B + Real.binEntropy ε < δ := by
   have hcont : Continuous (fun ε : ℝ ↦ ε * (A + B) + Real.binEntropy ε) :=
     (continuous_id.mul continuous_const).add Real.binEntropy_continuous

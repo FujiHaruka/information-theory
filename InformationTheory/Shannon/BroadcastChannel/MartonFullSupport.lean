@@ -1,6 +1,7 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.Mixture
 import InformationTheory.Shannon.BroadcastChannel.MartonUnion
-import InformationTheory.Shannon.MultipleAccess.TimeSharing
+import Mathlib.Probability.Distributions.Uniform
 
 /-!
 # Broadcast channel — Marton's inner bound without the auxiliary support hypotheses
@@ -16,7 +17,7 @@ that limit and removes the two auxiliary hypotheses.
 ## Main definitions
 
 * `martonMixKernel K κ₀ ε` — the input kernel smoothed toward a fixed anchor measure, letter by
-  letter, reusing the clamped weight of `InformationTheory.Shannon.MAC.macMix`.
+  letter, reusing the clamped weight of `InformationTheory.mixLaw`.
 
 ## Main statements
 
@@ -30,7 +31,6 @@ namespace InformationTheory.Shannon.BroadcastChannel.Marton
 
 open MeasureTheory ProbabilityTheory InformationTheory.Shannon Filter
 open InformationTheory.Shannon.BroadcastChannel InformationTheory.Shannon.ChannelCoding
-open InformationTheory.Shannon.MAC
 open scoped ENNReal NNReal Topology
 
 universe u
@@ -48,10 +48,10 @@ variable {V₁ V₂ : Type*} [Fintype V₁] [MeasurableSpace V₁] [MeasurableSi
 `ε > 0` and a full-support anchor every letter is charged, and at `ε = 0` the kernel is `K`. -/
 noncomputable def martonMixKernel (K : Kernel (V₁ × V₂) α) (κ₀ : Measure α) (ε : ℝ) :
     Kernel (V₁ × V₂) α :=
-  Kernel.ofFunOfCountable fun v ↦ macMix (K v) κ₀ ε
+  Kernel.ofFunOfCountable fun v ↦ mixLaw (K v) κ₀ ε
 
 lemma martonMixKernel_apply (K : Kernel (V₁ × V₂) α) (κ₀ : Measure α) (ε : ℝ) (v : V₁ × V₂) :
-    martonMixKernel K κ₀ ε v = macMix (K v) κ₀ ε := rfl
+    martonMixKernel K κ₀ ε v = mixLaw (K v) κ₀ ε := rfl
 
 instance martonMixKernel.instIsMarkovKernel (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (κ₀ : Measure α) [IsProbabilityMeasure κ₀] (ε : ℝ) :
@@ -60,7 +60,7 @@ instance martonMixKernel.instIsMarkovKernel (K : Kernel (V₁ × V₂) α) [IsMa
 
 lemma martonMixKernel_zero (K : Kernel (V₁ × V₂) α) (κ₀ : Measure α) :
     martonMixKernel K κ₀ 0 = K :=
-  Kernel.ext fun v ↦ by rw [martonMixKernel_apply, macMix_zero]
+  Kernel.ext fun v ↦ by rw [martonMixKernel_apply, mixLaw_zero]
 
 end MixKernel
 
@@ -81,30 +81,30 @@ variable (pV μ₀ : Measure (V₁ × V₂)) [IsProbabilityMeasure pV] [IsProbab
 
 lemma martonMixJoint_real_continuous (q : V₁ × V₂ × α × β₁ × β₂) :
     Continuous fun ε : ℝ ↦
-      (martonJointDistribution (macMix pV μ₀ ε) (martonMixKernel K κ₀ ε) W).real {q} := by
+      (martonJointDistribution (mixLaw pV μ₀ ε) (martonMixKernel K κ₀ ε) W).real {q} := by
   classical
   obtain ⟨v₁, v₂, x, y₁, y₂⟩ := q
-  have hrw : (fun ε : ℝ ↦ (martonJointDistribution (macMix pV μ₀ ε)
+  have hrw : (fun ε : ℝ ↦ (martonJointDistribution (mixLaw pV μ₀ ε)
         (martonMixKernel K κ₀ ε) W).real {(v₁, v₂, x, y₁, y₂)})
-      = fun ε : ℝ ↦ (macMix pV μ₀ ε).real {(v₁, v₂)}
-        * (macMix (K (v₁, v₂)) κ₀ ε).real {x} * (W x).real {(y₁, y₂)} := by
+      = fun ε : ℝ ↦ (mixLaw pV μ₀ ε).real {(v₁, v₂)}
+        * (mixLaw (K (v₁, v₂)) κ₀ ε).real {x} * (W x).real {(y₁, y₂)} := by
     funext ε
     simpa [martonMixKernel_apply] using martonJointDistribution_real_singleton
-      (macMix pV μ₀ ε) (martonMixKernel K κ₀ ε) W (v₁, v₂) x (y₁, y₂)
+      (mixLaw pV μ₀ ε) (martonMixKernel K κ₀ ε) W (v₁, v₂) x (y₁, y₂)
   rw [hrw]
-  exact ((macMix_real_continuous pV μ₀ (v₁, v₂)).mul
-    (macMix_real_continuous (K (v₁, v₂)) κ₀ x)).mul continuous_const
+  exact ((mixLaw_real_continuous pV μ₀ (v₁, v₂)).mul
+    (mixLaw_real_continuous (K (v₁, v₂)) κ₀ x)).mul continuous_const
 
 lemma martonMixJoint_map_real_continuous {γ : Type*}
     [MeasurableSpace γ] [MeasurableSingletonClass γ]
     (f : V₁ × V₂ × α × β₁ × β₂ → γ) (hf : Measurable f) (x : γ) :
     Continuous fun ε : ℝ ↦
-      ((martonJointDistribution (macMix pV μ₀ ε) (martonMixKernel K κ₀ ε) W).map f).real {x} := by
+      ((martonJointDistribution (mixLaw pV μ₀ ε) (martonMixKernel K κ₀ ε) W).map f).real {x} := by
   classical
   have hrw : (fun ε : ℝ ↦
-      ((martonJointDistribution (macMix pV μ₀ ε) (martonMixKernel K κ₀ ε) W).map f).real {x})
+      ((martonJointDistribution (mixLaw pV μ₀ ε) (martonMixKernel K κ₀ ε) W).map f).real {x})
       = fun ε : ℝ ↦ ∑ q ∈ Finset.univ.filter fun q ↦ f q = x,
-        (martonJointDistribution (macMix pV μ₀ ε) (martonMixKernel K κ₀ ε) W).real {q} := by
+        (martonJointDistribution (mixLaw pV μ₀ ε) (martonMixKernel K κ₀ ε) W).real {q} := by
     funext ε
     exact map_real_singleton_fiber_sum _ f hf x
   rw [hrw]
@@ -114,27 +114,27 @@ lemma martonMix_entropy_continuous {γ : Type*} [Fintype γ]
     [MeasurableSpace γ] [MeasurableSingletonClass γ]
     (f : V₁ × V₂ × α × β₁ × β₂ → γ) (hf : Measurable f) :
     Continuous fun ε : ℝ ↦
-      entropy (martonJointDistribution (macMix pV μ₀ ε) (martonMixKernel K κ₀ ε) W) f := by
+      entropy (martonJointDistribution (mixLaw pV μ₀ ε) (martonMixKernel K κ₀ ε) W) f := by
   unfold entropy
   exact continuous_finsetSum _ fun x _ ↦
     Real.continuous_negMulLog.comp (martonMixJoint_map_real_continuous pV μ₀ K κ₀ W f hf x)
 
 lemma martonInfo₁_mix_continuous :
-    Continuous fun ε : ℝ ↦ martonInfo₁ (macMix pV μ₀ ε) (martonMixKernel K κ₀ ε) W := by
+    Continuous fun ε : ℝ ↦ martonInfo₁ (mixLaw pV μ₀ ε) (martonMixKernel K κ₀ ε) W := by
   unfold martonInfo₁
   exact ((martonMix_entropy_continuous pV μ₀ K κ₀ W Prod.fst measurable_fst).add
     (martonMix_entropy_continuous pV μ₀ K κ₀ W (fun q ↦ q.2.2.2.1) (by fun_prop))).sub
     (martonMix_entropy_continuous pV μ₀ K κ₀ W (fun q ↦ (q.1, q.2.2.2.1)) (by fun_prop))
 
 lemma martonInfo₂_mix_continuous :
-    Continuous fun ε : ℝ ↦ martonInfo₂ (macMix pV μ₀ ε) (martonMixKernel K κ₀ ε) W := by
+    Continuous fun ε : ℝ ↦ martonInfo₂ (mixLaw pV μ₀ ε) (martonMixKernel K κ₀ ε) W := by
   unfold martonInfo₂
   exact ((martonMix_entropy_continuous pV μ₀ K κ₀ W (fun q ↦ q.2.1) (by fun_prop)).add
     (martonMix_entropy_continuous pV μ₀ K κ₀ W (fun q ↦ q.2.2.2.2) (by fun_prop))).sub
     (martonMix_entropy_continuous pV μ₀ K κ₀ W (fun q ↦ (q.2.1, q.2.2.2.2)) (by fun_prop))
 
 lemma martonInfoV₁V₂_mix_continuous :
-    Continuous fun ε : ℝ ↦ martonInfoV₁V₂ (macMix pV μ₀ ε) (martonMixKernel K κ₀ ε) W := by
+    Continuous fun ε : ℝ ↦ martonInfoV₁V₂ (mixLaw pV μ₀ ε) (martonMixKernel K κ₀ ε) W := by
   unfold martonInfoV₁V₂
   exact ((martonMix_entropy_continuous pV μ₀ K κ₀ W Prod.fst measurable_fst).add
     (martonMix_entropy_continuous pV μ₀ K κ₀ W (fun q ↦ q.2.1) (by fun_prop))).sub
@@ -184,20 +184,20 @@ theorem marton_region_subset_capacity_of_channel_fullSupport
     rw [hκ₀]; exact fun a ↦ uniformOfFintype_real_singleton_pos a
   intro p hM
   refine bc_mem_closure_of_strictly_below W p fun ε hε ↦ ?_
-  have htend₁ : Tendsto (fun t : ℝ ↦ martonInfo₁ (macMix pV μ₀ t) (martonMixKernel K κ₀ t) W)
+  have htend₁ : Tendsto (fun t : ℝ ↦ martonInfo₁ (mixLaw pV μ₀ t) (martonMixKernel K κ₀ t) W)
       (𝓝[>] (0 : ℝ)) (𝓝 (martonInfo₁ pV K W)) := by
     have h := (martonInfo₁_mix_continuous pV μ₀ K κ₀ W).tendsto 0
-    rw [macMix_zero, martonMixKernel_zero] at h
+    rw [mixLaw_zero, martonMixKernel_zero] at h
     exact h.mono_left nhdsWithin_le_nhds
-  have htend₂ : Tendsto (fun t : ℝ ↦ martonInfo₂ (macMix pV μ₀ t) (martonMixKernel K κ₀ t) W)
+  have htend₂ : Tendsto (fun t : ℝ ↦ martonInfo₂ (mixLaw pV μ₀ t) (martonMixKernel K κ₀ t) W)
       (𝓝[>] (0 : ℝ)) (𝓝 (martonInfo₂ pV K W)) := by
     have h := (martonInfo₂_mix_continuous pV μ₀ K κ₀ W).tendsto 0
-    rw [macMix_zero, martonMixKernel_zero] at h
+    rw [mixLaw_zero, martonMixKernel_zero] at h
     exact h.mono_left nhdsWithin_le_nhds
-  have htend₁₂ : Tendsto (fun t : ℝ ↦ martonInfoV₁V₂ (macMix pV μ₀ t) (martonMixKernel K κ₀ t) W)
+  have htend₁₂ : Tendsto (fun t : ℝ ↦ martonInfoV₁V₂ (mixLaw pV μ₀ t) (martonMixKernel K κ₀ t) W)
       (𝓝[>] (0 : ℝ)) (𝓝 (martonInfoV₁V₂ pV K W)) := by
     have h := (martonInfoV₁V₂_mix_continuous pV μ₀ K κ₀ W).tendsto 0
-    rw [macMix_zero, martonMixKernel_zero] at h
+    rw [mixLaw_zero, martonMixKernel_zero] at h
     exact h.mono_left nhdsWithin_le_nhds
   have hA := htend₁.eventually_const_lt
     (show martonInfo₁ pV K W - ε / 2 < martonInfo₁ pV K W by linarith)
@@ -207,10 +207,10 @@ theorem marton_region_subset_capacity_of_channel_fullSupport
     (show martonInfoV₁V₂ pV K W < martonInfoV₁V₂ pV K W + ε / 2 by linarith)
   obtain ⟨t, ⟨hA', hB', hC'⟩, ht⟩ :=
     ((hA.and (hB.and hC)).and eventually_mem_nhdsWithin).exists
-  refine bc_strict_interior_achievable (macMix pV μ₀ t) (martonMixKernel K κ₀ t) W
-    (fun v ↦ macMix_full_support pV μ₀ hμ₀pos ht v) (fun v a ↦ ?_) hW ?_ ?_ ?_
+  refine bc_strict_interior_achievable (mixLaw pV μ₀ t) (martonMixKernel K κ₀ t) W
+    (fun v ↦ mixLaw_real_pos pV μ₀ hμ₀pos ht v) (fun v a ↦ ?_) hW ?_ ?_ ?_
   · rw [martonMixKernel_apply]
-    exact macMix_full_support (K v) κ₀ hκ₀pos ht a
+    exact mixLaw_real_pos (K v) κ₀ hκ₀pos ht a
   · linarith [hM.bound₁]
   · linarith [hM.bound₂]
   · linarith [hM.boundSum]

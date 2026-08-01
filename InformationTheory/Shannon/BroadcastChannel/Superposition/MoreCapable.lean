@@ -693,7 +693,8 @@ theorem exists_fullSupport_bcInfo_ge_sumRate_of_isUVChannelLaw (W : BCChannel α
   have hJ : 0 ≤ J := ENNReal.toReal_nonneg
   -- One weight pays for all three slots: the satellite and the input-output slot together are
   -- bounded by `A + J`, so the two-quantity choice covers them both.
-  obtain ⟨ε, hε0, hε1, hεAJ, hεB⟩ := exists_perturb_weight (by linarith : (0 : ℝ) ≤ A + J) hB hδ
+  obtain ⟨ε, hε0, hε1, hεAJ, hεB⟩ :=
+    exists_mul_add_binEntropy_lt (by linarith : (0 : ℝ) ≤ A + J) hB hδ
   have hbin : 0 ≤ Real.binEntropy ε := Real.binEntropy_nonneg hε0.le hε1.le
   set lam := ENNReal.ofReal (1 - ε) with hlam'
   have hlamR : lam.toReal = 1 - ε := ENNReal.toReal_ofReal (by linarith)

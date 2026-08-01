@@ -359,7 +359,7 @@ theorem exists_fullSupport_bcInfo_ge_of_isUVChannelLaw (W : BCChannel α β₁ �
   set B := (uvInfo₂ ν).toReal with hB'
   have hA : 0 ≤ A := ENNReal.toReal_nonneg
   have hB : 0 ≤ B := ENNReal.toReal_nonneg
-  obtain ⟨ε, hε0, hε1, hεA, hεB⟩ := exists_perturb_weight hA hB hδ
+  obtain ⟨ε, hε0, hε1, hεA, hεB⟩ := exists_mul_add_binEntropy_lt hA hB hδ
   set lam := ENNReal.ofReal (1 - ε) with hlam'
   have hlamR : lam.toReal = 1 - ε := ENNReal.toReal_ofReal (by linarith)
   have hlam1 : lam ≤ 1 := by

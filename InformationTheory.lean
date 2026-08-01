@@ -7,6 +7,9 @@ import InformationTheory.Meta.EntryPoint
 -- Shared utility: singleton masses of a measure on a finite type
 import InformationTheory.Probability.SingletonMass
 
+-- Shared utility: mixing two measures at a clamped weight
+import InformationTheory.Probability.Mixture
+
 -- Fano's inequality
 import InformationTheory.Fano
 import InformationTheory.Fano.Entropy
