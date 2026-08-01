@@ -6,7 +6,10 @@ import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.MartonBridge
 
 `martonRegion` is the quadrilateral of one fixed pair of auxiliary alphabets, whereas the UV
 outer region is a union over five-tuple laws.  This file takes the union on the inner side, so
-that the two regions can be compared as sets.
+that the two regions can be compared as sets, and records what makes the result behave like an
+inner bound: it is a nonempty lower set, it is unchanged when the auxiliary alphabets are
+relabeled, and it therefore absorbs the quadrilateral of every pair of finite auxiliary
+alphabets.
 
 ## Main definitions
 
@@ -25,23 +28,29 @@ that the two regions can be compared as sets.
   auxiliary alphabets, in every universe.
 * `martonRegionUnion_isLowerSet` / `martonRegionUnion_nonempty` — the union is a nonempty lower
   set, as the UV outer region is.
+* `martonRegion_isLowerSet` / `martonRegion_convex` / `martonRegion_nonempty` — a single
+  quadrilateral is a nonempty convex lower set.  Convexity is claimed of the quadrilaterals
+  only, not of the union.
+* `martonRegion_map_relabel` — the quadrilateral depends on the auxiliary alphabets only through
+  the joint law, so a measurable bijection of either alphabet leaves it unchanged.
 
 ## Implementation notes
 
 The auxiliaries range over `ULift (Fin (k + 1))`, one cardinality at a time, in the universe of
 the input alphabet: fixing the cardinality avoids quantifying over types, and the universe lift
-is what lets the comparison classes be applied at a member of the union.  A countable auxiliary
-alphabet is not available here, unlike on the outer side: the dependence between the two
-auxiliaries is the one information slot reading no output letter, so it is the one that can be
-infinite, and the `toReal` convention would then drop the sum-rate penalty.
+is what lets the comparison classes be applied at a member of the union.  Relabeling invariance
+is what keeps that ladder lossless: an arbitrary pair of finite nonempty auxiliary alphabets is
+carried onto the rung of its own two cardinalities, so indexing the union by cardinalities
+rather than by types gives up nothing.  A countable auxiliary alphabet is not available here,
+unlike on the outer side: the dependence between the two auxiliaries is the one information
+slot reading no output letter, so it is the one that can be infinite, and the `toReal`
+convention would then drop the sum-rate penalty.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
 
 open MeasureTheory ProbabilityTheory InformationTheory.Shannon
 open InformationTheory.Shannon.BroadcastChannel
-
-set_option linter.unusedSectionVars false
 
 universe u
 
@@ -91,6 +100,9 @@ theorem martonRegionUnion_subset_uv (W : BCChannel α β₁ β₂) [IsMarkovKern
     Set.iUnion_subset fun hpV ↦ Set.iUnion_subset fun K ↦ Set.iUnion_subset fun hK ↦ ?_
   exact marton_region_subset_uv pV K W
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [DecidableEq β₁]
+  [Nonempty β₁] [MeasurableSingletonClass β₁] [DecidableEq β₂] [Nonempty β₂]
+  [MeasurableSingletonClass β₂] in
 theorem martonRegionUnionFS_subset_union (W : BCChannel α β₁ β₂) :
     martonRegionUnionFS W ⊆ martonRegionUnion W := by
   refine closure_mono ?_
@@ -115,7 +127,7 @@ theorem martonRegionUnionFS_subset_capacity (W : BCChannel α β₁ β₂) [IsMa
 
 end Union
 
-/-! ## Order, convexity and nondegeneracy -/
+/-! ## Order, convexity and nonemptiness -/
 
 section Shape
 
@@ -174,7 +186,7 @@ theorem martonRegionUnion_isLowerSet (W : BCChannel α β₁ β₂) :
     isLowerSet_iUnion fun _ ↦ isLowerSet_iUnion fun _ ↦ isLowerSet_iUnion fun _ ↦
       isLowerSet_iUnion fun _ ↦ martonRegion_isLowerSet _ _ _)
 
-section Witness
+section Nonemptiness
 
 variable [Nonempty α]
 
@@ -185,7 +197,7 @@ theorem martonRegionUnion_nonempty (W : BCChannel α β₁ β₂) :
   exact (martonRegion_nonempty (Measure.dirac v₀) (Kernel.const _ (Measure.dirac x₀)) W).mono
     (martonRegion_subset_union_of_bcAux 0 0 _ _ W)
 
-end Witness
+end Nonemptiness
 
 end Shape
 
@@ -420,7 +432,7 @@ private noncomputable def bcAuxMeasurableEquiv (V : Type*) [Fintype V] [Nonempty
 /-- Every Marton quadrilateral lies in the union, whatever the auxiliary alphabets: the union is
 indexed by one alphabet of each finite cardinality, in the universe of the input alphabet, and a
 pair of auxiliary alphabets of the same cardinalities is carried onto those by a relabeling that
-leaves the three informations of the quadrilateral unchanged. -/
+leaves the three information terms of the quadrilateral unchanged. -/
 @[entry_point]
 theorem martonRegion_subset_union (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
