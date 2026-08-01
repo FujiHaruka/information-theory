@@ -12,9 +12,8 @@ import Mathlib.Data.Fin.Tuple.Basic
 # Multiple access channel — time-sharing achievability (full convex-hull form)
 
 Operational time-sharing for the two-user MAC (Cover–Thomas Theorem 15.3.1, convex-hull
-form).  The single-input corner-point achievability `mac_achievability` (proven, `@audit:ok`)
-is the input; this file lifts it to the convex hull of the per-input pentagons via block
-concatenation.
+form).  The single-input corner-point achievability `mac_achievability` is the input; this
+file lifts it to the convex hull of the per-input pentagons via block concatenation.
 
 ## Main definitions
 
@@ -28,6 +27,14 @@ concatenation.
 * `macCapacityRegion W` — the operational capacity region, the topological closure of the
   achievable set.  (The exact-rate achievable set is not closed — boundary Pareto faces
   enter only in the closure — so the region is defined as its closure.)
+
+## Main statements
+
+* `mac_achievability_region` — the closed convex hull of the pentagons of the full-support
+  product inputs is contained in the operational capacity region.
+* `mac_achievability_region_allprob` — the same inclusion for the pentagons of *all*
+  probability product inputs, obtained by smoothing an arbitrary input toward a uniform
+  anchor and passing to the limit.
 -/
 
 namespace InformationTheory.Shannon.MAC
@@ -582,17 +589,16 @@ theorem mac_capacityRegion_convex (W : MACChannel α₁ α₂ β) [IsMarkovKerne
     (hu_tend.const_smul a).add (hv_tend.const_smul b)
   exact (mac_capacityRegion_isClosed W).mem_of_tendsto hw_tend (Eventually.of_forall hw_mem)
 
-/-! ## Single-user axes: M₁ = 1 (resp. M₂ = 1) specialization of the achievability engine -/
+/-! ## Single-user axes: specializing the achievability engine with one user silent -/
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
 /-- Achievability on the single-user axis with user 1 silent: the rate pair `(0, R₂)` with
 `R₂ < macInfo₂` is achievable.  This is the `R₁ = 0` specialization of the achievability
 engine: `R₁ = 0` forces `M₁ = ⌈exp (n·0)⌉ = 1`, so the two alias terms carrying the
 `(M₁ - 1)` factor (`E1`, `E3`) collapse to `0` and only the correct-pair atypicality `E0`
-(AEP) and the user-2 alias
-`E2` (controlled by `R₂ < macInfo₂`) remain.  The corner conditions `R₁ < macInfo₁` and
-`R₁ + R₂ < macInfoBoth` of `mac_achievability` — vacuous when `macInfo₁ ≤ 0` — are therefore
-not needed.
+(AEP) and the user-2 alias `E2` (controlled by `R₂ < macInfo₂`) remain.  The corner
+conditions `R₁ < macInfo₁` and `R₁ + R₂ < macInfoBoth` of `mac_achievability` are therefore
+not needed; the first of them fails outright when `macInfo₁ ≤ 0`.
 @audit:ok -/
 theorem mac_rate₂_achievable
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
