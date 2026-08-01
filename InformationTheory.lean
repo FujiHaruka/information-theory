@@ -19,6 +19,7 @@ import InformationTheory.Fano.Measure
 import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.Bridge
+import InformationTheory.Shannon.BoolLaw
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.CondMIChainRule
 import InformationTheory.Shannon.Converse
@@ -304,6 +305,7 @@ import InformationTheory.Shannon.WynerZiv.FactorizableRate
 import InformationTheory.Shannon.AWGN.MutualInfoBridge
 import InformationTheory.Shannon.CondKLIntegral
 import InformationTheory.Shannon.CondMutualInfoMixture
+import InformationTheory.Shannon.MutualInfoFiniteRange
 import InformationTheory.Shannon.EPI.G2.BridgeDensityHelpers
 import InformationTheory.Shannon.EPI.G2.ConvEntropyMonotone
 import InformationTheory.Shannon.EPI.G2.ConvEntropyDensity

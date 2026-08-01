@@ -1,3 +1,4 @@
+import InformationTheory.Shannon.BoolLaw
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Quantization
 import InformationTheory.Shannon.BroadcastChannel.Superposition.Region
 
@@ -22,8 +23,6 @@ The second endpoint is where a less noisy channel enters: it forces
 ## Main definitions
 
 * `uvCloudLaw ν` and `uvSatelliteKernel ν` — the achievability pair read off a five-tuple law.
-* `boolLaw lam` — the Bernoulli tag law, clamped so that it is a probability measure for every
-  weight.
 * `uvTagTrue ν`, `uvTagFalse σ`, `uvMixKernel ν σ` and `uvMixLaw ν σ lam` — two channel laws
   mixed along a Bernoulli tag carried by the auxiliary, each of them keeping its auxiliary under
   its own tag.
@@ -37,6 +36,8 @@ The second endpoint is where a less noisy channel enters: it forces
 * `bcInfo₂_uvCloudLaw`, `bcInfo₁_uvCloudLaw` and `bcInfoJoint_uvCloudLaw` — the three
   informations of the achievability pair read off a channel law are the corresponding slots of
   that law.
+* `mul_uvInfo₂_le_uvInfo₂_uvMixLaw` and `mul_condMutualInfo_le_condMutualInfo_uvMixLaw` — the two
+  slots of a mixture of two channel laws against the slots of the branch it keeps.
 * `mul_uvInfo₂_le_uvInfo₂_uvTimeShareLaw` and `condMutualInfo_uvTimeShareLaw` — the two slots of
   the time-shared law against the slots of the original one.
 * `exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw` — over a less noisy channel, a rate pair
@@ -60,29 +61,6 @@ open scoped ENNReal Topology
 universe u
 
 /-! ## Mixing two channel laws along a Bernoulli tag -/
-
-/-! ### The tag law -/
-
-/-- The Bernoulli tag law with weight `lam`, clamped so that it is a probability measure for
-every weight.  The clamp is what makes `IsProbabilityMeasure` an instance rather than a lemma
-with a side condition, and the conditional mutual information of the mixture needs that instance
-in order to be stated at all. -/
-noncomputable def boolLaw (lam : ℝ≥0∞) : Measure Bool :=
-  (lam ⊓ 1) • Measure.dirac true + (1 - lam) • Measure.dirac false
-
-instance boolLaw_isProbabilityMeasure (lam : ℝ≥0∞) : IsProbabilityMeasure (boolLaw lam) := by
-  constructor
-  simp only [boolLaw, Measure.coe_add, Measure.coe_smul, Pi.add_apply, Pi.smul_apply,
-    measure_univ, smul_eq_mul, mul_one]
-  rcases le_total lam 1 with h | h
-  · rw [inf_of_le_left h]
-    exact add_tsub_cancel_of_le h
-  · rw [inf_of_le_right h, tsub_eq_zero_of_le h, add_zero]
-
-lemma lintegral_boolLaw (lam : ℝ≥0∞) (F : Bool → ℝ≥0∞) :
-    ∫⁻ t, F t ∂(boolLaw lam) = (lam ⊓ 1) * F true + (1 - lam) * F false := by
-  rw [boolLaw, lintegral_add_measure, lintegral_smul_measure, lintegral_smul_measure,
-    lintegral_dirac, lintegral_dirac, smul_eq_mul, smul_eq_mul]
 
 /-! ### The mixture of two tagged laws -/
 
@@ -274,32 +252,6 @@ end Mixture
 
 /-! ## The information slots of the time-shared law -/
 
-/-! ### Conditioning on a constant -/
-
-section Constant
-
-variable {Ω A B C : Type*} [MeasurableSpace Ω]
-variable [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
-variable [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B] [MeasurableSpace C]
-
-lemma condMutualInfo_eq_mutualInfo_of_ae_const (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → A) (Yo : Ω → B) (Zc : Ω → C) (hXs : Measurable Xs) (hYo : Measurable Yo)
-    (hZc : Measurable Zc) (c : C) (hc : Zc =ᵐ[μ] fun _ ↦ c) :
-    condMutualInfo μ Xs Yo Zc = mutualInfo μ Xs Yo := by
-  have hchain := mutualInfo_chain_rule μ Xs Yo Zc hXs hYo hZc
-  have hzero : mutualInfo μ Zc Yo = 0 := mutualInfo_eq_zero_of_ae_const μ Zc Yo hYo c hc
-  have hae : (fun ω ↦ (Zc ω, Xs ω)) =ᵐ[μ] fun ω ↦ (c, Xs ω) := by
-    filter_upwards [hc] with ω hω
-    rw [hω]
-  have hpair : mutualInfo μ (fun ω ↦ (Zc ω, Xs ω)) Yo = mutualInfo μ Xs Yo := by
-    rw [mutualInfo_congr_ae μ Yo hae]
-    exact mutualInfo_eq_of_leftInverse μ Xs Yo hXs hYo (f := fun a ↦ (c, a)) (g := Prod.snd)
-      (measurable_const.prodMk measurable_id) measurable_snd (fun _ ↦ rfl)
-  rw [hpair, hzero, zero_add] at hchain
-  exact hchain.symm
-
-end Constant
-
 section Slots
 
 variable {α β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
@@ -311,6 +263,23 @@ variable [MeasurableSpace V]
 section Corner
 
 variable [Nonempty β₂] [StandardBorelSpace β₂]
+
+lemma mul_uvInfo₂_le_uvInfo₂_uvMixLaw (ν σ : Measure (U × V × α × β₁ × β₂))
+    [IsProbabilityMeasure ν] [IsProbabilityMeasure σ] (lam : ℝ≥0∞) (hlam : lam ≤ 1) :
+    lam * uvInfo₂ ν ≤ uvInfo₂ (uvMixLaw ν σ lam) := by
+  have hU : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.1) := measurable_fst
+  have hY₂ : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.2.2) := by fun_prop
+  simp only [uvInfo₂, uvMixLaw]
+  rw [mutualInfo_map_comp _ Prod.snd measurable_snd _ hU _ hY₂,
+    mutualInfo_compProd_eq_add_lintegral _ _ hU hY₂ (tag := fun a ↦ a.1) measurable_fst
+      (by filter_upwards [uvMixKernel_ae_tag ν σ lam] with p hp using hp),
+    lintegral_boolLaw, inf_of_le_left hlam]
+  have hbr : mutualInfo (uvMixKernel ν σ true) (fun q ↦ q.1) (fun q ↦ q.2.2.2.2)
+      = uvInfo₂ ν := by
+    change mutualInfo (uvTagTrue ν) (fun q ↦ q.1) (fun q ↦ q.2.2.2.2) = uvInfo₂ ν
+    exact uvInfo₂_uvTagTrue ν
+  rw [hbr]
+  exact le_add_left le_self_add
 
 lemma mul_uvInfo₂_le_uvInfo₂_uvTimeShareLaw (ν : Measure (U × V × α × β₁ × β₂))
     [IsProbabilityMeasure ν] (u₀ : U) (lam : ℝ≥0∞) (hlam : lam ≤ 1) :
@@ -349,6 +318,37 @@ lemma condMutualInfo_uvTagTrue (ν : Measure (U × V × α × β₁ × β₂)) [
     (fun q ↦ q.1) (by fun_prop) (by fun_prop) measurable_fst
     (measurable_prodMk_left) measurable_snd (fun _ ↦ rfl)
     (mutualInfo_ne_top_of_fintype_right ν _ _ measurable_fst (by fun_prop))
+
+lemma mul_condMutualInfo_le_condMutualInfo_uvMixLaw (ν σ : Measure (U × V × α × β₁ × β₂))
+    [IsProbabilityMeasure ν] [IsProbabilityMeasure σ] (lam : ℝ≥0∞) (hlam : lam ≤ 1) :
+    lam * condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
+      ≤ condMutualInfo (uvMixLaw ν σ lam)
+          (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) := by
+  have hX : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.1) := by fun_prop
+  have hY₁ : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.2.1) := by fun_prop
+  have hU : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.1) := measurable_fst
+  have hmargfin : ∫⁻ t, mutualInfo (uvMixKernel ν σ t) (fun q ↦ q.1)
+      (fun q ↦ q.2.2.2.1) ∂(boolLaw lam) ≠ ∞ := by
+    rw [lintegral_boolLaw]
+    refine ENNReal.add_ne_top.mpr
+      ⟨ENNReal.mul_ne_top (ne_top_of_le_ne_top ENNReal.one_ne_top inf_le_right) ?_,
+        ENNReal.mul_ne_top (ne_top_of_le_ne_top ENNReal.one_ne_top tsub_le_self) ?_⟩
+    · change mutualInfo (uvTagTrue ν) _ _ ≠ ∞
+      exact mutualInfo_ne_top_of_fintype_right _ _ _ measurable_fst (by fun_prop)
+    · change mutualInfo (uvTagFalse σ) _ _ ≠ ∞
+      exact mutualInfo_ne_top_of_fintype_right _ _ _ measurable_fst (by fun_prop)
+  rw [condMutualInfo_map_comp' ((boolLaw lam) ⊗ₘ (uvMixKernel ν σ)) Prod.snd measurable_snd
+      (uvMixLaw ν σ lam) rfl _ hX _ hY₁ _ hU,
+    condMutualInfo_compProd_snd_eq_lintegral _ _ hX hY₁ hU (tag := fun a ↦ a.1) measurable_fst
+      (by filter_upwards [uvMixKernel_ae_tag ν σ lam] with p hp using hp)
+      (mutualInfo_ne_top_of_fintype_right _ _ _ measurable_fst (by fun_prop)) hmargfin,
+    lintegral_boolLaw, inf_of_le_left hlam]
+  have hbr : condMutualInfo (uvMixKernel ν σ true) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
+      (fun q ↦ q.1) = condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) := by
+    change condMutualInfo (uvTagTrue ν) _ _ _ = _
+    exact condMutualInfo_uvTagTrue ν
+  rw [hbr]
+  exact le_add_right le_rfl
 
 omit [StandardBorelSpace U] [Nonempty U] [Fintype β₁] [MeasurableSingletonClass β₁] in
 lemma condMutualInfo_uvTagConst (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]

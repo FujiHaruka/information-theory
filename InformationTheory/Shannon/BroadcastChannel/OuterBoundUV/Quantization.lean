@@ -1,6 +1,6 @@
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Assembly
 import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule
-import InformationTheory.Shannon.MaxEntropy.Basic
+import InformationTheory.Shannon.MutualInfoFiniteRange
 
 /-!
 # Broadcast channel — truncating the countable auxiliary of the UV outer region
@@ -33,9 +33,6 @@ finite output alphabet caps it by `log |β₂|`.
 * `tendsto_uvQuantizeSlack` — the slack vanishes as the truncation level grows.
 * `uvInfo₂_ne_top` and `uvInfoSum₂_ne_top` — the two slots are finite even over a countable
   auxiliary, which is what lets the estimates be read in the reals.
-* `mutualInfo_ne_top_of_fintype_right` and `mutualInfo_le_ofReal_log_card` — a finite
-  alphabet on one side alone bounds the mutual information, which is what the countable
-  auxiliary needs.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -47,45 +44,6 @@ open scoped ENNReal Topology
 universe u
 
 /-! ## Finiteness and monotonicity of the information slots -/
-
-/-! ### Mutual information against a finite alphabet -/
-
-section FiniteRange
-
-variable {Ω : Type*} [MeasurableSpace Ω]
-variable {A : Type*} [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
-variable {B : Type*} [Fintype B] [Nonempty B] [MeasurableSpace B] [MeasurableSingletonClass B]
-
-theorem mutualInfo_ne_top_of_fintype_right (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → A) (Yo : Ω → B) (hXs : Measurable Xs) (hYo : Measurable Yo) :
-    mutualInfo μ Xs Yo ≠ ∞ :=
-  ne_top_of_le_ne_top (mutualInfo_ne_top μ Yo Yo hYo hYo)
-    (mutualInfo_le_of_markov μ Xs Yo Yo hXs hYo hYo
-      (isMarkovChain_comp_conditioner_right μ Xs Yo hXs hYo measurable_id))
-
-theorem mutualInfo_le_ofReal_log_card (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → A) (Yo : Ω → B) (hXs : Measurable Xs) (hYo : Measurable Yo) :
-    mutualInfo μ Xs Yo ≤ ENNReal.ofReal (Real.log (Fintype.card B)) := by
-  have htoReal : (mutualInfo μ Xs Yo).toReal ≤ Real.log (Fintype.card B) := by
-    rw [mutualInfo_comm μ Xs Yo hXs hYo, mutualInfo_eq_entropy_sub_condEntropy μ Yo Xs hYo hXs]
-    have hnn : 0 ≤ InformationTheory.MeasureFano.condEntropy μ Yo Xs := condEntropy_nonneg μ Yo Xs
-    have hcard : entropy μ Yo ≤ Real.log (Fintype.card B) :=
-      InformationTheory.Shannon.MaxEntropy.entropy_le_log_card μ Yo hYo
-    linarith
-  calc mutualInfo μ Xs Yo = ENNReal.ofReal (mutualInfo μ Xs Yo).toReal :=
-        (ENNReal.ofReal_toReal (mutualInfo_ne_top_of_fintype_right μ Xs Yo hXs hYo)).symm
-    _ ≤ ENNReal.ofReal (Real.log (Fintype.card B)) := ENNReal.ofReal_le_ofReal htoReal
-
-omit [StandardBorelSpace A] [Nonempty A] [Fintype B] [Nonempty B]
-  [MeasurableSingletonClass B] in
-theorem mutualInfo_eq_zero_of_ae_const (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → A) (Yo : Ω → B) (hYo : Measurable Yo) (c : A) (hc : Xs =ᵐ[μ] fun _ ↦ c) :
-    mutualInfo μ Xs Yo = 0 := by
-  rw [mutualInfo_congr_ae μ Yo hc]
-  exact (mutualInfo_eq_zero_iff_indep μ (fun _ ↦ c) Yo measurable_const hYo).2
-    (indepFun_const_left c Yo)
-
-end FiniteRange
 
 variable {α : Type u} {β₁ β₂ : Type*}
 variable [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]

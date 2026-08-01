@@ -189,99 +189,6 @@ end FullSupport
 
 end Perturb
 
-/-! ## The entropy of a clamped Bernoulli tag -/
-
-lemma boolLaw_real_true {lam : ℝ≥0∞} (hlam : lam ≤ 1) :
-    (boolLaw lam).real {true} = lam.toReal := by
-  rw [Measure.real, boolLaw]
-  simp [inf_of_le_left hlam]
-
-lemma boolLaw_real_false {lam : ℝ≥0∞} (hlam : lam ≤ 1) :
-    (boolLaw lam).real {false} = 1 - lam.toReal := by
-  rw [Measure.real, boolLaw]
-  simp [ENNReal.toReal_sub_of_le hlam ENNReal.one_ne_top]
-
-lemma entropy_eq_binEntropy_of_map_boolLaw {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω)
-    (T : Ω → Bool) {lam : ℝ≥0∞} (hlam : lam ≤ 1) (h : μ.map T = boolLaw lam) :
-    entropy μ T = Real.binEntropy lam.toReal := by
-  rw [entropy, h, Fintype.sum_bool, boolLaw_real_true hlam, boolLaw_real_false hlam,
-    Real.binEntropy_eq_negMulLog_add_negMulLog_one_sub]
-
-/-! ## The two slots of the tagged mixture -/
-
-section MixSlots
-
-variable {α β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
-variable {U V : Type*} [MeasurableSpace U] [StandardBorelSpace U] [Nonempty U]
-variable [MeasurableSpace V]
-
-/-! ### The receiver-2 corner -/
-
-section Corner
-
-variable [Nonempty β₂] [StandardBorelSpace β₂]
-
-lemma mul_uvInfo₂_le_uvInfo₂_uvMixLaw (ν σ : Measure (U × V × α × β₁ × β₂))
-    [IsProbabilityMeasure ν] [IsProbabilityMeasure σ] (lam : ℝ≥0∞) (hlam : lam ≤ 1) :
-    lam * uvInfo₂ ν ≤ uvInfo₂ (uvMixLaw ν σ lam) := by
-  have hU : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.1) := measurable_fst
-  have hY₂ : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.2.2) := by fun_prop
-  simp only [uvInfo₂, uvMixLaw]
-  rw [mutualInfo_map_comp _ Prod.snd measurable_snd _ hU _ hY₂,
-    mutualInfo_compProd_eq_add_lintegral _ _ hU hY₂ (tag := fun a ↦ a.1) measurable_fst
-      (by filter_upwards [uvMixKernel_ae_tag ν σ lam] with p hp using hp),
-    lintegral_boolLaw, inf_of_le_left hlam]
-  have hbr : mutualInfo (uvMixKernel ν σ true) (fun q ↦ q.1) (fun q ↦ q.2.2.2.2)
-      = uvInfo₂ ν := by
-    change mutualInfo (uvTagTrue ν) (fun q ↦ q.1) (fun q ↦ q.2.2.2.2) = uvInfo₂ ν
-    exact uvInfo₂_uvTagTrue ν
-  rw [hbr]
-  exact le_add_left le_self_add
-
-end Corner
-
-/-! ### The satellite conditional information -/
-
-section Satellite
-
-variable [Nonempty α] [StandardBorelSpace α]
-variable [Fintype β₁] [Nonempty β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁]
-
-lemma mul_condMutualInfo_le_condMutualInfo_uvMixLaw (ν σ : Measure (U × V × α × β₁ × β₂))
-    [IsProbabilityMeasure ν] [IsProbabilityMeasure σ] (lam : ℝ≥0∞) (hlam : lam ≤ 1) :
-    lam * condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
-      ≤ condMutualInfo (uvMixLaw ν σ lam)
-          (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) := by
-  have hX : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.1) := by fun_prop
-  have hY₁ : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.2.1) := by fun_prop
-  have hU : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.1) := measurable_fst
-  have hmargfin : ∫⁻ t, mutualInfo (uvMixKernel ν σ t) (fun q ↦ q.1)
-      (fun q ↦ q.2.2.2.1) ∂(boolLaw lam) ≠ ∞ := by
-    rw [lintegral_boolLaw]
-    refine ENNReal.add_ne_top.mpr
-      ⟨ENNReal.mul_ne_top (ne_top_of_le_ne_top ENNReal.one_ne_top inf_le_right) ?_,
-        ENNReal.mul_ne_top (ne_top_of_le_ne_top ENNReal.one_ne_top tsub_le_self) ?_⟩
-    · change mutualInfo (uvTagTrue ν) _ _ ≠ ∞
-      exact mutualInfo_ne_top_of_fintype_right _ _ _ measurable_fst (by fun_prop)
-    · change mutualInfo (uvTagFalse σ) _ _ ≠ ∞
-      exact mutualInfo_ne_top_of_fintype_right _ _ _ measurable_fst (by fun_prop)
-  rw [condMutualInfo_map_comp' ((boolLaw lam) ⊗ₘ (uvMixKernel ν σ)) Prod.snd measurable_snd
-      (uvMixLaw ν σ lam) rfl _ hX _ hY₁ _ hU,
-    condMutualInfo_compProd_snd_eq_lintegral _ _ hX hY₁ hU (tag := fun a ↦ a.1) measurable_fst
-      (by filter_upwards [uvMixKernel_ae_tag ν σ lam] with p hp using hp)
-      (mutualInfo_ne_top_of_fintype_right _ _ _ measurable_fst (by fun_prop)) hmargfin,
-    lintegral_boolLaw, inf_of_le_left hlam]
-  have hbr : condMutualInfo (uvMixKernel ν σ true) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
-      (fun q ↦ q.1) = condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) := by
-    change condMutualInfo (uvTagTrue ν) _ _ _ = _
-    exact condMutualInfo_uvTagTrue ν
-  rw [hbr]
-  exact le_add_right le_rfl
-
-end Satellite
-
-end MixSlots
-
 /-! ## Forgetting the tag -/
 
 section ForgetSatellite
@@ -423,25 +330,6 @@ lemma mul_uvInfo₂_sub_binEntropy_le_uvInfo₂_uvPerturbLaw (W : BCChannel α �
   linarith
 
 end PerturbCorner
-
-/-! ## Choosing the perturbation weight -/
-
-lemma exists_perturb_weight {A B δ : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B) (hδ : 0 < δ) :
-    ∃ ε : ℝ, 0 < ε ∧ ε < 1 ∧ ε * A + Real.binEntropy ε < δ ∧ ε * B + Real.binEntropy ε < δ := by
-  have hcont : Continuous (fun ε : ℝ ↦ ε * (A + B) + Real.binEntropy ε) :=
-    (continuous_id.mul continuous_const).add Real.binEntropy_continuous
-  have htend : Filter.Tendsto (fun ε : ℝ ↦ ε * (A + B) + Real.binEntropy ε) (nhds 0) (nhds 0) := by
-    have h0 : (0 : ℝ) * (A + B) + Real.binEntropy 0 = 0 := by simp
-    simpa [h0] using hcont.tendsto 0
-  have hev₁ : ∀ᶠ ε in nhdsWithin (0 : ℝ) (Set.Ioi 0), ε * (A + B) + Real.binEntropy ε < δ :=
-    (htend.eventually (gt_mem_nhds hδ)).filter_mono nhdsWithin_le_nhds
-  have hev₂ : ∀ᶠ ε in nhdsWithin (0 : ℝ) (Set.Ioi 0), ε ∈ Set.Ioo (0 : ℝ) 1 :=
-    Ioo_mem_nhdsGT one_pos
-  obtain ⟨ε, hlt, hmem⟩ := (hev₁.and hev₂).exists
-  have hb : 0 ≤ Real.binEntropy ε := Real.binEntropy_nonneg hmem.1.le hmem.2.le
-  refine ⟨ε, hmem.1, hmem.2, ?_, ?_⟩
-  · nlinarith [mul_nonneg hmem.1.le hB]
-  · nlinarith [mul_nonneg hmem.1.le hA]
 
 /-! ## The full-support pair of a channel law -/
 
