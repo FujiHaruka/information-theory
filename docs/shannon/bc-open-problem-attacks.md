@@ -16,7 +16,7 @@
 
 **20 leg** (L0–L20 の枠割りは親 plan §6.2 が SoT)。延長判断は L20 完了時点。
 **固定枠**: L0 文献 / L1 probe 基盤 / L4・L9・L14 棚卸し / **L19 収穫・L20 記録 (予約済、探索に流用しない)**。
-**現在**: leg 2 / 20 (**L1 完了** 2026-08-01 — 次は L2)。
+**現在**: leg 3 / 20 (**L2 完了** 2026-08-01 — 次は L3)。
 
 ## Attack 一覧
 
@@ -24,8 +24,11 @@
 |---|---|---|---|---|---|
 | `lit-landscape` | — | `harvested` | **L0** | **完了**。F1–F8 + 外部ノート V6–V10 を原論文で verbatim 確認し `bc-facts.md` に 13 行。うち **F3 REFUTED** (UV は最良既知 outer でない) / **F7 は plan より強い** (`Δ₁₈ᴴ`) / **F4・F6・F8 は PARTIAL** (帰属・内容・出典の誤り) / 外部ノートの文献層は生存 (V9 は日付まで一致) | 訂正済ランドスケープ (親 plan §1.1 / §1.3) + 下記の子 attack 6 本 |
 | `probe-harness` | — | `harvested` | **L1** | **完了**。基盤 `bc_probe.py` (情報量式の記号展開 / 構造制約つき掃引 / 補助変数上の最大化、selftest 18 項目) + 実行可能 probe 2 本。使い方は親 plan §2.1。テストケース (a) 外部ノート V1–V3 は**3 本とも TRUE**、うち V1 は係数相殺による**証明** (掃引ではない)、V2 は**強化つき** (無仮定の (5) の残差が正確に `I(A;B) − I(Y₁;Z₂∣A,B)` ⟹ ノートの 2 仮定はちょうど必要十分)。⚠ **ノートへの訂正 1 件**: V3 の数値例は**ノート自身の結論には不要** — 残差が相互情報量 2 本の和ゆえ設定下で `Φ ≥ Ψ` は恒真で、例が示すのは「残差が恒等的に 0 ではない」ことだけ。逐語 → [`bc-facts.md`](bc-facts.md) §数値 probe の判定 (L1) | 基盤そのもの (以後の全 attack の入力) + idea `residual-as-slack-diagnostic` の裏づけ (残差の**閉じた式**が確定) |
-| `selftensor-reduction` | E+D | `todo` | — | **L2 = 本 relay の分岐点**。外部ノート V4 / V5 — multi-letter 表現 (定理1) と support function 経由の還元 (3) が我々の定義で生きているか。**+ L0 が足した項目**: support function `h_n^T(θ)` の加法性が既知予想の双対汎関数 `F(T,{a_x})` の加法性と同一命題か (どちらの文献も述べていない) | — |
-| `selftensor-counterexample` | E | `todo` | — | 同一チャネルの自己テンソルで `h_2 > 2 h_1` を数値探索 (外部ノート (11))。これが 1 つ出れば `C(T) ⊋ M(T)` が直ちに従う。**L2 が生きたら着手**。⚠ 還元自体は既知ゆえ、軸 E で新規性を主張できるのはここ | — |
+| `selftensor-reduction` | E+D | `harvested` | **L2** | **完了**。4 判定。**V4 = 条件つき生存** — 定理1 の逆側は我々の `bcCapacityRegion` の上で成立し、しかも**共通メッセージ層は不要** (私信のみの定義ゆえ)。ただし**達成側は在庫では閉じない** (`marton_region_subset_capacity` の full-support 仮説を決定論的符号器が満たさない)。**V5 = 還元 (3) は support function 経由ゆえ*閉凸包*の命題**。`martonRegionUnion` は既に `closure` 済で未証明なのは凸性だけ ⟹ 「closure を取れば入る」退路は最初から無く、劣化 BSC 対で測ったギャップは凸性ギャップではなく**本物の support function ギャップ** (`λ* = 0.2622134001` で `+2.23e-03`)。**V5-b = (11) は我々の 2 補助変数 `def` の上では自明に充足** — 原因は非加法性ではなく共通補助 `U₀` の欠落なので**保証された偽陽性**。**新項目 = `h_n^T(θ)` 加法性と `F(T,{a_x})` 加法性は別命題** (定義域・汎関数の型・共通補助の扱いの 3 点で食い違い、どちらも他方を構文的に含まない)。逐語 → [`bc-facts.md`](bc-facts.md) §定義照合と数値 probe の判定 (L2) | `bc-marton-convexhull-check.py` + 下記の子 attack 3 本 (`marton-3aux-probe` / `support-vs-dual-additivity` / `u0-necessity-quantified`) + **既存の負の判定行の射程拡大** (union までの距離 → 閉凸包までの距離) |
+| `selftensor-counterexample` | E | `todo` | — | ⚠ **ブロッキング前提**: **我々の `martonRegionUnion` (2 補助変数) の上で走らせてはならない** (V5-b: 保証された偽陽性)。**3 補助変数版 `M(T)` を probe 側に用意すること = `marton-3aux-probe` が前提**。その上での中身 = 同一チャネルの自己テンソルで `h_2 > 2 h_1` を数値探索 (外部ノート (11))。これが 1 つ出れば `C(T) ⊋ M(T)` が直ちに従う。⚠ 還元自体は既知ゆえ、軸 E で新規性を主張できるのはここ | — |
+| `marton-3aux-probe` | E | `todo` | — | **V5-b から起票** (§5-9)。3 補助変数 Marton 領域 (共通補助 `U₀` つき、[`bc-facts.md`](bc-facts.md) F2 の Jog–Nair Bound 1 の形) を**数値 probe 側に**用意する。`selftensor-counterexample` のブロッキング前提。⚠ **Lean 側の新規実装は層 3 でスコープ外** (親 plan §2.1) — `bc_probe.py` の消費者として probe 側に閉じること | — |
+| `support-vs-dual-additivity` | E | `todo` | — | **新項目の判定「別命題」から起票** (§5-9)。`h_n^T(θ)` の加法性と `F(T,{a_x})` の加法性を繋ぐのに要る 2 段のうち、(b) `{a_x}` ↔ `θ` の Legendre / 上凹包の段を明示的に書き下せるか ((a) は `M` の閉凸性)。**親 plan §4 軸 E の新規性 (ii) の実体**で、どちらの文献も述べていない | — |
+| `u0-necessity-quantified` | A+E | `todo` | — | **V5 の副産物から起票** (§5-9)。2 補助変数 Marton union の閉凸包が劣化 BSC 対で**時分割領域そのものに潰れる** (`S(λ)` が退化コーナー 2 つの上包絡と全 `λ` で一致、最大偏差 `+3.331e-16`)。⚠ 2 元入力なので F6 (randomized time-division が Marton の sum rate を達成) と整合し、**非自明になるのは `\|X\| ≥ 3` から**。潰れないチャネルを 1 つ見つければ「共通補助 `U₀` 無しでも時分割より真に強い」の実例になり、`U₀` の必要性の定量になる | — |
 | `weakest-hyp-morecapable` | A | `todo` | — | `bc_moreCapable_uv_subset_superposition` の実使用仮説を最弱化 (L3) | — |
 | `outer-slack-localize` | B | **`killed`** | **L0** | **死因 `known-result`** — 「UV の証明で捨てた項を拾って新しい outer を作る」は Gohari–Nair Theorem 7 (auxiliary-receiver approach、IEEE TIT 68(2):701–736, 2022) が既に実行済で、その導出法が逐語で「UV 導出で捨てられる項を最小化する」もの (F3)。着手前に文献で死亡 | 子 attack 2 本 (`outer-slack-vs-thm7` / `jbound-optimality`) |
 | `outer-slack-vs-thm7` | B | `todo` | — | **`outer-slack-localize` の死因から起票** (親 plan §5-9)。先に Theorem 7 の改善項リストを抽出 → `bc_uv_converse` / `bc_capacity_subset_uv` の不等号ステップを全列挙して対応付ける。**対応が付かないステップ = 我々固有の緩み**。⚠ 順序を逆にすると既知の再発見 | — |
@@ -70,8 +73,8 @@
 | A | 0 | — |
 | B | 0 | L0 は軸に紐づかない文献 leg。**死亡も確定事実**なのでゼロ進捗ではない (親 plan §5-1) |
 | C | 0 | — |
-| D | 0 | — |
-| E | 0 | L1 で確定事実 (V1–V3)。ただし**軸 E の生死を決めるのは V4/V5** で、それは L2 |
+| D | 0 | L2 で multi-letter 表現が我々の定義で**逆側だけ生きる**と確定 (`multiletter-subject` の入力)。⚠ ただし L2 は軸 E の leg なので**本軸のカウントはリセットしない** (下記の二重計上の注意) |
+| E | 0 | L2 で V4 / V5 / 新項目が決着。⚠ ただし**決着の中身は軸 E 内の路線 1 本 (`selftensor-counterexample`) を条件付きで塞ぐもの** — 前提工事 `marton-3aux-probe` を挟むまで動かせない |
 | F | 0 | L1 で主語が変わったが、**leg は消費していない** (下記の二重計上の注意) |
 | G | 0 | L0 で新設 (親 plan §4 軸 G)。L1 (b) で確定事実 |
 
@@ -81,3 +84,5 @@
 ⚠ **二重計上の注意**: L1 の (b) は軸 G の leg で得た事実だが、副産物として軸 F の主語を変えた。
 **進捗として数えるのは軸 G の側だけ**にする — 同じ 1 事実で 2 つの軸のカウントをリセットすると、
 round-robin (§5-5) が「回っているように見えて回っていない」状態を検出できなくなる。
+**L2 も同じ扱い**: multi-letter 表現の確定は軸 D の入力になるが、L2 は軸 E の leg なので
+**数えるのは軸 E の側だけ**にする。
