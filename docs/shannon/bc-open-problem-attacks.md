@@ -12,12 +12,19 @@
 > ⚠ `killed` の行は**削除しない**。plan hygiene の「決着済は削除」の例外 — ここでは死因そのものが
 > 資産で、削除すると長期 relay が同じ壁に再び当たる。
 
+## Leg 予算
+
+**20 leg** (L0–L20 の枠割りは親 plan §6.2 が SoT)。延長判断は L20 完了時点。
+**固定枠**: L0 文献 / L1 probe 基盤 / L4・L9・L14 棚卸し / **L19 収穫・L20 記録 (予約済、探索に流用しない)**。
+**現在**: leg 0 / 20 (未着手)。
+
 ## Attack 一覧
 
 | slug | 軸 | 状態 | 直近 leg | 死因 / 現況 | 残った副産物 |
 |---|---|---|---|---|---|
-| `lit-landscape` | — | `todo` | — | 親 plan §1.1 の F1–F8 を原論文で verbatim 確認 (Leg 0) | — |
-| `weakest-hyp-morecapable` | A | `todo` | — | `bc_moreCapable_uv_subset_superposition` の実使用仮説を最弱化 (Leg 1) | — |
+| `lit-landscape` | — | `todo` | — | 親 plan §1.1 の F1–F8 を原論文で verbatim 確認 (L0) | — |
+| `probe-harness` | — | `todo` | — | `bc-marton-union-gap-check.py` を候補命題差し替え可能な形へ一般化 (L1)。kill-first の道具 | — |
+| `weakest-hyp-morecapable` | A | `todo` | — | `bc_moreCapable_uv_subset_superposition` の実使用仮説を最弱化 (L2) | — |
 | `outer-slack-localize` | B | `todo` | — | `bc_capacity_subset_uv` の不等号ステップを全列挙し等号成立条件を書き出す | — |
 | `jog-nair-inequality` | C | `todo` | — | BSSC の情報不等式を Lean で述べる (T1) | — |
 | `multiletter-subject` | D | `todo` | — | multi-letter 表現の Lean 構成 + 「単一文字特徴付けを持つ」の定義候補 (Leg 2) | — |
