@@ -4,6 +4,7 @@ import InformationTheory.Shannon.Bridge
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.Entropy
+import InformationTheory.Shannon.MaxEntropy.Basic
 import InformationTheory.Shannon.Pi
 import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 
@@ -22,7 +23,6 @@ log Mx+log My ≥ H(X, Y)    - δ(Pe)
 
 ## Main statements
 
-* `entropy_le_log_card` — `H(W) ≤ log |α|` for any `μ`, via Jensen on `negMulLog`.
 * `fano_inequality_with_side_info` — Fano with a paired conditioner `(Yo, Si)`.
 * `entropy_ge_condEntropy` — conditioning never increases entropy, `H(W | Y) ≤ H(W)`.
 * `slepian_wolf_converse_X` / `_Y` / `_sum` — the three rate lower bounds.
@@ -32,95 +32,6 @@ namespace InformationTheory.Shannon
 
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal
-
-/-! ## Entropy is bounded by the log of the alphabet size -/
-
-/-- `H(W) ≤ log |α|` for any `μ`. -/
-@[entry_point]
-theorem entropy_le_log_card
-    {Ω : Type*} [MeasurableSpace Ω]
-    {α : Type*} [Fintype α] [Nonempty α]
-      [MeasurableSpace α] [MeasurableSingletonClass α]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → α) (hXs : Measurable Xs) :
-    entropy μ Xs ≤ Real.log (Fintype.card α) := by
-  classical
-  haveI : IsProbabilityMeasure (μ.map Xs) :=
-    Measure.isProbabilityMeasure_map hXs.aemeasurable
-  set N : ℕ := Fintype.card α with hN_def
-  have hN_pos : 0 < N := Fintype.card_pos
-  have hN_pos_R : (0 : ℝ) < N := by exact_mod_cast hN_pos
-  have hN_ne : (N : ℝ) ≠ 0 := hN_pos_R.ne'
-  -- Sum-of-pmf = 1 over the full universe.
-  have h_sum_one :
-      ∑ x : α, (μ.map Xs).real ({x} : Set α) = 1 := by
-    rw [show (∑ x : α, (μ.map Xs).real ({x} : Set α))
-          = ∑ x ∈ (Finset.univ : Finset α), (μ.map Xs).real ({x} : Set α) from rfl,
-        sum_measureReal_singleton]
-    rw [show ((Finset.univ : Finset α) : Set α) = Set.univ from Finset.coe_univ]
-    simp [measureReal_def, measure_univ]
-  -- Jensen on `Real.concaveOn_negMulLog` with weights `1 / N` on the full Finset.univ.
-  have h_each_in : ∀ x ∈ (Finset.univ : Finset α),
-      (μ.map Xs).real ({x} : Set α) ∈ Set.Ici (0 : ℝ) :=
-    fun x _ ↦ measureReal_nonneg
-  have h_one_div_pos : (0 : ℝ) ≤ 1 / N := by
-    rw [one_div]; exact inv_nonneg.mpr hN_pos_R.le
-  have h_weights_sum :
-      ∑ _x ∈ (Finset.univ : Finset α), ((1 : ℝ) / N) = 1 := by
-    rw [Finset.sum_const, nsmul_eq_mul]
-    rw [show ((Finset.univ : Finset α).card : ℝ) = (N : ℝ) by
-      rw [Finset.card_univ, hN_def]]
-    field_simp
-  have h_jensen :=
-    ConcaveOn.le_map_sum (𝕜 := ℝ) (t := (Finset.univ : Finset α))
-      (w := fun _ ↦ 1 / (N : ℝ))
-      (p := fun x ↦ (μ.map Xs).real ({x} : Set α))
-      Real.concaveOn_negMulLog
-      (fun _ _ ↦ h_one_div_pos) h_weights_sum h_each_in
-  simp only [smul_eq_mul] at h_jensen
-  -- LHS of Jensen: ∑ (1/N) • negMulLog (p x) ≥ ... — multiply by N to recover ∑ negMulLog.
-  have h_card_eq : ((Finset.univ : Finset α).card : ℝ) = (N : ℝ) := by
-    rw [Finset.card_univ, hN_def]
-  have h_lhs_mul :
-      (N : ℝ) * (∑ x ∈ (Finset.univ : Finset α),
-            (1 / (N : ℝ)) * Real.negMulLog ((μ.map Xs).real ({x} : Set α)))
-        = ∑ x ∈ (Finset.univ : Finset α),
-              Real.negMulLog ((μ.map Xs).real ({x} : Set α)) := by
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun x _ ↦ ?_
-    field_simp
-  -- mean = 1/N: ∑ (1/N) * p x = (1/N) * ∑ p x = 1/N.
-  have h_mean :
-      (∑ x ∈ (Finset.univ : Finset α),
-          (1 / (N : ℝ)) * (μ.map Xs).real ({x} : Set α))
-        = 1 / (N : ℝ) := by
-    rw [← Finset.mul_sum]
-    rw [show (∑ x ∈ (Finset.univ : Finset α), (μ.map Xs).real ({x} : Set α))
-          = ∑ x : α, (μ.map Xs).real ({x} : Set α) from rfl]
-    rw [h_sum_one, mul_one]
-  rw [h_mean] at h_jensen
-  -- negMulLog (1/N) = log N / N.
-  have h_negMulLog_inv :
-      Real.negMulLog ((1 : ℝ) / N) = Real.log N / N := by
-    rw [Real.negMulLog, Real.log_div one_ne_zero hN_ne, Real.log_one]
-    ring
-  -- Final assembly.
-  unfold entropy
-  rw [show (∑ x : α, Real.negMulLog ((μ.map Xs).real ({x} : Set α)))
-        = ∑ x ∈ (Finset.univ : Finset α),
-            Real.negMulLog ((μ.map Xs).real ({x} : Set α)) from rfl]
-  -- h_jensen : ∑ (1/N) • negMulLog (p x) ≤ negMulLog (1/N)
-  -- Multiply both sides by N (≥ 0).
-  have h_mul : (N : ℝ) * (∑ x ∈ (Finset.univ : Finset α),
-            (1 / (N : ℝ)) * Real.negMulLog ((μ.map Xs).real ({x} : Set α)))
-      ≤ (N : ℝ) * Real.negMulLog ((1 : ℝ) / N) :=
-    mul_le_mul_of_nonneg_left h_jensen hN_pos_R.le
-  rw [h_lhs_mul, h_negMulLog_inv] at h_mul
-  have h_simp : (N : ℝ) * (Real.log N / N) = Real.log N := by
-    rw [mul_div_assoc']
-    field_simp
-  rw [h_simp] at h_mul
-  exact h_mul
 
 /-! ## Fano with side information -/
 
@@ -173,7 +84,7 @@ theorem entropy_ge_condEntropy
 
 /-! ## The three rate lower bounds
 
-Each bound chains `entropy_le_log_card`, `entropy_ge_condEntropy`, a
+Each bound chains `MaxEntropy.entropy_le_log_card`, `entropy_ge_condEntropy`, a
 conditional mutual-information bridge, and `fano_inequality_with_side_info`.
 The Fano penalty `δ(Pe)` is written inline as
 `Real.binEntropy Pe + Pe · Real.log (|·| - 1)`, with the alphabet `|α|` for the
@@ -222,9 +133,9 @@ theorem slepian_wolf_converse_X
   -- Mx as positive cardinal: `Fintype.card (Fin Mx) = Mx`.
   have hcard_Fin : (Fintype.card (Fin Mx) : ℝ) = (Mx : ℝ) := by
     rw [Fintype.card_fin]
-  -- Step A: log Mx ≥ H(EX) by entropy_le_log_card.
+  -- Step A: log Mx ≥ H(EX) by MaxEntropy.entropy_le_log_card.
   have h_step_A : entropy μ EX ≤ Real.log (Mx : ℝ) := by
-    have := entropy_le_log_card μ EX hEX
+    have := MaxEntropy.entropy_le_log_card μ EX hEX
     rwa [hcard_Fin] at this
   -- Step B: H(EX) ≥ H(EX | Ys) by entropy_ge_condEntropy.
   have h_step_B :
@@ -298,7 +209,7 @@ theorem slepian_wolf_converse_Y
   have hcard_Fin : (Fintype.card (Fin My) : ℝ) = (My : ℝ) := by
     rw [Fintype.card_fin]
   have h_step_A : entropy μ EY ≤ Real.log (My : ℝ) := by
-    have := entropy_le_log_card μ EY hEY
+    have := MaxEntropy.entropy_le_log_card μ EY hEY
     rwa [hcard_Fin] at this
   have h_step_B :
       InformationTheory.MeasureFano.condEntropy μ EY Xs ≤ entropy μ EY :=
@@ -380,10 +291,10 @@ theorem slepian_wolf_converse_sum
   have h_log_split : Real.log (Mx : ℝ) + Real.log (My : ℝ)
       = Real.log ((Mx : ℝ) * My) := by
     rw [Real.log_mul hMx_pos_R.ne' hMy_pos_R.ne']
-  -- Step A: log (Mx * My) ≥ H(E) by entropy_le_log_card.
+  -- Step A: log (Mx * My) ≥ H(E) by MaxEntropy.entropy_le_log_card.
   have h_step_A :
       entropy μ E ≤ Real.log ((Mx : ℝ) * (My : ℝ)) := by
-    have := entropy_le_log_card μ E hE
+    have := MaxEntropy.entropy_le_log_card μ E hE
     rwa [hcard_prod_Fin] at this
   -- Step B: H(E) ≥ H(Z) - H(Z | E) via bridge + nonneg mutualInfo.
   have h_bridge :

@@ -149,7 +149,7 @@ variable {V₁ V₂ α β₁ β₂ : Type*}
 carrying a law over finite auxiliary alphabets to the natural-number auxiliaries over which the
 union defining `bcOuterRegionUV` is taken.  `Encodable.encode` is the same map up to the arbitrary
 choice of an ordering, but a finite alphabet carries no `Encodable` instance, and its decoder is
-`Option`-valued where the slot lemmas of the re-encoding take a total left inverse. -/
+`Option`-valued whereas the slot lemmas of the re-encoding take a total left inverse. -/
 noncomputable def natIndex (X : Type*) [Fintype X] (x : X) : ℕ := Fintype.equivFin X x
 
 lemma natIndex_injective (X : Type*) [Fintype X] : Function.Injective (natIndex X) :=

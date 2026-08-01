@@ -171,7 +171,7 @@ lemma mutualInfo_block_le_log_card
   have hXh_meas : Measurable Xh := hdecoder.comp hW_meas
   -- Step 1: entropy μ W ≤ log M.
   have h_step1 : entropy μ W ≤ Real.log (Fintype.card (Fin M)) :=
-    InformationTheory.Shannon.MaxEntropy.entropy_le_log_card μ W hW_meas
+    MaxEntropy.entropy_le_log_card μ W hW_meas
   -- Step 2: (mutualInfo μ Xs_block W).toReal ≤ entropy μ W via Bridge.
   have h_bridge :
       (mutualInfo μ W Xs_block).toReal

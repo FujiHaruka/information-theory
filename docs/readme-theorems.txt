@@ -78,7 +78,7 @@ chernoff_converse | Chernoff information error exponent (Bayesian, converse)
 tvNorm_le_sqrt_klDiv | Pinsker
 
 @ 12 | Maximum entropy
-entropy_le_log_card @ MaxEntropy/Basic
+entropy_le_log_card
 expFamily_maximizes_entropy_of_KKT
 
 @ 13 | Universal coding (LZ78)

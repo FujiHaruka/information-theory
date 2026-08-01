@@ -130,10 +130,10 @@ theorem capacity_bddAbove (W : Channel α β) [IsMarkovKernel W] :
   -- H(X) ≤ log |α|.
   have hHX_le : entropy (jointDistribution (pmfToMeasure p) W) Prod.fst
       ≤ Real.log (Fintype.card α) :=
-    entropy_le_log_card _ Prod.fst measurable_fst
+    MaxEntropy.entropy_le_log_card _ Prod.fst measurable_fst
   have hHY_le : entropy (jointDistribution (pmfToMeasure p) W) Prod.snd
       ≤ Real.log (Fintype.card β) :=
-    entropy_le_log_card _ Prod.snd measurable_snd
+    MaxEntropy.entropy_le_log_card _ Prod.snd measurable_snd
   -- H(X,Y) ≥ 0.
   have hHXY_nn : 0 ≤ entropy (jointDistribution (pmfToMeasure p) W) id :=
     entropy_nonneg _ id measurable_id

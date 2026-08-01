@@ -13,7 +13,7 @@ The single-shot form of the rate-distortion converse (Cover–Thomas 10.4):
 `R(D̃) ≤ log M` for the achieved distortion `D̃ := 𝔼 d(X, decoder(encoder X))`,
 obtained from the chain
 ```
-Real.log M ≥ entropy μ W                    -- entropy_le_log_card
+Real.log M ≥ entropy μ W                    -- MaxEntropy.entropy_le_log_card
           ≥ (mutualInfo μ X W).toReal       -- I = H - H|... ≤ H (condEntropy nonneg)
           ≥ (mutualInfo μ X X̂).toReal       -- DPI: X̂ = decoder ∘ W
           ≥ (rateDistortionFunction P_X D̃).toReal
@@ -161,7 +161,7 @@ theorem rate_distortion_converse_single_shot
   have hXh_meas : Measurable Xh := hdecoder.comp hW_meas
   -- ## Step 1: entropy μ W ≤ Real.log |M|.
   have h_step1 : entropy μ W ≤ Real.log (Fintype.card M) :=
-    InformationTheory.Shannon.MaxEntropy.entropy_le_log_card μ W hW_meas
+    MaxEntropy.entropy_le_log_card μ W hW_meas
   -- ## Step 2: (mutualInfo μ X W).toReal ≤ entropy μ W.
   -- Use Bridge: I(W; X) = H(W) - H(W|X) ≤ H(W). Then mutualInfo_comm.
   have h_bridge :

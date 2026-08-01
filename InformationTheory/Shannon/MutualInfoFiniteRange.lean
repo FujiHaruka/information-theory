@@ -52,7 +52,7 @@ theorem mutualInfo_le_ofReal_log_card (μ : Measure Ω) [IsProbabilityMeasure μ
     rw [mutualInfo_comm μ Xs Yo hXs hYo, mutualInfo_eq_entropy_sub_condEntropy μ Yo Xs hYo hXs]
     have hnn : 0 ≤ InformationTheory.MeasureFano.condEntropy μ Yo Xs := condEntropy_nonneg μ Yo Xs
     have hcard : entropy μ Yo ≤ Real.log (Fintype.card B) :=
-      InformationTheory.Shannon.MaxEntropy.entropy_le_log_card μ Yo hYo
+      MaxEntropy.entropy_le_log_card μ Yo hYo
     linarith
   calc mutualInfo μ Xs Yo = ENNReal.ofReal (mutualInfo μ Xs Yo).toReal :=
         (ENNReal.ofReal_toReal (mutualInfo_ne_top_of_fintype_right μ Xs Yo hXs hYo)).symm

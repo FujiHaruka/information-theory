@@ -198,7 +198,7 @@ theorem source_coding_per_n_bound
   -- ## B.1 Step A: entropy μ Yn ≤ log M.
   have hcard_Fin : (Fintype.card (Fin M) : ℝ) = (M : ℝ) := by rw [Fintype.card_fin]
   have h_step_A : entropy μ Yn ≤ Real.log (M : ℝ) := by
-    have := entropy_le_log_card μ Yn hYn_meas
+    have := MaxEntropy.entropy_le_log_card μ Yn hYn_meas
     rwa [hcard_Fin] at this
   -- ## B.2 Step B: I(Xn; Yn) ≤ entropy μ Yn  (= H(Yn) - H(Yn|Xn) ≤ H(Yn))
   have h_bridge_B :

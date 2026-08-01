@@ -40,7 +40,7 @@ log-cardinality rate: `(I(Jn; Xn) − I(Jn; Yn)).toReal ≤ log M`.
 
 Since `I(Jn; Yn) ≥ 0`, the truncated difference is `≤ I(Jn; Xn)`, and
 `I(Jn; Xn).toReal = H(Jn) − H(Jn | Xn) ≤ H(Jn) ≤ log |Fin M| = log M`
-(`entropy_le_log_card` + `condEntropy_nonneg`). This is the WZ analogue of the
+(`MaxEntropy.entropy_le_log_card` + `condEntropy_nonneg`). This is the WZ analogue of the
 rate-distortion `mutualInfo_block_le_log_card`. -/
 lemma mutualInfo_diff_le_log_card
     {Ω : Type*} [MeasurableSpace Ω]
@@ -59,7 +59,7 @@ lemma mutualInfo_diff_le_log_card
   have h_A_le : (mutualInfo μ Jn Xn).toReal ≤ Real.log (M : ℝ) := by
     rw [mutualInfo_eq_entropy_sub_condEntropy μ Jn Xn hJn hXn]
     have h_ent : entropy μ Jn ≤ Real.log (Fintype.card (Fin M)) :=
-      InformationTheory.Shannon.MaxEntropy.entropy_le_log_card μ Jn hJn
+      MaxEntropy.entropy_le_log_card μ Jn hJn
     have h_ce : 0 ≤ InformationTheory.MeasureFano.condEntropy μ Jn Xn :=
       condEntropy_nonneg μ Jn Xn
     rw [Fintype.card_fin] at h_ent
