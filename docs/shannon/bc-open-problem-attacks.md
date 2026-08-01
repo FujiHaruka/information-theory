@@ -16,7 +16,7 @@
 
 **20 leg** (L0–L20 の枠割りは親 plan §6.2 が SoT)。延長判断は L20 完了時点。
 **固定枠**: L0 文献 / L1 probe 基盤 / L4・L9・L14 棚卸し / **L19 収穫・L20 記録 (予約済、探索に流用しない)**。
-**現在**: leg 3 / 20 (**L2 完了** 2026-08-01 — 次は L3)。
+**現在**: leg 4 / 20 (**L3 完了** 2026-08-01 — 次は L4 = 棚卸し #1)。
 
 ## Attack 一覧
 
@@ -29,7 +29,9 @@
 | `marton-3aux-probe` | E | `todo` | — | **V5-b から起票** (§5-9)。3 補助変数 Marton 領域 (共通補助 `U₀` つき、[`bc-facts.md`](bc-facts.md) F2 の Jog–Nair Bound 1 の形) を**数値 probe 側に**用意する。`selftensor-counterexample` のブロッキング前提。⚠ **Lean 側の新規実装は層 3 でスコープ外** (親 plan §2.1) — `bc_probe.py` の消費者として probe 側に閉じること | — |
 | `support-vs-dual-additivity` | E | `todo` | — | **新項目の判定「別命題」から起票** (§5-9)。`h_n^T(θ)` の加法性と `F(T,{a_x})` の加法性を繋ぐのに要る 2 段のうち、(b) `{a_x}` ↔ `θ` の Legendre / 上凹包の段を明示的に書き下せるか ((a) は `M` の閉凸性)。**親 plan §4 軸 E の新規性 (ii) の実体**で、どちらの文献も述べていない | — |
 | `u0-necessity-quantified` | A+E | `todo` | — | **V5 の副産物から起票** (§5-9)。2 補助変数 Marton union の閉凸包が劣化 BSC 対で**時分割領域そのものに潰れる** (`S(λ)` が退化コーナー 2 つの上包絡と全 `λ` で一致、最大偏差 `+3.331e-16`)。⚠ 2 元入力なので F6 (randomized time-division が Marton の sum rate を達成) と整合し、**非自明になるのは `\|X\| ≥ 3` から**。潰れないチャネルを 1 つ見つければ「共通補助 `U₀` 無しでも時分割より真に強い」の実例になり、`U₀` の必要性の定量になる | — |
-| `weakest-hyp-morecapable` | A | `todo` | — | `bc_moreCapable_uv_subset_superposition` の実使用仮説を最弱化 (L3) | — |
+| `weakest-hyp-morecapable` | A | **`killed`** | **L3** | **死因 `probe-failed`** — `IsBCMoreCapable` を `IsBCMoreCapable.condMutualInfo_le` の結論そのものに差し替えると**通らない**。足りなかったのは `IsBCMoreCapable` の `def` 本体 (非条件つき比較) **1 本のみ** (chain の残り 6 本は差し替え仮説だけで通る)。さらに**両方向を機械検証したところ差し替え先は元クラスと同値** (`#print axioms` sorryAx-free) ⟹ **新クラス候補は 1 本も立たない**。⚠ 親 plan の「核は `condMutualInfo_le` 1 本」は `mutualInfo_out₂_le_out₁_of_moreCapable` 最終行の `exact hmc _` = **`def` の直接展開**を見落としていた。逐語 → [`bc-facts.md`](bc-facts.md) §機械検証 probe の判定 (L3) | 同値 2 本 (どちらも sorryAx-free) + probe 本体 [`bc-probe-l3-weakest-hyp.lean.txt`](bc-probe-l3-weakest-hyp.lean.txt) + 下記の子 attack 2 本 |
+| `weakest-hyp-degraded-lessnoisy` | A | `todo` | — | **`weakest-hyp-morecapable` の死因から起票** (§5-9)。同じ最弱仮説抽出を degraded / less noisy の等号定理へ横展開する。⚠ **手順を訂正して適用すること** — 実使用の棚卸しは証明本文の `rg` ではなく `dep_graph.sh` の前方閉包で行い、**辺の向き先が `def` 自身か名前つき補題か**を区別する (more capable ではこの区別を落として「核は 1 本」と誤った)。⚠ more capable が同値で潰れた以上、**同じ形の同値で潰れる公算も高い** — 先に「条件つき版と非条件版が同値になる構造」がそのクラスにもあるかを確認してから probe を組む | — |
+| `class-def-vs-consequence-gap` | A | `todo` | — | **同じ死因から起票、ただし主語が違う**。more capable では条件つき版と非条件版が同値だった (平均化) が、**これが同値にならないクラスはあるか**。同値にならないクラスがあれば、そこでは「帰結を定義に採る」が実際に真に広いクラスを生む = **軸 A の第一手が生きる場所**になる。最初の一手 = 3 クラス (degraded / less noisy / more capable) の定義を並べ、条件つき化が平均化で潰れるか否かを**構造として**判定する (probe より先に散文で) | — |
 | `outer-slack-localize` | B | **`killed`** | **L0** | **死因 `known-result`** — 「UV の証明で捨てた項を拾って新しい outer を作る」は Gohari–Nair Theorem 7 (auxiliary-receiver approach、IEEE TIT 68(2):701–736, 2022) が既に実行済で、その導出法が逐語で「UV 導出で捨てられる項を最小化する」もの (F3)。着手前に文献で死亡 | 子 attack 2 本 (`outer-slack-vs-thm7` / `jbound-optimality`) |
 | `outer-slack-vs-thm7` | B | `todo` | — | **`outer-slack-localize` の死因から起票** (親 plan §5-9)。先に Theorem 7 の改善項リストを抽出 → `bc_uv_converse` / `bc_capacity_subset_uv` の不等号ステップを全列挙して対応付ける。**対応が付かないステップ = 我々固有の緩み**。⚠ 順序を逆にすると既知の再発見 | — |
 | `jbound-optimality` | B | `todo` | — | 同上の子。J version of UV outer bound の最適性は Li が逐語で "optimality unknown" ⟹ ここは開いている。J-bound が緩む例を探す | — |
@@ -70,7 +72,7 @@
 
 | 軸 | 連続ゼロ進捗 leg 数 | 判定 |
 |---|---|---|
-| A | 0 | — |
+| A | 0 | L3 で第一手が `probe-failed`。**同値という確定事実 + 子 attack 2 本** (`weakest-hyp-degraded-lessnoisy` / `class-def-vs-consequence-gap`) が残るのでゼロ進捗ではない (親 plan §5-1) |
 | B | 0 | L0 は軸に紐づかない文献 leg。**死亡も確定事実**なのでゼロ進捗ではない (親 plan §5-1) |
 | C | 0 | — |
 | D | 0 | L2 で multi-letter 表現が我々の定義で**逆側だけ生きる**と確定 (`multiletter-subject` の入力)。⚠ ただし L2 は軸 E の leg なので**本軸のカウントはリセットしない** (下記の二重計上の注意) |
@@ -85,4 +87,5 @@
 **進捗として数えるのは軸 G の側だけ**にする — 同じ 1 事実で 2 つの軸のカウントをリセットすると、
 round-robin (§5-5) が「回っているように見えて回っていない」状態を検出できなくなる。
 **L2 も同じ扱い**: multi-letter 表現の確定は軸 D の入力になるが、L2 は軸 E の leg なので
-**数えるのは軸 E の側だけ**にする。
+**数えるのは軸 E の側だけ**にする。**L3 も同じ**: 棚卸し手順の訂正 (`dep_graph.sh` + 辺の向き先の区別) は
+他軸の最弱仮説抽出にも効くが、L3 は軸 A の leg なので**他軸のカウントは動かさない**。

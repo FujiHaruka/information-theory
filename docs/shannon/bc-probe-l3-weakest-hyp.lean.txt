@@ -1,0 +1,217 @@
+-- Probe (BC relay leg L3, axis A first move).  Not part of the build: rename to
+--   InformationTheory/Shannon/BroadcastChannel/ProbeL3.lean
+-- and run `lake env lean` on it to reproduce.  Do not register it in InformationTheory.lean.
+--
+-- Question: can `bc_moreCapable_uv_subset_superposition` be proved from the *conclusion* of
+-- `IsBCMoreCapable.condMutualInfo_le` alone, instead of from the class `IsBCMoreCapable`?
+--
+-- Machine answer (verbatim `lake env lean`, 2026-08-01 commit 6ae3dd13):
+--   * With `hMC : BCCondMutualInfoLe W` only -> ERROR at `probe_mutualInfo_out₂_le_out₁`:
+--       `typeclass instance problem is stuck / MeasurableSingletonClass ?m`
+--     the goal at that point being (confirmed by the `show` line that precedes it)
+--       mutualInfoOfChannel (ν.map fun q => q.2.2.1) (Kernel.snd W)
+--         ≤ mutualInfoOfChannel (ν.map fun q => q.2.2.1) (Kernel.fst W)
+--     i.e. `IsBCMoreCapable W` at `p := ν.map (fun q => q.2.2.1)` -- the class definition itself.
+--   * Adding `hUC : IsBCMoreCapable W` back -> whole chain compiles, 0 errors,
+--     `#print axioms` = [propext, Classical.choice, Quot.sound].
+--   * `probe_condLe_imp_moreCapable` / `probe_moreCapable_imp_condLe`: the two hypotheses are
+--     EQUIVALENT (both directions sorryAx-free), so the substitution widens nothing.
+import InformationTheory.Shannon.BroadcastChannel.Superposition.MoreCapable
+
+/-!
+Probe: can `bc_moreCapable_uv_subset_superposition` be proved from the *conclusion* of
+`IsBCMoreCapable.condMutualInfo_le` alone, instead of the class `IsBCMoreCapable`?
+Temporary file, not registered in `InformationTheory.lean`.
+-/
+
+namespace InformationTheory.Shannon.BroadcastChannel
+
+open MeasureTheory ProbabilityTheory InformationTheory.Shannon
+open InformationTheory.Shannon.ChannelCoding
+open Filter
+open scoped ENNReal Topology
+
+universe u
+
+section Probe
+
+variable {α : Type u} {β₁ β₂ : Type*}
+  [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
+    [StandardBorelSpace α]
+  [Fintype β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
+    [StandardBorelSpace β₁]
+  [Fintype β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
+    [StandardBorelSpace β₂]
+
+/-- The conclusion of `IsBCMoreCapable.condMutualInfo_le`, taken as a bare hypothesis. -/
+def BCCondMutualInfoLe (W : BCChannel α β₁ β₂) [IsMarkovKernel W] : Prop :=
+  ∀ (U : Type) [MeasurableSpace U] [Countable U] [MeasurableSingletonClass U]
+      (pU : Measure U) [IsProbabilityMeasure pU] (K : Kernel U α) [IsMarkovKernel K],
+    condMutualInfo (bcJointDistribution pU K W) (fun q ↦ q.2.1) (fun q ↦ q.2.2.2) (fun q ↦ q.1)
+      ≤ condMutualInfo (bcJointDistribution pU K W) (fun q ↦ q.2.1) (fun q ↦ q.2.2.1)
+          (fun q ↦ q.1)
+
+/-- Copy of `condMutualInfo_out₂_le_out₁_of_moreCapable`, hypothesis replaced. -/
+theorem probe_condMutualInfo_out₂_le_out₁ (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hMC : BCCondMutualInfoLe W) {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν]
+    (h : IsUVChannelLaw W ν) :
+    condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.2.1)
+      ≤ condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.2.1) := by
+  set σ := ν.map (fun q : ℕ × ℕ × α × β₁ × β₂ ↦ (q.2.1, q.1, q.2.2))
+  have hs : IsUVChannelLaw W σ := h.swap_auxiliaries
+  haveI : IsProbabilityMeasure σ :=
+    Measure.isProbabilityMeasure_map (by fun_prop : Measurable _).aemeasurable
+  have hkey := hMC ℕ (uvCloudLaw σ) (uvSatelliteKernel σ)
+  have hjd : bcJointDistribution (uvCloudLaw σ) (uvSatelliteKernel σ) W
+      = σ.map (fun q ↦ (q.1, q.2.2.1, q.2.2.2.1, q.2.2.2.2)) :=
+    bcJointDistribution_uvCloudLaw W hs
+  have e₁ : condMutualInfo (bcJointDistribution (uvCloudLaw σ) (uvSatelliteKernel σ) W)
+        (fun q ↦ q.2.1) (fun q ↦ q.2.2.1) (fun q ↦ q.1)
+      = condMutualInfo σ (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) :=
+    condMutualInfo_map_comp' σ (fun q ↦ (q.1, q.2.2.1, q.2.2.2.1, q.2.2.2.2)) (by fun_prop)
+      _ hjd (fun q ↦ q.2.1) (by fun_prop) (fun q ↦ q.2.2.1) (by fun_prop) (fun q ↦ q.1)
+      (by fun_prop)
+  have e₂ : condMutualInfo (bcJointDistribution (uvCloudLaw σ) (uvSatelliteKernel σ) W)
+        (fun q ↦ q.2.1) (fun q ↦ q.2.2.2) (fun q ↦ q.1)
+      = condMutualInfo σ (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.1) :=
+    condMutualInfo_map_comp' σ (fun q ↦ (q.1, q.2.2.1, q.2.2.2.1, q.2.2.2.2)) (by fun_prop)
+      _ hjd (fun q ↦ q.2.1) (by fun_prop) (fun q ↦ q.2.2.2) (by fun_prop) (fun q ↦ q.1)
+      (by fun_prop)
+  rw [e₁, e₂] at hkey
+  have f₁ : condMutualInfo σ (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
+      = condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.2.1) :=
+    condMutualInfo_map_comp ν (fun q : ℕ × ℕ × α × β₁ × β₂ ↦ (q.2.1, q.1, q.2.2)) (by fun_prop)
+      (fun q ↦ q.2.2.1) (by fun_prop) (fun q ↦ q.2.2.2.1) (by fun_prop) (fun q ↦ q.1)
+      (by fun_prop)
+  have f₂ : condMutualInfo σ (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.1)
+      = condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.2.1) :=
+    condMutualInfo_map_comp ν (fun q : ℕ × ℕ × α × β₁ × β₂ ↦ (q.2.1, q.1, q.2.2)) (by fun_prop)
+      (fun q ↦ q.2.2.1) (by fun_prop) (fun q ↦ q.2.2.2.2) (by fun_prop) (fun q ↦ q.1)
+      (by fun_prop)
+  rw [f₁, f₂] at hkey
+  exact hkey
+
+/-- Copy of `uvInfoSum₁_le_uvInfoJoint_of_moreCapable`, hypothesis replaced. -/
+theorem probe_uvInfoSum₁_le_uvInfoJoint (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hMC : BCCondMutualInfoLe W) {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν]
+    (h : IsUVChannelLaw W ν) :
+    uvInfoSum₁ ν ≤ uvInfoJoint ν := by
+  rw [uvInfoJoint_eq_uvInfo₁_add_condMutualInfo W h, uvInfoSum₁]
+  exact add_le_add le_rfl (probe_condMutualInfo_out₂_le_out₁ W hMC h)
+
+/-- Copy of `mutualInfo_out₂_le_out₁_of_moreCapable`, hypothesis replaced. -/
+theorem probe_mutualInfo_out₂_le_out₁ (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hMC : BCCondMutualInfoLe W) (hUC : IsBCMoreCapable W)
+    {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν]
+    (h : IsUVChannelLaw W ν) :
+    mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2)
+      ≤ mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) := by
+  haveI : IsProbabilityMeasure (ν.map fun q : ℕ × ℕ × α × β₁ × β₂ ↦ q.2.2.1) :=
+    Measure.isProbabilityMeasure_map (by fun_prop : Measurable _).aemeasurable
+  have hmap : ν.map (fun q ↦ (q.2.2.1, q.2.2.2))
+      = (ν.map fun q ↦ q.2.2.1) ⊗ₘ W := h.map_input_output
+  have e₁ : mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
+      = mutualInfoOfChannel (ν.map fun q ↦ q.2.2.1) (Kernel.fst W) := by
+    rw [← mutualInfo_compProd_out₁, ← hmap,
+      mutualInfo_map_comp ν (fun q : ℕ × ℕ × α × β₁ × β₂ ↦ (q.2.2.1, q.2.2.2)) (by fun_prop)
+        _ (by fun_prop) _ (by fun_prop)]
+  have e₂ : mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2)
+      = mutualInfoOfChannel (ν.map fun q ↦ q.2.2.1) (Kernel.snd W) := by
+    rw [← mutualInfo_compProd_out₂, ← hmap,
+      mutualInfo_map_comp ν (fun q : ℕ × ℕ × α × β₁ × β₂ ↦ (q.2.2.1, q.2.2.2)) (by fun_prop)
+        _ (by fun_prop) _ (by fun_prop)]
+  rw [e₁, e₂]
+  show mutualInfoOfChannel (ν.map fun q ↦ q.2.2.1) (Kernel.snd W)
+      ≤ mutualInfoOfChannel (ν.map fun q ↦ q.2.2.1) (Kernel.fst W)
+  exact hUC _
+
+/-- Copy of `uvInfo₂_le_uvInfoJoint_of_moreCapable`, hypothesis replaced. -/
+theorem probe_uvInfo₂_le_uvInfoJoint (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hMC : BCCondMutualInfoLe W) (hUC : IsBCMoreCapable W)
+    {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν]
+    (h : IsUVChannelLaw W ν) :
+    uvInfo₂ ν ≤ uvInfoJoint ν := by
+  have hdpi : uvInfo₂ ν ≤ mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) :=
+    mutualInfo_le_of_markov ν (fun q ↦ q.1) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2)
+      (by fun_prop) (by fun_prop) (by fun_prop) h.isMarkovChain_U_X_Y₂
+  exact hdpi.trans (probe_mutualInfo_out₂_le_out₁ W hMC hUC h)
+
+/-- Copy of `sub_mem_bcSuperpositionRegionSumRate_of_mem_uvRegion`, hypothesis replaced. -/
+theorem probe_sub_mem_bcSuperpositionRegionSumRate (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hMC : BCCondMutualInfoLe W) (hUC : IsBCMoreCapable W)
+    {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν]
+    (h : IsUVChannelLaw W ν) {p : ℝ × ℝ} (hp : p ∈ uvRegion ν) (m : ℕ) {δ : ℝ} (hδ : 0 < δ) :
+    ((p.1 - δ, p.2 - (uvQuantizeSlack ν m).toReal - δ) : ℝ × ℝ)
+      ∈ bcSuperpositionRegionSumRate.{u} W := by
+  classical
+  obtain ⟨hb₁, hb₂, hs₂, hs₁⟩ := hp
+  have hlaw : IsUVChannelLaw W (uvQuantizeLaw.{u} ν m) := uvQuantizeLaw_isUVChannelLaw W h m
+  have hslack : (0 : ℝ) ≤ (uvQuantizeSlack ν m).toReal := ENNReal.toReal_nonneg
+  have hJfin : uvInfoJoint ν ≠ ∞ :=
+    mutualInfo_ne_top_of_fintype_right ν _ _ (by fun_prop) (by fun_prop)
+  have h₁ : p.1 ≤ (uvInfo₁ (uvQuantizeLaw.{u} ν m)).toReal := by
+    rw [uvInfo₁_uvQuantizeLaw ν m]; exact hb₁
+  have h₂ : p.2 - (uvQuantizeSlack ν m).toReal ≤ (uvInfo₂ (uvQuantizeLaw.{u} ν m)).toReal := by
+    linarith [uvInfo₂_toReal_sub_slack_le.{u} ν m]
+  have hsum : p.1 + (p.2 - (uvQuantizeSlack ν m).toReal)
+      ≤ (uvInfoSum₂ (uvQuantizeLaw.{u} ν m)).toReal := by
+    linarith [uvInfoSum₂_toReal_sub_slack_le.{u} W h m]
+  have hJ : max p.1 0 + (p.2 - (uvQuantizeSlack ν m).toReal)
+      ≤ (uvInfoJoint (uvQuantizeLaw.{u} ν m)).toReal := by
+    rw [uvInfoJoint_uvQuantizeLaw ν m]
+    rcases le_or_gt 0 p.1 with hp₁ | hp₁
+    · rw [max_eq_left hp₁]
+      linarith [ENNReal.toReal_mono hJfin (probe_uvInfoSum₁_le_uvInfoJoint W hMC h)]
+    · rw [max_eq_right hp₁.le, zero_add]
+      linarith [ENNReal.toReal_mono hJfin (probe_uvInfo₂_le_uvInfoJoint W hMC hUC h)]
+  exact sub_mem_bcSuperpositionRegionSumRate_of_isUVChannelLaw W hlaw hδ h₁ h₂ hsum hJ
+
+/-- Copy of `mem_bcSuperpositionRegionSumRate_of_mem_uvRegion`, hypothesis replaced. -/
+theorem probe_mem_bcSuperpositionRegionSumRate (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hMC : BCCondMutualInfoLe W) (hUC : IsBCMoreCapable W)
+    {ν : Measure (ℕ × ℕ × α × β₁ × β₂)} [IsProbabilityMeasure ν]
+    (h : IsUVChannelLaw W ν) {p : ℝ × ℝ} (hp : p ∈ uvRegion ν) :
+    p ∈ bcSuperpositionRegionSumRate.{u} W := by
+  have ht : Tendsto (fun k : ℕ ↦ 1 / ((k : ℝ) + 1)) atTop (𝓝 0) :=
+    tendsto_one_div_add_atTop_nhds_zero_nat
+  have hslack : Tendsto (fun m : ℕ ↦ (uvQuantizeSlack ν m).toReal) atTop (𝓝 0) := by
+    have hcomp :=
+      (ENNReal.tendsto_toReal (by simp : (0 : ℝ≥0∞) ≠ ∞)).comp (tendsto_uvQuantizeSlack ν)
+    simpa [Function.comp_def] using hcomp
+  have h1 : Tendsto (fun k : ℕ ↦ p.1 - 1 / ((k : ℝ) + 1)) atTop (𝓝 p.1) := by
+    simpa using tendsto_const_nhds.sub ht
+  have h2 : Tendsto (fun k : ℕ ↦ p.2 - (uvQuantizeSlack ν k).toReal - 1 / ((k : ℝ) + 1))
+      atTop (𝓝 p.2) := by
+    simpa using (tendsto_const_nhds.sub hslack).sub ht
+  exact (bcSuperpositionRegionSumRate_isClosed W).mem_of_tendsto (h1.prodMk_nhds h2)
+    (Eventually.of_forall fun k ↦
+      probe_sub_mem_bcSuperpositionRegionSumRate W hMC hUC h hp k (by positivity))
+
+/-- Copy of `bc_moreCapable_uv_subset_superposition`, hypothesis replaced. -/
+theorem probe_bc_uv_subset_superposition (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hMC : BCCondMutualInfoLe W) (hUC : IsBCMoreCapable W) :
+    bcOuterRegionUV W ⊆ bcSuperpositionRegionSumRate.{u} W := by
+  refine closure_minimal ?_ (bcSuperpositionRegionSumRate_isClosed W)
+  refine Set.iUnion_subset fun ν ↦ Set.iUnion_subset fun hν ↦ fun p hp ↦ ?_
+  exact probe_mem_bcSuperpositionRegionSumRate W hMC hUC hν hp
+
+/-- Is the substituted hypothesis strictly weaker than the class?  Dirac auxiliary. -/
+theorem probe_condLe_imp_moreCapable (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hMC : BCCondMutualInfoLe W) : IsBCMoreCapable W := by
+  intro p _
+  have h := hMC PUnit (Measure.dirac PUnit.unit) (Kernel.const PUnit p)
+  rw [condMutualInfo_bcJointDistribution_out₁_eq_lintegral,
+    condMutualInfo_bcJointDistribution_out₂_eq_lintegral] at h
+  simpa using h
+
+theorem probe_moreCapable_imp_condLe (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hUC : IsBCMoreCapable W) : BCCondMutualInfoLe W :=
+  fun _ _ _ _ pU _ K _ ↦ hUC.condMutualInfo_le pU K
+
+#print axioms probe_condLe_imp_moreCapable
+#print axioms probe_moreCapable_imp_condLe
+#print axioms probe_bc_uv_subset_superposition
+
+end Probe
+
+end InformationTheory.Shannon.BroadcastChannel
