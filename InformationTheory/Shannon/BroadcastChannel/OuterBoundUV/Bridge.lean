@@ -60,6 +60,10 @@ each summand of the bound with an information slot of that law.
   receiver is the code's average error probability there.
 * `bc_uv_converse_from_code` — the UV outer bound at a bare broadcast code, with the rate pair
   `(log M₁, log M₂)` and the Fano slack still symbolic.
+* `mutualInfo_pair_out₁_eq_uvInfoJoint` — pairing the input letter with an auxiliary variable
+  that acts on the first output only through that letter adds nothing: the pair carries exactly
+  `uvInfoJoint`.  This is what identifies the input-output slot of a law with the corresponding
+  information of the achievability pair read off it.
 * `uvAux_pad_mutualInfo_eq`, `uvAux_pad_condMutualInfo_eq` — re-encoding the auxiliary
   variable into the fixed alphabet changes neither the mutual information it carries about
   an output nor the conditional mutual information it conditions.

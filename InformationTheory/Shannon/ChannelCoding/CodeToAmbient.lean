@@ -24,11 +24,13 @@ instantiates them by supplying its own encoder and channel.
   as well as the other letters.
 * `isMemorylessChannel_of_compProd_pi`: if the kernel is the per-letter product `∏ⱼ W (x m j)`
   of a channel applied to a deterministic codeword, the ambient is a memoryless channel.
-* `compProd_pi_map_pair_eq_of_update_invariant`: the joint law of the `i`-th output letter paired
-  with any map that is invariant under updating the `i`-th output coordinate and that retracts
-  onto the input letter, which is what lets a padded auxiliary variable sit there.
-* `compProd_pi_map_pair_eq`: its special case where that map is the input letter `x · i` itself,
-  so the joint law of the `i`-th input-output pair is the channel joint
+* `compProd_pi_map_pair_eq_of_update_invariant`: pair the `i`-th output letter with any map `G`
+  that is invariant under updating the `i`-th output coordinate and that retracts onto the input
+  letter; the joint law of that pair is `((ν ⊗ₘ κ).map G) ⊗ₘ W.comap g`, the composition product
+  of `G`'s own law with the channel read along the retraction.  The invariance is what lets a
+  padded auxiliary variable sit in the first component.
+* `compProd_pi_map_pair_eq`: its special case where `G` is the input letter `x · i` itself, so
+  the joint law of the `i`-th input-output pair is the channel joint
   `(ν.map fun m ↦ x m i) ⊗ₘ W`.
 * `compProd_comap_map_prodMap`: a composition product with a comapped kernel is the composition
   product of the pushed-forward measure with the kernel itself.

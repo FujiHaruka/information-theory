@@ -17,8 +17,10 @@ exact where they need to be.  The receiver-2 corner only needs the branch that k
 auxiliary, so the tag's own contribution is discarded and the slot is bounded below by
 `lam * I(U; Y₂)`.  The satellite slot is an equality, `lam * I(X; Y₁ ∣ U) + (1 - lam) * I(X; Y₁)`,
 because collapsing the auxiliary turns the conditional information into the unconditional one.
-The second endpoint is where a less noisy channel enters: it forces
-`I(X; Y₁ ∣ U) + I(U; Y₂) ≤ I(X; Y₁)`, so the segment traced by `lam` stays above the outer point.
+The second endpoint therefore contributes `I(X; Y₁)`, and the segment traced by `lam` stays above
+the outer point as soon as the rate pair also satisfies `max R₁ 0 + R₂ ≤ I(X; Y₁)`.  That sum
+constraint is all the assembly asks for beyond the three outer inequalities, and it comes for free
+over a less noisy channel, which forces `I(X; Y₁ ∣ U) + I(U; Y₂) ≤ I(X; Y₁)` at every law.
 
 ## Main definitions
 
@@ -510,7 +512,7 @@ lemma condMutualInfo_map_uvRelabel (ν : Measure (U × V × α × β₁ × β₂
 
 end Landing
 
-/-! ## The input-output slot under mixing -/
+/-! ## The input-output slot under time sharing -/
 
 section TimeShareSlot
 
@@ -671,9 +673,9 @@ theorem exists_bcInfo_ge_sumRate_of_isUVChannelLaw (W : BCChannel α β₁ β₂
 
 end TimeShareAssembly
 
-/-! ## Tracing the segment between the two endpoints -/
+/-! ## The sum constraint over a less noisy channel -/
 
-section Assembly
+section LessNoisy
 
 variable {α : Type u} {β₁ β₂ : Type*}
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
@@ -705,7 +707,7 @@ theorem exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw (W : BCChannel α β₁ 
     simp only [uvInfoSum₂, ENNReal.toReal_add hBfin hAfin] at hsum
     exact hsum
   -- A less noisy channel makes the input information dominate the two slots together, which is
-  -- the sum constraint the class free variant asks for.
+  -- the sum constraint the comparison-free form above asks for.
   have hab : a + b ≤ (uvInfoJoint ν).toReal := by
     have hle := bc_lessNoisy_infoJoint_ge (uvCloudLaw ν) (uvSatelliteKernel ν) W hln
     rwa [bcInfo₁_uvCloudLaw W h, bcInfo₂_uvCloudLaw W h, bcInfoJoint_uvCloudLaw W h] at hle
@@ -717,6 +719,6 @@ theorem exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw (W : BCChannel α β₁ 
     exists_bcInfo_ge_sumRate_of_isUVChannelLaw W h h₁ h₂ hsum hs₁
   exact ⟨k, pU, hpU, K, hK, hb₁, hb₂⟩
 
-end Assembly
+end LessNoisy
 
 end InformationTheory.Shannon.BroadcastChannel
