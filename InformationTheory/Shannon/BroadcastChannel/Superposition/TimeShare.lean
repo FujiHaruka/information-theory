@@ -250,7 +250,7 @@ lemma uvTimeShareLaw_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKern
 
 end Mixture
 
-/-! ## The information slots of the time-shared law -/
+/-! ## The information slots of a mixture and of the time-shared law -/
 
 section Slots
 
