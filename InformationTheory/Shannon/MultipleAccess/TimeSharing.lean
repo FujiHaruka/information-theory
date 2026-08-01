@@ -594,7 +594,7 @@ engine: `R₁ = 0` forces `M₁ = ⌈exp (n·0)⌉ = 1`, so the two alias terms 
 `R₁ + R₂ < macInfoBoth` of `mac_achievability` — vacuous when `macInfo₁ ≤ 0` — are therefore
 not needed.
 @audit:ok -/
-theorem mac_axis1_achievable
+theorem mac_rate₂_achievable
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
     (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
@@ -688,11 +688,11 @@ theorem mac_axis1_achievable
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
 /-- Achievability on the single-user axis with user 2 silent: the rate pair `(R₁, 0)` with
-`R₁ < macInfo₁` is achievable.  Symmetric to `mac_axis1_achievable`: `R₂ = 0` forces
+`R₁ < macInfo₁` is achievable.  Symmetric to `mac_rate₂_achievable`: `R₂ = 0` forces
 `M₂ = 1`, collapsing the `(M₂ - 1)`-carrying alias terms (`E2`, `E3`) and leaving only `E0`
 (AEP) and the user-1 alias `E1` (controlled by `R₁ < macInfo₁`).
 @audit:ok -/
-theorem mac_axis2_achievable
+theorem mac_rate₁_achievable
     (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     (p₂ : Measure α₂) [IsProbabilityMeasure p₂]
     (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
@@ -856,20 +856,20 @@ theorem mac_pentagon_subset_capacityRegion
     · -- `macInfo₁ ≤ 0` ⇒ `R.1 = 0`: user 1 is silent and user 2 achieves any rate below
       -- `macInfo₂`.  Although the `R₁ < macInfo₁` corner of `mac_achievability` as-stated is
       -- empty here, the point is achievable via its `M₁ = 1` internal specialization
-      -- (`mac_axis1_achievable`): every strictly-smaller perturbation `(−ε, R.2 − ε)` reduces
+      -- (`mac_rate₂_achievable`): every strictly-smaller perturbation `(−ε, R.2 − ε)` reduces
       -- to `MACAchievable W 0 (R.2 − ε)` (with `R.2 − ε < macInfo₂`) by monotonicity, so `R`
       -- is a limit of achievable points.
       have hR1zero : R.1 = 0 := le_antisymm (hR1le.trans h1) hR1nn
       refine mac_mem_closure_of_strictly_below W R (fun ε hε ↦ ?_)
       have hax : MACAchievable W 0 (R.2 - ε) :=
-        mac_axis1_achievable p₁ p₂ W hp₁ hp₂ hW (by linarith [hR2le])
+        mac_rate₂_achievable p₁ p₂ W hp₁ hp₂ hW (by linarith [hR2le])
       exact mac_achievable_mono hax (by rw [hR1zero]; linarith) le_rfl
     · -- `macInfo₂ ≤ 0` ⇒ `R.2 = 0`: symmetric single-user achievability with user 2 silent,
-      -- via the `M₂ = 1` internal specialization `mac_axis2_achievable`.
+      -- via the `M₂ = 1` internal specialization `mac_rate₁_achievable`.
       have hR2zero : R.2 = 0 := le_antisymm (hR2le.trans h2) hR2nn
       refine mac_mem_closure_of_strictly_below W R (fun ε hε ↦ ?_)
       have hax : MACAchievable W (R.1 - ε) 0 :=
-        mac_axis2_achievable p₁ p₂ W hp₁ hp₂ hW (by linarith [hR1le])
+        mac_rate₁_achievable p₁ p₂ W hp₁ hp₂ hW (by linarith [hR1le])
       exact mac_achievable_mono hax le_rfl (by rw [hR2zero]; linarith)
     · -- `macInfoBoth ≤ 0` ⇒ `R = (0, 0)`: the trivial single-message code is achievable.
       have hsum0 : R.1 + R.2 ≤ 0 := hRsumle.trans hb

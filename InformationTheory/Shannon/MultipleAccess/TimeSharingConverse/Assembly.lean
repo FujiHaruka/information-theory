@@ -682,12 +682,12 @@ lemma mac_converse_rate₂_mul_one_sub_errorProb_mem_of_ceil_exp_le [NeZero M₁
     exact ⟨p₁ i, p₂ i, hp₁prob i, hp₂prob i, hi⟩
   exact convexHull_subset_closedConvexHull (convexHull_mono hsubset hmem)
 
-/-- Axis case of the converse for user 1 (`R₂ = 0`): for a strictly positive rate `R₁`
+/-- Converse on the single-user axis with user 2 silent: for a strictly positive rate `R₁`
 achievable with `R₂ = 0`, the pair `(R₁, 0)` lies in the closed convex hull of the per-input
 pentagons.  Uses the user-1-only finite-`n` Fano bound `mac_converse_from_code_bound₁` (which
 needs only `2 ≤ M₁`, and thus survives the `M₂ = 1` degeneracy of the axis), then takes the
 Fano → 0 limit as in the interior case. -/
-lemma mac_timesharing_converse_axis1 (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+lemma mac_timesharing_converse_rate₁ (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     {R₁ : ℝ} (hR₁ : 0 < R₁) (hach : MACAchievable W R₁ 0) :
     (R₁, (0 : ℝ)) ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
         (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
@@ -751,11 +751,11 @@ lemma mac_timesharing_converse_axis1 (W : MACChannel α₁ α₂ β) [IsMarkovKe
       (hcard₁ k) hR₁.le (hM₁ k) hk1
   exact isClosed_closedConvexHull.mem_of_tendsto htend hev
 
-/-- Axis case of the converse for user 2 (`R₁ = 0`), symmetric to
-`mac_timesharing_converse_axis1`: uses the user-2-only finite-`n` Fano bound
+/-- Converse on the single-user axis with user 1 silent, symmetric to
+`mac_timesharing_converse_rate₁`: uses the user-2-only finite-`n` Fano bound
 `mac_converse_from_code_bound₂` (needing only `2 ≤ M₂`, surviving the `M₁ = 1` degeneracy),
 then takes the Fano → 0 limit. -/
-lemma mac_timesharing_converse_axis2 (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
+lemma mac_timesharing_converse_rate₂ (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     {R₂ : ℝ} (hR₂ : 0 < R₂) (hach : MACAchievable W 0 R₂) :
     ((0 : ℝ), R₂) ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
         (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
@@ -821,7 +821,7 @@ closed convex hull of the union of all per-input pentagons `macPentagon p₁ p�
 probability inputs `p₁`, `p₂`.  Assembled by casework on whether each rate is zero or positive:
 the interior case uses the Fano → 0 limit `mac_timesharing_converse_interior`, the origin
 `(0,0)` lies in any pentagon, and the two axis cases reduce to the single-user Fano corner via
-`mac_timesharing_converse_axis1/2`. -/
+`mac_timesharing_converse_rate₁` and `mac_timesharing_converse_rate₂`. -/
 theorem mac_timesharing_converse (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
     {p | MACAchievable W p.1 p.2 ∧ 0 ≤ p.1 ∧ 0 ≤ p.2}
       ⊆ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
@@ -831,10 +831,10 @@ theorem mac_timesharing_converse (W : MACChannel α₁ α₂ β) [IsMarkovKernel
   · rcases hR₂0.lt_or_eq with hR₂ | hR₂
     · exact mac_timesharing_converse_interior W hR₁ hR₂ hach
     · subst hR₂
-      exact mac_timesharing_converse_axis1 W hR₁ hach
+      exact mac_timesharing_converse_rate₁ W hR₁ hach
   · subst hR₁
     rcases hR₂0.lt_or_eq with hR₂ | hR₂
-    · exact mac_timesharing_converse_axis2 W hR₂ hach
+    · exact mac_timesharing_converse_rate₂ W hR₂ hach
     · subst hR₂
       -- origin: `(0, 0)` lies in every pentagon (all five inequalities are `0 ≤ nonneg`)
       apply subset_closedConvexHull
