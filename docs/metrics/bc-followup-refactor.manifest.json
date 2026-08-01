@@ -1,0 +1,51 @@
+{
+  "problem": "BC / MAC 家系の後続作業 (style / honesty ゲートが提起して当該 leg では見送った負債) を一括消化するリファクタ relay。9 leg の実装 (死宣言削除 + 改名束 / IsBCDegraded 移設 / 汎用補題の Shannon・Probability 昇格 2 方向 / 重複 4 件の一般形への畳み込み / 誤称領域の改名 + 姉妹の集約 / 再符号化不変性のファイル分離 / Achievability クラスタの呼称是正 2 段) + 家系横断の 4 件 (MAC 側 *_point_mem 改名 / natIndex の Encodable 差し替え判断 / entropy_le_log_card 重複統合 / MAC axis 語彙の意味反転解消) + docs stale sweep。新規 sorry 0 / 署名の honesty 変更 0 / @residual 新規 0 なので honesty ゲートは全 leg で不発動、代わりに毎 leg style-auditor を起動。commit range aad88f5d..ac0d5163 (29 commits)。",
+  "proof_log": "docs/proof-logs/proof-log-bc-followup-refactor.md",
+  "sessions": [
+    {
+      "id": "2a08bbfb-1497-441a-b3c5-eaa3700f341b",
+      "prompt_ids": [
+        "10012f24",
+        "6c0b5271",
+        "13a7b013",
+        "ebc9650a",
+        "a49628c7",
+        "479410d4",
+        "0aac368b",
+        "ebe023e5",
+        "71d3beff",
+        "036e9128",
+        "e98032d6",
+        "ae9aa201",
+        "53f82691",
+        "89cf4d2e",
+        "deab0982",
+        "47061f1e"
+      ],
+      "note": "relay 前半。ハンドオフからの後続作業洗い出し → T1+T2 死宣言 2 本削除 + 改名束 (aad88f5d / 715605b7) → T4 IsBCDegraded を Basic へ移設 (19d7f6ab / 6630a5ee) → T3 汎用補題 11 本を Shannon/ へ昇格 (27c909ca / 61971e9b) → T3' MAC 汎用混合 API 13 本を Probability/ へ昇格し BC→MAC import を除去 (08cfde86 / cacc59d6) → T7+T8 重複 4 件を既存一般形の系へ畳む (083aceef / 434f16fd) → T6 誤称 bcSuperpositionRegionFullSupport の改名 + 姉妹 SumRate の集約 (2ed67320 / 371dce85) → T5 再符号化不変性 3 本を MutualInfoReencoding.lean へ分離 (abbf8e58 / 43cd2d0c)。各 leg の後に style ゲート。"
+    },
+    {
+      "id": "346123c9-e430-43b3-bdb1-f9d11c879df8",
+      "prompt_ids": [
+        "d0bf97fc",
+        "50d8a971",
+        "42737f9d",
+        "efa85e32",
+        "00dd0d97",
+        "80a001cf",
+        "cea7aa08",
+        "3d23fc46",
+        "1919459c",
+        "9e8f18f9",
+        "042ae509",
+        "569a8375",
+        "3ff10d46",
+        "c78d15e7",
+        "e130a395"
+      ],
+      "note": "relay 後半。T10a Achievability クラスタの module doc を degradedness 非依存の実態へ (6a0c68ff / 4bc00e36) → T10b 可視性 / 改名 / 引数順 / 上流移動 / 呼称是正 / linter (8cac522b / 054f3994 / be0750b8) → #20 MAC 側 *_point_mem 3 本の追随改名 (6de04dd9 / 12109990) → #22 natIndex は Encodable.encode へ寄せず据え置き (9d16a21e) → #23 entropy_le_log_card 重複 2 本を MaxEntropy 側へ集約 (b5c55683 / 939e3550) → #25 MAC の axis 語彙を下付きへ統一し意味反転を解消 (d832baef / 9081cef4) → #21 plan / inventory / textbook の stale sweep (27fb9bfc / 595acb3c / ac0d5163)。末尾の proof-log 起票ターン (4e0588d7) は本 proof-log 自体を書くターンなので除外。"
+    }
+  ],
+  "filters": { "file_prefix": "InformationTheory/" },
+  "idle_gap_minutes": 5
+}
