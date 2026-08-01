@@ -11,17 +11,25 @@ at least as well as the second one does, which is exactly what `IsBCLessNoisy` a
 degradedness is not needed.  This file takes the union of that bound over the auxiliary
 alphabets, so that it can be compared with the outer bounds as a set.
 
+Two unions are taken, over the same full-support indices and differing only in the constraints
+cutting out each member.  Keeping the sum-rate constraint gives the general superposition bound,
+achievable over any broadcast channel; dropping it gives a larger set, achievable over a less
+noisy one, where `I(U; Y₁) ≥ I(U; Y₂)` makes the omitted inequality follow from the two kept ones.
+
 ## Main definitions
 
-* `bcSuperpositionRegionFullSupport W` — the superposition inner bound as a union over
-  auxiliary alphabets, restricted to the full-support indices.
+* `bcSuperpositionRegionNoSumRate W` — the superposition inner bound without its sum-rate
+  constraint, as a union over auxiliary alphabets, restricted to the full-support indices.
+* `bcSuperpositionRegionSumRate W` — the same union with the sum-rate constraint kept.
 
 ## Main statements
 
 * `bc_lessNoisy_achievability` — the superposition rate pairs of a less noisy channel are
   achievable.
-* `bcSuperpositionRegionFullSupport_subset_capacity` — the superposition inner bound sits inside
-  the operational capacity region.
+* `bcSuperpositionRegionNoSumRate_subset_capacity` — the two-constraint inner bound sits inside
+  the operational capacity region of a less noisy channel.
+* `bcSuperpositionRegionSumRate_subset_capacity` — the three-constraint inner bound sits inside
+  the operational capacity region, for any broadcast channel.
 
 ## Implementation notes
 
@@ -175,7 +183,7 @@ The full-support indices are the ones the achievability theorem applies to, so t
 of the union that is achievable.  As for `bcCapacityRegion` and the outer bounds, no sign
 constraint is imposed: a nonpositive rate asks only for a single message.
 @audit:ok -/
-noncomputable def bcSuperpositionRegionFullSupport (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
+noncomputable def bcSuperpositionRegionNoSumRate (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k))
     (_ : IsProbabilityMeasure pU) (_ : ∀ x : Marton.bcAuxAlphabet.{u} k, 0 < pU.real {x})
     (K : Kernel (Marton.bcAuxAlphabet.{u} k) α) (_ : IsMarkovKernel K)
@@ -183,17 +191,17 @@ noncomputable def bcSuperpositionRegionFullSupport (W : BCChannel α β₁ β₂
     {p : ℝ × ℝ | p.1 ≤ bcInfo₁ pU K W ∧ p.2 ≤ bcInfo₂ pU K W})
 
 omit [DecidableEq α] [DecidableEq β₁] [DecidableEq β₂] in
-theorem bcSuperpositionRegionFullSupport_isClosed (W : BCChannel α β₁ β₂) :
-    IsClosed (bcSuperpositionRegionFullSupport.{u} W) := isClosed_closure
+theorem bcSuperpositionRegionNoSumRate_isClosed (W : BCChannel α β₁ β₂) :
+    IsClosed (bcSuperpositionRegionNoSumRate.{u} W) := isClosed_closure
 
 /-- The superposition inner bound of a less noisy broadcast channel is achievable: it is
 contained in the operational capacity region.
 @audit:ok -/
 @[entry_point]
-theorem bcSuperpositionRegionFullSupport_subset_capacity (W : BCChannel α β₁ β₂)
+theorem bcSuperpositionRegionNoSumRate_subset_capacity (W : BCChannel α β₁ β₂)
     [IsMarkovKernel W] (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b})
     (hln : IsBCLessNoisy W) :
-    bcSuperpositionRegionFullSupport W ⊆ bcCapacityRegion W := by
+    bcSuperpositionRegionNoSumRate W ⊆ bcCapacityRegion W := by
   refine closure_minimal ?_ (bc_capacityRegion_isClosed W)
   refine Set.iUnion_subset fun k ↦ Set.iUnion_subset fun pU ↦ Set.iUnion_subset fun hpU ↦
     Set.iUnion_subset fun hpUpos ↦ Set.iUnion_subset fun K ↦ Set.iUnion_subset fun hK ↦
@@ -209,5 +217,59 @@ theorem bcSuperpositionRegionFullSupport_subset_capacity (W : BCChannel α β₁
   -- measured at `max (p.1 - ε) 0`, which the satellite information dominates.
   have hmax : max (p.1 - ε) 0 ≤ bcInfo₁ pU K W := max_le (by linarith [hp.1]) hnn
   linarith [hp.2]
+
+/-! ### The superposition inner bound with the sum-rate constraint kept -/
+
+section SumRate
+
+omit [DecidableEq α] [DecidableEq β₁] [DecidableEq β₂]
+
+/-- The superposition inner bound of a broadcast channel with the sum-rate constraint kept: the
+closure of the union, over the full-support auxiliary laws on `Marton.bcAuxAlphabet`, of the
+regions cut out by `R₁ ≤ I(X; Y₁ ∣ U)`, `R₂ ≤ I(U; Y₂)` and `max R₁ 0 + R₂ ≤ I((U, X); Y₁)`.
+
+The sum constraint is written with the first rate clamped at zero because that is the form the
+achievability theorem takes: a nonpositive first rate asks for a single satellite codeword, so the
+wrong-cloud slack it costs is measured at `max R₁ 0`.  With that shape the whole set is achievable
+with no comparison-class hypothesis, whereas the plain sum `R₁ + R₂` would need one on the branch
+where the first rate is negative.
+
+`bcSuperpositionRegionNoSumRate` drops the sum constraint, which is exact over a less noisy
+channel and a proper enlargement outside that class; this set is the general superposition bound
+and is contained in it. -/
+noncomputable def bcSuperpositionRegionSumRate (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
+  closure (⋃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k))
+    (_ : IsProbabilityMeasure pU) (_ : ∀ x : Marton.bcAuxAlphabet.{u} k, 0 < pU.real {x})
+    (K : Kernel (Marton.bcAuxAlphabet.{u} k) α) (_ : IsMarkovKernel K)
+    (_ : ∀ (x : Marton.bcAuxAlphabet.{u} k) (a : α), 0 < (K x).real {a}),
+    {p : ℝ × ℝ | p.1 ≤ bcInfo₁ pU K W ∧ p.2 ≤ bcInfo₂ pU K W
+      ∧ max p.1 0 + p.2 ≤ bcInfoJoint pU K W})
+
+omit [Nonempty α] [MeasurableSingletonClass α] [Nonempty β₁] [MeasurableSingletonClass β₁]
+  [Nonempty β₂] [MeasurableSingletonClass β₂] in
+theorem bcSuperpositionRegionSumRate_isClosed (W : BCChannel α β₁ β₂) :
+    IsClosed (bcSuperpositionRegionSumRate.{u} W) := isClosed_closure
+
+/-- The three-constraint superposition inner bound of a broadcast channel is achievable: it is
+contained in the operational capacity region.  No comparison between the two receivers is needed,
+because the region carries the sum constraint the achievability theorem asks for. -/
+@[entry_point]
+theorem bcSuperpositionRegionSumRate_subset_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) :
+    bcSuperpositionRegionSumRate.{u} W ⊆ bcCapacityRegion W := by
+  classical
+  refine closure_minimal ?_ (bc_capacityRegion_isClosed W)
+  refine Set.iUnion_subset fun k ↦ Set.iUnion_subset fun pU ↦ Set.iUnion_subset fun hpU ↦
+    Set.iUnion_subset fun hpUpos ↦ Set.iUnion_subset fun K ↦ Set.iUnion_subset fun hK ↦
+      Set.iUnion_subset fun hKpos ↦ ?_
+  intro p hp
+  refine bc_mem_closure_of_strictly_below W p fun ε hε ↦ ?_
+  intro ε' hε'
+  refine bc_achievability_of_rate_lt pU K W hpUpos hKpos hW
+    (by linarith [hp.1]) (by linarith [hp.2]) ?_ hε'
+  have hmax : max (p.1 - ε) 0 ≤ max p.1 0 := max_le_max (by linarith) le_rfl
+  linarith [hp.2.2]
+
+end SumRate
 
 end InformationTheory.Shannon.BroadcastChannel

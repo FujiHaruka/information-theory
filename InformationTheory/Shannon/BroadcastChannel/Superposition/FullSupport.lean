@@ -36,7 +36,7 @@ informations of a full-support pair.
 * `exists_fullSupport_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw` — over a less noisy channel, a
   rate pair satisfying the three UV outer inequalities of a channel law is dominated, up to any
   positive slack, by the two informations of a full-support pair.
-* `sub_mem_bcSuperpositionRegionFullSupport_of_lessNoisy_of_isUVChannelLaw` — that shifted rate
+* `sub_mem_bcSuperpositionRegionNoSumRate_of_lessNoisy_of_isUVChannelLaw` — that shifted rate
   pair lies in the superposition inner bound.
 -/
 
@@ -484,13 +484,13 @@ theorem exists_fullSupport_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw (W : BCChann
     exists_fullSupport_bcInfo_ge W pU K hδ hb₁ hb₂
   exact ⟨k, pU', hpU', hfs, K', hK', hfsK, hc₁, hc₂⟩
 
-lemma sub_mem_bcSuperpositionRegionFullSupport_of_lessNoisy_of_isUVChannelLaw
+lemma sub_mem_bcSuperpositionRegionNoSumRate_of_lessNoisy_of_isUVChannelLaw
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] (hln : IsBCLessNoisy W) {m : ℕ}
     {ν : Measure (Marton.bcAuxAlphabet.{u} m × V × α × β₁ × β₂)} [IsProbabilityMeasure ν]
     (h : IsUVChannelLaw W ν) {R₁ R₂ δ : ℝ} (hδ : 0 < δ)
     (h₁ : R₁ ≤ (uvInfo₁ ν).toReal) (h₂ : R₂ ≤ (uvInfo₂ ν).toReal)
     (hsum : R₁ + R₂ ≤ (uvInfoSum₂ ν).toReal) :
-    ((R₁ - δ, R₂ - δ) : ℝ × ℝ) ∈ bcSuperpositionRegionFullSupport.{u} W := by
+    ((R₁ - δ, R₂ - δ) : ℝ × ℝ) ∈ bcSuperpositionRegionNoSumRate.{u} W := by
   classical
   obtain ⟨k, pU, hpU, hfs, K, hK, hfsK, hc₁, hc₂⟩ :=
     exists_fullSupport_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw W hln h hδ h₁ h₂ hsum

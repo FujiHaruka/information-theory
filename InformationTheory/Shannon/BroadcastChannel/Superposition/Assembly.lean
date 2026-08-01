@@ -71,12 +71,12 @@ theorem uvInfoSum₂_toReal_sub_slack_le (W : BCChannel α β₁ β₂) [IsMarko
   have hle := ENNReal.toReal_le_add (uvInfoSum₂_le_uvQuantizeLaw_add_slack.{u} W h m) hfin hs
   linarith
 
-theorem sub_mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion (W : BCChannel α β₁ β₂)
+theorem sub_mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion (W : BCChannel α β₁ β₂)
     [IsMarkovKernel W] (hln : IsBCLessNoisy W) {ν : Measure (ℕ × ℕ × α × β₁ × β₂)}
     [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) {p : ℝ × ℝ} (hp : p ∈ uvRegion ν)
     (m : ℕ) {δ : ℝ} (hδ : 0 < δ) :
     ((p.1 - δ, p.2 - (uvQuantizeSlack ν m).toReal - δ) : ℝ × ℝ)
-      ∈ bcSuperpositionRegionFullSupport.{u} W := by
+      ∈ bcSuperpositionRegionNoSumRate.{u} W := by
   obtain ⟨hb₁, hb₂, hs₂, -⟩ := hp
   have hlaw : IsUVChannelLaw W (uvQuantizeLaw.{u} ν m) := uvQuantizeLaw_isUVChannelLaw W h m
   have h₁ : p.1 ≤ (uvInfo₁ (uvQuantizeLaw.{u} ν m)).toReal := by
@@ -86,13 +86,13 @@ theorem sub_mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion (W : BCChannel 
   have hsum : p.1 + (p.2 - (uvQuantizeSlack ν m).toReal)
       ≤ (uvInfoSum₂ (uvQuantizeLaw.{u} ν m)).toReal := by
     linarith [uvInfoSum₂_toReal_sub_slack_le.{u} W h m]
-  exact sub_mem_bcSuperpositionRegionFullSupport_of_lessNoisy_of_isUVChannelLaw W hln hlaw hδ
+  exact sub_mem_bcSuperpositionRegionNoSumRate_of_lessNoisy_of_isUVChannelLaw W hln hlaw hδ
     h₁ h₂ hsum
 
-theorem mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion (W : BCChannel α β₁ β₂)
+theorem mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion (W : BCChannel α β₁ β₂)
     [IsMarkovKernel W] (hln : IsBCLessNoisy W) {ν : Measure (ℕ × ℕ × α × β₁ × β₂)}
     [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) {p : ℝ × ℝ} (hp : p ∈ uvRegion ν) :
-    p ∈ bcSuperpositionRegionFullSupport.{u} W := by
+    p ∈ bcSuperpositionRegionNoSumRate.{u} W := by
   have ht : Tendsto (fun k : ℕ ↦ 1 / ((k : ℝ) + 1)) atTop (𝓝 0) :=
     tendsto_one_div_add_atTop_nhds_zero_nat
   have hslack : Tendsto (fun m : ℕ ↦ (uvQuantizeSlack ν m).toReal) atTop (𝓝 0) := by
@@ -104,22 +104,22 @@ theorem mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion (W : BCChannel α �
   have h2 : Tendsto (fun k : ℕ ↦ p.2 - (uvQuantizeSlack ν k).toReal - 1 / ((k : ℝ) + 1))
       atTop (𝓝 p.2) := by
     simpa using (tendsto_const_nhds.sub hslack).sub ht
-  exact (bcSuperpositionRegionFullSupport_isClosed W).mem_of_tendsto (h1.prodMk_nhds h2)
+  exact (bcSuperpositionRegionNoSumRate_isClosed W).mem_of_tendsto (h1.prodMk_nhds h2)
     (Eventually.of_forall fun k ↦
-      sub_mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion W hln h hp k (by positivity))
+      sub_mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion W hln h hp k (by positivity))
 
 /-- The UV outer region of a less noisy broadcast channel is contained in the superposition inner
 bound over the full-support achievability pairs.  The channel needs no support hypothesis here:
 the inclusion compares two single-letter regions, and positive mass on every output pair is asked
 for only where the inner bound is turned into codes
-(`bcSuperpositionRegionFullSupport_subset_capacity`). -/
+(`bcSuperpositionRegionNoSumRate_subset_capacity`). -/
 @[entry_point]
 theorem bc_lessNoisy_uv_subset_superposition (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hln : IsBCLessNoisy W) :
-    bcOuterRegionUV W ⊆ bcSuperpositionRegionFullSupport.{u} W := by
-  refine closure_minimal ?_ (bcSuperpositionRegionFullSupport_isClosed W)
+    bcOuterRegionUV W ⊆ bcSuperpositionRegionNoSumRate.{u} W := by
+  refine closure_minimal ?_ (bcSuperpositionRegionNoSumRate_isClosed W)
   refine Set.iUnion_subset fun ν ↦ Set.iUnion_subset fun hν ↦ fun p hp ↦ ?_
-  exact mem_bcSuperpositionRegionFullSupport_of_mem_uvRegion W hln hν hp
+  exact mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion W hln hν hp
 
 end Converse
 
@@ -145,13 +145,13 @@ theorem bc_lessNoisy_capacity_eq_uv (W : BCChannel α β₁ β₂) [IsMarkovKern
   classical
   exact Set.Subset.antisymm (bc_capacity_subset_uv W)
     ((bc_lessNoisy_uv_subset_superposition.{u} W hln).trans
-      (bcSuperpositionRegionFullSupport_subset_capacity W hW hln))
+      (bcSuperpositionRegionNoSumRate_subset_capacity W hW hln))
 
 theorem bc_lessNoisy_superposition_eq_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) (hln : IsBCLessNoisy W) :
-    bcSuperpositionRegionFullSupport.{u} W = bcCapacityRegion W := by
+    bcSuperpositionRegionNoSumRate.{u} W = bcCapacityRegion W := by
   classical
-  exact Set.Subset.antisymm (bcSuperpositionRegionFullSupport_subset_capacity W hW hln)
+  exact Set.Subset.antisymm (bcSuperpositionRegionNoSumRate_subset_capacity W hW hln)
     ((bc_capacity_subset_uv W).trans (bc_lessNoisy_uv_subset_superposition.{u} W hln))
 
 end Equality

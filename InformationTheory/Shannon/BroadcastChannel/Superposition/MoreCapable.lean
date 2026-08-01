@@ -42,11 +42,6 @@ no comparison between the two receivers.  A negative first rate is then met at t
 corner rather than by the sum-rate slot of the outer region, which is where the second of the two
 comparison bounds is spent.
 
-## Main definitions
-
-* `bcSuperpositionRegionSumRate W` — the superposition inner bound with its sum-rate constraint
-  kept, as a union over the auxiliary alphabets, restricted to the full-support indices.
-
 ## Main statements
 
 * `IsBCMoreCapable.condMutualInfo_le` — over a more capable channel, the receiver-2 information
@@ -57,8 +52,6 @@ comparison bounds is spent.
   channel law is at most `I(X; Y₁)`.
 * `mul_uvInfoJoint_le_uvInfoJoint_uvPerturbLaw` — perturbing a law toward the uniform one with
   weight `lam` keeps at least the fraction `lam` of `I(X; Y₁)`.
-* `bcSuperpositionRegionSumRate_subset_capacity` — the three-constraint inner bound sits inside the
-  operational capacity region, for any broadcast channel.
 * `bc_moreCapable_uv_subset_superposition` — the UV outer region of a more capable channel is
   contained in the three-constraint superposition inner bound.
 * `bc_moreCapable_capacity_eq_uv` — the single-letter characterization: the capacity region of a
@@ -410,63 +403,6 @@ lemma mul_uvInfoJoint_le_uvInfoJoint_uvPerturbLaw (W : BCChannel α β₁ β₂)
   exact hmix
 
 end PerturbSlot
-
-/-! ## The three-constraint inner bound -/
-
-section Region
-
-variable {α : Type u} {β₁ β₂ : Type*}
-  [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
-  [Fintype β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
-  [Fintype β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
-
-/-- The superposition inner bound of a broadcast channel with the sum-rate constraint kept: the
-closure of the union, over the full-support auxiliary laws on `Marton.bcAuxAlphabet`, of the
-regions cut out by `R₁ ≤ I(X; Y₁ ∣ U)`, `R₂ ≤ I(U; Y₂)` and `max R₁ 0 + R₂ ≤ I((U, X); Y₁)`.
-
-The sum constraint is written with the first rate clamped at zero because that is the form the
-achievability theorem takes: a nonpositive first rate asks for a single satellite codeword, so the
-wrong-cloud slack it costs is measured at `max R₁ 0`.  With that shape the whole set is achievable
-with no comparison-class hypothesis, whereas the plain sum `R₁ + R₂` would need one on the branch
-where the first rate is negative.
-
-`bcSuperpositionRegionFullSupport` drops the sum constraint, which is exact over a less noisy
-channel and a proper enlargement outside that class; this set is the general superposition bound
-and is contained in it. -/
-noncomputable def bcSuperpositionRegionSumRate (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
-  closure (⋃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k))
-    (_ : IsProbabilityMeasure pU) (_ : ∀ x : Marton.bcAuxAlphabet.{u} k, 0 < pU.real {x})
-    (K : Kernel (Marton.bcAuxAlphabet.{u} k) α) (_ : IsMarkovKernel K)
-    (_ : ∀ (x : Marton.bcAuxAlphabet.{u} k) (a : α), 0 < (K x).real {a}),
-    {p : ℝ × ℝ | p.1 ≤ bcInfo₁ pU K W ∧ p.2 ≤ bcInfo₂ pU K W
-      ∧ max p.1 0 + p.2 ≤ bcInfoJoint pU K W})
-
-omit [Nonempty α] [MeasurableSingletonClass α] [Nonempty β₁] [MeasurableSingletonClass β₁]
-  [Nonempty β₂] [MeasurableSingletonClass β₂] in
-theorem bcSuperpositionRegionSumRate_isClosed (W : BCChannel α β₁ β₂) :
-    IsClosed (bcSuperpositionRegionSumRate.{u} W) := isClosed_closure
-
-/-- The three-constraint superposition inner bound of a broadcast channel is achievable: it is
-contained in the operational capacity region.  No comparison between the two receivers is needed,
-because the region carries the sum constraint the achievability theorem asks for. -/
-@[entry_point]
-theorem bcSuperpositionRegionSumRate_subset_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
-    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) :
-    bcSuperpositionRegionSumRate.{u} W ⊆ bcCapacityRegion W := by
-  classical
-  refine closure_minimal ?_ (bc_capacityRegion_isClosed W)
-  refine Set.iUnion_subset fun k ↦ Set.iUnion_subset fun pU ↦ Set.iUnion_subset fun hpU ↦
-    Set.iUnion_subset fun hpUpos ↦ Set.iUnion_subset fun K ↦ Set.iUnion_subset fun hK ↦
-      Set.iUnion_subset fun hKpos ↦ ?_
-  intro p hp
-  refine bc_mem_closure_of_strictly_below W p fun ε hε ↦ ?_
-  intro ε' hε'
-  refine bc_achievability_of_rate_lt pU K W hpUpos hKpos hW
-    (by linarith [hp.1]) (by linarith [hp.2]) ?_ hε'
-  have hmax : max (p.1 - ε) 0 ≤ max p.1 0 := max_le_max (by linarith) le_rfl
-  linarith [hp.2.2]
-
-end Region
 
 /-! ## Repairing the support with the sum constraint -/
 
