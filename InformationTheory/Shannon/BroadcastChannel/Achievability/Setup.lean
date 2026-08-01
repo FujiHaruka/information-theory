@@ -94,9 +94,8 @@ noncomputable def bcInfo₂
 /-- The satellite conditional information
 `I(X; Y₁ ∣ U) = H(U, X) + H(U, Y₁) − H(U, X, Y₁) − H(U)` of the per-coordinate joint law.
 This is the achievable rate of receiver 1, which decodes the satellite tier on top of the
-cloud `U`.  Unlike
-the MAC `macInfo`, this is a genuine four-entropy *conditional* mutual information, not a
-plain three-term unconditional one. -/
+cloud `U`.  Unlike the MAC `macInfo`, this is a genuine four-entropy *conditional* mutual
+information, not a plain three-term unconditional one. -/
 noncomputable def bcInfo₁
     (pU : Measure U) (K : Kernel U α) (W : BCChannel α β₁ β₂) : ℝ :=
   entropy (bcJointDistribution pU K W) (fun q ↦ (q.1, q.2.1))

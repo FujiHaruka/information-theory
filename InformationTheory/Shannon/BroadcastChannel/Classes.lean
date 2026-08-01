@@ -235,8 +235,8 @@ fails on this class, so `marton_region_subset_capacity` is unavailable on it.
 @audit:ok -/
 @[entry_point]
 theorem IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero_of_one_lt_card
-    {W : BCChannel α β₁ β₂}
-    (hsd : IsBCSemiDeterministic W) (hcard : 1 < Fintype.card β₁) (a : α) :
+    {W : BCChannel α β₁ β₂} (hsd : IsBCSemiDeterministic W) (hcard : 1 < Fintype.card β₁)
+    (a : α) :
     ∃ b : β₁ × β₂, (W a).real {b} = 0 := by
   obtain ⟨f, hf⟩ := hsd
   obtain ⟨y₁, hy₁⟩ := Fintype.exists_ne_of_one_lt_card hcard (f a)

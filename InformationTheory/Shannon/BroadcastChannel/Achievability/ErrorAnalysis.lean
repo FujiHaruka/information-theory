@@ -23,7 +23,7 @@ variable {U α β₁ β₂ : Type*}
   [Fintype β₁] [DecidableEq β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
   [Fintype β₂] [DecidableEq β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
 
-/-! ### Receiver-2 (cloud) error analysis -/
+/-! ### Receiver-2 (cloud tier) error analysis -/
 
 /-- Receiver-2 two-event Bonferroni bound: when the pair `m` is sent, the receiver-2 per-pair
 error probability of the cloud joint-typical decoder is bounded by the correct-cloud atypical
@@ -649,7 +649,7 @@ theorem bc_random_codebook_E0₂_swap
   refine Finset.sum_congr rfl (fun x _ ↦ ?_)
   ring
 
-/-! ### Receiver-1 (strong) error analysis -/
+/-! ### Receiver-1 (superposition) error analysis -/
 
 /-- Receiver-1 three-event Bonferroni bound: when the pair `m` is sent, the receiver-1
 per-pair error probability of the superposition joint-typical decoder is bounded by three

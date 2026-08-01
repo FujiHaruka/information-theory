@@ -30,6 +30,7 @@ Conditional mutual information `condMutualInfo` and the Markov chain predicate
 * `mutualInfo_le_add_condMutualInfo` — `I(X; Y) ≤ I(X; Z) + I(X; Y | Z)`.
 * `condMutualInfo_map_left_measurableEquiv` — `I(e ∘ X; Y | Z) = I(X; Y | Z)`.
 * `condMutualInfo_map_middle_measurableEquiv` — `I(X; e ∘ Y | Z) = I(X; Y | Z)`.
+* `condMutualInfo_map_cond_measurableEquiv` — `I(X; Y | e ∘ Z) = I(X; Y | Z)`.
 * `isMarkovChain_map_left` — post-processing preserves the Markov property.
 
 ## Implementation notes
@@ -589,6 +590,8 @@ theorem condMutualInfo_map_cond_measurableEquiv
     ext s hs
     rw [Kernel.prod_apply, Kernel.prod_apply, hzx, hzy]
   rw [h_joint, h_factored, klDiv_map_measurableEquiv]
+
+/-! ## Stability of `IsMarkovChain` under post-processing -/
 
 /-- Markov chains are stable under post-processing on the left: if `Xs → Zc → Yo` is a Markov
 chain and `f : X → X'` is measurable, then `f ∘ Xs → Zc → Yo` is also a Markov chain. -/
