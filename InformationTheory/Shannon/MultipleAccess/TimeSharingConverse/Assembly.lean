@@ -1,12 +1,18 @@
 import InformationTheory.Shannon.MultipleAccess.TimeSharingConverse.Bridge
 
 /-!
-# Multiple access channel — time-sharing converse, CV/V assembly
+# Multiple access channel — time-sharing converse and the capacity region
 
 The converse-half headline `mac_timesharing_converse`: an achievable rate pair in the first
 quadrant lies in the closed convex hull of the union of all per-input pentagons.  Assembled from
 the Fano → 0 weak-converse limit, the uniformly-shrunk rate-point construction, and the axis
 casework, on top of the geometric gateway and measure bridge in `TimeSharingConverse.Bridge`.
+
+Pairing that converse with the achievability half `mac_achievability_region_allprob` gives the
+headline `mac_timesharing_capacity_region`: for a channel with strictly positive transition
+probabilities, the operational capacity region intersected with the first quadrant *equals* that
+closed convex hull.  Rate pairs with a negative coordinate are folded back onto the axes by
+`mac_achievable_clamp_iff`, so the converse only ever has to see first-quadrant pairs.
 -/
 
 namespace InformationTheory.Shannon.MAC
@@ -846,6 +852,14 @@ theorem mac_timesharing_converse (W : MACChannel α₁ α₂ β) [IsMarkovKernel
 
 end CVAssembly
 
+/-! ### Capacity region: converse and achievability combined
+
+The headline `mac_timesharing_capacity_region`.  Achievability contributes the inclusion of the
+closed convex hull in the capacity region; the converse contributes the reverse inclusion on the
+first quadrant, extended to the whole region by the clamping equivalence
+`mac_achievable_clamp_iff`, which lets a rate pair with a negative coordinate be replaced by its
+projection onto the axes without changing achievability. -/
+
 section VAssembly
 
 open MeasureTheory ProbabilityTheory InformationTheory InformationTheory.Shannon Filter
@@ -900,12 +914,12 @@ theorem mac_achievable_clamp_iff (W : MACChannel α₁ α₂ β) (R₁ R₂ : �
     · rw [← key R₂ n]; exact hM₂
 
 /-- Full first-quadrant characterization of the MAC capacity region (Cover–Thomas Theorem
-15.3.1): the operational capacity region, intersected with the first quadrant, equals the
-closed convex hull of the union of all per-input pentagons `macPentagon p₁ p₂ W` over
-probability inputs `p₁`, `p₂`.  The `⊆` half is the converse (`mac_timesharing_converse`, with
-negative rates clamped back to the axis via `mac_achievable_clamp_iff`); the `⊇` half is
-achievability (`mac_achievability_region_allprob`, whose pentagons already lie in the first
-quadrant). -/
+15.3.1): for a channel whose transition probabilities are all strictly positive, the operational
+capacity region, intersected with the first quadrant, equals the closed convex hull of the union
+of all per-input pentagons `macPentagon p₁ p₂ W` over probability inputs `p₁`, `p₂`.  The `⊆`
+half is the converse (`mac_timesharing_converse`, with negative rates clamped back to the axis
+via `mac_achievable_clamp_iff`); the `⊇` half is achievability
+(`mac_achievability_region_allprob`, whose pentagons already lie in the first quadrant). -/
 @[entry_point]
 theorem mac_timesharing_capacity_region (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     (hW : ∀ a : α₁ × α₂, ∀ b : β, 0 < (W a).real {b}) :
