@@ -143,9 +143,10 @@ theorem bcInfo₁_eq_condMutualInfo_toReal {U : Type*}
 /-! ### Achievability over a less noisy channel -/
 
 /-- Achievability half of the superposition inner bound over a less noisy broadcast channel.
-Degradedness enters `bc_achievability` only through the rate-sum inequality
-`I(X; Y₁ ∣ U) + I(U; Y₂) ≤ I((U, X); Y₁)`, which `bc_lessNoisy_infoJoint_ge` supplies from the
-weaker class hypothesis, so the same two-tier random-coding argument applies verbatim.
+The two-tier random-coding argument is shared with the degraded channel through
+`bc_achievability_of_infoJoint_ge`, which takes the rate-sum inequality
+`I(X; Y₁ ∣ U) + I(U; Y₂) ≤ I((U, X); Y₁)` as a hypothesis instead of deriving it;
+`bc_lessNoisy_infoJoint_ge` supplies it from the weaker class hypothesis.
 @audit:ok -/
 @[entry_point]
 theorem bc_lessNoisy_achievability {U : Type u}

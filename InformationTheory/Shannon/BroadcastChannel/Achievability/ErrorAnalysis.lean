@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.BroadcastChannel.Achievability.Setup
 
 /-!
-# Degraded broadcast channel — per-receiver error analysis
+# Broadcast channel — per-receiver error analysis
 
 The receiver-2 (cloud) error analysis with its random-codebook averaging (channel fold and
 wrong-cloud swap), and the receiver-1 (strong) error analysis with its random-coding averaged

@@ -171,7 +171,7 @@ lemma isMarkovChain_of_compProd_encoder
   rw [hκ]
   have hRHSconst : (fun y : Y ↦ G (Zc (m, y), Xs (m, y)))
       = (fun _ : Y ↦ ∫⁻ y' : Y, f (g m, m, y') ∂(Wcode (g m))) := by
-    funext y; show G (g m, m) = _; rw [hG_def]
+    funext y; change G (g m, m) = _; rw [hG_def]
   rw [hRHSconst, lintegral_const, measure_univ, mul_one]
 
 /-! ### Marginalizing and reindexing a product measure -/
@@ -362,7 +362,7 @@ lemma isMarkovChain_of_compProd_pi
     (fun y ↦ f (Zc (m, y), F (m, y), Yo (m, y))) hFm3]
   refine lintegral_congr fun y ↦ ?_
   rw [hG_def]
-  show ∫⁻ b, f (Zc (m, Function.update y i b), F (m, Function.update y i b),
+  change ∫⁻ b, f (Zc (m, Function.update y i b), F (m, Function.update y i b),
       Yo (m, Function.update y i b)) ∂(W (x m i))
     = ∫⁻ b, f (Zc (m, y), F (m, y), b) ∂(W (x m i))
   refine lintegral_congr fun b ↦ ?_

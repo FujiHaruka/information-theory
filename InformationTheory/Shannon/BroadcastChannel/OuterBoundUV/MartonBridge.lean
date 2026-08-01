@@ -31,8 +31,6 @@ the inner quadrilateral is contained in the outer region.
 * `martonInfo₁_eq_uvInfo₁_toReal` and `martonInfo₂_eq_uvInfo₂_toReal` — the two corner
   informations of the inner bound, defined as entropy differences over `ℝ`, are the corresponding
   slots of the exchanged law.
-* `martonInfoV₁V₂_eq_mutualInfo_toReal` — the auxiliary dependence of the inner bound is the
-  mutual information of the two auxiliaries of the Marton joint law.
 * `marton_region_subset_uv` — Marton's inner-bound quadrilateral is contained in the UV outer
   region, again with no support hypothesis.
 
@@ -249,16 +247,6 @@ lemma martonInfo₂_eq_uvInfo₂_toReal
       (fun q ↦ q.2.1) (fun q ↦ q.2.2.2.2) (by fun_prop) (by fun_prop)]
   rfl
 
-lemma martonInfoV₁V₂_eq_mutualInfo_toReal
-    (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
-    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
-    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    martonInfoV₁V₂ pV K W
-      = (mutualInfo (martonJointDistribution pV K W) (fun q ↦ q.1) (fun q ↦ q.2.1)).toReal := by
-  rw [mutualInfo_toReal_eq_entropy_form (martonJointDistribution pV K W)
-    (fun q ↦ q.1) (fun q ↦ q.2.1) (by fun_prop) (by fun_prop)]
-  rfl
-
 /-! ## The Markov chains carried by the Marton joint law -/
 
 private lemma martonJointDistribution_eq_map
@@ -371,6 +359,16 @@ private lemma condMutualInfo_aux₂_le_input
     (fun q ↦ q.1) (by fun_prop) (by fun_prop) (by fun_prop) (by fun_prop)
     (martonJointDistribution_isMarkovChain₂ pV K W)
     (mutualInfo_ne_top _ _ _ (by fun_prop) (by fun_prop))
+
+private lemma martonInfoV₁V₂_eq_mutualInfo_toReal
+    (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    martonInfoV₁V₂ pV K W
+      = (mutualInfo (martonJointDistribution pV K W) (fun q ↦ q.1) (fun q ↦ q.2.1)).toReal := by
+  rw [mutualInfo_toReal_eq_entropy_form (martonJointDistribution pV K W)
+    (fun q ↦ q.1) (fun q ↦ q.2.1) (by fun_prop) (by fun_prop)]
+  rfl
 
 private lemma martonInfo₁_eq_mutualInfo_toReal
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]

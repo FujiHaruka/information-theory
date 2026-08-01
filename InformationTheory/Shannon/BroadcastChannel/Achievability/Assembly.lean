@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.BroadcastChannel.Achievability.ErrorAnalysis
 
 /-!
-# Degraded broadcast channel — superposition random-coding assembly and headline
+# Broadcast channel — superposition random-coding assembly and the degraded headline
 
 The superposition random-coding assembly (E0 vanishing, per-codebook error decomposition,
 two-codebook average bounds, random → deterministic two-tier pigeonhole, rate slack) and the

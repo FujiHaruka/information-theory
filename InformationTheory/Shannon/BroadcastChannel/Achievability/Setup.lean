@@ -9,7 +9,7 @@ import InformationTheory.Shannon.CondEntropyMemoryless
 import InformationTheory.Shannon.SlepianWolf.ConditionalTypicalSlice
 
 /-!
-# Degraded broadcast channel — achievability setup and infrastructure
+# Broadcast channel — superposition achievability setup and infrastructure
 
 Cover–Thomas §15.6.2 superposition coding. The structural setup: the per-coordinate joint
 distribution and its i.i.d. ambient measure, the auxiliary-variable informations, the two-tier
