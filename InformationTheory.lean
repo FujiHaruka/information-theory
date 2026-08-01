@@ -276,11 +276,10 @@ import InformationTheory.Probability.TwoSidedExtension.PastBlockJointLaw
 import InformationTheory.Probability.TwoSidedExtension.LogCondIntegral
 import InformationTheory.Probability.TwoSidedExtension.CondExpMeasurePreserving
 import InformationTheory.Probability.TwoSidedExtension
--- Typed Random Variable API (I-1)
+-- Typed Random Variable API
 import InformationTheory.Shannon.TypedRV
--- Asymptotic / exponent framework (I-3)
+-- Asymptotic / exponent framework
 import InformationTheory.Asymptotic
--- Wave5 parallel-10 publish
 import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.MaxEntropy.ConstrainedKKT
 import InformationTheory.Shannon.LZ78.GreedyParsing
@@ -293,18 +292,14 @@ import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly.Assembly
 import InformationTheory.Shannon.FisherInfo.DeBruijnAssembly
 import InformationTheory.Shannon.FisherInfo.DeBruijnGeneral
 import InformationTheory.Shannon.AWGN.JointlyTypicalSet
--- Wave5 gap-close
 import InformationTheory.Shannon.Cramer.LC2PhaseC
 import InformationTheory.Shannon.MeasurePiTiltedFactorization
 import InformationTheory.Shannon.Cramer.InfinitePiTiltedChangeOfMeasure
--- Wave6 parallel-10 body discharge
 import InformationTheory.Shannon.AWGN.MIBridge
 import InformationTheory.Shannon.ParallelGaussian.KKT
 import InformationTheory.Shannon.EPI.L3Integration
--- Wave6 gap-close
 import InformationTheory.Shannon.Hoeffding.BoundaryMinimizer
 import InformationTheory.Shannon.WynerZiv.FactorizableRate
--- Wave7 parallel-10 + gap-close
 import InformationTheory.Shannon.AWGN.MutualInfoBridge
 import InformationTheory.Shannon.CondKLIntegral
 import InformationTheory.Shannon.MutualInfoReencoding

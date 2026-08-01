@@ -23,6 +23,16 @@ None of the statements mentions a channel or a code: they are properties of `mut
 * `condMutualInfo_eq_of_leftInverse_cond` — the same re-encoding applied to the conditioning
   variable of a conditional mutual information, obtained from the chain rule by cancelling the
   tag term on both sides.
+
+## Implementation notes
+
+A variable relabeled by a `MeasurableEquiv` is the special case `g := e.symm`, so
+`mutualInfo_map_left_measurableEquiv` is an instance of `mutualInfo_eq_of_leftInverse`; it is
+stated separately because it is proved directly from `klDiv_map_measurableEquiv`, without the
+data processing inequality.  Its conditioner analogue `condMutualInfo_map_cond_measurableEquiv`
+is not subsumed the same way: cancelling the conditioning variable's own term of the chain rule,
+which is how `condMutualInfo_eq_of_leftInverse_cond` is proved, needs that term to be finite,
+whereas a relabel needs no side condition at all.
 -/
 
 namespace InformationTheory.Shannon
