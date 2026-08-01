@@ -63,24 +63,42 @@ sim と定義の逐語照合 (CLAUDE.md 検証の誠実性)
   (I(U;Y), I(V;Z), I(U;V), I(X;Y), I(X;Z) のいずれも Y,Z の同時分布を見ない)。
   相関つき `q(y,z|x)` とその周辺だけを与えた場合が一致することを数値で確認する。
 
+**候補 P3 (§5)** — 上の 2 案が死んだあとの受け皿として、スラックを**恒等式**で
+書き直したところから出る第 3 案:
+
+    L'(T,p) := min over p(u,v|x) の [ I(U;X|Y) + I(V;X|Z) + H(X|U,V) + I(U;V|X) ]
+    主張: `L' >= H(X|Y,Z)`   (⟹ `gap <= min{I(X;Y|Z), I(X;Z|Y)}`)
+
 各節が何を決めるか
 ------------------
     §0  harness の照合 (高速評価器 / 周辺への還元 / 列挙の重複排除 / 補題)
     §1  コントロール (肯定 |X|=2 / 否定 Blackwell 再現 / 黄金比 witness)
     §2  (N1) と (N2) を **両候補に両方**当てる (R2 §11 の教訓: 片側だけだと死案が通る)
-    §3  P1 の掃引と kill witness    §4  P2 の掃引と kill witness    §5  まとめ表
+    §3  P1 の掃引と kill witness (dense 族と違反率の内訳を含む)
+    §4  P2 の掃引と kill witness
+    §5  **スラック恒等式** (記号的 = 証明) と 4 項損失 L' の内訳、候補 P3
+    §6  まとめ表
+
+§5 の恒等式が本 probe で唯一の**証明**である (係数相殺であって掃引ではない):
+
+    gap(T,p) = min{H(X|Y), H(X|Z)} - L'(T,p)
+
+⟹ 「鋭いチャネル依存スラックを作る」問題は **非負 4 項損失 L' を下から抑える**問題
+そのものに書き換わる。この形での必要条件は (N1) = 「|X|=2 で
+L' = min{H(X|Y),H(X|Z)}」、(N2) = 「格子 BC で L' = 0」となる。
 
 再実行コマンド / 期待される判定
 -------------------------------
     python3 docs/shannon/bc-jognair-phi-check.py           # 約 130s
-    python3 docs/shannon/bc-jognair-phi-check.py --quick   # 約 30s (掃引を縮小)
+    python3 docs/shannon/bc-jognair-phi-check.py --quick   # 約 25s (掃引を縮小)
 
 乱数種と最適化の開始点はすべて固定してあるので **再実行で報告値は一致する**
 (実行時間行を除く)。期待される最終判定 (通常実行):
 
     §2 (N1)/(N2) は **両候補とも 4 マス全部 PASS** — それでも下で両方死ぬ
-    §3 **P1 は refuted** (§3(e) 雑音つき Blackwell の明示 witness、margin ~ +0.10 bit)
+    §3 **P1 は refuted** (§3(e) 雑音つき Blackwell の明示 witness、margin ~ +0.15 bit)
     §4 **P2 は refuted** (§4(d) 部分併合 witness、margin ~ +0.037 bit)
+    §5 **P3 は (N1) FAIL** (|X|=2 で上界を ~0.21 bit 緩める = Theorem 1 より弱い)
 
 ⚠ **(N1)/(N2) を両方通しても足りない**というのが本 leg の主要な収穫である。
    2 条件はどちらも「退化した場所」(|X|=2 と決定論的 BC) での整合しか要求せず、
@@ -101,7 +119,14 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from bc_probe import Joint, local_max_certificate, parse, softmax  # noqa: E402
+from bc_probe import (  # noqa: E402
+    BayesNet,
+    Joint,
+    local_max_certificate,
+    parse,
+    prove_identity,
+    softmax,
+)
 
 
 def _load_sibling(fname: str, modname: str):
@@ -128,7 +153,11 @@ _LHS = parse("I(U;Y) + I(V;Z) - I(U;V)")
 _IXY = parse("I(X;Y)")
 _IXZ = parse("I(X;Z)")
 
-VIOL_TOL = 1e-7                          # これを超えた margin は witness として再評価する
+VIOL_TOL = 1e-7                          # 最適化由来の margin を違反と呼ぶ閾値
+DIRECT_TOL = 1e-9                        # **直接評価**由来の margin の閾値 (丸めは 1e-15 台)
+
+# 4 項損失 L' = I(U;X|Y) + I(V;X|Z) + H(X|U,V) + I(U;V|X) の各項 (§5)
+_LOSS = ("I(U;X|Y)", "I(V;X|Z)", "H(X|U,V)", "I(U;V|X)")
 
 
 # --------------------------------------------------------------------------
@@ -154,6 +183,27 @@ def objective(puvx: np.ndarray, Cy: np.ndarray, Cz: np.ndarray) -> float:
 
 def ixy_ixz(px: np.ndarray, Cy: np.ndarray, Cz: np.ndarray) -> tuple[float, float]:
     return _mi(px[:, None] * Cy), _mi(px[:, None] * Cz)
+
+
+def loss_terms(puvx: np.ndarray, Cy: np.ndarray, Cz: np.ndarray) -> tuple[float, ...]:
+    """`(I(U;X|Y), I(V;X|Z), H(X|U,V), I(U;V|X))` (bit)。§5 の 4 項損失 L' の内訳。
+
+    Markov `(U,V) -> X -> (Y,Z)` を構成から使うので、4 項とも**周辺チャネルだけ**で
+    決まる (`q(y,z|x)` の結合の取り方に依らない)。§5(c) が `bc_probe.Joint` 経由と照合。
+    """
+    pux = puvx.sum(axis=1)                                # p(u,x)
+    pvx = puvx.sum(axis=0)                                # p(v,x)
+    puv = puvx.sum(axis=2)
+    px = puvx.sum(axis=(0, 1))
+    puxy = pux[:, :, None] * Cy[None, :, :]               # U - X - Y
+    pvxz = pvx[:, :, None] * Cz[None, :, :]
+    i_uxy = (_h(puxy.sum(axis=1)) + _h(puxy.sum(axis=0))
+             - _h(puxy.sum(axis=(0, 1))) - _h(puxy))
+    i_vxz = (_h(pvxz.sum(axis=1)) + _h(pvxz.sum(axis=0))
+             - _h(pvxz.sum(axis=(0, 1))) - _h(pvxz))
+    h_x_uv = _h(puvx) - _h(puv)
+    i_uv_x = _h(pux) + _h(pvx) - _h(px) - _h(puvx)
+    return i_uxy, i_vxz, h_x_uv, i_uv_x
 
 
 def marginals(T: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -802,6 +852,13 @@ def section3(quick: bool) -> dict:
     note(m_e, "§3(e) 雑音つき Blackwell (明示 witness)")
     worst_slope = max(worst_slope, slope_e)
 
+    # --- (f) 平滑化 Blackwell (dense) の eps 掃引 ------------------------
+    note(section3f(quick), "§3(f) 平滑化 Blackwell (dense)")
+
+    # --- (g) dense ランダムチャネルでの違反率 ---------------------------
+    dense = section3g(quick)
+    note(dense["max"], "§3(g) dense ランダム |X|=3")
+
     print(f"  ⟹ §3 全体の最大 margin (T - Phi_det) = **{best_margin:+.6e}** "
           f"({best_where})")
     if best_margin > VIOL_TOL:
@@ -810,7 +867,166 @@ def section3(quick: bool) -> dict:
         print("     ⟹ **掃引では P1 を殺せなかった** (= 証拠。証明ではない)。")
     print()
     return {"margin": best_margin, "where": best_where, "witness": best_witness,
-            "slope": worst_slope}
+            "slope": worst_slope, "dense": dense}
+
+
+def best_empty_cell_gain(px, Cy, Cz, fine: bool = True):
+    """最良の決定論的対から**空セル摂動**だけで届く最良値 (最適化を使わない直接評価)。
+
+    返り `(最良値, Phi_det, 摂動の記述)`。摂動の強さは幾何格子で振る — 平滑化した
+    チャネルでは最適な強さが平滑化量とともに小さくなるので、粗い格子だと**違反を
+    見落とす** (親 brief の「小さい margin を緩い許容で偽陰性にするな」に対応)。
+    """
+    pd, arg, _ = phi_det(px, Cy, Cz)
+    kx = px.size
+    grid_e = ([0.5, 0.3, 0.2, 0.1] + [10.0 ** (-k) for k in range(2, 9)]
+              + [3.0 * 10.0 ** (-k) for k in range(2, 9)]) if fine else [0.3, 0.1, 0.01]
+    best, desc = pd, None
+    for (u, v) in empty_cells(arg, kx):
+        for x in range(kx):
+            for e in grid_e:
+                val = objective(cell_perturbed(arg, px, x, u, v, e), Cy, Cz)
+                if val > best:
+                    best, desc = val, (arg, x, u, v, e)
+    return best, pd, desc
+
+
+def smoothed_blackwell(eps: float) -> tuple[np.ndarray, np.ndarray]:
+    """`(1-eps)·決定論的 + eps·一様` で平滑化した Blackwell の周辺チャネル。
+
+    `eps > 0` なら全遷移確率が正 = **dense**。`eps -> 0` で決定論的 Blackwell。
+    """
+    Cy, Cz = marginals(blackwell())
+    return (1 - eps) * Cy + eps / Cy.shape[1], (1 - eps) * Cz + eps / Cz.shape[1]
+
+
+def section3f(quick: bool) -> float:
+    """dense な平滑化 Blackwell 族での `T - Phi_det` の eps 依存。"""
+    print("  (f) **平滑化 Blackwell (dense)** — `(1-eps)·決定論的 + eps·一様`:")
+    print("      eps > 0 で全遷移確率が正 = dense。eps -> 0 で決定論的 Blackwell に戻る。")
+    print("      margin は**明示 witness の直接評価** (空セル摂動、強さは幾何格子) と、")
+    print("      決定論的対 25 本すべてを seed に入れた最大化の**両方**で測る。")
+    rng = np.random.default_rng(20260803)
+    pxs = [("一様", np.full(3, 1.0 / 3.0)),
+           ("黄金比", np.array([Q_GOLDEN, 1 - 2 * Q_GOLDEN, Q_GOLDEN]))]
+    print("      p(x)   |  eps   |  Phi_det  | margin (直接) | margin (最大化) |"
+          " margin/eps")
+    print("      -------+--------+-----------+---------------+-----------------+"
+          "-----------")
+    best = -np.inf
+    for name, px in pxs:
+        for eps in ((1e-1, 1e-2, 1e-3, 1e-4) if not quick else (1e-1, 1e-3)):
+            Cy, Cz = smoothed_blackwell(eps)
+            direct, pd, _ = best_empty_cell_gain(px, Cy, Cz)
+            rep = t_lower(px, Cy, Cz, rng, restarts=4 if quick else 12,
+                          seed_pairs=det_pairs(3))
+            m_d, m_o = direct - pd, rep.best - pd
+            best = max(best, m_d, m_o)
+            print(f"      {name:<6} | {eps:<6g} | {pd:9.6f} | {m_d:+13.3e} |"
+                  f" {m_o:+15.3e} | {max(m_d, m_o) / eps:10.4f}")
+    print("      ⟹ margin は eps に**ほぼ比例**して 0 に潰れる (最右列がほぼ一定)。")
+    print("        決定論的 Blackwell (eps=0) では margin ちょうど 0 なので、"
+          "これは §3(e) の")
+    print("        機構と整合する — 平滑化は超一次の**損**を一次に落とし、"
+          "超一次の**得**だけを残す。")
+    print("      ⚠ 直接評価の丸めは 1e-15 台なので、この列は許容 1e-9 で違反と呼べる。")
+    return best
+
+
+def section3g(quick: bool) -> dict:
+    """dense (Dirichlet) なランダム `|X|=3` チャネルで P1 が破れる**割合**。"""
+    print("  (g) **dense ランダム |X|=3 チャネルでの違反率** (許容 "
+          f"{DIRECT_TOL:g}、直接評価のみ):")
+    rng = np.random.default_rng(90210)
+    n = 100 if quick else 600
+    n_cell, n_cell_viol, margins = 0, 0, []
+    classB = []
+    for _ in range(n):
+        conc = float(rng.choice([0.3, 1.0, 3.0]))
+        Cy = rng.dirichlet(np.full(int(rng.integers(2, 5)), conc), size=3)
+        Cz = rng.dirichlet(np.full(int(rng.integers(2, 5)), conc), size=3)
+        px = rng.dirichlet(np.full(3, float(rng.choice([0.5, 1.0, 3.0]))))
+        best, pd, _ = best_empty_cell_gain(px, Cy, Cz, fine=not quick)
+        _, arg, _ = phi_det(px, Cy, Cz)
+        if empty_cells(arg, 3):
+            n_cell += 1
+            n_cell_viol += int(best - pd > DIRECT_TOL)
+            margins.append(best - pd)
+        else:
+            classB.append((px, Cy, Cz, pd, arg))
+    n_nocell = len(classB)
+    print(f"      Dirichlet 引きなので全 {n} 本が dense (全遷移確率が正)。**最良の決定論的")
+    print("      対が空セルを持つか**で 2 クラスに分けると、判定の質がまったく違う:")
+    print(f"      [クラス A] 空セルを**持つ**: {n_cell} 本 ⟹ "
+          f"**{n_cell_viol} 本が違反** (直接評価で決着)")
+    if n_cell:
+        print(f"        margin の中央値 {np.median(margins):.4f}、最大 "
+              f"{max(margins):.4f}。§3(e) の超一次機構が働くので、ここは掃引ではなく")
+        print("        **witness の直接評価で決まる** = 取りこぼしが原理的に無い。")
+    # クラス B は Phi_det = max{I,I} に退化しており、P1 の違反は gap > 0 と同値
+    worst_deg = max(abs(pd - max(ixy_ixz(px, Cy, Cz)))
+                    for px, Cy, Cz, pd, _ in classB) if classB else 0.0
+    n_b = min(len(classB), 8 if quick else 40)
+    b_screen, b_opt, b_margins = 0, 0, []
+    for px, Cy, Cz, pd, arg in classB[:n_b]:
+        sv, _ = screen_value(px, Cy, Cz, pd, arg, rng, 200)
+        b_screen += int(sv - pd > DIRECT_TOL)
+        rep = t_lower(px, Cy, Cz, rng, restarts=6 if quick else 15,
+                      seed_pairs=det_pairs(3))
+        b_opt += int(rep.best - pd > DIRECT_TOL)
+        b_margins.append(rep.best - pd)
+    print(f"      [クラス B] 空セルを**持たない**: {n_nocell} 本 "
+          f"(最良対の片方が定数 ⟹ Phi_det = max{{I,I}} に退化、"
+          f"ずれの最大 {worst_deg:.1e})")
+    print(f"        ここでは `T > Phi_det` は **`gap > 0` と同値**で、決定論性の問題では")
+    print(f"        なくなる。抽出した {n_b} 本を 2 通りの探索強度で叩くと:")
+    print(f"          screen (頂点方向 + ランダム 200 本)        ⟹ 違反 {b_screen}/{n_b}")
+    print(f"          最大化 (決定論的対 25 seed + 再スタート {6 if quick else 15}) "
+          f"⟹ 違反 {b_opt}/{n_b}  (margin の最大 {max(b_margins):.4f})")
+    print("        ⚠ **探索を強めると違反が増える** ⟹ クラス B の違反率は探索強度に")
+    print("          依存する**下界**であって、真の率ではない。「率」を確定値として")
+    print("          報告してはいけない。")
+    n_viol = n_cell_viol + b_opt
+    margins = np.array(margins + b_margins)
+
+    # --- dense チャネルの gap と最適点の台の大きさ (親 brief 項目 3 の診断) ---
+    print()
+    print("      **診断** — dense チャネルで `gap` と最適点 `p(u,v)` の台を測る")
+    print("      (『dense なら最適 p(u,v) は全格子台を持つ』という読みの数値的な検査):")
+    rng2 = np.random.default_rng(31337)
+    n_diag = 8 if quick else 40
+    n_gap_pos, supports, gaps = 0, [], []
+    for _ in range(n_diag):
+        conc = float(rng2.choice([0.3, 1.0, 3.0]))
+        Cy = rng2.dirichlet(np.full(int(rng2.integers(2, 5)), conc), size=3)
+        Cz = rng2.dirichlet(np.full(int(rng2.integers(2, 5)), conc), size=3)
+        px = rng2.dirichlet(np.full(3, float(rng2.choice([0.5, 1.0, 3.0]))))
+        pd, arg, _ = phi_det(px, Cy, Cz)
+        rep = t_lower(px, Cy, Cz, rng2, restarts=4 if quick else 10,
+                      seed_pairs=det_pairs(3))
+        t_best = max(rep.best, pd)
+        g = t_best - max(ixy_ixz(px, Cy, Cz))
+        gaps.append(g)
+        n_gap_pos += int(g > 1e-6)
+        cond = softmax(rep.best_x.reshape(3, 9), axis=-1).reshape(3, 3, 3)
+        puv = cond_to_joint(cond, px).sum(axis=2)
+        supports.append(int((puv > 1e-6).sum()))
+    gaps = np.array(gaps)
+    print(f"      {n_diag} 本: gap > 1e-6 のもの **{n_gap_pos}/{n_diag}** 本 "
+          f"(gap の中央値 {np.median(gaps):.2e}、最大 {gaps.max():.4f})")
+    print(f"      最適点の p(u,v) の台の大きさ (9 マス中): 中央値 "
+          f"{int(np.median(supports))}、最小 {min(supports)}、最大 {max(supports)}")
+    print("      ⟹ 最適点の台は 3-8 マスに散らばり、**全格子 9 マスにはならなかった**。")
+    print("        gap = 0 の側では台 3 マス (U=X, V=定数) に落ちる。")
+    print("      ⚠ これは『dense なら最適 p(u,v) は全格子台を持つ』という読みと")
+    print("        整合しない数値である。ただし最大化は局所最適の最良値でしかないので、")
+    print("        **文献の主張を否定する証拠にはならない** (真の最大化子を外している")
+    print("        可能性が残る)。文献側の逐語確認は本 probe の担当外。")
+    return {"max": float(margins.max()), "n": n, "n_cell": n_cell,
+            "cell_viol": n_cell_viol, "nocell": n_nocell, "n_b": n_b,
+            "b_screen": b_screen, "b_opt": b_opt, "n_viol": n_viol,
+            "gap_pos": n_gap_pos, "n_diag": n_diag,
+            "sup_med": int(np.median(supports)), "sup_max": max(supports)}
 
 
 def bsc(e: float) -> np.ndarray:
@@ -1162,19 +1378,234 @@ def section4d(quick: bool) -> float:
 
 
 # --------------------------------------------------------------------------
-# §5 まとめ
+# §5 スラック恒等式 — gap = min{H(X|Y),H(X|Z)} - L' と、候補 P3
 # --------------------------------------------------------------------------
-def section5(n: dict, r3: dict, r4: dict, quick: bool) -> None:
+def l_prime(px, Cy, Cz, rng, restarts=8, seed_pairs=()):
+    """4 項損失 `L'` を `p(u,v|x)` 上で**最小化**する (`T` の最大化とは独立の run)。
+
+    返り `(最小値, 最適点での 4 項, 最適点の p(u,v,x))`。返るのは局所最適の中の
+    最良値 = `L'` の **上界**にすぎない (`T` 側が下界なのと表裏)。
+    """
+    kx = px.size
+
+    def f(theta):
+        cond = softmax(theta.reshape(kx, kx * kx), axis=-1).reshape(kx, kx, kx)
+        return -sum(loss_terms(cond_to_joint(cond, px), Cy, Cz))   # 最小化 = -最大化
+
+    seeds = []
+    for fg in seed_pairs:
+        c = np.zeros((kx, kx, kx))
+        for x in range(kx):
+            c[x, fg[0][x], fg[1][x]] = 1.0
+        seeds.append(np.log(c.ravel() + 1e-6))
+    rep = maximize_hd(f, kx**3, rng, restarts=restarts, seeds=seeds, maxiter=3000)
+    cond = softmax(rep.best_x.reshape(kx, kx * kx), axis=-1).reshape(kx, kx, kx)
+    p3 = cond_to_joint(cond, px)
+    terms = loss_terms(p3, Cy, Cz)
+    return -rep.best, terms, p3
+
+
+def section5(quick: bool) -> dict:
     print("=" * 78)
-    print("§5 まとめ")
+    print("§5 スラック恒等式 — `gap = min{H(X|Y),H(X|Z)} - L'` と第 3 の候補 P3")
+    print("=" * 78)
+    ok = True
+
+    # --- (a) 記号的恒等式 (係数相殺 = 証明。掃引ではない) -----------------
+    print("  (a) **記号的恒等式** (`prove_identity` = 同時エントロピー係数の相殺 ⟹ 証明):")
+    items = [
+        ("(A1)", "I(X;Y) + H(X|Y)", "H(X)",
+         "⟹ max{I(X;Y),I(X;Z)} = H(X) - min{H(X|Y),H(X|Z)} (R2 step 2)"),
+        ("(A2)", "I(X;Z) + H(X|Z)", "H(X)", "同上の Z 側"),
+        ("(B)", "H(X) - (I(U;Y) + I(V;Z) - I(U;V))",
+         "I(U;X|Y) + I(V;X|Z) + H(X|U,V) + I(U;V|X) - I(U;Y|X) - I(V;Z|X)",
+         "5 変数**無条件**の線形情報恒等式 (Markov を使わない形)"),
+    ]
+    for tag, lhs, rhs, why in items:
+        held, resid = prove_identity(lhs, rhs)
+        ok &= held
+        print(f"      [{'PASS' if held else 'FAIL'}] {tag} {lhs} = {rhs}")
+        print(f"             {why}")
+        if not held:
+            print(f"             残差 = {resid}")
+
+    # --- (b) Markov 下で 2 つの引き算項が 0 -----------------------------
+    rng = np.random.default_rng(161803)
+    worst = 0.0
+    for _ in range(200 if quick else 600):
+        net = BayesNet()
+        net.add(("U", "V"), (3, 3), dirichlet=float(rng.choice([0.3, 1.0, 3.0])))
+        net.add("X", 3, parents=("U", "V"), dirichlet=1.0)
+        net.add(("Y", "Z"), (3, 3), parents=("X",), dirichlet=1.0)
+        J = net.build(rng)
+        worst = max(worst, abs(J.eval(parse("I(U;Y|X)"), "bits")),
+                    abs(J.eval(parse("I(V;Z|X)"), "bits")))
+    good = worst < 1e-12
+    ok &= good
+    print(f"  (b) Markov `(U,V) -> X -> (Y,Z)` の BayesNet で "
+          f"|I(U;Y|X)|, |I(V;Z|X)| の最大 = {worst:.3e}  {'OK' if good else '**NG**'}")
+    print("      ⟹ (B) の引き算項が落ちて **H(X) - T の被最小化量 = 4 項損失 L'**、")
+    print("        (A) と合わせて **gap(T,p) = min{H(X|Y),H(X|Z)} - L'(T,p)** が従う。")
+    print("        ⟹ 「鋭いチャネル依存スラックを作る」問題は "
+          "**非負 4 項損失 L' を下から抑える**問題そのものである。")
+    print("        この形での (N1)/(N2): (N1) = 「|X|=2 で L' = min{H(X|Y),H(X|Z)}」、")
+    print("        (N2) = 「格子 BC で L' = 0」(U=Y,V=Z で 4 項が項別に消える)。")
+
+    # --- (c) 高速 4 項評価器の照合 --------------------------------------
+    worst_c = 0.0
+    for _ in range(100):
+        Cy = rng.dirichlet(np.full(3, 1.0), size=3)
+        Cz = rng.dirichlet(np.full(3, 1.0), size=3)
+        puvx = rng.dirichlet(np.full(27, 1.0)).reshape(3, 3, 3)
+        J = joint5(puvx, Cy[:, :, None] * Cz[:, None, :])
+        ref = [J.eval(parse(e), "bits") for e in _LOSS]
+        worst_c = max(worst_c, max(abs(a - b) for a, b in zip(loss_terms(puvx, Cy, Cz), ref)))
+    good = worst_c < 1e-12
+    ok &= good
+    print(f"  (c) 4 項の高速評価器 vs `bc_probe.Joint` 経由 (100 本): 最大差 {worst_c:.3e}"
+          f"  {'OK' if good else '**NG**'}")
+
+    # --- (d0) 恒等式の**点ごと**の数値確認 -------------------------------
+    worst_pw = 0.0
+    for _ in range(200 if quick else 600):
+        Cy = rng.dirichlet(np.full(int(rng.integers(2, 5)), 1.0), size=3)
+        Cz = rng.dirichlet(np.full(int(rng.integers(2, 5)), 1.0), size=3)
+        puvx = rng.dirichlet(np.full(27, float(rng.choice([0.3, 1.0])))).reshape(3, 3, 3)
+        px = puvx.sum(axis=(0, 1))
+        worst_pw = max(worst_pw, abs(_h(px) - objective(puvx, Cy, Cz)
+                                     - sum(loss_terms(puvx, Cy, Cz))))
+    good = worst_pw < 1e-12
+    ok &= good
+    print(f"  (d) 恒等式 `H(X) - [I(U;Y)+I(V;Z)-I(U;V)] = L'` を **点ごとに** 数値確認")
+    print(f"      (ランダムな p(u,v|x) で最大差 {worst_pw:.3e})  "
+          f"{'OK' if good else '**NG**'}")
+    print("      ⚠ これが恒等式そのものの検査である。下の表の 2 列は**それぞれ独立に")
+    print("        最適化した片側評価**で、差は恒等式の破れではなく収束誤差である")
+    print("        (T は下界、L' は上界なので、どちらも gap を下から評価する)。")
+    print("      最適点での 4 項を並べる:")
+    Cy_b, Cz_b = marginals(blackwell())
+    chans = [
+        ("Blackwell + 黄金比 p", Cy_b, Cz_b,
+         np.array([Q_GOLDEN, 1 - 2 * Q_GOLDEN, Q_GOLDEN])),
+        ("Blackwell + 一様", Cy_b, Cz_b, np.full(3, 1.0 / 3.0)),
+        ("平滑化 Blackwell eps=0.1 (dense)", *smoothed_blackwell(0.1),
+         np.full(3, 1.0 / 3.0)),
+        ("BSC(0.1) 2 本 (|X|=2)", bsc(0.1), bsc(0.1), np.full(2, 0.5)),
+    ]
+    print("      チャネル                     |  gap(直接) | gap(恒等式) | 収束差  |"
+          "   L'")
+    print("      -----------------------------+------------+-------------+---------+"
+          "----------")
+    rows = []
+    for name, Cy, Cz, px in chans:
+        kx = px.size
+        rep = t_lower(px, Cy, Cz, rng, restarts=4 if quick else 10,
+                      seed_pairs=det_pairs(kx))
+        pd, _, _ = phi_det(px, Cy, Cz)
+        t_best = max(rep.best, pd)
+        gap_direct = t_best - max(ixy_ixz(px, Cy, Cz))
+        lp, terms, _ = l_prime(px, Cy, Cz, rng, restarts=4 if quick else 10,
+                               seed_pairs=det_pairs(kx))
+        hxy = _h(px[:, None] * Cy) - _h((px[:, None] * Cy).sum(axis=0))   # H(X|Y)
+        hxz = _h(px[:, None] * Cz) - _h((px[:, None] * Cz).sum(axis=0))
+        gap_id = min(hxy, hxz) - lp
+        good = abs(gap_direct - gap_id) < 1e-4 and min(terms) > -1e-9
+        ok &= good
+        rows.append((name, terms, lp, min(hxy, hxz), px, Cy, Cz))
+        print(f"      {name:<28} | {gap_direct:10.6f} | {gap_id:11.6f} |"
+              f" {gap_direct - gap_id:+.1e} | {lp:8.6f}{'' if good else '  **NG**'}")
+    print("      最適点での 4 項の内訳 (すべて >= 0 でなければならない):")
+    print(f"      チャネル                     | {_LOSS[0]:>9} | {_LOSS[1]:>9} |"
+          f" {_LOSS[2]:>9} | {_LOSS[3]:>9}")
+    print("      -----------------------------+-----------+-----------+-----------+"
+          "-----------")
+    for name, terms, _, _, _, _, _ in rows:
+        print(f"      {name:<28} | {terms[0]:9.6f} | {terms[1]:9.6f} |"
+              f" {terms[2]:9.6f} | {terms[3]:9.6f}")
+    print("      ⟹ Blackwell では 4 項すべて 0 (U=Y,V=Z が項別に消す) = L' = 0。")
+    print("        BSC 2 本 (|X|=2) では L' = min{H(X|Y),H(X|Z)} ちょうど "
+          "(= Theorem 1 の内容)。")
+
+    # --- (e) P3: L' >= H(X|Y,Z) か -------------------------------------
+    print("  (e) **候補 P3**: `L' >= H(X|Y,Z)`  (⟹ `gap <= min{I(X;Y|Z), I(X;Z|Y)}`)")
+    print("      RHS は `q(y,z|x)` の**結合**に依存する一方、L' と gap は"
+          "**周辺だけ**で決まる (§0(b))。")
+    print("      ⟹ 同じ gap に対し結合の取り方で RHS が動く。ここでは 案 B と同じ")
+    print("        条件付き独立 `Y ⊥ Z | X` の代表で測る。")
+    print("      チャネル                     |    L'    | H(X\\|Y,Z) | margin (RHS-L') |"
+          " 判定")
+    print("      -----------------------------+----------+----------+-----------------+"
+          "------")
+    p3_max = -np.inf
+    for name, terms, lp, _, px, Cy, Cz in rows:
+        pxyz = px[:, None, None] * Cy[:, :, None] * Cz[:, None, :]
+        h_x_yz = _h(pxyz) - _h(pxyz.sum(axis=0))
+        m = h_x_yz - lp
+        p3_max = max(p3_max, m)
+        print(f"      {name:<28} | {lp:8.6f} | {h_x_yz:8.6f} | {m:+15.6f} |"
+              f" {'**違反**' if m > VIOL_TOL else 'OK'}")
+    n_p3 = 3 if quick else 12
+    for _ in range(n_p3):
+        conc = float(rng.choice([0.3, 1.0, 3.0]))
+        Cy = rng.dirichlet(np.full(int(rng.integers(2, 5)), conc), size=3)
+        Cz = rng.dirichlet(np.full(int(rng.integers(2, 5)), conc), size=3)
+        px = rng.dirichlet(np.full(3, conc))
+        lp, _, _ = l_prime(px, Cy, Cz, rng, restarts=3 if quick else 6,
+                           seed_pairs=det_pairs(3)[:5])
+        pxyz = px[:, None, None] * Cy[:, :, None] * Cz[:, None, :]
+        p3_max = max(p3_max, _h(pxyz) - _h(pxyz.sum(axis=0)) - lp)
+    print(f"      + ランダム dense チャネル {n_p3} 本を追加 ⟹ margin の最大 "
+          f"{p3_max:+.6f}")
+    print("      ⟹ 不等式そのものは "
+          f"{'**破れた**' if p3_max > VIOL_TOL else 'この掃引では破れなかった'} "
+          "(L' は上界なので margin は上振れ側 = 違反判定に有利)。")
+    n1_p3 = False       # 下で数値確認する
+    px2 = np.full(2, 0.5)
+    Cy2, Cz2 = bsc(0.1), bsc(0.1)
+    pxyz = px2[:, None, None] * Cy2[:, :, None] * Cz2[:, None, :]
+    h_x_yz = _h(pxyz) - _h(pxyz.sum(axis=0))
+    hxy = _h(px2[:, None] * Cy2) - _h((px2[:, None] * Cy2).sum(axis=0))
+    slack = min(hxy, hxy) - h_x_yz
+    print(f"      (N1) の検査 (|X|=2, BSC(0.1) 2 本): P3 の上界は "
+          f"max{{I,I}} + {slack:.6f} を許す")
+    print(f"        が Theorem 1 の真値は max{{I,I}} ちょうど ⟹ **P3 は (N1) を "
+          f"{slack:.6f} bit 緩める = FAIL**")
+    print("      (N2) の検査 (格子 BC): L' = 0 かつ H(X|Y,Z) = 0 ⟹ 等号 = **PASS**")
+    print("      ⟹ P3 は **案 B と同じ穴** — (N2) は等号で満たすが (N1) で緩む。")
+    print(f"  §5 判定: {'全 OK' if ok else '**NG あり**'}\n")
+    return {"ok": ok, "n1": n1_p3, "n2": True, "margin": p3_max, "slack": slack}
+
+
+# --------------------------------------------------------------------------
+# §6 まとめ
+# --------------------------------------------------------------------------
+def section6(n: dict, r3: dict, r4: dict, r5: dict, quick: bool) -> None:
+    print("=" * 78)
+    print("§6 まとめ")
     print("=" * 78)
     v = lambda b: "PASS" if b else "**FAIL**"           # noqa: E731
-    print("  候補 | 主張                     | (N1) | (N2) | 最大 margin      | 発生場所")
-    print("  -----+--------------------------+------+------+------------------+" + "-" * 26)
-    print(f"  P1   | T(X) = Phi_det(q,p)      | {v(n['n1_p1']):<4} | {v(n['n2_p1']):<4} |"
+    print("  候補 | 主張                       | (N1) | (N2) | 最大 margin      | 発生場所")
+    print("  -----+----------------------------+------+------+------------------+" + "-" * 26)
+    print(f"  P1   | T(X) = Phi_det(q,p)        | {v(n['n1_p1']):<4} | {v(n['n2_p1']):<4} |"
           f" {r3['margin']:+.6e} | {r3['where']}")
-    print(f"  P2   | gap(T,p) <= D(p)         | {v(n['n1_p2']):<4} | {v(n['n2_p2']):<4} |"
+    print(f"  P2   | gap(T,p) <= D(p)           | {v(n['n1_p2']):<4} | {v(n['n2_p2']):<4} |"
           f" {r4['margin']:+.6e} | {r4['where']}")
+    print(f"  P3   | L' >= H(X\\|Y,Z)            | {v(r5['n1']):<4} | {v(r5['n2']):<4} |"
+          f" {r5['margin']:+.6e} | §5(e) (RHS - L')")
+    print()
+    d = r3["dense"]
+    print(f"  dense ランダム |X|=3 チャネル {d['n']} 本での P1 違反 (§3(g)):")
+    print(f"     クラス A (最良対に空セルあり) {d['n_cell']:4d} 本 ⟹ "
+          f"**{d['cell_viol']} 本が違反** (直接評価で決着、取りこぼし無し)")
+    print(f"     クラス B (空セルなし = Phi_det が max{{I,I}} に退化) {d['nocell']:4d} 本 ⟹ "
+          f"抽出 {d['n_b']} 本で")
+    print(f"       screen は違反 {d['b_screen']} 本、最大化は違反 {d['b_opt']} 本 "
+          "— **探索を強めると増える**")
+    print("     ⟹ 「dense なら P1 はほぼ必ず破れる」かどうかは、この probe では")
+    print("        **確定できない**。クラス A は確定的に破れるが、クラス B の率は")
+    print("        探索強度に依存する下界しか出ない (率を確定値として読まないこと)。")
+    print(f"     診断: 最適点の p(u,v) の台は中央値 {d['sup_med']}/9、最大 "
+          f"{d['sup_max']}/9 で全格子には届かず。")
     print()
     print("  margin の意味: P1 は `T の最大化 - Phi_det`、P2 は `gap - D(p)`。")
     print("  **どちらも右辺は全列挙で厳密、左辺は最大化の下界**なので、正の margin は")
@@ -1230,11 +1661,13 @@ def main() -> None:
     nres, ok2 = section2(args.quick)
     r3 = section3(args.quick)
     r4 = section4(args.quick)
-    section5(nres, r3, r4, args.quick)
+    r5 = section5(args.quick)
+    section6(nres, r3, r4, r5, args.quick)
 
     print()
     print(f"  harness コントロール: §0 {'PASS' if ok0 else '**FAIL**'} / "
-          f"§1 {'PASS' if ok1 else '**FAIL**'} / §2 {'PASS' if ok2 else '**FAIL**'}")
+          f"§1 {'PASS' if ok1 else '**FAIL**'} / §2 {'PASS' if ok2 else '**FAIL**'} / "
+          f"§5 {'PASS' if r5['ok'] else '**FAIL**'}")
     print(f"\n合計実行時間 {time.time() - t0:.1f}s")
 
 
