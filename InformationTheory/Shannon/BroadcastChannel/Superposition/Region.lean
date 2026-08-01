@@ -3,18 +3,18 @@ import InformationTheory.Shannon.BroadcastChannel.Classes
 import InformationTheory.Shannon.BroadcastChannel.MartonUnion
 
 /-!
-# Broadcast channel — the superposition inner bound over a less noisy channel
+# Broadcast channel — the superposition inner bound
 
 Superposition coding sends a cloud center `U` to both receivers and a satellite `X` to the
-first one only.  Its inner bound is achievable as soon as the first receiver decodes the cloud
-at least as well as the second one does, which is exactly what `IsBCLessNoisy` asks; physical
-degradedness is not needed.  This file takes the union of that bound over the auxiliary
-alphabets, so that it can be compared with the outer bounds as a set.
+first one only.  This file takes the union of its inner bound over the auxiliary alphabets, so
+that it can be compared with the outer bounds as a set.
 
 Two unions are taken, over the same full-support indices and differing only in the constraints
 cutting out each member.  Keeping the sum-rate constraint gives the general superposition bound,
-achievable over any broadcast channel; dropping it gives a larger set, achievable over a less
-noisy one, where `I(U; Y₁) ≥ I(U; Y₂)` makes the omitted inequality follow from the two kept ones.
+achievable over any broadcast channel; dropping it gives a superset, achievable as soon as the
+first receiver decodes the cloud at least as well as the second one does — which is exactly what
+`IsBCLessNoisy` asks, physical degradedness is not needed — because `I(U; Y₁) ≥ I(U; Y₂)` makes
+the omitted inequality follow from the two kept ones.
 
 ## Main definitions
 
@@ -235,8 +235,8 @@ with no comparison-class hypothesis, whereas the plain sum `R₁ + R₂` would n
 where the first rate is negative.
 
 `bcSuperpositionRegionNoSumRate` drops the sum constraint, which is exact over a less noisy
-channel and a proper enlargement outside that class; this set is the general superposition bound
-and is contained in it. -/
+channel but not in general; this set is the general superposition bound and is contained in
+it. -/
 noncomputable def bcSuperpositionRegionSumRate (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k))
     (_ : IsProbabilityMeasure pU) (_ : ∀ x : Marton.bcAuxAlphabet.{u} k, 0 < pU.real {x})

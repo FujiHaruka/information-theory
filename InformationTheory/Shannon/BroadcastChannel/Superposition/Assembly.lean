@@ -24,11 +24,11 @@ in the inner bound needs nothing beyond the less noisy hypothesis.
 * `bc_lessNoisy_capacity_eq_uv` — the single-letter characterization: the capacity region of a
   less noisy broadcast channel whose transition law gives every output pair positive mass is its
   UV outer region `bcOuterRegionUV`.
-* `bc_lessNoisy_superposition_eq_capacity` — the same capacity region read off the superposition
-  inner bound instead of the outer bound.
+* `bc_lessNoisy_superposition_eq_capacity` — the same capacity region read off the
+  two-constraint superposition inner bound instead of the outer bound.
 * `bc_lessNoisy_uv_subset_superposition` — the inclusion the two equalities rest on: the UV
-  outer region of a less noisy channel is contained in the superposition inner bound over the
-  full-support achievability pairs.
+  outer region of a less noisy channel is contained in the two-constraint superposition inner
+  bound over the full-support achievability pairs.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -108,10 +108,10 @@ theorem mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion (W : BCChannel α β�
     (Eventually.of_forall fun k ↦
       sub_mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion W hln h hp k (by positivity))
 
-/-- The UV outer region of a less noisy broadcast channel is contained in the superposition inner
-bound over the full-support achievability pairs.  The channel needs no support hypothesis here:
-the inclusion compares two single-letter regions, and positive mass on every output pair is asked
-for only where the inner bound is turned into codes
+/-- The UV outer region of a less noisy broadcast channel is contained in the two-constraint
+superposition inner bound over the full-support achievability pairs.  The channel needs no
+support hypothesis here: the inclusion compares two single-letter regions, and positive mass on
+every output pair is asked for only where the inner bound is turned into codes
 (`bcSuperpositionRegionNoSumRate_subset_capacity`). -/
 @[entry_point]
 theorem bc_lessNoisy_uv_subset_superposition (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
