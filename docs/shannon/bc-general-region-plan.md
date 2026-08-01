@@ -221,7 +221,10 @@ def 化 + ベタ書き置換 (`bb40c820`、数え漏れは F-26-(b)) / **F-15 �
 3. `uvAux_pad_mutualInfo_prod_eq` (`Bridge.lean:723`) の `prod` が何の直積か読めない / 4. `_cond` の位置が Mathlib 順と逆な `condMutualInfo_eq_of_leftInverse_cond`。どちらも優先度低
 5. **`martonRegionUnionFS_subset_capacity` (`MartonUnion.lean:119`) が P7 で厳密に包含された** —
    `martonRegionUnionFS ⊆ martonRegionUnion` なので `martonRegionUnion_subset_capacity`
-   (`MartonFullSupport.lean:232`) が上位互換。retire / `@[deprecated]` / 弱い版も残す、は API 設計判断
+   (`MartonFullSupport.lean:232`) が上位互換。retire / `@[deprecated]` / 弱い版も残す、は API 設計判断。
+   **direct consumer は 0 decl / 0 file** (`dep_consumers.sh` 実測) ⟹ どの選択でも波及なし。
+   **F-6 の `FS` 改名束と対象が重なる** (`FS` を宣言名断片に持つのは `MartonUnion.lean` の 3 本のみ)
+   ⟹ **B-5 を先に決めてから F-6**、でないと消す宣言を改名することになる
 
 ### C. 数学的な締めどころ / その他
 
@@ -325,7 +328,9 @@ def 化 + ベタ書き置換 (`bb40c820`、数え漏れは F-26-(b)) / **F-15 �
     (`Superposition/FullSupport.lean:224` / `:250`) と `boolLaw` のエントロピー補題 3 本 (`:194`–`:208`) は
     下流の `FullSupport.lean` に残っている。`docs/rules/module-structure.md`「def は下に、基本 API は
     その隣に」に反し、**混合だけを使いたい consumer が一様摂動の装置ごと import する**羽目になる。
-    移動の可否判定は 1 点: `Real.binEntropy` が `TimeShare.lean` の import 閉包に届くか。
+    移動の可否判定は 1 点: `Real.binEntropy` が `TimeShare.lean` の import 閉包に届くか
+    ⟹ **届く** (`import …Superposition.TimeShare` 単独のファイルで `#check @Real.binEntropy` が通る、
+    実測) ⟹ **移動は可能**で、残るのは F-15 との順序判断だけ。
     ⚠ **F-15 と対象が重なる** — `boolLaw` 一族は F-15 で `Shannon/` 側へ出す候補でもあるので、
     どちらを先に取るかを決めてから着手する (両方を別 leg でやると同じ 3 本を 2 度動かす)
 25. **F-c と同じ `ℝ≥0∞` イディオムが BC 族の外に 2 箇所残っている** — `BroadcastChannel/OuterBound.lean:362`
