@@ -12,7 +12,8 @@ Two-receiver broadcast channel (BC) primitives, following the single-user
 
 * `BCChannel α β₁ β₂ := Kernel α (β₁ × β₂)` — a discrete BC with one input and a pair
   of outputs.
-* `IsBCDegraded W` — physical degradedness `X → Y₁ → Y₂` of the channel `W`.
+* `IsBCDegraded W` — physical degradedness `X → Y₁ → Y₂`: the second output is the first one
+  passed through a further kernel.
 * `BroadcastCode M₁ M₂ n α β₁ β₂` — a two-receiver block code: one joint encoder for the
   message pair and a separate decoder per receiver.
 * `BroadcastCode.errorProbAt₁` / `errorProbAt₂` — the pointwise per-receiver block-decoding
@@ -42,9 +43,10 @@ abbrev BCChannel (α β₁ β₂ : Type*)
 /-- Physical degradedness `X → Y₁ → Y₂`: the second (degraded) output is a stochastic
 function of the first output alone.  There is a Markov kernel `Q : Kernel β₁ β₂` (the
 degrading channel) such that sampling `(y₁, y₂) ∼ W x` is the same as sampling
-`y₁ ∼ (W x).map Prod.fst` and then `y₂ ∼ Q y₁`.  A structural precondition of the
-degraded-BC achievability theorem (parity with the converse's block-prefix degradedness),
-not a load-bearing hypothesis. -/
+`y₁ ∼ (W x).map Prod.fst` and then `y₂ ∼ Q y₁`.  A condition on the channel alone,
+constraining neither the code nor the input law: it is a structural precondition rather than
+a load-bearing hypothesis, and the block-prefix degradedness the converse runs on is derived
+from it. -/
 def IsBCDegraded (W : BCChannel α β₁ β₂) : Prop :=
   ∃ Q : Kernel β₁ β₂, IsMarkovKernel Q ∧
     ∀ a : α, W a = ((W a).map Prod.fst).bind (fun y₁ ↦ (Q y₁).map (fun y₂ ↦ (y₁, y₂)))

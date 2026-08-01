@@ -11,12 +11,12 @@ import InformationTheory.Shannon.SlepianWolf.ConditionalTypicalSlice
 /-!
 # Degraded broadcast channel — achievability setup and infrastructure
 
-Cover–Thomas §15.6.2 superposition coding. The structural setup: the
-per-coordinate joint distribution and its i.i.d. ambient measure, the auxiliary-variable
-informations, the two-tier (cloud / satellite) random codebook, the i.i.d. coordinate facts and
-positivity of the BC ambient law, the `(U, X)` marginal factorization, typical-set relabeling
-invariance, the two exponential ingredients of the covering bound, the conditional-slice
-satellite typicality bound, and the two-tier decoders assembling the broadcast code.
+Cover–Thomas §15.6.2 superposition coding. The structural setup: the per-coordinate joint
+distribution and its i.i.d. ambient measure, the auxiliary-variable informations, the two-tier
+(cloud / satellite) random codebook, the i.i.d. coordinate facts and positivity of the BC
+ambient law, the `(U, X)` marginal factorization, typical-set relabeling invariance, the two
+exponential ingredients of the covering bound, the conditional-slice satellite typicality
+bound, and the two-tier decoders assembling the broadcast code.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -413,7 +413,8 @@ lemma bc_perseq_mass_le
       have : (∑ i : Fin n, pmfLog μ bcUs (u i)) / n < H_U + ε := by linarith
       have := (div_lt_iff₀ hn_pos_R).mp this
       linarith
-    have hSUX : (n : ℝ) * (H_UX - ε) < ∑ i : Fin n, pmfLog μ (jointSequence bcUs bcXs) (u i, x i) := by
+    have hSUX :
+        (n : ℝ) * (H_UX - ε) < ∑ i : Fin n, pmfLog μ (jointSequence bcUs bcXs) (u i, x i) := by
       have hgt := (abs_lt.mp hux).1
       have : H_UX - ε < (∑ i : Fin n, pmfLog μ (jointSequence bcUs bcXs) (u i, x i)) / n := by
         linarith
