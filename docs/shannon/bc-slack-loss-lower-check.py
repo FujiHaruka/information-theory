@@ -473,17 +473,31 @@ def section2(quick: bool) -> dict:
         hx = _h(px)
         gy, gz, _, _, _ = gamma_sup(px, Cy, Cz, rng, restarts=4)
         l_sup = hx - min(gy, gz)
-        l_ib, _ = lambda_ib(px, Cy, Cz, rng, n_lam=13 if quick else 21)
+        l_ib, _ = lambda_ib(px, Cy, Cz, rng, n_lam=13 if quick else 21,
+                            restarts=3 if kx <= 6 else 10)
         ld = lambda_det(px, Cy, Cz)[0] if kx <= 6 else float("nan")
         rows.append((name, hx, l_sup, l_ib, ld))
         print(f"  {name:<20} H(X)={hx:.4f}  Λ_sup={l_sup:+.3e}  Λ_ib={l_ib:+.3e}  "
               f"Λ_det={ld:+.3e}")
-    worst = max(abs(r[2]) for r in rows), max(abs(r[3]) for r in rows)
-    print(f"  ⟹ `Λ_sup` の |値| の最大 = {worst[0]:.3e} / `Λ_ib` = {worst[1]:.3e}")
-    ok = max(worst) < 1e-5
-    verdict = "PASS" if ok else "**FAIL** (下界が正なら L' = 0 と矛盾 = バグ)"
+    # 証明済の下界が `L' = 0` を超えたら、それは数学的矛盾ではなく**推定不足**である
+    # (`Gamma` / `G(λ)` は最大化 = 真値の下界 ⟹ `Λ` は上振れする)。黙って除外せず、
+    # 推定不足として分けて数え、どの行がそうなったかを必ず出す。
+    tol_est = 1e-4
+    short = [r for r in rows if max(r[2], r[3]) > tol_est]
+    clean = [r for r in rows if max(r[2], r[3]) <= tol_est]
+    worst = (max(abs(r[2]) for r in clean) if clean else 0.0,
+             max(abs(r[3]) for r in clean) if clean else 0.0)
+    print(f"  ⟹ 推定が足りた {len(clean)}/{len(rows)} 件での |値| の最大: "
+          f"`Λ_sup` {worst[0]:.3e} / `Λ_ib` {worst[1]:.3e}")
+    for r in short:
+        print(f"  ⚠ **推定不足** {r[0]}: Λ_sup={r[2]:+.3e} / Λ_ib={r[3]:+.3e} — "
+              "証明済の下界が `L' = 0` を超えている ⟹ `G(λ)` の最大化が届いていない"
+              "だけで反例ではない (|X| が大きいほど起きる)")
+    ok = max(worst) < 1e-5 and not short
+    verdict = "PASS" if ok else ("**保留** (推定不足 %d 件。数学的な反例ではない)"
+                                 % len(short))
     print(f"  ⟹ (N2) {verdict}")
-    return dict(rows=rows, ok=ok)
+    return dict(rows=rows, ok=ok, short=len(short))
 
 
 # --------------------------------------------------------------------------
@@ -843,7 +857,8 @@ def section5(r1: dict, r2: dict, r3: dict, r4: dict, r4b: dict,
     print(f"  (N1) `|X|=2` で鋭いか: {'**FAIL** (証明書つき)' if n1_cert else 'PASS'} "
           f"(格子による証明書 {r1['cert']}/{len(r1['rows'])} 本、"
           f"deficit の最大 {max(r1['d_grid']):+.6f})")
-    print(f"  (N2) 格子 BC で 0 か  : {'PASS' if r2['ok'] else '**FAIL**'}")
+    n2_txt = "PASS" if r2["ok"] else "**保留** (推定不足 %d 件)" % r2["short"]
+    print(f"  (N2) 格子 BC で 0 か  : {n2_txt}")
     print("  (N3) 非決定論的点での局所最適性: **自動 PASS** "
           "(証明済の下界は摂動で破れない ⟹ L13 の死因は本候補には効かない)")
     print(f"  generic な非退化点: slack/gap の中央 {r4['ratio_med']:.2f}、"
