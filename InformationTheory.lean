@@ -125,6 +125,7 @@ import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.Quantization
 import InformationTheory.Shannon.BroadcastChannel.Classes
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.MartonBridge
 import InformationTheory.Shannon.BroadcastChannel.MartonUnion
+import InformationTheory.Shannon.BroadcastChannel.MartonFullSupport
 import InformationTheory.Shannon.BroadcastChannel.Superposition.Region
 import InformationTheory.Shannon.BroadcastChannel.Superposition.TimeShare
 import InformationTheory.Shannon.BroadcastChannel.Superposition.FullSupport
