@@ -1,7 +1,7 @@
 import Mathlib.MeasureTheory.Measure.Real
 import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
-import Mathlib.Topology.Instances.Real.Lemmas
 import Mathlib.Tactic.Finiteness
+import Mathlib.Topology.Instances.Real.Lemmas
 
 /-!
 # Mixing two measures at a clamped weight
@@ -22,6 +22,9 @@ and the second measure charges that point, and it depends continuously on the we
 
 * `mixLaw_real_apply` — the singleton mass of the mixture is the convex combination of the two
   singleton masses.
+* `mixLaw_real_pos` — at a positive weight the mixture charges every point the second measure
+  charges.
+* `mixLaw_real_continuous` — a singleton mass of the mixture depends continuously on the weight.
 
 ## Implementation notes
 

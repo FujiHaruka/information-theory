@@ -17,7 +17,7 @@ that limit and removes the two auxiliary hypotheses.
 ## Main definitions
 
 * `martonMixKernel K κ₀ ε` — the input kernel smoothed toward a fixed anchor measure, letter by
-  letter, reusing the clamped weight of `InformationTheory.mixLaw`.
+  letter, by the clamped-weight mixture `InformationTheory.mixLaw`.
 
 ## Main statements
 

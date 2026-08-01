@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
+import InformationTheory.Probability.Mixture
 import InformationTheory.Shannon.MultipleAccess.Achievability
 import InformationTheory.Shannon.MultipleAccess.Reconciliation
-import InformationTheory.Probability.Mixture
 import Mathlib.Analysis.Convex.Topology
 import Mathlib.Probability.Distributions.Uniform
 import Mathlib.MeasureTheory.Constructions.Pi

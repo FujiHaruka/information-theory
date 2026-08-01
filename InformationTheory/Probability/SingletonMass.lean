@@ -20,7 +20,7 @@ singleton masses of a pushforward are the sums of the masses over the fibers.
 ## Implementation notes
 
 The module sits at the bottom of the import DAG — it depends only on Mathlib — so any file
-needing the identity can import it without pulling in information-theoretic material.
+needing either identity can import it without pulling in information-theoretic material.
 -/
 
 namespace InformationTheory
