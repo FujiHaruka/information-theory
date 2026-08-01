@@ -22,9 +22,11 @@
 
 | slug | 軸 | 状態 | 直近 leg | 死因 / 現況 | 残った副産物 |
 |---|---|---|---|---|---|
-| `lit-landscape` | — | `todo` | — | 親 plan §1.1 の F1–F8 を原論文で verbatim 確認 (L0) | — |
-| `probe-harness` | — | `todo` | — | `bc-marton-union-gap-check.py` を候補命題差し替え可能な形へ一般化 (L1)。kill-first の道具 | — |
-| `weakest-hyp-morecapable` | A | `todo` | — | `bc_moreCapable_uv_subset_superposition` の実使用仮説を最弱化 (L2) | — |
+| `lit-landscape` | — | `todo` | — | 親 plan §1.1 の F1–F8 + 外部ノート V7–V10 (日付つき文献主張) を原論文で verbatim 確認 (L0) | — |
+| `probe-harness` | — | `todo` | — | `bc-marton-union-gap-check.py` を候補命題差し替え可能な形へ一般化 + 外部ノート V1–V3 を即決着 (L1)。kill-first の道具 | — |
+| `selftensor-reduction` | E+D | `todo` | — | **L2 = 本 relay の分岐点**。外部ノート V4 / V5 — multi-letter 表現 (定理1) と support function 経由の還元 (3) が我々の定義で生きているか | — |
+| `selftensor-counterexample` | E | `todo` | — | 同一チャネルの自己テンソルで `h_2 > 2 h_1` を数値探索 (外部ノート (11))。これが 1 つ出れば `C(T) ⊋ M(T)` が直ちに従う。**L2 が生きたら着手** | — |
+| `weakest-hyp-morecapable` | A | `todo` | — | `bc_moreCapable_uv_subset_superposition` の実使用仮説を最弱化 (L3) | — |
 | `outer-slack-localize` | B | `todo` | — | `bc_capacity_subset_uv` の不等号ステップを全列挙し等号成立条件を書き出す | — |
 | `jog-nair-inequality` | C | `todo` | — | BSSC の情報不等式を Lean で述べる (T1) | — |
 | `multiletter-subject` | D | `todo` | — | multi-letter 表現の Lean 構成 + 「単一文字特徴付けを持つ」の定義候補 (Leg 2) | — |
@@ -48,7 +50,9 @@
 
 | idea | 軸 | 中身 | 起票 leg |
 |---|---|---|---|
-| (まだ無い) | | | |
+| `residual-as-slack-diagnostic` | B | 外部ノートの残差恒等式 (5) は「一文字化がどこで壊れるか」を明示する。これを我々の `bc_capacity_subset_uv` の緩みの局所化に転用できないか | L(-1) |
+| `absorption-as-class-def` | A+E | 外部ノートの吸収条件 (9) `Δ₁₂ ≤ N₁₂ + G₁₂` を**満たすチャネルのクラス**として定義すると、既知クラス (degraded / less noisy / more capable) を含む新クラスになるか。軸 A の最弱仮説抽出と合流しうる | L(-1) |
+| `collider-conditioning` | C | 残差の正体が collider conditioning (独立な `A,B` が共通の子 `Y₁` を条件付けて従属化) なら、その現象を直接測る情報量が新しい情報不等式の候補になる | L(-1) |
 
 ## 軸ごとの連続ゼロ進捗カウント (round-robin 判定用)
 
