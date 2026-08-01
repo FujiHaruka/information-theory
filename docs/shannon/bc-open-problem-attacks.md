@@ -16,14 +16,14 @@
 
 **20 leg** (L0–L20 の枠割りは親 plan §6.2 が SoT)。延長判断は L20 完了時点。
 **固定枠**: L0 文献 / L1 probe 基盤 / L4・L9・L14 棚卸し / **L19 収穫・L20 記録 (予約済、探索に流用しない)**。
-**現在**: leg 1 / 20 (**L0 完了** 2026-08-01 — 次は L1)。
+**現在**: leg 2 / 20 (**L1 完了** 2026-08-01 — 次は L2)。
 
 ## Attack 一覧
 
 | slug | 軸 | 状態 | 直近 leg | 死因 / 現況 | 残った副産物 |
 |---|---|---|---|---|---|
 | `lit-landscape` | — | `harvested` | **L0** | **完了**。F1–F8 + 外部ノート V6–V10 を原論文で verbatim 確認し `bc-facts.md` に 13 行。うち **F3 REFUTED** (UV は最良既知 outer でない) / **F7 は plan より強い** (`Δ₁₈ᴴ`) / **F4・F6・F8 は PARTIAL** (帰属・内容・出典の誤り) / 外部ノートの文献層は生存 (V9 は日付まで一致) | 訂正済ランドスケープ (親 plan §1.1 / §1.3) + 下記の子 attack 6 本 |
-| `probe-harness` | — | `todo` | — | `bc-marton-union-gap-check.py` を候補命題差し替え可能な形へ一般化 + テストケース 2 本 = 外部ノート V1–V3 と `markovity-local-max-repro` (L1)。kill-first の道具 | — |
+| `probe-harness` | — | `harvested` | **L1** | **完了**。基盤 `bc_probe.py` (情報量式の記号展開 / 構造制約つき掃引 / 補助変数上の最大化、selftest 18 項目) + 実行可能 probe 2 本。使い方は親 plan §2.1。テストケース (a) 外部ノート V1–V3 は**3 本とも TRUE**、うち V1 は係数相殺による**証明** (掃引ではない)、V2 は**強化つき** (無仮定の (5) の残差が正確に `I(A;B) − I(Y₁;Z₂∣A,B)` ⟹ ノートの 2 仮定はちょうど必要十分)。⚠ **ノートへの訂正 1 件**: V3 の数値例は**ノート自身の結論には不要** — 残差が相互情報量 2 本の和ゆえ設定下で `Φ ≥ Ψ` は恒真で、例が示すのは「残差が恒等的に 0 ではない」ことだけ。逐語 → [`bc-facts.md`](bc-facts.md) §数値 probe の判定 (L1) | 基盤そのもの (以後の全 attack の入力) + idea `residual-as-slack-diagnostic` の裏づけ (残差の**閉じた式**が確定) |
 | `selftensor-reduction` | E+D | `todo` | — | **L2 = 本 relay の分岐点**。外部ノート V4 / V5 — multi-letter 表現 (定理1) と support function 経由の還元 (3) が我々の定義で生きているか。**+ L0 が足した項目**: support function `h_n^T(θ)` の加法性が既知予想の双対汎関数 `F(T,{a_x})` の加法性と同一命題か (どちらの文献も述べていない) | — |
 | `selftensor-counterexample` | E | `todo` | — | 同一チャネルの自己テンソルで `h_2 > 2 h_1` を数値探索 (外部ノート (11))。これが 1 つ出れば `C(T) ⊋ M(T)` が直ちに従う。**L2 が生きたら着手**。⚠ 還元自体は既知ゆえ、軸 E で新規性を主張できるのはここ | — |
 | `weakest-hyp-morecapable` | A | `todo` | — | `bc_moreCapable_uv_subset_superposition` の実使用仮説を最弱化 (L3) | — |
@@ -33,11 +33,13 @@
 | `jog-nair-inequality` | C | `todo` | — | BSSC の情報不等式を Lean で述べる (T1)。⚠ この不等式は inner の明示評価を**可能にする**道具 (F4 の訂正) | — |
 | `multiletter-subject` | D | `todo` | — | multi-letter 表現の Lean 構成 + **Li の Table I のレベル (`Σ₁ᴴ` / `Π₂ᴴ` / `Δ₁₈ᴴ`) と我々の在庫の等号定理の対応付け** (L2)。⚠ 旧「単一文字特徴付けを持つ、の定義候補」は F7 で肯定決着済ゆえ主語を差し替え | — |
 | `bc-computability-openness` | D | `todo` | — | **F8 の NOT-FOUND から起票**。「BC 容量領域の計算可能性は未決」と明示する一次文献が見つかっていない。否定的解決を標的にする前に出典を立てるか、**無いことを確定事実にする** (⚠ Fawzi–Fermé arXiv:2310.05515 は一発符号化の近似困難性で別物) | — |
-| `markovity-conjecture` | G | `todo` | — | Gohari–Liu–Nair (ISIT 2025) **Conjecture 2 (Markovity Conjecture)** = 「Marton 領域の極点評価では `U → (W,X) → V` を持つ組だけで十分」。**真に未解決、根拠は数値証拠のみ** (`|X|=3,4,5` で各 10,000 チャネル超)。本 relay 最大の近距離標的 (L5)。⚠ 局所最適性条件だけで証明する路線は論文自身の反例が潰している | — |
-| `markovity-local-max-repro` | G | `todo` | — | 同論文 §III-B の局所最大点インスタンス (`X=Y=Z={A,B,C}`、`{a_x}` / `α` / `λ` / 3×3 遷移行列 2 枚 / 目的値 4 つがすべて明示) の数値再現。**L1 harness の 2 つ目のテストケース = 既知の答えがある検証課題** | — |
+| `markovity-conjecture` | G | `todo` | — | Gohari–Liu–Nair (ISIT 2025) **Conjecture 2 (Markovity Conjecture)** = 「Marton 領域の極点評価では `U → (W,X) → V` を持つ組だけで十分」。**真に未解決、根拠は数値証拠のみ** (`\|X\|=3,4,5` で各 10,000 チャネル超)。本 relay 最大の近距離標的 (L5)。⚠ 「局所最適性条件だけで証明する路線は論文自身の反例が潰している」は **L1 で弱まった** (下記 `markovity-localopt-route`) | — |
+| `markovity-local-max-repro` | G | `harvested` | **L1** | **完了、ただし想定外の結果**。目的値 4 つは**8 桁全桁再現** (harness は既知の答えに対して検証された)。一方、論文が §III-B で逐語 "satisfies (4), (7) and (8)" と書く 3 条件のうち**成立するのは (4) だけで、(7)/(8) は `+1.08e-03` / `+2.79e-03` 違反する** — 改善の witness は明示 (種類 2/3 = 補助アルファベットを 1 増やす摂動、改善方向は決定論的境界)。**実装に関与していない独立エージェントの敵対的監査 (自前再実装・コード非共有) が CONFIRMED**、加えて**肯定コントロール** (同一インスタンスの大域最大点では論文の条件が全て成立) で「コードの性質ではない」を分離した。⚠ **射程の限定 (監査が追加)**: 論文が §I で引く濃度限界 `\|U\|+\|V\| ≤ \|X\|+1 = 4` を課した空間の内側では報告点は**真の局所最大** (改善摂動は `\|U\|+\|V\|=5` へ出る)。**論文への影響範囲**: Conjecture 1 / Conjecture 2 / 目的値 4 つ / §IV Theorem 2 はいずれも**無傷**。逐語と再検証コマンド → [`bc-facts.md`](bc-facts.md) §数値 probe の判定 (L1) の (b) 行 | 検証済 harness + 子 attack 2 本 (`markovity-localopt-route` / `cardinality-localmax-boundary`) |
+| `markovity-localopt-route` | G | `todo` | — | **`markovity-local-max-repro` の結果から起票** (親 plan §5-9)。**確立している事実**: §III-B の報告点は、論文が §III で自ら定義する 3 種の摂動の意味では (7)/(8) を満たさない (独立監査 + 肯定コントロール、上行)。**ここから先は推論であって確立していない**: ⟹ §II-B が「局所最適性条件による証明路線の障害」として提示したインスタンスは、**主張されたほどには路線を塞いでいない**かもしれない。⚠ **自動的には従わない** — (i) 論文の記述は逐語 "we failed to do this" であって「この点が唯一の障害だ」とは書いていない、(ii) 濃度限界の内側では報告点は真の局所最大 (下記 `cardinality-localmax-boundary`) ⟹ **路線が開きうるのは濃度非制約の空間に限る**。**最初の一手 = 診断であって証明ではない**: (7)–(10) が非矩形パターン `A B / C A` を排除するのはどの濃度領域か、を harness で走査する。証明に投資するのは診断が生き残ってから (§5-2 kill-first) | — |
+| `cardinality-localmax-boundary` | F | `todo` | — | **同じく `markovity-local-max-repro` から起票、ただし軸が違う**。濃度限界 `\|U\|+\|V\| ≤ \|X\|+1` を課すか否かが、**同一の点について「局所最大である / でない」を反転させる** (改善摂動はちょうど限界の外へ出る)。`F(T,{a_x})` の定義自体には濃度制約が無い (逐語 "where the maximum is taken over all p(u, v, x) defined on U × V × X") ので、**この 2 つは同じ最適化問題ではない**。最初の一手 = Marton 領域まわりの主張を「濃度制約の内側でしか成り立たないもの / 外でも成り立つもの」に仕分ける。⚠ 軸 F の旧コスト論拠 (Fenchel–Eggleston が Mathlib 不在) は**層 3 の話**で、本 relay (層 1–2) には効かない | — |
 | `sum-bc-classes` | A | `todo` | — | arXiv:2606.12839 (Gohari–Liu–Nair, 2026-06-11) が degraded / less noisy / more capable / deterministic / semi-deterministic **成分の和 (sum) BC** で auxiliary-receiver 外界 = Marton を示した。我々は成分クラス 3 本の等号定理を Lean で持つ ⟹ 軸 A の最弱仮説抽出がそのまま乗る。⚠ **積ではなく和** — 軸 E のテンソル冪とは別演算 | — |
 | `product-bc-tensor` | E | `todo` | — | 積 BC の構成と非加法性の例 | — |
-| `cardinality-bound` | F | `todo` | — | Fenchel–Eggleston が Mathlib 不在ゆえ高コスト。予備 | — |
+| `cardinality-bound` | F | `todo` | — | 旧主語「cardinality bound の改善」は Fenchel–Eggleston が Mathlib 不在ゆえ高コスト = 予備枠だった。**L1 で軸 F の主語が「濃度限界がどの主張の生死を分けるか」へ変わった** (親 plan §4 軸 F、優先度 4 → 3) ⟹ 本行は改善路線として保持し、当面の実働は `cardinality-localmax-boundary` | — |
 
 ## 候補経路 (本 relay の主成果物)
 
@@ -56,7 +58,7 @@
 
 | idea | 軸 | 中身 | 起票 leg |
 |---|---|---|---|
-| `residual-as-slack-diagnostic` | B | 外部ノートの残差恒等式 (5) は「一文字化がどこで壊れるか」を明示する。これを我々の `bc_capacity_subset_uv` の緩みの局所化に転用できないか | L(-1) |
+| `residual-as-slack-diagnostic` | B | 外部ノートの残差恒等式 (5) は「一文字化がどこで壊れるか」を明示する。これを我々の `bc_capacity_subset_uv` の緩みの局所化に転用できないか。**L1 で前提が強くなった** — 残差は散文の見込みではなく**閉じた式** `I(A;B) − I(Y₁;Z₂∣A,B)` として確定した (記号的に証明、`probe-harness` 行) ので、「どの項が緩みか」を式のレベルで名指せる | L(-1) |
 | `absorption-as-class-def` | A+E | 外部ノートの吸収条件 (9) `Δ₁₂ ≤ N₁₂ + G₁₂` を**満たすチャネルのクラス**として定義すると、既知クラス (degraded / less noisy / more capable) を含む新クラスになるか。軸 A の最弱仮説抽出と合流しうる | L(-1) |
 | `collider-conditioning` | C | 残差の正体が collider conditioning (独立な `A,B` が共通の子 `Y₁` を条件付けて従属化) なら、その現象を直接測る情報量が新しい情報不等式の候補になる | L(-1) |
 | `markovity-as-class-def` | G+A | Markovity 予想が**成り立つチャネルのクラス**を定義すると、我々が等号を持つ 3 クラス (degraded / less noisy / more capable) を含むか。含むなら軸 A の最弱仮説抽出と合流し、含まないならクラスの境界が新しい標的になる | L0 |
@@ -69,8 +71,13 @@
 | B | 0 | L0 は軸に紐づかない文献 leg。**死亡も確定事実**なのでゼロ進捗ではない (親 plan §5-1) |
 | C | 0 | — |
 | D | 0 | — |
-| E | 0 | — |
-| F | 0 | — |
-| G | 0 | L0 で新設 (親 plan §4 軸 G) |
+| E | 0 | L1 で確定事実 (V1–V3)。ただし**軸 E の生死を決めるのは V4/V5** で、それは L2 |
+| F | 0 | L1 で主語が変わったが、**leg は消費していない** (下記の二重計上の注意) |
+| G | 0 | L0 で新設 (親 plan §4 軸 G)。L1 (b) で確定事実 |
 
-3 に達した軸は `parked` にして別軸へ移る (親 plan §5-5)。
+3 に達した軸は `parked` にして別軸へ移る (親 plan §5-5)。**L0 / L1 はどちらも軸に紐づかない固定枠
+(文献 / 基盤) なので、その leg で触れなかった軸のカウントは進めない**。
+
+⚠ **二重計上の注意**: L1 の (b) は軸 G の leg で得た事実だが、副産物として軸 F の主語を変えた。
+**進捗として数えるのは軸 G の側だけ**にする — 同じ 1 事実で 2 つの軸のカウントをリセットすると、
+round-robin (§5-5) が「回っているように見えて回っていない」状態を検出できなくなる。
