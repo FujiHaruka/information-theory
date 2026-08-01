@@ -131,7 +131,7 @@ lemma mac_perletter_superadd (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
 first quadrant, then it lies in the closed convex hull of all per-input pentagons.  Combines
 the finite-`n` Fano bounds with the geometric gateway `mac_avgPentagon_mem_convexHull` and the
 per-letter identifications `mac_condMI_eq_macInfo₁_at` and friends. -/
-lemma mac_converse_shrunk_point_mem
+lemma mac_converse_rate_mul_one_sub_errorProb_mem_of_ceil_exp_le
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂)
     {R₁ R₂ : ℝ} (hR₁ : 0 ≤ R₁) (hR₂ : 0 ≤ R₂)
@@ -383,8 +383,8 @@ lemma mac_timesharing_converse_interior (W : MACChannel α₁ α₂ β) [IsMarko
       ∈ closedConvexHull ℝ (⋃ (p₁ : Measure α₁) (p₂ : Measure α₂)
           (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
     filter_upwards [hpos1, hpos2] with k hk1 hk2
-    exact mac_converse_shrunk_point_mem (c k) W (hnpos k) (hcard₁ k) (hcard₂ k) hR₁.le hR₂.le
-      (hM₁ k) (hM₂ k) hk1 hk2
+    exact mac_converse_rate_mul_one_sub_errorProb_mem_of_ceil_exp_le (c k) W (hnpos k)
+      (hcard₁ k) (hcard₂ k) hR₁.le hR₂.le (hM₁ k) (hM₂ k) hk1 hk2
   exact isClosed_closedConvexHull.mem_of_tendsto htend hev
 
 /-- Finite-`n` Fano corner bound for user 1: the single user-1 corner inequality
@@ -461,11 +461,12 @@ lemma mac_converse_from_code_bound₂
   have hle := ENNReal.toReal_mono hfin hsingle
   linarith [hbound, hle]
 
-/-- Membership of the shrunk rate point on the user-1 axis (`R₂ = 0`): the analogue of
-`mac_converse_shrunk_point_mem` for the axis point `(R₁(1−Pe) − log2/n, 0)`, which uses only the
-user-1 Fano bound (`mac_converse_from_code_bound₁`, needing just `2 ≤ M₁`) plus per-letter
-nonnegativity, so it survives the `M₂ = 1` degeneracy. -/
-lemma mac_converse_shrunk_point_mem_axis1 [NeZero M₂]
+/-- Membership of the shrunk rate point when user 2 is silent (`R₂ = 0`): the analogue of
+`mac_converse_rate_mul_one_sub_errorProb_mem_of_ceil_exp_le` for the point
+`(R₁(1−Pe) − log2/n, 0)`, which uses only the user-1 Fano bound
+(`mac_converse_from_code_bound₁`, needing just `2 ≤ M₁`) plus per-letter nonnegativity, so it
+survives the `M₂ = 1` degeneracy. -/
+lemma mac_converse_rate₁_mul_one_sub_errorProb_mem_of_ceil_exp_le [NeZero M₂]
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₁ : 2 ≤ M₁)
     {R₁ : ℝ} (hR₁ : 0 ≤ R₁)
@@ -573,9 +574,9 @@ lemma mac_converse_shrunk_point_mem_axis1 [NeZero M₂]
     exact ⟨p₁ i, p₂ i, hp₁prob i, hp₂prob i, hi⟩
   exact convexHull_subset_closedConvexHull (convexHull_mono hsubset hmem)
 
-/-- Membership of the shrunk rate point on the user-2 axis (`R₁ = 0`), symmetric to
-`mac_converse_shrunk_point_mem_axis1`. -/
-lemma mac_converse_shrunk_point_mem_axis2 [NeZero M₁]
+/-- Membership of the shrunk rate point when user 1 is silent (`R₁ = 0`), symmetric to
+`mac_converse_rate₁_mul_one_sub_errorProb_mem_of_ceil_exp_le`. -/
+lemma mac_converse_rate₂_mul_one_sub_errorProb_mem_of_ceil_exp_le [NeZero M₁]
     (c : MACCode M₁ M₂ n α₁ α₂ β) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₂ : 2 ≤ M₂)
     {R₂ : ℝ} (hR₂ : 0 ≤ R₂)
@@ -740,7 +741,8 @@ lemma mac_timesharing_converse_axis1 (W : MACChannel α₁ α₂ β) [IsMarkovKe
           (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
     filter_upwards [hpos1] with k hk1
     haveI : NeZero (m₂ k) := ⟨by have := hcard₂ k; omega⟩
-    exact mac_converse_shrunk_point_mem_axis1 (c k) W (hnpos k) (hcard₁ k) hR₁.le (hM₁ k) hk1
+    exact mac_converse_rate₁_mul_one_sub_errorProb_mem_of_ceil_exp_le (c k) W (hnpos k)
+      (hcard₁ k) hR₁.le (hM₁ k) hk1
   exact isClosed_closedConvexHull.mem_of_tendsto htend hev
 
 /-- Axis case of the converse for user 2 (`R₁ = 0`), symmetric to
@@ -804,7 +806,8 @@ lemma mac_timesharing_converse_axis2 (W : MACChannel α₁ α₂ β) [IsMarkovKe
           (_ : IsProbabilityMeasure p₁) (_ : IsProbabilityMeasure p₂), macPentagon p₁ p₂ W) := by
     filter_upwards [hpos2] with k hk2
     haveI : NeZero (m₁ k) := ⟨by have := hcard₁ k; omega⟩
-    exact mac_converse_shrunk_point_mem_axis2 (c k) W (hnpos k) (hcard₂ k) hR₂.le (hM₂ k) hk2
+    exact mac_converse_rate₂_mul_one_sub_errorProb_mem_of_ceil_exp_le (c k) W (hnpos k)
+      (hcard₂ k) hR₂.le (hM₂ k) hk2
   exact isClosed_closedConvexHull.mem_of_tendsto htend hev
 
 /-- Time-sharing converse for the MAC: every achievable first-quadrant rate pair lies in the
