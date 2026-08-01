@@ -6,6 +6,10 @@
 >
 > **状態**: `live` (進行中) / `killed` (死亡、死因必須) / `parked` (3 leg ゼロ進捗で退避) /
 > `harvested` (収穫して終了) / `todo` (未着手)
+> ⚠ **語彙の穴 (L5 で発覚、改定は提案のみ)**: 「進捗はあったが**前提工事が入るまで進めない**」に当たる状態が
+> 無い。`parked` はゼロ進捗による退避の意味なので、流用すると「回しても進まなかった」と
+> 「別の工事待ち」が同じ語で表示される (L4 が §5-5 のカウンタで見つけたのと同じ形の欠陥)。
+> **提案**: `blocked(<前提の slug>)` を足す。当面は `parked` + 現況欄に前提と再開条件を明記して運用する。
 > **死因の語彙**: `numeric-counterexample` / `known-result` / `probe-failed` / `too-hard` /
 > `mathlib-wall`
 >
@@ -16,7 +20,7 @@
 
 **20 leg** (L0–L20 の枠割りは親 plan §6.2 が SoT)。延長判断は L20 完了時点。
 **固定枠**: L0 文献 / L1 probe 基盤 / L4・L9・L14 棚卸し / **L19 収穫・L20 記録 (予約済、探索に流用しない)**。
-**現在**: leg 5 / 20 (**L4 棚卸し #1 完了** 2026-08-01 — 次は L5)。
+**現在**: leg 6 / 20 (**L5 = 軸 G の第一手 完了** 2026-08-02 — 次は L6 = 軸 B `outer-slack-vs-thm7`)。
 
 ## Attack 一覧
 
@@ -38,9 +42,10 @@
 | `jog-nair-inequality` | C | `todo` | — | BSSC の情報不等式を Lean で述べる (T1)。⚠ この不等式は inner の明示評価を**可能にする**道具 (F4 の訂正) | — |
 | `multiletter-subject` | D | `todo` | — | multi-letter 表現の Lean 構成 + **Li の Table I のレベル (`Σ₁ᴴ` / `Π₂ᴴ` / `Δ₁₈ᴴ`) と我々の在庫の等号定理の対応付け** (L2)。⚠ 旧「単一文字特徴付けを持つ、の定義候補」は F7 で肯定決着済ゆえ主語を差し替え | — |
 | `bc-computability-openness` | D | `todo` | — | **F8 の NOT-FOUND から起票**。「BC 容量領域の計算可能性は未決」と明示する一次文献が見つかっていない。否定的解決を標的にする前に出典を立てるか、**無いことを確定事実にする** (⚠ Fawzi–Fermé arXiv:2310.05515 は一発符号化の近似困難性で別物) | — |
-| `markovity-conjecture` | G | `todo` | — | Gohari–Liu–Nair (ISIT 2025) **Conjecture 2 (Markovity Conjecture)** = 「Marton 領域の極点評価では `U → (W,X) → V` を持つ組だけで十分」。**真に未解決、根拠は数値証拠のみ** (`\|X\|=3,4,5` で各 10,000 チャネル超)。本 relay 最大の近距離標的 (L5)。⚠ 「局所最適性条件だけで証明する路線は論文自身の反例が潰している」は **L1 で弱まった** (下記 `markovity-localopt-route`) | — |
+| `markovity-conjecture` | G | **`parked`** (前提工事待ち) | **L5** | Gohari–Liu–Nair (ISIT 2025) **Conjecture 2 (Markovity Conjecture)** = 「Marton 領域の極点評価では `U → (W,X) → V` を持つ組だけで十分」。**真に未解決、根拠は数値証拠のみ** (`\|X\|=3,4,5` で各 10,000 チャネル超)。⚠ 「局所最適性条件だけで証明する路線は論文自身の反例が潰している」は **L1 で弱まった** (下記 `markovity-localopt-route`)。**L5 の第一手 = 「述べられるが偽」**: 第 1 形 ((U,V,W,X) 版) は共通補助が無いので在庫に主語が無く、第 2 形 (F 側) は `V₁ ⊥ V₂ ∣ X` として我々の support function へ移せる (命題 **M2**) が、**M2 は数値反例で FALSE** (`+7.147687e-04`、hardening 3 段 + 独立 4 系統 + 肯定コントロール 3 本)。⚠ **Conjecture 2 の反例ではない** — 論文の `F` に残る `−αH(Y) − (λ−α)H(Z) + Σ p(x)a_x` は線形項では相殺できないので M2 は部分族ではなく**移植**。逐語 → [`bc-facts.md`](bc-facts.md) §数値 probe の判定 (L5)。**park の理由はゼロ進捗ではなく前提工事**: 2 補助変数の在庫の上では行き止まりで、**軸 E に L2 が課したのと同一の `marton-3aux-probe` が挟まる**。**再開条件** = `marton-3aux-probe` または `support-vs-dual-additivity` のどちらかが済むこと | probe [`bc-markovity-conjecture-check.py`](bc-markovity-conjecture-check.py) (反例インスタンスを逐語ハードコード) + 子 attack `markovity-via-dual-F` + 下記 `markovity-localopt-route` への入力 |
 | `markovity-local-max-repro` | G | `harvested` | **L1** | **完了、ただし想定外の結果**。目的値 4 つは**8 桁全桁再現** (harness は既知の答えに対して検証された)。一方、論文が §III-B で逐語 "satisfies (4), (7) and (8)" と書く 3 条件のうち**成立するのは (4) だけで、(7)/(8) は `+1.08e-03` / `+2.79e-03` 違反する** — 改善の witness は明示 (種類 2/3 = 補助アルファベットを 1 増やす摂動、改善方向は決定論的境界)。**実装に関与していない独立エージェントの敵対的監査 (自前再実装・コード非共有) が CONFIRMED**、加えて**肯定コントロール** (同一インスタンスの大域最大点では論文の条件が全て成立) で「コードの性質ではない」を分離した。⚠ **射程の限定 (監査が追加)**: 論文が §I で引く濃度限界 `\|U\|+\|V\| ≤ \|X\|+1 = 4` を課した空間の内側では報告点は**真の局所最大** (改善摂動は `\|U\|+\|V\|=5` へ出る)。**論文への影響範囲**: Conjecture 1 / Conjecture 2 / 目的値 4 つ / §IV Theorem 2 はいずれも**無傷**。逐語と再検証コマンド → [`bc-facts.md`](bc-facts.md) §数値 probe の判定 (L1) の (b) 行 | 検証済 harness + 子 attack 2 本 (`markovity-localopt-route` / `cardinality-localmax-boundary`) |
-| `markovity-localopt-route` | G | `todo` | — | **`markovity-local-max-repro` の結果から起票** (親 plan §5-9)。**確立している事実**: §III-B の報告点は、論文が §III で自ら定義する 3 種の摂動の意味では (7)/(8) を満たさない (独立監査 + 肯定コントロール、上行)。**ここから先は推論であって確立していない**: ⟹ §II-B が「局所最適性条件による証明路線の障害」として提示したインスタンスは、**主張されたほどには路線を塞いでいない**かもしれない。⚠ **自動的には従わない** — (i) 論文の記述は逐語 "we failed to do this" であって「この点が唯一の障害だ」とは書いていない、(ii) 濃度限界の内側では報告点は真の局所最大 (下記 `cardinality-localmax-boundary`) ⟹ **路線が開きうるのは濃度非制約の空間に限る**。**最初の一手 = 診断であって証明ではない**: (7)–(10) が非矩形パターン `A B / C A` を排除するのはどの濃度領域か、を harness で走査する。証明に投資するのは診断が生き残ってから (§5-2 kill-first) | — |
+| `markovity-localopt-route` | G | `todo` | — | **`markovity-local-max-repro` の結果から起票** (親 plan §5-9)。**確立している事実**: §III-B の報告点は、論文が §III で自ら定義する 3 種の摂動の意味では (7)/(8) を満たさない (独立監査 + 肯定コントロール、上行)。**ここから先は推論であって確立していない**: ⟹ §II-B が「局所最適性条件による証明路線の障害」として提示したインスタンスは、**主張されたほどには路線を塞いでいない**かもしれない。⚠ **自動的には従わない** — (i) 論文の記述は逐語 "we failed to do this" であって「この点が唯一の障害だ」とは書いていない、(ii) 濃度限界の内側では報告点は真の局所最大 (下記 `cardinality-localmax-boundary`) ⟹ **路線が開きうるのは濃度非制約の空間に限る**。**最初の一手 = 診断であって証明ではない**: (7)–(10) が非矩形パターン `A B / C A` を排除するのはどの濃度領域か、を harness で走査する。証明に投資するのは診断が生き残ってから (§5-2 kill-first)。**L5 が入力を 1 本足した**: 我々の 2 補助変数の support function の最適点 90 点で **決定論性 90/90 / rectangular 89/90 / Markov 89/90**、しかも**破れる 1 点がそのまま M2 の反例で、その写像は §III-B の非矩形パターンと同型** ⟹ 「ギャップが立つ ⟺ 最適点が非 Markov ⟺ 非 rectangular」が完全一致した。**診断の主語をここへ寄せられる** — 濃度領域の走査に加えて「非矩形が残るチャネルはどれだけ稀か」を定量できる (L5 の走査では 3/10、`λ` の窓は幅 0.05 程度) | 上記の統計 (facts §L5 の 3 行目) |
+| `markovity-via-dual-F` | G+E | `todo` | — | **`markovity-conjecture` の L5 の park から起票** (§5-9)。M2 が偽だったのは共通補助 `W` を落としたためなので、**Conjecture 2 は領域側 `h` ではなく双対側 `F` の言葉で扱う**。⚠ **`F` の逐語実装は L1 の [`bc-markovity-localmax-check.py`](bc-markovity-localmax-check.py) に既にある** (§III-B の目的値 4 つを 8 桁再現済) ⟹ 工事の実体は「我々の領域 `def` と `F` を繋ぐ段」であって `F` の実装ではない。**`support-vs-dual-additivity` (`{a_x}` ↔ `θ` の Legendre / 上凹包の段) と大きく重なる** — 先にそちらを済ませるのが安い。⟹ **軸 E と軸 G が 1 つの前提工事を共有する**ことが L5 の最大の産物 (親 plan 判断ログ 16) | — |
 | `cardinality-localmax-boundary` | F | `todo` | — | **同じく `markovity-local-max-repro` から起票、ただし軸が違う**。濃度限界 `\|U\|+\|V\| ≤ \|X\|+1` を課すか否かが、**同一の点について「局所最大である / でない」を反転させる** (改善摂動はちょうど限界の外へ出る)。`F(T,{a_x})` の定義自体には濃度制約が無い (逐語 "where the maximum is taken over all p(u, v, x) defined on U × V × X") ので、**この 2 つは同じ最適化問題ではない**。最初の一手 = Marton 領域まわりの主張を「濃度制約の内側でしか成り立たないもの / 外でも成り立つもの」に仕分ける。⚠ 軸 F の旧コスト論拠 (Fenchel–Eggleston が Mathlib 不在) は**層 3 の話**で、本 relay (層 1–2) には効かない | — |
 | `sum-bc-classes` | A | `todo` | — | arXiv:2606.12839 (Gohari–Liu–Nair, 2026-06-11) が degraded / less noisy / more capable / deterministic / semi-deterministic **成分の和 (sum) BC** で auxiliary-receiver 外界 = Marton を示した。我々は成分クラス 3 本の等号定理を Lean で持つ ⟹ 軸 A の最弱仮説抽出がそのまま乗る。⚠ **積ではなく和** — 軸 E のテンソル冪とは別演算 | — |
 | `product-bc-tensor` | E | `todo` | — | 積 BC の構成と非加法性の例 | — |
