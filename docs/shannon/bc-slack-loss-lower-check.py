@@ -884,8 +884,9 @@ def section5(r1: dict, r2: dict, r3: dict, r4: dict, r4b: dict,
         print("     **周辺だけの緩和で `Λ` を作る道は Theorem 1 を内蔵しない限り閉じている**。")
         print("     ⟹ P4 はその内蔵を base case で行う設計であり、この読みの直接の帰結。")
     if not dead:
-        print("  ⟹ **P4 が生存**。§3.1 の (1)(2)(3)(4) は本 leg で揃う ⟹ 残るは (5) "
-              "novelty gate (本候補について独りで通すこと)。")
+        print("  ⟹ **P4 が生存**。§3.1 の (1)(2)(3)(4) は本 leg で揃い、**(5) novelty gate も "
+              "L15 で単独実施して通過**した (一次文献 5 本、記録は `bc-facts.md` §L15) ⟹ "
+              "経路 **R3** として `bc-open-problem-routes.md` に載っている。")
     else:
         print("  ⟹ P4 も死亡。退路 (判断ログ 28) どおり、同 family の次候補を起票せず "
               "L16–L18 で軸 G ブロックを発動する。")
