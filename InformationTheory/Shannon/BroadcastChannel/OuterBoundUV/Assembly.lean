@@ -46,11 +46,11 @@ region is a closed lower set, so the limit and the rate pairs below it are in th
 ## Implementation notes
 
 The asymptotic argument runs on `bc_uv_logCard_mul_one_sub_errorProb_mem` rather than on
-`bc_uv_rate_sub_fanoSlack_mem_of_ceil_exp_le`:
-the latter subtracts the sum of both Fano slacks from each coordinate, and a slack of the other
-receiver is not controlled by the rate of this one, since the message counts of an achievable
-pair are bounded from below only.  Discounting each rate by its own error probability removes
-that coupling, and the residue is two bits per block whatever the message counts are.
+`bc_uv_rate_sub_fanoSlack_mem_of_ceil_exp_le`: the latter subtracts the sum of both Fano slacks
+from each coordinate, and a slack of the other receiver is not controlled by the rate of this
+one, since the message counts of an achievable pair are bounded from below only.  Discounting
+each rate by its own error probability removes that coupling, and the residue is two bits per
+block whatever the message counts are.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -614,7 +614,11 @@ theorem bc_uv_rate_sub_fanoSlack_mem_of_ceil_exp_le
   · rw [hsumr]; linarith [hslot.sumBound₂, hF₁, hF₂]
   · rw [hsumr]; linarith [hslot.sumBound₁, hF₁, hF₂]
 
-/-- @audit:ok -/
+/-- The rate pair of a broadcast code, each coordinate discounted by the error probability of its
+own receiver and by two bits per letter, lies in the UV outer region.  Bounding a Fano slack by
+`log 2 + Pe * log M` turns it into a discount on the rate of its own receiver, so neither
+coordinate refers to the message count of the other one.
+@audit:ok -/
 lemma bc_uv_logCard_mul_one_sub_errorProb_mem [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :

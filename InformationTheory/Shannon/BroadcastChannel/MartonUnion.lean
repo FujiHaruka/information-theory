@@ -17,7 +17,7 @@ alphabets.
 * `martonRegionUnion W` — Marton's inner bound, as the closure of the union of `martonRegion`
   over the auxiliary laws on those alphabets.
 * `martonRegionUnionFullSupport W` — the same union restricted to the full-support indices,
-  which is the form the achievability theorem applies to.
+  those whose auxiliary law and auxiliary kernel charge every point.
 
 ## Main statements
 
@@ -76,8 +76,8 @@ noncomputable def martonRegionUnion (W : BCChannel α β₁ β₂) : Set (ℝ ×
     (_ : IsMarkovKernel K), martonRegion pV K W)
 
 /-- The same union over the full-support indices only: the auxiliary law and the auxiliary
-kernel charge every point.  Those are the regularity preconditions of
-`marton_region_subset_capacity`, so this is the form of the union that is achievable. -/
+kernel charge every point.  Those are the two support hypotheses that
+`marton_region_subset_capacity` asks of the auxiliaries. -/
 noncomputable def martonRegionUnionFullSupport (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k₁ : ℕ) (k₂ : ℕ)
     (pV : Measure (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂))

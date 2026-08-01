@@ -121,7 +121,7 @@ lemma mac_perletter_superadd (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     gcongr
   exact ENNReal.toReal_le_add hMBle hC1_ne hC2_ne
 
--- `macInfo₁_nonneg` / `macInfo₂_nonneg` / `macInfoBoth_nonneg` now live in
+-- `macInfo₁_nonneg` / `macInfo₂_nonneg` / `macInfoBoth_nonneg` live in
 -- `InformationTheory.Shannon.MultipleAccess.TimeSharing` (needed there for the all-probability
 -- achievability upgrade) and are inherited via the import.
 
