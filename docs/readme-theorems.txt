@@ -1,12 +1,18 @@
 # readme-theorems — source of truth for the "Formalized results" table in README.md.
 #
 # Each '@ <ch> | <topic>' line starts a chapter; the lines beneath it are that chapter's
-# headline theorems, one per line, as 'NAME' or 'NAME | note' (note rendered in parens).
+# headline theorems, one per line, as 'NAME' or 'NAME | statement override'.
 #
 # File paths and links are NOT stored here. scripts/gen_readme_table.ts resolves each NAME
 # to its current source file by scanning InformationTheory/ on every run, so a moved file
 # self-heals and only a true rename/delete fails the check. To re-curate, edit this file
 # and regenerate; never hand-edit the table inside the README markers.
+#
+# The Statement column is NOT stored here either: it is summarized from the declaration's
+# docstring (the code-side source of truth), stopping before audit narration such as
+# '@audit:' / 'sorryAx-free' / 'See also' / 'Proof:'. Add a '| <statement>' override only
+# when that summary reads badly out of context — a hand-written statement drifts silently
+# the same way a hand-written table does, so keep overrides rare and note why below.
 #
 #   Regenerate README : deno run -A scripts/gen_readme_table.ts --write
 #   Verify (CI/manual): deno run -A scripts/gen_readme_table.ts --check
@@ -17,7 +23,7 @@
 entropy
 mutualInfo
 mutualInfo_chain_rule
-mutualInfo_le_of_postprocess | DPI
+mutualInfo_le_of_postprocess
 fano_inequality_measure_theoretic
 
 @ 3 | Asymptotic equipartition (AEP)
@@ -32,50 +38,53 @@ birkhoff_ergodic_ae
 
 @ 5 | Data compression
 shannonCode_expected_length_bounds
-kraftSum_le_one_of_uniquelyDecodable | McMillan
+kraftSum_le_one_of_uniquelyDecodable
 huffmanLength_optimal
 
 @ 6 | Gambling & the doubling rate
-doublingRate_le_proportional | Kelly optimality
+doublingRate_le_proportional
 doublingRate_eq_proportional_iff
-sideInfo_doublingRate_increment_eq_mutualInfo | side information ΔW = I(X;Y) (CT 6.1.3)
-condDoublingRate_le_proportional | conditional Kelly optimality
-seqLogWealth_div_tendsto_doublingRate | operational doubling rate (1/n)·log Sₙ → W(b,o,p) a.s. (CT 6.3)
-seqLogWealth_proportional_div_tendsto | Kelly growth rate over sequences (CT 6.3)
-seqLogWealth_proportional_asymptotically_optimal | Kelly asymptotic optimality over sequences (CT 6.3)
-seqLogWealth_tendsto_atTop_of_pos_doublingRate | exponential wealth growth: W*>0 ⟹ log Sₙ→∞ a.s. (CT 6.3)
-seqLogWealth_tendsto_atBot_of_neg_doublingRate | ruin: W*<0 ⟹ log Sₙ→−∞ a.s. (CT 6.3)
+sideInfo_doublingRate_increment_eq_mutualInfo
+condDoublingRate_le_proportional
+seqLogWealth_div_tendsto_doublingRate
+seqLogWealth_proportional_div_tendsto
+seqLogWealth_proportional_asymptotically_optimal
+seqLogWealth_tendsto_atTop_of_pos_doublingRate
+seqLogWealth_tendsto_atBot_of_neg_doublingRate
 
 @ 7 | Channel capacity
 shannon_noisy_channel_coding_theorem_general
 channel_coding_feedback_converse
 shannon_converse_single_shot
-channelCoding_strong_converse_asymptotic | Wolfowitz strong converse (asymptotic)
+channelCoding_strong_converse_asymptotic
 
 @ 8 | Differential entropy
 differentialEntropy_gaussianReal
-jointDifferentialEntropyPi_le_sum
+# override: the docstring's second sentence is the proof recipe, not the statement.
+jointDifferentialEntropyPi_le_sum | `n`-variable differential-entropy subadditivity `h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)` (the parallel-Gaussian consumer form).
 
 @ 9 | Gaussian channel
 awgn_capacity_closed_form_genuine
-contAwgn_eq_shannonHartley | continuous-time Shannon–Hartley operational capacity, W·log(1+P/(N₀·W))
-parallel_gaussian_capacity_formula_minimal | water-filling
-whittaker_shannon_bandlimited | Whittaker–Shannon sampling theorem (band-limited signal from its Nyquist-rate samples)
-whittaker_shannon_hasSum | cardinal series, L² spectrum form
+contAwgn_eq_shannonHartley
+parallel_gaussian_capacity_formula_minimal
+# override: the docstring describes the wrapper's reduction rather than the statement.
+whittaker_shannon_bandlimited | **Whittaker–Shannon sampling theorem**: a band-limited signal is recovered from its integer samples — for continuous integrable `f` whose Fourier transform vanishes outside `[-1/2, 1/2]`, the cardinal series `∑ n : ℤ, f n · sinc (t - n)` sums to `f t` at every real `t`.
+whittaker_shannon_hasSum
 
 @ 10 | Rate–distortion
 rate_distortion_achievability
-rate_distortion_achievability_operational | operational achievability, unconditional form (R > R(D), full-support source)
-rate_distortion_achievability_operational_general | operational achievability for an arbitrary source (full-support hypothesis removed)
+rate_distortion_achievability_operational
+rate_distortion_achievability_operational_general
 rateDistortionFunction_convexOn
 rate_distortion_converse_n_letter_singleLetter
 
 @ 11 | Hypothesis testing & large deviations
 stein_converse_finite_n
 sanov_ldp_upper_bound
-cramer_lower_boundary | Cramér large-deviation lower bound
-chernoff_converse | Chernoff information error exponent (Bayesian, converse)
-tvNorm_le_sqrt_klDiv | Pinsker
+# override: the docstring positions this against its sibling form instead of stating it.
+cramer_lower_boundary | **Cramér's theorem** (large-deviation lower bound, boundary case): for a bounded i.i.d. sequence and a tilt `λ` whose cgf derivative is `a`, `−(λ·a − cgf λ) ≤ liminf (1/n) log P(∑ᵢ Yᵢ ≥ a·n)`.
+chernoff_converse
+tvNorm_le_sqrt_klDiv
 
 @ 12 | Maximum entropy
 entropy_le_log_card
@@ -86,55 +95,56 @@ lz78_asymptotic_optimality_with_greedy
 arithmeticCode_expected_length_bounds
 
 @ 14 | Kolmogorov complexity
-kolmogorov_entropy_rate | Kolmogorov complexity converges to the entropy rate, (1/n)·E[C(Xⁿ|n)] → H(X)/log 2 for an i.i.d. source (Cover–Thomas Thm 14.3.1)
-condComplexity_not_computable | Kolmogorov complexity is not a computable function, for any fixed side information (Cover–Thomas Thm 14.6)
-incompressible_seq_freq_tendsto_half | Incompressible binary sequences obey a law of large numbers: the frequency of ones converges to 1/2 (Cover–Thomas Thm 14.5.1)
-universalProb_ge_two_pow_neg_prefixComplexity | The universal probability dominates the shortest program's weight, P_U(x) ≥ 2^(-K(x)) (Cover–Thomas Thm 14.6.1)
-prefixComplexity_le_two_mul_neg_logb_universalProb | Prefix complexity and universal probability agree up to a factor of two for the self-delimiting machine, -log₂ P_U(x) ≤ K(x) ≤ 2·(-log₂ P_U(x)) + 1
-chaitinOmega_le_one | Chaitin's halting probability converges, Ω ≤ 1, by the Kraft bound on the prefix-free halting set (Cover–Thomas §14.9)
-prefixComplexity_not_computable | Prefix Kolmogorov complexity is not a computable function (Berry's paradox)
-prefixUniversalEval_dom_not_computablePred | The halting set of the self-delimiting universal machine is undecidable, by reduction from the halting problem
-chaitinOmega_not_computable | Chaitin's Ω is not computable: no computable sequence of dyadic numerators approximates it to within 2^(-n) at every precision (Cover–Thomas §14.9); the negation is proved for that additive predicate, which the textbook notion of a computable real implies, while the converse implication is not formalized because Mathlib carries no computable arithmetic on ℚ
-prefixComplexity_le_twoPartLength | Every two-part description bounds the prefix complexity, K(x) ≤ K(S) + 4·⌈log₂ S.card⌉ + O(1); the index coefficient 4 is fixed by the self-delimiting machine and built into the description length, so this is not the textbook additive form with coefficient 1 on the index part
-mdlComplexity_sub_prefixComplexity_le | The shortest coefficient-4 two-part description length and the prefix complexity agree up to an additive constant, in both directions — a statement about that quantity, not the textbook MDL principle
+kolmogorov_entropy_rate
+condComplexity_not_computable
+incompressible_seq_freq_tendsto_half
+universalProb_ge_two_pow_neg_prefixComplexity
+prefixComplexity_le_two_mul_neg_logb_universalProb
+chaitinOmega_le_one
+prefixComplexity_not_computable
+prefixUniversalEval_dom_not_computablePred
+chaitinOmega_not_computable
+prefixComplexity_le_twoPartLength
+mdlComplexity_sub_prefixComplexity_le
 
 @ 15 | Distributed source coding
 slepian_wolf_full_rate_region_achievability
-wyner_ziv_achievability | Wyner–Ziv lossy source coding with decoder side information, achievability (Cover–Thomas Thm 15.9.1)
-wyner_ziv_converse | Wyner–Ziv single-letter rate characterization, converse (Cover–Thomas Thm 15.9.1)
-mac_converse | MAC capacity-region outer bound (per-letter conditional MI sum form)
-mac_achievability | MAC achievability (corner-point form)
-mac_capacity_region_reconciliation | MAC reconciliation: achievability corner informations = converse conditional/joint MI on the same single-letter law
-mac_timesharing_capacity_region | MAC time-sharing capacity region = closed convex hull of per-input pentagons (Cover–Thomas Thm 15.3.1, convex-hull form)
-bc_degraded_converse_from_code | degraded broadcast-channel converse at a broadcast code, single-letter auxiliary-variable capacity-region outer bound (Cover–Thomas Thm 15.6.2)
-bc_achievability | degraded broadcast-channel achievability, superposition-coding inner bound (Cover–Thomas Thm 15.6.2)
-marton_achievability | general broadcast-channel achievability, Marton inner bound at U = ∅ (El Gamal–Kim Thm 8.3)
-martonRegionUnion_subset_capacity | general broadcast-channel inner bound in set form, Marton region at U = ∅ as a union over auxiliary alphabets ⊆ capacity region (for a transition law giving every output pair positive mass; El Gamal–Kim Thm 8.3)
-bc_capacity_subset_coop | general broadcast-channel converse by receiver cooperation, capacity region ⊆ cooperative outer region
-bc_capacity_subset_uv | general broadcast-channel converse, capacity region ⊆ UV outer region (Nair–El Gamal, El Gamal–Kim Ch. 8)
-bc_lessNoisy_capacity_eq_uv | less noisy broadcast channel, capacity region = UV outer region (equality, for a transition law giving every output pair positive mass; Nair–El Gamal, El Gamal–Kim Ch. 8)
-bc_moreCapable_capacity_eq_uv | more capable broadcast channel, capacity region = UV outer region (equality, for a transition law giving every output pair positive mass; Nair–El Gamal, El Gamal–Kim Ch. 8)
-bc_degraded_capacity_eq_uv | physically degraded broadcast channel, capacity region = UV outer region (equality, for a transition law giving every output pair positive mass; Cover–Thomas Thm 15.6.2)
-relay_cutset_outer_bound | relay-channel cut-set outer bound, min of broadcast-cut and MAC-cut per-letter sums (Cover–Thomas Thm 15.10.1)
+wyner_ziv_achievability
+wyner_ziv_converse
+mac_converse
+mac_achievability
+mac_capacity_region_reconciliation
+mac_timesharing_capacity_region
+bc_degraded_converse_from_code
+bc_achievability
+marton_achievability
+martonRegionUnion_subset_capacity
+bc_capacity_subset_coop
+bc_capacity_subset_uv
+bc_lessNoisy_capacity_eq_uv
+bc_moreCapable_capacity_eq_uv
+bc_degraded_capacity_eq_uv
+relay_cutset_outer_bound
 
 @ 16 | Log-optimal portfolio
-growthRate_concaveOn | growth rate is concave in the portfolio (Cover–Thomas Thm 16.2.2)
-logOptimal_of_kuhnTucker | Kuhn–Tucker condition ⟹ log-optimal portfolio (Cover–Thomas Thm 16.2.1, reverse)
-kuhnTucker_of_logOptimal | log-optimal portfolio ⟹ Kuhn–Tucker condition (Cover–Thomas Thm 16.2.1, forward)
-competitive_optimality | competitive optimality of the log-optimal portfolio, E[S_b/S_b*] ≤ 1 (Cover–Thomas Thm 16.6.1)
-seqLogWealth_div_tendsto_growthRate | operational asymptotic optimality over i.i.d. markets, (1/n)·log Sₙ → W(b) a.s. (Cover–Thomas Thm 16.3)
-sideInfo_growthRate_increment_le_mutualInfo | side information increases the growth rate by at most I(X;Y) (Cover–Thomas Thm 16.4.1)
-seqLogWealth_div_tendsto_stationary | growth rate over a stationary ergodic market, fixed-portfolio form (Cover–Thomas Thm 16.5)
-growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete | growing-memory log-optimal wealth AEP over a stationary ergodic market, (1/n)·log S*ₙ → W_∞ a.s. (Cover–Thomas Thm 16.5.1)
-universal_portfolio_regret_tendsto_zero | Cover's universal portfolio: per-period regret vanishes without knowing the market law (Cover–Thomas Thm 16.7.1)
+growthRate_concaveOn
+logOptimal_of_kuhnTucker
+kuhnTucker_of_logOptimal
+competitive_optimality
+seqLogWealth_div_tendsto_growthRate
+sideInfo_growthRate_increment_le_mutualInfo
+seqLogWealth_div_tendsto_stationary
+growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete
+universal_portfolio_regret_tendsto_zero
 
 @ 17 | Entropy inequalities
 han_inequality
 shearer_inequality
 loomis_whitney
-brascamp_lieb_finset
+# override: the docstring states the bound as display math, which a table cell cannot hold.
+brascamp_lieb_finset | **Brascamp–Lieb inequality** (combinatorial form): if `S : ι → Finset (Fin n)` covers each coordinate at least `k` times, then `|A|^k ≤ ∏ i, |π_{S i}(A)|` for every nonempty `A : Finset (Fin n → α)`. Loomis–Whitney is the special case `S i := univ.filter (· ≠ i)` with `k = n - 1`.
 entropy_power_inequality_of_density
-minkowskiDeterminantInequality | Minkowski determinant
-stam_inequality_smoothed_density | Stam inequality (Gaussian-smoothed densities)
-debruijn_identity_per_time | de Bruijn identity (per-time)
-debruijn_identity_integrated | de Bruijn identity (integrated)
+minkowskiDeterminantInequality
+stam_inequality_smoothed_density
+debruijn_identity_per_time
+debruijn_identity_integrated

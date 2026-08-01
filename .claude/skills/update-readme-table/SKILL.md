@@ -17,8 +17,9 @@ description: README.md の「Formalized results」定理表を最新化する。
 
 ## 前提 (この仕組みの SoT)
 
-- **唯一の編集対象** = `docs/readme-theorems.txt`。`@ <章番号> | <トピック>` で章を開始、以下の行が代表定理。1 行 = `NAME` / `NAME | 注記` / `NAME @ パス断片`(同名 decl の曖昧性解消) / `NAME @ パス断片 | 注記`。
+- **唯一の編集対象** = `docs/readme-theorems.txt`。`@ <章番号> | <トピック>` で章を開始、以下の行が代表定理。1 行 = `NAME` / `NAME | 説明 override` / `NAME @ パス断片`(同名 decl の曖昧性解消) / `NAME @ パス断片 | 説明 override`。
 - **パスは書かない** — スクリプトが毎回 `InformationTheory/` を走査して解決する。ファイル移動は自動追従、true rename/delete だけが落ちる。
+- **説明文 (Statement 列) も書かない** — 各 decl の **docstring** から要約される (`@audit:` / `sorryAx-free` / `See also` / `Proof:` 以降は落とす、収まらなければ末尾 `…`)。定理の意味が変わったら直すのは docstring 側。`| 説明` の override は **docstring が README 単体で読めないときだけ** (証明レシピしか書いていない / display math で切れる等)。override は手書きなので drift 源になる — 増やさず、理由を直前行のコメントに残す。
 - README のマーカー間は **絶対に手で編集しない**。
 
 ## やること
@@ -42,7 +43,8 @@ deno run -A scripts/gen_readme_table.ts --check
   rg -n "(theorem|lemma|def) <NAME>\b" InformationTheory/
   ```
   ヒット 0 なら名前違い (綴り / 下付き文字 `₂` / namespace) を疑い再 grep。
-- 該当する Cover & Thomas の章 (`@ <num> | ...`) の下に名前を追記。短い説明を付けたいときは `NAME | 注記`。
+- 該当する Cover & Thomas の章 (`@ <num> | ...`) の下に名前を追記。説明は docstring から生成されるので**基本は名前だけ**。docstring が README 単体で読めない場合のみ `NAME | 説明` で上書きし、理由をコメント行に残す。
+- `--check` が `has no usable docstring` で落ちたら、それは載せようとしている定理に docstring が無いということ (headline は docstring 必須 → `docs/rules/docstrings.md`)。override で塞ぐ前に docstring を書く方を先に検討する。
 - どの定理を代表にするか (curation) は editorial。**1 本の名指し追加**なら該当章にそのまま置く。**大幅な入れ替え / 章の代表総入れ替え**はユーザーに方針確認してから。
 
 ### 3. 再生成
