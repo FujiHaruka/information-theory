@@ -132,8 +132,14 @@ const WALL_TAG = "@residual(wall:";
 type Index = {
   decls: Map<string, string[]>; // name -> repo-relative file paths
   docs: Map<string, string>; // `${name} ${path}` -> raw docstring body
+  // Library-wide totals published in the README. All four are recounted on every run —
+  // a hand-kept figure goes stale on the next commit and --check cannot notice.
   modules: number; // .lean files under CODE_ROOT
-  proofDecls: number; // library-wide theorem + lemma count, published in the README
+  proofDecls: number; // theorem + lemma
+  otherDecls: number; // def / abbrev / structure / inductive / class / instance / opaque
+  codeLines: number; // non-blank lines after comments are stripped
+  sorryCount: number; // real sorry tokens (0 unless a documented wall is open)
+  axiomCount: number; // custom axiom declarations (any is a hard failure)
   documentedWallFiles: string[]; // real sorry + a `@residual(wall:` tag → tolerated
   undocumentedSorryFiles: string[]; // real sorry, no wall tag → always fail
   axiomFiles: string[];
@@ -155,13 +161,21 @@ async function buildIndex(): Promise<Index> {
   const axiomFiles: string[] = [];
   let modules = 0;
   let proofDecls = 0;
+  let otherDecls = 0;
+  let codeLines = 0;
+  let sorryCount = 0;
+  let axiomCount = 0;
   for await (const path of walkLean(CODE_ROOT)) {
     modules++;
     const raw = await Deno.readTextFile(path);
     const code = stripComments(raw);
+    codeLines += code.split("\n").filter((l) => l.trim() !== "").length;
+    sorryCount += (code.match(SORRY_RE) ?? []).length;
+    axiomCount += (code.match(AXIOM_RE) ?? []).length;
     for (const m of code.matchAll(DECL_RE)) {
       const [, kind, name] = m;
       if (kind === "theorem" || kind === "lemma") proofDecls++;
+      else otherDecls++;
       const arr = decls.get(name);
       if (arr) { if (!arr.includes(path)) arr.push(path); }
       else decls.set(name, [path]);
@@ -181,7 +195,19 @@ async function buildIndex(): Promise<Index> {
     if (AXIOM_RE.test(code)) axiomFiles.push(path);
     AXIOM_RE.lastIndex = 0;
   }
-  return { decls, docs, modules, proofDecls, documentedWallFiles, undocumentedSorryFiles, axiomFiles };
+  return {
+    decls,
+    docs,
+    modules,
+    proofDecls,
+    otherDecls,
+    codeLines,
+    sorryCount,
+    axiomCount,
+    documentedWallFiles,
+    undocumentedSorryFiles,
+    axiomFiles,
+  };
 }
 
 // ── docstring → statement summary ────────────────────────────────────────────
@@ -320,8 +346,16 @@ function listedTheoremFiles(resolved: Resolved[]): Set<string> {
 // next commit, and --check would have no way to notice.
 function renderTotals(idx: Index, listed: number): string {
   const n = (x: number) => x.toLocaleString("en-US");
-  return `The library holds **${n(idx.proofDecls)} theorems and lemmas** across ` +
-    `**${n(idx.modules)} modules**; the ${n(listed)} results below are the curated selection.`;
+  // An open wall is reported as the count it is, not rounded away — the sentence has to
+  // stay true the day a `sorry` reappears, without anyone remembering to rewrite it.
+  const honesty = idx.sorryCount === 0
+    ? `**0 \`sorry\`** and **${n(idx.axiomCount)} custom axioms**`
+    : `**${n(idx.sorryCount)} \`sorry\`**, every one under a documented \`@residual(wall:…)\` tag, ` +
+      `and **${n(idx.axiomCount)} custom axioms**`;
+  return `Library totals, recounted on every regeneration: **${n(idx.proofDecls)} theorems and ` +
+    `lemmas**, **${n(idx.otherDecls)} definitions** and **${n(idx.codeLines)} lines of Lean** ` +
+    `(non-blank, comments excluded) across **${n(idx.modules)} modules**, with ${honesty}. ` +
+    `The ${n(listed)} results below are the curated selection.`;
 }
 
 function renderTable(chapters: Chapter[], byChapter: Map<Chapter, Resolved[]>, totals: string): string {
