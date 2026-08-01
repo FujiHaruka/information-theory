@@ -490,6 +490,8 @@ lemma martonInfo₁_add_martonInfo₂_sub_martonInfoV₁V₂_le_uvInfoSum₁_toR
   rw [uvInfoSum₁, ENNReal.toReal_add hfin hfinc]
   linarith
 
+/-! ## The inner quadrilateral inside the outer region -/
+
 /-- Marton's inner-bound quadrilateral is contained in the UV outer region: the exchanged and
 re-encoded Marton joint law is one of the laws the outer union ranges over, and the three
 informations of the inner bound meet its four constraints at that law.  No support hypothesis

@@ -1,13 +1,16 @@
 import InformationTheory.Shannon.BroadcastChannel.Achievability.ErrorAnalysis
 
 /-!
-# Broadcast channel — superposition random-coding assembly and the degraded headline
+# Broadcast channel — superposition random-coding assembly and the achievability theorems
 
 The superposition random-coding assembly (E0 vanishing, per-codebook error decomposition,
 two-codebook average bounds, random → deterministic two-tier pigeonhole, rate slack) and the
-headline `bc_achievability`.  The assembly carries the rate-sum inequality
+three achievability forms it carries.  `bc_achievability_of_rate_lt` asks only that the rate pair
+lie strictly inside the three superposition constraints, so it holds over any broadcast channel.
+`bc_achievability_of_infoJoint_ge` takes the information-level rate-sum inequality
 `I(X; Y₁ ∣ U) + I(U; Y₂) ≤ I((U, X); Y₁)` as a hypothesis rather than deriving it, so it serves
-any comparison class that supplies it; degradedness discharges it for the headline.
+any comparison class that supplies it, and the headline `bc_achievability` is the branch where
+degradedness discharges that inequality.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -27,17 +30,18 @@ variable {U α β₁ β₂ : Type*}
 
 /-! ### Assembly (superposition random-coding, two receivers)
 
-The receiver-1/receiver-2 swap lemmas above are stitched into the headline through the
-same skeleton as the MAC achievability assembly (`InformationTheory.Shannon.MAC`
-`Achievability.lean`), adapted to the two-tier (cloud / conditional-satellite) codebook and
-the two per-receiver error probabilities:
+The receiver-1/receiver-2 swap lemmas of
+`BroadcastChannel/Achievability/ErrorAnalysis.lean` are stitched into the achievability
+theorems through the same skeleton as the MAC achievability assembly
+(`MultipleAccess/Achievability.lean`), adapted to the two-tier (cloud / conditional-satellite)
+codebook and the two per-receiver error probabilities:
 
 * `E0` vanishing: the correct-cloud (`(U, Y₂)`) and correct-triple (`(U, X, Y₁)`) atypical
   masses tend to `0` (AEP / LLN).
 * per-codebook `averageErrorProb.toReal` decomposition into the Bonferroni terms.
 * two-codebook average bounds (weight-summed swaps).
 * pigeonhole to a deterministic codebook pair.
-* rate-slack vanishing under the rate-sum hypothesis `I((U, X); Y₁) ≥ I(X; Y₁ ∣ U) + I(U; Y₂)`.
+* rate-slack vanishing under the sum constraint `max R₁ 0 + R₂ < I((U, X); Y₁)` on the rate pair.
 -/
 
 /-- Pairwise independence of any BC coordinate selector under the ambient measure. -/

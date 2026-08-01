@@ -42,6 +42,7 @@ Umbrella of the `Shannon/BroadcastChannel/Achievability/` family, re-exporting:
   ingredients, and the two-tier decoders.
 * `Achievability.ErrorAnalysis` — the receiver-2 (cloud) and receiver-1 (strong) error analyses
   with their random-codebook averaging.
-* `Achievability.Assembly` — the superposition random-coding assembly and the degraded headline
-  `bc_achievability`.
+* `Achievability.Assembly` — the superposition random-coding assembly, the class-free
+  `bc_achievability_of_rate_lt`, the rate-sum form `bc_achievability_of_infoJoint_ge` derived
+  from it, and the degraded headline `bc_achievability`.
 -/
