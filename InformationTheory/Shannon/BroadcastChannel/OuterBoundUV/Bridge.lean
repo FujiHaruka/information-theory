@@ -769,6 +769,26 @@ noncomputable def uvInfoSum₁ (ν : Measure (U × V × α × β₁ × β₂)) [
 noncomputable def uvInfoJoint (ν : Measure (U × V × α × β₁ × β₂)) : ℝ≥0∞ :=
   mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
 
+omit [StandardBorelSpace α] [Nonempty α] [StandardBorelSpace β₂] [Nonempty β₂] in
+lemma mutualInfo_pair_out₁_eq_uvInfoJoint {A : Type*} [MeasurableSpace A]
+    [StandardBorelSpace A] [Nonempty A] (ν : Measure (U × V × α × β₁ × β₂))
+    [IsProbabilityMeasure ν] (Aux : U × V × α × β₁ × β₂ → A) (hAux : Measurable Aux)
+    (hmk : IsMarkovChain ν Aux (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)) :
+    mutualInfo ν (fun q ↦ (Aux q, q.2.2.1)) (fun q ↦ q.2.2.2.1) = uvInfoJoint ν := by
+  have hswap : mutualInfo ν (fun q ↦ (Aux q, q.2.2.1)) (fun q ↦ q.2.2.2.1)
+      = mutualInfo ν (fun q ↦ (q.2.2.1, Aux q)) (fun q ↦ q.2.2.2.1) :=
+    (mutualInfo_eq_of_leftInverse ν (fun q ↦ (Aux q, q.2.2.1))
+      (fun q ↦ q.2.2.2.1) (by fun_prop) (by fun_prop) (f := Prod.swap) (g := Prod.swap)
+      measurable_swap measurable_swap (fun _ ↦ rfl)).symm
+  have hchain := mutualInfo_chain_rule ν Aux
+    (fun q : U × V × α × β₁ × β₂ ↦ q.2.2.2.1) (fun q ↦ q.2.2.1) hAux (by fun_prop) (by fun_prop)
+  have hzero : condMutualInfo ν Aux (fun q : U × V × α × β₁ × β₂ ↦ q.2.2.2.1)
+      (fun q ↦ q.2.2.1) = 0 :=
+    condMutualInfo_eq_zero_of_markov ν Aux (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
+      hAux (by fun_prop) (by fun_prop) hmk
+  rw [hswap, hchain, hzero, add_zero]
+  rfl
+
 end Slots
 
 /-! ### The per-letter law read off the ambient -/

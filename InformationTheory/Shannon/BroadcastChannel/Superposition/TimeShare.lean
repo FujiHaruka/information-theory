@@ -40,9 +40,16 @@ The second endpoint is where a less noisy channel enters: it forces
   slots of a mixture of two channel laws against the slots of the branch it keeps.
 * `mul_uvInfo₂_le_uvInfo₂_uvTimeShareLaw` and `condMutualInfo_uvTimeShareLaw` — the two slots of
   the time-shared law against the slots of the original one.
+* `uvInfoJoint_uvTimeShareLaw` — time sharing leaves the input-output information `I(X; Y₁)`
+  unchanged.
+* `exists_bcInfo_ge_sumRate_of_isUVChannelLaw` — a rate pair satisfying the three UV outer
+  inequalities of a channel law together with the sum constraint `max R₁ 0 + R₂ ≤ I(X; Y₁)` is
+  dominated by the three informations of some achievability pair, with no comparison between the
+  two receivers.
 * `exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw` — over a less noisy channel, a rate pair
   satisfying the three UV outer inequalities of a channel law is dominated by the two
-  informations of some achievability pair.
+  informations of some achievability pair, the sum constraint coming for free from the
+  comparison.
 
 ## Implementation notes
 
@@ -283,20 +290,8 @@ lemma mul_uvInfo₂_le_uvInfo₂_uvMixLaw (ν σ : Measure (U × V × α × β�
 
 lemma mul_uvInfo₂_le_uvInfo₂_uvTimeShareLaw (ν : Measure (U × V × α × β₁ × β₂))
     [IsProbabilityMeasure ν] (u₀ : U) (lam : ℝ≥0∞) (hlam : lam ≤ 1) :
-    lam * uvInfo₂ ν ≤ uvInfo₂ (uvTimeShareLaw ν u₀ lam) := by
-  have hU : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.1) := measurable_fst
-  have hY₂ : Measurable (fun q : (Bool × U) × V × α × β₁ × β₂ ↦ q.2.2.2.2) := by fun_prop
-  simp only [uvInfo₂, uvTimeShareLaw, uvMixLaw]
-  rw [mutualInfo_map_comp _ Prod.snd measurable_snd _ hU _ hY₂,
-    mutualInfo_compProd_eq_add_lintegral _ _ hU hY₂ (tag := fun a ↦ a.1) measurable_fst
-      (by filter_upwards [uvMixKernel_ae_tag ν (uvCollapse ν u₀) lam] with p hp using hp),
-    lintegral_boolLaw, inf_of_le_left hlam]
-  have hbr : mutualInfo (uvMixKernel ν (uvCollapse ν u₀) true) (fun q ↦ q.1)
-      (fun q ↦ q.2.2.2.2) = uvInfo₂ ν := by
-    show mutualInfo (uvTagTrue ν) (fun q ↦ q.1) (fun q ↦ q.2.2.2.2) = uvInfo₂ ν
-    exact uvInfo₂_uvTagTrue ν
-  rw [hbr]
-  exact le_add_left le_self_add
+    lam * uvInfo₂ ν ≤ uvInfo₂ (uvTimeShareLaw ν u₀ lam) :=
+  mul_uvInfo₂_le_uvInfo₂_uvMixLaw ν (uvCollapse ν u₀) lam hlam
 
 end Corner
 
@@ -476,22 +471,8 @@ theorem bcInfoJoint_uvCloudLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {ν : Measure (U × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) :
     bcInfoJoint (uvCloudLaw ν) (uvSatelliteKernel ν) W = (uvInfoJoint ν).toReal := by
   rw [bcInfoJoint_eq_mutualInfo_toReal, bcJointDistribution_uvCloudLaw W h,
-    mutualInfo_map_comp ν _ (by fun_prop) _ (by fun_prop) _ (by fun_prop)]
-  congr 1
-  -- `I((U, X); Y₁) = I(X; Y₁) + I(U; Y₁ ∣ X)` and the channel law kills the second term.
-  have hswap : mutualInfo ν (fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.2.1)) (fun q ↦ q.2.2.2.1)
-      = mutualInfo ν (fun q : U × V × α × β₁ × β₂ ↦ (q.2.2.1, q.1)) (fun q ↦ q.2.2.2.1) :=
-    (mutualInfo_eq_of_leftInverse ν (fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.2.1))
-      (fun q ↦ q.2.2.2.1) (by fun_prop) (by fun_prop) (f := Prod.swap) (g := Prod.swap)
-      measurable_swap measurable_swap (fun _ ↦ rfl)).symm
-  have hchain := mutualInfo_chain_rule ν (fun q : U × V × α × β₁ × β₂ ↦ q.1)
-    (fun q ↦ q.2.2.2.1) (fun q ↦ q.2.2.1) (by fun_prop) (by fun_prop) (by fun_prop)
-  have hzero : condMutualInfo ν (fun q : U × V × α × β₁ × β₂ ↦ q.1) (fun q ↦ q.2.2.2.1)
-      (fun q ↦ q.2.2.1) = 0 :=
-    condMutualInfo_eq_zero_of_markov ν (fun q ↦ q.1) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
-      (by fun_prop) (by fun_prop) (by fun_prop) h.isMarkovChain_U_X_Y₁
-  rw [hswap, hchain, hzero, add_zero]
-  rfl
+    mutualInfo_map_comp ν _ (by fun_prop) _ (by fun_prop) _ (by fun_prop),
+    mutualInfo_pair_out₁_eq_uvInfoJoint ν (fun q ↦ q.1) measurable_fst h.isMarkovChain_U_X_Y₁]
 
 end Bridge
 
@@ -529,6 +510,167 @@ lemma condMutualInfo_map_uvRelabel (ν : Measure (U × V × α × β₁ × β₂
 
 end Landing
 
+/-! ## The input-output slot under mixing -/
+
+section TimeShareSlot
+
+variable {α β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
+variable {U V : Type*} [MeasurableSpace U] [MeasurableSpace V]
+
+lemma uvInfoJoint_smul_add_smul (ν σ : Measure (U × V × α × β₁ × β₂))
+    (hσ : σ.map (fun q ↦ (q.2.2.1, q.2.2.2.1)) = ν.map (fun q ↦ (q.2.2.1, q.2.2.2.1)))
+    {a b : ℝ≥0∞} (hab : a + b = 1) :
+    uvInfoJoint (a • ν + b • σ) = uvInfoJoint ν := by
+  have hXY : Measurable (fun q : U × V × α × β₁ × β₂ ↦ (q.2.2.1, q.2.2.2.1)) := by fun_prop
+  refine mutualInfo_congr_pair _ _ (by fun_prop) (by fun_prop) (by fun_prop) (by fun_prop) ?_
+  rw [Measure.map_add _ _ hXY, Measure.map_smul, Measure.map_smul, hσ, ← add_smul, hab, one_smul]
+
+lemma uvInfoJoint_uvTimeShareLaw (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
+    (u₀ : U) (lam : ℝ≥0∞) :
+    uvInfoJoint (uvTimeShareLaw ν u₀ lam) = uvInfoJoint ν := by
+  have hforget : (uvTimeShareLaw ν u₀ lam).map (uvRelabel (Prod.snd : Bool × U → U) (id : V → V))
+      = (lam ⊓ 1) • ν + (1 - lam) • uvCollapse ν u₀ :=
+    uvMixLaw_map_forget ν (uvCollapse ν u₀) lam
+  have hcoll : (uvCollapse ν u₀).map (fun q ↦ (q.2.2.1, q.2.2.2.1))
+      = ν.map (fun q ↦ (q.2.2.1, q.2.2.2.1)) := by
+    rw [uvCollapse, Measure.map_map
+      (show Measurable (fun q : U × V × α × β₁ × β₂ ↦ (q.2.2.1, q.2.2.2.1)) by fun_prop)
+      (measurable_uvRelabel (measurable_const (a := u₀)) measurable_id)]
+    rfl
+  have hab : (lam ⊓ 1) + (1 - lam) = 1 := by
+    rcases le_total lam 1 with h | h
+    · rw [inf_of_le_left h]; exact add_tsub_cancel_of_le h
+    · rw [inf_of_le_right h, tsub_eq_zero_of_le h, add_zero]
+  rw [← uvInfoJoint_map_uvRelabel (uvTimeShareLaw ν u₀ lam)
+      (measurable_snd : Measurable (Prod.snd : Bool × U → U))
+      (measurable_id : Measurable (id : V → V)),
+    hforget, uvInfoJoint_smul_add_smul ν (uvCollapse ν u₀) hcoll hab]
+
+end TimeShareSlot
+
+/-! ## Time sharing with the sum constraint -/
+
+section TimeShareAssembly
+
+variable {α : Type u} {β₁ β₂ : Type*}
+variable [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [StandardBorelSpace α]
+variable [Fintype β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
+  [StandardBorelSpace β₁]
+variable [Fintype β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
+  [StandardBorelSpace β₂]
+variable {V : Type*} [MeasurableSpace V] [StandardBorelSpace V] [Nonempty V]
+
+lemma exists_bcInfo_ge_sumRate_of_tagged (W : BCChannel α β₁ β₂) [IsMarkovKernel W] {m : ℕ}
+    {ν : Measure ((Bool × Marton.bcAuxAlphabet.{u} m) × V × α × β₁ × β₂)}
+    [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) {R₁ R₂ : ℝ}
+    (h₁ : R₁ ≤ (condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)).toReal)
+    (h₂ : R₂ ≤ (uvInfo₂ ν).toReal) (hJ : max R₁ 0 + R₂ ≤ (uvInfoJoint ν).toReal) :
+    ∃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k)) (_ : IsProbabilityMeasure pU)
+      (K : Kernel (Marton.bcAuxAlphabet.{u} k) α) (_ : IsMarkovKernel K),
+      R₁ ≤ bcInfo₁ pU K W ∧ R₂ ≤ bcInfo₂ pU K W ∧ max R₁ 0 + R₂ ≤ bcInfoJoint pU K W := by
+  classical
+  have he : Measurable (boolProdAuxEquiv.{u} m) := measurable_of_countable _
+  have hd : Measurable (boolProdAuxEquiv.{u} m).symm := measurable_of_countable _
+  set ν' := ν.map (uvRelabel (boolProdAuxEquiv.{u} m) (id : V → V)) with hν'
+  have hlaw : IsUVChannelLaw W ν' := h.map_auxiliaries he measurable_id
+  haveI : IsProbabilityMeasure ν' :=
+    Measure.isProbabilityMeasure_map (measurable_uvRelabel he measurable_id).aemeasurable
+  have hcmi : condMutualInfo ν' (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
+      = condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) :=
+    condMutualInfo_map_uvRelabel ν he hd (boolProdAuxEquiv.{u} m).symm_apply_apply
+  have hinfo₂ : uvInfo₂ ν' = uvInfo₂ ν :=
+    uvInfo₂_map_uvRelabel ν he measurable_id hd (boolProdAuxEquiv.{u} m).symm_apply_apply
+  have hjoint : uvInfoJoint ν' = uvInfoJoint ν := uvInfoJoint_map_uvRelabel ν he measurable_id
+  refine ⟨2 * m + 1, uvCloudLaw ν', inferInstance, uvSatelliteKernel ν', inferInstance, ?_, ?_, ?_⟩
+  · rw [bcInfo₁_uvCloudLaw W hlaw, hcmi]; exact h₁
+  · rw [bcInfo₂_uvCloudLaw W hlaw, hinfo₂]; exact h₂
+  · rw [bcInfoJoint_uvCloudLaw W hlaw, hjoint]; exact hJ
+
+theorem exists_bcInfo_ge_sumRate_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    {m : ℕ} {ν : Measure (Marton.bcAuxAlphabet.{u} m × V × α × β₁ × β₂)} [IsProbabilityMeasure ν]
+    (h : IsUVChannelLaw W ν) {R₁ R₂ : ℝ}
+    (h₁ : R₁ ≤ (uvInfo₁ ν).toReal) (h₂ : R₂ ≤ (uvInfo₂ ν).toReal)
+    (hs₂ : R₁ + R₂ ≤ (uvInfoSum₂ ν).toReal)
+    (hs₁ : max R₁ 0 + R₂ ≤ (uvInfoJoint ν).toReal) :
+    ∃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k)) (_ : IsProbabilityMeasure pU)
+      (K : Kernel (Marton.bcAuxAlphabet.{u} k) α) (_ : IsMarkovKernel K),
+      R₁ ≤ bcInfo₁ pU K W ∧ R₂ ≤ bcInfo₂ pU K W ∧ max R₁ 0 + R₂ ≤ bcInfoJoint pU K W := by
+  have hs₁' : R₁ + R₂ ≤ (uvInfoJoint ν).toReal :=
+    le_trans (add_le_add (le_max_left R₁ 0) le_rfl) hs₁
+  have hBfin : uvInfo₂ ν ≠ ∞ := uvInfo₂_ne_top ν
+  have hAfin : condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) ≠ ∞ := by
+    have := uvInfoSum₂_ne_top ν
+    simp only [uvInfoSum₂, ENNReal.add_ne_top] at this
+    exact this.2
+  have hJfin : uvInfoJoint ν ≠ ∞ :=
+    mutualInfo_ne_top_of_fintype_right ν _ _ (by fun_prop) (by fun_prop)
+  set a := (condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)).toReal with ha'
+  set b := (uvInfo₂ ν).toReal with hb'
+  set J := (uvInfoJoint ν).toReal with hJ'
+  have ha : 0 ≤ a := ENNReal.toReal_nonneg
+  have hb : 0 ≤ b := ENNReal.toReal_nonneg
+  have hsum' : R₁ + R₂ ≤ b + a := by
+    simp only [uvInfoSum₂, ENNReal.toReal_add hBfin hAfin] at hs₂
+    exact hs₂
+  obtain ⟨u₀⟩ : Nonempty (Marton.bcAuxAlphabet.{u} m) := inferInstance
+  -- The satellite slot of the time-shared law traces the segment between the two endpoints; the
+  -- other two slots are respectively scaled and preserved.
+  have hslot₁ : ∀ lam : ℝ≥0∞, lam ≤ 1 →
+      (condMutualInfo (uvTimeShareLaw ν u₀ lam) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
+          (fun q ↦ q.1)).toReal = lam.toReal * a + (1 - lam.toReal) * J := by
+    intro lam hlam
+    have hexp : condMutualInfo (uvTimeShareLaw ν u₀ lam) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
+          (fun q ↦ q.1)
+        = lam * condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
+          + (1 - lam) * uvInfoJoint ν :=
+      condMutualInfo_uvTimeShareLaw ν u₀ lam hlam
+    rw [hexp,
+      ENNReal.toReal_add
+        (ENNReal.mul_ne_top (ne_top_of_le_ne_top ENNReal.one_ne_top hlam) hAfin)
+        (ENNReal.mul_ne_top (ne_top_of_le_ne_top ENNReal.one_ne_top tsub_le_self) hJfin),
+      ENNReal.toReal_mul, ENNReal.toReal_mul,
+      ENNReal.toReal_sub_of_le hlam ENNReal.one_ne_top, ENNReal.toReal_one]
+  have hslot₂ : ∀ lam : ℝ≥0∞, lam ≤ 1 →
+      lam.toReal * b ≤ (uvInfo₂ (uvTimeShareLaw ν u₀ lam)).toReal := by
+    intro lam hlam
+    rw [← ENNReal.toReal_mul]
+    exact ENNReal.toReal_mono (uvInfo₂_ne_top _)
+      (mul_uvInfo₂_le_uvInfo₂_uvTimeShareLaw ν u₀ lam hlam)
+  have hslot₃ : ∀ lam : ℝ≥0∞, (uvInfoJoint (uvTimeShareLaw ν u₀ lam)).toReal = J := by
+    intro lam; rw [uvInfoJoint_uvTimeShareLaw]
+  rcases le_or_gt R₂ 0 with hR₂ | hR₂
+  · -- A nonpositive second rate asks for a constant auxiliary.
+    refine exists_bcInfo_ge_sumRate_of_tagged W (uvTimeShareLaw_isUVChannelLaw W h u₀ 0) ?_
+      (hR₂.trans ENNReal.toReal_nonneg) ?_
+    · rw [hslot₁ 0 zero_le_one, ENNReal.toReal_zero]
+      have hcJ : (uvInfo₁ ν).toReal ≤ J :=
+        ENNReal.toReal_mono hJfin (mutualInfo_le_of_markov ν (fun q ↦ q.2.1) (fun q ↦ q.2.2.1)
+          (fun q ↦ q.2.2.2.1) (by fun_prop) (by fun_prop) (by fun_prop) h.isMarkovChain_V_X_Y₁)
+      linarith [h₁]
+    · rw [hslot₃ 0]; exact hs₁
+  · -- A positive second rate is met exactly at `lam = R₂ / I(U; Y₂)`, and the convex combination
+    -- of the two endpoints dominates the smaller of them.
+    have hb0 : 0 < b := lt_of_lt_of_le hR₂ h₂
+    have hlam0 : 0 < R₂ / b := div_pos hR₂ hb0
+    have hlam1 : R₂ / b ≤ 1 := (div_le_one hb0).mpr h₂
+    have hbb : (R₂ / b) * b = R₂ := div_mul_cancel₀ R₂ (ne_of_gt hb0)
+    have hlam : ENNReal.ofReal (R₂ / b) ≤ 1 := ENNReal.ofReal_le_one.mpr hlam1
+    have hlamR : (ENNReal.ofReal (R₂ / b)).toReal = R₂ / b := ENNReal.toReal_ofReal hlam0.le
+    refine exists_bcInfo_ge_sumRate_of_tagged W
+      (uvTimeShareLaw_isUVChannelLaw W h u₀ (ENNReal.ofReal (R₂ / b))) ?_ ?_ ?_
+    · rw [hslot₁ _ hlam, hlamR]
+      have e1 : (R₂ / b) * (R₁ + R₂) ≤ (R₂ / b) * (b + a) :=
+        mul_le_mul_of_nonneg_left hsum' hlam0.le
+      have e2 : (1 - R₂ / b) * (R₁ + R₂) ≤ (1 - R₂ / b) * J :=
+        mul_le_mul_of_nonneg_left hs₁' (by linarith)
+      nlinarith [hbb]
+    · have hge := hslot₂ _ hlam
+      rwa [hlamR, hbb] at hge
+    · rw [hslot₃]; exact hs₁
+
+end TimeShareAssembly
+
 /-! ## Tracing the segment between the two endpoints -/
 
 section Assembly
@@ -541,32 +683,6 @@ variable [Fintype β₁] [DecidableEq β₁] [Nonempty β₁] [MeasurableSpace �
 variable [Fintype β₂] [DecidableEq β₂] [Nonempty β₂] [MeasurableSpace β₂]
   [MeasurableSingletonClass β₂] [StandardBorelSpace β₂]
 variable {V : Type*} [MeasurableSpace V] [StandardBorelSpace V] [Nonempty V]
-
-omit [StandardBorelSpace β₂] [StandardBorelSpace V] [Nonempty V] in
-lemma exists_bcInfo_ge_of_tagged (W : BCChannel α β₁ β₂) [IsMarkovKernel W] {m : ℕ}
-    {ν : Measure ((Bool × Marton.bcAuxAlphabet.{u} m) × V × α × β₁ × β₂)}
-    [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) {R₁ R₂ : ℝ}
-    (h₁ : R₁ ≤ (condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)).toReal)
-    (h₂ : R₂ ≤ (uvInfo₂ ν).toReal) :
-    ∃ (k : ℕ) (pU : Measure (Marton.bcAuxAlphabet.{u} k)) (_ : IsProbabilityMeasure pU)
-      (K : Kernel (Marton.bcAuxAlphabet.{u} k) α) (_ : IsMarkovKernel K),
-      R₁ ≤ bcInfo₁ pU K W ∧ R₂ ≤ bcInfo₂ pU K W := by
-  have he : Measurable (boolProdAuxEquiv.{u} m) := measurable_of_countable _
-  have hd : Measurable (boolProdAuxEquiv.{u} m).symm := measurable_of_countable _
-  set ν' := ν.map (uvRelabel (boolProdAuxEquiv.{u} m) (id : V → V)) with hν'
-  have hlaw : IsUVChannelLaw W ν' := h.map_auxiliaries he measurable_id
-  haveI : IsProbabilityMeasure ν' :=
-    Measure.isProbabilityMeasure_map (measurable_uvRelabel he measurable_id).aemeasurable
-  have hcmi : condMutualInfo ν' (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
-      = condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) :=
-    condMutualInfo_map_uvRelabel ν he hd (boolProdAuxEquiv.{u} m).symm_apply_apply
-  have hinfo₂ : uvInfo₂ ν' = uvInfo₂ ν :=
-    uvInfo₂_map_uvRelabel ν he measurable_id hd (boolProdAuxEquiv.{u} m).symm_apply_apply
-  refine ⟨2 * m + 1, uvCloudLaw ν', inferInstance, uvSatelliteKernel ν', inferInstance, ?_, ?_⟩
-  · rw [bcInfo₁_uvCloudLaw W hlaw, hcmi]
-    exact h₁
-  · rw [bcInfo₂_uvCloudLaw W hlaw, hinfo₂]
-    exact h₂
 
 theorem exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hln : IsBCLessNoisy W) {m : ℕ}
@@ -582,63 +698,24 @@ theorem exists_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw (W : BCChannel α β₁ 
     have := uvInfoSum₂_ne_top ν
     simp only [uvInfoSum₂, ENNReal.add_ne_top] at this
     exact this.2
-  have hJfin : uvInfoJoint ν ≠ ∞ :=
-    mutualInfo_ne_top_of_fintype_right ν _ _ (by fun_prop) (by fun_prop)
   set a := (condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)).toReal with ha'
   set b := (uvInfo₂ ν).toReal with hb'
-  set J := (uvInfoJoint ν).toReal with hJ'
   have ha : 0 ≤ a := ENNReal.toReal_nonneg
-  have hb : 0 ≤ b := ENNReal.toReal_nonneg
-  -- The sum-rate slot splits into the two slots, both of which are finite.
   have hsum' : R₁ + R₂ ≤ b + a := by
     simp only [uvInfoSum₂, ENNReal.toReal_add hBfin hAfin] at hsum
     exact hsum
-  -- A less noisy channel makes the input information dominate the two slots together.
-  have hab : a + b ≤ J := by
+  -- A less noisy channel makes the input information dominate the two slots together, which is
+  -- the sum constraint the class free variant asks for.
+  have hab : a + b ≤ (uvInfoJoint ν).toReal := by
     have hle := bc_lessNoisy_infoJoint_ge (uvCloudLaw ν) (uvSatelliteKernel ν) W hln
     rwa [bcInfo₁_uvCloudLaw W h, bcInfo₂_uvCloudLaw W h, bcInfoJoint_uvCloudLaw W h] at hle
-  -- The receiver-1 corner is dominated by the input information as well.
-  have hcJ : (uvInfo₁ ν).toReal ≤ J :=
-    ENNReal.toReal_mono hJfin (mutualInfo_le_of_markov ν (fun q ↦ q.2.1) (fun q ↦ q.2.2.1)
-      (fun q ↦ q.2.2.2.1) (by fun_prop) (by fun_prop) (by fun_prop) h.isMarkovChain_V_X_Y₁)
-  obtain ⟨u₀⟩ : Nonempty (Marton.bcAuxAlphabet.{u} m) := inferInstance
-  -- The satellite slot of the time-shared law traces the segment between the two endpoints.
-  have hslot₁ : ∀ lam : ℝ≥0∞, lam ≤ 1 →
-      (condMutualInfo (uvTimeShareLaw ν u₀ lam) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
-          (fun q ↦ q.1)).toReal = lam.toReal * a + (1 - lam.toReal) * J := by
-    intro lam hlam
-    rw [condMutualInfo_uvTimeShareLaw ν u₀ lam hlam,
-      ENNReal.toReal_add
-        (ENNReal.mul_ne_top (ne_top_of_le_ne_top ENNReal.one_ne_top hlam) hAfin)
-        (ENNReal.mul_ne_top (ne_top_of_le_ne_top ENNReal.one_ne_top tsub_le_self) hJfin),
-      ENNReal.toReal_mul, ENNReal.toReal_mul,
-      ENNReal.toReal_sub_of_le hlam ENNReal.one_ne_top, ENNReal.toReal_one]
-  have hslot₂ : ∀ lam : ℝ≥0∞, lam ≤ 1 →
-      lam.toReal * b ≤ (uvInfo₂ (uvTimeShareLaw ν u₀ lam)).toReal := by
-    intro lam hlam
-    rw [← ENNReal.toReal_mul]
-    exact ENNReal.toReal_mono (uvInfo₂_ne_top _)
-      (mul_uvInfo₂_le_uvInfo₂_uvTimeShareLaw ν u₀ lam hlam)
-  rcases le_or_gt R₂ 0 with hR₂ | hR₂
-  · -- A nonpositive second rate asks for a constant auxiliary.
-    refine exists_bcInfo_ge_of_tagged W (uvTimeShareLaw_isUVChannelLaw W h u₀ 0) ?_
-      (hR₂.trans ENNReal.toReal_nonneg)
-    rw [hslot₁ 0 zero_le_one, ENNReal.toReal_zero]
-    linarith [h₁]
-  · -- A positive second rate is met exactly at `lam = R₂ / I(U; Y₂)`.
-    have hb0 : 0 < b := lt_of_lt_of_le hR₂ h₂
-    have hlam0 : 0 < R₂ / b := div_pos hR₂ hb0
-    have hlam1 : R₂ / b ≤ 1 := (div_le_one hb0).mpr h₂
-    have hbb : (R₂ / b) * b = R₂ := div_mul_cancel₀ R₂ (ne_of_gt hb0)
-    have hlam : ENNReal.ofReal (R₂ / b) ≤ 1 := ENNReal.ofReal_le_one.mpr hlam1
-    have hlamR : (ENNReal.ofReal (R₂ / b)).toReal = R₂ / b :=
-      ENNReal.toReal_ofReal hlam0.le
-    refine exists_bcInfo_ge_of_tagged W
-      (uvTimeShareLaw_isUVChannelLaw W h u₀ (ENNReal.ofReal (R₂ / b))) ?_ ?_
-    · rw [hslot₁ _ hlam, hlamR]
-      nlinarith [mul_le_mul_of_nonneg_left hab (by linarith : (0 : ℝ) ≤ 1 - R₂ / b)]
-    · have hge := hslot₂ _ hlam
-      rwa [hlamR, hbb] at hge
+  have hs₁ : max R₁ 0 + R₂ ≤ (uvInfoJoint ν).toReal := by
+    rcases le_or_gt 0 R₁ with hR₁ | hR₁
+    · rw [max_eq_left hR₁]; linarith
+    · rw [max_eq_right hR₁.le]; linarith
+  obtain ⟨k, pU, hpU, K, hK, hb₁, hb₂, -⟩ :=
+    exists_bcInfo_ge_sumRate_of_isUVChannelLaw W h h₁ h₂ hsum hs₁
+  exact ⟨k, pU, hpU, K, hK, hb₁, hb₂⟩
 
 end Assembly
 

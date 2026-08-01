@@ -24,11 +24,12 @@ instantiates them by supplying its own encoder and channel.
   as well as the other letters.
 * `isMemorylessChannel_of_compProd_pi`: if the kernel is the per-letter product `∏ⱼ W (x m j)`
   of a channel applied to a deterministic codeword, the ambient is a memoryless channel.
-* `compProd_pi_map_pair_eq`: the joint law of the `i`-th input-output pair is the channel joint
+* `compProd_pi_map_pair_eq_of_update_invariant`: the joint law of the `i`-th output letter paired
+  with any map that is invariant under updating the `i`-th output coordinate and that retracts
+  onto the input letter, which is what lets a padded auxiliary variable sit there.
+* `compProd_pi_map_pair_eq`: its special case where that map is the input letter `x · i` itself,
+  so the joint law of the `i`-th input-output pair is the channel joint
   `(ν.map fun m ↦ x m i) ⊗ₘ W`.
-* `compProd_pi_map_pair_eq_of_update_invariant`: the same identity with the input letter `x · i`
-  replaced by any map that is invariant under updating the `i`-th output coordinate and that
-  retracts onto the input letter, which is what lets a padded auxiliary variable sit there.
 * `compProd_comap_map_prodMap`: a composition product with a comapped kernel is the composition
   product of the pushed-forward measure with the kernel itself.
 * `compProd_map_prodMap`: the two-sided form of the previous item — a composition product
@@ -421,41 +422,6 @@ lemma compProd_map_prodMap {Z Z' B B' : Type*} [MeasurableSpace Z] [MeasurableSp
   rw [h1, ← Measure.map_map (by fun_prop) (by fun_prop), ← Measure.compProd_map hg, hκ,
     compProd_comap_map_prodMap ρ κ' hf]
 
-/-- Per-letter joint pushforward of a product-channel `compProd`: for an ambient `ν ⊗ₘ κ`
-whose message-to-output kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)`, the
-joint law of the `i`-th input-output pair `(x ω.1 i, ω.2 i)` is the channel joint
-`(ν.map fun m ↦ x m i) ⊗ₘ W`.  Stated separately from `isMarkovChain_of_compProd_pi`, which
-establishes the same identity internally, because it is what identifies a per-letter
-information quantity of the ambient with the corresponding channel quantity. -/
-lemma compProd_pi_map_pair_eq
-    {M A B : Type*} [MeasurableSpace M] [MeasurableSpace A] [MeasurableSpace B]
-    {k : ℕ} (ν : Measure M) [IsProbabilityMeasure ν]
-    (x : M → Fin k → A) (hx : Measurable x)
-    (W : Kernel A B) [IsMarkovKernel W]
-    (κ : Kernel M (Fin k → B)) [IsMarkovKernel κ]
-    (hκ : ∀ m, κ m = Measure.pi (fun j ↦ W (x m j))) (i : Fin k) :
-    (ν ⊗ₘ κ).map (fun ω ↦ (x ω.1 i, ω.2 i)) = (ν.map (fun m ↦ x m i)) ⊗ₘ W := by
-  set μ : Measure (M × (Fin k → B)) := ν ⊗ₘ κ with hμ_def
-  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
-  set Zc : M × (Fin k → B) → A := fun ω ↦ x ω.1 i with hZc_def
-  set Yo : M × (Fin k → B) → B := fun ω ↦ ω.2 i with hYo_def
-  have hxi_meas : Measurable (fun m ↦ x m i) := (measurable_pi_apply i).comp hx
-  have hZc_meas : Measurable Zc := hxi_meas.comp measurable_fst
-  have hYo_meas : Measurable Yo := (measurable_pi_apply i).comp measurable_snd
-  show μ.map (fun ω ↦ (Zc ω, Yo ω)) = (ν.map (fun m ↦ x m i)) ⊗ₘ W
-  refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
-  have hFmeas : Measurable (fun ω : M × (Fin k → B) ↦ f (Zc ω, Yo ω)) :=
-    hf.comp (hZc_meas.prodMk hYo_meas)
-  have hFm2 : Measurable (fun z : A ↦ ∫⁻ b : B, f (z, b) ∂(W z)) :=
-    Measurable.lintegral_kernel_prod_right' (κ := W) hf
-  rw [lintegral_map hf (hZc_meas.prodMk hYo_meas), hμ_def,
-    Measure.lintegral_compProd hFmeas, Measure.lintegral_compProd hf,
-    lintegral_map hFm2 hxi_meas]
-  refine lintegral_congr fun m ↦ ?_
-  rw [hκ]
-  exact lintegral_pi_eval (fun j ↦ W (x m j)) i (fun b ↦ f (x m i, b))
-    (hf.comp (measurable_const.prodMk measurable_id))
-
 /-- @audit:ok -/
 lemma compProd_pi_map_pair_eq_of_update_invariant
     {M A B C : Type*} [MeasurableSpace M] [MeasurableSpace A] [MeasurableSpace B]
@@ -490,6 +456,29 @@ lemma compProd_pi_map_pair_eq_of_update_invariant
     rw [Kernel.comap_apply, hgG (m, y)]
   rw [hker]
   exact lintegral_congr fun b ↦ by rw [hGupd m y b, Function.update_self i b y]
+
+/-- Per-letter joint pushforward of a product-channel `compProd`: for an ambient `ν ⊗ₘ κ`
+whose message-to-output kernel factors as the per-letter product `κ m = ∏ⱼ W (x m j)`, the
+joint law of the `i`-th input-output pair `(x ω.1 i, ω.2 i)` is the channel joint
+`(ν.map fun m ↦ x m i) ⊗ₘ W`.  Stated separately from `isMarkovChain_of_compProd_pi`, which
+establishes the same identity internally, because it is what identifies a per-letter
+information quantity of the ambient with the corresponding channel quantity. -/
+lemma compProd_pi_map_pair_eq
+    {M A B : Type*} [MeasurableSpace M] [MeasurableSpace A] [MeasurableSpace B]
+    {k : ℕ} (ν : Measure M) [IsProbabilityMeasure ν]
+    (x : M → Fin k → A) (hx : Measurable x)
+    (W : Kernel A B) [IsMarkovKernel W]
+    (κ : Kernel M (Fin k → B)) [IsMarkovKernel κ]
+    (hκ : ∀ m, κ m = Measure.pi (fun j ↦ W (x m j))) (i : Fin k) :
+    (ν ⊗ₘ κ).map (fun ω ↦ (x ω.1 i, ω.2 i)) = (ν.map (fun m ↦ x m i)) ⊗ₘ W := by
+  have hxi : Measurable (fun m ↦ x m i) := (measurable_pi_apply i).comp hx
+  have hmarg : (ν ⊗ₘ κ).map (fun ω ↦ x ω.1 i) = ν.map (fun m ↦ x m i) := by
+    rw [show (fun ω : M × (Fin k → B) ↦ x ω.1 i) = (fun m ↦ x m i) ∘ Prod.fst from rfl,
+      ← Measure.map_map hxi measurable_fst]
+    exact congrArg _ (Measure.fst_compProd ν κ)
+  rw [compProd_pi_map_pair_eq_of_update_invariant ν x W κ hκ i (fun ω ↦ x ω.1 i)
+      (hxi.comp measurable_fst) (fun _ _ _ ↦ rfl) id measurable_id (fun _ ↦ rfl),
+    Kernel.comap_id, hmarg]
 
 /-! ### Unzipping a product of two-stage laws -/
 
