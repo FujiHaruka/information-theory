@@ -16,7 +16,7 @@
 
 **20 leg** (L0–L20 の枠割りは親 plan §6.2 が SoT)。延長判断は L20 完了時点。
 **固定枠**: L0 文献 / L1 probe 基盤 / L4・L9・L14 棚卸し / **L19 収穫・L20 記録 (予約済、探索に流用しない)**。
-**現在**: leg 4 / 20 (**L3 完了** 2026-08-01 — 次は L4 = 棚卸し #1)。
+**現在**: leg 5 / 20 (**L4 棚卸し #1 完了** 2026-08-01 — 次は L5)。
 
 ## Attack 一覧
 
@@ -67,6 +67,12 @@
 | `absorption-as-class-def` | A+E | 外部ノートの吸収条件 (9) `Δ₁₂ ≤ N₁₂ + G₁₂` を**満たすチャネルのクラス**として定義すると、既知クラス (degraded / less noisy / more capable) を含む新クラスになるか。軸 A の最弱仮説抽出と合流しうる | L(-1) |
 | `collider-conditioning` | C | 残差の正体が collider conditioning (独立な `A,B` が共通の子 `Y₁` を条件付けて従属化) なら、その現象を直接測る情報量が新しい情報不等式の候補になる | L(-1) |
 | `markovity-as-class-def` | G+A | Markovity 予想が**成り立つチャネルのクラス**を定義すると、我々が等号を持つ 3 クラス (degraded / less noisy / more capable) を含むか。含むなら軸 A の最弱仮説抽出と合流し、含まないならクラスの境界が新しい標的になる | L0 |
+| `conditioning-collapse-schema` | A | **L3 の死因からの派生**。条件つき版と非条件版が同値になったのは more capable 固有の事情ではなく、`∀ p, F(p) ≤ G(p)` という**周辺分布で量化されたチャネル述語**一般に効く平均化の帰結かもしれない。そうならば degraded / less noisy でも同じ形で潰れ、`weakest-hyp-degraded-lessnoisy` は着手前に結末が読める。先にやるのは schema の書き下し — どの汎関数の組 `(F,G)` について「全周辺分布での不等式」と「全 `(pU,K)` での条件つき不等式」が同値になるか。**昇格条件**: schema に**境界**を付けること (同値にならない `(F,G)` の実例を 1 つ出す)。出れば `class-def-vs-consequence-gap` に主張 1 文と step 列が入り、軸 A の第一手が生きる場所が特定される | L4 |
+| `region-convexity-transplant` | E+D | **類似問題からの移植**。領域の凸性を時分割で示す機構が**別家系に 2 系統ある** — MAC は `macConcatCode` (`MultipleAccess/TimeSharing.lean:163`) → `mac_timesharing_strict` (:369) → `mac_capacityRegion_convex` (:565)、WynerZiv は補助変数上の値集合について `wzRateValueSet_timeShare_mem` (`WynerZiv/FactorizableRate.lean:948`) / `mutualInfoPmf_mixture_affine` (:783) / `wzRateValueSet_avg_mem` (:1230) / `wynerZivRate_convex_in_D` (:1122)。一方 **BC 側には `Convex ℝ (bcCapacityRegion W)` も union の凸性も無い** (`rg 'Convex ℝ' InformationTheory/Shannon/BroadcastChannel/` のヒットは四辺形版 `martonRegion_convex` の 1 本のみ)。L2 の V5 が還元 (3) を**閉凸包の命題**と確定させた以上、「support function が領域を決める」という言明自体が両端の凸性に依存する。**昇格条件**: 時分割変数を補助アルファベットへ吸収する標準手が我々の `def` の上で step 列として書けること。書ければ (3) の主張が「閉凸包」から「領域そのもの」へ降り、V5 の測定の意味が 1 段強くなる | L4 |
+| `entropic-vector-as-hierarchy-atom` | D | **同じく移植**。Li の `Δ^H_atom` は逐語 `aᵀh(X₁,…,X_n) ≥ 0` で `h` は entropic vector ([`bc-facts.md`](bc-facts.md) F7)。その entropic vector が**在庫にそのまま在る** — `jointEntropySubset` (`Shannon/Han/D.lean:36` = `S ↦ H(X_S)`) と `entropyPolymatroid` (`Shannon/Polymatroid.lean:281`、`@[entry_point]`、axiom 3 本 `jointEntropySubset_empty` / `_mono` / `_submodular` (:47 / :76 / :202) を `Combinatorics.Polymatroid` に束ねたもの)。⟹ `multiletter-subject` が要求する「Li の階層のレベルを我々の型で書く」は、少なくとも `Δ₀ᴴ` 層については**在庫の消費だけで書ける**。**昇格条件**: `Δ^H_atom` / `Δ₀ᴴ` を `entropyPolymatroid` 上の述語として 1 文で書き、Table I の `Σ₁ᴴ` (degraded BC) が我々の `bc_degraded_capacity_eq_uv` の形と照合できること | L4 |
+| `uv-slack-step-enumeration` | B | **既存証明の読み直しから**。`dep_rank.sh` の実測で BC family の重い entry point は `bc_degraded_capacity_eq_uv` 2425 / `bc_moreCapable_capacity_eq_uv` 2402 / `bc_lessNoisy_capacity_eq_uv` 2373 / `bc_capacity_subset_uv` 1687 / `martonRegionUnion_subset_capacity` 1661 (推移依存数)。軸 B が列挙したい対象 = `bc_capacity_subset_uv` の前方閉包で、実測は**内部 266 decl / 外部 1412**、うち名前が不等号形のものは **21 本だけ**。緩みを入れる本体は `mutualInfo_le_of_markov` (DPI) / `mutualInfo_le_of_postprocess` / `condMutualInfo_le_of_markov_joint` / `condMutualInfo_le_add_condMutualInfo` / `mutualInfo_le_condMutualInfo_of_indep_markov` / `bcUVTimeShare_uvInfo₁_ge` / `bcUVTimeShare_uvInfoSum₁_ge` / `bcConverseFanoSlack₁_le` / `klDiv_map_le`。⟹ `outer-slack-vs-thm7` の「不等号ステップを全列挙」は散文の読解ではなく **`dep_graph.sh` + 名前フィルタで機械的に得られ、規模は 21 本**。**昇格条件**: 21 本それぞれに等号成立条件を書き、Gohari–Nair Theorem 7 の「捨てられる項」と対応が付くか / 付かないものが残るかを判定できること | L4 |
+| `shannon-cone-lp` | C | **数値実験のパターンの空き口から**。`bc_probe.py` は情報量式を**同時エントロピー `h(S)` 上の有理係数ベクトル**として保持する (`LinInfo.terms`) が、その表現を使っているのは恒等式の係数相殺 `prove_identity` / `is_zero` **だけ**。不等式側は掃引 `test_relation` (証拠) しかなく、**証明側の口が空いている** — 同じベクトルに elemental Shannon 不等式を制約とした LP を当てれば「その不等式は Shannon 型か」を機械判定できる (ITIP 相当。`scipy.optimize.linprog` は既に依存)。軸 C にとっての意味は大きい: F4 の Jog–Nair 不等式は Shannon 型でないからこそ定理なので、**LP が通る候補はその場で既知として殺せる = §5-7 novelty gate の機械化**。**昇格条件**: LP が Jog–Nair 不等式に「Shannon 型でない」を返し (肯定コントロール = Shannon 型不等式が通ること)、その上で生き残る新候補が 1 本でも出ること | L4 |
+| `product-outer-claim4` | E+B | **文献の未使用の道具から**。F5 / V10 の逐語 "In Section III we establish a new outer bound (Claim 4) for product broadcast channels and use it to determine the capacity region of some new classes (Theorems 2 and 3). This outer bound is strictly better than the UV outer bound as it is optimal for the example where the UV outer bound is loose." — **Claim 4 はどの attack にも使われていない**。我々は `bc_capacity_subset_uv` を `T^{⊗n}` に当てて `h_n` の上界を引けるが、それは UV 由来で緩いことが F5 で判明済。Claim 4 は**積 BC 専用でかつ UV より真に強い**外界なので、軸 E の自己テンソル化 (`h_n` の評価) と軸 B の「UV はどこで緩むか」の**両方に同時に効く唯一の未使用資産**。**昇格条件**: Claim 4 を逐語取得し、(i) 自己テンソル `T ⊗ T` に特化した形が書けるか、(ii) それが `h_2` に UV より真に良い上界を与えるか。与えるなら `selftensor-counterexample` のブロッキング前提 (`marton-3aux-probe`) を迂回する別ルートが立つ | L4 |
 
 ## 軸ごとの連続ゼロ進捗カウント (round-robin 判定用)
 
@@ -74,7 +80,7 @@
 |---|---|---|
 | A | 0 | L3 で第一手が `probe-failed`。**同値という確定事実 + 子 attack 2 本** (`weakest-hyp-degraded-lessnoisy` / `class-def-vs-consequence-gap`) が残るのでゼロ進捗ではない (親 plan §5-1) |
 | B | 0 | L0 は軸に紐づかない文献 leg。**死亡も確定事実**なのでゼロ進捗ではない (親 plan §5-1) |
-| C | 0 | — |
+| C | 0 | **L0–L3 の 4 leg で一度も leg の主語になっていない** (下記 L4 の点検で唯一の該当軸)。カウントは 0 だが、それは「進んだ」ではなく「回ってきていない」 |
 | D | 0 | L2 で multi-letter 表現が我々の定義で**逆側だけ生きる**と確定 (`multiletter-subject` の入力)。⚠ ただし L2 は軸 E の leg なので**本軸のカウントはリセットしない** (下記の二重計上の注意) |
 | E | 0 | L2 で V4 / V5 / 新項目が決着。⚠ ただし**決着の中身は軸 E 内の路線 1 本 (`selftensor-counterexample`) を条件付きで塞ぐもの** — 前提工事 `marton-3aux-probe` を挟むまで動かせない |
 | F | 0 | L1 で主語が変わったが、**leg は消費していない** (下記の二重計上の注意) |
@@ -89,3 +95,27 @@ round-robin (§5-5) が「回っているように見えて回っていない」
 **L2 も同じ扱い**: multi-letter 表現の確定は軸 D の入力になるが、L2 は軸 E の leg なので
 **数えるのは軸 E の側だけ**にする。**L3 も同じ**: 棚卸し手順の訂正 (`dep_graph.sh` + 辺の向き先の区別) は
 他軸の最弱仮説抽出にも効くが、L3 は軸 A の leg なので**他軸のカウントは動かさない**。
+
+### L4 の点検 — 強制 park 対象は無い。ただしカウンタは構造的に発火しえない
+
+**park 対象**: **無い** (全軸 0、3 に達した軸はゼロ本)。park 済みの軸も無いので再開条件の点検も空。
+
+**カウンタが実態を反映しているかの点検 — 反映していない**。免除規定 (L0 / L1 は軸に紐づかない
+固定枠なので触れなかった軸のカウントを進めない) 自体は妥当で、これを外して「その leg で触れなかった
+全軸のカウントを進める」に変えると、**回ってきていない軸まで park される** = round-robin の趣旨
+(詰まった軸から強制的に離す) と逆向きになる。過剰なのは免除ではなく、**3 つの規約の合成**の側:
+
+- 親 plan §5-1 (no empty leg) が**全 leg に確定事実 1 行を義務づける**
+- 親 plan §6.1 が **1 leg = 1 attack の 1 ステップ**に粒度を固定する
+- 上の二重計上の注意が、**leg の主語になった軸以外はカウントを動かさない**と定める
+
+⟹ カウンタが増えるのは「その軸の leg なのに確定事実がゼロ」のときだけで、それは §5-1 違反。
+**§5-1 を守る限りカウンタは 3 に到達できない** — L0–L3 で全軸 0 なのは順調さの表示ではなく、
+**機構が一度も動きうる状態になっていないこと**の表示である。加えて軸 C のように「一度も回ってきて
+いない」状態と「回したが進まなかった」状態が**同じ 0 で表示される**ため、区別も付かない。
+
+**⚠ 規約の改定は提案までにとどめる** (本 leg では規約本文を書き換えない)。提案の中身は親 plan
+§9 判断ログ 14 に 1 件として起票した — 要点は (i) §5-5 のカウンタを「詰まりの検出」専用と明記し、
+(ii) 別に**枯渇カウンタ** (その軸が最後に leg の主語になってからの leg 数) を持ち、
+(iii) 棚卸し leg で枯渇カウンタが閾値を超えた軸は**次の可変枠を割り当てるか、優先度を下げる理由を
+書くかの二択を強制する**、の 3 点。判定は棚卸し leg にだけ発生するので運用コストは増えない。
