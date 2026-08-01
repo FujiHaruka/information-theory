@@ -16,14 +16,12 @@ alphabets.
 * `bcAuxAlphabet k` — the auxiliary alphabet of cardinality `k + 1`.
 * `martonRegionUnion W` — Marton's inner bound, as the closure of the union of `martonRegion`
   over the auxiliary laws on those alphabets.
-* `martonRegionUnionFS W` — the same union restricted to the full-support indices, which is the
-  form the achievability theorem applies to.
+* `martonRegionUnionFullSupport W` — the same union restricted to the full-support indices,
+  which is the form the achievability theorem applies to.
 
 ## Main statements
 
 * `martonRegionUnion_subset_uv` — the union sits inside the UV outer region.
-* `martonRegionUnionFS_subset_capacity` — the full-support union sits inside the operational
-  capacity region.
 * `martonRegion_subset_union` — the union absorbs the quadrilateral of every pair of finite
   auxiliary alphabets, in every universe.
 * `martonRegionUnion_isLowerSet` / `martonRegionUnion_nonempty` — the union is a nonempty lower
@@ -80,7 +78,7 @@ noncomputable def martonRegionUnion (W : BCChannel α β₁ β₂) : Set (ℝ ×
 /-- The same union over the full-support indices only: the auxiliary law and the auxiliary
 kernel charge every point.  Those are the regularity preconditions of
 `marton_region_subset_capacity`, so this is the form of the union that is achievable. -/
-noncomputable def martonRegionUnionFS (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
+noncomputable def martonRegionUnionFullSupport (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k₁ : ℕ) (k₂ : ℕ)
     (pV : Measure (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂))
     (_ : IsProbabilityMeasure pV)
@@ -103,8 +101,8 @@ theorem martonRegionUnion_subset_uv (W : BCChannel α β₁ β₂) [IsMarkovKern
 
 omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] [Nonempty β₁]
   [MeasurableSingletonClass β₁] [Nonempty β₂] [MeasurableSingletonClass β₂] in
-theorem martonRegionUnionFS_subset_union (W : BCChannel α β₁ β₂) :
-    martonRegionUnionFS W ⊆ martonRegionUnion W := by
+theorem martonRegionUnionFullSupport_subset_union (W : BCChannel α β₁ β₂) :
+    martonRegionUnionFullSupport W ⊆ martonRegionUnion W := by
   refine closure_mono ?_
   refine Set.iUnion_subset fun k₁ ↦ Set.iUnion_subset fun k₂ ↦ Set.iUnion_subset fun pV ↦
     Set.iUnion_subset fun hpV ↦ Set.iUnion_subset fun _ ↦ Set.iUnion_subset fun K ↦
@@ -112,19 +110,6 @@ theorem martonRegionUnionFS_subset_union (W : BCChannel α β₁ β₂) :
   exact Set.subset_iUnion_of_subset k₁ (Set.subset_iUnion_of_subset k₂
     (Set.subset_iUnion_of_subset pV (Set.subset_iUnion_of_subset hpV
       (Set.subset_iUnion_of_subset K (Set.subset_iUnion_of_subset hK subset_rfl)))))
-
-/-- The full-support form of Marton's inner bound is achievable: it is contained in the
-operational capacity region. -/
-@[entry_point]
-theorem martonRegionUnionFS_subset_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
-    (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) :
-    martonRegionUnionFS W ⊆ bcCapacityRegion W := by
-  classical
-  refine closure_minimal ?_ (bc_capacityRegion_isClosed W)
-  refine Set.iUnion_subset fun k₁ ↦ Set.iUnion_subset fun k₂ ↦ Set.iUnion_subset fun pV ↦
-    Set.iUnion_subset fun hpV ↦ Set.iUnion_subset fun hpVpos ↦ Set.iUnion_subset fun K ↦
-      Set.iUnion_subset fun hK ↦ Set.iUnion_subset fun hKpos ↦ ?_
-  exact marton_region_subset_capacity pV K W hpVpos hKpos hW
 
 end Union
 

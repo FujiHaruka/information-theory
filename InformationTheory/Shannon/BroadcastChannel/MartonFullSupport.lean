@@ -226,8 +226,7 @@ variable {α : Type u} {β₁ β₂ : Type*}
 
 /-- Marton's inner bound is achievable in full: the union over all auxiliary laws and input
 kernels, not only over the full-support ones, is contained in the operational capacity region.
-This is `martonRegionUnionFS_subset_capacity` with the two support hypotheses of the union
-binder removed. -/
+Only the channel is required to have full support. -/
 @[entry_point]
 theorem martonRegionUnion_subset_capacity (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) :

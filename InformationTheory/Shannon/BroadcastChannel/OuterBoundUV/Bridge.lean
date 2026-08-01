@@ -60,8 +60,6 @@ each summand of the bound with an information slot of that law.
   receiver is the code's average error probability there.
 * `bc_uv_converse_from_code` — the UV outer bound at a bare broadcast code, with the rate pair
   `(log M₁, log M₂)` and the Fano slack still symbolic.
-* `bc_uv_rate_extract` — the same bound with the rate pair `(n R₁, n R₂)` of a code whose
-  message counts satisfy `⌈exp (n Rₖ)⌉ ≤ Mₖ`.
 * `uvAux_pad_mutualInfo_eq`, `uvAux_pad_condMutualInfo_eq` — re-encoding the auxiliary
   variable into the fixed alphabet changes neither the mutual information it carries about
   an output nor the conditional mutual information it conditions.
@@ -602,36 +600,6 @@ theorem bc_uv_converse_from_code
     by simpa only [bcConverseFanoSlack₂, add_assoc] using h.bound₂,
     by simpa only [bcConverseFanoSlack₁, bcConverseFanoSlack₂, add_assoc] using h.sumBound₂,
     by simpa only [bcConverseFanoSlack₁, bcConverseFanoSlack₂, add_assoc] using h.sumBound₁⟩
-
-/-- @audit:ok -/
-lemma bc_uv_rate_extract [NeZero M₁] [NeZero M₂]
-    (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
-    (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {R₁ R₂ : ℝ}
-    (hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
-    (hM₂ : Nat.ceil (Real.exp ((n : ℝ) * R₂)) ≤ M₂) :
-    InBCOuterRegionUV ((n : ℝ) * R₁) ((n : ℝ) * R₂)
-      ((∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
-            (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)).toReal
-        + bcConverseFanoSlack₁ c W)
-      ((∑ i : Fin n, mutualInfo (bcConverseAmbient c W)
-            (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)).toReal
-        + bcConverseFanoSlack₂ c W)
-      ((∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
-              (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i) (bcConverseY₂s i)
-            + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
-              (bcConverseY₁s i) (uvAux bcConverseMsg₂ bcConverseY₁s bcConverseY₂s i))).toReal
-        + bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W)
-      ((∑ i : Fin n, (mutualInfo (bcConverseAmbient c W)
-              (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i) (bcConverseY₁s i)
-            + condMutualInfo (bcConverseAmbient c W) (fun ω ↦ c.encoder ω.1 i)
-              (bcConverseY₂s i) (uvAux bcConverseMsg₁ bcConverseY₁s bcConverseY₂s i))).toReal
-        + bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) := by
-  have h := bc_uv_converse_from_code c W hcard₁ hcard₂
-  have hlog₁ : (n : ℝ) * R₁ ≤ Real.log (M₁ : ℝ) := le_log_of_ceil_exp_le hM₁
-  have hlog₂ : (n : ℝ) * R₂ ≤ Real.log (M₂ : ℝ) := le_log_of_ceil_exp_le hM₂
-  exact ⟨hlog₁.trans h.bound₁, hlog₂.trans h.bound₂,
-    (add_le_add hlog₁ hlog₂).trans h.sumBound₂,
-    (add_le_add hlog₁ hlog₂).trans h.sumBound₁⟩
 
 end Converse
 

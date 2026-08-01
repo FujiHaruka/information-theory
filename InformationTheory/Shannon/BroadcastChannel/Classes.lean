@@ -163,7 +163,7 @@ theorem IsBCDegraded.isBCLessNoisy {W : BCChannel α β₁ β₂} [IsMarkovKerne
 
 /-! ### Less noisy implies more capable -/
 
-theorem bcJointDistribution_id_eq (p : Measure α) [IsProbabilityMeasure p]
+theorem bcJointDistribution_id_eq_map_compProd (p : Measure α) [IsProbabilityMeasure p]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     bcJointDistribution p Kernel.id W
       = (p ⊗ₘ W).map (fun z : α × β₁ × β₂ ↦ (z.1, z.1, z.2)) := by
@@ -193,7 +193,8 @@ theorem mutualInfoOfChannel_map_eq_mutualInfo_bcJointDistribution {γ : Type*}
     measurable_fst.prodMk (hg.comp (measurable_snd.comp measurable_snd))
   have hpair : (bcJointDistribution p Kernel.id W).map
       (fun q : α × α × β₁ × β₂ ↦ (q.1, g q.2.2)) = p ⊗ₘ (W.map g) := by
-    rw [bcJointDistribution_id_eq p W, Measure.map_map hpairMap hD, Measure.compProd_map hg]
+    rw [bcJointDistribution_id_eq_map_compProd p W, Measure.map_map hpairMap hD,
+      Measure.compProd_map hg]
     rfl
   have hfst : (bcJointDistribution p Kernel.id W).map (Prod.fst : α × α × β₁ × β₂ → α)
       = (p ⊗ₘ (W.map g)).map Prod.fst := by

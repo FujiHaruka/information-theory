@@ -357,13 +357,8 @@ theorem bc_sum_rate_le_capacity
       _ ≤ (M₁ : ℝ) * (M₂ : ℝ) :=
           mul_le_mul h₁ h₂ (Real.exp_pos _).le (le_trans (Real.exp_pos _).le h₁)
       _ = ((M₁ * M₂ : ℕ) : ℝ) := by push_cast; ring
-  · calc (c.coop.averageErrorProb W).toReal
-        ≤ (c.averageErrorProb₁ W + c.averageErrorProb₂ W).toReal :=
-          ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨hne₁, hne₂⟩)
-            (c.averageErrorProb_coop_le W)
-      _ = (c.averageErrorProb₁ W).toReal + (c.averageErrorProb₂ W).toReal :=
-          ENNReal.toReal_add hne₁ hne₂
-      _ < ε := by linarith
+  · have hsum := ENNReal.toReal_le_add (c.averageErrorProb_coop_le W) hne₁ hne₂
+    linarith
 
 /-- The cooperative outer region: the rate pairs whose two coordinates are bounded by the
 capacities of the two marginal channels and whose sum is bounded by the capacity of the channel

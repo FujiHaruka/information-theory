@@ -31,11 +31,11 @@ region is a closed lower set, so the limit and the rate pairs below it are in th
   law, so the letter laws of a code index the union.
 * `bcUVTimeShare_uvInfo₁_ge` and its three companions — each information slot of the time-shared
   law dominates the average of the letter slots.
-* `bc_uv_shrunk_point_mem` — the rate pair of a code, shrunk by the Fano slack per letter, lies
-  in the region.
-* `bc_uv_code_point_mem` — the same in the form the asymptotic argument consumes: each rate is
-  discounted by the error probability of its receiver and by two bits per letter, which no
-  longer refers to the message count of the other receiver.
+* `bc_uv_rate_sub_fanoSlack_mem_of_ceil_exp_le` — the rate pair of a code, shrunk by the Fano
+  slack per letter, lies in the region.
+* `bc_uv_logCard_mul_one_sub_errorProb_mem` — the same in the form the asymptotic argument
+  consumes: each rate is discounted by the error probability of its receiver and by two bits per
+  letter, which no longer refers to the message count of the other receiver.
 * `bc_achievable_clamp_iff` — clamping a rate pair into the first quadrant leaves achievability
   unchanged, since both ceilings equal one at a nonpositive rate.
 * `bc_uv_quadrant_mem_of_achievable` — an achievable rate pair with nonnegative coordinates lies
@@ -45,7 +45,8 @@ region is a closed lower set, so the limit and the rate pairs below it are in th
 
 ## Implementation notes
 
-The asymptotic argument runs on `bc_uv_code_point_mem` rather than on `bc_uv_shrunk_point_mem`:
+The asymptotic argument runs on `bc_uv_logCard_mul_one_sub_errorProb_mem` rather than on
+`bc_uv_rate_sub_fanoSlack_mem_of_ceil_exp_le`:
 the latter subtracts the sum of both Fano slacks from each coordinate, and a slack of the other
 receiver is not controlled by the rate of this one, since the message counts of an achievable
 pair are bounded from below only.  Discounting each rate by its own error probability removes
@@ -434,7 +435,7 @@ lemma bcUVTimeShare_uvInfoSum₁_ge (c : BroadcastCode M₁ M₂ n α β₁ β�
 /-! ### The shrunk rate point -/
 
 /-- @audit:ok -/
-lemma bc_uv_mixture_point_mem
+lemma bc_uv_mem_of_mul_le_slot_sums
     [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hn : 0 < n) {r₁ r₂ : ℝ}
@@ -570,7 +571,7 @@ region.  The letter index is absorbed into the auxiliaries, which already carry 
 average of the letter laws is again a channel law and dominates the per-letter averages of all
 four information slots.
 @audit:ok -/
-theorem bc_uv_shrunk_point_mem
+theorem bc_uv_rate_sub_fanoSlack_mem_of_ceil_exp_le
     [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {R₁ R₂ : ℝ}
@@ -607,14 +608,14 @@ theorem bc_uv_shrunk_point_mem
         - 2 * (bcConverseFanoSlack₁ c W + bcConverseFanoSlack₂ c W) := by
     field_simp
     ring
-  refine bc_uv_mixture_point_mem c W hn ?_ ?_ ?_ ?_
+  refine bc_uv_mem_of_mul_le_slot_sums c W hn ?_ ?_ ?_ ?_
   · rw [hcorner]; linarith [hslot.bound₁, hF₂]
   · rw [hcorner]; linarith [hslot.bound₂, hF₁]
   · rw [hsumr]; linarith [hslot.sumBound₂, hF₁, hF₂]
   · rw [hsumr]; linarith [hslot.sumBound₁, hF₁, hF₂]
 
 /-- @audit:ok -/
-lemma bc_uv_code_point_mem [NeZero M₁] [NeZero M₂]
+lemma bc_uv_logCard_mul_one_sub_errorProb_mem [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) :
     ((Real.log (M₁ : ℝ) * (1 - (c.averageErrorProb₁ W).toReal) - 2 * Real.log 2) / (n : ℝ),
@@ -633,14 +634,14 @@ lemma bc_uv_code_point_mem [NeZero M₁] [NeZero M₂]
       = Real.log (M₁ : ℝ) - (c.averageErrorProb₁ W).toReal * Real.log (M₁ : ℝ) := by ring
   have he₂ : Real.log (M₂ : ℝ) * (1 - (c.averageErrorProb₂ W).toReal)
       = Real.log (M₂ : ℝ) - (c.averageErrorProb₂ W).toReal * Real.log (M₂ : ℝ) := by ring
-  refine bc_uv_mixture_point_mem c W hn ?_ ?_ ?_ ?_
+  refine bc_uv_mem_of_mul_le_slot_sums c W hn ?_ ?_ ?_ ?_
   · rw [hcancel, he₁]; linarith [hslot.bound₁]
   · rw [hcancel, he₂]; linarith [hslot.bound₂]
   · rw [hcancel₂, he₁, he₂]; linarith [hslot.sumBound₂]
   · rw [hcancel₂, he₁, he₂]; linarith [hslot.sumBound₁]
 
 /-- @audit:ok -/
-lemma bc_uv_rate_point_mem [NeZero M₁] [NeZero M₂]
+lemma bc_uv_rate_mem_of_mul_le_logCard [NeZero M₁] [NeZero M₂]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (hn : 0 < n) (hcard₁ : 2 ≤ M₁) (hcard₂ : 2 ≤ M₂) {r₁ r₂ : ℝ}
     (h₁ : (n : ℝ) * r₁ ≤ Real.log (M₁ : ℝ) * (1 - (c.averageErrorProb₁ W).toReal))
@@ -648,7 +649,7 @@ lemma bc_uv_rate_point_mem [NeZero M₁] [NeZero M₂]
     (r₁ - 2 * Real.log 2 / (n : ℝ), r₂ - 2 * Real.log 2 / (n : ℝ)) ∈ bcOuterRegionUV W := by
   have hn' : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
   refine bcOuterRegionUV_isLowerSet W (Prod.mk_le_mk.mpr ⟨?_, ?_⟩)
-    (bc_uv_code_point_mem c W hn hcard₁ hcard₂)
+    (bc_uv_logCard_mul_one_sub_errorProb_mem c W hn hcard₁ hcard₂)
   · have hd : r₁ ≤ Real.log (M₁ : ℝ) * (1 - (c.averageErrorProb₁ W).toReal) / (n : ℝ) := by
       rw [le_div_iff₀ hn']; linarith [h₁]
     rw [sub_div]
@@ -701,7 +702,7 @@ lemma bc_achievable_clamp_iff (W : BCChannel α β₁ β₂) (R₁ R₂ : ℝ) :
     exact ⟨M₁, M₂, by rw [← key R₁ n]; exact hM₁, by rw [← key R₂ n]; exact hM₂, c, hc⟩
 
 /-- @audit:ok -/
-lemma bc_uv_shifted_point_mem (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+lemma bc_uv_rate_mul_one_sub_mem_of_errorProb_le (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (hn : 0 < n) {R₁ R₂ ε : ℝ}
     (hR₁ : 0 ≤ R₁) (hR₂ : 0 ≤ R₂) (hε1 : ε ≤ 1)
     (hM₁ : Nat.ceil (Real.exp ((n : ℝ) * R₁)) ≤ M₁)
@@ -755,14 +756,14 @@ lemma bc_uv_shifted_point_mem (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
         have : R₂ ≤ 0 := by nlinarith
         linarith
       haveI : NeZero (2 : ℕ) := ⟨by norm_num⟩
-      refine bc_uv_rate_point_mem (c.padFirst.padSecond) W hn le_rfl le_rfl ?_ ?_
+      refine bc_uv_rate_mem_of_mul_le_logCard (c.padFirst.padSecond) W hn le_rfl le_rfl ?_ ?_
       · rw [hR₁z, zero_mul, mul_zero]
         exact hpad _ le_rfl
       · rw [hR₂z, zero_mul, mul_zero]
         exact hpad' _ le_rfl
     · haveI : NeZero M₂ := ⟨by omega⟩
       haveI : NeZero (2 : ℕ) := ⟨by norm_num⟩
-      refine bc_uv_rate_point_mem c.padFirst W hn le_rfl (by omega) ?_ ?_
+      refine bc_uv_rate_mem_of_mul_le_logCard c.padFirst W hn le_rfl (by omega) ?_ ?_
       · rw [hR₁z, zero_mul, mul_zero]
         exact hpad _ le_rfl
       · rw [BroadcastCode.averageErrorProb₂_padFirst]
@@ -775,14 +776,14 @@ lemma bc_uv_shifted_point_mem (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
         linarith
       haveI : NeZero M₁ := ⟨by omega⟩
       haveI : NeZero (2 : ℕ) := ⟨by norm_num⟩
-      refine bc_uv_rate_point_mem c.padSecond W hn (by omega) le_rfl ?_ ?_
+      refine bc_uv_rate_mem_of_mul_le_logCard c.padSecond W hn (by omega) le_rfl ?_ ?_
       · rw [BroadcastCode.averageErrorProb₁_padSecond]
         exact hprod₁
       · rw [hR₂z, zero_mul, mul_zero]
         exact hpad' _ le_rfl
     · haveI : NeZero M₁ := ⟨by omega⟩
       haveI : NeZero M₂ := ⟨by omega⟩
-      exact bc_uv_rate_point_mem c W hn (by omega) (by omega) hprod₁ hprod₂
+      exact bc_uv_rate_mem_of_mul_le_logCard c W hn (by omega) (by omega) hprod₁ hprod₂
 
 /-- An achievable rate pair with nonnegative coordinates lies in the UV outer region.  For every
 error tolerance and every block length the pair, discounted by the error probability of each
@@ -820,7 +821,7 @@ lemma bc_uv_quadrant_mem_of_achievable (W : BCChannel α β₁ β₂) [IsMarkovK
       rw [div_le_iff₀ hη] at h4
       rw [div_le_div_iff₀ hn' (by norm_num : (0 : ℝ) < 2)]
       linarith
-    have hmem := bc_uv_shifted_point_mem W c hn hR₁ hR₂ hε1 hM₁ hM₂ hc₁.le hc₂.le
+    have hmem := bc_uv_rate_mul_one_sub_mem_of_errorProb_le W c hn hR₁ hR₂ hε1 hM₁ hM₂ hc₁.le hc₂.le
     refine bcOuterRegionUV_isLowerSet W (Prod.mk_le_mk.mpr ⟨?_, ?_⟩) hmem
     · have : R₁ * (1 - ε) = R₁ - R₁ * ε := by ring
       rw [this]; linarith

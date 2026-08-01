@@ -119,8 +119,7 @@ lemma mac_perletter_superadd (p₁ : Measure α₁) [IsProbabilityMeasure p₁]
     rw [decompA, add_comm (condMutualInfo J Prod.fst (fun q ↦ q.2.2) (fun q ↦ q.2.1))
         (condMutualInfo J (fun q ↦ q.2.1) (fun q ↦ q.2.2) Prod.fst)]
     gcongr
-  rw [← ENNReal.toReal_add hC1_ne hC2_ne]
-  exact ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨hC1_ne, hC2_ne⟩) hMBle
+  exact ENNReal.toReal_le_add hMBle hC1_ne hC2_ne
 
 -- `macInfo₁_nonneg` / `macInfo₂_nonneg` / `macInfoBoth_nonneg` now live in
 -- `InformationTheory.Shannon.MultipleAccess.TimeSharing` (needed there for the all-probability

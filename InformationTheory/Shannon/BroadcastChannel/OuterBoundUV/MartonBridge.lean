@@ -17,8 +17,8 @@ the inner quadrilateral is contained in the outer region.
 
 ## Main definitions
 
-* `auxNatIndex X` — the index of a letter of the finite alphabet `X`, as a natural number.
-* `martonSwapLaw` — the Marton joint law with its two auxiliaries exchanged.
+* `natIndex X` — the index of a letter of the finite alphabet `X`, as a natural number.
+* `martonAuxSwapLaw` — the Marton joint law with its two auxiliaries exchanged.
 * `martonUVLaw` — the exchanged law re-encoded over the natural-number auxiliaries indexing
   `bcOuterRegionUV`.
 
@@ -114,24 +114,24 @@ theorem martonJointDistribution_isUVChannelLaw
 
 /-- The Marton joint law with its two auxiliaries exchanged, which is the order in which the
 information slots of the UV outer bound read them. -/
-noncomputable def martonSwapLaw (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α)
+noncomputable def martonAuxSwapLaw (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α)
     (W : BCChannel α β₁ β₂) : Measure (V₂ × V₁ × α × β₁ × β₂) :=
   (martonJointDistribution pV K W).map fun q ↦ (q.2.1, q.1, q.2.2)
 
-instance martonSwapLaw.instIsProbabilityMeasure
+instance martonAuxSwapLaw.instIsProbabilityMeasure
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    IsProbabilityMeasure (martonSwapLaw pV K W) :=
+    IsProbabilityMeasure (martonAuxSwapLaw pV K W) :=
   Measure.isProbabilityMeasure_map
     (by fun_prop : Measurable
       (fun q : V₁ × V₂ × α × β₁ × β₂ ↦ (q.2.1, q.1, q.2.2))).aemeasurable
 
-lemma martonSwapLaw_isUVChannelLaw
+lemma martonAuxSwapLaw_isUVChannelLaw
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    IsUVChannelLaw W (martonSwapLaw pV K W) :=
+    IsUVChannelLaw W (martonAuxSwapLaw pV K W) :=
   (martonJointDistribution_isUVChannelLaw pV K W).swap_auxiliaries
 
 end ChannelLaw
@@ -150,17 +150,17 @@ variable {V₁ V₂ α β₁ β₂ : Type*}
 /-- The index of a letter of a finite alphabet, as a natural number.  This is the re-encoding
 carrying a law over finite auxiliary alphabets to the natural-number auxiliaries over which the
 union defining `bcOuterRegionUV` is taken. -/
-noncomputable def auxNatIndex (X : Type*) [Fintype X] (x : X) : ℕ := Fintype.equivFin X x
+noncomputable def natIndex (X : Type*) [Fintype X] (x : X) : ℕ := Fintype.equivFin X x
 
-lemma auxNatIndex_injective (X : Type*) [Fintype X] : Function.Injective (auxNatIndex X) :=
+lemma natIndex_injective (X : Type*) [Fintype X] : Function.Injective (natIndex X) :=
   fun _ _ h ↦ (Fintype.equivFin X).injective (Fin.val_injective h)
 
 /-- The exchanged Marton joint law, re-encoded over the natural-number auxiliaries indexing the
 UV outer region. -/
 noncomputable def martonUVLaw (pV : Measure (V₁ × V₂)) (K : Kernel (V₁ × V₂) α)
     (W : BCChannel α β₁ β₂) : Measure (ℕ × ℕ × α × β₁ × β₂) :=
-  (martonSwapLaw pV K W).map
-    (uvRelabel (α := α) (β₁ := β₁) (β₂ := β₂) (auxNatIndex V₂) (auxNatIndex V₁))
+  (martonAuxSwapLaw pV K W).map
+    (uvRelabel (α := α) (β₁ := β₁) (β₂ := β₂) (natIndex V₂) (natIndex V₁))
 
 instance martonUVLaw.instIsProbabilityMeasure
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
@@ -168,8 +168,8 @@ instance martonUVLaw.instIsProbabilityMeasure
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     IsProbabilityMeasure (martonUVLaw pV K W) :=
   Measure.isProbabilityMeasure_map
-    (measurable_uvRelabel (measurable_of_countable (auxNatIndex V₂))
-      (measurable_of_countable (auxNatIndex V₁))).aemeasurable
+    (measurable_uvRelabel (measurable_of_countable (natIndex V₂))
+      (measurable_of_countable (natIndex V₁))).aemeasurable
 
 /-- The exchanged and re-encoded Marton joint law is a channel law of `W`, hence one of the laws
 the union defining `bcOuterRegionUV` ranges over. -/
@@ -179,17 +179,17 @@ theorem martonUVLaw_isUVChannelLaw
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     IsUVChannelLaw W (martonUVLaw pV K W) :=
-  (martonSwapLaw_isUVChannelLaw pV K W).map_auxiliaries
-    (f := auxNatIndex V₂) (g := auxNatIndex V₁)
+  (martonAuxSwapLaw_isUVChannelLaw pV K W).map_auxiliaries
+    (f := natIndex V₂) (g := natIndex V₁)
     (measurable_of_countable _) (measurable_of_countable _)
 
 lemma uvInfo₁_martonUVLaw
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    uvInfo₁ (martonUVLaw pV K W) = uvInfo₁ (martonSwapLaw pV K W) := by
-  have hd : ∀ v : V₁, Function.invFun (auxNatIndex V₁) (auxNatIndex V₁ v) = v :=
-    Function.leftInverse_invFun (auxNatIndex_injective V₁)
+    uvInfo₁ (martonUVLaw pV K W) = uvInfo₁ (martonAuxSwapLaw pV K W) := by
+  have hd : ∀ v : V₁, Function.invFun (natIndex V₁) (natIndex V₁ v) = v :=
+    Function.leftInverse_invFun (natIndex_injective V₁)
   exact uvInfo₁_map_uvRelabel _ (measurable_of_countable _) (measurable_of_countable _)
     (measurable_of_countable _) hd
 
@@ -197,9 +197,9 @@ lemma uvInfo₂_martonUVLaw
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    uvInfo₂ (martonUVLaw pV K W) = uvInfo₂ (martonSwapLaw pV K W) := by
-  have hd : ∀ u : V₂, Function.invFun (auxNatIndex V₂) (auxNatIndex V₂ u) = u :=
-    Function.leftInverse_invFun (auxNatIndex_injective V₂)
+    uvInfo₂ (martonUVLaw pV K W) = uvInfo₂ (martonAuxSwapLaw pV K W) := by
+  have hd : ∀ u : V₂, Function.invFun (natIndex V₂) (natIndex V₂ u) = u :=
+    Function.leftInverse_invFun (natIndex_injective V₂)
   exact uvInfo₂_map_uvRelabel _ (measurable_of_countable _) (measurable_of_countable _)
     (measurable_of_countable _) hd
 
@@ -207,9 +207,9 @@ lemma uvInfoSum₂_martonUVLaw
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    uvInfoSum₂ (martonUVLaw pV K W) = uvInfoSum₂ (martonSwapLaw pV K W) := by
-  have hd : ∀ u : V₂, Function.invFun (auxNatIndex V₂) (auxNatIndex V₂ u) = u :=
-    Function.leftInverse_invFun (auxNatIndex_injective V₂)
+    uvInfoSum₂ (martonUVLaw pV K W) = uvInfoSum₂ (martonAuxSwapLaw pV K W) := by
+  have hd : ∀ u : V₂, Function.invFun (natIndex V₂) (natIndex V₂ u) = u :=
+    Function.leftInverse_invFun (natIndex_injective V₂)
   exact uvInfoSum₂_map_uvRelabel _ (measurable_of_countable _) (measurable_of_countable _)
     (measurable_of_countable _) hd
 
@@ -217,9 +217,9 @@ lemma uvInfoSum₁_martonUVLaw
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    uvInfoSum₁ (martonUVLaw pV K W) = uvInfoSum₁ (martonSwapLaw pV K W) := by
-  have hd : ∀ v : V₁, Function.invFun (auxNatIndex V₁) (auxNatIndex V₁ v) = v :=
-    Function.leftInverse_invFun (auxNatIndex_injective V₁)
+    uvInfoSum₁ (martonUVLaw pV K W) = uvInfoSum₁ (martonAuxSwapLaw pV K W) := by
+  have hd : ∀ v : V₁, Function.invFun (natIndex V₁) (natIndex V₁ v) = v :=
+    Function.leftInverse_invFun (natIndex_injective V₁)
   exact uvInfoSum₁_map_uvRelabel _ (measurable_of_countable _) (measurable_of_countable _)
     (measurable_of_countable _) hd
 
@@ -229,8 +229,8 @@ lemma martonInfo₁_eq_uvInfo₁_toReal
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    martonInfo₁ pV K W = (uvInfo₁ (martonSwapLaw pV K W)).toReal := by
-  rw [martonSwapLaw, uvInfo₁, mutualInfo_map_comp (martonJointDistribution pV K W)
+    martonInfo₁ pV K W = (uvInfo₁ (martonAuxSwapLaw pV K W)).toReal := by
+  rw [martonAuxSwapLaw, uvInfo₁, mutualInfo_map_comp (martonJointDistribution pV K W)
       (fun q ↦ (q.2.1, q.1, q.2.2)) (by fun_prop)
       (fun q ↦ q.2.1) (by fun_prop) (fun q ↦ q.2.2.2.1) (by fun_prop),
     mutualInfo_toReal_eq_entropy_form (martonJointDistribution pV K W)
@@ -241,8 +241,8 @@ lemma martonInfo₂_eq_uvInfo₂_toReal
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    martonInfo₂ pV K W = (uvInfo₂ (martonSwapLaw pV K W)).toReal := by
-  rw [martonSwapLaw, uvInfo₂, mutualInfo_map_comp (martonJointDistribution pV K W)
+    martonInfo₂ pV K W = (uvInfo₂ (martonAuxSwapLaw pV K W)).toReal := by
+  rw [martonAuxSwapLaw, uvInfo₂, mutualInfo_map_comp (martonJointDistribution pV K W)
       (fun q ↦ (q.2.1, q.1, q.2.2)) (by fun_prop)
       (fun q ↦ q.1) (by fun_prop) (fun q ↦ q.2.2.2.2) (by fun_prop),
     mutualInfo_toReal_eq_entropy_form (martonJointDistribution pV K W)
@@ -394,26 +394,26 @@ private lemma martonInfo₂_eq_mutualInfo_toReal
     (fun q ↦ q.2.1) (fun q ↦ q.2.2.2.2) (by fun_prop) (by fun_prop)]
   rfl
 
-private lemma condMutualInfo_martonSwapLaw₁
+private lemma condMutualInfo_martonAuxSwapLaw₁
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    condMutualInfo (martonSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
+    condMutualInfo (martonAuxSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
       = condMutualInfo (martonJointDistribution pV K W) (fun q ↦ q.2.2.1)
           (fun q ↦ q.2.2.2.1) (fun q ↦ q.2.1) :=
   condMutualInfo_map_comp' (martonJointDistribution pV K W)
-    (fun q ↦ (q.2.1, q.1, q.2.2)) (by fun_prop) (martonSwapLaw pV K W) rfl
+    (fun q ↦ (q.2.1, q.1, q.2.2)) (by fun_prop) (martonAuxSwapLaw pV K W) rfl
     _ (by fun_prop) _ (by fun_prop) _ (by fun_prop)
 
-private lemma condMutualInfo_martonSwapLaw₂
+private lemma condMutualInfo_martonAuxSwapLaw₂
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    condMutualInfo (martonSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.2.1)
+    condMutualInfo (martonAuxSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2) (fun q ↦ q.2.1)
       = condMutualInfo (martonJointDistribution pV K W) (fun q ↦ q.2.2.1)
           (fun q ↦ q.2.2.2.2) (fun q ↦ q.1) :=
   condMutualInfo_map_comp' (martonJointDistribution pV K W)
-    (fun q ↦ (q.2.1, q.1, q.2.2)) (by fun_prop) (martonSwapLaw pV K W) rfl
+    (fun q ↦ (q.2.1, q.1, q.2.2)) (by fun_prop) (martonAuxSwapLaw pV K W) rfl
     _ (by fun_prop) _ (by fun_prop) _ (by fun_prop)
 
 lemma martonInfo₁_sub_martonInfoV₁V₂_le
@@ -421,7 +421,7 @@ lemma martonInfo₁_sub_martonInfoV₁V₂_le
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     martonInfo₁ pV K W - martonInfoV₁V₂ pV K W
-      ≤ (condMutualInfo (martonSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
+      ≤ (condMutualInfo (martonAuxSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
           (fun q ↦ q.1)).toReal := by
   have hfin_a : mutualInfo (martonJointDistribution pV K W) (fun q ↦ q.1) (fun q ↦ q.2.1) ≠ ∞ :=
     mutualInfo_ne_top _ _ _ (by fun_prop) (by fun_prop)
@@ -434,7 +434,7 @@ lemma martonInfo₁_sub_martonInfoV₁V₂_le
     (add_le_add le_rfl (condMutualInfo_aux₁_le_input pV K W))
   have hmono := ENNReal.toReal_le_add hle hfin_a hfin_c
   rw [martonInfo₁_eq_mutualInfo_toReal, martonInfoV₁V₂_eq_mutualInfo_toReal,
-    condMutualInfo_martonSwapLaw₁]
+    condMutualInfo_martonAuxSwapLaw₁]
   linarith
 
 lemma martonInfo₂_sub_martonInfoV₁V₂_le
@@ -442,7 +442,7 @@ lemma martonInfo₂_sub_martonInfoV₁V₂_le
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     martonInfo₂ pV K W - martonInfoV₁V₂ pV K W
-      ≤ (condMutualInfo (martonSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2)
+      ≤ (condMutualInfo (martonAuxSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2)
           (fun q ↦ q.2.1)).toReal := by
   have hfin_a : mutualInfo (martonJointDistribution pV K W) (fun q ↦ q.1) (fun q ↦ q.2.1) ≠ ∞ :=
     mutualInfo_ne_top _ _ _ (by fun_prop) (by fun_prop)
@@ -457,18 +457,18 @@ lemma martonInfo₂_sub_martonInfoV₁V₂_le
     (by fun_prop) (by fun_prop)] at hle
   have hmono := ENNReal.toReal_le_add hle hfin_a hfin_c
   rw [martonInfo₂_eq_mutualInfo_toReal, martonInfoV₁V₂_eq_mutualInfo_toReal,
-    condMutualInfo_martonSwapLaw₂]
+    condMutualInfo_martonAuxSwapLaw₂]
   linarith
 
-lemma martonInfoSum_le_uvInfoSum₂_toReal
+lemma martonInfo₁_add_martonInfo₂_sub_martonInfoV₁V₂_le_uvInfoSum₂_toReal
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     martonInfo₁ pV K W + martonInfo₂ pV K W - martonInfoV₁V₂ pV K W
-      ≤ (uvInfoSum₂ (martonSwapLaw pV K W)).toReal := by
-  have hfin : uvInfo₂ (martonSwapLaw pV K W) ≠ ∞ :=
+      ≤ (uvInfoSum₂ (martonAuxSwapLaw pV K W)).toReal := by
+  have hfin : uvInfo₂ (martonAuxSwapLaw pV K W) ≠ ∞ :=
     mutualInfo_ne_top _ _ _ (by fun_prop) (by fun_prop)
-  have hfinc : condMutualInfo (martonSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
+  have hfinc : condMutualInfo (martonAuxSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
       (fun q ↦ q.1) ≠ ∞ :=
     condMutualInfo_ne_top _ _ _ _ (by fun_prop) (by fun_prop) (by fun_prop)
   have hA := martonInfo₁_sub_martonInfoV₁V₂_le pV K W
@@ -476,15 +476,15 @@ lemma martonInfoSum_le_uvInfoSum₂_toReal
   rw [uvInfoSum₂, ENNReal.toReal_add hfin hfinc]
   linarith
 
-lemma martonInfoSum_le_uvInfoSum₁_toReal
+lemma martonInfo₁_add_martonInfo₂_sub_martonInfoV₁V₂_le_uvInfoSum₁_toReal
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     martonInfo₁ pV K W + martonInfo₂ pV K W - martonInfoV₁V₂ pV K W
-      ≤ (uvInfoSum₁ (martonSwapLaw pV K W)).toReal := by
-  have hfin : uvInfo₁ (martonSwapLaw pV K W) ≠ ∞ :=
+      ≤ (uvInfoSum₁ (martonAuxSwapLaw pV K W)).toReal := by
+  have hfin : uvInfo₁ (martonAuxSwapLaw pV K W) ≠ ∞ :=
     mutualInfo_ne_top _ _ _ (by fun_prop) (by fun_prop)
-  have hfinc : condMutualInfo (martonSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2)
+  have hfinc : condMutualInfo (martonAuxSwapLaw pV K W) (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2)
       (fun q ↦ q.2.1) ≠ ∞ :=
     condMutualInfo_ne_top _ _ _ _ (by fun_prop) (by fun_prop) (by fun_prop)
   have hB := martonInfo₂_sub_martonInfoV₁V₂_le pV K W
@@ -511,10 +511,10 @@ theorem marton_region_subset_uv
     exact hb₂
   have g₃ : r₁ + r₂ ≤ (uvInfoSum₂ (martonUVLaw pV K W)).toReal := by
     rw [uvInfoSum₂_martonUVLaw]
-    exact hbsum.trans (martonInfoSum_le_uvInfoSum₂_toReal pV K W)
+    exact hbsum.trans (martonInfo₁_add_martonInfo₂_sub_martonInfoV₁V₂_le_uvInfoSum₂_toReal pV K W)
   have g₄ : r₁ + r₂ ≤ (uvInfoSum₁ (martonUVLaw pV K W)).toReal := by
     rw [uvInfoSum₁_martonUVLaw]
-    exact hbsum.trans (martonInfoSum_le_uvInfoSum₁_toReal pV K W)
+    exact hbsum.trans (martonInfo₁_add_martonInfo₂_sub_martonInfoV₁V₂_le_uvInfoSum₁_toReal pV K W)
   exact subset_closure (Set.mem_iUnion.mpr ⟨⟨martonUVLaw pV K W, inferInstance⟩,
     Set.mem_iUnion.mpr ⟨martonUVLaw_isUVChannelLaw pV K W, g₁, g₂, g₃, g₄⟩⟩)
 
