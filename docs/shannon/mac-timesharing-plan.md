@@ -27,7 +27,7 @@ Parent ヘッダは plan_lint の親子グラフ構築点。子の状態を変�
 - [x] P0 — `MACAchievable` def + `macPentagon` set def + strict-interior wrapper ✅
 - [x] P1 🎯 gateway — `mac_timesharing_strict` (block 連結による凸性、exact→strict restate) ✅
 - [x] P2 — `mac_capacityRegion_convex` / `_isClosed` (direct 構成) ✅
-- [x] P3 — `mac_pentagon_subset_capacityRegion` (strict 内部 + 退化 3-way: (0,0)=`mac_achievable_zero_zero`, 軸=`mac_axis1/2_achievable` の M=1 engine 特殊化) ✅
+- [x] P3 — `mac_pentagon_subset_capacityRegion` (strict 内部 + 退化 3-way: (0,0)=`mac_achievable_zero_zero`, 軸=`mac_rate₂_achievable` / `mac_rate₁_achievable` の M=1 engine 特殊化) ✅ ⚠ **旧名 axis1/axis2 から下付きの意味が反転している** — 現行の下付きは**生きている座標**なので、user 1 が沈黙する軸 (`(0, R₂)`) は `mac_rate₂_achievable`、user 2 が沈黙する軸 (`(R₁, 0)`) は `mac_rate₁_achievable`
 - [x] P4 — achievability headline `mac_achievability_region` (`@[entry_point]`) ✅ `@audit:ok`
 - [x] CV — converse half headline `mac_timesharing_converse`（guard/IsProbabilityMeasure 訂正形）✅ proof-done sorryAx-free → [`mac-timesharing-converse-plan.md`](mac-timesharing-converse-plan.md)（Gap 0/A/B′/C `3377eba5`/`9c86884d`/`5a0419b0`/`302dbe03` + Dispatch B `d920a15e` / A `315be033` / 軸 casework `c37333dc`）
 - [x] V — full-region antisymmetry headline `mac_timesharing_capacity_region`（`@[entry_point]`、intersection 形 `macCapacityRegion ∩ Q = RHS`）✅ proof-done sorryAx-free → [`mac-timesharing-converse-plan.md`](mac-timesharing-converse-plan.md)（Dispatch C all-prob upgrade `2d45273c` / Dispatch D clamp + antisymmetry `67283ec4`）
@@ -87,7 +87,7 @@ time-sharing 領域 = **異なる product input のペンタゴンを跨いだ�
 
 1. **achievability half (P0–P4)** = `closedConvexHull(⋃ pentagon) ⊆ macCapacityRegion`。
    - **P1 が gateway (唯一の重い operational 核)**: `MACAchievable` の凸性
-     `mac_timesharing_concat_achievable`。長さ `n₁` 符号と `n₂` 符号を長さ `n₁+n₂` に連結し、
+     `mac_timesharing_strict`。長さ `n₁` 符号と `n₂` 符号を長さ `n₁+n₂` に連結し、
      各ブロックを独立 decode、誤り ≤ err₁+err₂ (union bound)、`n₁/(n₁+n₂) → lam` を有理近似
      (`MACAchievable` の `∀ε'` slack が近似誤差を吸収するため任意実 lam で成立)。真の template は
      **Mathlib convexHull 補題ではなく in-project の `Measure.pi` split over
@@ -175,17 +175,22 @@ variable {α₁ α₂ β : Type*}
 
 ---
 
-## P1 🎯 gateway — `mac_timesharing_concat_achievable` (block 連結による凸性)
+## P1 🎯 gateway — `mac_timesharing_strict` (block 連結による凸性)
 **proof-log**: yes (block-Markov 連結 + `Measure.pi` split が本計画の唯一の新規 operational 核、再開根拠必須)
 
 **ファイル**: `TimeSharing.lean`
 
+計画時の仮称は mac_timesharing_concat_achievable (引退)。**as-landed は exact-rate 形ではなく
+strict 形** — 厳密な gap `R < lam·a + (1-lam)·b` がブロック分割の `O(1)/n` 丸めを吸収する
+(exact-rate 形は境界点で偽)。
+
 - [ ] **gateway atom** (最優先 dispatch、gateway-atom-first):
   ```lean
-  theorem mac_timesharing_concat_achievable (W) [IsMarkovKernel W]
-      {a₁ a₂ b₁ b₂ lam : ℝ} (ha : MACAchievable W a₁ a₂) (hb : MACAchievable W b₁ b₂)
-      (hlam : lam ∈ Set.Icc (0:ℝ) 1) :
-      MACAchievable W (lam·a₁ + (1-lam)·b₁) (lam·a₂ + (1-lam)·b₂)
+  theorem mac_timesharing_strict (W) [IsMarkovKernel W]
+      {a₁ a₂ b₁ b₂ R₁ R₂ lam : ℝ} (ha : MACAchievable W a₁ a₂) (hb : MACAchievable W b₁ b₂)
+      (hlam : lam ∈ Set.Icc (0:ℝ) 1)
+      (hR₁ : R₁ < lam·a₁ + (1-lam)·b₁) (hR₂ : R₂ < lam·a₂ + (1-lam)·b₂) :
+      MACAchievable W R₁ R₂
   ```
   証明骨格 (operational): 目標 `ε'` に対し (i) `n₁/(n₁+n₂)` が `lam` に十分近い `n₁, n₂` を選ぶ
   (有理近似、`∀ε'` slack が近似誤差吸収)、(ii) `ha`/`hb` から長さ `n₁`/`n₂` 符号を取り、
@@ -201,7 +206,7 @@ variable {α₁ α₂ β : Type*}
   factorization、`MeasurableEquiv` 群。
 - **予想規模**: ~150-300 行 (連結 + `Measure.pi` split + union bound + 有理近似)。**本計画の重心**。
 - **撤退ライン (最重要)**: `Fin (n₁+n₂) ≃ Fin n₁ ⊕ Fin n₂` の measure factorization で **3+ turn
-  stall したら、その 1 atom `mac_timesharing_concat_achievable` のみ `sorry` +
+  stall したら、その 1 atom `mac_timesharing_strict` のみ `sorry` +
   `@residual(plan:mac-timesharing-plan)`** (同 slug 再帰)。**`IsMACTimeSharingHyp` /
   `Prop := True` / pentagon 凸結合を受ける load-bearing predicate は禁止** (削除済 tier-5 scaffold
   の再発防止)。regularity hyp (`IsMarkovKernel W` / `0≤lam≤1` / 可測性) は precondition で OK。
@@ -215,7 +220,7 @@ variable {α₁ α₂ β : Type*}
 
 - [ ] `mac_achievable_convex : Convex ℝ {p : ℝ×ℝ | MACAchievable W p.1 p.2}` — P1 を
   `convex_iff_segment_subset` / `convex_iff_forall_pos` 形に翻訳 (`lam·x + (1-lam)·y` の
-  成分別が `mac_timesharing_concat_achievable` の結論に一致)。
+  成分別が `mac_timesharing_strict` の結論に一致)。
 - [ ] `mac_capacityRegion_convex : Convex ℝ (macCapacityRegion W)` = `Convex.closure` を上に適用。
 - [ ] `mac_capacityRegion_isClosed : IsClosed (macCapacityRegion W)` = `isClosed_closure`。
 - **注記 (advisor 逸脱)**: advisor の「生 `{MACAchievable}` の `IsClosed` (limiting/diagonal)」は
@@ -362,7 +367,7 @@ append-only。決着済 entry は削除 (git が履歴)、active のみ残す。
    false-as-stated。RHS を `macCapacityRegion = closure {MACAchievable}` (操作的容量領域) に置換。
    副次: P2 の「生集合 IsClosed (limiting/diagonal、~120 LOC)」は消滅、closure が自動 closed +
    `Convex.closure` で P1 から凸性自由 (~40 LOC)。honest かつ軽量化。
-3. **achievability 攻略順序 (active)**: P1 gateway atom `mac_timesharing_concat_achievable` を
+3. **achievability 攻略順序 (active)**: P1 gateway atom `mac_timesharing_strict` を
    **gateway-atom-first で dispatch** → 通れば P2 凸性 + P3 閉包 + P4 plumbing で achievability half
    確定、`Fin (n₁+n₂) ≃ Fin n₁ ⊕ Fin n₂` factorization で 3+ turn stall なら P1 のみ sorry に縮退。
 4. **converse half + V を子サブプランで CLOSED (settled、child-is-SoT)**: CV/V は

@@ -20,7 +20,7 @@ Parent ヘッダは plan_lint の親子グラフ構築点。CLOSED 反映は親�
 - [x] Gap 0/A/B′/C — finite-n 材料（code→ambient bridge / Fano 付き rate extract / per-letter `condMI=macInfo` 同定 / 平均 pentagon→凸包）✅ commits `3377eba5`/`9c86884d`/`5a0419b0`/`302dbe03`、独立監査 PASS。
 - [x] Dispatch B — CV-level 解析核（Fano `/n→0` 極限 + 点構成 uniform 乗法縮小 + interior tail）✅ `d920a15e`→`23f9db46`。CV interior + shrunk-point sorryAx-free。
 - [x] Dispatch A — `hsub = mac_perletter_superadd`（無条件 `macInfoBoth ≤ macInfo₁+macInfo₂`、差分 = `I(X₁;X₂)+I(X₁;X₂|Y) ≥ 0`、既存 `macJoint_mutualInfo_X1_X2_eq_zero` 使用）✅ `315be033`。→ interior 全体 sorryAx-free。
-- [x] **軸 casework** — `mac_timesharing_converse_axis1`/`_axis2`（single-user Fano corner `mac_converse_from_code_bound₁`/`_bound₂` を `hcard₁`/`hcard₂` のみ・M_other=1 で通す）✅ `c37333dc`、監査 PASS（all-OK 6/6）→ **CV headline `mac_timesharing_converse` proof-done sorryAx-free**。
+- [x] **軸 casework** — `mac_timesharing_converse_rate₁`/`_rate₂`（single-user Fano corner `mac_converse_from_code_bound₁`/`_bound₂` を `hcard₁`/`hcard₂` のみ・M_other=1 で通す）✅ `c37333dc`、監査 PASS（all-OK 6/6）→ **CV headline `mac_timesharing_converse` proof-done sorryAx-free**。下付きは**生きている座標**（`_rate₁` は `(R₁, 0)` = user 2 沈黙）で、旧 axis1/axis2 から番号は変わらない。有限-`n` 側の入口 `mac_converse_rate₁`/`_rate₂_mul_one_sub_errorProb_mem_of_ceil_exp_le` も同じ軸で命名されている。
 - [x] Dispatch C — achievability full-support→all-prob upgrade `mac_achievability_region_allprob` + `mac_pentagon_subset_capacityRegion_allprob`（macMix smoothing + macInfo 連続性、gateway atom PASS = not-a-wall）✅ `2d45273c`。proof-done sorryAx-free。
 - [x] Dispatch D — clamp-equivalence `mac_achievable_clamp_iff` + **V full-region headline `mac_timesharing_capacity_region`**（`@[entry_point]`、intersection 形 `macCapacityRegion W ∩ Q = closedConvexHull(all-prob pentagons)`）✅ `67283ec4`。proof-done sorryAx-free。
 
@@ -62,7 +62,7 @@ converse = 「達成 rate pair `(R₁,R₂)` は各時刻の周辺入力ペン�
 - **L-MAC5 全体（CV + V）proof-done sorryAx-free**（confidence machine、再検証: `lake env lean InformationTheory/Shannon/MultipleAccess/TimeSharingConverse.lean` silent + `#print axioms mac_timesharing_capacity_region` = `[propext, Classical.choice, Quot.sound]`、commit `67283ec4`。両ファイル 0 sorry / 0 @residual）。
 - **軸 corner は un-bundled `mac_converse_from_code_bound₁`/`_bound₂` が `hcard₁`/`hcard₂`（`2≤Mᵢ`）のみで通る**（confidence machine、commit `c37333dc`）。bundled wrapper `mac_converse` の「両ユーザ `2≤M`」要求が障害に見えたが、un-bundled 個別 bound は片側 card 前提だけで M_other=1 でも成立 → 軸 casework が genuine closure。
 - **`MACAchievable`（`TimeSharing.lean:47`）は負 rate を含む down-set**（confidence machine、`⌈exp(n·R)⌉ ≤ M` が R<0 で `⌈exp(neg)⌉=1` vacuous）。→ CV の `0≤R` guard + V の `∩Q` の根拠。
-- **`Real.continuous_negMulLog` は Mathlib 存在**（confidence machine、Dispatch C macInfo 連続性 gateway atom の building block、`InformationTheory/Fano/Measure.lean:333` 使用実績）→ full-support→all-prob upgrade は not-a-wall。
+- **`Real.continuous_negMulLog` は Mathlib 存在**（confidence machine、Dispatch C macInfo 連続性 gateway atom の building block、`Fano/Measure.lean` に使用実績）→ full-support→all-prob upgrade は not-a-wall。
 
 （これ以上のキャッシュはしない。`docs/shannon/mac-facts.md` は現時点で作らない。）
 
