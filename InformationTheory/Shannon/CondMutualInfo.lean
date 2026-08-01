@@ -27,6 +27,7 @@ Conditional mutual information `condMutualInfo` and the Markov chain predicate
 * `condMutualInfo_ne_top` — finiteness over finite alphabets.
 * `condMutualInfo_eq_zero_of_markov` — Markov chain ⇒ `I(X; Y | Z) = 0`.
 * `mutualInfo_le_of_markov` — `I(X; Y) ≤ I(Z; Y)` under `X → Z → Y`.
+* `mutualInfo_le_add_condMutualInfo` — `I(X; Y) ≤ I(X; Z) + I(X; Y | Z)`.
 * `condMutualInfo_map_left_measurableEquiv` — `I(e ∘ X; Y | Z) = I(X; Y | Z)`.
 * `condMutualInfo_map_middle_measurableEquiv` — `I(X; e ∘ Y | Z) = I(X; Y | Z)`.
 * `isMarkovChain_map_left` — post-processing preserves the Markov property.
@@ -395,6 +396,23 @@ theorem mutualInfo_le_of_markov
   -- Compose
   rw [h_chain, h_zero, add_zero] at h_dpi
   exact h_dpi
+
+theorem mutualInfo_le_add_condMutualInfo
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    [StandardBorelSpace X] [Nonempty X]
+    [StandardBorelSpace Y] [Nonempty Y]
+    (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y)
+    (hXs : Measurable Xs) (hZc : Measurable Zc) (hYo : Measurable Yo) :
+    mutualInfo μ Xs Yo ≤ mutualInfo μ Xs Zc + condMutualInfo μ Xs Yo Zc := by
+  have hpair : Measurable (fun ω ↦ (Zc ω, Yo ω)) := hZc.prodMk hYo
+  have hdpi : mutualInfo μ Xs ((Prod.snd : Z × Y → Y) ∘ fun ω ↦ (Zc ω, Yo ω))
+      ≤ mutualInfo μ Xs (fun ω ↦ (Zc ω, Yo ω)) :=
+    mutualInfo_le_of_postprocess μ Xs (fun ω ↦ (Zc ω, Yo ω)) hXs hpair measurable_snd
+  rw [show ((Prod.snd : Z × Y → Y) ∘ fun ω ↦ (Zc ω, Yo ω)) = Yo from rfl,
+    mutualInfo_comm μ Xs (fun ω ↦ (Zc ω, Yo ω)) hXs hpair,
+    mutualInfo_chain_rule μ Yo Xs Zc hYo hXs hZc, mutualInfo_comm μ Zc Xs hZc hXs,
+    condMutualInfo_comm μ Yo Xs Zc hYo hXs hZc] at hdpi
+  exact hdpi
 
 /-! ## `MeasurableEquiv` invariance of `condMutualInfo`
 

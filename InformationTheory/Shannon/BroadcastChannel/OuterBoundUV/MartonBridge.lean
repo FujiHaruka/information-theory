@@ -283,8 +283,8 @@ private lemma martonJointDistribution_isMarkovChain₁
   have h3 := isMarkovChain_map_left _ _ _ _ measurable_snd hZc (by fun_prop)
     (f := (Prod.fst : β₁ × β₂ → β₁)) measurable_fst h2
   have h4 := isMarkovChain_swap _ _ _ _ (by fun_prop) hZc (by fun_prop) h3
-  exact isMarkovChain_map_comp _ _ (by fun_prop) _ (by fun_prop) _ (by fun_prop) _ (by fun_prop) _
-    (martonJointDistribution_eq_map pV K W) h4
+  exact isMarkovChain_map_comp _ _ (by fun_prop) _ (martonJointDistribution_eq_map pV K W) _
+    (by fun_prop) _ (by fun_prop) _ (by fun_prop) h4
 
 private lemma martonJointDistribution_isMarkovChain₂
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
@@ -309,28 +309,10 @@ private lemma martonJointDistribution_isMarkovChain₂
   have h3 := isMarkovChain_map_left _ _ _ _ measurable_snd hZc (by fun_prop)
     (f := (Prod.snd : β₁ × β₂ → β₂)) measurable_snd h2
   have h4 := isMarkovChain_swap _ _ _ _ (by fun_prop) hZc (by fun_prop) h3
-  exact isMarkovChain_map_comp _ _ (by fun_prop) _ (by fun_prop) _ (by fun_prop) _ (by fun_prop) _
-    (martonJointDistribution_eq_map pV K W) h4
+  exact isMarkovChain_map_comp _ _ (by fun_prop) _ (martonJointDistribution_eq_map pV K W) _
+    (by fun_prop) _ (by fun_prop) _ (by fun_prop) h4
 
 /-! ## The sum-rate inequalities -/
-
-private lemma mutualInfo_le_add_condMutualInfo {Ω A B C : Type*} [MeasurableSpace Ω]
-    [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
-    [MeasurableSpace B]
-    [MeasurableSpace C] [StandardBorelSpace C] [Nonempty C]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (As : Ω → A) (Bs : Ω → B) (Cs : Ω → C)
-    (hAs : Measurable As) (hBs : Measurable Bs) (hCs : Measurable Cs) :
-    mutualInfo μ As Cs ≤ mutualInfo μ As Bs + condMutualInfo μ As Cs Bs := by
-  have hpair : Measurable (fun ω ↦ (Bs ω, Cs ω)) := hBs.prodMk hCs
-  have hdpi : mutualInfo μ As ((Prod.snd : B × C → C) ∘ fun ω ↦ (Bs ω, Cs ω))
-      ≤ mutualInfo μ As (fun ω ↦ (Bs ω, Cs ω)) :=
-    mutualInfo_le_of_postprocess μ As (fun ω ↦ (Bs ω, Cs ω)) hAs hpair measurable_snd
-  rw [show ((Prod.snd : B × C → C) ∘ fun ω ↦ (Bs ω, Cs ω)) = Cs from rfl,
-    mutualInfo_comm μ As (fun ω ↦ (Bs ω, Cs ω)) hAs hpair,
-    mutualInfo_chain_rule μ Cs As Bs hCs hAs hBs, mutualInfo_comm μ Bs As hBs hAs,
-    condMutualInfo_comm μ Cs As Bs hCs hAs hBs] at hdpi
-  exact hdpi
 
 private lemma condMutualInfo_aux₁_le_input
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]

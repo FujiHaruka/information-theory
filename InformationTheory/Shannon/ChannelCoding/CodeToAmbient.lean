@@ -644,9 +644,9 @@ lemma isMarkovChain_map_comp
     [MeasurableSpace C]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (T : Ω → Ω') (hT : Measurable T)
+    (ρ : Measure Ω') [IsFiniteMeasure ρ] (hρ : ρ = μ.map T)
     (f : Ω' → A) (hf : Measurable f) (g : Ω' → C) (hg : Measurable g)
     (h : Ω' → B) (hh : Measurable h)
-    (ρ : Measure Ω') [IsFiniteMeasure ρ] (hρ : ρ = μ.map T)
     (hchain : IsMarkovChain μ (fun ω ↦ f (T ω)) (fun ω ↦ g (T ω)) (fun ω ↦ h (T ω))) :
     IsMarkovChain ρ f g h := by
   subst hρ

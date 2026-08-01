@@ -23,8 +23,8 @@ on the first output alone and does not enter that chain.
 * `IsBCLessNoisy.isBCMoreCapable` — a less noisy channel is more capable.
 * `bc_lessNoisy_infoJoint_ge` — over a less noisy channel the joint information `I((U, X); Y₁)`
   dominates the sum `I(X; Y₁ ∣ U) + I(U; Y₂)` of the two per-receiver informations.
-* `IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero` — a semi-deterministic channel with
-  at least two first-output letters gives some output pair probability zero.
+* `IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero_of_one_lt_card` — a semi-deterministic
+  channel with at least two first-output letters gives some output pair probability zero.
 
 ## Implementation notes
 
@@ -163,7 +163,7 @@ theorem IsBCDegraded.isBCLessNoisy {W : BCChannel α β₁ β₂} [IsMarkovKerne
 
 /-! ### Less noisy implies more capable -/
 
-theorem bcJointDistribution_id_eq_map_compProd (p : Measure α) [IsProbabilityMeasure p]
+private theorem bcJointDistribution_id_eq_map_compProd (p : Measure α) [IsProbabilityMeasure p]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     bcJointDistribution p Kernel.id W
       = (p ⊗ₘ W).map (fun z : α × β₁ × β₂ ↦ (z.1, z.1, z.2)) := by
@@ -181,7 +181,7 @@ theorem bcJointDistribution_id_eq_map_compProd (p : Measure α) [IsProbabilityMe
       ((measurable_fst.prodMk measurable_fst).prodMk measurable_snd)]
   rfl
 
-theorem mutualInfoOfChannel_map_eq_mutualInfo_bcJointDistribution {γ : Type*}
+private theorem mutualInfoOfChannel_map_eq_mutualInfo_bcJointDistribution {γ : Type*}
     [MeasurableSpace γ] (p : Measure α) [IsProbabilityMeasure p]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] {g : β₁ × β₂ → γ} (hg : Measurable g) :
     mutualInfoOfChannel p (W.map g)
@@ -234,7 +234,8 @@ differs from `f a` is null.  The full-support hypothesis of `marton_achievabilit
 fails on this class, so `marton_region_subset_capacity` is unavailable on it.
 @audit:ok -/
 @[entry_point]
-theorem IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero {W : BCChannel α β₁ β₂}
+theorem IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero_of_one_lt_card
+    {W : BCChannel α β₁ β₂}
     (hsd : IsBCSemiDeterministic W) (hcard : 1 < Fintype.card β₁) (a : α) :
     ∃ b : β₁ × β₂, (W a).real {b} = 0 := by
   obtain ⟨f, hf⟩ := hsd

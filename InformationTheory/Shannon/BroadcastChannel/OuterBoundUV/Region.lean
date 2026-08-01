@@ -305,8 +305,8 @@ lemma IsUVChannelLaw.isMarkovChain_UV_X_Y {W : BCChannel α β₁ β₂} [IsMark
     (fun ω : (U × V × α) × (β₁ × β₂) ↦ ω.1.2.2)
     (Prod.snd : (U × V × α) × (β₁ × β₂) → β₁ × β₂) measurable_fst hZc measurable_snd
     (f := fun r : U × V × α ↦ (r.1, r.2.1)) (by fun_prop) h₀
-  exact isMarkovChain_map_comp _ _ measurable_uvUnsplit _ (by fun_prop) _ (by fun_prop) _
-    (by fun_prop) ν ((isUVChannelLaw_iff W ν).mp h) h₁
+  exact isMarkovChain_map_comp _ _ measurable_uvUnsplit ν ((isUVChannelLaw_iff W ν).mp h) _
+    (by fun_prop) _ (by fun_prop) _ (by fun_prop) h₁
 
 lemma IsUVChannelLaw.isMarkovChain_U_X_Y₁ {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
     {ν : Measure (U × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] (h : IsUVChannelLaw W ν) :
