@@ -6,7 +6,7 @@ import InformationTheory.Shannon.BroadcastChannel.Marton.ObjectiveConvexity
 /-!
 # Marton's inner bound — the per-coordinate law in vector form
 
-The convexity mechanism behind the cardinality bound (`ObjectiveConvexity.lean`) speaks about
+The convexity mechanism behind the cardinality bound (`auxWeightObjective`) speaks about
 weight vectors `q : U → ℝ` and a family of conditional laws `k : U → V × Z → ℝ`, whereas the
 Marton informations are stated for the measure `martonJointDistribution pV K W`.  This file
 descends the measure-level singleton masses of the projections of that law to explicit finite
