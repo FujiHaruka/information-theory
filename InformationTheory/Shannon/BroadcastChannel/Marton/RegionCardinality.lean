@@ -26,6 +26,14 @@ sign, so nothing in the argument caps it.
 
 * `closure_convexHull_martonRegionUnion_eq_bounded` — the closed convex hull of Marton's inner
   bound is unchanged by that restriction.
+* `martonRegionUnionBounded_isLowerSet` / `martonRegionUnionBounded_nonempty` /
+  `martonRegionUnionBounded_subset_union` — the restricted union is a nonempty lower set, as the
+  unrestricted union is, and it sits inside the unrestricted one.
+* `isLowerSet_convexHull` — the convex hull of a lower set of the plane is a lower set.
+* `exists_nonneg_weights_separating_of_isLowerSet` — a point outside a nonempty closed convex
+  lower set of the plane is separated from it by a functional with nonnegative coefficients.
+* `martonInfoV₁V₂_nonneg` — the dependence between the two auxiliaries is nonnegative, which is
+  the hypothesis under which a rate weighting is attained at a vertex of the quadrilateral.
 
 ## Implementation notes
 
@@ -159,9 +167,9 @@ end Separation
 section Info
 
 variable {α β₁ β₂ V₁ V₂ : Type*}
-    [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
-    [Fintype V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]
-    [Fintype V₂] [Nonempty V₂] [MeasurableSpace V₂] [MeasurableSingletonClass V₂]
+  [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
+  [Fintype V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]
+  [Fintype V₂] [Nonempty V₂] [MeasurableSpace V₂] [MeasurableSingletonClass V₂]
 
 theorem martonInfoV₁V₂_nonneg (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
