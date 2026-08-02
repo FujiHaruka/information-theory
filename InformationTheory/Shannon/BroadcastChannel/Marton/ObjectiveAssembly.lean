@@ -7,8 +7,8 @@ import InformationTheory.Shannon.BroadcastChannel.Marton.ObjectiveVectorForm
 The cardinality bound for the outer auxiliary variable optimizes a weighted sum of the three
 informations of the region inequalities: `μ₁` times the first-receiver information plus `μ₃` times
 the sum-rate expression `I(V₁; Y₁) + I(V₂; Y₂) - I(V₁; V₂)`.  This file writes that weighted sum
-as `auxWeightObjective`, the shape support reduction consumes, plus a term that reads the weights
-only through the channel-input aggregate.
+as `auxWeightObjective`, the shape the support reduction consumes, plus a term that reads the
+weights only through the channel-input aggregate.
 
 The entropy of the outer auxiliary letter cancels twice, once inside the sum-rate expression and
 once against the two entropy differences it leaves behind, and those differences are linear in the
@@ -187,8 +187,9 @@ private lemma sum_eq_one_of_martonAuxRow_aggregate
         rw [← Finset.mul_sum, sum_martonAuxRow_eq_one κ K u, mul_one]
     _ = 1 := sum_measureReal_singleton_univ_eq_one q
 
-/-- The outer auxiliary law can be replaced by one supported on at most `Fintype.card α` letters
-without decreasing the weighted sum of the three informations of the region inequalities. -/
+/-- The outer auxiliary law can be replaced by a probability measure on the same auxiliary
+alphabet whose support has at most `Fintype.card α` letters, without decreasing the weighted sum
+of the three informations of the region inequalities. -/
 @[entry_point]
 theorem exists_support_card_le_martonWeightedSum_measure
     (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
