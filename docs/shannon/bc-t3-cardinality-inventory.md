@@ -1712,3 +1712,333 @@ L12 はその残り 6 射影の同型反復であり、軸の gate でも層 3 �
   `unknown identifier 'Finset.sum_comm₃'` を返すだけで実名に届かない。部分文字列クエリ
   `loogle '"sum_comm"'` は `Found 17 declarations whose name contains "sum_comm".` として
   `Finset.sum_comm_cycle` を出す。**名前を当てにいく前に部分文字列で引くこと**。
+
+---
+
+## §11 L13–L15 の実測 — 目的関数の組み立てと測度形への回収
+
+⚠ 本節は**追記であり §1–§10 は書き換えていない**。ただし §10.3（残件 1 つ）と §8.2（C ルートの
+射程）については、本節の実測が**外していた / 訂正の公算が高い**ことを明示する（§11.1 / §11.6）。
+
+### 11.0 一行判定
+
+**L13–L15 で新規に立った宣言は 19 本、すべて proof done（`sorry` 0 / `@residual` 0）で、
+Mathlib 側の不足は 0 件**（壁 0 / 共有 sorry 補題の候補 0）。⚠ 再導出は
+`scripts/sig_view.ts --sorry <file>` と `#print axioms <decl>`（本節は値をキャッシュしない）。
+⚠ **§10.3 が「残件 1 つ」とした disintegration は新規宣言 0 本・実測 ~2 行で、代わりに §10.3 が
+落としていた橋が 2 件あった**（§11.1）。標的言明 (a′-1) には**まだ 2 件の残件**があり、
+うち 1 件（`V₂` 側）は次 leg の設計を決める分岐である（§11.6）。
+⚠ **行数は (a′-1) の見積り 480–800 行を既に超えている**（実測 1070 行、§11.5）。
+
+### 11.1 §10.3 の残件は外れていた — disintegration に新規宣言 0 本 / 代わりに漏れが 2 件
+
+| 項目 | 実測 | 逐語の根拠 |
+|---|---|---|
+| `pV = q ⊗ₘ κ` の disintegration | ⚠ **新規宣言 0 本 / 消費側 1 行**。`pV.disintegrate pV.condKernel` が 1 term で `pV.fst ⊗ₘ pV.condKernel = pV` を返し、消費側は `conv_lhs => rw [← pV.disintegrate pV.condKernel]` で既存 7 射影がそのまま一般 `pV` に効く ⟹ §10.3 の見積り「20–40 行」に対し**実測 ~2 行** | `MeasureTheory.Measure.disintegrate`（`Mathlib/Probability/Kernel/Disintegration/Basic.lean:63`）の `#check` 逐語: `∀ {α : Type u_1} {Ω : Type u_2} {mα : MeasurableSpace α} {mΩ : MeasurableSpace Ω} (ρ : Measure (α × Ω)) (ρCond : Kernel α Ω) [ρ.IsCondKernel ρCond], ρ.fst ⊗ₘ ρCond = ρ` |
+| 型クラス連鎖 3 段 | ⚠ **機械検証済で繋がる / import 追加 0 本 / 署名に増える前提 0 個**。最小前提は `[Countable V₂] [Nonempty V₂] [MeasurableSpace V₂] [MeasurableSingletonClass V₂]` + `[IsFiniteMeasure pV]` で、BC 家系の変数ブロックは `[Fintype V₂]` → `Countable` を含むのでそのまま通る | scratch で `example (pV : Measure (V₁ × V₂)) [IsFiniteMeasure pV] : pV.fst ⊗ₘ pV.condKernel = pV := pV.disintegrate pV.condKernel` が 0 error。連鎖の逐語 = `MeasurableSingletonClass.toDiscreteMeasurableSpace : ∀ {α} [MeasurableSpace α] [MeasurableSingletonClass α] [Countable α], DiscreteMeasurableSpace α` → `standardBorelSpace_of_discreteMeasurableSpace : ∀ {α} [MeasurableSpace α] [DiscreteMeasurableSpace α] [Countable α], StandardBorelSpace α` → `Measure.condKernel : … [StandardBorelSpace Ω] → [Nonempty Ω] → (ρ : Measure (α × Ω)) → [IsFiniteMeasure ρ] → Kernel α Ω`。`IsMarkovKernel pV.condKernel` / `IsProbabilityMeasure pV.fst` も `inferInstance` で出る |
+| ⚠ **名前の罠** | **`MeasureTheory.Measure.compProd_fst_condKernel` は宣言として存在しない** — 在庫がこの名前を採ると unknown identifier。正しくは `Measure.disintegrate` | loogle 逐語 2 本: `loogle "MeasureTheory.Measure.compProd_fst_condKernel"` → `unknown identifier 'MeasureTheory.Measure.compProd_fst_condKernel'` / `loogle '"compProd_fst_condKernel"'` → `Found one declaration whose name contains "compProd_fst_condKernel".` `ProbabilityTheory.Kernel.compProd_fst_condKernelReal`。実体は `Mathlib/Probability/Kernel/Disintegration/StandardBorel.lean:63-64` の**docstring 内の文字列**（`## Main statements` の箇条書き）だけである |
+
+⚠ **§10.3 の残件リストが落としていた橋が 2 件あった**。目的関数は `entropy`
+（`InformationTheory/Shannon/Bridge.lean:40-41` 逐語:
+`noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ := ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})`）
+の和差なので、singleton 質量の**積形**を与える 7 射影（§10.1）だけでは `negMulLog` の側が繋がらない:
+
+- **GAP A** = chain-rule 恒等式（`H(V₁,V₂) − H(V₁)` / `H(V₁,Y₁) − H(V₁)` を `q` について線型な形へ）。
+  `Real.negMulLog_mul`（`Mathlib/Analysis/SpecialFunctions/Log/NegMulLog.lean:177`、**前提なし**）で閉じ、
+  private 補題 `sum_negMulLog_mul_sub_eq` 1 本（12 行）に括り出た。
+- **GAP B** = `auxWeightObjective` が内部生成する `Y₂` 周辺が、既在の集約形
+  `marton_map_Y₂_real_singleton_eq_aggregate`（`ObjectiveVectorForm.lean:344`）と一致すること。
+  `Finset.sum_comm_cycle` 1 本 + `Finset.sum_comm` 1 本で閉じた
+  （`ObjectiveVectorForm.lean:479` / `:484`）。
+
+⟹ **教訓（⚠ 我々の演繹）**: 残件の洗い出しを「**測度側で何が要るか**」だけで作ると、
+**目的関数側の関数形（`negMulLog` の中に何が入るか）で要る橋を落とす**。射影表と目的関数の
+定義展開を**両側から突き合わせる**まで残件リストは閉じない。
+
+### 11.2 landing した宣言の逐語署名（L13 / L14 / L15）
+
+`ObjectiveVectorForm.lean:62-67` と `ObjectiveAssembly.lean:43-48` の変数ブロックは**逐語で同一**
+（以下 **VB5** と呼ぶ。`#check` で elaborate して確認済）:
+
+```lean
+variable {V₁ V₂ α β₁ β₂ : Type*}
+  [Fintype V₁] [Nonempty V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]
+  [Fintype V₂] [Nonempty V₂] [MeasurableSpace V₂] [MeasurableSingletonClass V₂]
+  [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [Fintype β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
+  [Fintype β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
+```
+
+⚠ **`ObjectiveConvexity.lean` の変数ブロックは別物**（`:39` 逐語）:
+`variable {U V Z X : Type*} [Fintype U] [Fintype V] [Fintype Z] [Fintype X]` — **可測空間も
+`MeasurableSingletonClass` も無いベクトル層**である。
+
+**L13（`ObjectiveVectorForm.lean`、7 本）**
+
+| decl | file:line | 型クラス前提（逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `sum_negMulLog_mul_sub_eq` `[private]` | `…/Marton/ObjectiveVectorForm.lean:373` | 宣言自身の binder のみ = `{ι σ : Type*} [Fintype ι] [Fintype σ]`（VB5 は使わない）⚠ 外部からは `#check` 不可（`Unknown identifier` が返る = file-scoped private の逐語確認） | `(∑ i : ι, ∑ s : σ, Real.negMulLog (q i * c i s)) - ∑ i : ι, Real.negMulLog (q i) = ∑ i : ι, q i * ∑ s : σ, Real.negMulLog (c i s)`（仮引数 `(q : ι → ℝ) (c : ι → σ → ℝ) (hc : ∀ i, ∑ s : σ, c i s = 1)`） |
+| `marton_entropy_V₁V₂_sub_entropy_V₁_eq_sum` `@[entry_point]` | 同 `:389` | VB5 全 20 個 + `(q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ] (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]` | `entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ (p.1, p.2.1)) - entropy (martonJointDistribution (q ⊗ₘ κ) K W) Prod.fst = ∑ u : V₁, q.real {u} * ∑ v₂ : V₂, Real.negMulLog ((κ u).real {v₂})` |
+| `martonAuxOutput₁Row`（def） | 同 `:404` | `#check` 逐語 = `[MeasurableSpace V₁] [Fintype V₂] [MeasurableSpace V₂] [Fintype α] [MeasurableSpace α] [MeasurableSpace β₁] [Fintype β₂] [MeasurableSpace β₂]`（VB5 のうち def が実際に使う 8 個だけが残る） | `martonAuxOutput₁Row κ K W u y₁ = ∑ v₂ : V₂, (κ u).real {v₂} * ∑ x : α, (K (u, v₂)).real {x} * ∑ y₂ : β₂, (W x).real {(y₁, y₂)}` |
+| `sum_martonAuxOutput₁Row_eq_one` `@[entry_point]` | 同 `:413` | VB5 から `omit [Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁] [Nonempty V₂] [Nonempty α] [Nonempty β₁] [Nonempty β₂] in`（`:408-409` 逐語）+ `[IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W]` | `∑ y₁ : β₁, martonAuxOutput₁Row κ K W u y₁ = 1` |
+| `marton_entropy_V₁Y₁_sub_entropy_V₁_eq_sum` `@[entry_point]` | 同 `:433` | VB5 全 20 個 + 上と同じ 4 引数 | `entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ (p.1, p.2.2.2.1)) - entropy (martonJointDistribution (q ⊗ₘ κ) K W) Prod.fst = ∑ u : V₁, q.real {u} * ∑ y₁ : β₁, Real.negMulLog (martonAuxOutput₁Row κ K W u y₁)` |
+| `martonAuxKernelSlot`（def） | 同 `:450` | `#check` 逐語 = `[MeasurableSpace V₁] [MeasurableSpace V₂] [Fintype α] [MeasurableSpace α] [Fintype β₁] [MeasurableSpace β₁] [MeasurableSpace β₂]` | `martonAuxKernelSlot κ K W u p = (κ u).real {p.1} * ∑ x : α, (K (u, p.1)).real {x} * ∑ y₁ : β₁, (W x).real {(y₁, p.2)}`（型は `V₁ → V₂ × β₂ → ℝ`） |
+| `sum_martonAuxKernelSlot_mixture_eq_aggregate` `@[entry_point]` | 同 `:461` | VB5 から `omit [Nonempty V₁] [MeasurableSingletonClass V₁] [Nonempty V₂] [MeasurableSingletonClass V₂] [Nonempty α] [MeasurableSingletonClass α] [Nonempty β₁] [MeasurableSingletonClass β₁] [Fintype β₂] [Nonempty β₂] [MeasurableSingletonClass β₂] in`（`:454-456` 逐語）+ `[IsProbabilityMeasure q] [IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W]` | `∑ v₂ : V₂, ∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u (v₂, y₂) = ∑ x : α, (∑ u : V₁, q.real {u} * martonAuxRow κ K u x) * ∑ y₁ : β₁, (W x).real {(y₁, y₂)}` |
+
+**L14（受け口 1 本 + `ObjectiveAssembly.lean` 9 本）**
+
+| decl | file:line | 型クラス前提（逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `exists_support_card_le_auxWeightObjective_add_aggregate` `@[entry_point]` | `…/Marton/ObjectiveConvexity.lean:119` | `{U V Z X : Type*} [Fintype U] [Fintype V] [Fintype Z] [Fintype X]` **のみ**（`:39`）⟹ ⚠ 可測構造も `MeasurableSingletonClass` も要らない | `∃ q' : U → ℝ, 0 ≤ q' ∧ (∀ x, ∑ u, q' u * A u x = ∑ u, q u * A u x) ∧ auxWeightObjective k w c t q + g (fun x ↦ ∑ u, q u * A u x) ≤ auxWeightObjective k w c t q' + g (fun x ↦ ∑ u, q' u * A u x) ∧ {u \| q' u ≠ 0}.ncard ≤ Fintype.card X`（仮引数 `(A) (hA : ∀ u, ∑ x, A u x = 1) (k) (hk : ∀ u p, 0 ≤ k u p) (w) (c t : ℝ) (ht : 0 ≤ t) (g : (X → ℝ) → ℝ) (q) (hq : 0 ≤ q)`）。本体は `exists_support_card_le_of_convexOn_add_aggregate` + `convexOn_auxWeightObjective` の適用 1 term |
+| `martonAuxCoeff`（def） | `…/Marton/ObjectiveAssembly.lean:53` | `#check` 逐語 = `[MeasurableSpace V₁] [Fintype V₂] [MeasurableSpace V₂] [Fintype α] [MeasurableSpace α] [Fintype β₁] [MeasurableSpace β₁] [Fintype β₂] [MeasurableSpace β₂]` | `martonAuxCoeff κ K W μ₁ μ₃ u = μ₃ * (∑ v₂ : V₂, Real.negMulLog ((κ u).real {v₂})) - (μ₁ + μ₃) * (∑ y₁ : β₁, Real.negMulLog (martonAuxOutput₁Row κ K W u y₁))` |
+| `martonOutput₁Aggregate`（def） | 同 `:60` | `#check` 逐語 = `{α β₁ β₂} [Fintype α] [MeasurableSpace α] [Fintype β₁] [MeasurableSpace β₁] [Fintype β₂] [MeasurableSpace β₂]`（⚠ `V₁ V₂` に**依存しない** = 集約 slot `g` の実体である根拠） | `martonOutput₁Aggregate W μ₁ μ₃ a = (μ₁ + μ₃) * ∑ y₁ : β₁, Real.negMulLog (∑ x : α, a x * ∑ y₂ : β₂, (W x).real {(y₁, y₂)})` |
+| `martonAuxKernelSlot_nonneg` / `sum_mul_martonAuxCoeff_eq_sub` / `sum_negMulLog_martonAuxKernelSlot_eq_entropy` / `sum_negMulLog_martonAuxKernelSlot_mixture_eq_entropy` / `martonOutput₁Aggregate_eq_mul_entropy` `[private]` | 同 `:66` / `:74` / `:90` / `:101` / `:112` | VB5 から各々 `omit …`（`:63-65` / `:71-73` の逐語。後ろ 3 本は omit 無し = VB5 全 20 個）+ 後ろ 3 本は `[IsProbabilityMeasure q] [IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W]` | 順に `0 ≤ martonAuxKernelSlot κ K W u p` / 係数ベクトルの和の分配 / `∑ p : V₂ × β₂, Real.negMulLog (∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u p) = entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ (p.2.1, p.2.2.2.2))` / 同 `(fun p ↦ p.2.2.2.2)` の集約版 / `martonOutput₁Aggregate W μ₁ μ₃ (fun x ↦ ∑ u, q.real {u} * martonAuxRow κ K u x) = (μ₁ + μ₃) * entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ p.2.2.2.1)` |
+| `martonWeightedSum_eq_auxWeightObjective_add_aggregate` `@[entry_point]` | 同 `:127` | VB5 全 20 個 + `(q : Measure V₁) [IsProbabilityMeasure q] (κ) [IsMarkovKernel κ] (K) [IsMarkovKernel K] (W) [IsMarkovKernel W] (μ₁ μ₃ : ℝ)` ⚠ **`μ` の符号仮定は 0 個** | `μ₁ * martonInfo₁ (q ⊗ₘ κ) K W + μ₃ * (martonInfo₁ (q ⊗ₘ κ) K W + martonInfo₂ (q ⊗ₘ κ) K W - martonInfoV₁V₂ (q ⊗ₘ κ) K W) = auxWeightObjective (martonAuxKernelSlot κ K W) (martonAuxCoeff κ K W μ₁ μ₃) 0 μ₃ (fun u ↦ q.real {u}) + martonOutput₁Aggregate W μ₁ μ₃ (fun x ↦ ∑ u, q.real {u} * martonAuxRow κ K u x)` ⟹ ⚠ **`c := 0` / 凸 slot の係数 `t := μ₃`** |
+| `exists_support_card_le_martonWeightedSum` `@[entry_point]` | 同 `:150` | 上と同じ + ⚠ **`(hμ₃ : 0 ≤ μ₃)` の 1 本だけ**（`hμ₁` は無い） | `∃ q' : V₁ → ℝ, 0 ≤ q' ∧ (∀ x, ∑ u, q' u * martonAuxRow κ K u x = ∑ u, q.real {u} * martonAuxRow κ K u x) ∧ μ₁ * martonInfo₁ … + μ₃ * (…) ≤ auxWeightObjective … q' + martonOutput₁Aggregate … ∧ {u \| q' u ≠ 0}.ncard ≤ Fintype.card α` |
+
+**L15（`ObjectiveAssembly.lean`、2 本。⚠ 自作の新規補題は private 1 本のみ）**
+
+| decl | file:line | 型クラス前提（逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `sum_eq_one_of_martonAuxRow_aggregate` `[private]` | `…/Marton/ObjectiveAssembly.lean:172` | VB5 から `omit [Nonempty V₁] [Nonempty V₂] [Nonempty α] in`（`:171` 逐語）+ `(q : Measure V₁) [IsProbabilityMeasure q] (κ) [IsMarkovKernel κ] (K) [IsMarkovKernel K] (q' : V₁ → ℝ) (hagg : ∀ x, ∑ u, q' u * martonAuxRow κ K u x = ∑ u, q.real {u} * martonAuxRow κ K u x)` | `∑ u, q' u = 1`（= 集約保存だけから `stdSimplex` 入りが出る。⚠ 行和 1 を 2 度使う 5 段 `calc`） |
+| `exists_support_card_le_martonWeightedSum_measure` `@[entry_point]` | 同 `:194` | VB5 全 20 個 + `(q : Measure V₁) [IsProbabilityMeasure q] (κ) [IsMarkovKernel κ] (K) [IsMarkovKernel K] (W) [IsMarkovKernel W] (μ₁ μ₃ : ℝ) (hμ₃ : 0 ≤ μ₃)` | `∃ (q' : Measure V₁) (_ : IsProbabilityMeasure q'), {u \| q'.real {u} ≠ 0}.ncard ≤ Fintype.card α ∧ μ₁ * martonInfo₁ (q ⊗ₘ κ) K W + μ₃ * (martonInfo₁ (q ⊗ₘ κ) K W + martonInfo₂ (q ⊗ₘ κ) K W - martonInfoV₁V₂ (q ⊗ₘ κ) K W) ≤ μ₁ * martonInfo₁ (q' ⊗ₘ κ) K W + μ₃ * (martonInfo₁ (q' ⊗ₘ κ) K W + martonInfo₂ (q' ⊗ₘ κ) K W - martonInfoV₁V₂ (q' ⊗ₘ κ) K W)` ⚠ **両辺が同じ型の `Measure V₁` 上の量** = (a′-1) の形に一番近い landing 点 |
+
+### 11.3 L15 は自作 0 件 — 消費した既存資産（すべて import 閉包内に既在）
+
+| 資産 | file:line | 型クラス前提（`#check` 逐語） | 何を与えたか |
+|---|---|---|---|
+| `ChannelCoding.pmfToMeasure` | `InformationTheory/Shannon/ChannelCoding/ShannonTheorem.lean:55` | `{α : Type u_1} → [Fintype α] → [inst : MeasurableSpace α] → (α → ℝ) → Measure α` ⚠ **`DecidableEq` も `Nonempty` も `MeasurableSingletonClass` も落ちている**（def の直前 `variable` には在るが def が使わないため） | ベクトル `q' : V₁ → ℝ` を `Measure V₁` へ戻す実体 `∑ a, ENNReal.ofReal (p a) • Measure.dirac a` |
+| `ChannelCoding.pmfToMeasure_isProbabilityMeasure` | 同 `:76` | `∀ {α} [Fintype α] [MeasurableSpace α] {p : α → ℝ}, p ∈ stdSimplex ℝ α → IsProbabilityMeasure (pmfToMeasure p)` | `IsProbabilityMeasure` の witness |
+| `ChannelCoding.pmfToMeasure_real_singleton` | 同 `:95` | `∀ {α} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α] {p : α → ℝ}, p ∈ stdSimplex ℝ α → ∀ (a : α), (pmfToMeasure p).real {a} = p a` | 台の集合の一致（`{u \| (pmfToMeasure qv).real {u} ≠ 0} = {u \| qv u ≠ 0}`）と重み付き和の再展開 |
+| `InformationTheory.sum_measureReal_singleton_univ_eq_one` | `InformationTheory/Probability/SingletonMass.lean:30` | `∀ {γ} [Fintype γ] [MeasurableSpace γ] [MeasurableSingletonClass γ] (μ : Measure γ) [IsProbabilityMeasure μ], ∑ z, μ.real {z} = 1` | `stdSimplex` の第 2 成分 |
+| `sum_martonAuxRow_eq_one` | `…/Marton/ObjectiveVectorForm.lean:125` | `∀ {V₁ V₂ α} [MeasurableSpace V₁] [Fintype V₂] [MeasurableSpace V₂] [MeasurableSingletonClass V₂] [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α] (κ) [IsMarkovKernel κ] (K) [IsMarkovKernel K] (u : V₁), ∑ x, martonAuxRow κ K u x = 1` | 集約保存 ⟹ `∑ q' = 1` の 5 段 `calc` の両端 |
+
+⚠ **見つけ方の教訓（4 度目の再演。§10.7 / handoff が記録する「結論形・部分文字列で引く」と同型）**:
+決め手は名前ではなく**式の部分項**での `rg`。逐語:
+
+- 効いた検索 `rg -n 'ENNReal.ofReal .* • Measure.dirac' InformationTheory/` ⟹ 9 hit、
+  2 hit 目・3 hit 目が `ShannonTheorem.lean:54`（docstring）と `:56`（def 本体）。
+- 届かなかった検索 `rg -ln 'PMF|toMeasure|ofFintype' InformationTheory/` ⟹ 先頭が
+  `InformationTheory/Fano.lean` / `Fano/Measure.lean` / `Fano/CondEntropy.lean` … と
+  `Fano` の `diracPMF` ノイズで埋まり、`ChannelCoding/ShannonTheorem.lean` は上位に出ない。
+- **loogle は 1 本も要らなかった**（in-project 資産なので原理的に見えない = `cause:loogle-blind` の型）。
+
+⟹ ブリーフが立てた「汎用の橋 1 本を `SingletonMass.lean` に置く」案は**不要**で、具体 witness を
+直接置くほうが短かった（新規 private 1 本 = 17 行）。
+
+### 11.4 代数の核心（⚠ 我々の演繹だが、証明項として機械検証済）
+
+`S := martonInfo₁ + martonInfo₂ − martonInfoV₁V₂` を `Marton/Setup.lean:244` / `:252` / `:262` の
+定義から展開すると:
+
+1. **`H(V₂)` が相殺する** — `martonInfo₂` の `+H(V₂)` と `martonInfoV₁V₂` の `−H(V₂)`。
+2. **GAP A の 2 本（`marton_entropy_V₁V₂_sub_entropy_V₁_eq_sum` /
+   `marton_entropy_V₁Y₁_sub_entropy_V₁_eq_sum`）を当てると `H(V₁)` も相殺する**（`martonInfo₁` の
+   `+H(V₁)` と `martonInfoV₁V₂` の `+H(V₁)` が、2 本の左辺の `−H(V₁)` と組む）。
+3. 残るのは
+   `(μ₁+μ₃)·H(Y₁) + μ₃·[H(Y₂) − H(V₂,Y₂)] + ∑_u q_u·(μ₃·h₂(u) − (μ₁+μ₃)·h₁(u))`
+   （`h₂ u = ∑ v₂ negMulLog ((κ u).real {v₂})`、`h₁ u = ∑ y₁ negMulLog (martonAuxOutput₁Row κ K W u y₁)`）。
+4. ⟹ **集約 slot `g` = `martonOutput₁Aggregate` / 凸 slot（`t := μ₃`）= `−H(V₂\|Y₂)` /
+   線型 slot `w` = `martonAuxCoeff`** にちょうど 3 分割され、**定数 slot は `c := 0`**。
+
+- ⚠ **`hμ₁ : 0 ≤ μ₁` は不要**（署名で機械確認、§11.2 の表）。恒等式側は `ring` で閉じて `μ` の符号を
+  使わず、台縮小が要求するのは `ht : 0 ≤ t`（= `μ₃`）1 本だけ。`μ₁` は符号仮定のない線型 slot `w` と
+  何の仮定も持たない集約 slot `g` にしか入らない。
+- ⚠ **退化境界 2 つで結論が生きる**（⚠ 我々の再導出）: `μ₃ = 0` では凸 slot が消えて主張は
+  「線型 + 集約だけの目的関数が台縮小で減らない」— 集約が厳密保存なので**非自明なまま生きる**。
+  `μ₁ = −μ₃` では目的関数が `μ₃·(martonInfo₂ − martonInfoV₁V₂)` に縮み、これも実質的な主張である
+  （どちらも vacuous ではない = `hμ₁` を落としたことが under-hypothesis を生んでいない根拠）。
+- ⚠ **補題化の粒度についての所見**: 上の 4 段のうち補題化が要ったのは「同定 3 本」
+  （`sum_negMulLog_martonAuxKernelSlot_eq_entropy` / `…_mixture_eq_entropy` /
+  `martonOutput₁Aggregate_eq_mul_entropy`）だけで、**`H(V₁)` の 2 度の相殺は
+  `martonWeightedSum_eq_auxWeightObjective_add_aggregate` 末尾の `ring` 1 発に吸収された**
+  ⟹ **「代数のステップ数」ではなく「`rw` が要る接続点の数」で補題を切る**のが正しい粒度。
+
+### 11.5 行数の実測と (a′-1) 予算の突き合わせ — ⚠ **既に上限超過**
+
+`wc -l` 逐語（HEAD `925e28a4`）:
+
+| file | 行 |
+|---|---|
+| `…/Marton/SupportReduction.lean` | 230 |
+| `…/Marton/ObjectiveConvexity.lean` | 129 |
+| `…/Marton/ObjectiveVectorForm.lean` | 489 |
+| `…/Marton/ObjectiveAssembly.lean` | 222 |
+| **合計** | **1070** |
+
+§8.2 の (a′-1) 見積りは **480–800 行**（部品 1/2/4 = 280–450 行 + (3a)(3b)(3c) = 200–350 行）。
+⟹ ⚠ **実測 1070 行は上限 800 を 270 行（+34%）超えている**。しかも **(a′-1) はまだ立っていない**
+（§11.6 の残件 2 件が未着手。現在の到達点は `exists_support_card_le_martonWeightedSum_measure` で、
+`V₁` の**台の大きさ**しか縛れていない）。
+
+⚠ **これは「内数の再配分」では説明できない**（§10.7 の言い回しをここへ流用してはならない）。
+超過の内訳（⚠ 我々の演繹）:
+
+- **(3b) の実体 `SupportReduction.lean` 230 行 + `ObjectiveConvexity.lean` 129 行 = 359 行**は
+  見積り (3a)(3b)(3c) 200–350 行の枠にほぼ収まる。
+- **超過の主因は §10.7 で記録済の `ObjectiveVectorForm.lean`**（見積り 120–200 行 → 実測 489 行）
+  で、そこに L13 の GAP A / GAP B（§11.1、127 行）が**見積りに無かった項目として**上乗せされた。
+- ⟹ 超過は「測度形 ↔ ベクトル形の橋」1 箇所に集中しており、**凸性・端点・台縮小の数学側は
+  見積り通り**である。⚠ ただし §11.6 (ii) が要求する `V₂` 側の鏡像は**同じ橋をもう一度**なので、
+  超過の主因がそのまま倍化する構造にある（次 leg の見積りはこの実測から起こすこと）。
+
+### 11.6 残件 — 標的言明 (a′-1) までに何が残っているか
+
+§8.2 の (a′-1) は
+`∃ (k₁' k₂' : ℕ) (_ : k₁' < martonAuxBound α) (_ : k₂' < martonAuxBound α) (pV') … `
+と **2 つの補助アルファベット両方**の基数を縛る。L15 までで縛れたのは **`V₁` の台の大きさだけ**
+（`κ` を固定して `q` のみを動かす機構）。⚠ **`martonAuxBound` はまだコードに存在しない** —
+`rg -n 'martonAuxBound' InformationTheory/` は **0 hit**（§7.7 は値 `Fintype.card α` を確定させた
+だけで、`def` は未実装）。
+
+#### (i) 台の小ささ → **基数の小さい型への付け替え** に何が要るか
+
+⚠ **在るもの / 無いものを分けて書く。**
+
+| 項目 | 実測 | 逐語の根拠 |
+|---|---|---|
+| 付け替え先の型 | 在る。`abbrev bcAuxAlphabet (k : ℕ) : Type u := ULift.{u} (Fin (k + 1))` ⟹ `\|bcAuxAlphabet k\| = k+1`。§7.7 の off-by-one（`k₁' < Fintype.card α` ⟺ `\|V₁'\| ≤ \|α\|`）は**現 HEAD でもそのまま**成立 | `MartonUnion.lean:65` |
+| 3 汎関数の再ラベル不変性 | ⚠ **`≃ᵐ`（全単射）版しか無い** ⟹ **基数を落とせない**。`martonInfo₁_map_relabel` / `martonInfo₂_map_relabel` / `martonInfoV₁V₂_map_relabel` / `martonRegion_map_relabel` はいずれも `(e₁ : V₁ ≃ᵐ V₁') (e₂ : V₂ ≃ᵐ V₂')` を取る | `MartonUnion.lean:249` / `:288` / `:329` / `:372`。`#check` 逐語（`martonRegion_map_relabel`）: `… (e₁ : V₁ ≃ᵐ V₁') (e₂ : V₂ ≃ᵐ V₂'), martonRegion (Measure.map ⇑(e₁.prodCongr e₂) pV) (K.comap ⇑(e₁.prodCongr e₂).symm ⋯) W = martonRegion pV K W` |
+| `V ≃ᵐ bcAuxAlphabet (card V - 1)` | 在るが ⚠ **`private`** ⟹ 他ファイルから使えない（§4.1 の指摘は現 HEAD でも有効）。再導出は `(Fintype.equivFin V).trans ((finCongr …).trans Equiv.ulift.symm)` + `measurable_of_countable` の 5 行 | `MartonUnion.lean:402` `private noncomputable def bcAuxMeasurableEquiv` |
+| **単射（非全射）版のエントロピー不変性** | ⚠ **在る — ただし別家系**。`wz_entropy_map_injective`「Shannon entropy is invariant under an injective (measurable) relabeling of the alphabet」。⚠ **`≃ᵐ` を要求しない**ので、これが (i) の心臓部を埋める | `InformationTheory/Shannon/WynerZiv/Achievability/Covering.lean:1189`。`#check` 逐語: `∀ {Ω γ₀ δ₀} [MeasurableSpace Ω] [Fintype γ₀] [DecidableEq γ₀] [Nonempty γ₀] [MeasurableSpace γ₀] [MeasurableSingletonClass γ₀] [Fintype δ₀] [DecidableEq δ₀] [Nonempty δ₀] [MeasurableSpace δ₀] [MeasurableSingletonClass δ₀] (μ : Measure Ω) (X : Ω → γ₀), Measurable X → ∀ (g : γ₀ → δ₀), Function.Injective g → Measurable g → (entropy μ fun ω => g (X ω)) = entropy μ X`。⚠ 消費者 3 decl / 2 file（`scripts/dep_consumers.sh InformationTheory.Shannon.wz_entropy_map_injective`: `Concentration.lean:205` / `:957` / `MassBound.lean:168`）⟹ **移設するなら 3 decl に触る / 汎用版を別置きするなら波及 0** |
+| 同時分布の輸送 | ⚠ **`≃ᵐ` 版の証明が単射版へほぼそのまま延びる**（⚠ 我々の演繹、未実装）。`martonJointDistribution_map_relabel` が equiv を使う唯一の箇所は `hKcomap : (K.comap E.symm E.symm.measurable).comap E E.measurable = K` で、これは**左逆元 `g ∘ f = id` があれば足りる**。主力の `compProd_comap_map_prodMap` は `{g : A → A'} (hg : Measurable g)` しか要求しない | `MartonUnion.lean:198`（`:209` が `hKcomap`）/ `InformationTheory/Shannon/ChannelCoding/CodeToAmbient.lean:401` 逐語: `lemma compProd_comap_map_prodMap {A A' B : Type*} [MeasurableSpace A] [MeasurableSpace A'] [MeasurableSpace B] (μ : Measure A) [SFinite μ] (κ : Kernel A' B) [IsMarkovKernel κ] {g : A → A'} (hg : Measurable g) : (μ ⊗ₘ κ.comap g hg).map (fun z ↦ (g z.1, z.2)) = (μ.map g) ⊗ₘ κ` |
+| ⚠ **本当に無いもの** | **「台 `ncard ≤ Fintype.card α` の測度を、基数 `≤ Fintype.card α` の型の上の測度として書き直す」段**。⚠ `\|V₁\| > \|α\|` のとき **`V₁ → T` の大域単射は存在しない**ので、上の単射版をそのまま当てることはできず、**先に台の部分型 `↥{u \| q'.real {u} ≠ 0}`（あるいは同値な小さい型）へ落とす**段が要る。in-project にこの段の資産は見当たらない（下の検索を実施） | 検索（結論形）: `rg -n 'entropy [^=]*= entropy' InformationTheory/ --glob '*.lean'` の 25 hit を全走査 ⟹ 出るのは `wz_entropy_map_injective` / `entropy_measurableEquiv_comp`（`Shannon/Pi.lean:36`）/ `entropy_eq_of_identDistrib`（`AEP/Basic/Converse.lean:55`）/ `entropy_map_comp`（`Shannon/Bridge.lean:53`）の 4 型だけで、**台への制限を扱うものは 0 件** |
+
+⚠ **`OuterBoundUV/Quantization.lean` は (i) に使えない**（§6.2 / plan §5 の L6 所見の再確認）。
+中身は `ℕ` 上の補助変数を `Fin (m+1)` へ**裾を畳んで**落とす粗視化で、代償が
+`uvQuantizeSlack ν m`（`Quantization.lean:160`）として残り `m → ∞` で 0 に行くことに依存している。
+(i) が要るのは**厳密保存**なので、効くのは**ファイルの形だけ**である。
+
+⟹ **(i) の結論（分かったこと）**: 3 部品のうち 2 部品（単射版エントロピー不変性 / 同時分布の輸送）は
+**既存資産で埋まる公算が高く、新規の数学は要らない**。残るのは「台の部分型へ落とす」1 段と
+`bcAuxMeasurableEquiv` の `private` 解除（または 5 行の再導出）、および `martonAuxBound` の `def` である。
+⚠ **分からないこと**: (a) 台への制限を**測度の水準**でやるのと、L11–L15 のベクトル層を**部分型の上で
+もう一度走らせる**のとどちらが短いか（後者は 4 ファイルの型引数を差し替えるだけの可能性がある）、
+(b) 単射版 relabel 4 本を書き下ろす実行数（`≃ᵐ` 版が `MartonUnion.lean:198-383` の 185 行なので
+同程度と見るのが素直だが未検証）。
+
+#### (ii) ⚠ **`V₂` 側の基数も縛れるのか** — 次 leg の設計を決める分岐
+
+**一次文献 [GA09] の逐語**（`$LIT/ga09.txt`。`$LIT` は facts `## L7 (T3)` 冒頭の定義）:
+
+- `ga09.txt:292-294` 逐語: "For this problem, we would like to show that **it suffices to take the
+  maximum over random variables U and V with the cardinality bounds of min(|X|, Su) and
+  min(|X|, Sv)**. It suffices to prove the following lemma:"
+- `ga09.txt:295-296, 319-320` 逐語（Lemma 1）: "Given an arbitrary broadcast channel `q(y, z|x)`,
+  an arbitrary input distribution `p(x)`, non-negative reals `λ` and `γ`, and natural numbers `Su`
+  and `Sv` **where `Su > |X|`** the following holds: `sup … = …` where … **`|Û| < Su`, `|V̂| ≤ Sv`**."
+- `ga09.txt:587-589` 逐語（§V-B の初等証明、`U` 側の凸性を見る所）: "Next, note that
+  **`λI(U;Y) = λH(Y) − λH(Y|U)` is linear in `q(u)`, and `γI(V;Z) = γH(Z) − γH(Z|V)` is convex in
+  `q(u)`. The latter is because the marginal distribution of X is preserved and hence H(Z) is
+  fixed.**"
+
+⟹ **文献の答は「同じ機構の 2 度適用で閉じる」**（⚠ 分かったこと）。根拠 3 点:
+
+1. **Lemma 1 は片側だけを 1 減らし、他方の上界を触らない**（`|Û| < Su` **かつ** `|V̂| ≤ Sv`）
+   ⟹ 交互に当てても増えない。§L7 行 4 (Q4) が記録した**発散する相互再帰は起きない** —
+   あれは「3 汎関数の**値**を保存しようとする素朴 Carathéodory」の話で、ここで保存するのは
+   **`p₀(x)` だけ**、目的関数には**減らないこと**しか要求しない。
+2. **目的関数 `I(U;Y)+I(V;Z)−I(U;V)+λI(U;Y)+γI(V;Z)` は `(U,Y,λ) ↔ (V,Z,γ)` の入れ替えで
+   それ自身に写る**（⚠ 我々の演繹だが上の逐語式から機械的）⟹ `V` 側の証明は `U` 側の鏡像。
+3. 我々の Lean 版は**最大点の存在を仮定しない**分だけ文献より扱いが軽い — [GA09] §V-B は
+   "Assume that the maximum … is obtained at some joint distribution `p₀`"（`ga09.txt:575-576` 逐語）
+   から始まるが、`exists_support_card_le_martonWeightedSum` は**任意の `q` に対し witness を返す**
+   形（端点で減らないことだけを使う）なので、`Su` を 1 ずつ減らす帰納も要らない。
+
+⚠ **ただし Lean 側の代償が 1 つある（⚠ 我々の演繹、未実装）**。鏡像フレーム
+（`q₂` を動かし `p₀(v₁,x\|v₂)` を固定）で目的関数を分解すると、slot の配り方が**変わる**:
+
+| 項 | `V₁` 側（実装済） | `V₂` 側（鏡像） |
+|---|---|---|
+| `H(Y₁)` / `H(Y₂)` | 集約 slot `g` | 集約 slot `g`（両方） |
+| `−H(Y₁\|V₁)` | **線型**（`martonAuxCoeff` の第 2 項） | ⚠ **凸**（`q₂` について。第 2 の凸 slot） |
+| `−H(Y₂\|V₂)` | 凸 slot（`t := μ₃`、`martonAuxKernelSlot`） | **線型** |
+| `H(V₂\|V₁)` / `H(V₁\|V₂)` | 線型 | 線型 |
+| `−H(V₁)` | （相殺して消える） | ⚠ **凸**（`Z := Fin 1` に退化させた同型の bracket） |
+
+⟹ **鏡像側は凸 slot が 2 本要る**（`auxWeightObjective` は `t` を 1 本しか持たない、
+`ObjectiveConvexity.lean:88` 逐語）。⚠ ただし**凸性の数学は新規 0**:
+`convexOn_negCondEntropy_mixture (k : U → V × Z → ℝ)`（同 `:62`）は `V` `Z` について完全に多相で、
+**転置した slot を渡すだけで `−H(Y₂\|V₂)` 型の bracket が出る**ことを機械確認した（scratch の
+`example … := convexOn_negCondEntropy_mixture (fun u p ↦ martonAuxKernelSlot κ K W u (p.2, p.1)) hk`
+が 0 error）。台縮小の受け口 `exists_support_card_le_of_convexOn_add_aggregate`
+（`SupportReduction.lean:219`）は**任意の `ConvexOn f`** を取るので、2 本の和のままでも消費できる。
+
+⚠ **§8.2 の射程限定は分解の取り方の産物である公算が高い（訂正候補）**。§8.2 は
+「一般の `μ₂ > 0` では `μ₂·H(V₂)` が残り、凹かつ集約の関数でもない ⟹ 本機構の射程外」と書いたが、
+[GA09] の grouping（`ga09.txt:587-589` 逐語）は `μ₂I₂ = μ₂H(Y₂) − μ₂H(Y₂\|V₂)` と切り、
+`H(Y₂)` は**既に集約形で証明済**（`marton_map_Y₂_real_singleton_eq_aggregate`、
+`ObjectiveVectorForm.lean:344`）、`−H(Y₂\|V₂) = H(V₂) − H(V₂,Y₂)` は**上の転置 bracket そのもの**である。
+⚠ **確認できたのは凸 slot の可用性（型検査）まで**で、`μ₂ * martonInfo₂ = 集約 + 転置 bracket` の
+**恒等式は未検証**（要る周辺は `marton_map_V₂Y₂_real_singleton_eq_sum`（同 `:285`）と
+`marton_map_V₂_real_singleton_eq_sum`（同 `:190`）で既に在るので短い見込み）。
+⟹ **§8.2 の「2 系列に絞れ」を実装へ渡す前に、この 1 本を試すこと**（潰れれば §8.2 が正しい）。
+
+⚠ **分からないこと（次 leg が最初に決めるべきこと）**:
+
+1. 鏡像を**既存補題の型引数の入れ替えで得られるか**、それとも書き下ろしか。
+   `martonInfo₁` / `martonInfo₂` は 5 つ組の**座標順が固定**された定義
+   （`Marton/Setup.lean:244` / `:252` の `Prod.fst` / `fun q ↦ q.2.1` / `fun q ↦ q.2.2.2.1` /
+   `fun q ↦ q.2.2.2.2`）なので、鏡像には `pV.map Prod.swap` と **`W : BCChannel α β₁ β₂` の出力の
+   入れ替え**を伴う変換補題が要る。⚠ **その swap 対称性補題は in-project に無い**
+   （`rg -n 'Prod.swap|swap' …/Marton/*.lean …/MartonUnion.lean` の hit は
+   `ErrorAnalysis.lean:91-99` と `Covering.lean:72/87/100` の**典型集合側**だけで、3 汎関数の
+   入れ替えを述べたものは 0 件）。
+2. 2 系列（`μ₂ = 0` / `μ₁ = 0`）で足りるのか、上の訂正候補が通って**全域 `μ ≥ 0`** で閉じるのか。
+   これは §8.2 の (a′-2) の 3 段（分離 → 支持関数）が要求する重みの範囲に直結する。
+3. `V₁` 側と `V₂` 側を**同時に**縛る順序（先に `V₁` を縛った後、`V₂` の縮約が `V₁` の台を壊さないこと）
+   の Lean での言い方。⚠ 文献側では Lemma 1 の `|V̂| ≤ Sv` が保証しているが、我々の per-instance 形では
+   「2 回目の適用が 1 回目の `ncard` 上界を保つ」ことを**別途言う**必要がある（`κ` の側を触らない
+   構成なので自明に近いが、未検証）。
+
+### 11.7 壁と撤退ライン
+
+⚠ **L13 / L14 / L15 のいずれでも `@residual(wall:…)` は 1 本も立っていない / 共有 sorry 補題の
+候補も 0 件**。§9.9 の壁 0 件判定はそのまま有効で、追加すべき行も無い。再導出コマンド:
+`rg -n 'sorry|@residual' InformationTheory/Shannon/BroadcastChannel/Marton/Objective*.lean
+InformationTheory/Shannon/BroadcastChannel/Marton/SupportReduction.lean`。
+
+- **親プラン §6 の撤退ライン 3 本は不発火**（逐語で照合）:
+  「L8 の棚卸しで軸 T3-α が gate を通らない」= L8 で (a′) 決定済 ⟹ 触れない。
+  「L14 の棚卸しで層 3 に載せられる散文が 1 本も無い」= 層 3 に載る成果
+  （`exists_support_card_le_martonWeightedSum_measure`）が landing 済 ⟹ 不発火。
+  「20 leg 使い切って未達」= 未到達。
+- ⚠ **ただし予算の位置は正直に書く**: 親プラン §5 の可変枠 **L2–L15 は L15 で使い切り**、
+  残るのは L16–L18（層 3 の集中枠 3 本）+ L19（収穫）+ L20（記録）である。§11.6 の残件 2 件
+  （うち (ii) は鏡像 1 式）を **3 leg で入れる**のが次 leg の前提条件になる。⚠ §11.5 の実測
+  （橋 1 箇所で +270 行）を踏まえると、**(ii) をフルに鏡像化する路線は 3 leg に収まらない公算がある**
+  ⟹ 次 leg の最初の判断は「(ii) を鏡像化するか、標的を `V₁` 側 1 変数の基数境界へ**明示的に**
+  絞って (a′-1) を言い直すか」である。⚠ 後者を採る場合も**撤退ではなく標的の再選択**なので、
+  §8.2 の表と同じ形式で「何が言えて何が言えないか」を書くこと（`@residual(wall:…)` は切らない —
+  facts §L7 行 7 のとおり文献側では 2009–2011 に閉じている）。
+- honesty ゲートは launch 条件外で不発火（新規 `sorry` / `@residual` の導入 0 / honesty 上意味の
+  変わる署名変更 0）。規約ゲートは L13 / L14 / L15 の 3 回とも **PASS**。
+
+### 11.8 掃除候補（低優先。§10.5 の更新）
+
+1. **§10.5 の `compProd_real_singleton_mul` 3 重複は未着手のまま**
+   （`…/Marton/MarkovCore/Receiver1.lean:571` / `Receiver2.lean:500` の `have hcompProd` と
+   `ObjectiveVectorForm.lean:97` の private 1 本）。新規追加なので**波及 0**。
+2. ⚠ **新規 1 件 — `wzPmfMeasure` が `ChannelCoding.pmfToMeasure` の逐語同一コピー**。
+   `InformationTheory/Shannon/WynerZiv/Converse/Prelim.lean:100`（`def`）+ `:104` / `:118` / `:129`
+   （補題 3 本）が、`ShannonTheorem.lean:55` / `:60` / `:76` / `:95` と**本体まで逐語同一**
+   （`∑ t, ENNReal.ofReal (p t) • Measure.dirac t`、証明も `Measure.finsetSum_apply` →
+   `Finset.sum_eq_single` の同じ手順）。docstring 自身が重複を認めている
+   （`Prelim.lean:89-93` の節コメント逐語: "Mirrors `ChannelCoding.pmfToMeasure` (kept local to
+   avoid a heavy `ShannonTheorem` import)."）。
+   ⚠ **その回避理由は現 HEAD では成立しない（機械確認）**: `Prelim.lean` の import 4 本
+   （`WynerZiv.Operational` / `WynerZiv.FactorizableRate` / `WynerZiv.ConverseGateway` /
+   `ChannelCoding.ConverseMemorylessMarkov`）だけを import した scratch で
+   `#check @InformationTheory.Shannon.ChannelCoding.pmfToMeasure` が
+   `{α : Type u_1} → [Fintype α] → [inst : MeasurableSpace α] → (α → ℝ) → Measure α` を返す
+   ⟹ **`pmfToMeasure` は既に import 閉包内に在る**（前 2 本のどちらかが引き込んでいる。
+   ⚠ 4 本のうち後ろ 2 本だけでは届かない = 経路は前 2 本側）。
+   さらに**同じ WynerZiv 家系の別ファイルは既に共有版を消費している**
+   （`WynerZiv/Achievability/Concentration.lean:650-658` の `wz_pmfToMeasure_isFiniteMeasure` が
+   `ChannelCoding.pmfToMeasure` を直接 `unfold` している）⟹ 局所コピーの理由は残っていない。
+   ⚠ 削除は `private` 4 本の差し替えなので**外部波及 0**（`private` = file-scoped）。
+3. ⚠ **移設候補 1 件 — `wz_entropy_map_injective`**（§11.6 (i)）。`entropy_measurableEquiv_comp`
+   （`Shannon/Pi.lean:36`）の真の一般化であり、置き場所は WynerZiv の
+   `Achievability/Covering.lean`（1384 行、WynerZiv 7 本 import）で**他家系から呼びにくい**。
+   ⚠ **移設なら 3 decl / 2 file に触る**（`scripts/dep_consumers.sh` 実測、§11.6 の表）、
+   **`Shannon/Pi.lean` 側に汎用版を新規に置くなら波及 0**（ただし一時的に重複が 1 件増える）。
