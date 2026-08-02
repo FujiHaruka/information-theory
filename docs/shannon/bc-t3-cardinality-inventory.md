@@ -1048,6 +1048,32 @@ theorem closure_convexHull_martonRegionUnion_eq_bounded (W : BCChannel α β₁ 
           (K : Kernel _ α) (_ : IsMarkovKernel K), martonRegion pV K W))
 ```
 
+⚠ **(a′-1) の署名は本ルート (C) の射程より広い — L11 の実測で判明**（⚠ 我々の演繹。展開は
+`Marton/Setup.lean:244` / `:252` / `:262` の逐語定義から機械的。`H(·)` は
+`entropy (martonJointDistribution pV K W) ·` の略記）。`U := V₁` と置き `pV = q ⊗ₘ κ`（`κ` 固定）
+として `q = p(v₁)` だけを動かすと:
+
+- `martonInfo₂ − martonInfoV₁V₂ = (H(Y₂) − H(V₂,Y₂)) + (H(V₁,V₂) − H(V₁))`
+  ⟹ **`H(V₂)` は完全に相殺する**。第 1 括弧は `−H(V₂|Y₂)` = 凸核（§9.1、`convexOn_negCondEntropy`
+  (`Marton/ObjectiveConvexity.lean:43`) の `f`）、第 2 括弧は `H(V₂|V₁) = ∑_u q(u)·H(κ_u)` で
+  `q` について**線型** ⟹ `auxWeightObjective` (`同:86`) の `w` slot にそのまま載る。
+- `martonInfo₁ = H(Y₁) + (H(V₁) − H(V₁,Y₁)) = H(Y₁) − H(Y₁|V₁)` ⟹ `H(Y₁|V₁)` は線型、
+  `H(Y₁)` は集約 `p(x)` のみの関数なので `exists_support_card_le_of_convexOn_add_aggregate`
+  (`Marton/SupportReduction.lean:219`) の `g` に吸収される（`g` に凸性も可測性も要らない）。
+- ⚠ **しかし一般の `μ₂ > 0` では `μ₂·H(V₂)` が残る**。`p(v₂) = ∑_u q(u)·κ(v₂|u)` は `q` について
+  線型で `Real.concaveOn_negMulLog`（§9.4 の表）より `H(V₂)` は `q` について**凹**、
+  **かつ集約 `p(x)` の関数でもない**（`p(v₂)` は `p(x)` から決まらない）⟹ **凸 slot・線型 slot・
+  集約 slot のどれにも載らない = 本機構の射程外**。`p(v₂)` も集約に足すと `X := α ⊕ V₂` となり
+  基数定数が `\|α\|+\|V₂\|` に膨らむ（= §L7 が記録した発散する相互再帰）。
+
+⟹ **上の (a′-1) は `μ₁ μ₂ μ₃ ≥ 0` の全域を量化しているが、C ルートで届くのは `μ₂ = 0` 系列と
+対称の `μ₁ = 0` 系列だけ**である。⚠ **署名側を 2 系列に絞ること**（`(hμ₂ : μ₂ = 0)` を足した版と
+その対称版の 2 本に割る、あるいは本節末尾の `(μ₁−μ₂)I₁ + μ₂S` 形で述べる）— 全域版のまま実装へ
+渡すと under-hypothesis になる。⚠ これは L7 が記録した「標的言明が文献より強い」の再演である。
+なお本節末尾の 3 段（`geometric_hahn_banach_closed_point` → 分離汎関数 → 支持関数）が要求する重みは
+**まさにその 2 系列だけ**（本節末尾の逐語「⚠ ここで要る重みは `μ₂ = 0` 系列と `μ₁ = 0` 系列だけ」）
+なので、**射程を絞っても (a′-2) は閉じる**。
+
 | 案 | 定義変更 | 文献の証明が届くか | 領域の切り詰めが出るか | 追加債務 |
 |---|---|---|---|---|
 | (a) スカラーのみ | 無し | **届く** | 出ない（§7.6 の代償） | 無し |
@@ -1419,16 +1445,24 @@ noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ :=
 `{Ω : Type*} [MeasurableSpace Ω]` / `{X : Type*} [Fintype X] [DecidableEq X] [Nonempty X]
 [MeasurableSpace X] [MeasurableSingletonClass X]` である（`entropy` の署名に載る）。
 
-**判定: §4.5 の主張は正しい。ただし方向を分けて読むこと（⚠ 我々の演繹）**:
+**判定: §4.5 の主張は正しい。ただし方向と水準を分けて読むこと（⚠ 我々の演繹）**:
 
-- **測度 → ベクトル**: `entropy μ Xs = ∑ x, negMulLog (P.real {x})`（`P := μ.map Xs`）は**定義的一致**。
-  `MaxEntropy/Basic.lean:244` が実際に `:= rfl` で書いている ⟹ **橋は `rfl`、コスト 0**。
+- **測度 → ベクトル / 水準 1（`entropy` の展開）**: `entropy μ Xs = ∑ x, negMulLog (P.real {x})`
+  （`P := μ.map Xs`）は**定義的一致**。`MaxEntropy/Basic.lean:244` が実際に `:= rfl` で書いている
+  ⟹ **この段だけは `rfl`、コスト 0**。
+- ⚠ **測度 → ベクトル / 水準 2（marginal の分解）は `rfl` ではない**（L11 の実測。前版はこの 2 水準を
+  分けずに「橋は `rfl`、コスト 0」と書いていた）。`(μ.map g).real {x}` を `∑ u, q u * k u x` の形へ
+  書き換える段は**周辺化の計算**であり、`map_real_singleton_fiber_sum`
+  (`InformationTheory/Probability/SingletonMass.lean:35`) で fiber 和へ開いてから
+  `martonJointDistribution_real_singleton`
+  (`Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean:63`) を各項に当てる 2 段が要る。
+  ⚠ **壁ではない** — この 2 資産の合成で埋まり、L11 で実測 95 行 / proof done（§10）。
 - **ベクトル → 測度**: 逆向き（任意の `q : X → ℝ` を測度に持ち上げる）は `rfl` ではなく
   `pmfToMeasure` + `pmfToMeasure_apply_singleton`（§4.5 の表）を経由する。
 
 ⟹ **本 leg の座標化は「測度 → ベクトル」向きだけで足りる**（`f` はベクトル上で定義し、
 消費側で `entropy` に `rfl` で戻す）ので、§4.5 の「座標化は安い」は**維持される**。
-⚠ 前提は崩れていない。
+⚠ 前提は崩れていないが、「安い」の内訳は「水準 1 が 0 行 / 水準 2 が §10 の実測」である。
 
 ### 9.6 Q6 — in-project 凸性資産の棚卸し（**前在庫の主張を一部修正**）
 
@@ -1466,12 +1500,14 @@ noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ :=
 | **C. WZ 資産の再利用** ✓ | `negMulLog_marginal_gap_le_joint_gap` を移項 | 不要（コンビネータのみ） | **proof done で在る** | **45 行 / 新規補題 0**（機械検証済） | **✓ 採用** |
 | A. perspective 同時凸性 | `(a,b) ↦ a·log(a/b)` の同時凸性 | **`"perspective"` = 0 件** | 無し | 同時凸性の自作 120–200 行 + 和への持ち上げ | ✗ |
 | B. Gibbs 変分 | `H(V\|Z) = inf_r …` + アフィン族の inf | **`iInf` コンビネータ 0 件** | **片側 (`≤`) のみ** | 上限到達 + コンビネータ自作、200 行超 | ✗ |
-| D. measure 形 KL 同時凸性 | `klDiv_joint_convex` | 0 件 | **proof done で在る** | `ℝ≥0∞ → ℝ` の `.toReal` 橋 + 有限性 + `IsFiniteMeasure` 供給で 80–150 行 | △ 予備 |
+| D. measure 形 KL 同時凸性 | `klDiv_joint_convex` | 0 件 | **proof done で在る** | `ℝ≥0∞ → ℝ` の `.toReal` 橋 + 有限性 + `IsFiniteMeasure` 供給で 80–150 行 | ⚠ **不要（C が通過）** |
 
-⚠ **D を予備として残す理由**: C は `Fintype V/Z` のベクトル形で完結するが、
+⚠ **D を予備としていた理由と、それが消えた経緯**: C は `Fintype V/Z` のベクトル形で完結するが、
 消費側の `martonInfo₁ / martonInfo₂ / martonInfoV₁V₂` は**測度形**である（`martonRegion_convex` の
 署名逐語: `pV : Measure (V₁ × V₂)` / `K : Kernel (V₁ × V₂) α`）。C を採る場合、
-§9.5 の「測度 → ベクトル」`rfl` 橋で降ろす段が要る。そこが詰まったときの逃げ道が D。
+§9.5 の「測度 → ベクトル」で降ろす段が要る。**その段が L11 で proof done で通った**（§10）ので、
+**D は逃げ道として不要になった**。⚠ ただし `klDiv_joint_convex` 自体は在庫として生きている
+（別の目的関数形が要る場合の資産、§9.2）。
 
 ### 9.8 自己構築が要る要素（優先順）
 
@@ -1480,19 +1516,30 @@ noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ :=
 | 1 | `negCondEnt_convexOn`（`−H(V\|Z)` の凸性、ベクトル形） | §9.1.3 逐語をそのまま | **20 行**（機械検証済） | `∑ p : V × Z` と `∑ z, ∑ v` の順序差 — `Finset.sum_comm` + `Fintype.sum_prod_type` の 2 段が要る（`simp` の高階単一化は**発火しない**ので `rw [← hflip …]` を明示する） |
 | 2 | `convex_nonneg_pi` | §9.1.3 逐語 | **3 行** | Mathlib の `convex_Ici` は `Set.Ici` 形。`{q \| 0 ≤ q}` との同一視を挟むより自作が短い |
 | 3 | 線型写像との合成 | §9.1.3 の `negCondEnt_comp_convexOn` | **22 行**（機械検証済） | `ConvexOn.comp_linearMap` は `(⇑g ⁻¹' s)` を返すので `ConvexOn.subset` で `{q \| 0 ≤ q}` に落とす段が必須 |
-| 4 | 線型項 `−H(Y\|U)+H(V\|U)` を載せる | `LinearMap.convexOn` + `ConvexOn.add` | 30–60 行 | `q(u)` について線型であることの証明（`p₀(v,x\|u)` 固定の逐語確認が要る） |
-| 5 | 定数項 `H(Y)` | `convexOn_const` | 5–10 行 | `q` を動かしても `p(x)` が保存されることが前提（`exists_support_card_le_of_convexOn` の `hA` / 結論の `∀ x, ∑ i, q' i * A i x = ∑ i, q i * A i x` がまさにこれ） |
-| 6 | 測度形 ↔ ベクトル形の降ろし | `entropy` の `rfl`（§9.5）+ `pmfToMeasure`（§4.5） | 40–90 行 | ⚠ **ここが C の唯一の未検証段**。`martonInfo*` の定義を Read してから見積り直すこと |
+| 4 | 線型項 `−H(Y\|U)+H(V\|U)` を載せる | `LinearMap.convexOn` + `ConvexOn.add` | ⚠ **#6 に吸収**（同じ 2 補題の再適用） | `q(u)` について線型であることの証明（`p₀(v,x\|u)` 固定の逐語確認が要る） |
+| 5 | 定数項 `H(Y)` | `convexOn_const` / ⚠ 実際には `exists_support_card_le_of_convexOn_add_aggregate` の `g` | ⚠ **#6 に吸収** | 定数ではなく**集約 `p(x)` の関数**だった（`H(Y₁)` は `p(x)` から決まる）⟹ `convexOn_const` ではなく集約系で処理する |
+| 6 | 測度形 ↔ ベクトル形の降ろし | §9.5 水準 1（`rfl`）+ `map_real_singleton_fiber_sum` + `martonJointDistribution_real_singleton` + `Measure.condKernel` 系 | ⚠ **40–90 行 → 105–175 行に改訂**（内訳は下記） | ⚠ 水準 2 は `rfl` ではない（§9.5）。`pmfToMeasure` は**この向きでは使わない** |
 
-**合計の見積り更新**: §8.2 が (a′-1) = 480–800 行としたうちの「部品 (3a) 凸性そのもの」は
-**200–350 行の想定に対し 120–210 行に下がる**（#1–#3 の 45 行が確定値、#4–#6 が残り）。
-⚠ **総額 480–800 行は動かさない** — 減ったのは (3a) の内数だけであり、部品 1 / 2 / 4 は未着手のままである。
+**#6 の内訳（L11 の実測に基づく改訂。⚠ 我々の演繹）**: master 補題（任意射影 `g` の 5 重和 + `if`）
+25–40 行 / `(V₂,Y₂)`-周辺 atom 20–35 行 / `A` 行（`A u x = ∑ v₂, (κ u).real {v₂} * (K (u,v₂)).real {x}`）
+とその行和 1 で 15–25 行 / `H(Y₁)` の集約表示 15–25 行 / `pV = q ⊗ₘ κ` の disintegration 20–40 行 /
+集約系（`…_add_aggregate` への接続）8–12 行 ⟹ **105–175 行**。
+
+**合計の見積り更新**: #4（30–60）と #5（5–10）は**同じ 2 補題の再適用**なので #6 に吸収され、
+**#4+#5+#6 = 75–160 → 130–210 行**。⟹ §8.2 が (a′-1) = 480–800 行としたうちの
+「部品 (3a) 凸性そのもの」は **120–210 → 175–275 行**（#1–#3 の 45 行が確定値）。
+⚠ **これは §8.2 の (3a) 原予算 200–350 行の内側**である。
+⚠ **総額 (a′-1) 480–800 行 + (a′-2) 60–120 行は動かさない** — 動いたのは (3a) の内数だけであり、
+部品 1 / 2 / 4 は未着手のままである。⚠ 「凸性が既に在ったのだから全体が軽くなった」と読むのは
+§7.4 / §9.10 の誤読の再演になる。
 
 ### 9.9 Mathlib の壁の列挙 — **本 leg に壁は 0 件**
 
 ⚠ **`@residual(wall:…)` は 1 本も切らない。** 以下は「Mathlib に無い」という事実の列挙であり、
 **すべて in-project 資産または 45 行の自作で埋まる**ので壁ではない
-（親プラン `bc-open-problem-t3-plan.md:264` / facts §L7 行 7 の判定と整合）。
+（親プラン `bc-open-problem-t3-plan.md` **§5「leg 予算と配分」**の leg 台帳
+「⚠ `@residual(wall:…)` は切らない」の項 / facts §L7 行 7 の判定と整合。
+⚠ 行番号での参照は leg ごとにずれるので**節名で参照する**）。
 
 | Mathlib に無いもの | loogle 逐語 | 埋め方 | 壁か |
 |---|---|---|---|
@@ -1571,4 +1618,67 @@ end InformationTheory.Shannon.BroadcastChannel.Marton
 `fun q ↦ c + lin q + …` の構文形にそのまま当たるかは実装時に確認）。
 ⚠ **`martonInfo₁ / martonInfo₂ / martonInfoV₁V₂`（測度形）をこの `f` に載せる段は本調査の範囲外**
 であり、そこが §9.8 の #6 = C ルートの唯一の未検証段である。実装は gateway-atom-first で
-#6 を 1 本投げてから残りを決めること。
+#6 を 1 本投げてから残りを決めること。⟹ **その 1 本は L11 で通った（§10）**。
+
+---
+
+## §10 L11 の実測 — 測度形 → ベクトル形の降ろし
+
+### 10.0 一行判定
+
+**§9.8 の #6（C ルートの唯一の未検証段）の gateway atom は proof done で通り、壁は 0 件。**
+残件は 4 つに縮んだ（§10.3）。⚠ 見積りは**上方**改訂（40–90 → 105–175 行、§9.8）だが、
+それでも §8.2 の (3a) 原予算 200–350 行の内側であり、**総額は動かさない**。
+
+### 10.1 landing した宣言（すべて `sorry` 0 / `@residual` 0）
+
+| decl | file:line | 型クラス前提（逐語） | 結論形 |
+|---|---|---|---|
+| `marton_map_V₂Y₂_real_singleton_eq_sum` `@[entry_point]` | `Shannon/BroadcastChannel/Marton/ObjectiveVectorForm.lean:64` | `[Fintype V₁] [Nonempty V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]`（`V₂ α β₁ β₂` も同型の 4 本ずつ）+ 引数側の `[IsProbabilityMeasure q] [IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W]` | `((martonJointDistribution (q ⊗ₘ κ) K W).map (fun p ↦ (p.2.1, p.2.2.2.2))).real {(v₂, y₂)} = ∑ u : V₁, q.real {u} * ((κ u).real {v₂} * ∑ x : α, (K (u, v₂)).real {x} * ∑ y₁ : β₁, (W x).real {(y₁, y₂)})` |
+| `martonJointDistribution_map_real_singleton` `[private]` | 同 `:39` | 上記 + `{γ : Type*} [MeasurableSpace γ] [MeasurableSingletonClass γ] [DecidableEq γ]` | 任意射影 `g` について 5 重和 + `if` の master 形（他の 5 本のエントロピーもこれの再適用で出る） |
+| `exists_support_card_le_of_convexOn_add_aggregate` `@[entry_point]` | `…/Marton/SupportReduction.lean:219` | `{ι : Type*} [Fintype ι] {X : Type*} [Fintype X]` | `f q + g (fun x ↦ ∑ i, q i * A i x) ≤ f q' + g (fun x ↦ ∑ i, q' i * A i x)` ほか 3 連言。⚠ **`g` に凸性も可測性も仮定しない** |
+| `auxWeightObjective`（`t : ℝ` slot 追加） | `…/Marton/ObjectiveConvexity.lean:86` | `[Fintype U] [Fintype V] [Fintype Z] [Fintype X]` | `c + (∑ u, q u * w u) + t * ((∑ z, negMulLog (∑ v, ∑ u, q u * k u (v, z))) - ∑ p : V × Z, negMulLog (∑ u, q u * k u p))` |
+| `convexOn_auxWeightObjective` / `exists_support_card_le_auxWeightObjective` | 同 `:94` / `:103` | 同上 | ⚠ **`(ht : 0 ≤ t)` が追加**（`ConvexOn.smul` で 1 行） |
+
+### 10.2 消費した既存資産（新規補題を書かずに済んだもの）
+
+| 資産 | file:line | 何を与えたか |
+|---|---|---|
+| `InformationTheory.map_real_singleton_fiber_sum` | `InformationTheory/Probability/SingletonMass.lean:35` | `(μ.map f).real {x}` を fiber 上の `μ.real` の和へ開く（`[SigmaFinite μ]` + `[DecidableEq δ]` が要る） |
+| `…Marton.martonJointDistribution_real_singleton` | `…/Marton/MarkovCore/Prelim.lean:63` | 5 つ組の singleton 質量 = `pV.real * (K _).real * (W _).real` |
+| `…Shannon.jointDistribution_singleton` | `Shannon/IIDProductInput/Basic.lean:244` | `⊗ₘ` の singleton 質量（`ℝ≥0∞` 形。`.real` 形は §10.5） |
+
+### 10.3 残件 4 つ（§9.8 #6 の未着手分）
+
+| 残件 | 見込みの経路 | ⚠ 型クラス前提の逐語確認 |
+|---|---|---|
+| `A u x = ∑ v₂, (κ u).real {v₂} * (K (u,v₂)).real {x}` とその行和 1 | §10.1 の master 補題の再適用 + `sum_measureReal_singleton_univ_eq_one` (`SingletonMass.lean:30`) | 追加なし |
+| 線型項 `w`（`H(Y₁\|V₁)` と `H(κ_u)`） | 同 master の再適用 | 追加なし |
+| `H(Y₁)` の集約表示 | `…_add_aggregate` の `g`（§10.1） | 追加なし |
+| `pV = q ⊗ₘ κ` の disintegration | `Measure.disintegrate` (`Mathlib/Probability/Kernel/Disintegration/Basic.lean:63`) + `Measure.condKernel.instIsCondKernel` (`…/StandardBorel.lean:370`) + `Measure.instIsMarkovKernelCondKernel` (`同:382`) | ⚠ **`[StandardBorelSpace Ω] [Nonempty Ω]`**（`…/StandardBorel.lean:77` の `variable` 逐語）**+ `[IsFiniteMeasure ρ]` を要求する**。BC 家系では `[Fintype _] → [Countable _]` と `[MeasurableSingletonClass _]` から `MeasurableSingletonClass.toDiscreteMeasurableSpace` (`Mathlib/MeasureTheory/MeasurableSpace/Defs.lean:551`) → `standardBorelSpace_of_discreteMeasurableSpace` (`Mathlib/MeasureTheory/Constructions/Polish/Basic.lean:119`) で解決し、`[Nonempty V₂]` は変数ブロックに既在 ⟹ **署名に増えない**（前例 `Shannon/Entropy.lean:53` も同じ経路） |
+
+### 10.4 設計判断（⚠ 我々の演繹）
+
+- **`pV = q ⊗ₘ κ` の disintegration は必須**。代替案「`U := V₁ × V₂` として `q := pV` 全体を動かす」は
+  **却下**: そのとき線型項だった `H(V₂|V₁)` が `q` について**凹**になり
+  （`convexOn_negCondEntropy` (`…/Marton/ObjectiveConvexity.lean:43`) が `−H(V|Z)` の同時法則に関する
+  凸性を述べている = `H(V₂|V₁)` は同時法則について凹）、`auxWeightObjective` の線型 slot に載らない。
+- **`t : ℝ` slot の必要性**: 凸括弧の係数は §8.2 の展開で `μ₂ + μ₃` になり、退化重み `0` も取る
+  ⟹ 係数 1 固定では届かない。`(ht : 0 ≤ t)` は `ConvexOn.smul`（§9.4 の表）の前提そのもので、
+  **`μ ≥ 0` から自動で供給される**（load-bearing ではなく regularity）。
+
+### 10.5 掃除候補（低優先）
+
+`(pV ⊗ₘ K).real {(p,x)} = pV.real {p} * (K p).real {x}` の `have` が
+`…/Marton/MarkovCore/Receiver1.lean:571` / `Receiver2.lean:500` / `ObjectiveVectorForm.lean:75` の
+**3 箇所に重複**している（いずれも `jointDistribution_singleton` + `jointDistribution_def` +
+`ENNReal.toReal_mul` の同じ 4 行）。公開 1 本を `InformationTheory/Probability/SingletonMass.lean`
+（Mathlib のみに依存する層なので生の `⊗ₘ` 形で述べる）に置けば**署名変更なしで畳める**
+⟹ 新規追加なので**波及 0**。
+
+### 10.6 壁と撤退ライン
+
+⚠ **本 leg で `@residual(wall:…)` は 1 本も立っていない / 共有 sorry 補題の候補も 0 件。**
+§9.9 の壁 0 件判定はそのまま有効で、追加すべき行も無い。
+撤退ライン 3 本（親プラン §6）は**どれも触れず、発火しない** — L11 は §9.8 #6 の gateway atom であり、
+軸の gate でも層 3 の棚卸しでもない。⚠ §6.5 の予算警告は依然有効（§9.10）。
