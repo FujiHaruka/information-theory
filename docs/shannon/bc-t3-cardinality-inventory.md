@@ -1622,20 +1622,26 @@ end InformationTheory.Shannon.BroadcastChannel.Marton
 
 ---
 
-## §10 L11 の実測 — 測度形 → ベクトル形の降ろし
+## §10 L11–L12 の実測 — 測度形 → ベクトル形の降ろし
 
 ### 10.0 一行判定
 
-**§9.8 の #6（C ルートの唯一の未検証段）の gateway atom は proof done で通り、壁は 0 件。**
-残件は 4 つに縮んだ（§10.3）。⚠ 見積りは**上方**改訂（40–90 → 105–175 行、§9.8）だが、
-それでも §8.2 の (3a) 原予算 200–350 行の内側であり、**総額は動かさない**。
+**§9.8 の #6（C ルートの唯一の未検証段）は 3 汎関数が要る 7 射影すべてが proof done で降り、壁は 0 件。**
+L11 の gateway atom に続き、L12 で残り 6 射影 + 集約行 + 行和 1 が `@[entry_point]` で landing（§10.1）。
+残件は **1 つだけ**（`pV = q ⊗ₘ κ` の disintegration、§10.3）で、その先は目的関数の組み立て。
+⚠ 実測は見積りを超えた（§10.7）が、超過は §8.2 の (3a) の**内数の再配分**として記録するのみで、
+**総額（(a′-1) 480–800 行 + (a′-2) 60–120 行）は据え置き**。
 
 ### 10.1 landing した宣言（すべて `sorry` 0 / `@residual` 0）
 
 | decl | file:line | 型クラス前提（逐語） | 結論形 |
 |---|---|---|---|
-| `marton_map_V₂Y₂_real_singleton_eq_sum` `@[entry_point]` | `Shannon/BroadcastChannel/Marton/ObjectiveVectorForm.lean:64` | `[Fintype V₁] [Nonempty V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]`（`V₂ α β₁ β₂` も同型の 4 本ずつ）+ 引数側の `[IsProbabilityMeasure q] [IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W]` | `((martonJointDistribution (q ⊗ₘ κ) K W).map (fun p ↦ (p.2.1, p.2.2.2.2))).real {(v₂, y₂)} = ∑ u : V₁, q.real {u} * ((κ u).real {v₂} * ∑ x : α, (K (u, v₂)).real {x} * ∑ y₁ : β₁, (W x).real {(y₁, y₂)})` |
-| `martonJointDistribution_map_real_singleton` `[private]` | 同 `:39` | 上記 + `{γ : Type*} [MeasurableSpace γ] [MeasurableSingletonClass γ] [DecidableEq γ]` | 任意射影 `g` について 5 重和 + `if` の master 形（他の 5 本のエントロピーもこれの再適用で出る） |
+| `marton_map_V₂Y₂_real_singleton_eq_sum` `@[entry_point]` | `Shannon/BroadcastChannel/Marton/ObjectiveVectorForm.lean:274` | `[Fintype V₁] [Nonempty V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]`（`V₂ α β₁ β₂` も同型の 4 本ずつ）+ 引数側の `[IsProbabilityMeasure q] [IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W]` | `((martonJointDistribution (q ⊗ₘ κ) K W).map (fun p ↦ (p.2.1, p.2.2.2.2))).real {(v₂, y₂)} = ∑ u : V₁, q.real {u} * ((κ u).real {v₂} * ∑ x : α, (K (u, v₂)).real {x} * ∑ y₁ : β₁, (W x).real {(y₁, y₂)})` |
+| `martonJointDistribution_map_real_singleton` `[private]` | 同 `:64` | 上記 + `{γ : Type*} [MeasurableSpace γ] [MeasurableSingletonClass γ] [DecidableEq γ]` | 任意射影 `g` について 5 重和 + `if` の master 形（他の 5 本のエントロピーもこれの再適用で出る） |
+| `martonAuxRow`（def）/ `sum_martonAuxRow_eq_one` `@[entry_point]` | 同 `:61` / `:114` | 変数ブロックは上と同（後者は `omit [Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁] [Nonempty V₂] [Nonempty α] in` 付き）+ `[IsMarkovKernel κ] [IsMarkovKernel K]` | `martonAuxRow κ K u x = ∑ v₂ : V₂, (κ u).real {v₂} * (K (u, v₂)).real {x}` / `∑ x : α, martonAuxRow κ K u x = 1`（= §10.3 前版が挙げた「保存すべき行」と「行和 1」） |
+| `marton_map_X_real_singleton_eq_sum` `@[entry_point]` | 同 `:128` | 変数ブロックは上と同 + `[IsProbabilityMeasure q] [IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W]` | `((martonJointDistribution (q ⊗ₘ κ) K W).map (fun p ↦ p.2.2.1)).real {x} = ∑ u : V₁, q.real {u} * martonAuxRow κ K u x`（= 集約の実体） |
+| `marton_map_V₁_real_singleton_eq` / `marton_map_V₂_real_singleton_eq_sum` / `marton_map_V₁V₂_real_singleton_eq` / `marton_map_V₁Y₁_real_singleton_eq_sum` `@[entry_point]` | 同 `:150` / `:179` / `:208` / `:240` | 同上 | 順に `… .real {u} = q.real {u}` / `= ∑ u : V₁, q.real {u} * (κ u).real {v₂}` / `= q.real {u} * (κ u).real {v₂}` / `= q.real {u} * ∑ v₂ : V₂, (κ u).real {v₂} * ∑ x : α, (K (u, v₂)).real {x} * ∑ y₂ : β₂, (W x).real {(y₁, y₂)}` |
+| ⚠ `marton_map_Y₁_real_singleton_eq_aggregate` / `marton_map_Y₂_real_singleton_eq_aggregate` `@[entry_point]` | 同 `:301` / `:333` | 同上 | `((martonJointDistribution (q ⊗ₘ κ) K W).map (fun p ↦ p.2.2.2.1)).real {y₁} = ∑ x : α, (∑ u : V₁, q.real {u} * martonAuxRow κ K u x) * ∑ y₂ : β₂, (W x).real {(y₁, y₂)}`（`Y₂` 版は `β₁`/`β₂` を入替え）。⚠ 右辺が `q` を**集約を通してのみ**読むことが構文で見える = `exists_support_card_le_of_convexOn_add_aggregate` の `g` に載る根拠 |
 | `exists_support_card_le_of_convexOn_add_aggregate` `@[entry_point]` | `…/Marton/SupportReduction.lean:219` | `{ι : Type*} [Fintype ι] {X : Type*} [Fintype X]` | `f q + g (fun x ↦ ∑ i, q i * A i x) ≤ f q' + g (fun x ↦ ∑ i, q' i * A i x)` ほか 3 連言。⚠ **`g` に凸性も可測性も仮定しない** |
 | `auxWeightObjective`（`t : ℝ` slot 追加） | `…/Marton/ObjectiveConvexity.lean:86` | `[Fintype U] [Fintype V] [Fintype Z] [Fintype X]` | `c + (∑ u, q u * w u) + t * ((∑ z, negMulLog (∑ v, ∑ u, q u * k u (v, z))) - ∑ p : V × Z, negMulLog (∑ u, q u * k u p))` |
 | `convexOn_auxWeightObjective` / `exists_support_card_le_auxWeightObjective` | 同 `:94` / `:103` | 同上 | ⚠ **`(ht : 0 ≤ t)` が追加**（`ConvexOn.smul` で 1 行） |
@@ -1648,13 +1654,14 @@ end InformationTheory.Shannon.BroadcastChannel.Marton
 | `…Marton.martonJointDistribution_real_singleton` | `…/Marton/MarkovCore/Prelim.lean:63` | 5 つ組の singleton 質量 = `pV.real * (K _).real * (W _).real` |
 | `…Shannon.jointDistribution_singleton` | `Shannon/IIDProductInput/Basic.lean:244` | `⊗ₘ` の singleton 質量（`ℝ≥0∞` 形。`.real` 形は §10.5） |
 
-### 10.3 残件 4 つ（§9.8 #6 の未着手分）
+### 10.3 残件 1 つ（§9.8 #6 の未着手分）
+
+⚠ 前版が挙げた 4 件のうち 3 件 — 集約行 `A u x = ∑ v₂, (κ u).real {v₂} * (K (u,v₂)).real {x}` と
+その行和 1 / 線型項 `w`（`H(Y₁\|V₁)` と `H(κ_u)`）の射影 / `H(Y₁)` の集約表示 — は L12 で
+closing した（§10.1 の下 4 行。いずれも型クラス前提の追加なし）。残るのは次の 1 件のみ。
 
 | 残件 | 見込みの経路 | ⚠ 型クラス前提の逐語確認 |
 |---|---|---|
-| `A u x = ∑ v₂, (κ u).real {v₂} * (K (u,v₂)).real {x}` とその行和 1 | §10.1 の master 補題の再適用 + `sum_measureReal_singleton_univ_eq_one` (`SingletonMass.lean:30`) | 追加なし |
-| 線型項 `w`（`H(Y₁\|V₁)` と `H(κ_u)`） | 同 master の再適用 | 追加なし |
-| `H(Y₁)` の集約表示 | `…_add_aggregate` の `g`（§10.1） | 追加なし |
 | `pV = q ⊗ₘ κ` の disintegration | `Measure.disintegrate` (`Mathlib/Probability/Kernel/Disintegration/Basic.lean:63`) + `Measure.condKernel.instIsCondKernel` (`…/StandardBorel.lean:370`) + `Measure.instIsMarkovKernelCondKernel` (`同:382`) | ⚠ **`[StandardBorelSpace Ω] [Nonempty Ω]`**（`…/StandardBorel.lean:77` の `variable` 逐語）**+ `[IsFiniteMeasure ρ]` を要求する**。BC 家系では `[Fintype _] → [Countable _]` と `[MeasurableSingletonClass _]` から `MeasurableSingletonClass.toDiscreteMeasurableSpace` (`Mathlib/MeasureTheory/MeasurableSpace/Defs.lean:551`) → `standardBorelSpace_of_discreteMeasurableSpace` (`Mathlib/MeasureTheory/Constructions/Polish/Basic.lean:119`) で解決し、`[Nonempty V₂]` は変数ブロックに既在 ⟹ **署名に増えない**（前例 `Shannon/Entropy.lean:53` も同じ経路） |
 
 ### 10.4 設計判断（⚠ 我々の演繹）
@@ -1670,15 +1677,38 @@ end InformationTheory.Shannon.BroadcastChannel.Marton
 ### 10.5 掃除候補（低優先）
 
 `(pV ⊗ₘ K).real {(p,x)} = pV.real {p} * (K p).real {x}` の `have` が
-`…/Marton/MarkovCore/Receiver1.lean:571` / `Receiver2.lean:500` / `ObjectiveVectorForm.lean:75` の
+`…/Marton/MarkovCore/Receiver1.lean:571` / `Receiver2.lean:500` の `have hcompProd` と、L12 で
+`private lemma compProd_real_singleton_mul` (`ObjectiveVectorForm.lean:86`) として括り出した 1 本の
 **3 箇所に重複**している（いずれも `jointDistribution_singleton` + `jointDistribution_def` +
-`ENNReal.toReal_mul` の同じ 4 行）。公開 1 本を `InformationTheory/Probability/SingletonMass.lean`
-（Mathlib のみに依存する層なので生の `⊗ₘ` 形で述べる）に置けば**署名変更なしで畳める**
-⟹ 新規追加なので**波及 0**。
+`ENNReal.toReal_mul` の同じ 4 行で、Marton 固有の要素をひとつも含まない）。公開 1 本を
+`InformationTheory/Probability/SingletonMass.lean` か `…/Marton/MarkovCore/Prelim.lean` に置けば
+3 箇所が一度に消える ⟹ 新規追加なので**波及 0**。
 
 ### 10.6 壁と撤退ライン
 
-⚠ **本 leg で `@residual(wall:…)` は 1 本も立っていない / 共有 sorry 補題の候補も 0 件。**
+⚠ **L11 / L12 のいずれでも `@residual(wall:…)` は 1 本も立っていない / 共有 sorry 補題の候補も 0 件。**
 §9.9 の壁 0 件判定はそのまま有効で、追加すべき行も無い。
-撤退ライン 3 本（親プラン §6）は**どれも触れず、発火しない** — L11 は §9.8 #6 の gateway atom であり、
-軸の gate でも層 3 の棚卸しでもない。⚠ §6.5 の予算警告は依然有効（§9.10）。
+撤退ライン 3 本（親プラン §6）は**どれも触れず、発火しない** — L11 は §9.8 #6 の gateway atom、
+L12 はその残り 6 射影の同型反復であり、軸の gate でも層 3 の棚卸しでもない。
+⚠ §6.5 の予算警告は依然有効（§9.10）。
+
+### 10.7 ⚠ 見積りとの差（L12 の実測。総額は動かさない）
+
+- **行数**: 見積り 120–200 行に対し**実測 +267 行**（`ObjectiveVectorForm.lean` 95 → 362 行）。
+  増分は master 補題（§10.1）が返す 5 重和の `if` を潰す**定型句**であって新規の数学ではない
+  — `compProd_real_singleton_mul` / `sum_bcChannel_real_singleton_eq_one` /
+  `sum_compProd_mul_kernel_real_singleton` など private 補助 4 本
+  （`ObjectiveVectorForm.lean:64`–`:109`）に括り出して圧縮済み。⚠ 超過は §8.2 の (3a) の
+  **内数の再配分**として記録するだけであり、「全体が軽く / 重くなった」ではない（§7.4 の誤読の再演を避ける）。
+- **和の順序入れ替えは想定より軽かった**: 前版が「最も手数が要る見込み」とした `Y₁`/`Y₂` の
+  3 重和の巡回置換は Mathlib の `Finset.sum_comm_cycle` **1 本**で片付いた
+  （`ObjectiveVectorForm.lean:326` / `:358` で両定理とも一発でコンパイル）。乗法版の逐語 =
+  `Mathlib/Algebra/BigOperators/Group/Finset/Sigma.lean:127` `theorem prod_comm_cycle
+  {s : Finset γ} {t : Finset α} {u : Finset κ} {f : γ → α → κ → β} :
+  (∏ x ∈ s, ∏ y ∈ t, ∏ z ∈ u, f x y z) = ∏ z ∈ u, ∏ x ∈ s, ∏ y ∈ t, f x y z`。
+  加法版は同 `:126` の `@[to_additive]` 生成、型クラス前提は同 `:28` の `variable [CommMonoid β]`
+  の加法版 `[AddCommMonoid β]` のみ。
+- ⚠ **検索語の粒度の教訓**（逐語）: 名前を推測して丸ごと引く `loogle "Finset.sum_comm₃"` は
+  `unknown identifier 'Finset.sum_comm₃'` を返すだけで実名に届かない。部分文字列クエリ
+  `loogle '"sum_comm"'` は `Found 17 declarations whose name contains "sum_comm".` として
+  `Finset.sum_comm_cycle` を出す。**名前を当てにいく前に部分文字列で引くこと**。
