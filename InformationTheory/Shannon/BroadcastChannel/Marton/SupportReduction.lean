@@ -9,9 +9,10 @@ import Mathlib.Tactic.Linarith
 /-!
 # Support reduction for a convex objective on a transportation polytope
 
-A nonnegative weight vector `q : ι → ℝ` acting on a family of rows `A : ι → X → ℝ` can always be
-replaced by one supported on at most `Fintype.card X` indices, without moving the aggregate
-`fun x ↦ ∑ i, q i * A i x` and without decreasing the value of a convex objective `f`.
+A nonnegative weight vector `q : ι → ℝ` acting on a family of rows `A : ι → X → ℝ`, each of
+which sums to one, can always be replaced by one supported on at most `Fintype.card X` indices,
+without moving the aggregate `fun x ↦ ∑ i, q i * A i x` and without decreasing the value of a
+convex objective `f`.
 
 This is the mechanism behind cardinality bounds for auxiliary random variables: the rows are the
 conditional laws `A i = p(· | i)` on the alphabet `X`, the aggregate is the input law `p(x)` that
@@ -22,7 +23,8 @@ as well as `q` while killing one coordinate.
 
 ## Main statements
 
-* `exists_support_card_le_of_convexOn` — the support reduction described above.
+* `exists_support_card_le_of_convexOn` — a nonnegative weight vector can be replaced by one
+  supported on at most `Fintype.card X` indices, preserving the aggregate and not decreasing `f`.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -53,7 +55,8 @@ private lemma exists_dep_of_card_lt (A : ι → X → ℝ) (q : ι → ℝ)
       simpa using this
     have hsplit : ∑ i, c i * A i x = ∑ i ∈ S, c i * A i x :=
       (Finset.sum_subset (Finset.subset_univ S) fun i _ hiS ↦ by rw [hcnot i hiS, zero_mul]).symm
-    calc ∑ i, c i * A i x = ∑ i ∈ S.attach, c i.1 * A i.1 x := by
+    calc ∑ i, c i * A i x
+        = ∑ i ∈ S.attach, c i.1 * A i.1 x := by
           rw [Finset.sum_attach S fun i ↦ c i * A i x]; exact hsplit
       _ = ∑ i : {x // x ∈ S}, g i * A i.1 x := by
           rw [Finset.univ_eq_attach]
