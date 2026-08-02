@@ -14,6 +14,8 @@ alphabets.
 ## Main definitions
 
 * `bcAuxAlphabet k` — the auxiliary alphabet of cardinality `k + 1`.
+* `bcAuxMeasurableEquiv V` — a finite nonempty alphabet, as the auxiliary alphabet of its own
+  cardinality.
 * `martonRegionUnion W` — Marton's inner bound, as the closure of the union of `martonRegion`
   over the auxiliary laws on those alphabets.
 * `martonRegionUnionFullSupport W` — the same union restricted to the full-support indices,

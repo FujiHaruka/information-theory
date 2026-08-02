@@ -505,7 +505,10 @@ lemma exists_bcAuxAlphabet_martonInfo_eq {n : ℕ}
 most `martonAuxBound α` letters, without decreasing the weighted sum of the three informations of
 the region inequalities.  The second-receiver weight `μ₂` and the sum-rate weight `μ₃` scale the
 two convex entropy slots and are assumed nonnegative; the first-receiver weight `μ₁` is
-unrestricted.  The inner auxiliary alphabet is carried along unchanged. -/
+unrestricted.  The inner auxiliary alphabet is carried along unchanged, and no bound on its
+cardinality is claimed.  The replacing law and kernels depend on the weights.
+
+@audit:ok -/
 @[entry_point]
 theorem exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights
     (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
