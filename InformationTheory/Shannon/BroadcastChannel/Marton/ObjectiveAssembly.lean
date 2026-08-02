@@ -16,11 +16,20 @@ weights.  What survives is the negated conditional entropy `-H(V₂ | Y₂)` wit
 which is the convex part of `auxWeightObjective`, together with the entropy of the first output,
 which reads the weights only through the aggregate.
 
+The weight of the second region inequality is carried by a second convex slot: the information it
+weighs splits into the entropy of the second output, which again reads the weights only through
+the aggregate, and the negated conditional entropy of the second output given the inner auxiliary
+letter, which is the same convex slot with the roles of its two coordinates exchanged.  The
+weighted sum is therefore an instance of `auxWeightObjectiveTwoSlot` for the whole range of
+weights.
+
 ## Main definitions
 
 * `martonAuxCoeff` — the coefficient vector of the linear part of the objective.
 * `martonOutput₁Aggregate` — the part of the objective that reads the weights only through the
   channel-input aggregate, namely the entropy of the first output.
+* `martonOutput₂Aggregate` — the same for the second output, weighted by the weight of the second
+  region inequality.
 
 ## Main statements
 
@@ -32,6 +41,12 @@ which reads the weights only through the aggregate.
 * `exists_support_card_le_martonWeightedSum_measure` — the same replacement stated for the outer
   auxiliary law itself, as a probability measure whose support has at most `Fintype.card α`
   letters.
+* `martonWeightedSum_eq_auxWeightObjectiveTwoSlot_add_aggregate` — the weighted sum with all three
+  weights present is the two-slot objective plus the two aggregate terms.
+* `exists_support_card_le_martonWeightedSumAllWeights` — the support reduction of the weights for
+  the weighted sum with all three weights present.
+* `exists_support_card_le_martonWeightedSumAllWeights_measure` — the same replacement stated for
+  the outer auxiliary law itself.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -259,6 +274,90 @@ theorem exists_support_card_le_martonWeightedSum_measure
     exact hcard
   · haveI := pmfToMeasure_isProbabilityMeasure hmem
     rw [martonWeightedSum_eq_auxWeightObjective_add_aggregate (pmfToMeasure qv) κ K W μ₁ μ₃]
+    simp only [hreal]
+    exact hle
+
+/-- The weighted sum of the three informations of the region inequalities, with all three weights
+present, is the two-slot auxiliary-weight objective at the weight vector of the outer auxiliary
+marginal, plus two terms reading the weights only through the channel-input aggregate.  The weight
+of the second region inequality is carried by the second convex slot. -/
+@[entry_point]
+theorem martonWeightedSum_eq_auxWeightObjectiveTwoSlot_add_aggregate
+    (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (μ₁ μ₂ μ₃ : ℝ) :
+    μ₁ * martonInfo₁ (q ⊗ₘ κ) K W + μ₂ * martonInfo₂ (q ⊗ₘ κ) K W
+      + μ₃ * (martonInfo₁ (q ⊗ₘ κ) K W + martonInfo₂ (q ⊗ₘ κ) K W
+              - martonInfoV₁V₂ (q ⊗ₘ κ) K W)
+      = auxWeightObjectiveTwoSlot (martonAuxKernelSlot κ K W) (martonAuxCoeff κ K W μ₁ μ₃) 0 μ₃ μ₂
+          (fun u ↦ q.real {u})
+        + (martonOutput₁Aggregate W μ₁ μ₃ (fun x ↦ ∑ u, q.real {u} * martonAuxRow κ K u x)
+          + martonOutput₂Aggregate W μ₂ (fun x ↦ ∑ u, q.real {u} * martonAuxRow κ K u x)) := by
+  have h₁ := martonWeightedSum_eq_auxWeightObjective_add_aggregate q κ K W μ₁ μ₃
+  have h₂ := mul_martonInfo₂_eq_negCondEntropy_add_aggregate q κ K W μ₂
+  simp only [auxWeightObjectiveTwoSlot]
+  linarith
+
+/-- The weight vector of the outer auxiliary marginal can be replaced by a nonnegative weight
+vector supported on at most `Fintype.card α` letters, keeping the channel-input aggregate and not
+decreasing the weighted sum of the three informations, for the whole range of weights on the two
+region inequalities that the support reduction needs to be nonnegative. -/
+@[entry_point]
+theorem exists_support_card_le_martonWeightedSumAllWeights
+    (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (μ₁ μ₂ μ₃ : ℝ) (hμ₂ : 0 ≤ μ₂) (hμ₃ : 0 ≤ μ₃) :
+    ∃ q' : V₁ → ℝ, 0 ≤ q' ∧
+      (∀ x, ∑ u, q' u * martonAuxRow κ K u x = ∑ u, q.real {u} * martonAuxRow κ K u x) ∧
+      μ₁ * martonInfo₁ (q ⊗ₘ κ) K W + μ₂ * martonInfo₂ (q ⊗ₘ κ) K W
+        + μ₃ * (martonInfo₁ (q ⊗ₘ κ) K W + martonInfo₂ (q ⊗ₘ κ) K W
+                - martonInfoV₁V₂ (q ⊗ₘ κ) K W)
+        ≤ auxWeightObjectiveTwoSlot (martonAuxKernelSlot κ K W) (martonAuxCoeff κ K W μ₁ μ₃)
+            0 μ₃ μ₂ q'
+          + (martonOutput₁Aggregate W μ₁ μ₃ (fun x ↦ ∑ u, q' u * martonAuxRow κ K u x)
+            + martonOutput₂Aggregate W μ₂ (fun x ↦ ∑ u, q' u * martonAuxRow κ K u x)) ∧
+      {u | q' u ≠ 0}.ncard ≤ Fintype.card α := by
+  obtain ⟨q', hq'nonneg, hq'agg, hle, hcard⟩ :=
+    exists_support_card_le_auxWeightObjectiveTwoSlot_add_aggregate (martonAuxRow κ K)
+      (sum_martonAuxRow_eq_one κ K) (martonAuxKernelSlot κ K W)
+      (martonAuxKernelSlot_nonneg κ K W) (martonAuxCoeff κ K W μ₁ μ₃) 0 μ₃ μ₂ hμ₃ hμ₂
+      (fun a ↦ martonOutput₁Aggregate W μ₁ μ₃ a + martonOutput₂Aggregate W μ₂ a)
+      (fun u ↦ q.real {u}) fun _ ↦ measureReal_nonneg
+  refine ⟨q', hq'nonneg, hq'agg, ?_, hcard⟩
+  rw [martonWeightedSum_eq_auxWeightObjectiveTwoSlot_add_aggregate q κ K W μ₁ μ₂ μ₃]
+  exact hle
+
+/-- The outer auxiliary law can be replaced by a probability measure on the same auxiliary
+alphabet whose support has at most `Fintype.card α` letters, without decreasing the weighted sum
+of the three informations of the region inequalities, for the whole range of weights on the two
+region inequalities that the support reduction needs to be nonnegative. -/
+@[entry_point]
+theorem exists_support_card_le_martonWeightedSumAllWeights_measure
+    (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (μ₁ μ₂ μ₃ : ℝ) (hμ₂ : 0 ≤ μ₂) (hμ₃ : 0 ≤ μ₃) :
+    ∃ (q' : Measure V₁) (_ : IsProbabilityMeasure q'),
+      {u | q'.real {u} ≠ 0}.ncard ≤ Fintype.card α ∧
+      μ₁ * martonInfo₁ (q ⊗ₘ κ) K W + μ₂ * martonInfo₂ (q ⊗ₘ κ) K W
+        + μ₃ * (martonInfo₁ (q ⊗ₘ κ) K W + martonInfo₂ (q ⊗ₘ κ) K W
+                - martonInfoV₁V₂ (q ⊗ₘ κ) K W)
+        ≤ μ₁ * martonInfo₁ (q' ⊗ₘ κ) K W + μ₂ * martonInfo₂ (q' ⊗ₘ κ) K W
+          + μ₃ * (martonInfo₁ (q' ⊗ₘ κ) K W + martonInfo₂ (q' ⊗ₘ κ) K W
+                  - martonInfoV₁V₂ (q' ⊗ₘ κ) K W) := by
+  obtain ⟨qv, hqvnonneg, hqvagg, hle, hcard⟩ :=
+    exists_support_card_le_martonWeightedSumAllWeights q κ K W μ₁ μ₂ μ₃ hμ₂ hμ₃
+  have hmem : qv ∈ stdSimplex ℝ V₁ :=
+    ⟨fun u ↦ hqvnonneg u, sum_eq_one_of_martonAuxRow_aggregate q κ K qv hqvagg⟩
+  have hreal : ∀ u : V₁, (pmfToMeasure qv).real {u} = qv u := pmfToMeasure_real_singleton hmem
+  refine ⟨pmfToMeasure qv, pmfToMeasure_isProbabilityMeasure hmem, ?_, ?_⟩
+  · have hsupport : {u : V₁ | (pmfToMeasure qv).real {u} ≠ 0} = {u : V₁ | qv u ≠ 0} := by
+      ext u
+      simp only [Set.mem_setOf_eq, hreal u]
+    rw [hsupport]
+    exact hcard
+  · haveI := pmfToMeasure_isProbabilityMeasure hmem
+    rw [martonWeightedSum_eq_auxWeightObjectiveTwoSlot_add_aggregate (pmfToMeasure qv) κ K W
+      μ₁ μ₂ μ₃]
     simp only [hreal]
     exact hle
 

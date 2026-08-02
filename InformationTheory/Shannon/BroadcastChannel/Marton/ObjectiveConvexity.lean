@@ -21,9 +21,17 @@ objective is convex on the nonnegative orthant, so it can be fed to
 `exists_support_card_le_of_convexOn`: the weights can be replaced by weights supported on at most
 `Fintype.card X` indices, keeping the induced law on `X` and not decreasing the objective.
 
+Exchanging the roles of the two coordinates of the conditional law turns the same convexity
+statement into convexity of `-H(Z | V)`, so a second slot with its own nonnegative coefficient can
+be carried alongside the first one.  Both negated conditional entropies of a pair are therefore
+available at once, which is what the weighted sum of the region informations needs when the weight
+of the second region inequality is not zero.
+
 ## Main definitions
 
 * `auxWeightObjective` — the scalar objective as a function of the weight vector.
+* `auxWeightObjectiveTwoSlot` — the objective carrying a second convex slot, the negated
+  conditional entropy of the mixture with the two coordinates exchanged.
 
 ## Main statements
 
@@ -32,6 +40,11 @@ objective is convex on the nonnegative orthant, so it can be fed to
   on at most `Fintype.card X` indices without decreasing the objective.
 * `exists_support_card_le_auxWeightObjective_add_aggregate` — the same conclusion for the
   objective carrying an additional term that reads the weights only through the aggregate.
+* `convexOn_auxWeightObjectiveTwoSlot` — the two-slot objective is convex on the nonnegative
+  orthant.
+* `exists_support_card_le_auxWeightObjectiveTwoSlot_add_aggregate` — support reduction for the
+  two-slot objective carrying an additional term that reads the weights only through the
+  aggregate.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -74,6 +87,18 @@ theorem convexOn_negCondEntropy_mixture (k : U → V × Z → ℝ) (hk : ∀ u p
   have hsub : {q : U → ℝ | 0 ≤ q} ⊆ (⇑L) ⁻¹' {r : V × Z → ℝ | 0 ≤ r} :=
     fun q hq p ↦ Finset.sum_nonneg fun u _ ↦ mul_nonneg (hq u) (hk u p)
   exact (convexOn_negCondEntropy.comp_linearMap (E := (U → ℝ)) L).subset hsub convex_setOf_nonneg
+
+theorem convexOn_negCondEntropy_mixture_transpose (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) :
+    ConvexOn ℝ {q : U → ℝ | 0 ≤ q}
+      (fun q ↦ (∑ v, Real.negMulLog (∑ z, ∑ u, q u * k u (v, z)))
+        - ∑ p : V × Z, Real.negMulLog (∑ u, q u * k u p)) := by
+  refine (convexOn_negCondEntropy_mixture (V := Z) (Z := V) (fun u p ↦ k u (p.2, p.1))
+    fun u p ↦ hk u (p.2, p.1)).congr fun q _ ↦ ?_
+  dsimp only
+  congr 1
+  exact Fintype.sum_equiv (Equiv.prodComm Z V)
+    (fun p : Z × V ↦ Real.negMulLog (∑ u, q u * k u (p.2, p.1)))
+    (fun p : V × Z ↦ Real.negMulLog (∑ u, q u * k u p)) fun p ↦ rfl
 
 lemma convexOn_sum_mul (w : U → ℝ) :
     ConvexOn ℝ {q : U → ℝ | 0 ≤ q} (fun q ↦ ∑ u, q u * w u) := by
@@ -125,5 +150,38 @@ theorem exists_support_card_le_auxWeightObjective_add_aggregate (A : U → X →
       {u | q' u ≠ 0}.ncard ≤ Fintype.card X :=
   exists_support_card_le_of_convexOn_add_aggregate A hA (auxWeightObjective k w c t)
     (convexOn_auxWeightObjective k hk w c t ht) g q hq
+
+/-- The scalar objective carrying, on top of `auxWeightObjective`, a second convex slot with
+coefficient `s`: the negated conditional entropy of the mixture `∑ u, q u * k u` with the roles of
+the two coordinates exchanged.  Both slots mix the same family of conditional laws `k`, so the
+weighted sum of the region informations of the Marton inner bound is an instance of this shape for
+the whole range of weights, not only for those making the second slot vanish. -/
+noncomputable def auxWeightObjectiveTwoSlot (k : U → V × Z → ℝ) (w : U → ℝ) (c t s : ℝ)
+    (q : U → ℝ) : ℝ :=
+  auxWeightObjective k w c t q
+    + s * ((∑ v, Real.negMulLog (∑ z, ∑ u, q u * k u (v, z)))
+      - ∑ p : V × Z, Real.negMulLog (∑ u, q u * k u p))
+
+/-- The two-slot objective is convex on the nonnegative orthant, for nonnegative coefficients on
+the two entropy parts. -/
+@[entry_point]
+theorem convexOn_auxWeightObjectiveTwoSlot (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) (w : U → ℝ)
+    (c t s : ℝ) (ht : 0 ≤ t) (hs : 0 ≤ s) :
+    ConvexOn ℝ {q : U → ℝ | 0 ≤ q} (auxWeightObjectiveTwoSlot k w c t s) :=
+  (convexOn_auxWeightObjective k hk w c t ht).add
+    (by simpa only [smul_eq_mul] using (convexOn_negCondEntropy_mixture_transpose k hk).smul hs)
+
+/-- Support reduction for the two-slot objective carrying an additional term `g` that reads the
+weights only through the aggregate `fun x ↦ ∑ u, q u * A u x`. -/
+@[entry_point]
+theorem exists_support_card_le_auxWeightObjectiveTwoSlot_add_aggregate (A : U → X → ℝ)
+    (hA : ∀ u, ∑ x, A u x = 1) (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) (w : U → ℝ)
+    (c t s : ℝ) (ht : 0 ≤ t) (hs : 0 ≤ s) (g : (X → ℝ) → ℝ) (q : U → ℝ) (hq : 0 ≤ q) :
+    ∃ q' : U → ℝ, 0 ≤ q' ∧ (∀ x, ∑ u, q' u * A u x = ∑ u, q u * A u x) ∧
+      auxWeightObjectiveTwoSlot k w c t s q + g (fun x ↦ ∑ u, q u * A u x)
+        ≤ auxWeightObjectiveTwoSlot k w c t s q' + g (fun x ↦ ∑ u, q' u * A u x) ∧
+      {u | q' u ≠ 0}.ncard ≤ Fintype.card X :=
+  exists_support_card_le_of_convexOn_add_aggregate A hA (auxWeightObjectiveTwoSlot k w c t s)
+    (convexOn_auxWeightObjectiveTwoSlot k hk w c t s ht hs) g q hq
 
 end InformationTheory.Shannon.BroadcastChannel.Marton
