@@ -545,7 +545,9 @@ most `martonAuxBound α` letters, without decreasing the weighted sum of the thr
 the region inequalities.  The first-receiver weight `μ₁` and the sum-rate weight `μ₃` are assumed
 nonnegative; the second-receiver weight `μ₂` is unrestricted.  The outer auxiliary alphabet is
 carried along unchanged, and no bound on its cardinality is claimed.  The replacing law and kernel
-depend on the weights. -/
+depend on the weights.
+
+@audit:ok -/
 @[entry_point]
 theorem exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights_inner
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]

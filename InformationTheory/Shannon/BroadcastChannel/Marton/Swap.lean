@@ -31,6 +31,7 @@ variable {α β₁ β₂ V₁ V₂ : Type*}
   [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
   [MeasurableSpace V₁] [MeasurableSpace V₂]
 
+/-- @audit:ok -/
 lemma martonJointDistribution_swap
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -89,6 +90,7 @@ section FirstReceiver
 
 variable [Fintype V₂] [Fintype β₂]
 
+/-- @audit:ok -/
 lemma martonInfo₁_swap
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -108,6 +110,7 @@ section SecondReceiver
 
 variable [Fintype V₁] [Fintype β₁]
 
+/-- @audit:ok -/
 lemma martonInfo₂_swap
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -130,6 +133,7 @@ section Auxiliaries
 variable [Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁]
   [Fintype V₂] [Nonempty V₂] [MeasurableSingletonClass V₂]
 
+/-- @audit:ok -/
 lemma martonInfoV₁V₂_swap
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]

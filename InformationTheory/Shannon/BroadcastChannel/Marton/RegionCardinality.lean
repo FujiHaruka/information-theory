@@ -435,7 +435,8 @@ runs over finitely many cardinalities.
 
 Only the closed convex hull is unchanged: a point of the uncapped union lies in the closed convex
 hull of the capped one, not necessarily in the capped union itself, which is not claimed to be
-convex. -/
+convex.
+@audit:ok -/
 @[entry_point]
 theorem closure_convexHull_martonRegionUnion_eq_bounded (W : BCChannel α β₁ β₂)
     [IsMarkovKernel W] :
