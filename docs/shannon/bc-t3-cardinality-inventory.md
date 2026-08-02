@@ -3209,3 +3209,459 @@ L19 の最初の確認事項は項目 2 ではなく**項目 1 と項目 3** に
   付けると機械層にブロックされる）。本 leg は既存実態（`MartonUnion.lean` の掲載補題は全て bare で、
   module doc の bullet が説明を担う）に従った。⚠ 規約側を実態に寄せるなら **item 1 の headline 定義を
   `@[entry_point]` に限定**するのが筋。
+
+## §16 L19 の実測 — B（`V₂` 側の基数）は **closed**
+
+⚠ 本節は**追記であり §1–§15 は書き換えていない**（§15 が §14 に対して採ったのと同じ作法）。
+⚠ **§15.3 / §15.6 が記録した `RegionCardinality.lean` の行番号は本節の実装で下方へずれている** —
+対応表は §16.6 末尾。§15 の本文は履歴としてそのまま残す。
+
+### 16.0 一行判定 — **B は closed。proof done**
+
+headline は 2 本:
+
+* `exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights_inner`
+  （`Marton/CardinalityBound.lean:552`、`@[entry_point]` + `@audit:ok`）
+* `closure_convexHull_martonRegionUnion_eq_bounded`
+  （`Marton/RegionCardinality.lean:443`、`@[entry_point]` + `@audit:ok`）
+
+新規 1 ファイル `Marton/Swap.lean`（4 宣言）+ 既存 2 ファイルへの追記。3 ファイルとも
+**0 sorry / 0 `@residual`**、honesty / style の両ゲート PASS。⚠ **本節でも `@residual(wall:…)` は
+1 本も立てていない**（§9.9 / §11.7 / §12.5 / §13.6 / §14.8 / §15.0 の壁 0 件判定を維持）。
+
+到達状態の再導出（⚠ 機械で再導出できる値をキャッシュの根拠にしない）:
+
+```bash
+lake env lean InformationTheory/Shannon/BroadcastChannel/Marton/Swap.lean   # 0 byte
+rg -c 'sorry|@residual' InformationTheory/Shannon/BroadcastChannel/Marton/Swap.lean \
+  InformationTheory/Shannon/BroadcastChannel/Marton/CardinalityBound.lean \
+  InformationTheory/Shannon/BroadcastChannel/Marton/RegionCardinality.lean   # ヒット 0
+scripts/sig_view.ts --names InformationTheory/Shannon/BroadcastChannel/Marton/RegionCardinality.lean
+```
+
+⚠ **本在庫の作成時に独立に再実行した `#print axioms`**（HEAD = `c793cedb`。実装者・監査者の自己
+申告ではない）: `closure_convexHull_martonRegionUnion_eq_bounded` /
+`exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights_inner` / swap 4 本 /
+`martonRegionUnionBounded_nonempty` の **7 本とも `[propext, Classical.choice, Quot.sound]`**。
+`sig_view --names` は `Swap.lean` **4 decls, 0 with sorry** / `RegionCardinality.lean`
+**18 decls, 0 with sorry** / `CardinalityBound.lean` **17 decls, 0 with sorry**。
+
+commit 列: `d5ed7bdc`（swap 4 本）→ `14bdd2f3`（本体）→ `a9787043`（honesty ゲート）→
+`adbceb76` / `c793cedb`（規約ゲート）。
+
+⚠ **実装者は 2 度とも最終報告を送らず idle 化した**（本 relay 通算 4 回目）⟹ 以下の実測は
+**オーケストレーターが commit の diff と `#check` / `#print axioms` から直接読み取ったもの**であり、
+実装者の自己申告の転記ではない。
+
+### 16.1 swap 対称性 4 本の逐語（`Marton/Swap.lean`）
+
+section 冒頭の変数束（`:30-32`、逐語）:
+
+```lean
+variable {α β₁ β₂ V₁ V₂ : Type*}
+  [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
+  [MeasurableSpace V₁] [MeasurableSpace V₂]
+```
+
+| 宣言 | file:line | ⚠ **追加で要る型クラス（実測、逐語）** |
+|---|---|---|
+| `martonJointDistribution_swap` | `Swap.lean:39` | **なし**（上の 5 本 + 明示引数の `[IsProbabilityMeasure pV] [IsMarkovKernel K] [IsMarkovKernel W]`） |
+| `martonInfo₁_swap` | `:101` | `[Fintype V₂] [Fintype β₂]` |
+| `martonInfo₂_swap` | `:124` | `[Fintype V₁] [Fintype β₁]` |
+| `martonInfoV₁V₂_swap` | `:150` | `[Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁] [Fintype V₂] [Nonempty V₂] [MeasurableSingletonClass V₂]` |
+
+結論形（逐語。3 情報量は「受信機 1 と 2 が入れ替わり、補助間依存は不変」）:
+
+```lean
+martonJointDistribution (pV.map Prod.swap) (K.comap Prod.swap measurable_swap) (W.map Prod.swap)
+  = (martonJointDistribution pV K W).map (fun q ↦ (q.2.1, q.1, q.2.2.1, q.2.2.2.2, q.2.2.2.1))
+
+martonInfo₁ (pV.map Prod.swap) (K.comap Prod.swap measurable_swap) (W.map Prod.swap)
+  = martonInfo₂ pV K W
+martonInfo₂ (pV.map Prod.swap) (K.comap Prod.swap measurable_swap) (W.map Prod.swap)
+  = martonInfo₁ pV K W
+martonInfoV₁V₂ (pV.map Prod.swap) (K.comap Prod.swap measurable_swap) (W.map Prod.swap)
+  = martonInfoV₁V₂ pV K W
+```
+
+⟹ ⚠ **§14.5 / L18 申し送りが立てた entropy 座標読み替え表 3 行は逐語で正しかった** — 訂正 0 件。
+⚠ **`W` も本当に入れ替わっている**（`W.map Prod.swap`）: 補助変数だけを swap して受信機を据え置いた
+版は型が付かない（§16.5 (a) の独立実測 2 点目）。
+
+⚠ **`martonInfo*` の定義側は `DecidableEq` / `Nonempty` / `MeasurableSingletonClass` を要求しない**
+（`#check @martonInfo₁` 実測 = `[Fintype V₁] [MeasurableSpace V₁] [MeasurableSpace V₂]
+[MeasurableSpace α] [Fintype β₁] [MeasurableSpace β₁] [MeasurableSpace β₂]`）⟹ `Setup.lean:44-49`
+の変数束（5 型 × 5 クラス）は**束として過大**であり、`omit … in` ではなく **3 section に割る**
+（`FirstReceiver` / `SecondReceiver` / `Auxiliaries`、兄弟 `CardinalityBound.lean` の
+`Support` / `ComapSupport` / `Bound` と同構造）だけで `linter.unusedSectionVars` が黙る。
+
+### 16.2 二重有界版の逐語
+
+**(1) 内側版 headline**（`CardinalityBound.lean:552-562`。⚠ 変数束は同 `:425-431` の `Bound` section
+= 5 型それぞれに `[Fintype _] [Nonempty _] [MeasurableSpace _] [MeasurableSingletonClass _]` を持つ束）:
+
+```lean
+theorem exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights_inner
+    (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (μ₁ μ₂ μ₃ : ℝ) (hμ₁ : 0 ≤ μ₁) (hμ₃ : 0 ≤ μ₃) :
+    ∃ (k : ℕ) (_ : k < martonAuxBound α) (pV' : Measure (V₁ × bcAuxAlphabet.{u} k))
+      (_ : IsProbabilityMeasure pV') (K' : Kernel (V₁ × bcAuxAlphabet.{u} k) α)
+      (_ : IsMarkovKernel K'),
+      μ₁ * martonInfo₁ pV K W + μ₂ * martonInfo₂ pV K W
+        + μ₃ * (martonInfo₁ pV K W + martonInfo₂ pV K W - martonInfoV₁V₂ pV K W)
+        ≤ μ₁ * martonInfo₁ pV' K' W + μ₂ * martonInfo₂ pV' K' W
+          + μ₃ * (martonInfo₁ pV' K' W + martonInfo₂ pV' K' W - martonInfoV₁V₂ pV' K' W)
+```
+
+⚠ **重み写像の実測**: 素の配置（`:521`）は `(μ₁, μ₂, μ₃)` で要求が **`0 ≤ μ₂` `0 ≤ μ₃`**、
+内側版は同じ `(μ₁, μ₂, μ₃)` で要求が **`0 ≤ μ₁` `0 ≤ μ₃`**。実装は L17 headline を
+**`(μ₂, μ₁, μ₃)` の順**で呼ぶ（`:576` 逐語 `… μ₂ μ₁ μ₃ hμ₁ hμ₃`）⟹ ⚠ **swap は 2 つの受信機重みを
+入れ替え、和レート重み `μ₃` は動かさない**。
+
+**(2) 二重有界な合併**（`RegionCardinality.lean:270-275`。`martonRegionUnionOuterBounded`（`:212`）
+との差は `(_ : k₂ < martonAuxBound α)` の **1 binder だけ**）:
+
+```lean
+noncomputable def martonRegionUnionBounded (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
+  closure (⋃ (k₁ : ℕ) (_ : k₁ < martonAuxBound α) (k₂ : ℕ) (_ : k₂ < martonAuxBound α)
+    (pV : Measure (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂))
+    (_ : IsProbabilityMeasure pV)
+    (K : Kernel (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂) α)
+    (_ : IsMarkovKernel K), martonRegion pV K W)
+```
+
+**(3) 領域 headline**（`:443-446`）。仮説は **`[IsMarkovKernel W]` のみ**（他は section の型クラス束
+`:325-328`）:
+
+```lean
+theorem closure_convexHull_martonRegionUnion_eq_bounded (W : BCChannel α β₁ β₂)
+    [IsMarkovKernel W] :
+    closure (convexHull ℝ (martonRegionUnion W))
+      = closure (convexHull ℝ (martonRegionUnionBounded W))
+```
+
+受け皿 4 本 = `martonRegionUnionBounded_isLowerSet`（`:277`）/
+`martonRegion_subset_bounded_of_bcAux`（`:284`）/ `martonRegionUnionBounded_subset_union`（`:296`）/
+`martonRegionUnionBounded_nonempty`（`:310`）。核心の包含は
+`martonRegion_subset_closure_convexHull_bounded`（`:393-432`）。
+
+### 16.3 §14.5 の 3 点の決着 — 項目 3 の危険視は**過大**だった
+
+| # | §14.5 の項目 | 決着 |
+|---|---|---|
+| 1 | swap 対称性補題 | **通った**（§16.1）。自作 4 本 / 新しい数学 0 行 |
+| 2 | 逆向き disintegration | §15.8 で型クラス債務 0 と確定済 → 実装は `CardinalityBound.lean:567-570` の 1 段（`Measure.disintegrate _ _`） |
+| 3 | 2 回適用の非干渉 | ⚠ **`ncard` 保存則**なしで解けた（下記） |
+
+⚠ **項目 3 は「`κ₂` を固定したまま `V₂` の法だけを縮めるので新しい `V₁` 周辺分布は元の台に留まる」
+という保存則の形で危険視されていたが、分離ベースの証明にはその段が現れない**。実際の証明
+（`RegionCardinality.lean:406-432`）は不等式の鎖 1 本である:
+
+```
+obj(pV) ≤ obj(q'⊗ₘκ')   -- 外側版（L17 headline、`:412-414`）
+       ≤ obj(pV'')      -- 内側版（`..._inner`、`:418-419`）
+       = μ₁x + μ₂y      -- hvert
+       < μ₁p.1 + μ₂p.2  -- hsep
+       ≤ obj(pV)        -- hdom
+```
+
+**根拠は L17 が内側アルファベットを型ごと持ち回ること**（docstring 逐語
+「The inner auxiliary alphabet is carried along unchanged」`CardinalityBound.lean:516`）⟹
+2 回目の適用が返す `pV''` は `bcAuxAlphabet k × bcAuxAlphabet k'` の上に載り、第 1 座標の型は
+触られない。⟹ ⚠ **一般化した教訓: 「2 段の縮小が互いを壊さないか」という形の危険視は、下流が
+「最適値の比較」しか要求しないとき保存則を要しない。要否は下流の消費形で決まる。**
+
+⚠ **`exists_weights_dominating` の `0 ≤ a` は既に成立していた — 新しい数学 0 行**
+（`RegionCardinality.lean:157`）。結論を `0 ≤ b ∧ 0 ≤ c` から **`0 ≤ a ∧ 0 ≤ b ∧ 0 ≤ c`** へ強めた
+だけで、分岐 1（`h : μ₂ ≤ μ₁`）は `a = μ₁ - μ₂` ⟹ `sub_nonneg.mpr h`、分岐 2 は `a = 0` ⟹ `le_rfl`。
+consumer は外側版 `:347` の 1 箇所のみで、`obtain ⟨a, b, c, -, hb, hc, hdom, hvert⟩` と `-` を
+挿すだけで済む（逐語で現 HEAD にそう入っている）。
+
+⚠ **tell**: swap 配置での再利用が要求したのは `0 ≤ μ₁`（= 素の配置で符号自由だった重み）であり、
+**それが偶然すでに非負だった**ことに気付かなければ「重みの符号が足りない」= 壁に見えた。⟹
+⚠ **補題の結論が「実際に証明している事実」より弱く書かれていないかを、再利用の前に証明本体を
+読んで確認する価値がある**（署名だけ見ると穴に見える）。
+
+⚠ **`(W.map Prod.swap).map Prod.swap = W` は不要だった**。戻しは測度側とカーネル側で別処理:
+`hswap`（`CardinalityBound.lean:585-591`）= `Measure.map_map measurable_swap measurable_swap` +
+`Prod.swap ∘ Prod.swap = id`（`funext fun _ ↦ rfl`）+ `Measure.map_id`、
+`hcomap`（`:592-595`）= `Kernel.ext fun _ ↦ rfl`。⟹ swap 3 本を**前向きのまま**
+`rwa [hswap, hcomap] at h` で使える（`:600` `:605` `:610`）ので、**チャネル側を往復させる補題は
+1 本も要らない**。⚠ **`Prod.swap` の二重適用は `simp` すら不要**（構造 eta で定義的）⟹
+§14.5 が指した `CardinalityBound.lean:450` `:453` の `simp` 手筋（`Prod.swap_swap`）は不要だった。
+
+### 16.4 消費した資産の逐語（自作補題 **0 本** / loogle 呼び出し **0 回**）
+
+**Mathlib**（`file:line` + 逐語署名）:
+
+```
+Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:433
+theorem measurable_swap : Measurable (Prod.swap : α × β → β × α)
+
+Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:410
+theorem Measurable.prodMap [MeasurableSpace δ] {f : α → β} {g : γ → δ} (hf : Measurable f)
+    (hg : Measurable g) : Measurable (Prod.map f g)
+
+Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean:376
+def prodComm : α × β ≃ᵐ β × α
+
+Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean:381
+def prodAssoc : (α × β) × γ ≃ᵐ α × β × γ
+
+Mathlib/Probability/Kernel/Composition/MapComap.lean:118
+lemma IsMarkovKernel.map (κ : Kernel α β) [IsMarkovKernel κ] (hf : Measurable f) :
+    IsMarkovKernel (map κ f)          -- ⚠ lemma
+
+Mathlib/Probability/Kernel/Composition/MapComap.lean:187
+instance IsMarkovKernel.comap (κ : Kernel α β) [IsMarkovKernel κ] (hg : Measurable g) :
+    IsMarkovKernel (comap κ g hg)     -- instance
+
+Mathlib/Probability/Kernel/Composition/MapComap.lean:74
+theorem map_apply (κ : Kernel α β) (hf : Measurable f) (a : α) : map κ f a = (κ a).map f
+
+Mathlib/Probability/Kernel/Composition/MapComap.lean:159
+theorem comap_apply (κ : Kernel α β) (hg : Measurable g) (c : γ) : comap κ g hg c = κ (g c) := rfl
+```
+
+⚠ **`Kernel.IsMarkovKernel.map` は `lemma`、`.comap` は `instance`（非対称）** ⟹
+`IsMarkovKernel (W.map Prod.swap)` は自動で付かず `haveI := Kernel.IsMarkovKernel.map W
+measurable_swap` が要る（`Swap.lean:47-48` / `CardinalityBound.lean:563-564`）。⚠ ただし
+**statement 側は instance 無しで elaborate する**（§16.1 のとおり `MeasurableSpace` しか要らない）
+⟹ ⚠ **§14.5 が予定していた型注釈 `(W.map Prod.swap : BCChannel α β₂ β₁)` は不要だった**。
+
+**in-project**:
+
+| 資産 | file:line | 用途 |
+|---|---|---|
+| `compProd_comap_map_prodMap` | `Shannon/ChannelCoding/CodeToAmbient.lean:401` | 第 1 段 compProd の押し出し |
+| `compProd_map_prodMap` | 同 `:415` | ⚠ **第 2 段（出力側も動く）**。下記 |
+| `entropy_map_comp` | `Shannon/Bridge.lean:53` | 座標写像に沿った entropy の読み替え |
+| `entropy_measurableEquiv_comp` | `Shannon/Pi.lean:36` | `V₁V₂` 座標入替（`MeasurableEquiv.prodComm`） |
+
+⚠ **§14.5 の唯一の実質的な穴 — 両側版 `compProd_map_prodMap`**。§14.5 は道具を
+`compProd_comap_map_prodMap` としていたが、それで足りるのは **relabel が補助変数側（`V`）だけで
+出力ペア側が恒等**のとき。swap は出力側も `Prod.swap` で動かすので第 2 段の押し出しに両側版が要る。
+**同ファイルの 14 行下に実在した**（逐語）:
+
+```lean
+-- InformationTheory/Shannon/ChannelCoding/CodeToAmbient.lean:415
+lemma compProd_map_prodMap {Z Z' B B' : Type*} [MeasurableSpace Z] [MeasurableSpace Z']
+    [MeasurableSpace B] [MeasurableSpace B']
+    (ρ : Measure Z) [SFinite ρ] (κ : Kernel Z B) [IsMarkovKernel κ]
+    {f : Z → Z'} (hf : Measurable f) {g : B → B'} (hg : Measurable g)
+    (κ' : Kernel Z' B') [IsMarkovKernel κ']
+    (hκ : κ.map g = κ'.comap f hf) :
+    (ρ ⊗ₘ κ).map (Prod.map f g) = (ρ.map f) ⊗ₘ κ'
+```
+
+⟹ 実際の骨格は「第 1 段 = `:401` → 第 2 段 = `:415`」の混成（`Swap.lean:55-80`）。`hκ` 義務は
+`Kernel.ext` + `simp only [Kernel.map_apply _ measurable_swap, Kernel.comap_apply, hf_def]` の 1 行
+（`:67-68`）。⚠ **教訓: loogle は 1 度も呼んでいない。`rg` で片側版を引き、そのファイルを Read
+したら隣が両側版だった。「出力側も動かす compProd 押し出しは Mathlib に無い」と loogle 判定して
+いたら自作 40–80 行に化けていた**（CLAUDE.md「In-repo asset search」の実例が 1 件増える）。
+
+⚠ **import 重量で route を 1 度差し替えた**: `V₁V₂` 座標入替は `entropy_injective_comp`
+（`CardinalityBound.lean:51`）でも通るが、`CardinalityBound` を import すると `ObjectiveAssembly` +
+`MartonUnion` まで芋づるになる。代わりに `Pi.lean:36`（import は `Shannon.Entropy` 1 本のみ）の
+`entropy_measurableEquiv_comp` を `e := MeasurableEquiv.prodComm` で使用 ⟹ **`Swap.lean` の import は
+3 本**（`Marton.Setup` / `ChannelCoding.CodeToAmbient` / `Shannon.Pi`）で `CardinalityBound` /
+`RegionCardinality` に依存しない = **下流から import しても循環しない**。
+
+### 16.5 2 つのゲートの結果
+
+#### (a) honesty ゲート = **all OK**（tier 1 / defect 0）
+
+書込は `a9787043`（3 file、9 insertions）。⚠ **タグの実測**（`rg -n '@audit:ok'` で再導出）: 本 leg で
+**新規 6 本**（`Swap.lean:38` `:100` `:123` `:149` / `CardinalityBound.lean:550` /
+`RegionCardinality.lean:441`）、3 file 合計 **8 本**（残る 2 本は L17 / L18 の headline に既在）。
+⚠ **監査の自己申告は「tier 1 × 10」だが、`@audit:ok` は headline にのみ置く規約なので監査対象宣言数と
+タグ数は別勘定である** — 本在庫はタグの実測値を採る。
+
+⚠ **判定の根拠**（監査が書いた 3 点 + オーケストレーターの独立実測 2 点）:
+
+1. **退化境界を「クラスとして」書いた**（特定型の instance ではなく `[Subsingleton α]`）:
+   `martonAuxBound α = 1` ⟹ 走る指標は `k₁ = k₂ = 0` のみ。それでも
+   `martonRegionUnionBounded_nonempty`（`:310`）が成立する ⟹ ⚠ **「空 = 空」の空虚な真ではない**。
+2. **定数チャネル模型**（`W = Kernel.const α ν`）では ⚠ **受信機情報量 2 本だけが 0**（三情報量が
+   全部 0 になるのではない — `martonInfoV₁V₂` は `pV` だけで決まり、チャネルに依らない）。両辺が
+   `{p | p.1 ≤ 0 ∧ p.2 ≤ 0}` に収まる ⟹ ⚠ **「全平面 = 全平面」でもない**。
+3. **二重 cap の実在を機械証明で確認**（`#print` に頼らない）: `martonRegionUnionBounded ⊆
+   martonRegionUnionOuterBounded` を書くと **OuterBounded 側の binder に `hk₁` を供給する必要**が
+   生じるので、Bounded 側に cap が無ければ型が付かない ⟹ cap は署名に実在する。
+4. ⚠ **オーケストレーター独立実測 (i)**: `rfl` 版（`martonRegionUnion W = martonRegionUnionBounded W`）
+   は型不一致で落ちる ⟹ **headline は自明命題ではない**。
+5. ⚠ **オーケストレーター独立実測 (ii)**: `W` を swap しない版の `martonInfo₁_swap` は型不一致で
+   落ちる ⟹ **受信機も真に入れ替わっている**（補助変数だけの入替ではない）。
+
+⚠ **機械に落としていない項目を 2 件、正直に書く**: (i) swap の**向き**の「反例による」refutation、
+(ii) `_inner` の**符号入れ替え**の単体 check。理由 = ⚠ **コード中に否定的主張が存在せず反証対象が
+無い**（4 本とも証明済み定理なので偽ではありえない）。⟹ CLAUDE.md「A dismissed asset must be
+dismissed by the compiler」が要求する反証は、**否定的主張を書いた場合にのみ発生する義務**である。
+
+#### (b) 規約ゲート = **PASS**。⚠ 拾った虚偽 1 件
+
+`martonRegionUnionOuterBounded` の docstring に残っていた次の段落が **本 leg で偽になった**
+（`c793cedb` で除去。⚠ 逐語）:
+
+```
+The inner auxiliary alphabet still ranges over every cardinality: the weighted sum that the
+cardinality bound optimizes reads the dependence between the two auxiliaries with a nonpositive
+weight, so it caps the outer alphabet only.
+```
+
+⚠ **偽である理由**: 非正の係数は **2 つの補助変数について対称**なので片側性を説明しない。実際
+`..._inner` は**同じ重み付き和・同じ非正係数のまま内側を cap している**。差し替え後（`:207-211`）は
+「one pass of the cardinality bound caps the marginal it varies and carries the other coordinate
+along unchanged」= **1 回のパスの非対称性**として書き直されている。
+
+⚠ **これは honesty ゲートが検出し、オーケストレーターの掃き出しは取り逃した**。取り逃した理由 =
+検索語（`left alone` / `no bound on its cardinality` 等）で探したから。⟹ ⚠ **教訓: 語ではなく
+「限界の断言」という主張の型で探す**（「〜のみ」「〜は不可能」「〜に限る」を含む一文はすべて、
+射程を広げる leg で偽になりうる）。⚠ **§15.4 が拾った「未満 / 高々」の誤記と同型の事故であり、
+2 leg 連続で docstring の射程主張が虚偽化している**。
+
+`adbceb76` は `Swap.lean` の headline 4 本に数学的 docstring を付与（`@audit:ok` は逐語保存）+
+import 整列。⚠ **`-D` ゲート出力のバイト数は固定値ではない**（`Swap.lean` = 0 / `CardinalityBound` =
+195 / `RegionCardinality` = 196 / `MarkovCore` = 189。header linter は `lake build` 経路で発火し
+`-D` 指定の `lake env lean` 経路では本ファイルに限り発火しなかった）⟹ **受入基準は「出力 0 または
+`Copyright too short!` のみ」と読むべき**で、バイト数固定は脆い。
+
+### 16.6 予算の実測 — ⚠ **予測なしで着手した leg**
+
+⚠ **本 leg には予測帯が無い**。§14.7 の見積り表は A の予測であり、プラン §5.4 が「⚠ **見積りは
+在庫 §15.6 の実測から起こす（§14.7 の帯を B へ流用しない）**」と明記していたため、B の帯は
+**立てられないまま着手した**。⟹ ⚠ **以下は予実差ではなく実測のみである**。
+
+`wc -l`（⚠ 再導出。キャッシュしない）:
+
+```bash
+wc -l InformationTheory/Shannon/BroadcastChannel/Marton/{SupportReduction,ObjectiveConvexity,\
+ObjectiveVectorForm,ObjectiveAssembly,CardinalityBound,RegionCardinality,Swap}.lean
+```
+
+| file | L18 close（`e7b6107d`） | 実装 commit | HEAD（`c793cedb`） | 差 |
+|---|---|---|---|---|
+| `…/Marton/Swap.lean` | **（未存在）** | 155（`d5ed7bdc`） | **172** | **+172** |
+| `…/Marton/CardinalityBound.lean` | 537 | 615（`14bdd2f3`） | **617** | **+80** |
+| `…/Marton/RegionCardinality.lean` | 322 | 456（`14bdd2f3`） | **459** | **+137** |
+| **本 leg 計** | 859 | | **1248** | **+389** |
+
+⚠ **relay 内で流通していた「Swap 156 / CardinalityBound +82 / RegionCardinality +157」は
+`git show --stat` の変更行数（挿入 + 削除）であって純増ではない** — `14bdd2f3` は
+`226 insertions(+), 14 deletions(-)`。純増は実装 commit 時点で **+78 / +134**、2 ゲート後の HEAD で
+**+80 / +137**。⚠ **在庫に載せるのは `wc -l` の実測**とする。
+
+宣言本体の実測:
+
+| 宣言 | file:line | 行 |
+|---|---|---|
+| `martonJointDistribution_swap` | `Swap.lean:39-91` | 53 |
+| `martonInfo₁_swap` | `:101-112` | 12 |
+| `martonInfo₂_swap` | `:124-137` | 14 |
+| `martonInfoV₁V₂_swap` | `:150-168` | 19 |
+| `exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights_inner` | `CardinalityBound.lean:552-613` | **62** |
+| `martonRegionUnionBounded`（def） | `RegionCardinality.lean:270-275` | 6 |
+| `martonRegionUnionBounded_isLowerSet` | `:277-282` | 6 |
+| `martonRegion_subset_bounded_of_bcAux` | `:284-294` | 11 |
+| `martonRegionUnionBounded_subset_union` | `:296-304` | 9 |
+| `martonRegionUnionBounded_nonempty` | `:310-315` | 6 |
+| `martonRegion_subset_closure_convexHull_bounded` | `:393-432` | **40** |
+| `closure_convexHull_martonRegionUnion_eq_bounded`（headline） | `:443-455` | 13 |
+| **計 12 宣言** | | **251** |
+
+⟹ **足場は 389 − 251 = 138 行** ⟹ ⚠ §13.3 が立てた「宣言本体 + 足場 150 行前後」の起こし方は
+**2 度目も概ね当たった**（ただし本 leg は 1 新規ファイル + 2 追記に分散しており、新規ファイル 1 本
+での実測ではない。⚠ **2 leg 分でも法則ではない**）。
+
+⚠ **(a′) 累計は隠さない**（内数の再配分で説明しない）:
+
+| 対象 | §8.2 の見積り | 実測（HEAD） | 差 |
+|---|---|---|---|
+| (a′-1) 側の 5 file（§13.3 の集合） | — | 230 + 188 + 520 + 367 + **617** = **1922** | |
+| `RegionCardinality.lean`（§15.6 では 322） | — | **459** | |
+| `Swap.lean`（新規） | — | **172** | |
+| **(a′) 累計** | **540–920** | **2553** | ⚠ **+177%（+1633 行）** |
+
+⚠ **§15.6 の 2164 から +389**。超過幅は本 leg でも狭まっていない（+135% → **+177%**）。
+⚠ ただし §14.8 / §15.6 のとおり**これは撤退ラインではない**（配分の問題であって完了条件は動かない）。
+⚠ **`SupportReduction.lean`（230 行）を数え落とすと 2323 になる** — §13.3 が定義した集合には
+含まれているので、7 file で数えること。
+
+⚠ **§15 の行番号の対応**（本 leg で `RegionCardinality.lean` は下方へずれた）:
+
+| §15.6 の記載 | 現 HEAD | ずれの理由 |
+|---|---|---|
+| `isLowerSet_convexHull` `:67-86` | `:77-96` | module doc +10 |
+| `exists_nonneg_weights_separating_of_isLowerSet` `:88-145` | `:98-155` | 同上 |
+| `exists_weights_dominating` `:147-165` | `:157-175` | 同上。⚠ 結論に `0 ≤ a` が 1 項増えたが **19 行のまま** |
+| `martonInfoV₁V₂_nonneg` `:178-188` | `:188-198` | 同上 |
+| `martonRegionUnionOuterBounded` `:202-207` | `:212-217` | 同上 |
+| `martonRegion_subset_closure_convexHull_outerBounded` `:259-294` | `:330-365` | +10 と `Bounded` section の挿入 |
+| `closure_convexHull_martonRegionUnion_eq_outerBounded` `:306-318` | `:379-391` | 同上 + docstring 2 行 |
+
+### 16.7 ⚠ (a′) の到達点と、**残っているもの**（最重要）
+
+**到達した**: `closure_convexHull_martonRegionUnion_eq_bounded` により、**Marton 内界の閉凸包は
+両補助アルファベットを `martonAuxBound α` で切った合併の閉凸包に等しい**。切り詰めが有限性を
+生むことは 2 つの逐語から従う:
+
+* `def martonAuxBound (α : Type*) [Fintype α] : ℕ := Fintype.card α`（`CardinalityBound.lean:435`）
+* `abbrev bcAuxAlphabet (k : ℕ) : Type u := ULift.{u} (Fin (k + 1))`（`MartonUnion.lean:67`）
+
+⟹ `k₁, k₂ < Fintype.card α` の下で**走る基数は有限個**（各補助アルファベットが 1 … `Fintype.card α`
+文字、指標の対は `(Fintype.card α)²` 通り）。⚠ **§15.7 の第 1 項（「`k₂` は `ℕ` 全域のまま」）は本 leg で
+解消した** — ただし解消したのは**基数の走る範囲**だけである（下記）。
+
+⚠ **到達していないもの（ここを曖昧に書かない）**:
+
+1. ⚠ **これは親プラン §1.1 の (C1) 側の機械検証であって、唯一の穴 (C2) = 外界側の effective
+   compactness は 1 ミリも動いていない**。(C1) は一次文献で既に「証明済」とされている側であり
+   （プラン §1.1 逐語「(C1) 計算可能な内界の列 — 既に在る」）、本 leg が足したのは**その in-project
+   Lean 実現の 1 段**である。⟹ ⚠ **「(a′) が閉じた」を「§0 のゴールに到達した」と書かないこと**
+   （プラン §0.1-2「中間結果は記録するが、ゴールの代替にはしない」）。
+2. ⚠ **残る形式化上の穴**: 合併は**基数について**有限になったが、**各指標の `pV` / `K` はなお連続体を
+   走る**（`Measure (bcAuxAlphabet k₁ × bcAuxAlphabet k₂)` / `Kernel _ α` は有限次元の単体・単体束の
+   上に載るとはいえ、「有界時間で `ε` 近似」を言うには**その上の最適化**が要る）。⚠ **未着手**。
+   ⟹ (C1) の「計算可能」の荷は、**基数の有限化までは降りたが、最適化の有効性までは降りていない**。
+3. ⚠ **§15.7 の第 2・第 3 項はそのまま有効**: 対象が閉凸包に上がっている以上、**非凸のままの
+   `martonRegionUnion` の切り詰めは言えない**（§14.2 の機械反例）。凸化した対象を内界として消費する
+   段で **`Convex ℝ (bcCapacityRegion W)` の債務 1 本**が立つ（in-project に無い）。また
+   `martonRegionUnion` 自身の凸性は**決着していない**（§14.6 の強度差の疑い = 教科書の Marton 内界は
+   time-sharing の第 3 補助変数を持つ形が標準だが in-project は 2 補助変数版）。⚠ honesty 監査の
+   判断で**コード docstring には書かない**こととしたので、**置き場は §15.7 と本項である**。
+
+### 16.8 壁と撤退ラインとの距離
+
+⚠ **本 leg でも `@residual(wall:…)` は 1 本も立てていない / 共有 sorry 補題の候補も 0 件**。
+§9.9 / §11.7 / §12.5 / §13.6 / §14.8 / §15.0 の壁 0 件判定はそのまま有効である。
+⚠ **記録できる loogle 実測も 0 件**である（本 leg は loogle を 1 度も呼んでいない。§16.4 のとおり
+`rg` + 隣接ファイルの Read で足りた）⟹ **`Found 0` を根拠に何かを壁と書くことは本節ではしていない**。
+
+- **親プラン §6 の撤退ライン 3 本のうち 2 本は不発火**（逐語で照合）:
+  「L8 の棚卸しで軸 T3-α が gate を通らない」= L8 で (a′) 決定済ゆえ触れない /
+  「L14 の棚卸しで層 3 に載せられる散文が 1 本も無い」= 層 3 に載る成果が landing 済ゆえ不発火。
+- ⚠ **3 本目「20 leg を使い切って未達 ⟹ 未達と書く」は、本 leg の消化により判定が目前である** —
+  プラン §5.1 の枠表で残るのは **L20（記録）1 本のみ**。⚠ **§16.7 のとおり (C2) は 1 ミリも
+  動いていないので、L20 で §0 の完了条件（肯定側 = 有界時間 `ε` 近似手続きの構成と正当性 /
+  否定側 = その不存在）に到達する見込みは無い** ⟹ ⚠ **この撤退ラインは発火する公算が高い**。
+  ⚠ **発火とは「未達と書く」ことであって、達成条件を緩めることではない**（プラン §6 冒頭 / §0.1-2）。
+- ⚠ **退避出口（`sorry` + `@residual(plan:bc-open-problem-t3)`）は本 leg では使っていない** —
+  B は proof done で閉じたので、型検査済み骨格を残す退出の必要が発生しなかった。⟹ プラン §5.4 が
+  用意していた退出路は**未使用のまま有効**（L20 で新たな形式化に手を出す場合の出口として残る）。
+- ⚠ **予算超過（+177%、§16.6）は撤退ラインではない**（配分の問題であって完了条件は動かない）。
+
+### 16.9 flag only（本 leg では実施しない申し送り）
+
+- **§15.9 の 3 件はすべて有効のまま**（汎用凸幾何 2 本の切り出しは現状維持が正 /
+  `docs/readme-theorems.txt` への登録は (a′) の完成時 / `docs/rules` の *Main statements* 義務と
+  `internal-doc` ratchet の衝突）。⚠ **本 leg で 2 人目の consumer は出ていない**ので昇格条件
+  （`OuterBoundUV/Region.lean` が `IsLowerSet` 系を使い始めること）は変わらない。
+- ⚠ **`Marton/Setup.lean:44-49` の変数束が過大**（§16.1）。`Swap.lean` 側は 3 section に割って
+  回避したが、**`Setup.lean` 自体は触っていない**。同じ束を継ぐ兄弟ファイルで同じ警告が出る。
+- **`Swap.lean` の consumer は現在 1 本のみ**（`CardinalityBound.lean:598` `:603` `:608` から
+  `..._inner` が使用）。⚠ 再導出は `scripts/dep_consumers.sh
+  InformationTheory.Shannon.BroadcastChannel.Marton.martonInfo₁_swap`（root olean が古い場合は
+  `lake build InformationTheory` の後に再実行）。
+- ⚠ **規約ゲートの受入基準からバイト数固定を外すこと**（§16.5 (b)）。「`-D` ゲート出力 196 バイト」は
+  ファイル依存で再現しない ⟹ 「出力 0 または `Copyright too short!` のみ」と読み替える。
