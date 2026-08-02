@@ -399,7 +399,7 @@ variable {α : Type u} {β₁ β₂ : Type*} [MeasurableSpace α]
 /-- A finite nonempty alphabet, as the auxiliary alphabet of the union of its own cardinality:
 the discrete measurable structure makes the indexing bijection of `Fintype.equivFin` measurable
 both ways, and the universe lift carries it into the universe of the input alphabet. -/
-private noncomputable def bcAuxMeasurableEquiv (V : Type*) [Fintype V] [Nonempty V]
+noncomputable def bcAuxMeasurableEquiv (V : Type*) [Fintype V] [Nonempty V]
     [MeasurableSpace V] [MeasurableSingletonClass V] :
     V ≃ᵐ bcAuxAlphabet.{u} (Fintype.card V - 1) where
   toEquiv := (Fintype.equivFin V).trans
