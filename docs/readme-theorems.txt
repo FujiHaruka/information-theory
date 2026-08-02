@@ -119,6 +119,7 @@ bc_degraded_converse_from_code
 bc_achievability
 marton_achievability
 martonRegionUnion_subset_capacity
+closure_convexHull_martonRegionUnion_eq_bounded
 bc_capacity_subset_coop
 bc_capacity_subset_uv
 bc_lessNoisy_capacity_eq_uv
