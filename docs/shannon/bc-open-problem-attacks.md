@@ -167,9 +167,13 @@ round-robin (§5-5) が「回っているように見えて回っていない」
 | slug | 軸 | 状態 | 直近 leg | 死因 / 現況 | 残った副産物 |
 |---|---|---|---|---|---|
 | `t3-lit-gate` | — | `harvested` | **L0(T3)** | **完了**。[`bc-facts.md`](bc-facts.md) §L0(T3) に 10 行。§1.1 の分解を **(C2) 1 本**へ訂正し、軸 **T3-γ を kill** | 下記 5 本 |
-| `t3-outer-computable-sequence` | T3-α | **`live`** | **L0(T3)** | **本丸**。容量領域に上から収束する計算可能な外界列の構成 | — |
+| `t3-outer-computable-sequence` | T3-α | **`live`** | **L0(T3)** | **本丸**。容量領域に上から収束する計算可能な外界列の構成。**L1 で主語が「構成する」から「多文字化以外の機構」へ動いた** (facts §L1(T3) 行 3) | — |
 | `t3-not-effectively-compact` | T3-β | **`live`** | **L0(T3)** | 否定側。「下からは半計算可能だが上からは半計算可能でない」の移植。⚠ **Marton 最適性予想の反証を含意する難度** | — |
 | `t3-hierarchy-level` | T3-γ | **`killed`** | **L0(T3)** | 死因 `known-result` — [Li21] 脚注 3 / §VIII 定義候補 3) が計算容易性との直結を**明示的に否定**している | 子 `t3-eps-vs-exact-decidability` |
 | `t3-eps-vs-exact-decidability` | T3-γ の子 | `todo` | — | facts §L0(T3) 行 9 の probe。**`ε` 近似可能性と厳密決定可能性 (Tarski 指数関数問題) の分離**を確定させる。⚠ 行 10 の難度較正がこれに依存している | — |
 | `t3-fano-converse-not-effective` | T3-α の子 | `todo` | — | facts §L0(T3) の演繹の probe。Fano 由来の converse が**固定 `n` では外界を与えない**ことと、有効化が `SRM` の加法性 (= Marton 最適性) とどう関係するか | — |
-| `t3-multiletter-marton-region-version` | T3-α/β 共通の前提 | `todo` | — | facts §L0(T3) 行 2 の穴埋め。「多文字 Marton は一般にタイト」の**領域版**の一次出典を取る (sum rate 版のみ逐語取得済) | — |
+| `t3-multiletter-marton-region-version` | T3-α/β 共通の前提 | **`harvested`** | **L1(T3)** | **完了**。[auxrec] p.21 の逐語で**領域版**の出典が取れた ("the multi-letter Marton's inner bound (whose limit is the capacity region)") ⟹ facts §L0(T3) 行 2 の留保は解消 (facts §L1(T3) 行 4) | — |
+| `t3-multiletter-uv-outer` | T3-α の子 | **`killed`** | **L1(T3)** | 死因 `numeric-counterexample` (⚠ **反例は数値ではなく解析的** — 優加法性 + 文献の witness 3 本)。`∩_n (1/n)UV(W^⊗n) = UV(W) ⊋ C(W)` で改善ゼロ (facts §L1(T3) 行 1) | 子 2 本 (`t3-auxrec-multiletter` / `t3-uv-superadditivity-check`) + 「多文字化の非対称性」(facts §L1(T3) 行 3) |
+| `t3-auxrec-multiletter` | T3-α の子 | `todo` | — | **次 leg の第一候補**。auxiliary-receiver 外界 ([auxrec] Theorem 7/8、`∀J` 形) の多文字版が優加法性を免れるか、免れたとして真に縮むか (facts §L1(T3) 行 6)。⚠ **「免れる」は「縮む」を意味しない** | — |
+| `t3-nonmultiletter-outer-mechanism` | T3-α の子 | `todo` | — | 多文字化以外に外界を縮める機構は何か (新しい単文字外界の路線 / 支持関数 `h_C(θ)` を上から計算可能に評価する路線)。⚠ 後者は外界列を作る問題と同値なので**困難が移動するだけかもしれない** | — |
+| `t3-uv-superadditivity-check` | T3-α の子 | `todo` | — | facts §L1(T3) 行 1 の 5 行の導出 (優加法性) の probe。⚠ **文献に明示的な記述が無いので、我々の導出のまま本 relay の判断の基礎になっている** | — |
