@@ -2511,3 +2511,334 @@ headline は**重みベクトル `(μ₁,μ₂,μ₃)` ごとに** witness `(k,q
 - ⚠ **枠は L17 を消化して残り 1 本**（L18 = 層 3 の集中枠）+ L19（収穫）+ L20（記録）。
   §13.5 の (a)（`V₂` 側）と (b)（全重み共通 witness / 支持超平面）の**どちらを L18 に入れるか**が
   次の判断点である。⚠ **両方を 1 leg に入れられるかは未検証**。
+
+## §14 L18 のスコープ判定 — **A（閉凸包版の領域等式）を先、A だけ**
+
+⚠ 本節は**追記であり §1–§13 は書き換えていない**（§11 が §10 に、§12 が §11 に、§13 が §12 に
+対して採ったのと同じ作法）。⚠ ただし本節の実測により **§13.5 (b) の「L17 で新たに判明した残件」
+という framing は覆った** — **§13.5 (b) の本文は履歴としてそのまま残し、訂正の所在は §14.1 である**。
+
+### 14.0 一行判定
+
+**A を先、A だけ**。A = §8.2 の **(a′-2)**（`closure_convexHull_martonRegionUnion_eq_bounded`
+= **閉凸包版の領域等式**）。**B（`V₂` 側の基数）は 1 leg に入らない**。
+
+⚠ **順序 A → B は確定**であって選好ではない: A は **(a′-1) の完成条件そのもの**なので
+（親プラン §5.3 (2) 逐語「(1) を閉じても本項が残れば標的言明は立たない」）、**B を先にやっても
+標的言明は立たない**。
+
+| 案 | 内容 | 判定 | 根拠 |
+|---|---|---|---|
+| **A** | (a′-2) を閉凸包版で閉じる（右辺は `k₁` だけ有界の正直形） | ✓ **採る** | gateway atom が**既に完証**（§14.3、0 error / 0 sorry / 宣言本体 55 行） |
+| **B** | `V₂` 側の基数（swap 対称性 + 逆向き disintegration + 2 回適用） | **採らない**（L19 以降） | 足りないのは 3 点だけだが 3 点とも未実装、うち 2 点は未検証（§14.5） |
+| **C** | A + B を 1 leg | ⚠ **採らない** | 予算は既に +130% 超過（§13.3）。B が伸びると **A も landing しない** |
+| **D** | A を骨格 + `sorry` + `@residual(plan:…)`（§8.2 の退出） | 採らない | ⚠ **gateway atom が既に完証されている以上、D を採る理由が無い** |
+
+到達状態の再導出（本節は値をキャッシュしない）:
+
+```bash
+rg -n 'Convex ℝ' InformationTheory/Shannon/BroadcastChannel/
+rg -n '0 ≤ martonInfo' InformationTheory/
+rg -n 'Prod.swap' InformationTheory/Shannon/BroadcastChannel/
+```
+
+### 14.1 ⚠ 最重要 — §13.5 (b) の「新規残件」という framing は誤り
+
+⚠ **§13.5 (b) は「honesty ゲートの射程申し送りとして本 leg で初めて浮上した」と書いたが、実際には
+在庫 §8.2（L8 時点）が設計・Mathlib 資産・行数見積りまで書き終えていた**。逐語は
+`bc-t3-cardinality-inventory.md:1043-1048`（= 本ファイル自身の §8.2）:
+
+```lean
+-- (a′-2) 領域版（§5.2 の martonRegionUnion_eq_bounded の閉凸包版）
+theorem closure_convexHull_martonRegionUnion_eq_bounded (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    closure (convexHull ℝ (martonRegionUnion W))
+      = closure (convexHull ℝ (⋃ (k₁ : ℕ) (_ : k₁ < martonAuxBound α) (k₂ : ℕ)
+          (_ : k₂ < martonAuxBound α) (pV : Measure _) (_ : IsProbabilityMeasure pV)
+          (K : Kernel _ α) (_ : IsMarkovKernel K), martonRegion pV K W))
+```
+
+さらに §8.2 は **3 段の手順**（`geometric_hahn_banach_closed_point` → lower set から非負重み →
+支持関数へ落として (a′-1) を当てる、`:1110-1118`）と **追加 60–120 行** の見積り（`:1104`）まで
+書いていた。
+
+⟹ ⚠ **これは「残件が 1 件増えた」ではなく「既決の設計が §12.4 / §13.5 への申し送りで落ちた」**
+である。honesty 監査の指摘（§13.4 (a)「重み付き和が全重みで載る ⟹ 領域が基数有界な合併である、は
+過大」）は**警告としては正しい**が、**設計上の答えは在庫の前半に既にあった**。
+
+⚠ **教訓（proof-log 候補、1 行）**: 「新しく判明した残件」を受け取ったら、まず**自分の在庫の前半を
+grep する**こと。tell は「**残件の説明文が、過去の設計節と同じ 2 択を同じ順序で再発明していた**」
+こと（§13.5 (b) の (α) 共通 witness / (β) 凸性・閉包 は、§8.2 の (a) スカラーのみ / (a′) 閉凸包 の
+対と同型で順序も同じ）。これは **loogle-blind の在庫版**である（loogle は Mathlib しか見ない ↔
+申し送りは在庫の後半しか見ない）。
+
+### 14.2 作業仮説の反証 — ⚠ **機械で示された**
+
+オーケストレーターの作業仮説「閉凸集合は支持半空間の交わり ⟹ 重みごとの witness で十分」は
+**述べたままでは偽**。条件 (i) 閉 / (ii) 凸 のうち **(ii) が成立しない**。
+
+| 条件 | 判定 | 逐語根拠 |
+|---|---|---|
+| (i) 閉 | **成立** | `martonRegionUnion` の `def` は `closure (⋃ …)`（`MartonUnion.lean:73-78`） |
+| (ii) 凸 | ⚠ **成立しない** | `MartonUnion.lean:32-33` module doc 逐語: *"Convexity is claimed of the quadrilaterals only, not of the union."* |
+
+結論形検索 `rg -n "Convex ℝ" InformationTheory/Shannon/BroadcastChannel/` の**全ヒットは 2 件**:
+`martonRegion_convex`（`MartonUnion.lean:134`、⚠ **四辺形 1 枚**についての主張）と
+`convex_setOf_nonneg`（`Marton/ObjectiveConvexity.lean:54`）のみ ⟹ **合併の凸性は in-project 0 件**。
+
+**TEST A の反例（逐語。散文ではなくコンパイラが示した。`lake env lean` 0 error）** — 標的
+`(I₁,I₂,I₁₂) = (1,1,0)` / witness 2 本 `(2,0,0)` `(0,2,0)`:
+
+```lean
+def Reg (I₁ I₂ I₁₂ : ℝ) : Set (ℝ × ℝ) := {p | InMartonRegion p.1 p.2 I₁ I₂ I₁₂}
+
+/-- A.1  per-weight domination holds for EVERY admissible weight (`μ₁` free, `0 ≤ μ₂`,
+`0 ≤ μ₃`) — exactly the L17 headline shape. -/
+theorem perWeight_ok (μ₁ μ₂ μ₃ : ℝ) (hμ₂ : 0 ≤ μ₂) (hμ₃ : 0 ≤ μ₃) :
+    μ₁ * 1 + μ₂ * 1 + μ₃ * (1 + 1 - 0) ≤
+      max (μ₁ * 2 + μ₂ * 0 + μ₃ * (2 + 0 - 0))
+          (μ₁ * 0 + μ₂ * 2 + μ₃ * (0 + 2 - 0)) := by
+  rcases le_or_gt 0 μ₁ with h | h
+  · rcases le_total μ₁ μ₂ with hle | hle
+    · exact le_max_of_le_right (by nlinarith)
+    · exact le_max_of_le_left (by nlinarith)
+  · exact le_max_of_le_right (by nlinarith)
+
+theorem corner_mem_target : ((1 : ℝ), (1 : ℝ)) ∈ Reg 1 1 0
+theorem corner_not_mem_w1 : ((1 : ℝ), (1 : ℝ)) ∉ Reg 2 0 0
+theorem corner_not_mem_w2 : ((1 : ℝ), (1 : ℝ)) ∉ Reg 0 2 0
+/-- A.3  and it is not in the CLOSURE of the union either. -/
+theorem corner_not_mem_closure_union :
+    ((1 : ℝ), (1 : ℝ)) ∉ closure (Reg 2 0 0 ∪ Reg 0 2 0)
+/-- A.4  but the corner IS in the convex hull of the two witness regions. -/
+theorem corner_mem_convexHull :
+    ((1 : ℝ), (1 : ℝ)) ∈ convexHull ℝ (Reg 2 0 0 ∪ Reg 0 2 0)
+```
+
+（4 本の本体は 2–9 行で再証明が容易なため署名のみ転記した。全文は
+`<scratchpad>/ScratchL18A.lean`、⚠ **session 局所なので消えている可能性がある**。
+絶対パス = `/private/tmp/claude-502/-Users-haruka-dev-lean-projects/64f3ff20-e458-4a51-8e34-3ab615767d84/scratchpad/ScratchL18A.lean`。
+`InMartonRegion` の実定義に対する反例であり、モデル化ではない。）
+
+⟹ ⚠ **ギャップの正体は「凸性ちょうど 1 個」**である。**L17 headline と同じ仮定の下で重み付き和の
+支配が全重みで成立するのに、角 `(1,1)` は 2 witness 領域の合併の閉包に入らない。しかし凸包には
+入る**（`(2,0)` と `(0,2)` の中点）。⟹ 重みごとの witness が買うのは**合併の閉凸包への包含**で
+あって、合併そのものへの包含ではない。
+
+### 14.3 A の gateway atom は**既に完証されている** — 逐語
+
+⚠ **これは提案ではなく実物**（`lake env lean` **0 error / 0 sorry**、宣言本体 55 行）。
+§8.2 の 3 段のうち**第 2 段**（抽象的な Hahn–Banach 汎関数を「非負の重み対」へ変える段 = 分離から
+`μ ≥ 0` を出す段）そのものである。⚠ **BC 側の資産を一切使わない**ので `Marton/` 配下へそのまま移植
+できる。必要 import は 3 本だけ:
+
+```lean
+import Mathlib.Analysis.LocallyConvex.Separation
+import Mathlib.Order.UpperLower.Basic
+import Mathlib.Analysis.Convex.Topology
+
+open Set
+
+theorem exists_nonneg_weights_separating_of_isLowerSet
+    {S : Set (ℝ × ℝ)} (hconv : Convex ℝ S) (hclosed : IsClosed S) (hlower : IsLowerSet S)
+    (hne : S.Nonempty) {p : ℝ × ℝ} (hp : p ∉ S) :
+    ∃ μ₁ μ₂ : ℝ, 0 ≤ μ₁ ∧ 0 ≤ μ₂ ∧
+      ∀ x ∈ S, μ₁ * x.1 + μ₂ * x.2 < μ₁ * p.1 + μ₂ * p.2 := by
+  obtain ⟨f, u, hfS, hfp⟩ := geometric_hahn_banach_closed_point hconv hclosed hp
+  refine ⟨f (1, 0), f (0, 1), ?_, ?_, ?_⟩
+  · -- nonnegativity of the first weight: push a point of `S` left along the first coordinate
+    by_contra hneg
+    push_neg at hneg
+    obtain ⟨x, hx⟩ := hne
+    have key : ∀ t : ℝ, 0 ≤ t → f (x.1 - t, x.2) < u := fun t ht ↦
+      hfS _ (hlower (by exact ⟨by simpa using sub_le_self x.1 ht, le_rfl⟩) hx)
+    have hval : ∀ t : ℝ, f (x.1 - t, x.2) = f x - t * f (1, 0) := by
+      intro t
+      have : ((x.1 - t : ℝ), (x.2 : ℝ)) = x - t • ((1 : ℝ), (0 : ℝ)) := by
+        simp [Prod.ext_iff]
+      rw [this, map_sub, map_smul, smul_eq_mul]
+    have hc : 0 < -f (1, 0) := by linarith
+    have hnum : 0 < u - f x + 1 := by have := hfS x hx; linarith
+    set t : ℝ := (u - f x + 1) / (-f (1, 0)) with ht_def
+    have ht0 : 0 ≤ t := le_of_lt (div_pos hnum hc)
+    have hne0 : f (1, 0) ≠ 0 := by linarith
+    have htm : t * f (1, 0) = -(u - f x + 1) := by
+      rw [ht_def, div_mul_eq_mul_div, div_eq_iff (by simpa using hne0)]; ring
+    have hbig := key t ht0
+    rw [hval, htm] at hbig
+    linarith
+  · -- nonnegativity of the second weight: the mirror argument
+    by_contra hneg
+    push_neg at hneg
+    obtain ⟨x, hx⟩ := hne
+    have key : ∀ t : ℝ, 0 ≤ t → f (x.1, x.2 - t) < u := fun t ht ↦
+      hfS _ (hlower (by exact ⟨le_rfl, by simpa using sub_le_self x.2 ht⟩) hx)
+    have hval : ∀ t : ℝ, f (x.1, x.2 - t) = f x - t * f (0, 1) := by
+      intro t
+      have : ((x.1 : ℝ), (x.2 - t : ℝ)) = x - t • ((0 : ℝ), (1 : ℝ)) := by
+        simp [Prod.ext_iff]
+      rw [this, map_sub, map_smul, smul_eq_mul]
+    have hc : 0 < -f (0, 1) := by linarith
+    have hnum : 0 < u - f x + 1 := by have := hfS x hx; linarith
+    set t : ℝ := (u - f x + 1) / (-f (0, 1)) with ht_def
+    have ht0 : 0 ≤ t := le_of_lt (div_pos hnum hc)
+    have hne0 : f (0, 1) ≠ 0 := by linarith
+    have htm : t * f (0, 1) = -(u - f x + 1) := by
+      rw [ht_def, div_mul_eq_mul_div, div_eq_iff (by simpa using hne0)]; ring
+    have hbig := key t ht0
+    rw [hval, htm] at hbig
+    linarith
+  · intro x hx
+    have hval : ∀ y : ℝ × ℝ, f y = y.1 * f (1, 0) + y.2 * f (0, 1) := by
+      intro y
+      have : y = y.1 • ((1 : ℝ), (0 : ℝ)) + y.2 • ((0 : ℝ), (1 : ℝ)) := by
+        simp [Prod.ext_iff]
+      rw [this, map_add, map_smul, map_smul, smul_eq_mul, smul_eq_mul]
+      simp
+    have h1 := hfS x hx
+    rw [hval] at h1
+    rw [hval] at hfp
+    nlinarith [h1, hfp]
+```
+
+⚠ fallback の絶対パス（**session 局所なので消えている可能性がある** — 上の転記が SoT）:
+`/private/tmp/claude-502/-Users-haruka-dev-lean-projects/64f3ff20-e458-4a51-8e34-3ab615767d84/scratchpad/ScratchL18B.lean`
+
+**§8.2 が名指した Mathlib 資産 2 本の逐語再確認**（`#check` で elaborate。⚠ `[...]` は逐語）:
+
+| Mathlib API | file:line | 型クラス前提（逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `geometric_hahn_banach_closed_point` | `Mathlib/Analysis/LocallyConvex/Separation.lean:230` | `{E : Type u_1} [TopologicalSpace E] [AddCommGroup E] [Module ℝ E] {s : Set E} {x : E} [IsTopologicalAddGroup E] [ContinuousSMul ℝ E] [LocallyConvexSpace ℝ E]` | `(hs₁ : Convex ℝ s) (hs₂ : IsClosed s) (disj : x ∉ s) : ∃ (f : StrongDual ℝ E) (u : ℝ), (∀ a ∈ s, f a < u) ∧ u < f x` |
+| `closedConvexHull_eq_closure_convexHull` | `Mathlib/Analysis/Convex/Topology.lean:332` | `{𝕜 : Type u_1} {E : Type u_2} [Field 𝕜] [PartialOrder 𝕜] [AddCommGroup E] [Module 𝕜 E] [TopologicalSpace E] [IsTopologicalAddGroup E] [ContinuousConstSMul 𝕜 E] {s : Set E}` | `closedConvexHull 𝕜 s = closure (convexHull 𝕜 s)` |
+
+⚠ **本 leg で新たに出た罠 1 件（同名 2 本）**: `geometric_hahn_banach_closed_point` は
+**同じファイルに 2 本ある** — root 名前空間の ℝ 版（`:230`、上表）と
+`RCLike.geometric_hahn_banach_closed_point`（`:359`、`namespace RCLike` `:256-404` の内側）。
+後者の結論は `(∀ a ∈ s, RCLike.re (f a) < u) ∧ u < RCLike.re (f x)` で **`re` が挟まる**。
+⚠ `open RCLike` している file で無修飾に書くと**後者が解決されうる** ⟹ 移植先で `open` を増やす
+場合は要注意（TEST B は `open Set` のみなので前者が解決している）。
+
+⚠ **§8.2 が (a′-1) に課していた射程限定（`μ₂ = 0` 系列 + `μ₁ = 0` 系列だけ、`:1069-1075`）は
+L16 で撤回済**であり、landing したのは**全重み版**である（§12）。⟹ ⚠ **(a′-1) は (a′-2) が要求
+する以上の強さを既に持っている** — (a′-2) 側で重みを絞る必要は無い。
+
+### 14.4 ⚠ A を閉じても「言えないまま」残るもの（正直に書く）
+
+- ⚠ 右辺の合併は `k₁ < martonAuxBound α` で切れるが **`k₂` は `ℕ` 全域のまま** ⟹
+  **有限個の指標への還元にはなっていない = 親プラン §1.1 (C1) の「計算可能」の荷はまだ降りない**。
+  A が買うのは「**外側補助変数の基数だけ**が領域の水準で有界になる」ことである。
+- ⚠ **対象が閉凸包に上がる**。非凸のままの `martonRegionUnion` の切り詰めは**言えない**
+  （§14.2 の TEST A が機械で示した）。凸化した対象を内界として消費する段で
+  `Convex ℝ (bcCapacityRegion W)` の債務 1 本が立つ（§8.2 項目 2 に既出。⚠ **この債務は (b) を
+  採っても同じだけ立つ**ので A 固有の代償ではない）。
+- ⚠ **未確認 1 件（L18 の最初に確認すること）**: 支持関数の**下からの**評価に
+  `0 ≤ martonInfoV₁V₂` が要る（点 `(I₁', S'−I₁')` が witness 領域に入ることの確認）。
+  `rg -n '0 ≤ martonInfo' InformationTheory/` は **0 件** ⟹ その名前の補題は in-project に無い。
+  経路候補 2 本は**存在と import 閉包内在を機械確認した**（下表、`ScratchL18E.lean` で
+  `Marton/CardinalityBound.lean` を import して `#check` が通る = **新規 import は不要**）。
+  ⚠ **組み立て自体は未検証**（見積り 0–25 行）。
+
+| 経路候補 | file:line | 型クラス前提（逐語、`#check` 出力） | 結論形（逐語） |
+|---|---|---|---|
+| `entropy_pair_eq_entropy_add_condEntropy` `@[entry_point]` | `Shannon/Entropy.lean:42` | `{Ω : Type u_1} [MeasurableSpace Ω] {X : Type u_2} [Fintype X] [MeasurableSpace X] [MeasurableSingletonClass X] {Y : Type u_3} [Fintype Y] [Nonempty Y] [MeasurableSpace Y] [MeasurableSingletonClass Y]` + `(μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Ω → X) (Yo : Ω → Y)` + `Measurable Xs → Measurable Yo →` | `entropy μ (fun ω ↦ (Xs ω, Yo ω)) = entropy μ Xs + InformationTheory.MeasureFano.condEntropy μ Yo Xs` |
+| `entropy_ge_condEntropy` `@[entry_point]` | `Shannon/SlepianWolf/Basic.lean:69` | `{Ω : Type u_1} [MeasurableSpace Ω] {W : Type u_2} [Fintype W] [Nonempty W] [MeasurableSpace W] [MeasurableSingletonClass W] {Y : Type u_3} [MeasurableSpace Y]` + `(μ : Measure Ω) [IsProbabilityMeasure μ] (Ws : Ω → W) (Yo : Ω → Y)` + `Measurable Ws → Measurable Yo →` | `InformationTheory.MeasureFano.condEntropy μ Ws Yo ≤ entropy μ Ws` |
+
+⚠ **2 本の `condEntropy` は同一**（どちらも `InformationTheory.MeasureFano.condEntropy`）ゆえ
+連結する。`martonInfoV₁V₂` の逐語定義（`Marton/Setup.lean:262-266`）は
+`entropy … Prod.fst + entropy … (fun q ↦ q.2.1) - entropy … (fun q ↦ (q.1, q.2.1))` = 差の形なので、
+連鎖律で第 3 項を割って条件付きエントロピーの単調性を当てる、が想定の 2 段である。
+⚠ **これは我々の演繹**（射影の可測性と `IsProbabilityMeasure` インスタンスが手元にあるかは未確認）。
+
+### 14.5 B（`V₂` 側）の実測 — ⚠ 前 advisor の読みは正しく、しかも「1 つ減る」より強い
+
+§13.5 (a) 項目 1 の「⚠ 未検証」の読み（「(ii) の残件は L17 の成果で 1 つ減る公算が高い」）を
+`#check` で**機械確認した**。`exists_support_card_le_martonWeightedSumAllWeights_measure` /
+`exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights` は **`{V₁ V₂ α β₁ β₂}` について完全に
+generic** であり、しかも:
+
+- ⚠ **型クラス前提が swap について対称**（逐語確認）: `V₁` と `V₂` はどちらも
+  `[Fintype _] [Nonempty _] [MeasurableSpace _] [MeasurableSingletonClass _]` の**同一の 4 本**、
+  `β₁` と `β₂` も同一の 4 本 ⟹ `V₁ := V₂`, `V₂ := V₁`, `β₁ := β₂`, `β₂ := β₁` と instantiate
+  しても**型クラス側の債務は 1 本も増えない**。
+- ⟹ ⚠ **L13–L17 の約 1842 行を鏡像実装する必要は無い**（これは「1 つ減る」より強い結論）。
+
+⟹ B に本当に足りないのは次の 3 点だけである（⚠ **3 点とも未実装、うち 2 点は未検証。我々の演繹**）:
+
+| # | 足りないもの | 状態 | ⚠ 危険 |
+|---|---|---|---|
+| 1 | swap 対称性補題 `martonInfo₁_swap` | **署名は elaborate 済**（下記逐語、本体 `sorry`） | 低 |
+| 2 | 逆向き disintegration `pV.map Prod.swap = q₂ ⊗ₘ κ₂` | ⚠ **未検証** | ⚠ **型クラス前提が未検証** — Mathlib の `condKernel` 系は `StandardBorelSpace` を要求しうる |
+| 3 | 2 回適用が互いの `ncard` 上界を壊さないこと | ⚠ **未検証**（§12.4 (ii) 項目 3 のまま） | 中。⚠ 読みは「`κ₂` を固定したまま `V₂` の法だけを縮めるので新しい `V₁` 周辺分布は元の台に留まる ⟹ 壊れない」だが**未検証** |
+
+⚠ 上の 2 が必要な理由（逐語根拠）: 上記 2 本の headline は補助法を**分解形 `q ⊗ₘ κ`**
+（`q : Measure V₁`, `κ : Kernel V₁ V₂`）で受け取るので、`pV.map Prod.swap` をこの形に戻す段が要る。
+
+```lean
+variable {α : Type*} {β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
+  {V₁ V₂ : Type*}
+  [Fintype V₁] [Nonempty V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]
+  [Fintype V₂] [Nonempty V₂] [MeasurableSpace V₂] [MeasurableSingletonClass V₂]
+  [Fintype β₁] [Nonempty β₁] [MeasurableSingletonClass β₁]
+  [Fintype β₂] [Nonempty β₂] [MeasurableSingletonClass β₂]
+
+/-- B gateway atom (statement only): swap symmetry of the two receiver informations. -/
+theorem martonInfo₁_swap
+    (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    martonInfo₁ (pV.map Prod.swap) (K.comap Prod.swap measurable_swap)
+        (W.map Prod.swap : BCChannel α β₂ β₁)
+      = martonInfo₂ pV K W := by
+  sorry
+```
+
+⚠ **`Kernel.map` と `Kernel.comap` は非対称**（逐語再確認）:
+
+| API | file:line | 逐語 |
+|---|---|---|
+| `ProbabilityTheory.Kernel.map` | `Mathlib/Probability/Kernel/Composition/MapComap.lean:63` | `noncomputable def map [MeasurableSpace γ] (κ : Kernel α β) (f : β → γ) : Kernel α γ` — ⚠ **可測性引数を取らない** |
+| `ProbabilityTheory.Kernel.comap` | 同 `:152` | `def comap (κ : Kernel α β) (g : γ → α) (hg : Measurable g) : Kernel γ β` — 取る |
+| `ProbabilityTheory.Kernel.mapOfMeasurable` | 同 `:53` | `noncomputable def mapOfMeasurable (κ : Kernel α β) (f : β → γ) (hf : Measurable f) :` — 可測性付きの別入口 |
+
+### 14.6 ⚠ 強度差の疑い — **決着させていない**
+
+⚠ **`martonRegionUnion` そのものが凸かどうかは決着していない**。教科書の Marton 内界は凸化のために
+**第 3 の補助変数 `V₀`（time-sharing）**を持つ形で述べられるのが標準だが、in-project の
+`martonRegion` は **2 補助変数版**である ⟹ ⚠ **強度差の疑いがあり、凸性を「自明」と見積もっては
+ならない**（CLAUDE.md「textbook-object strength diff」に該当）。
+
+⟹ ⚠ **A はこの点に立ち入らずに閉じる** — 凸性を**証明せず閉凸包へ上げて回避する**設計だからである
+（§8.2 が (b)「`Q` 追加」案を退けた理由でもある: (b) は定義を変えて凸化するので §8.3 のとおり
+`@[entry_point]` 2 本の証明が通らなくなる）。
+
+### 14.7 見積り
+
+⚠ §13.3 の作法（「宣言本体 + 足場 150 行前後」）に従う。
+
+| 部品 | 宣言本体 | 根拠 |
+|---|---|---|
+| A gateway atom（`exists_nonneg_weights_separating_of_isLowerSet`） | **55（実測、証明済）** | §14.3 |
+| `0 ≤ martonInfoV₁V₂` | 0–25 | ⚠ 未確認（§14.4） |
+| lower set / nonempty / closed の受け皿 3 本 | 20–40 | `martonRegionUnion_isLowerSet`（`MartonUnion.lean:171`）/ `martonRegionUnion_nonempty`（同 `:181`）を bounded 版へ複製 |
+| (a′-2) 本体（分離 → 非負重み → (a′-1) 適用 → 逆包含） | 80–140 | §8.2 の 60–120 に L17 実測の +20% を上乗せ |
+| **宣言本体 計** | **155–260** | |
+| **`wc -l` 予測（足場 +150）** | **305–410** | ⚠ **1 leg 分の実測に基づく我々の演繹** |
+
+⚠ **§8.3 の consumer 表が `:169` `:179` と記録していた行番号は現 HEAD で `:171` `:181` へずれている**
+（file の編集による 2 行シフト。⚠ 上表は現 HEAD の実測値であり、§8.3 の本文は履歴として残す）。
+
+### 14.8 壁と撤退ライン
+
+⚠ **本節でも `@residual(wall:…)` は 1 本も立てていない / 共有 sorry 補題の候補も 0 件**。
+§9.9 / §11.7 / §12.5 / §13.6 の壁 0 件判定はそのまま有効である。**A に必要な Mathlib 資産は
+2 本とも実在し（§14.3）、最難関の 1 段は既に証明済**なので、残っているのは行数と配線だけである。
+⚠ B の項目 2（逆向き disintegration の `StandardBorelSpace` 要否）だけは**壁かどうか未判定** —
+⚠ **判定していない以上、壁とも非壁とも書かない**（L19 以降の最初の確認事項）。
+
+- **親プラン §6 の撤退ライン 3 本は不発火**（逐語で照合）:
+  「L8 の棚卸しで軸 T3-α が gate を通らない」= L8 で (a′) 決定済ゆえ触れない /
+  「L14 の棚卸しで層 3 に載せられる散文が 1 本も無い」= 層 3 に載る成果が landing 済ゆえ不発火 /
+  「20 leg 使い切って未達」= L18 / L19 / L20 が残っており未到達。
+- ⚠ **§13.3 の予算超過（+130%）は事実だが撤退ラインではない** — 配分の問題であって完了条件は
+  動かない。ただし**それが C（A + B を 1 leg）を採らない理由**である（§14.0）。
+- ⚠ **A を閉じても (C1) の「計算可能」の荷は降りない**（§14.4 第 1 項）。⟹ L19 の収穫で
+  「何が言えたか」を書くときに **`k₂` が `ℕ` 全域のまま**であることを落とさないこと。
