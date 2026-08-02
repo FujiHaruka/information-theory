@@ -7,9 +7,12 @@ import Mathlib.Analysis.Convex.Function
 # Convexity of the auxiliary-weight objective
 
 Fix a family of conditional laws `k u : V × Z → ℝ` indexed by an auxiliary alphabet `U`, a
-coefficient vector `w : U → ℝ` and a constant `c`.  The objective attached to a weight vector
-`q : U → ℝ` is `c`, plus the linear form `∑ u, q u * w u`, plus the negated conditional entropy
-`-H(V | Z)` of the mixture `∑ u, q u * k u`.  This is the shape the elementary cardinality
+coefficient vector `w : U → ℝ`, a constant `c` and a nonnegative scalar `t`.  The objective
+attached to a weight vector `q : U → ℝ` is `c`, plus the linear form `∑ u, q u * w u`, plus `t`
+times the negated conditional entropy `-H(V | Z)` of the mixture `∑ u, q u * k u`.  A general
+coefficient is needed because the entropy differences a cardinality bound has to control come
+with weights of their own, including the degenerate weight `0`.  This is the shape the elementary
+cardinality
 argument for the Marton inner bound optimizes: with the conditional law held fixed, the entropy
 terms split into a part that is affine in the weights and a single genuinely convex part.
 
@@ -77,31 +80,34 @@ lemma convexOn_sum_mul (w : U → ℝ) :
   simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, add_mul, mul_assoc, Finset.mul_sum]
   exact Finset.sum_add_distrib
 
-/-- The scalar objective attached to a family of conditional laws `k`, a coefficient vector `w`
-and a constant `c`.  Its value at a weight vector `q` is `c`, plus the linear form
-`∑ u, q u * w u`, plus the negated conditional entropy of the mixture `∑ u, q u * k u`. -/
-noncomputable def auxWeightObjective (k : U → V × Z → ℝ) (w : U → ℝ) (c : ℝ) (q : U → ℝ) : ℝ :=
+/-- The scalar objective attached to a family of conditional laws `k`, a coefficient vector `w`,
+a constant `c` and a scalar `t`.  Its value at a weight vector `q` is `c`, plus the linear form
+`∑ u, q u * w u`, plus `t` times the negated conditional entropy of the mixture
+`∑ u, q u * k u`. -/
+noncomputable def auxWeightObjective (k : U → V × Z → ℝ) (w : U → ℝ) (c t : ℝ) (q : U → ℝ) : ℝ :=
   c + (∑ u, q u * w u)
-    + ((∑ z, Real.negMulLog (∑ v, ∑ u, q u * k u (v, z)))
+    + t * ((∑ z, Real.negMulLog (∑ v, ∑ u, q u * k u (v, z)))
       - ∑ p : V × Z, Real.negMulLog (∑ u, q u * k u p))
 
-/-- The auxiliary-weight objective is convex on the nonnegative orthant. -/
+/-- The auxiliary-weight objective is convex on the nonnegative orthant, for a nonnegative
+coefficient on the entropy part. -/
 @[entry_point]
 theorem convexOn_auxWeightObjective (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) (w : U → ℝ)
-    (c : ℝ) : ConvexOn ℝ {q : U → ℝ | 0 ≤ q} (auxWeightObjective k w c) :=
+    (c t : ℝ) (ht : 0 ≤ t) : ConvexOn ℝ {q : U → ℝ | 0 ≤ q} (auxWeightObjective k w c t) :=
   ((convexOn_const c convex_setOf_nonneg).add (convexOn_sum_mul w)).add
-    (convexOn_negCondEntropy_mixture k hk)
+    (by simpa only [smul_eq_mul] using (convexOn_negCondEntropy_mixture k hk).smul ht)
 
 /-- A nonnegative weight vector can be replaced by one supported on at most `Fintype.card X`
 indices, keeping the aggregate `fun x ↦ ∑ u, q u * A u x` and not decreasing the
 auxiliary-weight objective, provided every row `A u` sums to one. -/
 @[entry_point]
 theorem exists_support_card_le_auxWeightObjective (A : U → X → ℝ) (hA : ∀ u, ∑ x, A u x = 1)
-    (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) (w : U → ℝ) (c : ℝ) (q : U → ℝ) (hq : 0 ≤ q) :
+    (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) (w : U → ℝ) (c t : ℝ) (ht : 0 ≤ t) (q : U → ℝ)
+    (hq : 0 ≤ q) :
     ∃ q' : U → ℝ, 0 ≤ q' ∧ (∀ x, ∑ u, q' u * A u x = ∑ u, q u * A u x) ∧
-      auxWeightObjective k w c q ≤ auxWeightObjective k w c q' ∧
+      auxWeightObjective k w c t q ≤ auxWeightObjective k w c t q' ∧
       {u | q' u ≠ 0}.ncard ≤ Fintype.card X :=
-  exists_support_card_le_of_convexOn A hA (auxWeightObjective k w c)
-    (convexOn_auxWeightObjective k hk w c) q hq
+  exists_support_card_le_of_convexOn A hA (auxWeightObjective k w c t)
+    (convexOn_auxWeightObjective k hk w c t ht) q hq
 
 end InformationTheory.Shannon.BroadcastChannel.Marton

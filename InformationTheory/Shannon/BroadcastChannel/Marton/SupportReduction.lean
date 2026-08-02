@@ -1,3 +1,4 @@
+import InformationTheory.Meta.EntryPoint
 import Mathlib.Analysis.Convex.Function
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Set.Card
@@ -25,6 +26,8 @@ as well as `q` while killing one coordinate.
 
 * `exists_support_card_le_of_convexOn` — a nonnegative weight vector can be replaced by one
   supported on at most `Fintype.card X` indices, preserving the aggregate and not decreasing `f`.
+* `exists_support_card_le_of_convexOn_add_aggregate` — the same conclusion for an objective that
+  additionally contains an arbitrary term depending only on the aggregate.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -207,5 +210,20 @@ theorem exists_support_card_le_of_convexOn (A : ι → X → ℝ) (hA : ∀ i, �
     calc {i | q i ≠ 0}.ncard
         ≤ (Set.univ : Set ι).ncard := Set.ncard_le_ncard (Set.subset_univ _) (Set.toFinite _)
       _ = Fintype.card ι := by rw [Set.ncard_univ, Nat.card_eq_fintype_card]
+
+/-- Support reduction still applies when the objective carries, on top of the convex part `f`, a
+term `g` that reads only the aggregate `fun x ↦ ∑ i, q i * A i x`.  Nothing is assumed about `g`,
+because the reduced weights leave the aggregate unchanged. -/
+@[entry_point]
+theorem exists_support_card_le_of_convexOn_add_aggregate (A : ι → X → ℝ) (hA : ∀ i, ∑ x, A i x = 1)
+    (f : (ι → ℝ) → ℝ) (hf : ConvexOn ℝ {q : ι → ℝ | 0 ≤ q} f) (g : (X → ℝ) → ℝ)
+    (q : ι → ℝ) (hq : 0 ≤ q) :
+    ∃ q' : ι → ℝ, 0 ≤ q' ∧ (∀ x, ∑ i, q' i * A i x = ∑ i, q i * A i x) ∧
+      f q + g (fun x ↦ ∑ i, q i * A i x) ≤ f q' + g (fun x ↦ ∑ i, q' i * A i x) ∧
+      {i | q' i ≠ 0}.ncard ≤ Fintype.card X := by
+  obtain ⟨q', hq', hagg, hfle, hcard⟩ := exists_support_card_le_of_convexOn A hA f hf q hq
+  refine ⟨q', hq', hagg, ?_, hcard⟩
+  rw [show (fun x ↦ ∑ i, q' i * A i x) = fun x ↦ ∑ i, q i * A i x from funext hagg]
+  linarith
 
 end InformationTheory.Shannon.BroadcastChannel.Marton
