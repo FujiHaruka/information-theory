@@ -977,3 +977,162 @@ cardinality `k + 1`"、同 `:16`）なので `|V₁'| = k₁' + 1`。文献の `
 ⟹ `martonAuxBound α := Fintype.card α` で補正項は要らない。
 ⚠ **`|X| + 1` と書いてはならない** — `+1` / `+4` が付くのは共通メッセージ版の第 3 変数 `W` だけで、
 我々の 2 補助変数版には無関係である。
+
+---
+
+## §8 標的言明の選択 (L8)
+
+⚠ 本節は **追記であり、§1–§7 は書き換えていない**。§7.6 の 2 択 (a)/(b) に、第 3 案 (c) と
+本節で出た第 4 案 (a′) を加えて判定する。逐語の出典は [`bc-facts.md`](bc-facts.md) `## L7 (T3)` が SoT。
+
+### 8.1 (c) の判定 — **NO。逃げ道ではない**（ただし「3 本同時」は本当に緩む）
+
+(c) = 標的の右辺を有界合併にする形
+`martonRegion pV K W ⊆ ⋃ (k₁' < martonAuxBound α) (k₂' < …) (pV') (K'), martonRegion pV' K' W`。
+
+**(i) 緩む部分は本物である**（⚠ 我々の演繹）。`martonRegion` は 3 本の線型不等式で切られた lower set
+`Q(a,b,s) = {R₁ ≤ a, R₂ ≤ b, R₁+R₂ ≤ s}`（`a = I₁`, `b = I₂`, `s = I₁+I₂−I₁₂`）であり、
+線分 `L = {(t, s−t) : s−b ≤ t ≤ a}` の下方閉包に等しい。各 `Q` が lower set なので (c) は
+「`L` の各点が有界 witness の `Q(a',b',s')` に入る」ことと同値で、点ごとの要求は
+
+    (t, s−t) ∈ Q(a',b',s')  ⟺  t ≤ a' かつ s−t ≤ b' かつ s ≤ s'
+
+⟹ 目標値が `t` とともに動くので、§5.2 が要求する 3 本同時 `a ≤ a'` / `b ≤ b'` / `s ≤ s'` は
+**要求されない**。⟹ §7.4 の「3 汎関数の同時改善」は (c) の必要条件では**ない**。ここまでは正しい。
+
+**(ii) 潰れる部分**（⚠ 我々の演繹）。`L` の端点 `p₁ = (a, s−a)` では 3 本のうち **2 本が満強度で残る** —
+`a' ≥ a`（方向 `(1,0)`）と `s' ≥ s`（方向 `(1,1)`）。3 本目 `b' ≥ s−a` は `I₁₂' ≥ 0` から
+`b' = s'−a'+I₁₂' ≥ s−a` で自動に従う。対称に `p₂ = (s−b, b)` は `b' ≥ b` と `s' ≥ s`。
+⟹ **3 本同時 → 2 本同時に減っただけ**であり、「1 つの witness が複数方向で同時に支配する」という
+§7.4 の障害の**型はそのまま残る**。文献（§7.2、facts §L7 行 4）が与えるのは **1 方向 1 回**の最大化である。
+
+**(iii) 反例の形**（⚠ 我々の演繹。3 つ組の水準の反例であり、実チャネルでの実現は主張しない。
+示すのは「文献のスカラー保証から (c) は導けない」ことであって「(c) が偽」ではない）:
+有界 witness が返す `(I₁,I₂,I₁₂)` が `T' = (2,0,0)` と `T'' = (0,2,0)` の 2 つだけ、無界 witness が
+`T₀ = (1,1,0)` を返すとする。`(a,b,s)` は順に `(2,0,2)` / `(0,2,2)` / `(1,1,2)`。
+
+- **スカラー版は全方向で成立する**: 任意の重み `μ ≥ 0` に対し `max(2μ₁, 2μ₂) + 2μ₃ ≥ μ₁ + μ₂ + 2μ₃`。
+- **(c) は壊れる**: `(1,1) ∈ Q(T₀)` だが `Q(T')` は `R₂ ≤ 0` を、`Q(T'')` は `R₁ ≤ 0` を要求するので
+  どちらにも入らない。しかも `(1,1)` はまさに角点 `p₁ = (a, s−a)` である。
+
+⟹ **(c) は (a) と §5.2 の中間の強さ**で、証明側の障害は §5.2 と同型（次元が 1 減っただけ）。
+
+**(iv) 定数を `+1` して買えるか — 片側だけ買えて反復しない**（⚠ 我々の演繹、未検証）。
+`V₁` を縮める段では、`p₀(x)` を保つ多面体上で `I₁ = H(Y₁) − Σ q(v₁)H(Y₁\|v₁)` が `q` について
+**アフィン**である（facts §L7 行 4 逐語 "The term `−H(Y\|U)+H(V\|U)` is **linear** in `q(u)`"）
+⟹ `I₁` 保存を**等式制約として多面体に足せる**（端点の台は `\|X\|+1` に増える）。`S = I₁+I₂−I₁₂` は
+凸なので端点で減らない ⟹ `p₁` の 2 本同時が `\|V₁\| ≤ \|X\|+1` で取れる。
+⚠ **しかし `V₂` を縮める段で要る 2 本（`I₁` と `S`）はどちらも `p(v₂)` についてアフィンでない**
+（両方とも凸）ので同じ手が反復しない。⟹ (c) は定数を緩めても閉じない。
+
+### 8.2 推奨 — **(a′) スカラー版を「閉凸包の等式」として述べる** ✓ 推奨
+
+⚠ **(a′) は §7.6 の 2 択に無かった第 4 案**である。中身は (a) と同じだが、言明を領域の水準へ上げる。
+
+```lean
+-- (a′-1) 文献の結論形そのまま（∃ 形。sSup を経由しない）
+theorem exists_bounded_card_ge_martonWeightedSum
+    … (μ₁ μ₂ μ₃ : ℝ) (hμ₁ : 0 ≤ μ₁) (hμ₂ : 0 ≤ μ₂) (hμ₃ : 0 ≤ μ₃) … :
+    ∃ (k₁' k₂' : ℕ) (_ : k₁' < martonAuxBound α) (_ : k₂' < martonAuxBound α)
+      (pV') (_ : IsProbabilityMeasure pV') (K') (_ : IsMarkovKernel K'),
+      μ₁ * martonInfo₁ pV K W + μ₂ * martonInfo₂ pV K W
+        + μ₃ * (martonInfo₁ pV K W + martonInfo₂ pV K W - martonInfoV₁V₂ pV K W)
+      ≤ μ₁ * martonInfo₁ pV' K' W + μ₂ * martonInfo₂ pV' K' W
+        + μ₃ * (martonInfo₁ pV' K' W + martonInfo₂ pV' K' W - martonInfoV₁V₂ pV' K' W)
+
+-- (a′-2) 領域版（§5.2 の martonRegionUnion_eq_bounded の閉凸包版）
+theorem closure_convexHull_martonRegionUnion_eq_bounded (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    closure (convexHull ℝ (martonRegionUnion W))
+      = closure (convexHull ℝ (⋃ (k₁ : ℕ) (_ : k₁ < martonAuxBound α) (k₂ : ℕ)
+          (_ : k₂ < martonAuxBound α) (pV : Measure _) (_ : IsProbabilityMeasure pV)
+          (K : Kernel _ α) (_ : IsMarkovKernel K), martonRegion pV K W))
+```
+
+| 案 | 定義変更 | 文献の証明が届くか | 領域の切り詰めが出るか | 追加債務 |
+|---|---|---|---|---|
+| (a) スカラーのみ | 無し | **届く** | 出ない（§7.6 の代償） | 無し |
+| **(a′)** ✓ | **無し** | **届く**（(a) と同内容） | **出る（閉凸包の水準で）** | 容量領域の凸性 1 本（消費段で） |
+| (b) `Q` 追加 | 有り | 届く | 出る | 容量領域の凸性 + **§8.3 の 2 本** |
+| (c) 点ごと合併 | 無し | ⚠ **届かない**（§8.1） | 出る | — |
+| §5.2 単一 witness | 無し | ⚠ 届かない（§7.4） | 出る | — |
+
+**なぜ (a′) が T3 のゴールに対して最も多く言えるか**（親プラン §1.1 (C1) に照らす）:
+
+1. (C1) が要求するのは「各 `n` の Marton 領域が**計算可能**（有界時間 `ε` 近似）」である。
+   凸閉集合の `ε` 近似の標準構成は**有限個の方向で支持関数を評価する**ことであり、(a′-1) はその
+   評価式そのもの、(a′-2) はその評価が定める対象の同定である ⟹ **(a′) は T3 が実際に消費する形**。
+   非凸のままの合併は近似の形すら定まらない。
+2. **凸化しても内界であり続ける**（容量領域は time-sharing で凸）。⚠ ただし in-project に
+   `Convex ℝ (bcCapacityRegion W)` は**無い**（BC 家系の `Convex` は `martonRegion_convex`
+   (`MartonUnion.lean:133`) の 1 本のみ）⟹ 凸化した対象を内界として消費する段で債務が 1 本立つ。
+   ⚠ **この債務は (b) を採っても同じだけ立つ**（しかも (b) は既存 2 本を壊す形で立てる、§8.3）。
+3. **(b) と (a′) は同じ対象を指す**（⚠ 我々の演繹）: `Q` 付き領域は 3 つ組の凸結合に対する
+   `Q(Σλᵢtᵢ)` であり、支持関数が一致するので `Q(Σλᵢtᵢ) = Σλᵢ Q(tᵢ) ⊆ conv(⋃ᵢ Q(tᵢ))`、逆包含は
+   各不等式が 3 つ組について線型であることから直ちに従う ⟹ **`⋃_Q (Q 付き領域) = conv(⋃ martonRegion)`**。
+   ⟹ (b) が買うものを (a′) は**定義を触らずに**買う。
+4. §7.6 が (a) の代償とした「`martonRegionUnion` の切り詰めに届かない」は、**閉凸包を取れば届く**。
+   届かないのは非凸のままの合併の切り詰め = (c) だけで、それは §8.1 のとおり文献の射程外である。
+
+**行数の見積り**（§7.5 の更新。⚠ 我々の演繹）: (a′-1) = §7.5 の部品 1 / 2 / 4（有効、280–450 行）
++ 部品 3 の入れ替え先 (3a)(3b)(3c)（200–350 行）⟹ **480–800 行**（§5 の総額と同程度）。
+(a′-2) は追加で **60–120 行**。
+
+**最初の一手**: §7.5 が「本 leg では未調査 = 次の一手」と書いた唯一の項目、部品 **(3b)
+「多面体 `{q ≥ 0, Aq = b}` の端点の台が `rank A` 以下」の Mathlib 在庫調査**。⚠ §1 で棚卸しした
+`convexHull` 側 Carathéodory は双対側なのでテンプレートにならない（§7.5）。gateway-atom-first で 1 本投げる。
+
+**(a′-2) の 3 段**（Mathlib 資産は確認済）: `geometric_hahn_banach_closed_point`
+(`Mathlib/Analysis/LocallyConvex/Separation.lean:230`) で右辺の外の点を分離 → 両辺が lower set である
+ことから分離汎関数 `μ ≥ 0` を出す（`μᵢ < 0` なら右辺上の上限が `+∞` になり分離と矛盾）→ 方向 `μ` の
+支持関数を `μ₁ ≥ μ₂` のとき `(μ₁−μ₂)I₁ + μ₂S`（対称形も同様）へ落として (a′-1) を当てる。
+⚠ ここで**要る重みは `μ₂ = 0` 系列と `μ₁ = 0` 系列だけ**であり、これは [GA09] Lemma 1 の
+`γ = 0` / `λ = 0` に対応する。`μ₃ = 0`（純方向 `(1,0)` / `(0,1)`）は `ga09.txt:707` 逐語の
+"clearly `Û = V̂ = X` works" で閉じる（§7.2 に既出）。
+⚠ `closedConvexHull_eq_closure_convexHull` (`Mathlib/Analysis/Convex/Topology.lean:332`) が在るので
+`closedConvexHull` 表記でもよい。
+
+**進まないときの退出**: (3b) が Mathlib に無く自己構築が 150 行を超えるなら、(a′-1) を
+`sorry` + `@residual(plan:<slug>)` で骨格だけ立て、**独立に閉じられる (a′-2) を先に閉じる**
+（(a′-1) を仮定に取らず `sorry` の補題として参照する）。⚠ `@residual(wall:…)` は切らない
+（facts §L7 行 7: 文献側では 2009–2011 に閉じている）。
+
+### 8.3 (b) の波及 — 「7 decl に波及」では済まず、**`@[entry_point]` 2 本の証明が通らなくなる**
+
+`scripts/dep_consumers.sh …Marton.martonRegionUnion` の逐語出力（`direct consumers : 7 decl / 2 file`）:
+
+| file:line | decl | (b) の下で |
+|---|---|---|
+| `MartonFullSupport.lean:227` | `martonRegionUnion_subset_capacity` `@[entry_point]` | ⚠ **証明が通らない** |
+| `MartonUnion.lean:91` | `martonRegionUnion_subset_uv` `@[entry_point]` | ⚠ **証明が通らない** |
+| `MartonUnion.lean:104` | `martonRegionUnionFullSupport_subset_union` | 機械的（⚠ `martonRegionUnionFullSupport` も定義変更が要る = 波及 +1） |
+| `MartonUnion.lean:160` | `martonRegion_subset_union_of_bcAux` `[private]` | 機械的（`Q` を退化させる index を選ぶ） |
+| `MartonUnion.lean:169` | `martonRegionUnion_isLowerSet` | 機械的 |
+| `MartonUnion.lean:179` | `martonRegionUnion_nonempty` | 機械的 |
+| `MartonUnion.lean:410` | `martonRegion_subset_union` | 機械的 |
+
+⚠ **2 本が壊れる理由（逐語）**:
+
+- `martonRegionUnion_subset_capacity` の本体は `closure_minimal` + 各 index で
+  `marton_region_subset_capacity_of_channel_fullSupport pV K W hW` を当てるだけである
+  (`MartonFullSupport.lean:234-237`)。`Q` 付きの点は**単一の `(pV,K)` の四角形に入らない**ので
+  この per-index 還元は届かない。再証明には time-sharing（符号の連接）による新規の operational 証明が要る。
+- `martonRegionUnion_subset_uv` も同型 (`MartonUnion.lean:96-100`)。`Q` 付きだと `bcOuterRegionUV` の
+  **凸性**が要るが in-project に無い。迂回は `bcCapacityRegion W ⊆ bcOuterRegionUV W`
+  (`OuterBoundUV/Assembly.lean:853`) 経由だが、それには 1 本目の再証明が先に要る ⟹ 依存が 1 本目に集約される。
+
+⟹ **(b) のコストは §7.6 の見積り（「7 decl / 2 file に波及」）より遥かに大きい**。壊れる 2 本はどちらも
+sorryAx-free の headline であり、必要なのは署名の修正ではなく**新しい数学**である。⚠ しかも §8.2-3 の
+とおり (b) が買う対象は (a′) が定義を触らずに買う対象と等しい。
+
+### 8.4 撤退ライン判定 — **3 本とも触れない**
+
+| 親 §6 の撤退ライン | 触れるか | 判定 |
+|---|---|---|
+| L8 の棚卸しで T3-α が gate を通らず T3-β / γ も第一手を返さない | **触れない** | 本節は軸の gate ではなく層 3 の標的言明の選択。T3-α の gate 判定は別 leg |
+| L14 の棚卸しで層 3 に載せられる散文が 1 本も無い | **触れない** | (a′) が載る候補として生きている（§8.2）。むしろ載せる形が確定した |
+| 20 leg を使い切って未達 | **触れない** | — |
+
+⚠ §6.5 の予算警告（層 3 集中枠 L16–L18 を基数境界 1 本が埋めうる）は**そのまま有効**である
+— (a′) を採っても 480–800 行 + 60–120 行という見積りは動かない（§8.2）。
+⚠ `@residual(wall:…)` を切らないという §7.6 / facts §L7 行 7 の判定も動かない。(a′) は
+「文献の結論形をそのまま標的にする」選択であって、壁の回避ではない。
