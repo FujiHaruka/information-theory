@@ -158,3 +158,18 @@ round-robin (§5-5) が「回っているように見えて回っていない」
 (ii) 別に**枯渇カウンタ** (その軸が最後に leg の主語になってからの leg 数) を持ち、
 (iii) 棚卸し leg で枯渇カウンタが閾値を超えた軸は**次の可変枠を割り当てるか、優先度を下げる理由を
 書くかの二択を強制する**、の 3 点。判定は棚卸し leg にだけ発生するので運用コストは増えない。
+
+## T3 attack 一覧 (親 plan = [`bc-open-problem-t3-plan.md`](bc-open-problem-t3-plan.md))
+
+**leg 予算 20**。枠割りの SoT は T3 plan §5。状態語彙と死因の語彙、および **`killed` の行を消さない**
+規約は冒頭の節と共通 (再掲しない)。上の一覧とは親 plan が違うので表を分ける。
+
+| slug | 軸 | 状態 | 直近 leg | 死因 / 現況 | 残った副産物 |
+|---|---|---|---|---|---|
+| `t3-lit-gate` | — | `harvested` | **L0(T3)** | **完了**。[`bc-facts.md`](bc-facts.md) §L0(T3) に 10 行。§1.1 の分解を **(C2) 1 本**へ訂正し、軸 **T3-γ を kill** | 下記 5 本 |
+| `t3-outer-computable-sequence` | T3-α | **`live`** | **L0(T3)** | **本丸**。容量領域に上から収束する計算可能な外界列の構成 | — |
+| `t3-not-effectively-compact` | T3-β | **`live`** | **L0(T3)** | 否定側。「下からは半計算可能だが上からは半計算可能でない」の移植。⚠ **Marton 最適性予想の反証を含意する難度** | — |
+| `t3-hierarchy-level` | T3-γ | **`killed`** | **L0(T3)** | 死因 `known-result` — [Li21] 脚注 3 / §VIII 定義候補 3) が計算容易性との直結を**明示的に否定**している | 子 `t3-eps-vs-exact-decidability` |
+| `t3-eps-vs-exact-decidability` | T3-γ の子 | `todo` | — | facts §L0(T3) 行 9 の probe。**`ε` 近似可能性と厳密決定可能性 (Tarski 指数関数問題) の分離**を確定させる。⚠ 行 10 の難度較正がこれに依存している | — |
+| `t3-fano-converse-not-effective` | T3-α の子 | `todo` | — | facts §L0(T3) の演繹の probe。Fano 由来の converse が**固定 `n` では外界を与えない**ことと、有効化が `SRM` の加法性 (= Marton 最適性) とどう関係するか | — |
+| `t3-multiletter-marton-region-version` | T3-α/β 共通の前提 | `todo` | — | facts §L0(T3) 行 2 の穴埋め。「多文字 Marton は一般にタイト」の**領域版**の一次出典を取る (sum rate 版のみ逐語取得済) | — |
