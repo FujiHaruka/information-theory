@@ -2227,3 +2227,287 @@ subagent を不当に早期打ち切りする。
   （新規 `sorry` / `@residual` の導入 0 / 既存署名の変更 0）。
 - ⚠ **枠は L16 を消化して残り 2 本**（L17 / L18 = 層 3 の集中枠）+ L19（収穫）+ L20（記録）。
   §12.4 の残件 (i) と (ii) をこの 2 本に入れられるかが次の判断点である。
+
+## §13 L17 の実測 — 台の部分型化（§12.4 (i) の「本当に無い 1 段」は誤判定だった）
+
+⚠ 本節は**追記であり §1–§12 は書き換えていない**（§11 が §10 に、§12 が §11 に対して採ったのと
+同じ作法）。ただし本節の実測により、**§12.4 (i) と §11.6 (i) が 2 leg にわたり「本当に無い 1 段」と
+呼んでいた判定は覆った**。⚠ **§11.6 (i) / §12.4 (i) の本文は履歴としてそのまま残す — 訂正の所在は
+本節である**。
+
+### 13.0 一行判定
+
+**GO**。新規 1 ファイル `InformationTheory/Shannon/BroadcastChannel/Marton/CardinalityBound.lean`
+に **16 decl** が landing し、**`V₁`（外側補助変数）側の基数上界**が `@[entry_point]` 1 本として
+立った。**Mathlib 側の不足は 0 件**（壁 0 / 共有 sorry 補題の候補 0）。到達状態の再導出（本節は
+値をキャッシュしない）:
+
+```bash
+rg -n 'sorry|@residual' InformationTheory/Shannon/BroadcastChannel/Marton/CardinalityBound.lean
+scripts/sig_view.ts --names InformationTheory/Shannon/BroadcastChannel/Marton/CardinalityBound.lean
+lake env lean InformationTheory/Shannon/BroadcastChannel/Marton/CardinalityBound.lean
+```
+
+⚠ **(a′-1) はこれでも成立していない** — 縛れたのは **`V₁` のアルファベットだけ**で、結論の
+`κ' : Kernel (bcAuxAlphabet.{u} k) V₂` は **`V₂` を元の型のまま持つ**（§13.5）。
+
+### 13.1 ルート S′ の核心 — ⚠ **「本当に無い 1 段」は誤判定だった**
+
+§12.4 (i) / §11.6 (i) は「`|V₁| > |α|` のとき `V₁ → T` の**大域単射は存在しない**ので
+`wz_entropy_map_injective`（大域単射を要求）を当てられない ⟹ **台の部分型へ落とす段が本当に無い**」
+と書いていた。**この結論が覆った。**
+
+- **観察自体は正しい**。`|V₁| > |α|` で `V₁` から小さい型への大域単射は無い。⚠ **誤りは
+  「だから単射版の補題は使えない」という結論のほう**である。
+- **向きを反転**する。台の部分型を `S := {u : V₁ \| q.real {u} ≠ 0}` とすると、
+  `Subtype.val : ↥S → V₁` は **大域単射**（`Subtype.val_injective`）。
+- ⟹ 要る段は「**測度を落とす**段」ではなく「**部分型上の測度を押し出したら元に戻る**段」である。
+  これは既存資産 2 本（`compProd_comap_map_prodMap` +
+  Mathlib `MeasureTheory.Measure.map_comap_subtype_coe`）で閉じ、**実物のタクティク本体は 6 行**
+  （`CardinalityBound.lean:362-367` 逐語 = `hι` / `hpush` / `rw [← hpush]` / `exact` の 4 段）。
+- ⚠ **tell** = 「無い」の根拠が**存在しない対象（`V₁ → T` の単射）の非存在**だったこと。
+  **非存在は「その対象を本当に経由しなければならないか」を先に問わないと、誤った欠落判定を生む。**
+
+⚠ **併せて訂正**: plan §5.2 / 在庫 §12.4 (i) が L17 の gateway atom 候補に挙げていた
+**`Set.InjOn` 版のエントロピー不変性は不適**である（ルート S′ では**一度も要らない**）。
+根拠は散文ではなく**コンパイラ**である:
+
+- **ルート I**（`Set.InjOn` + 台の外を潰す非単射写像）は、`Kernel.comap` を on-the-nose で戻すと
+  **`F a₁ = F a₂ → K a₁ = K a₂` を強制する**（advisor の TEST 5 が `lake env lean` 0 error で
+  この含意を確認）。`F` が台の外を潰す以上これは一般に偽なので、ルート I は必ず a.e. 引数を経由する。
+- ⚠ **ルート I は壁ではない**（受け皿 `MeasureTheory.Measure.compProd_congr` は Mathlib に在る）。
+  ただし `martonJointDistribution` は `⊗ₘ` を 2 段重ねる（`Marton/Setup.lean:57-61`）ので
+  `compProd_congr` を 2 回 + 2 段目への持ち上げが要り、さらに `InjOn` 版エントロピー不変性は
+  **測度に依存する**言明になって `wz_entropy_map_injective` の測度非依存な証明を流用できない。
+- ⟹ **不適の理由は「潰れている」ではなく「S′ に無い負債を 3 つ背負う」**である。
+
+⚠ advisor の機械確認（TEST 1–6、`lake env lean` が silent = 0 error）は
+scratchpad の `ScratchL17*.lean` で行われた。**scratchpad はセッション局所なので消えうる** —
+本節に転記した結論（13.2 の逐語署名）が在庫側の SoT であり、再導出は 13.0 のコマンドによる。
+
+### 13.2 landing した 16 decl の逐語署名
+
+⚠ 以下の「型クラス前提」列は**ソース逐語**（section `variable` ブロック + `omit` 行 + 宣言自身の
+binder）である。⚠ **`variable` ブロックからの注入があるので宣言行だけを読むと落ちる**。
+本ファイルの `variable` ブロックは 6 系統（すべて `CardinalityBound.lean` の逐語）:
+
+| 略号 | file:line | 逐語 |
+|---|---|---|
+| **VB-R** | `:91-93` | `{α : Type u} {β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂] {V₁ V₂ V₁' V₂' : Type*} [MeasurableSpace V₁] [MeasurableSpace V₂] [MeasurableSpace V₁'] [MeasurableSpace V₂']` |
+| **VB-R1** | `:142-144` | `[Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁] [Fintype V₁'] [Nonempty V₁'] [MeasurableSingletonClass V₁'] [Fintype β₁] [Nonempty β₁] [MeasurableSingletonClass β₁]` |
+| **VB-R2** | `:186-188` | `[Fintype V₂] [Nonempty V₂] [MeasurableSingletonClass V₂] [Fintype V₂'] [Nonempty V₂'] [MeasurableSingletonClass V₂'] [Fintype β₂] [Nonempty β₂] [MeasurableSingletonClass β₂]` |
+| **VB-RA** | `:231-234` | `[Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁] [Fintype V₂] [Nonempty V₂] [MeasurableSingletonClass V₂] [Fintype V₁'] [Nonempty V₁'] [MeasurableSingletonClass V₁'] [Fintype V₂'] [Nonempty V₂'] [MeasurableSingletonClass V₂']` |
+| **VB-S** | `:284` | `{V₁ : Type*} [Fintype V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]` |
+| **VB-C** | `:345-347` | `{α : Type u} {β₁ β₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂] {V₁ V₂ : Type*} [Fintype V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁] [MeasurableSpace V₂]` |
+| **VB-B** | `:417-422` | §12.2 の **VB5 と同一**（`V₁ V₂ α β₁ β₂` の 5 組 × `[Fintype] [Nonempty] [MeasurableSpace] [MeasurableSingletonClass]`）。⚠ advisor 案どおり |
+
+**(1) エントロピー層（1 本）**
+
+| decl | file:line | 型クラス前提（ソース逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `entropy_injective_comp` | `…/Marton/CardinalityBound.lean:51` | 宣言自身が全部持つ（`variable` 注入なし）: `{Ω γ₀ δ₀ : Type*} [MeasurableSpace Ω] [Fintype γ₀] [Nonempty γ₀] [MeasurableSpace γ₀] [MeasurableSingletonClass γ₀] [Fintype δ₀] [Nonempty δ₀] [MeasurableSpace δ₀] [MeasurableSingletonClass δ₀]` | `entropy μ (fun ω ↦ g (X ω)) = entropy μ X`（仮引数 `(μ : Measure Ω) (X : Ω → γ₀) (hX : Measurable X) (g : γ₀ → δ₀) (hg : Function.Injective g) (hgmeas : Measurable g)`）⚠ `wz_entropy_map_injective`（`…/WynerZiv/Achievability/Covering.lean:1189`）との差は **`[DecidableEq γ₀]` `[DecidableEq δ₀]` の 2 本が無いことだけ** |
+
+**(2) 再ラベル層 — 単射版 4 本**
+
+| decl | file:line | 型クラス前提（ソース逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `martonJointDistribution_map_injective` | 同 `:95` | **VB-R のみ** | `martonJointDistribution (pV.map (fun v ↦ (f₁ v.1, f₂ v.2))) K' W = (martonJointDistribution pV (K'.comap (fun v ↦ (f₁ v.1, f₂ v.2)) ((hf₁.comp measurable_fst).prodMk (hf₂.comp measurable_snd))) W).map (fun q ↦ (f₁ q.1, f₂ q.2.1, q.2.2))`（仮引数 `(pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV] (K' : Kernel (V₁' × V₂') α) [IsMarkovKernel K'] (W : BCChannel α β₁ β₂) [IsMarkovKernel W] (f₁ : V₁ → V₁') (hf₁ : Measurable f₁) (f₂ : V₂ → V₂') (hf₂ : Measurable f₂)`）⚠ **単射性はどちらの写像にも要らない** |
+| `martonInfo₁_map_injective` | 同 `:146` | VB-R + **VB-R1** | `martonInfo₁ (pV.map (fun v ↦ (f₁ v.1, f₂ v.2))) K' W = martonInfo₁ pV (K'.comap (fun v ↦ (f₁ v.1, f₂ v.2)) ((hf₁.comp measurable_fst).prodMk (hf₂.comp measurable_snd))) W`（上に加え `(hinj₁ : Function.Injective f₁)`）⚠ **単射は `f₁` にだけ** |
+| `martonInfo₂_map_injective` | 同 `:190` | VB-R + **VB-R2** | 同型（`martonInfo₂`）。⚠ **単射は `f₂` にだけ**（`(hinj₂ : Function.Injective f₂)`、`f₁` は可測のみ） |
+| `martonInfoV₁V₂_map_injective` | 同 `:236` | VB-R + **VB-RA**（⚠ `β₁ β₂` の型クラスは要らない） | 同型（`martonInfoV₁V₂`）。⚠ **両方に単射**（`hinj₁` + `hinj₂`）。advisor が「1 行増える」と見込んだ `Prod.map` の単射性は `simpa [Prod.ext_iff, hinj₁.eq_iff, hinj₂.eq_iff]` の 1 行（`:269-270` 逐語）に収まった |
+
+**(3) 台の部分型パッケージ 4 本**
+
+| decl | file:line | 型クラス前提（ソース逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `map_comap_support_coe` | 同 `:287` | **VB-S** 全部 + `[IsProbabilityMeasure q]`。⚠ **`open MeasureTheory.Measure in`（`:286`）が要る** — `map_comap_subtype_coe` は完全修飾名だと unknown constant になる | `(Measure.comap (Subtype.val : ↥{u : V₁ \| q.real {u} ≠ 0} → V₁) q).map Subtype.val = q` |
+| `card_support_subtype_le` | 同 `:303` | `omit [Fintype V₁] [MeasurableSingletonClass V₁] in`（`:302` 逐語）+ `[IsProbabilityMeasure q]` + ⚠ **`[Fintype ↥{u : V₁ \| q.real {u} ≠ 0}]` を instance 引数で受ける** | `Fintype.card ↥{u : V₁ \| q.real {u} ≠ 0} ≤ n`（仮引数 `{n : ℕ} (h : {u : V₁ \| q.real {u} ≠ 0}.ncard ≤ n)`）。本体は `Nat.card_eq_fintype_card` + `Nat.card_coe_set_eq` ⟹ **instance 非依存** |
+| `nonempty_support_subtype` | 同 `:312` | `omit [MeasurableSingletonClass V₁] in`（`:311`）+ `[IsProbabilityMeasure q]` | `Nonempty ↥{u : V₁ \| q.real {u} ≠ 0}` ⚠ **これは定理**（台が空なら `measure_univ` に矛盾）なので、下流では instance 引数を供給する側 |
+| `isProbabilityMeasure_of_map_subtype_val` | 同 `:330` | `omit [Fintype V₁] [MeasurableSingletonClass V₁] in`（`:329`）+ `[IsProbabilityMeasure q]` | `IsProbabilityMeasure q'`（仮引数 `(q' : Measure ↥{u : V₁ \| q.real {u} ≠ 0}) (h : q'.map (Subtype.val : ↥{u : V₁ \| q.real {u} ≠ 0} → V₁) = q)`） |
+
+**(4) 部分型からの押し出し 3 本**（⚠ **13.1 の「6 行」の実物はここ**）
+
+| decl | file:line | 型クラス前提（ソース逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `martonInfo₁_comap_support` | 同 `:349` | VB-C + `[Nonempty V₁] [Fintype β₁] [Nonempty β₁] [MeasurableSingletonClass β₁]` + `[IsProbabilityMeasure q] [IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W] [IsProbabilityMeasure q'']` + ⚠ **`[Fintype ↥{u : V₁ \| q.real {u} ≠ 0}] [Nonempty ↥{u : V₁ \| q.real {u} ≠ 0}]`（`:356` 逐語）** | `martonInfo₁ (q ⊗ₘ κ) K W = martonInfo₁ (q'' ⊗ₘ (κ.comap Subtype.val measurable_subtype_coe)) (K.comap (fun v : ↥{u : V₁ \| q.real {u} ≠ 0} × V₂ ↦ ((v.1 : V₁), v.2)) ((measurable_subtype_coe.comp measurable_fst).prodMk measurable_snd)) W`（仮引数末尾 `(hq'' : q''.map (Subtype.val : …) = q)`） |
+| `martonInfo₂_comap_support` | 同 `:370` | `omit [MeasurableSingletonClass V₁] in`（`:369`）+ VB-C + `[Fintype V₂] [Nonempty V₂] [MeasurableSingletonClass V₂] [Fintype β₂] [Nonempty β₂] [MeasurableSingletonClass β₂]` + 上と同じ 5 本の測度クラス。⚠ **部分型側の型クラスを 1 本も要求しない**（`martonInfo₂` が読むのは `V₂` 座標だけ） | 同型（`martonInfo₂`） |
+| `martonInfoV₁V₂_comap_support` | 同 `:390` | VB-C + `[Nonempty V₁] [Fintype V₂] [Nonempty V₂] [MeasurableSingletonClass V₂]` + 測度クラス 5 本 + ⚠ `[Fintype ↥{u : V₁ \| q.real {u} ≠ 0}] [Nonempty ↥{u : V₁ \| q.real {u} ≠ 0}]`（`:397`） | 同型（`martonInfoV₁V₂`） |
+
+**(5) 基数層 4 本**（`def` 1 + 中間 2 + headline 1）
+
+| decl | file:line | 型クラス前提（ソース逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `martonAuxBound`（`def`） | 同 `:427` | `(α : Type*) [Fintype α]` のみ（`variable` 注入なし） | `def martonAuxBound (α : Type*) [Fintype α] : ℕ := Fintype.card α` ⚠ **`+1` は付いていない**（§7.7 の逐語判定どおり。`bcAuxAlphabet k` が `k+1` 文字なので添字側の上界が `k < martonAuxBound α`） |
+| `exists_bcAuxAlphabet_martonInfo_eq_of_card` | 同 `:430` | `omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in`（`:429`）+ VB-B の残り + 宣言側 `{T : Type*} [Fintype T] [Nonempty T] [MeasurableSpace T] [MeasurableSingletonClass T]` | `∃ (k : ℕ) (_ : k < n) (q' : Measure (bcAuxAlphabet.{u} k)) (_ : IsProbabilityMeasure q') (κ' : Kernel (bcAuxAlphabet.{u} k) V₂) (_ : IsMarkovKernel κ') (K' : Kernel (bcAuxAlphabet.{u} k × V₂) α) (_ : IsMarkovKernel K'), martonInfo₁ (μ ⊗ₘ κ) K W = martonInfo₁ (q' ⊗ₘ κ') K' W ∧ martonInfo₂ … ∧ martonInfoV₁V₂ …`（仮引数 `{n : ℕ} (hT : Fintype.card T ≤ n) (μ : Measure T) …）⚠ **結論は 3 本とも等式**（`bcAuxMeasurableEquiv T` による本物の可測同型） |
+| `exists_bcAuxAlphabet_martonInfo_eq` | 同 `:474` | 同上の `omit` + VB-B の残り | 上と同型で、仮定が `(hcard : {u : V₁ \| q.real {u} ≠ 0}.ncard ≤ n)`（= 台の `ncard`）に替わり `μ` が `q : Measure V₁` になったもの |
+| **headline** `exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights` `@[entry_point]` | 同 `:513` | **VB-B 全 20 個** + `[IsProbabilityMeasure q] [IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W]` + ⚠ **`(hμ₂ : 0 ≤ μ₂) (hμ₃ : 0 ≤ μ₃)` の 2 本だけ**（`hμ₁` は無い） | `∃ (k : ℕ) (_ : k < martonAuxBound α) (q' : Measure (bcAuxAlphabet.{u} k)) (_ : IsProbabilityMeasure q') (κ' : Kernel (bcAuxAlphabet.{u} k) V₂) (_ : IsMarkovKernel κ') (K' : Kernel (bcAuxAlphabet.{u} k × V₂) α) (_ : IsMarkovKernel K'), μ₁ * martonInfo₁ (q ⊗ₘ κ) K W + μ₂ * martonInfo₂ (q ⊗ₘ κ) K W + μ₃ * (martonInfo₁ (q ⊗ₘ κ) K W + martonInfo₂ (q ⊗ₘ κ) K W - martonInfoV₁V₂ (q ⊗ₘ κ) K W) ≤ μ₁ * martonInfo₁ (q' ⊗ₘ κ') K' W + μ₂ * martonInfo₂ (q' ⊗ₘ κ') K' W + μ₃ * (martonInfo₁ (q' ⊗ₘ κ') K' W + martonInfo₂ (q' ⊗ₘ κ') K' W - martonInfoV₁V₂ (q' ⊗ₘ κ') K' W)` ⚠ **`κ'` の余域は `V₂` のまま** |
+
+⚠ **消費した既存 headline は無改変**: `exists_support_card_le_martonWeightedSumAllWeights_measure`
+（`…/Marton/ObjectiveAssembly.lean:338`、§12.2 の最終行）を `:527` で呼ぶだけ。
+**署名変更 0 ⟹ 波及 0** なので `dep_consumers.sh` を回す必要のある段は本 leg にも無い。
+既存ファイルへの変更は **`MartonUnion.lean:402` の `private` を 1 語外した**のみ
+（使用箇所は同ファイル `:419` `:420` `:422` `:423` の 4 つ、公開範囲だけの変更で意味変化なし）。
+
+#### 13.2.1 ⚠ instance 引数 — **ブリーフの指示と実測が食い違った所**（実測が正）
+
+- `classical` の下では **`Fintype ↥S` も `MeasurableSingletonClass ↥S` も自動合成される**（機械確認）。
+- ⚠ **ただし `Fintype ↥S` は `DecidablePred` を要するので、statement に `↥S` が出る補題では
+  自動合成が効かない**（statement の elaboration 時には `classical` が効いていない）。
+  ⟹ `_comap_support` 3 本のうち 2 本（`martonInfo₁` / `martonInfoV₁V₂`）と
+  `card_support_subtype_le` では **`[Fintype ↥S]` を instance 引数のまま残した**。
+  ブリーフの「instance 引数から外すこと」は**この 3 本については実行不能**である。
+- 一方 **`MeasurableSingletonClass ↥S` は自動なので削除した**（`Subtype` 経由で付く）。
+  `Nonempty ↥S` は定理（`nonempty_support_subtype`）が供給する。
+- ⚠ **headline / 中間 2 本では `↥S` が結論に現れない**ので `classical` + 自動合成で足り、
+  **公開 API に部分型の instance は 1 本も露出していない** ⟹ ブリーフの狙いは達成されている。
+- **`Fintype.card` の instance 食い違いは 1 度も起きなかった**（`Nat.card_eq_fintype_card` 経由の
+  吸収は `card_support_subtype_le` の内部で完結）。
+
+### 13.3 行数の実測 — ⚠ **予算超過はさらに広がった**
+
+`git show <rev>:<path> \| wc -l` 逐語（`160aae37` = L16 時点 / `29ff3cd1` = HEAD = L17 時点）:
+
+| file | L16 (`160aae37`) | HEAD (`29ff3cd1`) | 差 |
+|---|---|---|---|
+| `…/Marton/SupportReduction.lean` | 230 | 230 | 0 |
+| `…/Marton/ObjectiveConvexity.lean` | 188 | 188 | 0 |
+| `…/Marton/ObjectiveVectorForm.lean` | 520 | 520 | 0 |
+| `…/Marton/ObjectiveAssembly.lean` | 367 | 367 | 0 |
+| `…/Marton/CardinalityBound.lean` | **（未存在）** | **537** | **+537** |
+| **合計（§12.3 と同じ 4 file + 新規 1）** | **1305** | **1842** | **+537** |
+| （参考）`…/BroadcastChannel/MartonUnion.lean` | 430 | 432 | +2（規約ゲートの module doc 1 bullet） |
+
+⚠ **`CardinalityBound.lean` の 537 は advisor 見積り 290–330 行を超えている**（+207〜247 行、
+**+63〜85%**）。内訳の推移は `6aebdccf`（実装 commit）で **534**、HEAD で **537**
+（+3 = honesty ゲートが headline docstring に書いた射程 2 文 + `@audit:ok`）。
+
+§8.2 の (a′-1) 見積りは **480–800 行**。⟹ ⚠ **実測 1842 行は上限 800 を 1042 行（+130%）超えている**。
+§12.3 時点の超過は +505 行（+63%）だったので、**超過幅は本 leg でさらに広がった**。しかも
+**(a′-1) はまだ成立していない**（§13.5）。⚠ **「内数の再配分」で隠さない**（§12.3 と同じ扱い）。
+
+⚠ **実装者による内訳の実測も併記する。ただしこれは上の超過を打ち消さない**（土俵が違うだけで、
+`wc -l` の超過は消えない）:
+
+| 宣言 | 実測（本体行） | advisor 見積り | 差 |
+|---|---|---|---|
+| `entropy_injective_comp` | 33 | 28 | +5 |
+| `martonJointDistribution_map_injective` | 42 | 41 | +1 |
+| `martonInfo{₁,₂,V₁V₂}_map_injective` | 35 / 36 / 37 = **108** | 33 / 33 / 35 = 101 | +7 |
+| 部分型パッケージ 4 本 | 14+7+16+8 = **45** | 55 | **−10** |
+| `martonInfo{₁,₂,V₁V₂}_comap_support` | 19+19+20 = **58** | 15×3 = 45 | +13 |
+| `martonAuxBound` | 4 | 5 | −1 |
+| (a′-1) 本体の組み立て（42 + 29 + 21） | **92** | 60–90 | +2 |
+| **宣言本体の合計** | **382** | 290–330 | **+52〜92（+18〜32%）** |
+
+⟹ **宣言の外の足場が約 150 行**（module docstring 36 + import 3 + `section` / `variable` /
+見出しコメント / 空行）。⚠ **実装者は超過の所在を最初に誤診し、計測で自ら訂正している** —
+「(a′-1) の組み立てが膨らんだ」と書いたが実測 92 行（見積り上限 90）でほぼ的中、
+headline のタクティク本体に至っては **8 行**（`:526-533` 逐語）だった。
+⟹ ⚠ **次 leg（L18）の見積りは「宣言本体 + 足場 150 行前後」の形で起こすのが妥当**
+（宣言本体だけを見積もると `wc -l` の段で必ず +50% 級に見える）。⚠ これは我々の演繹であって
+検証済の法則ではない（1 leg 分の実測に基づく）。
+
+### 13.4 2 つのゲートの結果
+
+#### (a) honesty ゲート = **OK**（tier 1）
+
+- **署名は 1 文字も変更していない**。書込は `CardinalityBound.lean:504-511` の headline docstring への
+  **`@audit:ok`** + 射程 2 文（`:508-509` 逐語 = 内側補助アルファベットの基数は主張していないこと /
+  置換後の法則とカーネルは重みに依存すること）。
+- 監査は独立に `#print axioms` を 6 本回して sorryAx 非依存を再確認し、off-by-one を
+  `bcAuxAlphabet k` = `k+1` 文字 ↔ `martonAuxBound α = Fintype.card α` の連鎖で逐語照合している
+  （§7.7 の判定と完全一致）。⚠ **値はキャッシュしない** — 再導出は 13.0 のコマンド + `#print axioms`。
+- **仮定 8 本はすべて precondition**（核を担ぐ仮定 0 本）。⚠ `hμ₃` が飾りでないことは
+  **反例構成で確認済**（`α` が単元・`q,κ` を相関させる場合、`μ₃ < 0` なら結論は偽）。
+
+⚠ **申し送り（本節に必ず残す）**: **本定理は重みベクトル `(μ₁,μ₂,μ₃)` ごとに witness
+`(k,q',κ',K')` を返す形**である。⟹ **下流文書で「Marton 領域は基数有界な合併である」と
+言い換えるのは過大**であり、領域包含（`martonRegion pV K W ⊆ ⋃ …`）には
+**(α) 全重みに共通の witness**、または **(β) 凸性 / 閉包による支持超平面 → 領域の復元**が
+別途要る。現 docstring は「重み付き和」と正しく書いており過大主張は無い。
+
+#### (b) 規約ゲート（style-auditor）= **PASS**
+
+- **in-place 修正 1 件**: `MartonUnion.lean` の module doc *Main definitions* に
+  `bcAuxMeasurableEquiv` の bullet を追加（de-private により cross-file で消費される public `def` に
+  なったため API surface に載せる）。宣言 docstring は逐語のまま。
+- **flag only 3 件**（未実行）:
+  1. `Marton/Objective{VectorForm,Convexity,Assembly}.lean` → `Marton/Objective/` へのサブディレクトリ
+     昇格（**前 leg からの継続**）。⚠ `CardinalityBound.lean` はこのクラスタに**入れない**判定。
+  2. ⚠ **新規** — `MartonUnion.lean` / `MartonFullSupport.lean` が、既に中身のある `Marton/` の隣に
+     **フラットで残っている**（名前空間は同じ `…BroadcastChannel.Marton`）。候補は
+     `Marton/Union.lean` / `Marton/FullSupport.lean`。import 書換 + `InformationTheory.lean` 再登録を
+     伴う `git mv` リファクタなので 1 と同じ PR にまとめる提案。
+  3. `martonWeightedSum` 対の**一般性と名前長の逆転**（制限版が素の名前、一般版が `AllWeights`）。
+     `docs/rules/` 違反ではなく、**記録のみ**（再発見を防ぐため）。
+- ⚠ **`docs/rules` 側の delta 2 件**（**規約側の不整合であって本 leg の違反ではない**）:
+  1. `docstrings.md` item 1（*Main statements* 記載の定理には docstring 必須）と
+     `scripts/lean_doc_lint.ts` の `internal-doc` ratchet（`@[entry_point]` でない documented lemma を
+     数える。*Main statements* 免除なし）が**衝突する**。本 file は
+     `martonInfo{₁,₂,V₁V₂}_map_injective` を *Main statements* に挙げつつ bare に留めており、
+     **linter 側に寄せて解決**した。⚠ *Main statements* が `@[entry_point]` 集合より広い file は
+     すべてこれに当たるので、`docs/rules/` で一度決めるべき論点。
+  2. `module-structure.md:78` の「file 参照は `Shannon/` 相対の backtick パス」という規約は
+     **実態に載っていない**（tree 実測: 完全形 35 / 相対形 0、かつ linter の `dead-file-ref` strict は
+     完全形しか検証しない）。⚠ **規約テキストの側を実態に合わせる**提案。
+
+### 13.5 残件 — ⚠ **(a′-1) は L17 では閉じていない**
+
+本 leg が縛ったのは **`V₁`（外側補助変数）のアルファベットだけ**である。headline の結論に現れる
+`κ' : Kernel (bcAuxAlphabet.{u} k) V₂` / `K' : Kernel (bcAuxAlphabet.{u} k × V₂) α` は
+**`V₂` を元の型のまま持つ**（13.2 (5) の逐語）。⟹ (a′-1) の成立には最低 2 件が残る。
+
+#### (a) `V₂` 側 — §12.4 (ii) の残件は**そのまま残っている**
+
+§12.4 (ii) の判定（`martonInfo₁` / `martonInfo₂` は 5 つ組の**座標順が固定**された定義
+`Marton/Setup.lean:244` / `:252` ゆえ、`V₂` 自身の台を縮める鏡像には `pV.map Prod.swap` と
+`W : BCChannel α β₁ β₂` の**出力の入れ替え**を伴う swap 対称性補題が要る）は**本 leg で 1 行も
+触っていない**。再導出は
+`rg -n 'Prod.swap' InformationTheory/Shannon/BroadcastChannel/`（2026-08-03 に再実行 —
+`martonInfo*` の swap 対称性を述べる補題は 0 件のまま。値はキャッシュしない）。
+
+⚠ **未検証の演繹 2 つ**（**機械確認ではない**）:
+
+1. ⚠ advisor の読み: 「TEST 1 の `martonJointDistribution_map_injective` は **`f₁` `f₂` 両方に
+   対称**（13.2 (2) の逐語どおり単射性を一切要求しない）なので、`V₂` 側で足りないのは
+   **型の付け替え機構ではなく swap 対称性補題のほう**であり、**(ii) の残件は L17 の成果で
+   1 つ減る公算が高い**」。⚠ **未検証**。
+2. ⚠ 実装者の読み: 「`martonInfo₂_comap_support` は**部分型側の型クラスを 1 本も要求しない**
+   （13.2 (4) の実測）ので、(ii) を攻めるときは**逆に `V₁` 側の型クラスが要らなくなる**」。
+   ⚠ **未検証**。
+3. ⚠ §12.4 (ii) の項目 3（2 回の適用が互いの `ncard` 上界を壊さないこと）も**未検証のまま**。
+
+#### (b) ⚠ **L17 で新たに判明した残件** — 全重み共通の witness / 支持超平面
+
+⚠ **これは §12.4 に無かった項目である**（honesty ゲートの射程申し送りとして本 leg で初めて浮上した）。
+headline は**重みベクトル `(μ₁,μ₂,μ₃)` ごとに** witness `(k,q',κ',K')` を返す形なので、
+`martonRegion pV K W ⊆ ⋃ …` のような**領域包含**へ持っていくには
+
+- **(α) 全重みに共通の witness**（重みに依存しない `(k,q',κ',K')` を 1 つ取る）、または
+- **(β) 凸性 / 閉包による支持超平面 → 領域の復元**
+
+のどちらかが別途要る。⚠ **どちらが短いかは未検証**であり、⚠ **「重み付き和が全重みで載る」から
+「領域が基数有界な合併である」を直ちに導くのは過大**（13.4 (a) の申し送り）。
+
+#### (c) 重複解消（本 leg の外へ切った follow-up 2 件）
+
+| 項目 | 現状 | 実測 |
+|---|---|---|
+| `entropy_injective_comp` ↔ `wz_entropy_map_injective`（`…/WynerZiv/Achievability/Covering.lean:1189`）の統合 | 申し送りを `CardinalityBound.lean:35-39` の *Implementation notes* に英語で記載済（実施していない） | 統合先 `Shannon/Pi.lean`（`entropy_measurableEquiv_comp` が `:36`）は**下流 240 / 425 module**、新規 leaf は下流 0。⚠ **`Covering.lean` は本 file の import 閉包外**（監査が 121 module を走査して確認） |
+| `_map_injective` 3 本 ↔ `MartonUnion.lean:249` `:288` `:329` `:372` の `≃ᵐ` 版の統合 | 未検証・未着手 | ⚠ `≃ᵐ` 版は `martonRegion_map_relabel` 経由で `martonRegion_subset_union` が消費中なので、統合すると波及が出る（実施前に `scripts/dep_consumers.sh` が要る） |
+
+### 13.6 壁と撤退ライン
+
+⚠ **L17 でも `@residual(wall:…)` は 1 本も立っていない / 共有 sorry 補題の候補も 0 件**。
+§9.9 / §11.7 / §12.5 の壁 0 件判定はそのまま有効で、追加すべき行も無い。
+**Mathlib 側の不足は本 leg で 0 件** — 残っているのは行数と配線だけである。
+再導出コマンドは §13.0 のもの。
+
+- **親プラン §6 の撤退ライン 3 本は不発火**（逐語で照合、advisor / 実装の双方が独立に確認）:
+  「L8 の棚卸しで軸 T3-α が gate を通らない」= L8 で (a′) 決定済ゆえ触れない /
+  「L14 の棚卸しで層 3 に載せられる散文が 1 本も無い」= 層 3 に載る成果が landing 済ゆえ不発火 /
+  「20 leg 使い切って未達」= 未到達。
+- 2 つのゲートは **honesty = OK / 規約 = PASS**（§13.4）。
+- ⚠ **枠は L17 を消化して残り 1 本**（L18 = 層 3 の集中枠）+ L19（収穫）+ L20（記録）。
+  §13.5 の (a)（`V₂` 側）と (b)（全重み共通 witness / 支持超平面）の**どちらを L18 に入れるか**が
+  次の判断点である。⚠ **両方を 1 leg に入れられるかは未検証**。
