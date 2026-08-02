@@ -7,7 +7,7 @@
 > [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md) / 失敗形 =
 > [`../proof-logs/proof-log-bc-open-problem-relay.md`](../proof-logs/proof-log-bc-open-problem-relay.md) §3
 
-**Status**: **L0 / L1 / L2 / L3 / L4 完了 = 5/20 leg**。
+**Status**: **L0 / L1 / L2 / L3 / L4 / L5 完了 = 6/20 leg**。
 **Branch**: `bc-computable-region`
 
 ---
@@ -216,8 +216,10 @@ incompleteness marker として自由に使ってよい**が、**hypothesis に�
 ⚠ **L16–L18 を探索に流用しない**。前 relay がゴールから形式化を落とした構造的な理由が
 「形式化に割く枠を予約していなかった」ことなので、枠として先に切る。
 
-⚠ **L1 枠に書かれていた棚卸し (我々の Lean 在庫がどの列に対応するか) は未実行** — leg 1 は文献調査に
-費やされた。**これは層 3 (L16–L18) の前提**なので、L16 に入る前にどこかの可変枠で消化すること。
+**L1 枠に書かれていた棚卸し (我々の Lean 在庫がどの列に対応するか) は L5 で消化済** — 成果物は
+[`bc-t3-lean-inventory.md`](bc-t3-lean-inventory.md)、判定は facts §L5(T3) の 7 行。土台 (定義の一般性・
+サンドイッチ両方向の sorryAx-free) は健全で層 3 で作り直す定義は無い一方、⚠ **層 3 の残コストは
+補助変数の基数境界** (在庫に Carathéodory 型の境界補題が 0 件、facts §L5(T3) 行 3) である。
 
 ---
 
