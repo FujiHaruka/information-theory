@@ -21,7 +21,8 @@ argument has to preserve, and the two output marginals are functions of that agg
 
 * `martonAuxRow` — the row, indexed by the outer auxiliary letter, of the stochastic matrix that
   aggregates the weights into the channel-input marginal.
-* `martonAuxOutputRow` — the analogous row for the first output marginal.
+* `martonAuxOutputRow` — the row, indexed by the same letter, of the stochastic matrix that
+  aggregates the weights into the first output marginal.
 * `martonAuxKernelSlot` — the conditional law, indexed by the outer auxiliary letter, on the pair
   formed by the inner auxiliary letter and the second output letter.
 
@@ -43,9 +44,9 @@ argument has to preserve, and the two output marginals are functions of that agg
   through the channel-input aggregate.
 * `marton_map_Y₂_real_singleton_eq_aggregate` — the second output marginal reads the weights only
   through the channel-input aggregate.
-* `sum_martonAuxOutputRow_eq_one` — each row of the first-output aggregation matrix sums to one.
 * `marton_entropy_V₁V₂_sub_entropy_V₁_eq_sum` — the entropy the auxiliary pair adds over the
   outer auxiliary letter alone is linear in the weights.
+* `sum_martonAuxOutputRow_eq_one` — each row of the first-output aggregation matrix sums to one.
 * `marton_entropy_V₁Y₁_sub_entropy_V₁_eq_sum` — the entropy the `(V₁, Y₁)`-pair adds over the
   outer auxiliary letter alone is linear in the weights.
 * `sum_martonAuxKernelSlot_mixture_eq_aggregate` — the mixture of the conditional laws, summed
