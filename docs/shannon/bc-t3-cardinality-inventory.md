@@ -3675,3 +3675,152 @@ ObjectiveVectorForm,ObjectiveAssembly,CardinalityBound,RegionCardinality,Swap}.l
   `lake build InformationTheory` の後に再実行）。
 - ⚠ **規約ゲートの受入基準からバイト数固定を外すこと**（§16.5 (b)）。「`-D` ゲート出力 196 バイト」は
   ファイル依存で再現しない ⟹ 「出力 0 または `Copyright too short!` のみ」と読み替える。
+
+## §17 L20 = 収穫の書き上げと正直な棚卸し — **§0 のゴールは未達**
+
+⚠ 本節も**追記であり §1–§16 は書き換えていない**。⚠ **本節の数値はすべて現 HEAD で機械から取り直した
+もの**であり、§11–§16 の記述の転記ではない（過去節は執筆当時の見立てで、粒度がずれうる）。
+
+### 17.1 収穫 — 層 3 で landing した 7 ファイルが**与えるもの / 与えないもの**
+
+再導出コマンド（⚠ キャッシュしない）:
+
+```bash
+wc -l InformationTheory/Shannon/BroadcastChannel/Marton/{SupportReduction,ObjectiveConvexity,\
+ObjectiveVectorForm,ObjectiveAssembly,CardinalityBound,RegionCardinality,Swap}.lean   # 計 2553
+rg -c 'sorry|@residual' <同 7 file>            # ⚠ ヒット 0（rg は exit 1 を返す）
+rg -n 'entry_point' <同 7 file>                # 計 31 本
+scripts/sig_view.ts --names <各 file>
+```
+
+⚠ **7 file 合計 2553 行 / `sorry` 0 / `@residual` 0 / `@[entry_point]` 31 本**。
+⚠ **`sorry` 0 と `@residual` 0 は同じ 1 回の `rg` で同時に確認している**（どちらの語もヒット 0）。
+
+| file | 行 | `@[entry_point]` | 掲載 headline |
+|---|---|---|---|
+| `SupportReduction.lean` | 230 | **2** | `exists_support_card_le_of_convexOn` / `..._of_convexOn_add_aggregate` |
+| `ObjectiveConvexity.lean` | 188 | **5** | `convexOn_auxWeightObjective` / `exists_support_card_le_auxWeightObjective`(`_add_aggregate`) / `convexOn_auxWeightObjectiveTwoSlot` / `exists_support_card_le_auxWeightObjectiveTwoSlot_add_aggregate` |
+| `ObjectiveVectorForm.lean` | 520 | **14** | `sum_martonAuxRow_eq_one` ほか座標ごとの singleton 質量の等式（module doc の *Main statements* 14 本と一致） |
+| `ObjectiveAssembly.lean` | 367 | **6** | `martonWeightedSum_eq_auxWeightObjective(TwoSlot)_add_aggregate` / `exists_support_card_le_martonWeightedSum(AllWeights)`(`_measure`) |
+| `CardinalityBound.lean` | 617 | **2** | `exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights` / `..._inner` |
+| `RegionCardinality.lean` | 459 | **2** | `closure_convexHull_martonRegionUnion_eq_outerBounded` / `..._eq_bounded` |
+| `Swap.lean` | 172 | ⚠ **0** | （`@[entry_point]` 無し。module doc の *Main statements* に 4 本） |
+
+⚠ **`Swap.lean` の `@[entry_point]` は 0 本である** — L19 の commit message / プラン §5.4 / §16.1 が
+「headline 4 本」と呼んでいるのは **module doc の *Main statements* 掲載**の意味であって
+`@[entry_point]` ではない。⟹ swap 4 本は `dep_rank.sh` の対象にも README 表の候補にもならない。
+
+**各ファイルが与えるもの / ⚠ 与えないもの**（判定は `sig_view.ts` の出力と module doc の逐語から起こした）:
+
+1. **`SupportReduction.lean`** — 与える: 非負の重みベクトルを、集約を動かさず凸目的の値を下げずに
+   高々 `Fintype.card X` 個の指標へ台縮小する純粋な凸幾何。情報量は 1 つも現れない。
+   ⚠ **与えない**: 縮んだ台の**大きさ**は縛るが、それが**どの型の上に載るか**は縛らない
+   （台は元のアルファベットの部分型のまま）。
+2. **`ObjectiveConvexity.lean`** — 与える: `auxWeightObjective` / `auxWeightObjectiveTwoSlot` の定義、
+   非負象限上での凸性、および (1) をそこへ流し込んだ台縮小。凸核は `-H(V | Z)`（WynerZiv 家系の資産）で、
+   two-slot 版は座標を入れ替えた形を第 2 slot に並べる。
+   ⚠ **与えない**: 目的関数は**抽象の重み `q` と条件法 `k` の言葉**であり、Marton の 3 情報量との
+   対応は 1 本も与えない。
+3. **`ObjectiveVectorForm.lean`** — 与える: `martonJointDistribution` の各射影の singleton 質量を
+   有限和へ降ろす辞書（定義 3 本 + 掲載命題 14 本）。`pV = q ⊗ₘ κ` と置くと各周辺が `q` の重み付き和に
+   なることを座標ごとに述べる。
+   ⚠ **与えない**: 目的関数の**組み立て**を与えない。あるのは座標ごとの等式だけで、
+   「重み付き和が `auxWeightObjective` の形になる」という主張はこのファイルには無い。
+4. **`ObjectiveAssembly.lean`** — 与える: 3 情報量の重み付き和が `auxWeightObjectiveTwoSlot` + 集約項に
+   等しいこと、およびそこから出る**外側**補助変数の台縮小（重み全 3 本を持つ版とその測度版）。
+   ⚠ **与えない**: 縮んだ台はなお**元の補助アルファベットの部分型**であって `bcAuxAlphabet k` の上に
+   載っていない。
+5. **`CardinalityBound.lean`** — 与える: 部分型を `bcAuxAlphabet k`（`k < martonAuxBound α`）へ載せ替える段、
+   3 情報量が単射可測写像による付け替えで不変であること、外側版と（受信機交換で読み替えた）内側版。
+   ⚠ **与えない**: 与えるのは**重み 1 組ごとのスカラー不等式**であって、領域（点集合）についての主張ではない。
+6. **`RegionCardinality.lean`** — 与える: 分離汎関数で重みを読み取り、スカラーの族を領域の言明 1 本へ畳む段。
+   2 つの切り詰め合併の定義と 2 本の headline、および汎用の凸幾何 2 本（`isLowerSet_convexHull` /
+   `exists_nonneg_weights_separating_of_isLowerSet`）。
+   ⚠ **与えない**: 一致するのは**閉凸包どうし**であって、切り詰めた合併そのものが元の合併に等しいとは
+   言っていない（headline docstring 逐語「not necessarily in the capped union itself, which is not
+   claimed to be convex」）。
+7. **`Swap.lean`** — 与える: 2 受信機の交換の下での 5 変数法と 3 情報量の対称性 4 本。内側版を鏡像証明では
+   なく付け替えで得るための道具。
+   ⚠ **与えない**: `@[entry_point]` を持たない（上記）。またチャネル `W` を往復させる補題も与えない
+   （§16.3 のとおり不要だった）。
+
+### 17.2 (C1) 側で機械検証されたこと — 一行要約
+
+`closure_convexHull_martonRegionUnion_eq_bounded` により、**Marton 内界の閉凸包は、両補助アルファベットを
+`martonAuxBound α` で切った合併の閉凸包に等しい**。「有限個になった」の意味は 2 つの定義の逐語から従う
+（⚠ 現 HEAD で `rg` して確認済。§16.7 の引用と一字も変わっていない）:
+
+* `def martonAuxBound (α : Type*) [Fintype α] : ℕ := Fintype.card α`（`CardinalityBound.lean:435`）
+* `abbrev bcAuxAlphabet (k : ℕ) : Type u := ULift.{u} (Fin (k + 1))`（`MartonUnion.lean:67`）
+
+⟹ `k₁, k₂ < Fintype.card α` の下で各補助アルファベットは 1 文字から `Fintype.card α` 文字までを走り、
+**指標の対は `(Fintype.card α)²` 通りの有限個**である。
+
+⚠ **`#print axioms` の逐語**（本節の執筆時に独立に再実行。scratchpad の probe ファイル →
+`lake env lean`。実装者・監査者の自己申告ではない）:
+
+```
+'…Marton.closure_convexHull_martonRegionUnion_eq_bounded' depends on axioms: [propext, Classical.choice, Quot.sound]
+'…Marton.closure_convexHull_martonRegionUnion_eq_outerBounded' depends on axioms: [propext, Classical.choice, Quot.sound]
+'…Marton.exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights_inner' depends on axioms: [propext, Classical.choice, Quot.sound]
+'…Marton.exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+
+⚠ **4 本とも `propext` / `Classical.choice` / `Quot.sound` の 3 つだけ**である。
+⚠ **`sorryAx`-free は必要条件であって十分条件ではない**ので、`#check @…` で署名も走査した:
+`closure_convexHull_martonRegionUnion_eq_bounded` の仮説は 3 つの型に付く
+`Fintype` / `Nonempty` / `MeasurableSpace` / `MeasurableSingletonClass` と `IsMarkovKernel W` のみ、
+`..._inner` はそれに `IsProbabilityMeasure pV` / `IsMarkovKernel K` と重みの符号 2 本
+（`0 ≤ μ₁` / `0 ≤ μ₃`）が加わるだけである ⟹ **いずれも正則性の前提であって、証明の核を担う
+load-bearing hypothesis は署名に無い**。
+
+### 17.3 ⚠ 正直な棚卸し — 落とすと嘘になるもの
+
+1. ⚠ **(C2) = 外界側の effective compactness は 1 ミリも動いていない**。本 relay が足したのは
+   親プラン §1.1 の **(C1) 側の in-project Lean 実現の 1 段**であり、(C1) は一次文献で既に「証明済」と
+   されている側である（プラン §1.1 逐語「(C1) 計算可能な内界の列 — 既に在る」）。
+   ⟹ ⚠ **「(a′) が閉じた」を「§0 のゴールに到達した」と書かない**（プラン §0.1-2）。
+2. ⚠ **基数は有限個になったが、各指標の `pV` / `K` はなお連続体を走る**。切れたのは**基数の走る範囲**
+   だけであり、「有界時間で `ε` 近似」を言うには**その上の最適化**が要る。⚠ **未着手**である
+   ⟹ (C1) の「計算可能」の荷は、**基数の有限化までは降りたが、最適化の有効性までは降りていない**。
+3. ⚠ **§5.3 / §16.7-3 の残る 2 件は未決のまま**である — (i) 凸化した対象を内界として消費する段で立つ
+   **`Convex ℝ (bcCapacityRegion W)` の債務**（in-project に無い）、(ii) `martonRegionUnion` **自身の
+   凸性の強度差の疑い**（教科書の Marton 内界は time-sharing の第 3 補助変数を持つ形が標準だが
+   in-project は 2 補助変数版）。⚠ honesty 監査の判断でコード docstring には書かないこととしたので、
+   **置き場は §15.7 / §16.7 と本項である**。
+
+**⚠ 未達判定 — 親プラン §6 の撤退ライン 3 本目は発火した**
+
+- 枠は L0–L19 で使い切り、残枠 L20 は記録の枠である（プラン §5.5 冒頭「この leg が §0 のゴールに対して
+  動かすものは無い」）。§0 の完了条件（肯定側 = 任意の `ε` に対する有界時間 `ε` 近似手続きの構成と
+  正当性 / 否定側 = その不存在の証明。いずれも散文と Lean proof done の両方）には**到達していない**。
+- ⟹ ⚠ **「20 leg を使い切って未達 ⟹ 未達と書く」は発火する。ここに未達と書く。**
+- ⚠ **発火とは「未達と書く」ことであって、達成条件を緩めることではない**（プラン §6 冒頭 / §0.1-2）。
+  §0 の完了条件は本 relay で 1 文字も動いていない。
+- ⚠ **到達した中間結果（(a′) = 7 file 2553 行 / `sorry` 0 / `@residual` 0 / 壁 0 件）は台帳に残すが、
+  ゴール達成とは書かない**。⚠ **予算超過（+177%、§16.6）は撤退ラインではない**（配分の問題）。
+
+### 17.4 次に着手するなら何か — ⚠ **材料のみ。ここで方針は決めない**
+
+各項目は「**何が要るか**」と「**なぜ今は無いか**」の 2 点セットで並べる。
+⚠ **見積り行数 / leg 数は書かない**（本 relay に根拠のある実測が無い）。
+
+1. **(C2) 本体** — 要る: `C` を共通部分にもつ、`k` と `W` について一様に半計算可能な外界の可算族が
+   1 つでも存在するか（または存在しないか）の証明（プラン §1.1）。
+   無い理由: 一次文献が未解決と明言しており、L3 で **[Li21] §VIII の open problem と同一の穴**と
+   確定している。⚠ **20 leg でこの軸は 1 ミリも動いていない**。
+2. **有限個の基数の上での最適化** — 要る: 各指標対 `(k₁, k₂)` について `pV` / `K` を走る最適化が
+   有界時間で `ε` 近似できること（有限次元の単体上の情報量汎関数の有効最大化）。
+   無い理由: **未着手**。⚠ 本 relay では**探索すらしていない** — §16.8 のとおり記録できる loogle 実測が
+   0 件なので、「in-project / Mathlib に無い」とすら**まだ言えない**（無いのは判定であって資産ではない）。
+3. **`Convex ℝ (bcCapacityRegion W)` の債務** — 要る: 容量領域の凸性 1 本。
+   無い理由: in-project に無い（§16.7-3）。閉凸包へ上がった対象を内界として消費する段で必要になる。
+4. **`martonRegionUnion` 自身の凸性の強度差** — 要る: in-project の 2 補助変数版が教科書の
+   3 補助変数（time-sharing）版と同じ強度かの diff。
+   無い理由: **未決**（§14.6 の疑い / §16.7-3）。⚠ CLAUDE.md「textbook-object strength diff」が
+   要求する diff が未実施のままである。
+5. **§16.9 の flag only 3 件** — 要る: 汎用凸幾何 2 本の切り出し / `Marton/Setup.lean:44-49` の過大な
+   変数束の section 分割 / 規約ゲートの受入基準からバイト数固定を外すこと。
+   無い理由: いずれも本 relay で条件が揃わなかった（切り出しは 2 人目の consumer 待ちで
+   `Swap.lean` の consumer は現在 1 本のみ / `Setup.lean` 自体は未着手 / 受入基準は文書側の作業）。
+   ⚠ **`docs/readme-theorems.txt` への登録可否は本節では判断しない**（プラン §5.5-4 の別項目）。
