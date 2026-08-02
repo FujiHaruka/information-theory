@@ -29,7 +29,7 @@ sign, so nothing in the argument caps it.
 * `martonRegionUnionOuterBounded_isLowerSet` / `martonRegionUnionOuterBounded_nonempty` /
   `martonRegionUnionOuterBounded_subset_union` — the restricted union is a nonempty lower set,
   as the unrestricted union is, and it sits inside the unrestricted one.
-* `IsLowerSet.convexHull` — the convex hull of a lower set of the plane is a lower set.
+* `isLowerSet_convexHull` — the convex hull of a lower set of the plane is a lower set.
 * `exists_nonneg_weights_separating_of_isLowerSet` — a point outside a nonempty closed convex
   lower set of the plane is separated from it by a functional with nonnegative coefficients.
 * `martonInfoV₁V₂_nonneg` — the dependence between the two auxiliaries is nonnegative, which is
@@ -41,6 +41,10 @@ The separating functional is produced by `geometric_hahn_banach_closed_point`, w
 signed.  Two facts turn them into the nonnegative weights the cardinality bound asks for: the
 region is a lower set, so a functional with a negative coefficient is unbounded below on it and
 cannot separate; and a lower set stays one under convex hulls and closures.
+
+`isLowerSet_convexHull`, which supplies the second of those facts, has no counterpart in
+Mathlib, which develops lower sets and convex hulls separately.  It is stated only for
+`Set (ℝ × ℝ)`, the ambient space of the region, not for a general ordered vector space.
 
 The weights of the cardinality bound multiply the three information terms, whereas a separating
 functional multiplies the two rate coordinates.  `exists_weights_dominating` converts between the
@@ -60,7 +64,7 @@ universe u
 
 section Separation
 
-theorem _root_.IsLowerSet.convexHull {s : Set (ℝ × ℝ)} (hs : IsLowerSet s) :
+theorem isLowerSet_convexHull {s : Set (ℝ × ℝ)} (hs : IsLowerSet s) :
     IsLowerSet (convexHull ℝ s) := by
   intro a b hba ha
   obtain ⟨d, hd0, rfl⟩ : ∃ d : ℝ × ℝ, 0 ≤ d ∧ b = a - d :=
@@ -68,16 +72,16 @@ theorem _root_.IsLowerSet.convexHull {s : Set (ℝ × ℝ)} (hs : IsLowerSet s) 
       by abel⟩
   have hshift : ∀ x : ℝ × ℝ, x - d ≤ x := fun x ↦
     Prod.le_def.mpr ⟨by simpa using hd0.1, by simpa using hd0.2⟩
-  have hconv : Convex ℝ {x : ℝ × ℝ | x - d ∈ _root_.convexHull ℝ s} := by
+  have hconv : Convex ℝ {x : ℝ × ℝ | x - d ∈ convexHull ℝ s} := by
     intro x hx y hy p q hp hq hpq
     have hpd : p • d + q • d = d := by rw [← add_smul, hpq, one_smul]
-    change p • x + q • y - d ∈ _root_.convexHull ℝ s
+    change p • x + q • y - d ∈ convexHull ℝ s
     have hrw : p • (x - d) + q • (y - d) = p • x + q • y - d := by
       rw [smul_sub, smul_sub,
         show p • x - p • d + (q • y - q • d) = p • x + q • y - (p • d + q • d) from by abel, hpd]
     rw [← hrw]
     exact (convex_convexHull ℝ s) hx hy hp hq hpq
-  have hsub : s ⊆ {x : ℝ × ℝ | x - d ∈ _root_.convexHull ℝ s} := fun x hx ↦
+  have hsub : s ⊆ {x : ℝ × ℝ | x - d ∈ convexHull ℝ s} := fun x hx ↦
     subset_convexHull ℝ s (hs (hshift x) hx)
   exact convexHull_min hsub hconv ha
 
@@ -262,7 +266,7 @@ lemma martonRegion_subset_closure_convexHull_outerBounded (k₁ k₂ : ℕ)
   have hconv : Convex ℝ (closure (convexHull ℝ (martonRegionUnionOuterBounded W))) :=
     (convex_convexHull ℝ _).closure
   have hlower : IsLowerSet (closure (convexHull ℝ (martonRegionUnionOuterBounded W))) :=
-    (martonRegionUnionOuterBounded_isLowerSet W).convexHull.closure
+    (isLowerSet_convexHull (martonRegionUnionOuterBounded_isLowerSet W)).closure
   have hne : (closure (convexHull ℝ (martonRegionUnionOuterBounded W))).Nonempty :=
     (martonRegionUnionOuterBounded_nonempty W).mono ((subset_convexHull ℝ _).trans subset_closure)
   intro p hp
