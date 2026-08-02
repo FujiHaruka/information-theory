@@ -21,6 +21,9 @@ argument has to preserve, and the two output marginals are functions of that agg
 
 * `martonAuxRow` — the row, indexed by the outer auxiliary letter, of the stochastic matrix that
   aggregates the weights into the channel-input marginal.
+* `martonAuxOutputRow` — the analogous row for the first output marginal.
+* `martonAuxKernelSlot` — the conditional law, indexed by the outer auxiliary letter, on the pair
+  formed by the inner auxiliary letter and the second output letter.
 
 ## Main statements
 
@@ -40,6 +43,13 @@ argument has to preserve, and the two output marginals are functions of that agg
   through the channel-input aggregate.
 * `marton_map_Y₂_real_singleton_eq_aggregate` — the second output marginal reads the weights only
   through the channel-input aggregate.
+* `sum_martonAuxOutputRow_eq_one` — each row of the first-output aggregation matrix sums to one.
+* `marton_entropy_V₁V₂_sub_entropy_V₁_eq_sum` — the entropy the auxiliary pair adds over the
+  outer auxiliary letter alone is linear in the weights.
+* `marton_entropy_V₁Y₁_sub_entropy_V₁_eq_sum` — the entropy the `(V₁, Y₁)`-pair adds over the
+  outer auxiliary letter alone is linear in the weights.
+* `sum_martonAuxKernelSlot_mixture_eq_aggregate` — the mixture of the conditional laws, summed
+  over the inner auxiliary letter, is the second output marginal in aggregate form.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -358,5 +368,121 @@ theorem marton_map_Y₂_real_singleton_eq_aggregate
   · refine Eq.trans Finset.sum_comm_cycle (Finset.sum_congr rfl fun x _ ↦ ?_)
     rw [← sum_compProd_mul_kernel_real_singleton q κ K x]
     simp only [Finset.sum_mul]
+
+private lemma sum_negMulLog_mul_sub_eq {ι σ : Type*} [Fintype ι] [Fintype σ]
+    (q : ι → ℝ) (c : ι → σ → ℝ) (hc : ∀ i, ∑ s : σ, c i s = 1) :
+    (∑ i : ι, ∑ s : σ, Real.negMulLog (q i * c i s)) - ∑ i : ι, Real.negMulLog (q i)
+      = ∑ i : ι, q i * ∑ s : σ, Real.negMulLog (c i s) := by
+  rw [← Finset.sum_sub_distrib]
+  refine Finset.sum_congr rfl fun i _ ↦ ?_
+  have hsplit : ∑ s : σ, Real.negMulLog (q i * c i s)
+      = (∑ s : σ, c i s) * Real.negMulLog (q i)
+        + q i * ∑ s : σ, Real.negMulLog (c i s) := by
+    simp only [Real.negMulLog_mul, Finset.sum_add_distrib, Finset.sum_mul, Finset.mul_sum]
+  rw [hsplit, hc i, one_mul]
+  ring
+
+/-- The entropy the joint auxiliary pair adds over the outer auxiliary letter alone is linear in
+the weights: the coefficient at `u` is the entropy of the inner conditional law `κ u`. -/
+@[entry_point]
+theorem marton_entropy_V₁V₂_sub_entropy_V₁_eq_sum
+    (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ (p.1, p.2.1))
+        - entropy (martonJointDistribution (q ⊗ₘ κ) K W) Prod.fst
+      = ∑ u : V₁, q.real {u} * ∑ v₂ : V₂, Real.negMulLog ((κ u).real {v₂}) := by
+  simp only [entropy, Fintype.sum_prod_type, marton_map_V₁V₂_real_singleton_eq q κ K W,
+    marton_map_V₁_real_singleton_eq q κ K W]
+  exact sum_negMulLog_mul_sub_eq (fun u ↦ q.real {u}) (fun u v₂ ↦ (κ u).real {v₂})
+    fun u ↦ sum_measureReal_singleton_univ_eq_one (κ u)
+
+/-- The row, indexed by the outer auxiliary letter `u`, of the stochastic matrix that carries a
+weight vector on `V₁` to the induced law on the first output: the mass `u` contributes to the
+output letter `y₁` after the inner auxiliary letter, the channel input and the channel output
+have been generated. -/
+noncomputable def martonAuxOutputRow (κ : Kernel V₁ V₂) (K : Kernel (V₁ × V₂) α)
+    (W : BCChannel α β₁ β₂) (u : V₁) (y₁ : β₁) : ℝ :=
+  ∑ v₂ : V₂, (κ u).real {v₂} * ∑ x : α, (K (u, v₂)).real {x} * ∑ y₂ : β₂, (W x).real {(y₁, y₂)}
+
+omit [Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁] [Nonempty V₂] [Nonempty α]
+  [Nonempty β₁] [Nonempty β₂] in
+/-- Each row of the first-output aggregation matrix is a probability vector on the first output
+alphabet. -/
+@[entry_point]
+theorem sum_martonAuxOutputRow_eq_one (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (u : V₁) : ∑ y₁ : β₁, martonAuxOutputRow κ K W u y₁ = 1 := by
+  simp only [martonAuxOutputRow]
+  rw [Finset.sum_comm]
+  have hrow : ∀ v₂ : V₂, ∑ y₁ : β₁, (κ u).real {v₂} *
+      ∑ x : α, (K (u, v₂)).real {x} * ∑ y₂ : β₂, (W x).real {(y₁, y₂)} = (κ u).real {v₂} := by
+    intro v₂
+    have hinner : ∑ y₁ : β₁, ∑ x : α, (K (u, v₂)).real {x} * ∑ y₂ : β₂, (W x).real {(y₁, y₂)}
+        = ∑ x : α, (K (u, v₂)).real {x} := by
+      rw [Finset.sum_comm]
+      refine Finset.sum_congr rfl fun x _ ↦ ?_
+      rw [← Finset.mul_sum, sum_bcChannel_real_singleton_eq_one W x, mul_one]
+    rw [← Finset.mul_sum, hinner, sum_measureReal_singleton_univ_eq_one (K (u, v₂)), mul_one]
+  rw [Finset.sum_congr rfl fun v₂ _ ↦ hrow v₂]
+  exact sum_measureReal_singleton_univ_eq_one (κ u)
+
+/-- The entropy the `(V₁, Y₁)`-pair adds over the outer auxiliary letter alone is linear in the
+weights: the coefficient at `u` is the entropy of the row `martonAuxOutputRow κ K W u`. -/
+@[entry_point]
+theorem marton_entropy_V₁Y₁_sub_entropy_V₁_eq_sum
+    (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ (p.1, p.2.2.2.1))
+        - entropy (martonJointDistribution (q ⊗ₘ κ) K W) Prod.fst
+      = ∑ u : V₁, q.real {u} * ∑ y₁ : β₁, Real.negMulLog (martonAuxOutputRow κ K W u y₁) := by
+  have hpair : ∀ (u : V₁) (y₁ : β₁),
+      ((martonJointDistribution (q ⊗ₘ κ) K W).map (fun p ↦ (p.1, p.2.2.2.1))).real {(u, y₁)}
+        = q.real {u} * martonAuxOutputRow κ K W u y₁ :=
+    marton_map_V₁Y₁_real_singleton_eq_sum q κ K W
+  simp only [entropy, Fintype.sum_prod_type, hpair, marton_map_V₁_real_singleton_eq q κ K W]
+  exact sum_negMulLog_mul_sub_eq (fun u ↦ q.real {u}) (martonAuxOutputRow κ K W)
+    (sum_martonAuxOutputRow_eq_one κ K W)
+
+/-- The conditional law, indexed by the outer auxiliary letter `u`, that the vector-level
+objective mixes: the mass `u` contributes to the pair consisting of the inner auxiliary letter
+and the second output letter. -/
+noncomputable def martonAuxKernelSlot (κ : Kernel V₁ V₂) (K : Kernel (V₁ × V₂) α)
+    (W : BCChannel α β₁ β₂) (u : V₁) (p : V₂ × β₂) : ℝ :=
+  (κ u).real {p.1} * ∑ x : α, (K (u, p.1)).real {x} * ∑ y₁ : β₁, (W x).real {(y₁, p.2)}
+
+omit [Nonempty V₁] [MeasurableSingletonClass V₁] [Nonempty V₂] [MeasurableSingletonClass V₂]
+  [Nonempty α] [MeasurableSingletonClass α] [Nonempty β₁] [MeasurableSingletonClass β₁]
+  [Fintype β₂] [Nonempty β₂] [MeasurableSingletonClass β₂] in
+/-- Summing the mixture of the conditional laws over the inner auxiliary letter recovers the
+second output marginal in the aggregate form: the weights are read only through
+`fun x ↦ ∑ u, q.real {u} * martonAuxRow κ K u x`. -/
+@[entry_point]
+theorem sum_martonAuxKernelSlot_mixture_eq_aggregate
+    (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (y₂ : β₂) :
+    ∑ v₂ : V₂, ∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u (v₂, y₂)
+      = ∑ x : α, (∑ u : V₁, q.real {u} * martonAuxRow κ K u x)
+          * ∑ y₁ : β₁, (W x).real {(y₁, y₂)} := by
+  have hmid : ∀ (v₂ : V₂) (u : V₁), q.real {u} * martonAuxKernelSlot κ K W u (v₂, y₂)
+      = ∑ x : α, q.real {u} * (κ u).real {v₂} * (K (u, v₂)).real {x}
+          * ∑ y₁ : β₁, (W x).real {(y₁, y₂)} := by
+    intro v₂ u
+    rw [martonAuxKernelSlot, Finset.mul_sum, Finset.mul_sum]
+    exact Finset.sum_congr rfl fun x _ ↦ by ring
+  calc ∑ v₂ : V₂, ∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u (v₂, y₂)
+      = ∑ v₂ : V₂, ∑ u : V₁, ∑ x : α, q.real {u} * (κ u).real {v₂} * (K (u, v₂)).real {x}
+          * ∑ y₁ : β₁, (W x).real {(y₁, y₂)} :=
+        Finset.sum_congr rfl fun v₂ _ ↦ Finset.sum_congr rfl fun u _ ↦ hmid v₂ u
+    _ = ∑ x : α, ∑ v₂ : V₂, ∑ u : V₁, q.real {u} * (κ u).real {v₂} * (K (u, v₂)).real {x}
+          * ∑ y₁ : β₁, (W x).real {(y₁, y₂)} := Finset.sum_comm_cycle
+    _ = ∑ x : α, (∑ u : V₁, q.real {u} * martonAuxRow κ K u x)
+          * ∑ y₁ : β₁, (W x).real {(y₁, y₂)} := by
+        refine Finset.sum_congr rfl fun x _ ↦ ?_
+        generalize (∑ y₁ : β₁, (W x).real {(y₁, y₂)}) = S
+        rw [Finset.sum_comm, Finset.sum_mul]
+        refine Finset.sum_congr rfl fun u _ ↦ ?_
+        rw [martonAuxRow, Finset.mul_sum, Finset.sum_mul]
+        exact Finset.sum_congr rfl fun v₂ _ ↦ by ring
 
 end InformationTheory.Shannon.BroadcastChannel.Marton
