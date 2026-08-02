@@ -2842,3 +2842,370 @@ theorem martonInfo₁_swap
   動かない。ただし**それが C（A + B を 1 leg）を採らない理由**である（§14.0）。
 - ⚠ **A を閉じても (C1) の「計算可能」の荷は降りない**（§14.4 第 1 項）。⟹ L19 の収穫で
   「何が言えたか」を書くときに **`k₂` が `ℕ` 全域のまま**であることを落とさないこと。
+
+## §15 L18 の実測 — A（閉凸包版の領域等式）は **closed**
+
+⚠ 本節は**追記であり §1–§14 は書き換えていない**（§11→§10 / §12→§11 / §13→§12 / §14→§13 が
+採ったのと同じ作法）。⚠ 本節の実測により **§14.8 の「残っているのは行数と配線だけ」という結論は
+不十分だった** — **§14 の本文は履歴としてそのまま残し、訂正の所在は §15.1 である**。
+
+### 15.0 一行判定 — **A は closed。proof done**
+
+headline は `closure_convexHull_martonRegionUnion_eq_outerBounded`
+（`Marton/RegionCardinality.lean:306`、`@[entry_point]` + `@audit:ok`）。
+**0 sorry / 0 `@residual` / 11 宣言 / 322 行**。honesty / style の両ゲート PASS。
+⚠ **§14.8 の「壁 0 件 / 共有 sorry 補題の候補 0 件」判定はそのまま維持**（本節でも
+`@residual(wall:…)` は 1 本も立てていない）。
+
+到達状態の再導出（⚠ 本節は機械で再導出できる値をキャッシュの根拠にしない）:
+
+```bash
+lake env lean InformationTheory/Shannon/BroadcastChannel/Marton/RegionCardinality.lean   # 0 byte
+scripts/sig_view.ts --names InformationTheory/Shannon/BroadcastChannel/Marton/RegionCardinality.lean
+rg -c 'sorry|@residual' InformationTheory/Shannon/BroadcastChannel/Marton/RegionCardinality.lean
+```
+
+⚠ **本在庫の作成時に独立に再実行した機械確認**（HEAD = `c5708d1d`。実装者・監査者の自己申告では
+ない）: `#print axioms` は headline / `martonRegion_subset_closure_convexHull_outerBounded` /
+`isLowerSet_convexHull` / `martonInfoV₁V₂_nonneg` の **4 本とも
+`[propext, Classical.choice, Quot.sound]`**、`rg -c 'sorry|@residual'` は**ヒット 0**、
+`sig_view --names` は **11 decls, 0 with sorry**。
+
+commit 列: `36d0180b`（実装）→ `3341783e`（honesty ゲート）→ `fb59985a`（style ゲート）→
+`85c35e5a`（改名）→ `c5708d1d`（dot 記法の差し戻し）。
+
+### 15.1 ⚠ 最重要 — §14 が記載していなかった前提が 3 件あった
+
+§14.8 は「A に必要な Mathlib 資産は 2 本とも実在し（§14.3）、最難関の 1 段は既に証明済なので、
+**残っているのは行数と配線だけ**」と結論した。⚠ **実際には最難関ではない段が 3 つ記載から漏れて
+おり、うち 1 つは Mathlib に無く自作を要した**。
+
+⚠ **教訓（proof-log 候補、1 行）**: **gateway atom の完証が言うのは「最難関が片付いた」ことだけで
+あって、残りの段の在庫が取れていることではない。gateway atom を通したら、残りの段の在庫を別途取る
+こと。** tell = §14.7 の見積り表に「(a′-2) 本体（分離 → 非負重み → (a′-1) 適用 → 逆包含）80–140」
+という**中身を分解していない 1 行**があり、その内側に下の 3 件が畳み込まれていた。
+
+| # | 漏れていた前提 | §14 の記載 | 実測 |
+|---|---|---|---|
+| 1 | 任意の同時分布 `pV` → 分解形 `q ⊗ₘ κ`（L17 headline は分解形しか受け取らない） | ⚠ **記載なし** | **無償**。新規 import 0 |
+| 2 | `0 ≤ martonInfoV₁V₂` | §14.4「⚠ 未確認 1 件」/ §14.7「0–25 行」 | **11 行**（`:178-188`） |
+| 3 | 下方集合の凸包は下方集合 | ⚠ **記載なし** | ⚠ **Mathlib に無い**。**20 行**で自作（`:67-86`） |
+
+**項目 1 の逐語**（⚠ `[...]` は `#check` 出力の逐語。⚠ **`martonRegion` 側の受け取り形が
+`q ⊗ₘ κ` である以上、この段は L17 headline を当てるための必須の前置きである**）:
+
+| Mathlib API | file:line | 型クラス前提（逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `MeasureTheory.Measure.disintegrate` | `Mathlib/Probability/Kernel/Disintegration/Basic.lean:63` | `{α : Type u_1} {Ω : Type u_2} {mα : MeasurableSpace α} {mΩ : MeasurableSpace Ω}` + `(ρ : Measure (α × Ω)) (ρCond : Kernel α Ω) [ρ.IsCondKernel ρCond]` | `ρ.fst ⊗ₘ ρCond = ρ` |
+| `MeasureTheory.Measure.condKernel` | `Mathlib/Probability/Kernel/Disintegration/StandardBorel.lean:361` | `{α : Type u_1} {Ω : Type u_2} {mα : MeasurableSpace α} {mΩ : MeasurableSpace Ω} [StandardBorelSpace Ω] [Nonempty Ω]` + `(ρ : Measure (α × Ω)) [IsFiniteMeasure ρ]` | `Kernel α Ω`（`irreducible_def`） |
+| `MeasureTheory.Measure.condKernel.instIsCondKernel` | 同 `:370` | `(ρ : Measure (α × Ω)) [IsFiniteMeasure ρ]` | `ρ.IsCondKernel ρ.condKernel`（instance） |
+
+⚠ **名前の罠**: `MeasureTheory.Measure.compProd_fst_condKernel` は**実在しない** —
+`StandardBorel.lean:358-359` の docstring に古い名前として残っているだけである。正しい入口は
+**`ρ.disintegrate ρCond`**。
+
+⚠ **`StandardBorelSpace` は要求されているが本 family では無償**: `[Fintype V₂] [Nonempty V₂]
+[MeasurableSpace V₂] [MeasurableSingletonClass V₂]` から `inferInstance` で通ることを
+**本在庫の作成時に機械確認した**（逐語は §15.8）。`IsMarkovKernel pV.condKernel` /
+`IsProbabilityMeasure pV.fst` も同様に `inferInstance`。⟹ 実装では `Marton/RegionCardinality.lean:277`
+の 1 行（`have hdis : pV.fst ⊗ₘ pV.condKernel = pV := pV.disintegrate pV.condKernel`）で済んでいる。
+
+**項目 3 の loogle 実測**（⚠ 本在庫の作成時に再実行。逐語）:
+
+* 素のクエリ `IsLowerSet, convexHull` → ⚠ **`Found 2 declarations mentioning convexHull and
+  IsLowerSet.`** — 中身は `Geometry.SimplicialComplex.ofErase` / `Geometry.SimplicialComplex.ofErase_faces`
+  （単体的複体の面集合が下方閉、という**無関係な**用法）。
+* 結論形クエリ `|- IsLowerSet (convexHull _ _)` → `Found 2 declarations mentioning …（型クラス列）…`
+  に続いて ⚠ **`Of these, 0 match your pattern(s).`**
+
+⚠ **`Found 0` という数値を素のクエリの結果として記録しないこと**。0 になるのは**結論形クエリの
+ほう**である（CLAUDE.md の壁宣言手順が要求する二段階の結論形検索は、まさにこの差を捕まえるために
+ある）。⚠ **なお本件は壁ではない** — 20 行で自作して閉じており、`@residual` は立てていない。
+
+### 15.2 検証済 atom の逐語（⚠ scratchpad は session 局所ゆえ、ここが SoT）
+
+⚠ atom 2（`exists_nonneg_weights_separating_of_isLowerSet`、58 行）は **§14.3 に既に逐語がある**
+ので再掲しない（現 HEAD の所在は `Marton/RegionCardinality.lean:88-145`。⚠ §14.3 の逐語からの差分は
+下記「移植時に直した警告」の 2 件のみで、論理は無改変）。
+
+**atom 1 — `isLowerSet_convexHull`（`:67-86`、20 行。⚠ Mathlib に無い）**:
+
+```lean
+theorem isLowerSet_convexHull {s : Set (ℝ × ℝ)} (hs : IsLowerSet s) :
+    IsLowerSet (convexHull ℝ s) := by
+  intro a b hba ha
+  obtain ⟨d, hd0, rfl⟩ : ∃ d : ℝ × ℝ, 0 ≤ d ∧ b = a - d :=
+    ⟨a - b, ⟨by simpa using (Prod.le_def.mp hba).1, by simpa using (Prod.le_def.mp hba).2⟩,
+      by abel⟩
+  have hshift : ∀ x : ℝ × ℝ, x - d ≤ x := fun x ↦
+    Prod.le_def.mpr ⟨by simpa using hd0.1, by simpa using hd0.2⟩
+  have hconv : Convex ℝ {x : ℝ × ℝ | x - d ∈ convexHull ℝ s} := by
+    intro x hx y hy p q hp hq hpq
+    have hpd : p • d + q • d = d := by rw [← add_smul, hpq, one_smul]
+    change p • x + q • y - d ∈ convexHull ℝ s
+    have hrw : p • (x - d) + q • (y - d) = p • x + q • y - d := by
+      rw [smul_sub, smul_sub,
+        show p • x - p • d + (q • y - q • d) = p • x + q • y - (p • d + q • d) from by abel, hpd]
+    rw [← hrw]
+    exact (convex_convexHull ℝ s) hx hy hp hq hpq
+  have hsub : s ⊆ {x : ℝ × ℝ | x - d ∈ convexHull ℝ s} := fun x hx ↦
+    subset_convexHull ℝ s (hs (hshift x) hx)
+  exact convexHull_min hsub hconv ha
+```
+
+**atom 3 — `martonInfoV₁V₂_nonneg`（`:178-188`、11 行）**。⚠ **section variable は
+`{α β₁ β₂ V₁ V₂ : Type*} [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
+[Fintype V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁] [Fintype V₂] [Nonempty V₂]
+[MeasurableSpace V₂] [MeasurableSingletonClass V₂]`**（`:173-176`）= §14.4 の経路候補 2 本が要求
+する分だけに絞ってある（`α β₁ β₂` に `Fintype` / `Nonempty` / `MeasurableSingletonClass` は不要）:
+
+```lean
+theorem martonInfoV₁V₂_nonneg (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
+    (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    0 ≤ martonInfoV₁V₂ pV K W := by
+  have hX : Measurable (Prod.fst : V₁ × V₂ × α × β₁ × β₂ → V₁) := measurable_fst
+  have hY : Measurable (fun q : V₁ × V₂ × α × β₁ × β₂ ↦ q.2.1) := measurable_fst.comp measurable_snd
+  rw [martonInfoV₁V₂,
+    entropy_pair_eq_entropy_add_condEntropy (martonJointDistribution pV K W) _ _ hX hY]
+  have := entropy_ge_condEntropy (martonJointDistribution pV K W)
+    (fun q : V₁ × V₂ × α × β₁ × β₂ ↦ q.2.1) (Prod.fst : V₁ × V₂ × α × β₁ × β₂ → V₁) hY hX
+  linarith
+```
+
+⟹ ⚠ **§14.4 の「想定の 2 段」（連鎖律 → 条件付きエントロピーの単調性）は当たっていた**。
+未確認としていた「射影の可測性と `IsProbabilityMeasure` が手元にあるか」は `measurable_fst` /
+`measurable_fst.comp measurable_snd` の 2 行で足りた。
+
+**移植時に直した警告（4 件。⚠ ブリーフの記載は 3 件だった）**:
+
+1. `push_neg` は deprecated → **`push Not`**（atom 2 に 2 箇所、`:96` `:116`）
+2. atom 2 の 3 つ目の `simp [Prod.ext_iff]` は `Prod.ext_iff` が unused → **引数を落として `simp`**（`:139`）
+3. `unusedSectionVars` が既定で発火（ブリーフはゲート実行時のみを想定）→ ⚠ `omit … in` ではなく
+   **section 分割**で解いた（`Separation` / `Info` / `OuterBounded` / `Nonemptiness` / `Cardinality`。
+   兄弟 `MartonUnion.lean` の `Union` / `Shape` / `Nonemptiness` と同じ形）
+4. ⚠ **ブリーフ未記載だった 4 件目** — atom 1 の `show p • x + q • y - d ∈ convexHull ℝ s` が
+   `linter.style.show`（「goal を変えているので `change` を使え」）に触る → **`change`** へ（`:78`）
+
+### 15.3 証明の骨格（⚠ 再現可能な形で。逐語は現 HEAD の実測）
+
+**手順 0 — 新しい def**（`:202-207`）。`martonRegionUnion`（`MartonUnion.lean:73-78`）との差は
+`(_ : k₁ < martonAuxBound α)` の **1 行だけ**:
+
+```lean
+noncomputable def martonRegionUnionOuterBounded (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
+  closure (⋃ (k₁ : ℕ) (_ : k₁ < martonAuxBound α) (k₂ : ℕ)
+    (pV : Measure (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂))
+    (_ : IsProbabilityMeasure pV)
+    (K : Kernel (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂) α)
+    (_ : IsMarkovKernel K), martonRegion pV K W)
+```
+
+構造補題 3 本（`_isLowerSet` `:209` / `martonRegion_subset_outerBounded_of_bcAux` `:215` /
+`_subset_union` `:225`）と `_nonempty`（`:239`、`k₁ = k₂ = 0` の Dirac witness +
+`Fintype.card_pos`）は `MartonUnion.lean` の対応物の逐語複製（`isLowerSet_iUnion` の入れ子が 1 段
+増えるだけ）。
+
+**手順 1 — 純算術の補題** `exists_weights_dominating`（`:147-165`、**19 行**、`private`）。
+`rcases le_total μ₂ μ₁` の 2 分岐で、**支配する重み**と**それが達成される頂点**を同時に返す:
+
+| 分岐 | 重み `(a, b, c)` | 頂点 `(x, y)` | `0 ≤ I₁₂` の用途 |
+|---|---|---|---|
+| `μ₂ ≤ μ₁` | `(μ₁ - μ₂, 0, μ₂)` | `(I₁, I₂ - I₁₂)` | `y ≤ I₂` ⟺ `0 ≤ I₁₂` |
+| `μ₁ ≤ μ₂` | `(0, μ₂ - μ₁, μ₁)` | `(I₁ - I₁₂, I₂)` | `x ≤ I₁` ⟺ `0 ≤ I₁₂` |
+
+⚠ **この 2 分岐が L16 の全重み版と正しく対応する**: 補題が返す非負性は **`0 ≤ b` と `0 ≤ c` の
+2 本だけ**（`a` は符号自由）で、これが L17 headline の仮説
+`(μ₁ μ₂ μ₃ : ℝ) (hμ₂ : 0 ≤ μ₂) (hμ₃ : 0 ≤ μ₃)`（`CardinalityBound.lean:516`、**`μ₁` は無制限**）に
+そのまま噛む。⟹ ⚠ **§14.3 末尾の「(a′-1) は (a′-2) が要求する以上の強さを既に持っている」は
+実測で裏付けられた** — L16 以前の射程限定版（`μ₂ = 0` 系列 + `μ₁ = 0` 系列だけ）では
+`(μ₁ - μ₂, 0, μ₂)` の第 1 成分が通らず、**この配線は成立しない**。
+
+**手順 2 — 核心** `martonRegion_subset_closure_convexHull_outerBounded`（`:259-294`、36 行）。
+`S := closure (convexHull ℝ (martonRegionUnionOuterBounded W))` の 4 性質（閉 = `isClosed_closure` /
+凸 = `(convex_convexHull ℝ _).closure` / 下方 = **atom 1** + `IsLowerSet.closure` / 非空）を揃え、
+`intro p hp` → `by_contra hpS` で:
+
+1. **atom 2** で分離 `hsep : ∀ x ∈ S, μ₁ * x.1 + μ₂ * x.2 < μ₁ * p.1 + μ₂ * p.2`、`0 ≤ μ₁`, `0 ≤ μ₂`
+2. **手順 1** で `⟨a, b, c, hb, hc, hdom, hvert⟩`
+3. **項目 1**（§15.1）で `hdis : pV.fst ⊗ₘ pV.condKernel = pV`
+4. **L17 headline** を `q := pV.fst`, `κ := pV.condKernel`, `K := K`, 重み `(a, b, c)` で適用し、
+   `rw [hdis] at hle` で左辺を `pV` へ戻す
+5. ⚠ **噛み合いの核心**: L17 headline が返す `q' ⊗ₘ κ'` は
+   **`bcAuxAlphabet k × bcAuxAlphabet k₂` の上に載る** — `k < martonAuxBound α` を満たしつつ `k₂` は
+   **元のまま**なので、これは**切り詰めた合併 `martonRegionUnionOuterBounded` の指標そのもの**である。
+   ⟹ ⚠ **`K` の輸送は不要**（`K' : Kernel (bcAuxAlphabet k × bcAuxAlphabet k₂) α` と型が同一）。
+   実装では `martonRegion_subset_outerBounded_of_bcAux k k₂ hk (q' ⊗ₘ κ') K' W` の 1 行（`:288`）。
+6. `hvert` を `I₁ := martonInfo₁ (q' ⊗ₘ κ') K' W` 等に適用。⚠ ここで **`0 ≤ I₁₂` に
+   `martonInfoV₁V₂_nonneg` を渡す**（`:286`）= **§14.4 の「未確認 1 件」が実際に消費された箇所**
+7. 矛盾（`:290-294`、`linarith`）:
+   `μ₁p.1 + μ₂p.2 ≤ a I₁ + b I₂ + c S'`（`hdom`）` ≤ a I₁' + b I₂' + c S''`（`hle`）
+   ` = μ₁x + μ₂y`（`hvert` の等式）` < μ₁p.1 + μ₂p.2`（`hsep`）
+
+**手順 3 — headline**（`:306-318`、13 行）。⊇ は `_subset_union` に `convexHull_mono` +
+`closure_mono`、⊆ は `closure_minimal (convexHull_min …) isClosed_closure` → もう 1 段
+`closure_minimal` → `Set.iUnion_subset` を 6 回剥がして手順 2 を当てる。
+
+### 15.4 監査が拾った実質的な指摘（⚠ 誇張の芽）
+
+honesty 監査（commit `3341783e`）が **docstring の誤記 1 件を是正**した:
+「outer アルファベットが `martonAuxBound α` **未満**（fewer than）の文字数」→ ⚠ **「高々
+（at most）」**（def docstring + module doc の 2 箇所）。
+
+⚠ **根拠の逐語**（`Marton/CardinalityBound.lean:424-426`）:
+
+```
+/-- The cardinality cap on a Marton auxiliary alphabet: the size of the channel input alphabet.
+An auxiliary alphabet of the union carries `k + 1` letters, so on its index the cap reads
+`k < martonAuxBound α`. -/
+def martonAuxBound (α : Type*) [Fintype α] : ℕ := Fintype.card α
+```
+
+⟹ `bcAuxAlphabet k₁` は **`k₁ + 1` 文字**なので `k₁ < Fintype.card α` は「**高々** `card α` 文字」で
+あり、「未満」は ⚠ **実際より 1 文字強い上界を主張していた**（L17 headline 自身の docstring
+`:504-505` は元から "with at most `martonAuxBound α` letters" と正しく書いており、**新規ファイル側
+だけが逐語から外れていた**）。
+
+⚠ **退化による自明化は 2 つの構造的に異なる境界で再テストされ、いずれも不発火**（監査の実測）:
+(i) `card α = 1` — 全情報量が 0 に潰れるが等式は成立し、`k₁ < 1` は `k₁ = 0` を許すので右辺も非空
+（**空虚な真ではない**）。(ii) `k₁ ≫ card α` の指標 — これは本定理の内容そのもので、
+`exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights` が実際に body で消費されている。
+⟹ 切り詰めは `rfl` 的自明化ではない（逆包含は別補題 `_subset_union` で別途証明されている）。
+
+### 15.5 命名の決着 — `Bounded` → `OuterBounded`
+
+style ゲート（`fb59985a`）が「**名前が言明を担えていない**」と判定した:
+`Bounded` は**何が**有界かを言っておらず、⚠ **両方の補助変数が有界だと誤読させる**（実際に切って
+いるのは外側 `k₁` だけで `k₂` は `ℕ` 全域）。兄弟 `martonRegionUnionFullSupport`
+（`MartonUnion.lean:83`）が確立した **`martonRegionUnion<どの制限か>`** という接尾辞規約に合わせ、
+**7 名を改名**した（`85c35e5a`。`InformationTheory/` 内の旧名参照は改名後 0 件）。
+
+⟹ ⚠ **在庫本文で今後この対象を指すときは `martonRegionUnionOuterBounded` と書くこと**
+（§8.2 / §14 の本文にある `martonRegionUnion_eq_bounded` は**在庫が §5.2 で設計した Lean 側に実在
+しない別名**であり、改名追随とは別軸である）。
+
+⚠ **`isLowerSet_convexHull` は dot 記法（`_root_.IsLowerSet.convexHull`）に一度変えてから差し戻した**
+（`85c35e5a` → `c5708d1d`）。差し戻しの理由 = 言明が **`Set (ℝ × ℝ)` 特化**なのに Mathlib root の
+一般名を占めるのは**名前が言明より強い**から。⟹ ⚠ **一般化してから Mathlib PR に出すのが筋**
+（現状は特化形）。
+
+⚠ 途中で判明した Lean 側の事実（L19 以降で同じことをするなら再利用できる）: `theorem
+IsLowerSet.convexHull` を namespace 内に書いても **dot 記法は効かない** — field 解決は
+`IsLowerSet.convexHull` を **root で直接引く**だけで現 namespace を辿らないため、
+`InformationTheory.….Marton.IsLowerSet.convexHull` は見えず `Function.convexHull` を探して失敗する。
+効かせるには宣言名を `_root_.IsLowerSet.convexHull` と書く必要があり、⚠ **その場合は本体内の裸の
+`convexHull` が自分自身に解決してしまう**ので `_root_.convexHull` への明示修飾が 3 箇所要る。
+
+### 15.6 予算の実測
+
+`Marton/RegionCardinality.lean` = **322 行 / 11 宣言 / 0 sorry**（HEAD `c5708d1d` の実測）。
+
+| 宣言 | 行 | 実行数 |
+|---|---|---|
+| `isLowerSet_convexHull`（atom 1） | `:67-86` | 20 |
+| `exists_nonneg_weights_separating_of_isLowerSet`（atom 2） | `:88-145` | 58 |
+| `exists_weights_dominating`（手順 1、`private`） | `:147-165` | **19** |
+| `martonInfoV₁V₂_nonneg`（atom 3） | `:178-188` | 11 |
+| `martonRegionUnionOuterBounded`（手順 0、def 本体） | `:202-207` | 6 |
+| `martonRegionUnionOuterBounded_isLowerSet` | `:209-213` | 5 |
+| `martonRegion_subset_outerBounded_of_bcAux` | `:215-223` | 9 |
+| `martonRegionUnionOuterBounded_subset_union` | `:225-233` | 9 |
+| `martonRegionUnionOuterBounded_nonempty` | `:239-244` | 6 |
+| `martonRegion_subset_closure_convexHull_outerBounded`（手順 2） | `:259-294` | 36 |
+| `closure_convexHull_martonRegionUnion_eq_outerBounded`（手順 3、headline） | `:306-318` | 13 |
+| **計 11 宣言** | | **192** |
+
+⚠ §14.7 の予測は**宣言本体 155–260 / `wc -l` 305–410** ⟹ **宣言本体 192 は予測の内側、`wc -l` 322 は
+予測レンジの下限側**に収まった。⚠ **本 relay で予測が上振れしなかった初のケースである**
+（`exists_weights_dominating` は見積り 25–40 行に対し **19 行** — `nlinarith` 不要で
+`linarith` + ヒント 2 本で通った）。
+
+⚠ **累計は隠さない**（内数の再配分で説明しない）:
+
+| 対象 | §8.2 の見積り | 実測 | 差 |
+|---|---|---|---|
+| (a′-1) 単独 | 480–800 | **1842**（§13.3） | **+130%** |
+| (a′-2) 単独 | 60–120（§8.2 `:1104`）→ §14.7 で 305–410 に改訂 | **322** | §8.2 比 **+168%** / §14.7 比 **レンジ内** |
+| **(a′) 累計** | **540–920** | **2164** | ⚠ **+135%（+1244 行）** |
+
+⟹ ⚠ **§13.3 / §14.0 の超過判定（+130%）は本 leg で狭まらず、むしろ広がっている**。
+⚠ ただし §14.8 のとおり**これは撤退ラインではない**（配分の問題であって完了条件は動かない）。
+本 leg の 322 行は改訂後の予測に収まっているので、**超過は (a′-1) 側に由来する**。
+
+### 15.7 ⚠ A を閉じても言えないまま残るもの（§14.4 を**更新せず再掲・強調**）
+
+- ⚠ 右辺の合併は `k₁ < martonAuxBound α` で切れるが **`k₂` は `ℕ` 全域のまま** ⟹
+  **有限個の指標への還元にはなっていない = 親プラン §1.1 (C1) の「計算可能」の荷は降りていない**。
+  A が買ったのは「**外側補助変数の基数だけ**が領域の水準で有界になる」ことである
+  （headline の docstring `:300-303` にもこの限定が逐語で入っている）。
+- ⚠ **対象が閉凸包に上がった** ⟹ 非凸のままの `martonRegionUnion` の切り詰めは**言えない**
+  （§14.2 の機械反例）。凸化した対象を内界として消費する段で **`Convex ℝ (bcCapacityRegion W)` の
+  債務 1 本が立つ**。⚠ honesty 監査の判断で**コード docstring には書かず**在庫 / プラン側に残す
+  こととした（docstring 規約「status / roadmap 散文を恒久記録に置かない」）ので、⚠ **本項がその
+  置き場である**。
+- ⚠ `martonRegionUnion` 自身の凸性は**決着していない**（§14.6 の強度差の疑い = 教科書の Marton
+  内界は time-sharing の第 3 補助変数 `V₀` を持つ形が標準だが in-project は 2 補助変数版）。
+  **A はこの点に立ち入らない設計**である（凸性を証明せず閉凸包へ上げて回避した）。
+
+### 15.8 B（`V₂` 側 = L19）へ向けて確定していること
+
+§14.5 の 3 点（1 swap 対称性補題 / 2 逆向き disintegration / 3 2 回適用の非干渉）は**そのまま
+有効**。⚠ ただし §15.1 の項目 1 で「**順方向の disintegration は無償**」が判明したため、
+**項目 2 は再評価の対象**である。
+
+⚠ **本在庫の作成時に機械確認した**（scratch file を `lake env lean`。⚠ 実装者・監査者の報告では
+なく本節の独立実測）:
+
+```lean
+variable {V₁ V₂ : Type*}
+  [Fintype V₁] [Nonempty V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]
+  [Fintype V₂] [Nonempty V₂] [MeasurableSpace V₂] [MeasurableSingletonClass V₂]
+
+example : StandardBorelSpace V₂ := inferInstance                                   -- ✓ 0 error
+example (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV] :
+    pV.fst ⊗ₘ pV.condKernel = pV := pV.disintegrate pV.condKernel                  -- ✓ 0 error
+example (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV] :
+    IsMarkovKernel pV.condKernel := inferInstance                                  -- ✓ 0 error
+example (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV] :
+    IsProbabilityMeasure pV.fst := inferInstance                                   -- ✓ 0 error
+-- ⚠ 逆向き（B が要求する形）
+example (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV] :
+    (pV.map Prod.swap).fst ⊗ₘ (pV.map Prod.swap).condKernel = pV.map Prod.swap :=
+  (pV.map Prod.swap).disintegrate (pV.map Prod.swap).condKernel                    -- ✓ 0 error
+```
+
+⟹ ⚠ **§14.5 項目 2 の危険視「Mathlib の `condKernel` 系は `StandardBorelSpace` を要求しうる」は
+半分当たりで半分外れ**: `Measure.condKernel` は確かに `[StandardBorelSpace Ω] [Nonempty Ω]` を
+要求する（§15.1 の逐語表）が、⚠ **本 family の型クラス束からはどちらも `inferInstance` で通る**
+ので **型クラス側の追加債務は 0 本**である。⚠ **実測で分かった唯一の追加要件は `[Nonempty V₁]`**
+— これを外すと逆向きだけが `failed to synthesize instance of type class Nonempty V₁` で落ちる
+（`Measure.condKernel` の `[Nonempty Ω]` が `Ω := V₁` で効くため）。L17 headline の変数ブロックは
+既に `[Nonempty V₁]` を持つ（`CardinalityBound.lean:418`）ので、**B 側でもこの要件は無償**。
+
+⚠ **ここで確定したのは「逆向きの分解が型として存在する」ことだけである**。§14.5 の項目 1
+（`martonInfo₁_swap`、署名は elaborate 済・本体 `sorry`）と項目 3（2 回適用が互いの `ncard` 上界を
+壊さないこと）は**依然として未検証**であり、⚠ **B 全体を壁とも非壁とも書かない**（§14.8 の作法を
+維持）。⚠ ただし **§14.8 が「壁かどうか未判定」とした根拠のうち型クラス軸は消えた**ので、
+L19 の最初の確認事項は項目 2 ではなく**項目 1 と項目 3** に移る。
+
+### 15.9 flag only（本 leg では実施しない申し送り）
+
+- **汎用凸幾何 2 本の切り出し**（`isLowerSet_convexHull` / `exists_nonneg_weights_separating_of_isLowerSet`）。
+  ⚠ **現状維持が正**: 移動先が現在の木に存在せず、今作ると consumer 1 の葉ファイルになる
+  （`IsLowerSet` はツリー全体で BC family の 3 file のみ、`geometric_hahn_banach` は本 file のみ）。
+  UV outer 側（`OuterBoundUV/Region.lean`）が 2 人目の consumer になった時点で
+  `InformationTheory/Shannon/BroadcastChannel/LowerSetSeparation.lean`（⚠ **`Marton/` の下ではなく
+  BC 直下** = 両サイドの共通下層）へ昇格。
+  ⚠ **`exists_weights_dominating` は汎用ではない** — 型こそ実数の算術だが、内容は
+  「3 つの情報項が張る**四辺形**の上で rate 重みを情報重みへ支配的に変換する」= Marton 領域の形状
+  そのものの符号化である（`private` のままが正しい）。⚠ **これは style ゲートがオーケストレーターの
+  「汎用 3 本」という読みを訂正した項目である。**
+- **`docs/readme-theorems.txt` への登録は しない**判断。本成果は (a′) へ向かう**中間段**であって章の
+  成果ではない（現在登録されている Marton 系は `marton_achievability` と
+  `martonRegionUnion_subset_capacity` の **2 本**、`docs/readme-theorems.txt:120-121`）。
+  ⟹ ⚠ **登録のタイミングは (a′) の完成時**。
+- **`docs/rules` delta**: `docstrings.md` item 1 の *Main statements* 掲載義務と
+  `scripts/lean_doc_lint.ts:469-477` の `internal-doc` ratchet が衝突する（掲載補題に docstring を
+  付けると機械層にブロックされる）。本 leg は既存実態（`MartonUnion.lean` の掲載補題は全て bare で、
+  module doc の bullet が説明を担う）に従った。⚠ 規約側を実態に寄せるなら **item 1 の headline 定義を
+  `@[entry_point]` に限定**するのが筋。
