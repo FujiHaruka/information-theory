@@ -7,7 +7,7 @@
 > [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md) / 失敗形 =
 > [`../proof-logs/proof-log-bc-open-problem-relay.md`](../proof-logs/proof-log-bc-open-problem-relay.md) §3
 
-**Status**: **L0 / L1 / L2 / L3 完了 = 4/20 leg**。
+**Status**: **L0 / L1 / L2 / L3 / L4 完了 = 5/20 leg**。
 **Branch**: `bc-computable-region`
 
 ---
