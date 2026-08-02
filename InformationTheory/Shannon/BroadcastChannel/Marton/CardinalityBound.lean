@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.BroadcastChannel.Marton.ObjectiveAssembly
-import InformationTheory.Shannon.BroadcastChannel.MartonUnion
 import InformationTheory.Shannon.BroadcastChannel.Marton.Swap
+import InformationTheory.Shannon.BroadcastChannel.MartonUnion
 
 /-!
 # Broadcast channel — cardinality bounds for the Marton auxiliary alphabets

@@ -7,7 +7,7 @@ import InformationTheory.Shannon.Pi
 
 The Marton data `(pV, K, W)` is symmetric in the two receivers: exchanging the two auxiliary
 letters of `pV` and `K` and the two outputs of `W` produces Marton data for the same channel
-read the other way round.  This file records that symmetry at the level of the five-variable
+read the other way around.  This file records that symmetry at the level of the five-variable
 law and of the three informations of the region inequalities, so that a statement proved for
 the first auxiliary alphabet transfers to the second one by reindexing rather than by a
 mirrored proof.
@@ -31,7 +31,11 @@ variable {α β₁ β₂ V₁ V₂ : Type*}
   [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
   [MeasurableSpace V₁] [MeasurableSpace V₂]
 
-/-- @audit:ok -/
+/-- The five-variable law of the Marton data with the two receivers exchanged — the two auxiliary
+letters of `pV` and `K` and the two outputs of `W` traded — is the pushforward of the original law
+along the map that trades the two auxiliary letters and the two outputs.
+
+@audit:ok -/
 lemma martonJointDistribution_swap
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -90,7 +94,10 @@ section FirstReceiver
 
 variable [Fintype V₂] [Fintype β₂]
 
-/-- @audit:ok -/
+/-- The first-receiver information of the Marton data with the two receivers exchanged is the
+second-receiver information of the original data.
+
+@audit:ok -/
 lemma martonInfo₁_swap
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -110,7 +117,10 @@ section SecondReceiver
 
 variable [Fintype V₁] [Fintype β₁]
 
-/-- @audit:ok -/
+/-- The second-receiver information of the Marton data with the two receivers exchanged is the
+first-receiver information of the original data.
+
+@audit:ok -/
 lemma martonInfo₂_swap
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
@@ -133,7 +143,10 @@ section Auxiliaries
 variable [Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁]
   [Fintype V₂] [Nonempty V₂] [MeasurableSingletonClass V₂]
 
-/-- @audit:ok -/
+/-- The dependence between the two auxiliary letters is unchanged when the two receivers are
+exchanged.
+
+@audit:ok -/
 lemma martonInfoV₁V₂_swap
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
