@@ -3468,6 +3468,10 @@ lemma compProd_map_prodMap {Z Z' B B' : Type*} [MeasurableSpace Z] [MeasurableSp
 3 本**（`Marton.Setup` / `ChannelCoding.CodeToAmbient` / `Shannon.Pi`）で `CardinalityBound` /
 `RegionCardinality` に依存しない = **下流から import しても循環しない**。
 
+⚠ **詰まりは 1 箇所 1 ターンのみ**（proof-log 素材）: `set f … with hf_def` の局所定義を `simp only`
+が展開せず `(f x).2 = x.2` が残る → **`hf_def` を simp set に足して解決**（`Swap.lean:68` 逐語
+`simp only [Kernel.map_apply _ measurable_swap, Kernel.comap_apply, hf_def]`）。
+
 ### 16.5 2 つのゲートの結果
 
 #### (a) honesty ゲート = **all OK**（tier 1 / defect 0）
@@ -3520,6 +3524,12 @@ along unchanged」= **1 回のパスの非対称性**として書き直されて
 「限界の断言」という主張の型で探す**（「〜のみ」「〜は不可能」「〜に限る」を含む一文はすべて、
 射程を広げる leg で偽になりうる）。⚠ **§15.4 が拾った「未満 / 高々」の誤記と同型の事故であり、
 2 leg 連続で docstring の射程主張が虚偽化している**。
+
+⚠ **実装 commit（`14bdd2f3`）自身も module doc の射程を 2 箇所直している**（放置すれば同種の虚偽に
+なった）: `CardinalityBound.lean` のタイトル「for the outer Marton auxiliary alphabet」→
+「cardinality bounds for the Marton auxiliary alphabets」、節見出し「for the outer auxiliary
+alphabet」→「for either auxiliary alphabet」。`RegionCardinality.lean` は module doc の該当段落を
+**2 パス構成の説明**へ差し替え、`## Main definitions` / `## Main statements` にも追加した。
 
 `adbceb76` は `Swap.lean` の headline 4 本に数学的 docstring を付与（`@audit:ok` は逐語保存）+
 import 整列。⚠ **`-D` ゲート出力のバイト数は固定値ではない**（`Swap.lean` = 0 / `CardinalityBound` =
