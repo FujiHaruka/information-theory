@@ -134,6 +134,7 @@ import InformationTheory.Shannon.BroadcastChannel.Classes
 import InformationTheory.Shannon.BroadcastChannel.OuterBoundUV.MartonBridge
 import InformationTheory.Shannon.BroadcastChannel.MartonUnion
 import InformationTheory.Shannon.BroadcastChannel.Marton.CardinalityBound
+import InformationTheory.Shannon.BroadcastChannel.Marton.RegionCardinality
 import InformationTheory.Shannon.BroadcastChannel.MartonFullSupport
 import InformationTheory.Shannon.BroadcastChannel.Superposition.Region
 import InformationTheory.Shannon.BroadcastChannel.Superposition.TimeShare
