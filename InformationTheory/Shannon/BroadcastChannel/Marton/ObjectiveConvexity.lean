@@ -171,8 +171,9 @@ theorem convexOn_auxWeightObjectiveTwoSlot (k : U → V × Z → ℝ) (hk : ∀ 
   (convexOn_auxWeightObjective k hk w c t ht).add
     (by simpa only [smul_eq_mul] using (convexOn_negCondEntropy_mixture_transpose k hk).smul hs)
 
-/-- Support reduction for the two-slot objective carrying an additional term `g` that reads the
-weights only through the aggregate `fun x ↦ ∑ u, q u * A u x`. -/
+/-- Support reduction also applies to the two-slot objective carrying an additional term `g` that
+reads the weights only through the aggregate `fun x ↦ ∑ u, q u * A u x`, provided both entropy
+coefficients are nonnegative. -/
 @[entry_point]
 theorem exists_support_card_le_auxWeightObjectiveTwoSlot_add_aggregate (A : U → X → ℝ)
     (hA : ∀ u, ∑ x, A u x = 1) (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) (w : U → ℝ)

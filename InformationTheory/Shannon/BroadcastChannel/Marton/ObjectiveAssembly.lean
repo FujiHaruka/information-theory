@@ -5,9 +5,10 @@ import InformationTheory.Shannon.BroadcastChannel.Marton.ObjectiveVectorForm
 # Marton's inner bound — the weighted sum of the region informations in vector form
 
 The cardinality bound for the outer auxiliary variable optimizes a weighted sum of the three
-informations of the region inequalities: `μ₁` times the first-receiver information plus `μ₃` times
-the sum-rate expression `I(V₁; Y₁) + I(V₂; Y₂) - I(V₁; V₂)`.  This file writes that weighted sum
-as `auxWeightObjective`, the shape the support reduction consumes, plus a term that reads the
+informations of the region inequalities: `μ₁` times the first-receiver information, `μ₂` times the
+second-receiver information, and `μ₃` times the sum-rate expression
+`I(V₁; Y₁) + I(V₂; Y₂) - I(V₁; V₂)`.  This file writes that weighted sum in the shape the support
+reduction consumes, an objective of the `auxWeightObjective` family, plus terms that read the
 weights only through the channel-input aggregate.
 
 The entropy of the outer auxiliary letter cancels twice, once inside the sum-rate expression and
@@ -300,8 +301,9 @@ theorem martonWeightedSum_eq_auxWeightObjectiveTwoSlot_add_aggregate
 
 /-- The weight vector of the outer auxiliary marginal can be replaced by a nonnegative weight
 vector supported on at most `Fintype.card α` letters, keeping the channel-input aggregate and not
-decreasing the weighted sum of the three informations, for the whole range of weights on the two
-region inequalities that the support reduction needs to be nonnegative. -/
+decreasing the weighted sum of the three informations of the region inequalities.  The
+second-receiver weight `μ₂` and the sum-rate weight `μ₃` scale the two convex entropy slots and
+are assumed nonnegative; the first-receiver weight `μ₁` is unrestricted. -/
 @[entry_point]
 theorem exists_support_card_le_martonWeightedSumAllWeights
     (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
@@ -329,8 +331,9 @@ theorem exists_support_card_le_martonWeightedSumAllWeights
 
 /-- The outer auxiliary law can be replaced by a probability measure on the same auxiliary
 alphabet whose support has at most `Fintype.card α` letters, without decreasing the weighted sum
-of the three informations of the region inequalities, for the whole range of weights on the two
-region inequalities that the support reduction needs to be nonnegative. -/
+of the three informations of the region inequalities.  The second-receiver weight `μ₂` and the
+sum-rate weight `μ₃` scale the two convex entropy slots and are assumed nonnegative; the
+first-receiver weight `μ₁` is unrestricted. -/
 @[entry_point]
 theorem exists_support_card_le_martonWeightedSumAllWeights_measure
     (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
