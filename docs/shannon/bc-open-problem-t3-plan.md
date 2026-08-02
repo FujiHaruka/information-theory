@@ -7,8 +7,8 @@
 > [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md) / 失敗形 =
 > [`../proof-logs/proof-log-bc-open-problem-relay.md`](../proof-logs/proof-log-bc-open-problem-relay.md) §3
 
-**Status**: **L0–L9 完了 = 10/20 leg**。直近の 4 leg (L6–L9) は**層 3 の実装線** (補助変数の
-基数境界) を走っており、**次の一手は 3 汎関数の凸性 gate** (§5)。
+**Status**: **L0–L10 完了 = 11/20 leg**。直近の 5 leg (L6–L10) は**層 3 の実装線** (補助変数の
+基数境界) を走っており、**次の一手は測度形 ↔ ベクトル形の降ろし** (§5)。
 **Branch**: `bc-computable-region`
 
 ---
@@ -140,9 +140,9 @@ T3 の主語は計算可能性なので**数値掃引は原理的に効かない
 教訓 (proof-log §3) が「軸を並べて round-robin すると gate を通らない候補に構築枠を使う」なので、
 gate-first を採る方針そのものは維持する。
 
-⚠ **この表の「次の一手」は散文線 (層 1–2) の話であって、直近の leg が走っている線ではない** — L6–L9 は
-**層 3 の実装線** (補助変数の基数境界) を連続で消化しており、**次の leg もそちら (凸性 gate)** である
-(§5)。両者は並行する 2 本の線で、片方を読んでもう片方の現況を推測しないこと。
+⚠ **この表の「次の一手」は散文線 (層 1–2) の話であって、直近の leg が走っている線ではない** — L6–L10 は
+**層 3 の実装線** (補助変数の基数境界) を連続で消化しており、**次の leg もそちら (測度形 ↔ ベクトル形の
+降ろし)** である (§5)。両者は並行する 2 本の線で、片方を読んでもう片方の現況を推測しないこと。
 
 ### 3.1 ⚠ 使えないと分かっているもの (前 relay の確定事実。再探索しない)
 
@@ -226,9 +226,9 @@ incompleteness marker として自由に使ってよい**が、**hypothesis に�
 サンドイッチ両方向の sorryAx-free) は健全で層 3 で作り直す定義は無い一方、⚠ **層 3 の残コストは
 補助変数の基数境界** (在庫に Carathéodory 型の境界補題が 0 件、facts §L5(T3) 行 3) である。
 
-**L6–L9 の 4 leg は、その基数境界 1 本に可変枠を連続で充てた** — 成果物は在庫
-[`bc-t3-cardinality-inventory.md`](bc-t3-cardinality-inventory.md) (§5 / §6.4 / §7 / §8 が SoT) と
-facts [`bc-facts.md`](bc-facts.md) `## L7 (T3)`、および新規 Lean ファイル 1 本。
+**L6–L10 の 5 leg は、その基数境界 1 本に可変枠を連続で充てた** — 成果物は在庫
+[`bc-t3-cardinality-inventory.md`](bc-t3-cardinality-inventory.md) (§5 / §6.4 / §7 / §8 / §9 が SoT) と
+facts [`bc-facts.md`](bc-facts.md) `## L7 (T3)`、および新規 Lean ファイル 2 本。
 
 - **L6 (在庫 gate) = COSTLY、⚠ 壁ではない** (`d6d964ff`)。Carathéodory 一式と単体のコンパクト性は
   Mathlib に在り、⚠ **Fenchel–Eggleston は本件に不要** (改善するのは定数だけ、在庫 §2.4) ⟹
@@ -255,14 +255,32 @@ facts [`bc-facts.md`](bc-facts.md) `## L7 (T3)`、および新規 Lean ファイ
   凸関数 `f` を仮定に取って「制約を保ちつつ `f` を減らさない台縮小」を返す形なので、**(3c)
   「凸関数は端点で最大」も同じ 1 本に畳まれている** ⟹ 残る部品は (3a) 凸性そのもの。
   ⚠ 到達状態 (sorry / axioms) の現物は `rg` / `#print axioms` で毎回引き直す (散文にキャッシュしない)。
+- **L10 (部品 (3a) の凸性 gate) = GO、⚠ 壁 0 件** (`e2c2dee4` / `8a2dd0d2`)。凸核 `−H(V|Z)` の凸性は
+  **自作不要**だった — 実物が 2 家系隣の
+  `InformationTheory/Shannon/WynerZiv/ConditionalEntropyConvexity.lean:75`
+  (`negMulLog_marginal_gap_le_joint_gap`) に proof done で在り、在庫が用意していたルート A
+  (perspective 自作) / ルート B (Gibbs 変分) はどちらも不要になった (判定と loogle 逐語の SoT は
+  在庫 §9。ここへ複製しない)。実装は新規
+  `InformationTheory/Shannon/BroadcastChannel/Marton/ObjectiveConvexity.lean` で、目的関数を
+  `auxWeightObjective k w c q` として名前つきで切り出し (線型項は抽象 `LinearMap` ではなく係数
+  ベクトル `w : U → ℝ` の明示形)、headline `exists_support_card_le_auxWeightObjective`
+  (`@[entry_point]`) が `A` の行和 1・`k` と `q` の非負だけを仮定に、`Fintype.card X` 本の線型制約を
+  保ちつつ目的関数を減らさず台を `Fintype.card X` 以下へ落とす ⟹ **[GA09] Lemma 1 の初等証明が
+  ベクトル水準で閉じた**。型クラス前提は `Fintype` 4 つのみで**測度空間を要求しない** (在庫 §9.1.1 が
+  警告した `MeasurableSpace` の伝播は `letI := ⊤` で回避)。⚠ **撤退ライン 3 本とも不発火**、
+  `@residual(wall:…)` は 1 本も立っていない。
 
-**⟹ 次の一手 (L10) = 部品 (3a)「3 汎関数を `f` に載せる凸性証明」の gateway atom**。在庫 §8.2 の
-見積り (a′-1 = 480–800 行 / a′-2 = 60–120 行) のうち、残る重さは **(i) 測度 ↔ 単体点の座標化**
-(在庫 §4.5: `entropy` の定義自身がベクトル形なので橋は `rfl` = ほぼゼロ) と **(ii) 凸性証明**に移った。
-⚠ **gate は「エントロピー / 相互情報量の凸性・凹性が in-project にどこまで在るか」**である
-([GA09] 逐語: `−H(Y|U)+H(V|U)` は `q(u)` について**線型**、`−H(V|Z)` は**凸**、facts §L7 行 4)。
+**⟹ 次の一手 (L11) = 部品 (3a) の残り 1 段「測度形 ↔ ベクトル形の降ろし」の gateway atom**
+(在庫 §9.8 の #6、見積り 40–90 行)。⚠ **これが (a′-1) の C ルートの唯一の未検証段である** —
+`martonInfo₁` / `martonInfo₂` / `martonInfoV₁V₂` (`Marton/Setup.lean:244` / `:252` / `:262`、
+いずれも `entropy (martonJointDistribution pV K W) _` の 3 項和の形) を `auxWeightObjective` に
+載せる段で、gateway-atom-first で 1 本投げる。詰まったときの逃げ道は在庫 §9.11 の**ルート D**
+(measure 形の `klDiv_joint_convex` (`Shannon/RateDistortion/Convexity.lean:280`) 経由、`.toReal` 橋 +
+有限性で 80–150 行)。
 ⚠ **`@residual(wall:…)` は切らない** — 文献側では 2009–2011 に閉じており (facts §L7 行 7)、残るのは
 手間であって壁ではない。⚠ 逆に「文献に在るのだから配線するだけ」と読むのも誤り (在庫 §7.4)。
+⚠ **予算は据え置き** — (a′-1) の総額 480–800 行 + (a′-2) 60–120 行は動かさない。下がったのは部品 (3a)
+の内数だけ (在庫 §9.8) で、**部品 1 / 2 / 4 は未着手**である。
 ⚠ **§6.5 の予算警告は有効** — 層 3 集中枠 L16–L18 を基数境界 1 本が埋めうるので、他の形式化を
 同居させない前提で配分する (これは配分の話であって `GOAL-CHANGE` ではない)。
 
@@ -348,3 +366,14 @@ facts [`bc-facts.md`](bc-facts.md) `## L7 (T3)`、および新規 Lean ファイ
    であって、非凸のままの合併の切り詰めは出ない (それは (c) = 文献の射程外)。⚠ **残債務 1 本**:
    凸化した対象を内界として消費する段で `Convex ℝ (bcCapacityRegion W)` が要るが in-project に無い
    (⚠ (b) を採っても同じだけ立つ債務であり、(a′) 固有の追加コストではない)。
+9. **L10: 在庫を「家系」の単位で数えると隣の家系の完成品を見落とす (2026-08-02)**: 部品 (3a) の
+   凸核 `−H(V|Z)` の凸性を、前在庫は「BC 家系の凸性資産は `martonRegion_convex` 1 本だけ」と
+   **家系を単位に数えた**結果 in-project に無いものとして扱い、自作ルート 2 本 (A = perspective /
+   B = Gibbs 変分) を用意していた。実物は 2 家系隣の
+   `Shannon/WynerZiv/ConditionalEntropyConvexity.lean:75` に proof done で在り、**どちらのルートも
+   不要**だった (根拠は在庫 §9。ここへ複製しない)。⚠ **CLAUDE.md が記録する Shannon–Hartley Leg B
+   Leaf 2 (`cause:loogle-blind`) と同型の再発**であり、L6 の副産物の訂正 (検索語 "Carathéodory" に
+   よる見落とし) に続いて**本 relay で 2 度目**である ⟹ **規約として持つ: 在庫の「無い」は家系でも
+   検索語でもなく結論形で数える** (`ConvexOn` などの結論パターンを project 全体に当てる。CLAUDE.md
+   「In-repo asset search」)。⚠ **見落としが埋まったことを「全体が軽くなった」と読まない** — 下がった
+   のは (3a) の内数だけで、予算は据え置き (在庫 §7.4 / §9.8 / §9.10)。
