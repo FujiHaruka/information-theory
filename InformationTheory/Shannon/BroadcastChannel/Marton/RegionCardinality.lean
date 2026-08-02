@@ -19,17 +19,17 @@ sign, so nothing in the argument caps it.
 
 ## Main definitions
 
-* `martonRegionUnionBounded W` — the union defining Marton's inner bound, restricted to the
+* `martonRegionUnionOuterBounded W` — the union defining Marton's inner bound, restricted to the
   indices whose outer auxiliary alphabet carries at most `martonAuxBound α` letters.
 
 ## Main statements
 
-* `closure_convexHull_martonRegionUnion_eq_bounded` — the closed convex hull of Marton's inner
-  bound is unchanged by that restriction.
-* `martonRegionUnionBounded_isLowerSet` / `martonRegionUnionBounded_nonempty` /
-  `martonRegionUnionBounded_subset_union` — the restricted union is a nonempty lower set, as the
-  unrestricted union is, and it sits inside the unrestricted one.
-* `isLowerSet_convexHull` — the convex hull of a lower set of the plane is a lower set.
+* `closure_convexHull_martonRegionUnion_eq_outerBounded` — the closed convex hull of Marton's
+  inner bound is unchanged by that restriction.
+* `martonRegionUnionOuterBounded_isLowerSet` / `martonRegionUnionOuterBounded_nonempty` /
+  `martonRegionUnionOuterBounded_subset_union` — the restricted union is a nonempty lower set,
+  as the unrestricted union is, and it sits inside the unrestricted one.
+* `IsLowerSet.convexHull` — the convex hull of a lower set of the plane is a lower set.
 * `exists_nonneg_weights_separating_of_isLowerSet` — a point outside a nonempty closed convex
   lower set of the plane is separated from it by a functional with nonnegative coefficients.
 * `martonInfoV₁V₂_nonneg` — the dependence between the two auxiliaries is nonnegative, which is
@@ -60,7 +60,7 @@ universe u
 
 section Separation
 
-theorem isLowerSet_convexHull {s : Set (ℝ × ℝ)} (hs : IsLowerSet s) :
+theorem _root_.IsLowerSet.convexHull {s : Set (ℝ × ℝ)} (hs : IsLowerSet s) :
     IsLowerSet (convexHull ℝ s) := by
   intro a b hba ha
   obtain ⟨d, hd0, rfl⟩ : ∃ d : ℝ × ℝ, 0 ≤ d ∧ b = a - d :=
@@ -68,16 +68,16 @@ theorem isLowerSet_convexHull {s : Set (ℝ × ℝ)} (hs : IsLowerSet s) :
       by abel⟩
   have hshift : ∀ x : ℝ × ℝ, x - d ≤ x := fun x ↦
     Prod.le_def.mpr ⟨by simpa using hd0.1, by simpa using hd0.2⟩
-  have hconv : Convex ℝ {x : ℝ × ℝ | x - d ∈ convexHull ℝ s} := by
+  have hconv : Convex ℝ {x : ℝ × ℝ | x - d ∈ _root_.convexHull ℝ s} := by
     intro x hx y hy p q hp hq hpq
     have hpd : p • d + q • d = d := by rw [← add_smul, hpq, one_smul]
-    change p • x + q • y - d ∈ convexHull ℝ s
+    change p • x + q • y - d ∈ _root_.convexHull ℝ s
     have hrw : p • (x - d) + q • (y - d) = p • x + q • y - d := by
       rw [smul_sub, smul_sub,
         show p • x - p • d + (q • y - q • d) = p • x + q • y - (p • d + q • d) from by abel, hpd]
     rw [← hrw]
     exact (convex_convexHull ℝ s) hx hy hp hq hpq
-  have hsub : s ⊆ {x : ℝ × ℝ | x - d ∈ convexHull ℝ s} := fun x hx ↦
+  have hsub : s ⊆ {x : ℝ × ℝ | x - d ∈ _root_.convexHull ℝ s} := fun x hx ↦
     subset_convexHull ℝ s (hs (hshift x) hx)
   exact convexHull_min hsub hconv ha
 
@@ -162,7 +162,7 @@ private lemma exists_weights_dominating (μ₁ μ₂ : ℝ) (h1 : 0 ≤ μ₁) (
 
 end Separation
 
-/-! ## The union over the bounded outer auxiliary alphabets -/
+/-! ## The union over the outer auxiliary alphabets of bounded cardinality -/
 
 section Info
 
@@ -185,7 +185,7 @@ theorem martonInfoV₁V₂_nonneg (pV : Measure (V₁ × V₂)) [IsProbabilityMe
 
 end Info
 
-section Bounded
+section OuterBounded
 
 variable {α : Type u} {β₁ β₂ : Type*} [Fintype α] [MeasurableSpace α]
   [Fintype β₁] [MeasurableSpace β₁] [Fintype β₂] [MeasurableSpace β₂]
@@ -195,31 +195,31 @@ alphabet carries at most `martonAuxBound α` letters.  The inner auxiliary alpha
 ranges over every cardinality: the weighted sum that the cardinality bound optimizes reads the
 dependence between the two auxiliaries with a nonpositive weight, so it caps the outer alphabet
 only. -/
-noncomputable def martonRegionUnionBounded (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
+noncomputable def martonRegionUnionOuterBounded (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k₁ : ℕ) (_ : k₁ < martonAuxBound α) (k₂ : ℕ)
     (pV : Measure (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂))
     (_ : IsProbabilityMeasure pV)
     (K : Kernel (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂) α)
     (_ : IsMarkovKernel K), martonRegion pV K W)
 
-lemma martonRegionUnionBounded_isLowerSet (W : BCChannel α β₁ β₂) :
-    IsLowerSet (martonRegionUnionBounded W) :=
+lemma martonRegionUnionOuterBounded_isLowerSet (W : BCChannel α β₁ β₂) :
+    IsLowerSet (martonRegionUnionOuterBounded W) :=
   IsLowerSet.closure (isLowerSet_iUnion fun _ ↦ isLowerSet_iUnion fun _ ↦
     isLowerSet_iUnion fun _ ↦ isLowerSet_iUnion fun _ ↦ isLowerSet_iUnion fun _ ↦
       isLowerSet_iUnion fun _ ↦ isLowerSet_iUnion fun _ ↦ martonRegion_isLowerSet _ _ _)
 
-lemma martonRegion_subset_bounded_of_bcAux (k₁ k₂ : ℕ) (hk₁ : k₁ < martonAuxBound α)
+lemma martonRegion_subset_outerBounded_of_bcAux (k₁ k₂ : ℕ) (hk₁ : k₁ < martonAuxBound α)
     (pV : Measure (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂)) [IsProbabilityMeasure pV]
     (K : Kernel (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂) α) [IsMarkovKernel K]
-    (W : BCChannel α β₁ β₂) : martonRegion pV K W ⊆ martonRegionUnionBounded W := by
+    (W : BCChannel α β₁ β₂) : martonRegion pV K W ⊆ martonRegionUnionOuterBounded W := by
   refine subset_trans ?_ subset_closure
   exact Set.subset_iUnion_of_subset k₁ (Set.subset_iUnion_of_subset hk₁
     (Set.subset_iUnion_of_subset k₂ (Set.subset_iUnion_of_subset pV
       (Set.subset_iUnion_of_subset inferInstance (Set.subset_iUnion_of_subset K
         (Set.subset_iUnion_of_subset inferInstance subset_rfl))))))
 
-lemma martonRegionUnionBounded_subset_union (W : BCChannel α β₁ β₂) :
-    martonRegionUnionBounded W ⊆ martonRegionUnion W := by
+lemma martonRegionUnionOuterBounded_subset_union (W : BCChannel α β₁ β₂) :
+    martonRegionUnionOuterBounded W ⊆ martonRegionUnion W := by
   refine closure_mono ?_
   refine Set.iUnion_subset fun k₁ ↦ Set.iUnion_subset fun _ ↦ Set.iUnion_subset fun k₂ ↦
     Set.iUnion_subset fun pV ↦ Set.iUnion_subset fun hpV ↦ Set.iUnion_subset fun K ↦
@@ -232,16 +232,16 @@ section Nonemptiness
 
 variable [Nonempty α]
 
-lemma martonRegionUnionBounded_nonempty (W : BCChannel α β₁ β₂) :
-    (martonRegionUnionBounded W).Nonempty := by
+lemma martonRegionUnionOuterBounded_nonempty (W : BCChannel α β₁ β₂) :
+    (martonRegionUnionOuterBounded W).Nonempty := by
   obtain ⟨x₀⟩ := (inferInstance : Nonempty α)
   obtain ⟨v₀⟩ := (inferInstance : Nonempty (bcAuxAlphabet.{u} 0 × bcAuxAlphabet.{u} 0))
   exact (martonRegion_nonempty (Measure.dirac v₀) (Kernel.const _ (Measure.dirac x₀)) W).mono
-    (martonRegion_subset_bounded_of_bcAux 0 0 Fintype.card_pos _ _ W)
+    (martonRegion_subset_outerBounded_of_bcAux 0 0 Fintype.card_pos _ _ W)
 
 end Nonemptiness
 
-end Bounded
+end OuterBounded
 
 /-! ## The cardinality bound on the region -/
 
@@ -252,18 +252,19 @@ variable {α : Type u} {β₁ β₂ : Type*}
   [Fintype β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
   [Fintype β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
 
-lemma martonRegion_subset_closure_convexHull_bounded (k₁ k₂ : ℕ)
+lemma martonRegion_subset_closure_convexHull_outerBounded (k₁ k₂ : ℕ)
     (pV : Measure (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂)) [IsProbabilityMeasure pV]
     (K : Kernel (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
-    martonRegion pV K W ⊆ closure (convexHull ℝ (martonRegionUnionBounded W)) := by
-  have hclosed : IsClosed (closure (convexHull ℝ (martonRegionUnionBounded W))) := isClosed_closure
-  have hconv : Convex ℝ (closure (convexHull ℝ (martonRegionUnionBounded W))) :=
+    martonRegion pV K W ⊆ closure (convexHull ℝ (martonRegionUnionOuterBounded W)) := by
+  have hclosed : IsClosed (closure (convexHull ℝ (martonRegionUnionOuterBounded W))) :=
+    isClosed_closure
+  have hconv : Convex ℝ (closure (convexHull ℝ (martonRegionUnionOuterBounded W))) :=
     (convex_convexHull ℝ _).closure
-  have hlower : IsLowerSet (closure (convexHull ℝ (martonRegionUnionBounded W))) :=
-    (isLowerSet_convexHull (martonRegionUnionBounded_isLowerSet W)).closure
-  have hne : (closure (convexHull ℝ (martonRegionUnionBounded W))).Nonempty :=
-    (martonRegionUnionBounded_nonempty W).mono ((subset_convexHull ℝ _).trans subset_closure)
+  have hlower : IsLowerSet (closure (convexHull ℝ (martonRegionUnionOuterBounded W))) :=
+    (martonRegionUnionOuterBounded_isLowerSet W).convexHull.closure
+  have hne : (closure (convexHull ℝ (martonRegionUnionOuterBounded W))).Nonempty :=
+    (martonRegionUnionOuterBounded_nonempty W).mono ((subset_convexHull ℝ _).trans subset_closure)
   intro p hp
   by_contra hpS
   obtain ⟨μ₁, μ₂, h1, h2, hsep⟩ :=
@@ -279,8 +280,8 @@ lemma martonRegion_subset_closure_convexHull_bounded (k₁ k₂ : ℕ)
   obtain ⟨x, y, hx, hy, hxy, heq⟩ :=
     hvert (martonInfo₁ (q' ⊗ₘ κ') K' W) (martonInfo₂ (q' ⊗ₘ κ') K' W)
       (martonInfoV₁V₂ (q' ⊗ₘ κ') K' W) (martonInfoV₁V₂_nonneg (q' ⊗ₘ κ') K' W)
-  have hz : (x, y) ∈ closure (convexHull ℝ (martonRegionUnionBounded W)) :=
-    (martonRegion_subset_bounded_of_bcAux k k₂ hk (q' ⊗ₘ κ') K' W).trans
+  have hz : (x, y) ∈ closure (convexHull ℝ (martonRegionUnionOuterBounded W)) :=
+    (martonRegion_subset_outerBounded_of_bcAux k k₂ hk (q' ⊗ₘ κ') K' W).trans
       ((subset_convexHull ℝ _).trans subset_closure) ⟨hx, hy, hxy⟩
   have hsepz : μ₁ * x + μ₂ * y < μ₁ * p.1 + μ₂ * p.2 := hsep (x, y) hz
   obtain ⟨hp₁, hp₂, hpsum⟩ := hp
@@ -298,19 +299,19 @@ convex.  Capping the outer alphabet alone leaves the union ranging over every ca
 inner one, so it is not a union over finitely many indices.
 @audit:ok -/
 @[entry_point]
-theorem closure_convexHull_martonRegionUnion_eq_bounded (W : BCChannel α β₁ β₂)
+theorem closure_convexHull_martonRegionUnion_eq_outerBounded (W : BCChannel α β₁ β₂)
     [IsMarkovKernel W] :
     closure (convexHull ℝ (martonRegionUnion W))
-      = closure (convexHull ℝ (martonRegionUnionBounded W)) := by
+      = closure (convexHull ℝ (martonRegionUnionOuterBounded W)) := by
   refine subset_antisymm ?_
-    (closure_mono (convexHull_mono (martonRegionUnionBounded_subset_union W)))
+    (closure_mono (convexHull_mono (martonRegionUnionOuterBounded_subset_union W)))
   refine closure_minimal (convexHull_min ?_ (convex_convexHull ℝ _).closure) isClosed_closure
   refine closure_minimal ?_ isClosed_closure
   refine Set.iUnion_subset fun k₁ ↦ Set.iUnion_subset fun k₂ ↦ Set.iUnion_subset fun pV ↦
     Set.iUnion_subset fun hpV ↦ Set.iUnion_subset fun K ↦ Set.iUnion_subset fun hK ↦ ?_
   haveI := hpV
   haveI := hK
-  exact martonRegion_subset_closure_convexHull_bounded k₁ k₂ pV K W
+  exact martonRegion_subset_closure_convexHull_outerBounded k₁ k₂ pV K W
 
 end Cardinality
 
