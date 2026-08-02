@@ -205,10 +205,10 @@ variable {α : Type u} {β₁ β₂ : Type*} [Fintype α] [MeasurableSpace α]
   [Fintype β₁] [MeasurableSpace β₁] [Fintype β₂] [MeasurableSpace β₂]
 
 /-- The union defining `martonRegionUnion`, restricted to the indices whose outer auxiliary
-alphabet carries at most `martonAuxBound α` letters.  The inner auxiliary alphabet still
-ranges over every cardinality: the weighted sum that the cardinality bound optimizes reads the
-dependence between the two auxiliaries with a nonpositive weight, so it caps the outer alphabet
-only. -/
+alphabet carries at most `martonAuxBound α` letters.  The inner auxiliary alphabet still ranges
+over every cardinality: one pass of the cardinality bound caps the marginal it varies and carries
+the other coordinate along unchanged.  `martonRegionUnionBounded` is the restriction left by
+capping both. -/
 noncomputable def martonRegionUnionOuterBounded (W : BCChannel α β₁ β₂) : Set (ℝ × ℝ) :=
   closure (⋃ (k₁ : ℕ) (_ : k₁ < martonAuxBound α) (k₂ : ℕ)
     (pV : Measure (bcAuxAlphabet.{u} k₁ × bcAuxAlphabet.{u} k₂))
@@ -372,6 +372,8 @@ Only the closed convex hull is unchanged: a point of the uncapped union lies in 
 hull of the capped one, not necessarily in the capped union itself, which is not claimed to be
 convex.  Capping the outer alphabet alone leaves the union ranging over every cardinality of the
 inner one, so it is not a union over finitely many indices.
+`closure_convexHull_martonRegionUnion_eq_bounded` caps both alphabets, and its union does run
+over finitely many indices.
 @audit:ok -/
 @[entry_point]
 theorem closure_convexHull_martonRegionUnion_eq_outerBounded (W : BCChannel α β₁ β₂)
