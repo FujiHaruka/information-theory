@@ -655,7 +655,10 @@ def section3(quick: bool) -> dict:
           f"⟹ 分割 `m_S(X)` へ落としても同じ機構で死ぬ (`H(m_S)` の傾きも無限大)。")
 
     print("  (b) **文献既知の 1 例で足場を取る** — `Z = BEC(ε)`, `W = BSC(δ)` は")
-    print("      `ε ≤ h(δ)` ⟺ more capable (El Gamal–Kim Ch.5)。`ε > 2δ` なら less noisy でない。")
+    print("      `ε ≤ h(δ)` ⟺ more capable (El Gamal–Kim Ch.5)。`ε > 4δ(1−δ)` なら less noisy でない")
+    print("      (⚠ `2δ` は**劣化**の境界。LNIT 5–39 の 4 区分: `ε ≤ 2δ` 劣化 / "
+          "`2δ < ε ≤ 4δ(1−δ)` less noisy だが劣化でない /")
+    print("       `4δ(1−δ) < ε ≤ h(δ)` more capable だが less noisy でない / `h(δ) < ε` どれでもない)。")
     fine2, nv2, _ = grids(2, quick)
     rows = []
     for eps in (0.5, 0.3):
