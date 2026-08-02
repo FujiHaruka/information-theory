@@ -29,14 +29,12 @@ open MeasureTheory ProbabilityTheory InformationTheory.Shannon
 open InformationTheory.Shannon.ChannelCoding
 open scoped ENNReal NNReal BigOperators
 
-set_option linter.unusedSectionVars false
-
 variable {V₁ V₂ α β₁ β₂ : Type*}
-  [Fintype V₁] [DecidableEq V₁] [Nonempty V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]
-  [Fintype V₂] [DecidableEq V₂] [Nonempty V₂] [MeasurableSpace V₂] [MeasurableSingletonClass V₂]
-  [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
-  [Fintype β₁] [DecidableEq β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
-  [Fintype β₂] [DecidableEq β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
+  [Fintype V₁] [Nonempty V₁] [MeasurableSpace V₁] [MeasurableSingletonClass V₁]
+  [Fintype V₂] [Nonempty V₂] [MeasurableSpace V₂] [MeasurableSingletonClass V₂]
+  [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [Fintype β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
+  [Fintype β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
 
 private lemma martonJointDistribution_map_real_singleton {γ : Type*}
     [MeasurableSpace γ] [MeasurableSingletonClass γ] [DecidableEq γ]
@@ -95,4 +93,3 @@ theorem marton_map_V₂Y₂_real_singleton_eq_sum
     ring
 
 end InformationTheory.Shannon.BroadcastChannel.Marton
-
