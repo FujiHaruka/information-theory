@@ -1,15 +1,21 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.BroadcastChannel.Marton.ObjectiveAssembly
 import InformationTheory.Shannon.BroadcastChannel.MartonUnion
+import InformationTheory.Shannon.BroadcastChannel.Marton.Swap
 
 /-!
-# Broadcast channel — a cardinality bound for the outer Marton auxiliary alphabet
+# Broadcast channel — cardinality bounds for the Marton auxiliary alphabets
 
 The support reduction replaces the law of the outer auxiliary letter by one charging at most
 `Fintype.card α` letters, but leaves it on its original alphabet.  This file carries such a law
 onto an alphabet of that many letters: the support of the law is a subtype of the original
 alphabet, its inclusion is injective, and the three informations of the region inequalities are
 unchanged when either auxiliary alphabet is relabeled by an injective measurable map.
+
+The same statement for the inner auxiliary alphabet is the one for the outer alphabet read
+through the exchange of the two receivers: the exchange trades the two receiver informations and
+fixes the auxiliary dependence, so it trades the two receiver weights and leaves the sum-rate
+weight where it is.
 
 ## Main definitions
 
@@ -24,6 +30,8 @@ unchanged when either auxiliary alphabet is relabeled by an injective measurable
 * `exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights` — the outer auxiliary law can be
   replaced by a law on `bcAuxAlphabet k` with `k < martonAuxBound α`, without decreasing the
   weighted sum of the three informations of the region inequalities.
+* `exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights_inner` — the same for the inner
+  auxiliary alphabet, with the roles of the two receiver weights exchanged.
 
 ## Implementation notes
 
@@ -410,7 +418,7 @@ lemma martonInfoV₁V₂_comap_support [Nonempty V₁]
 
 end ComapSupport
 
-/-! ## The cardinality bound for the outer auxiliary alphabet -/
+/-! ## The cardinality bound for either auxiliary alphabet -/
 
 section Bound
 
@@ -531,6 +539,76 @@ theorem exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights
   refine ⟨k, hk, q', hq', κ', hκ', K', hK', ?_⟩
   rw [← h₁, ← h₂, ← h₃]
   exact hle
+
+/-- The inner auxiliary law can be replaced by a law on an auxiliary alphabet of the union with at
+most `martonAuxBound α` letters, without decreasing the weighted sum of the three informations of
+the region inequalities.  The first-receiver weight `μ₁` and the sum-rate weight `μ₃` are assumed
+nonnegative; the second-receiver weight `μ₂` is unrestricted.  The outer auxiliary alphabet is
+carried along unchanged, and no bound on its cardinality is claimed.  The replacing law and kernel
+depend on the weights. -/
+@[entry_point]
+theorem exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights_inner
+    (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (μ₁ μ₂ μ₃ : ℝ) (hμ₁ : 0 ≤ μ₁) (hμ₃ : 0 ≤ μ₃) :
+    ∃ (k : ℕ) (_ : k < martonAuxBound α) (pV' : Measure (V₁ × bcAuxAlphabet.{u} k))
+      (_ : IsProbabilityMeasure pV') (K' : Kernel (V₁ × bcAuxAlphabet.{u} k) α)
+      (_ : IsMarkovKernel K'),
+      μ₁ * martonInfo₁ pV K W + μ₂ * martonInfo₂ pV K W
+        + μ₃ * (martonInfo₁ pV K W + martonInfo₂ pV K W - martonInfoV₁V₂ pV K W)
+        ≤ μ₁ * martonInfo₁ pV' K' W + μ₂ * martonInfo₂ pV' K' W
+          + μ₃ * (martonInfo₁ pV' K' W + martonInfo₂ pV' K' W - martonInfoV₁V₂ pV' K' W) := by
+  haveI : IsMarkovKernel (W.map (Prod.swap : β₁ × β₂ → β₂ × β₁)) :=
+    Kernel.IsMarkovKernel.map W measurable_swap
+  haveI : IsProbabilityMeasure (pV.map (Prod.swap : V₁ × V₂ → V₂ × V₁)) :=
+    Measure.isProbabilityMeasure_map measurable_swap.aemeasurable
+  have hdis : (pV.map (Prod.swap : V₁ × V₂ → V₂ × V₁)).fst ⊗ₘ
+      (pV.map (Prod.swap : V₁ × V₂ → V₂ × V₁)).condKernel
+        = pV.map (Prod.swap : V₁ × V₂ → V₂ × V₁) :=
+    Measure.disintegrate _ _
+  obtain ⟨k, hk, q', hq', κ', hκ', K', hK', hle⟩ :=
+    exists_bcAuxAlphabet_card_le_martonWeightedSumAllWeights
+      (pV.map (Prod.swap : V₁ × V₂ → V₂ × V₁)).fst
+      (pV.map (Prod.swap : V₁ × V₂ → V₂ × V₁)).condKernel
+      (K.comap (Prod.swap : V₂ × V₁ → V₁ × V₂) measurable_swap)
+      (W.map (Prod.swap : β₁ × β₂ → β₂ × β₁)) μ₂ μ₁ μ₃ hμ₁ hμ₃
+  rw [hdis] at hle
+  haveI := hq'
+  haveI := hκ'
+  haveI := hK'
+  haveI : IsProbabilityMeasure ((q' ⊗ₘ κ').map (Prod.swap : bcAuxAlphabet.{u} k × V₁ → _)) :=
+    Measure.isProbabilityMeasure_map measurable_swap.aemeasurable
+  refine ⟨k, hk, (q' ⊗ₘ κ').map Prod.swap, inferInstance,
+    K'.comap (Prod.swap : V₁ × bcAuxAlphabet.{u} k → _) measurable_swap, inferInstance, ?_⟩
+  have hswap :
+      ((q' ⊗ₘ κ').map (Prod.swap : bcAuxAlphabet.{u} k × V₁ → V₁ × bcAuxAlphabet.{u} k)).map
+        (Prod.swap : V₁ × bcAuxAlphabet.{u} k → bcAuxAlphabet.{u} k × V₁) = q' ⊗ₘ κ' := by
+    rw [Measure.map_map measurable_swap measurable_swap,
+      show (Prod.swap : V₁ × bcAuxAlphabet.{u} k → bcAuxAlphabet.{u} k × V₁) ∘
+        (Prod.swap : bcAuxAlphabet.{u} k × V₁ → V₁ × bcAuxAlphabet.{u} k) = id from
+        funext fun _ ↦ rfl, Measure.map_id]
+  have hcomap : (K'.comap (Prod.swap : V₁ × bcAuxAlphabet.{u} k → bcAuxAlphabet.{u} k × V₁)
+      measurable_swap).comap
+      (Prod.swap : bcAuxAlphabet.{u} k × V₁ → V₁ × bcAuxAlphabet.{u} k) measurable_swap = K' :=
+    Kernel.ext fun _ ↦ rfl
+  have e₁ : martonInfo₁ (q' ⊗ₘ κ') K' (W.map (Prod.swap : β₁ × β₂ → β₂ × β₁))
+      = martonInfo₂ ((q' ⊗ₘ κ').map Prod.swap) (K'.comap Prod.swap measurable_swap) W := by
+    have h := martonInfo₁_swap ((q' ⊗ₘ κ').map Prod.swap)
+      (K'.comap (Prod.swap : V₁ × bcAuxAlphabet.{u} k → _) measurable_swap) W
+    rwa [hswap, hcomap] at h
+  have e₂ : martonInfo₂ (q' ⊗ₘ κ') K' (W.map (Prod.swap : β₁ × β₂ → β₂ × β₁))
+      = martonInfo₁ ((q' ⊗ₘ κ').map Prod.swap) (K'.comap Prod.swap measurable_swap) W := by
+    have h := martonInfo₂_swap ((q' ⊗ₘ κ').map Prod.swap)
+      (K'.comap (Prod.swap : V₁ × bcAuxAlphabet.{u} k → _) measurable_swap) W
+    rwa [hswap, hcomap] at h
+  have e₃ : martonInfoV₁V₂ (q' ⊗ₘ κ') K' (W.map (Prod.swap : β₁ × β₂ → β₂ × β₁))
+      = martonInfoV₁V₂ ((q' ⊗ₘ κ').map Prod.swap) (K'.comap Prod.swap measurable_swap) W := by
+    have h := martonInfoV₁V₂_swap ((q' ⊗ₘ κ').map Prod.swap)
+      (K'.comap (Prod.swap : V₁ × bcAuxAlphabet.{u} k → _) measurable_swap) W
+    rwa [hswap, hcomap] at h
+  rw [martonInfo₁_swap pV K W, martonInfo₂_swap pV K W, martonInfoV₁V₂_swap pV K W,
+    e₁, e₂, e₃] at hle
+  linarith
 
 end Bound
 
