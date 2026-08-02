@@ -2042,3 +2042,188 @@ InformationTheory/Shannon/BroadcastChannel/Marton/SupportReduction.lean`。
    `Achievability/Covering.lean`（1384 行、WynerZiv 7 本 import）で**他家系から呼びにくい**。
    ⚠ **移設なら 3 decl / 2 file に触る**（`scripts/dep_consumers.sh` 実測、§11.6 の表）、
    **`Shannon/Pi.lean` 側に汎用版を新規に置くなら波及 0**（ただし一時的に重複が 1 件増える）。
+
+---
+
+## §12 L16 の実測 — 全重み版への拡張（§8.2 の射程限定は覆った）
+
+⚠ 本節は**追記であり §1–§11 は書き換えていない**（§11 が §10 に対して採ったのと同じ作法）。
+ただし本節の実測により、**§8.2 の射程限定（「本機構が届くのは `μ₂ = 0` 系列と対称の `μ₁ = 0` 系列
+だけ」）は覆り、§11.6 (ii) が「訂正候補」として登録した読み（射程限定は分解の取り方の産物である）が
+確定した**。⚠ §8.2 / §11.6 の本文は履歴としてそのまま残す — 訂正の所在は本節である。
+
+### 12.0 一行判定
+
+**GO**。§11.6 (ii) が未検証としていた恒等式（`μ₂·martonInfo₂ = 集約 slot + 転置した凸 slot`）は
+gateway atom として通り、**新規に立った宣言は 13 本**（`@[entry_point]` 6 / `def` 2 /
+非 `@[entry_point]` の public theorem 1 / `private` 4）で、**すべて proof done**。
+**Mathlib 側の不足は 0 件**（壁 0 / 共有 sorry 補題の候補 0）。到達状態の再導出は
+`rg -n 'sorry|@residual' InformationTheory/Shannon/BroadcastChannel/Marton/Objective*.lean
+InformationTheory/Shannon/BroadcastChannel/Marton/SupportReduction.lean` と
+`scripts/sig_view.ts --sorry <file>`（本節は値をキャッシュしない）。
+
+⟹ 目的関数 `μ₁·I₁ + μ₂·I₂ + μ₃·(I₁+I₂−I_{V₁V₂})` は **`hμ₂ : 0 ≤ μ₂` と `hμ₃ : 0 ≤ μ₃` の
+2 本だけで全域に載る**（⚠ **`μ₁` は無条件** = §11.4 で `hμ₁` を落とした判定はそのまま生きている）。
+
+⚠ **(a′-1) はこれでも成立していない** — 縛れたのは依然 **`V₁` の台の大きさだけ**で、
+§11.6 (i)（台の小ささ → 基数の小さい型への付け替え）は**手つかず**である（§12.4）。
+
+### 12.1 gateway atom の中身
+
+一次文献の逐語（[GA09] `ga09.txt:587-589` の grouping）は **§11.6 (ii) に既に在るので複製しない**。
+実装が採った切り方は逐語のそれと同じで、`martonInfo₂ = H(V₂) + H(Y₂) − H(V₂,Y₂)`
+（`Marton/Setup.lean:252`）を 2 つの slot に配る:
+
+| 項 | 行き先 | 同定した補題 |
+|---|---|---|
+| `H(Y₂)` | **集約 slot**（`g`） | `marton_map_Y₂_real_singleton_eq_aggregate`（`ObjectiveVectorForm.lean:346`、L12 で既在）を `martonOutput₂Aggregate_eq_mul_entropy` が消費 |
+| `H(V₂) − H(V₂,Y₂)`（= `−H(Y₂\|V₂)`） | **転置した凸 slot**（係数 `s := μ₂`） | `convexOn_negCondEntropy_mixture_transpose`。⚠ 凸性の**数学は新規 0** — `convexOn_negCondEntropy_mixture`（`ObjectiveConvexity.lean:75`）に `V` `Z` を入れ替えて渡すだけ |
+| `∑ y₂` 側の潰れ | 凸 slot の第 1 成分が `κ` だけを読む形になる根拠 | `sum_martonAuxKernelSlot_mixture_eq_kernel_mixture`（新規。`∑ y₂, martonAuxKernelSlot κ K W u (v₂, y₂) = (κ u).real {v₂}` の列和） |
+
+⟹ 受け皿は `auxWeightObjective` の凸 slot 1 本では足りないので、**凸 slot を 2 本持つ
+`auxWeightObjectiveTwoSlot`** を新設した（`t` = 既存の `−H(V₂\|Y₂)` 用 / `s` = 転置版用）。
+集約 slot `g` は**仮定を 1 つも持たない**ので、`martonOutput₁Aggregate + martonOutput₂Aggregate` を
+そのまま 1 本の `g` として渡せる（`exists_support_card_le_martonWeightedSumAllWeights` の適用行が逐語）。
+
+⚠ **実装中に効いた所見 2 件**（⚠ 我々の記録。次に転置系の補題を書くときに再現する）:
+
+1. **唯一詰まった段 = `ConvexOn.congr` に転置インスタンスを渡すと goal が beta-redex のまま残る**。
+   そのままだと `congr 1` が分解せず `Fintype.sum_equiv` が `AddCommMonoid ?m` で stuck する。
+   **`dsimp only` を 1 行挟む**と beta 簡約 + `(v,z).1 / .2` の iota が潰れて第 1 成分が α 同値まで
+   一致し、`Fintype.sum_equiv (Equiv.prodComm Z V) … fun p ↦ rfl` で閉じた
+   （`ObjectiveConvexity.lean:91-101` が実物）。
+2. **命名**: `Full` は `docs/rules/naming.md` の proof-staging 語彙なので採らず、**`AllWeights`**
+   （数学的射程を述べる descriptive な区別子）を採った。規約ゲートが `naming.md` に照らして妥当と判定。
+
+### 12.2 landing した宣言の逐語署名
+
+変数ブロックは §11.2 の **VB5**（`ObjectiveVectorForm.lean:64-69` / `ObjectiveAssembly.lean:59-64`。
+⚠ 行番号は L16 で module docstring が伸びた分だけ §11.2 の値から +2 ずれている）と、
+`ObjectiveConvexity.lean:52` の `variable {U V Z X : Type*} [Fintype U] [Fintype V] [Fintype Z]
+[Fintype X]`（可測空間を要求しないベクトル層）の 2 系統で、**L15 から変わっていない**。
+
+⚠ 以下の「型クラス前提」列は**ソース逐語**（変数ブロック + `omit` 行 + 宣言自身の binder）であって、
+§11.2 のような `#check` での elaborate 済出力ではない（本 leg では `#check` を回していない）。
+
+**`ObjectiveConvexity.lean`（4 本）**
+
+| decl | file:line | 型クラス前提（ソース逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `convexOn_negCondEntropy_mixture_transpose` | `…/Marton/ObjectiveConvexity.lean:91` | `:52` の変数ブロックのうち宣言が使う `[Fintype U] [Fintype V] [Fintype Z]` | `ConvexOn ℝ {q : U → ℝ \| 0 ≤ q} (fun q ↦ (∑ v, Real.negMulLog (∑ z, ∑ u, q u * k u (v, z))) - ∑ p : V × Z, Real.negMulLog (∑ u, q u * k u p))`（仮引数 `(k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p)`）⚠ **`convexOn_negCondEntropy_mixture` との差は `∑ z` を内側に取るか外側に取るかだけ** |
+| `auxWeightObjectiveTwoSlot`（def） | 同 `:159` | 同上 | `auxWeightObjectiveTwoSlot k w c t s q = auxWeightObjective k w c t q + s * ((∑ v, Real.negMulLog (∑ z, ∑ u, q u * k u (v, z))) - ∑ p : V × Z, Real.negMulLog (∑ u, q u * k u p))`（`noncomputable`、仮引数 `(k : U → V × Z → ℝ) (w : U → ℝ) (c t s : ℝ) (q : U → ℝ)`） |
+| `convexOn_auxWeightObjectiveTwoSlot` `@[entry_point]` | 同 `:168` | 同上 | `ConvexOn ℝ {q : U → ℝ \| 0 ≤ q} (auxWeightObjectiveTwoSlot k w c t s)`（仮引数 `(k) (hk : ∀ u p, 0 ≤ k u p) (w) (c t s : ℝ) (ht : 0 ≤ t) (hs : 0 ≤ s)`）⚠ **符号仮定は 2 つの凸 slot 係数 `t` `s` にだけ付き、`w` `c` は無条件** |
+| `exists_support_card_le_auxWeightObjectiveTwoSlot_add_aggregate` `@[entry_point]` | 同 `:178` | 同上 + `[Fintype X]` | `∃ q' : U → ℝ, 0 ≤ q' ∧ (∀ x, ∑ u, q' u * A u x = ∑ u, q u * A u x) ∧ auxWeightObjectiveTwoSlot k w c t s q + g (fun x ↦ ∑ u, q u * A u x) ≤ auxWeightObjectiveTwoSlot k w c t s q' + g (fun x ↦ ∑ u, q' u * A u x) ∧ {u \| q' u ≠ 0}.ncard ≤ Fintype.card X`（仮引数に `(A) (hA : ∀ u, ∑ x, A u x = 1) … (g : (X → ℝ) → ℝ) (q) (hq : 0 ≤ q)`。⚠ **`g` に仮定は 0 個**）。本体は `exists_support_card_le_of_convexOn_add_aggregate` の適用 1 term |
+
+**`ObjectiveVectorForm.lean`（2 本）**
+
+| decl | file:line | 型クラス前提（ソース逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `sum_martonAuxKernelSlot_eq_kernel_real_singleton` `[private]` | `…/Marton/ObjectiveVectorForm.lean:458` | VB5 から `omit [Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁] [Fintype V₂] [Nonempty V₂] [MeasurableSingletonClass V₂] [Nonempty α] [Nonempty β₁] [Nonempty β₂] in`（`:456-457` 逐語）+ `[IsMarkovKernel K] [IsMarkovKernel W]` | `∑ y₂ : β₂, martonAuxKernelSlot κ K W u (v₂, y₂) = (κ u).real {v₂}` |
+| `sum_martonAuxKernelSlot_mixture_eq_kernel_mixture` `@[entry_point]` | 同 `:475` | VB5 から `omit [Nonempty V₁] [MeasurableSingletonClass V₁] [Fintype V₂] [Nonempty V₂] [MeasurableSingletonClass V₂] [Nonempty α] [Nonempty β₁] [Nonempty β₂] in`（`:470-471` 逐語）+ `[IsProbabilityMeasure q] [IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W]` | `∑ y₂ : β₂, ∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u (v₂, y₂) = ∑ u : V₁, q.real {u} * (κ u).real {v₂}` |
+
+**`ObjectiveAssembly.lean`（7 本）**
+
+| decl | file:line | 型クラス前提（ソース逐語） | 結論形（逐語） |
+|---|---|---|---|
+| `martonOutput₂Aggregate`（def） | `…/Marton/ObjectiveAssembly.lean:82` | VB5 のうち def が使う分（⚠ `V₁ V₂` に**依存しない** = 集約 slot `g` の実体である根拠。`martonOutput₁Aggregate` と同型） | `martonOutput₂Aggregate W μ₂ a = μ₂ * ∑ y₂ : β₂, Real.negMulLog (∑ x : α, a x * ∑ y₁ : β₁, (W x).real {(y₁, y₂)})`（`noncomputable`） |
+| `martonOutput₂Aggregate_eq_mul_entropy` `[private]` | 同 `:145` | VB5 全 20 個 + `[IsProbabilityMeasure q] [IsMarkovKernel κ] [IsMarkovKernel K] [IsMarkovKernel W]` | `martonOutput₂Aggregate W μ₂ (fun x ↦ ∑ u : V₁, q.real {u} * martonAuxRow κ K u x) = μ₂ * entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ p.2.2.2.2)` |
+| `sum_negMulLog_martonAuxKernelSlot_transpose_eq_entropy` `[private]` | 同 `:156` | 同上 | `∑ v₂ : V₂, Real.negMulLog (∑ y₂ : β₂, ∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u (v₂, y₂)) = entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ p.2.1)` |
+| `mul_martonInfo₂_eq_negCondEntropy_add_aggregate` `[private]` | 同 `:167` | 同上 | `μ₂ * martonInfo₂ (q ⊗ₘ κ) K W = μ₂ * ((∑ v₂ : V₂, Real.negMulLog (∑ y₂ : β₂, ∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u (v₂, y₂))) - ∑ p : V₂ × β₂, Real.negMulLog (∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u p)) + martonOutput₂Aggregate W μ₂ (fun x ↦ ∑ u, q.real {u} * martonAuxRow κ K u x)` ⟹ ⚠ **これが gateway atom そのもの。`μ₂` の符号仮定は 0 個** |
+| `martonWeightedSum_eq_auxWeightObjectiveTwoSlot_add_aggregate` `@[entry_point]` | 同 `:286` | VB5 全 20 個 + 上と同じ 4 引数 + `(μ₁ μ₂ μ₃ : ℝ)` ⚠ **符号仮定 0 個** | `μ₁ * martonInfo₁ (q ⊗ₘ κ) K W + μ₂ * martonInfo₂ (q ⊗ₘ κ) K W + μ₃ * (martonInfo₁ (q ⊗ₘ κ) K W + martonInfo₂ (q ⊗ₘ κ) K W - martonInfoV₁V₂ (q ⊗ₘ κ) K W) = auxWeightObjectiveTwoSlot (martonAuxKernelSlot κ K W) (martonAuxCoeff κ K W μ₁ μ₃) 0 μ₃ μ₂ (fun u ↦ q.real {u}) + (martonOutput₁Aggregate W μ₁ μ₃ (…) + martonOutput₂Aggregate W μ₂ (…))` ⟹ ⚠ **`c := 0` / `t := μ₃` / `s := μ₂`**。本体は既存の `martonWeightedSum_eq_auxWeightObjective_add_aggregate` + gateway atom + `linarith` |
+| `exists_support_card_le_martonWeightedSumAllWeights` `@[entry_point]` | 同 `:308` | 同上 + ⚠ **`(hμ₂ : 0 ≤ μ₂) (hμ₃ : 0 ≤ μ₃)` の 2 本だけ**（`hμ₁` は無い） | `∃ q' : V₁ → ℝ, 0 ≤ q' ∧ (∀ x, ∑ u, q' u * martonAuxRow κ K u x = ∑ u, q.real {u} * martonAuxRow κ K u x) ∧ μ₁ * martonInfo₁ … + μ₂ * martonInfo₂ … + μ₃ * (…) ≤ auxWeightObjectiveTwoSlot … q' + (martonOutput₁Aggregate … + martonOutput₂Aggregate …) ∧ {u \| q' u ≠ 0}.ncard ≤ Fintype.card α` |
+| `exists_support_card_le_martonWeightedSumAllWeights_measure` `@[entry_point]` | 同 `:338` | 同上（`hμ₂` / `hμ₃` の 2 本） | `∃ (q' : Measure V₁) (_ : IsProbabilityMeasure q'), {u \| q'.real {u} ≠ 0}.ncard ≤ Fintype.card α ∧ μ₁ * martonInfo₁ (q ⊗ₘ κ) K W + μ₂ * martonInfo₂ (q ⊗ₘ κ) K W + μ₃ * (…) ≤ μ₁ * martonInfo₁ (q' ⊗ₘ κ) K W + μ₂ * martonInfo₂ (q' ⊗ₘ κ) K W + μ₃ * (…)` ⚠ **両辺が同じ型の `Measure V₁` 上の量** = §11.2 の L15 到達点の全重み版 |
+
+⚠ **既存 3 本は無改変**（`martonWeightedSum_eq_auxWeightObjective_add_aggregate` /
+`exists_support_card_le_martonWeightedSum` / `…_measure`）。**署名変更 0 ⟹ 波及 0** なので
+`dep_consumers.sh` を回す必要のある段は本 leg に無い。追加のみである。
+
+### 12.3 行数の実測 — ⚠ **予算超過は解消していない（広がった）**
+
+`git show <rev>:<path> | wc -l` 逐語（`926d5c29` = L15 時点 / `160aae37` = L16 時点）:
+
+| file | L15 (`926d5c29`) | L16 (`160aae37`) | 差 |
+|---|---|---|---|
+| `…/Marton/SupportReduction.lean` | 230 | 230 | 0 |
+| `…/Marton/ObjectiveConvexity.lean` | 129 | 188 | +59 |
+| `…/Marton/ObjectiveVectorForm.lean` | 489 | 520 | +31 |
+| `…/Marton/ObjectiveAssembly.lean` | 222 | 367 | +145 |
+| **合計** | **1070** | **1305** | **+235** |
+
+§8.2 の (a′-1) 見積りは **480–800 行**。⟹ ⚠ **実測 1305 行は上限 800 を 505 行（+63%）超えている**。
+§11.5 時点の超過は +270 行（+34%）だったので、**超過幅は本 leg で広がった**。しかも
+**(a′-1) はまだ成立していない**（§12.4）。⚠ **「内数の再配分」で隠さない**（§10.7 / §7.4 の言い回しを
+ここへ流用してはならない。§11.5 と同じ扱い）。
+
+⚠ **ただし §11.5 が立てた「主因が倍化する」という予測は、この leg では実現していない**（⚠ 我々の演繹）。
+§11.5 は「`V₂` 側の鏡像は**同じ橋をもう一度**通すので `ObjectiveVectorForm.lean` の超過が倍化する」と
+書いたが、L16 が採ったのは**鏡像ではなく転置**（同じ slot 機構を係数 `s` で 2 本目として使う）で、
+測度形 ↔ ベクトル形の橋を通り直していない ⟹ `ObjectiveVectorForm.lean` の増分は **+31 行**に留まった。
+⚠ **これは倍化予測が誤りだったことを意味しない** — 予測が対象にしていた「`q₂` を動かして `V₂` 自身の
+台を縮める鏡像」は**まだ実装されていない**（§12.4 (ii)）。倍化するかは依然**未検証**である。
+
+### 12.4 残件 — (a′-1) までに何が残っているか
+
+#### (i) 台の小ささ → 基数の小さい型への付け替え：⚠ **手つかず**
+
+§11.6 (i) の判定はそのまま有効で、**本 leg は 1 行も触っていない**。要点だけ再掲する
+（在庫の SoT は §11.6 (i) の表。ここへ複製しない）:
+
+- 3 部品のうち 2 部品（単射版エントロピー不変性 / 同時分布の輸送）は**既存資産で埋まる公算が高い**。
+- ⚠ **本当に無い 1 段** = **「台の部分型へ落とす段」**。`|V₁| > |α|` のとき `V₁ → T` の**大域単射は
+  存在しない**ので、`wz_entropy_map_injective`（`InformationTheory/Shannon/WynerZiv/Achievability/
+  Covering.lean:1189`、`Function.Injective g` = **大域単射を要求**する。2026-08-03 に行番号と署名を
+  逐語再確認）を直接は当てられない。
+- ⚠ **`martonAuxBound` はコードに存在しない**（再導出 `rg -n 'martonAuxBound' InformationTheory/` =
+  0 hit、本 leg でも再確認）。
+
+##### ⚠ L17 の設計分岐は **未決のまま**である（盛らないこと）
+
+§11.6 (i) の「⚠ 分からないこと (a)」= **ルート S**（台への制限を**測度の水準**でやる = 部分型へ落とす）と
+**ルート V**（L11–L15 のベクトル層を**部分型の上でもう一度走らせる**）のどちらが短いか、という分岐に
+`proof-pivot-advisor` を 1 体投じたが、**起動から約 5 分で打ち切られた** — オーケストレーターが
+バックグラウンド待機の完了を待たずに経過時間を推測し、実経過を数十倍に取り違えた**誤った早期打ち切り**
+である。⚠ **advisor が空振りしたのではなく、報告を出すだけの時間を与えていない**。
+
+⟹ ⚠ **この分岐は依然 未決**である（報告は 1 行も出ていない）。**「検証した」とは書けず、推奨ルートも
+立っていない**。⚠ ただし **advisor ルートは潰れていない — 試されていないだけ**なので、次 leg は
+advisor / 直接実装のどちらも選べる。
+
+⚠ **教訓**: オーケストレーターがバックグラウンド待機の完了通知を待たずに経過時間を推測すると、
+subagent を不当に早期打ち切りする。
+
+⚠ **次 leg への申し送り**（⚠ **提案であって検証済の設計ではない**）:
+
+- **gateway atom を 1 本直接実装させる**案。⚠ 根拠は CLAUDE.md「gateway-atom-first」**のみ**であり、
+  「advisor が不発だった」は根拠にならない（上記のとおり打ち切りは計測ミスによる）。
+- 候補 atom = **`Set.InjOn` 版のエントロピー不変性 1 本**。`wz_entropy_map_injective` の
+  `Function.Injective g` を「台の上でのみ単射」へ緩める形で、`Finset.sum_nbij'`
+  （`Mathlib/Algebra/BigOperators/Group/Finset/Defs.lean`）/ `Finset.sum_bij_ne_zero`
+  （同 `…/Finset/Basic.lean`）+ `Real.negMulLog_zero`
+  （`Mathlib/Analysis/SpecialFunctions/Log/NegMulLog.lean:170` 逐語 `@[simp] lemma negMulLog_zero :
+  negMulLog (0 : ℝ) = 0`、`@[simp]` 付き）で閉じるかを試す。⚠ **3 本とも存在は確認済**
+  （loogle / `rg` 逐語、2026-08-03）だが、**この組み合わせで閉じるかは未検証**。
+
+#### (ii) `V₂` 側の基数：⚠ **L16 の GO で性質が変わった**
+
+§11.6 (ii) が「次 leg の設計を決める分岐」としていた項目は、**目的関数側については決着した** —
+全重み `μ₁ μ₂ μ₃`（`μ₂` `μ₃` は非負）で台縮小が載るので、**§11.6 (ii) の表が予告していた「鏡像側は
+凸 slot が 2 本要る」は `auxWeightObjectiveTwoSlot` として実装済**である。
+
+⟹ **残るのは §11.6 (ii) の「⚠ 分からないこと」の項目 1 だけ**: `martonInfo₁` / `martonInfo₂` は
+5 つ組の**座標順が固定**された定義（`Marton/Setup.lean:244` / `:252`）なので、`V₂` 自身の台を縮める
+鏡像には `pV.map Prod.swap` と `W : BCChannel α β₁ β₂` の**出力の入れ替え**を伴う swap 対称性補題が
+要る。⚠ **その補題は in-project に 0 件**（§11.6 (ii) の `rg` 実測）で、**書き下ろしか型引数の
+入れ替えで済むかは未検証**。項目 3（2 回の適用が互いの `ncard` 上界を壊さないこと）も未検証のまま。
+
+### 12.5 壁と撤退ライン
+
+⚠ **L16 でも `@residual(wall:…)` は 1 本も立っていない / 共有 sorry 補題の候補も 0 件**。
+§9.9 / §11.7 の壁 0 件判定はそのまま有効で、追加すべき行も無い。再導出コマンドは §12.0 のもの。
+
+- **親プラン §6 の撤退ライン 3 本は不発火**（逐語で照合）: 「L8 の棚卸しで軸 T3-α が gate を通らない」
+  = L8 で (a′) 決定済ゆえ触れない / 「L14 の棚卸しで層 3 に載せられる散文が 1 本も無い」= 層 3 に載る
+  成果が landing 済ゆえ不発火 / 「20 leg 使い切って未達」= 未到達。
+- 規約ゲート（style-auditor）は **PASS**。honesty ゲートは **launch 条件外で不発火**
+  （新規 `sorry` / `@residual` の導入 0 / 既存署名の変更 0）。
+- ⚠ **枠は L16 を消化して残り 2 本**（L17 / L18 = 層 3 の集中枠）+ L19（収穫）+ L20（記録）。
+  §12.4 の残件 (i) と (ii) をこの 2 本に入れられるかが次の判断点である。
