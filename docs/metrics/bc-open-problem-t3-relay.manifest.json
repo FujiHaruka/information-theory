@@ -1,0 +1,48 @@
+{
+  "problem": "一般 2 受信者 DM-BC の容量領域の計算可能な特徴付け (未解決本体 T3) への 20 leg relay (L0-L19)。層 3 (Lean 実装) は L9 以降なので、計測対象は層 3 を含む r4-r11 の 8 セッションに限定する (r1-r3 = L0-L8 は散文 / 一次文献 gate の leg で対象ファイルの編集が無い)。対象ファイル prefix = InformationTheory/Shannon/BroadcastChannel/Marton/。",
+  "proof_log": "docs/proof-logs/proof-log-bc-open-problem-t3-relay.md",
+  "sessions": [
+    {
+      "id": "11acfd19",
+      "prompt_ids": ["70985095"],
+      "note": "r4 = L6 (在庫 gate = COSTLY) + L7 (一次文献の決着 = [GA09] §V-B の初等証明) + L8 (標的言明を (a′) に決定) + L9 (層 3 の初着地 = Marton/SupportReduction.lean)。subagent 6 体。"
+    },
+    {
+      "id": "4f6e974f",
+      "prompt_ids": ["7d8aabf8", "409ae698", "7397b465"],
+      "note": "r5 = L10 (部品 (3a) 凸核の凸性は 2 家系隣に proof done で実在 ⟹ 自作ルート 2 本が不要に。Marton/ObjectiveConvexity.lean)。1 ターン目は在庫 gate の Lean probe 5 本、2 ターン目が実装、3 ターン目が規約ゲート。plan sync / handoff の 2 ターンは除外。"
+    },
+    {
+      "id": "b18798b0",
+      "prompt_ids": ["5a54ee2c"],
+      "note": "r6 = L11-L12 (測度形 → ベクトル形の降ろしを 7 射影ぶん完遂。Marton/ObjectiveVectorForm.lean)。"
+    },
+    {
+      "id": "914d1ca2",
+      "prompt_ids": ["1f9116c6"],
+      "note": "r7 = L13 (disintegration は新規宣言 0 本 / 落ちていた橋 2 件) + L14 (目的関数の組み立て = Marton/ObjectiveAssembly.lean) + L15 (測度形への回収)。"
+    },
+    {
+      "id": "cbf4f88c",
+      "prompt_ids": ["67f18758", "47224995", "7c56c85f", "d5924cfe", "91867b78"],
+      "note": "r8 = L16 (gateway atom GO ⟹ 全重み域へ。判断ログ 10 の射程限定を撤回)。実装 3 ターン + 規約ゲート 2 ターン。以降の docsync の小ターン群 (plan / inventory / handoff のみ) は除外。"
+    },
+    {
+      "id": "64f3ff20",
+      "prompt_ids": ["597d7b13", "e5c8ccf2", "d2cb45b7"],
+      "note": "r9 = L17 (台の部分型化 ⟹ V₁ 側の基数上界。Marton/CardinalityBound.lean)。実装 + honesty ゲート + 規約ゲート。L18 スコープ判定 (docs のみ) のターンは除外。"
+    },
+    {
+      "id": "779f2341",
+      "prompt_ids": ["6d49ff0b", "70108649"],
+      "note": "r10 = L18 (A = 閉凸包版の領域等式。Marton/RegionCardinality.lean)。2 ターン目は dot 記法の revert + Bounded → OuterBounded の改名。handoff ターンは除外。"
+    },
+    {
+      "id": "2d0e971b",
+      "prompt_ids": ["ed8d63b1", "0f396139", "d974c90a", "08ebee28", "b27f35da"],
+      "note": "r11 = L19 (B = V₂ 側の基数。新規 Marton/Swap.lean + 既存 2 ファイルへの追記)。実装 2 ターン + honesty / 規約ゲート 3 ターン (最終ターンで docstring の虚偽 1 件を除去)。plan sync / handoff は除外。"
+    }
+  ],
+  "filters": { "file_prefix": "InformationTheory/Shannon/BroadcastChannel/Marton/" },
+  "idle_gap_minutes": 5
+}
