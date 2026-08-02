@@ -20,7 +20,7 @@ sign, so nothing in the argument caps it.
 ## Main definitions
 
 * `martonRegionUnionBounded W` — the union defining Marton's inner bound, restricted to the
-  indices whose outer auxiliary alphabet carries fewer than `martonAuxBound α` letters.
+  indices whose outer auxiliary alphabet carries at most `martonAuxBound α` letters.
 
 ## Main statements
 
@@ -183,7 +183,7 @@ variable {α : Type u} {β₁ β₂ : Type*} [Fintype α] [MeasurableSpace α]
   [Fintype β₁] [MeasurableSpace β₁] [Fintype β₂] [MeasurableSpace β₂]
 
 /-- The union defining `martonRegionUnion`, restricted to the indices whose outer auxiliary
-alphabet carries fewer than `martonAuxBound α` letters.  The inner auxiliary alphabet still
+alphabet carries at most `martonAuxBound α` letters.  The inner auxiliary alphabet still
 ranges over every cardinality: the weighted sum that the cardinality bound optimizes reads the
 dependence between the two auxiliaries with a nonpositive weight, so it caps the outer alphabet
 only. -/
@@ -282,7 +282,13 @@ lemma martonRegion_subset_closure_convexHull_bounded (k₁ k₂ : ℕ)
 
 /-- The closed convex hull of Marton's inner bound is unchanged when the outer auxiliary alphabet
 is capped at `martonAuxBound α` letters, the size of the channel input alphabet.  No cap is placed
-on the inner auxiliary alphabet. -/
+on the inner auxiliary alphabet.
+
+Only the closed convex hull is unchanged: a point of the uncapped union lies in the closed convex
+hull of the capped one, not necessarily in the capped union itself, which is not claimed to be
+convex.  Capping the outer alphabet alone leaves the union ranging over every cardinality of the
+inner one, so it is not a union over finitely many indices.
+@audit:ok -/
 @[entry_point]
 theorem closure_convexHull_martonRegionUnion_eq_bounded (W : BCChannel α β₁ β₂)
     [IsMarkovKernel W] :
