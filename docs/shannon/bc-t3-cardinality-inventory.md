@@ -1136,3 +1136,439 @@ sorryAx-free の headline であり、必要なのは署名の修正ではなく
 — (a′) を採っても 480–800 行 + 60–120 行という見積りは動かない（§8.2）。
 ⚠ `@residual(wall:…)` を切らないという §7.6 / facts §L7 行 7 の判定も動かない。(a′) は
 「文献の結論形をそのまま標的にする」選択であって、壁の回避ではない。
+
+---
+
+## §9 目的関数の凸性の在庫 (L10)
+
+### 9.0 一行判定
+
+**Q1 の凸核 = (i) 既存資産で閉じる。** 文献が「唯一の非自明な核」とした `−H(V|Z)` の凸性は、
+**同じ repo の Wyner–Ziv 家系に proof-done で既に在る** — `negMulLog_marginal_gap_le_joint_gap`
+(`InformationTheory/Shannon/WynerZiv/ConditionalEntropyConvexity.lean:75`、0 sorry) が
+逐語で `−H(V|Z)` の同時分布に関する 2 点凸性そのものである。
+ルート A (perspective) / ルート B (Gibbs 変分) の**どちらも要らない** ⟹ 第 3 のルート C を推奨。
+
+⚠ **本節の主張は散文ではなく機械検証済**である。scratchpad で実際に
+
+```lean
+ConvexOn ℝ {r : V × Z → ℝ | 0 ≤ r}
+  (fun r ↦ (∑ z, Real.negMulLog (∑ v, r (v, z))) - ∑ p : V × Z, Real.negMulLog (r p))
+```
+
+を上記 1 本から導き、さらに線型写像 `q ↦ (fun p ↦ ∑ u, q u * k u p)` と合成して
+`ConvexOn ℝ {q : U → ℝ | 0 ≤ q} …`（= `exists_support_card_le_of_convexOn` の `hf` の型）まで
+落とすところまで `lake env lean` clean を確認した（**計 45 行 / 新規補題 0 本 / Mathlib 壁 0 件**）。
+
+| Q | 問い | 判定 |
+|---|---|---|
+| Q1 | 条件付きエントロピーの同時分布に関する凹性 | **in-project に在る**（Mathlib には無い） |
+| Q2 | KL の**同時**凸性 | **in-project に在る** (`klDiv_joint_convex`)。**Mathlib は 0 件**（片側すら無い） |
+| Q3 | Gibbs / 変分表示ルート | **在るのは片側 (Donsker–Varadhan の `≤`) だけ**。`inf` 表示は無い ⟹ ルート B は不成立 |
+| Q4 | `ConvexOn` コンビネータ | `.comp_linearMap` / `.comp_affineMap` / `.add` / `.sub` / `.smul` / `.neg` / `.subset` 全部在る。**`ConvexOn.sum` と perspective と `iSup/iInf` 版は無い** |
+| Q5 | `entropy` のベクトル形 = `rfl` という §4.5 の主張 | **逐語確認済 = 正しい**（ただし方向に注意、§9.5） |
+| Q6 | 前在庫「BC 家系の凸性は `martonRegion_convex` 1 本」 | **BC 家系に限れば正しい**。ただし**家系の外に凸性の主資産が 3 本在り、前在庫はそれを数えていない**（§9.6） |
+
+### 9.1 Q1 — 凸核の実体（**最重要**）
+
+#### 9.1.1 主資産（`#check @…` の逐語出力）
+
+```
+@negMulLog_marginal_gap_le_joint_gap : ∀ {α : Type u_1} {β : Type u_2} [inst : Fintype α] [inst_1 : Fintype β]
+  [MeasurableSpace α] [MeasurableSpace β] (r₁ r₂ : α × β → ℝ),
+  (∀ (p : α × β), 0 ≤ r₁ p) →
+    (∀ (p : α × β), 0 ≤ r₂ p) →
+      ∀ (a b : ℝ),
+        0 ≤ a →
+          0 ≤ b →
+            a + b = 1 →
+              ∑ y,
+                  ((∑ x, (a * r₁ (x, y) + b * r₂ (x, y))).negMulLog - a * (∑ x, r₁ (x, y)).negMulLog -
+                    b * (∑ x, r₂ (x, y)).negMulLog) ≤
+                ∑ y,
+                  ∑ x,
+                    ((a * r₁ (x, y) + b * r₂ (x, y)).negMulLog - a * (r₁ (x, y)).negMulLog - b * (r₂ (x, y)).negMulLog)
+```
+
+- **file:line**: `InformationTheory/Shannon/WynerZiv/ConditionalEntropyConvexity.lean:75`
+- **完全修飾名**: `InformationTheory.Shannon.negMulLog_marginal_gap_le_joint_gap`
+- **型クラス前提（逐語）**: `[Fintype α] [Fintype β] [MeasurableSpace α] [MeasurableSpace β]`
+- **引数の順**: `{α β : Type*}` → 4 instance → `(r₁ r₂ : α × β → ℝ)` → `(hr₁ hr₂ : ∀ p, 0 ≤ · p)`
+  → `(a b : ℝ)` → `(ha : 0 ≤ a) (hb : 0 ≤ b) (hab : a + b = 1)`
+- **状態**: 0 sorry（ファイル全体 7 decl / 0 sorry、`scripts/sig_view.ts` 逐語）
+
+⚠ **`[MeasurableSpace α] [MeasurableSpace β]` は使われていないのに署名に載っている**
+（同ファイル `:40-42` の `variable` ブロックからの漏れ。`:38` に
+`set_option linter.unusedSectionVars false` が置かれているのでリンタも黙っている）。
+消費側に測度空間インスタンスを要求する。BC 家系では `V₁ V₂ α β₁ β₂` すべてに
+`[MeasurableSpace _]` が既に付いている（`martonRegion_convex` 署名の逐語で確認）ので**実害は無い**が、
+`exists_support_card_le_of_convexOn` の側は `[Fintype ι] [Fintype X]` **のみ**で測度空間を要求しない
+（§9.4 の逐語）ため、**この 1 本を挟むと消費側の署名に `MeasurableSpace` が 2 本増える**。
+
+#### 9.1.2 なぜこれが `−H(V|Z)` の凸性なのか（⚠ 我々の演繹、ただし機械検証済）
+
+`Hmarg(r) := ∑_z negMulLog(∑_v r(v,z))`、`Hjoint(r) := ∑_{v,z} negMulLog(r(v,z))` と置くと
+上の結論は `Hmarg(m) − a·Hmarg(r₁) − b·Hmarg(r₂) ≤ Hjoint(m) − a·Hjoint(r₁) − b·Hjoint(r₂)`
+（`m = a·r₁ + b·r₂`）であり、移項すると
+
+```
+(Hmarg − Hjoint)(m) ≤ a·(Hmarg − Hjoint)(r₁) + b·(Hmarg − Hjoint)(r₂)
+```
+
+`Hjoint − Hmarg = H(V,Z) − H(Z) = H(V|Z)` なので `Hmarg − Hjoint = −H(V|Z)`。
+⟹ **`−H(V|Z)` は同時分布 `r = p(v,z)` について `{r | 0 ≤ r}` 上で凸**。
+
+⚠ **正規化 (`∑ r = 1`) を要求しない**。前提は `∀ p, 0 ≤ rᵢ p` だけであり、これは
+`exists_support_card_le_of_convexOn` の定義域 `{q | 0 ≤ q}` と**完全に一致する**（単体へ制限する
+必要が無い）。文献の分解が「`q(u)` だけを動かす」形であることと整合する。
+
+#### 9.1.3 ルート C — 機械検証済の橋（**そのまま実装に使える 45 行**）
+
+以下は scratchpad で `lake env lean` clean（0 error / 0 warning）を確認した実物である。
+⚠ 本在庫は `InformationTheory/**.lean` を書き換えていない。下記は**実装エージェントへの入力**であり、
+コミット済のコードではない。
+
+```lean
+import InformationTheory.Shannon.WynerZiv.ConditionalEntropyConvexity
+import Mathlib.Analysis.Convex.Function
+
+open InformationTheory InformationTheory.Shannon Finset
+
+variable {V Z U : Type*} [Fintype V] [Fintype Z] [Fintype U]
+  [MeasurableSpace V] [MeasurableSpace Z]
+
+theorem negCondEnt_convexOn :
+    ConvexOn ℝ {r : V × Z → ℝ | 0 ≤ r}
+      (fun r ↦ (∑ z, Real.negMulLog (∑ v, r (v, z)))
+                 - ∑ p : V × Z, Real.negMulLog (r p)) := by
+  constructor
+  · intro r₁ h₁ r₂ h₂ a b ha hb _ p
+    exact add_nonneg (mul_nonneg ha (h₁ p)) (mul_nonneg hb (h₂ p))
+  · intro r₁ h₁ r₂ h₂ a b ha hb hab
+    have key := negMulLog_marginal_gap_le_joint_gap r₁ r₂ h₁ h₂ a b ha hb hab
+    have hflip : ∀ g : V × Z → ℝ, ∑ z, ∑ v, g (v, z) = ∑ p : V × Z, g p := by
+      intro g; rw [Finset.sum_comm]; exact (Fintype.sum_prod_type (f := g)).symm
+    simp only [Finset.sum_sub_distrib, ← Finset.mul_sum] at key
+    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+    rw [← hflip fun p ↦ Real.negMulLog (r₁ p), ← hflip fun p ↦ Real.negMulLog (r₂ p),
+      ← hflip fun p ↦ Real.negMulLog (a * r₁ p + b * r₂ p)]
+    linarith [key]
+
+theorem convex_nonneg_pi {ι : Type*} : Convex ℝ {q : ι → ℝ | 0 ≤ q} := by
+  intro x hx y hy a b ha hb _ i
+  exact add_nonneg (mul_nonneg ha (hx i)) (mul_nonneg hb (hy i))
+
+theorem negCondEnt_comp_convexOn (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) :
+    ConvexOn ℝ {q : U → ℝ | 0 ≤ q}
+      (fun q ↦ (∑ z, Real.negMulLog (∑ v, ∑ u, q u * k u (v, z)))
+                 - ∑ p : V × Z, Real.negMulLog (∑ u, q u * k u p)) := by
+  classical
+  let L : (U → ℝ) →ₗ[ℝ] (V × Z → ℝ) :=
+    { toFun := fun q p ↦ ∑ u, q u * k u p
+      map_add' := fun q₁ q₂ ↦ by
+        funext p; simp only [Pi.add_apply, add_mul]; exact Finset.sum_add_distrib
+      map_smul' := fun c q ↦ by
+        funext p
+        simp only [Pi.smul_apply, smul_eq_mul, RingHom.id_apply, Finset.mul_sum, mul_assoc] }
+  have hcomp := negCondEnt_convexOn.comp_linearMap (E := (U → ℝ)) L
+  have hsub : {q : U → ℝ | 0 ≤ q} ⊆ (⇑L) ⁻¹' {r : V × Z → ℝ | 0 ≤ r} := by
+    intro q hq
+    exact fun p ↦ Finset.sum_nonneg fun u _ ↦ mul_nonneg (hq u) (hk u p)
+  exact (hcomp.subset hsub convex_nonneg_pi)
+```
+
+⚠ **`convex_nonneg_pi` は Mathlib に無い**（`convex_Ici` は `Set.Ici` 形であり、
+`{q | 0 ≤ q}` を `Set.Ici (0 : ι → ℝ)` と同一視する `simp` 補題を通す必要がある）ので
+**上の 3 行で自作するのが最短**である。`SupportReduction.lean` 側もこれを持っていない。
+
+#### 9.1.4 Mathlib 側は 0 件（逐語）
+
+| クエリ（逐語） | 出力（逐語） |
+|---|---|
+| `ConvexOn _ _ (fun _ => Real.negMulLog _)` | `Found 0 declarations mentioning Real.partialOrder, Real, Real.negMulLog, Real.instAddCommMonoid, and ConvexOn.` / `Of these, 0 match your pattern(s).` |
+| `ConcaveOn, Real.negMulLog` | `Found one declaration mentioning Real.negMulLog and ConcaveOn.` → `Real.concaveOn_negMulLog` |
+| `"condEntropy"` | `Found 0 declarations whose name contains "condEntropy".` |
+| `"mutualInfo"` | `Found 0 declarations whose name contains "mutualInfo".` |
+| `ConvexOn _ _ (fun _ => Finset.sum _ _)` | `Found 4 declarations mentioning Finset.sum and ConvexOn.` / `Of these, 0 match your pattern(s).` |
+
+⟹ Mathlib が持つのは**スカラー 1 変数の `Real.concaveOn_negMulLog : ConcaveOn ℝ (Set.Ici 0) Real.negMulLog`
+1 本だけ**で、多変数のエントロピー凹性・相互情報量・条件付きエントロピーは**概念ごと存在しない**
+（`condEntropy` / `mutualInfo` という名前が 0 件）。Fano 在庫 (`docs/fano/fano-mathlib-inventory.md:54-56`)
+の判定と整合する。
+
+### 9.2 Q2 — KL の同時凸性
+
+**結論: Mathlib は 0 件（片側凸性すら無い）。in-project には measure 形の同時凸性が proof done で在る。**
+
+| 概念 | decl | file:line | 型クラス前提（逐語） | 結論形（逐語） |
+|---|---|---|---|---|
+| **KL の同時凸性**（両引数を同時に混合） | `InformationTheory.Shannon.klDiv_joint_convex` | `InformationTheory/Shannon/RateDistortion/Convexity.lean:280` | `[MeasurableSpace Ω]` `[IsFiniteMeasure μ₁] [IsFiniteMeasure μ₂] [IsFiniteMeasure σ₁] [IsFiniteMeasure σ₂]` | `klDiv (ENNReal.ofReal lam • μ₁ + ENNReal.ofReal (1 - lam) • μ₂) (ENNReal.ofReal lam • σ₁ + ENNReal.ofReal (1 - lam) • σ₂) ≤ ENNReal.ofReal lam * klDiv μ₁ σ₁ + ENNReal.ofReal (1 - lam) * klDiv μ₂ σ₂` |
+| 相互情報量の混合凸性 | `InformationTheory.Shannon.klDiv_mixture_le` | 同 `:336` | `[MeasurableSpace α] [MeasurableSpace β]` `[IsProbabilityMeasure P] [IsFiniteMeasure ν₁] [IsFiniteMeasure ν₂]` | `klDiv (mixtureMeasure lam ν₁ ν₂) (…prod…) ≤ ENNReal.ofReal lam * klDiv ν₁ (…) + ENNReal.ofReal (1 - lam) * klDiv ν₂ (…)` |
+| KL の**左引数のみ**の狭義凸性（pmf 形） | `InformationTheory.Shannon.CsiszarProjection.klDivPmf_strictConvexOn_left` | `InformationTheory/Shannon/CsiszarProjection.lean:99` | `[Fintype α]` | `StrictConvexOn ℝ (stdSimplex ℝ α) fun P => klDivPmf P Q`（`(hQ_pos : ∀ a, 0 < Q a)` 付き） |
+| スカラー核 | `InformationTheory.convexOn_klFun` | `Mathlib/InformationTheory/KullbackLeibler/KLFun.lean` | 無し | `ConvexOn ℝ (Set.Ici 0) InformationTheory.klFun` |
+| 同（狭義） | `InformationTheory.strictConvexOn_klFun` | 同上 | 無し | `StrictConvexOn ℝ (Set.Ici 0) InformationTheory.klFun` |
+
+⚠ **`klDivPmf_strictConvexOn_left` は片側だけ**なので本件には**足りない**
+（`q(u)` を動かすと `p(v,z)` と `p(z)` が**両方**動く）。
+
+**Mathlib 側の 0 件（逐語）**:
+
+| クエリ（逐語） | 出力（逐語） |
+|---|---|
+| `ConvexOn, InformationTheory.klDiv` | `Found 0 declarations mentioning InformationTheory.klDiv and ConvexOn.` |
+| `ConvexOn, InformationTheory.klFun, Finset.sum` | `Found 0 declarations mentioning InformationTheory.klFun, Finset.sum, and ConvexOn.` |
+
+⟹ Mathlib の `klDiv` には**凸性補題が 1 本も無い**（同時どころか片側も）。スカラーの `klFun` の凸性で
+止まっている。⚠ これは前在庫が触れていなかった事実である。
+
+⚠ **`klDiv_joint_convex` の `(_hlam₀ : 0 ≤ lam) (_hlam₁ : lam ≤ 1)` は本体で未使用**
+（アンダースコア接頭辞、`Convexity.lean:282` 逐語）。不使用仮定は言明を**弱く**するだけなので
+honesty 上の欠陥ではないが、消費時に「この 2 本を供給しないと通らない」と誤読しないこと。
+
+### 9.3 Q3 — Gibbs / 変分表示ルート（**ルート B は不成立**）
+
+指示された 7 ファイルを実際に開いた結果:
+
+| ファイル | 在るもの | 変分表示として使えるか |
+|---|---|---|
+| `Shannon/EPI/G2/KLVariationalLower.lean:87` | `klDiv_variational_lower_bound` | ⚠ **片側 (`≤`) のみ**。下記逐語 |
+| `Shannon/CsiszarProjection.lean:99` | `klDivPmf_strictConvexOn_left` | ✗ 左引数のみ（§9.2） |
+| `Shannon/MaxEntropy/Basic.lean:230,266` | **Gibbs *不等式*** `H ≤ log \|α\|` とその等号条件 | ✗ 変分表示ではない（名前が紛らわしい） |
+| `Fano/Entropy.lean` / `Fano/BinaryJensen.lean:33` | `ConcaveOn ℝ (Set.Icc 0 1) Real.binEntropy` | ✗ 二値スカラー |
+| `Shannon/RateDistortion/Convexity.lean` | §9.2 の 3 本 | ○ ただし変分表示ではなく直接の凸性 |
+| `Shannon/WynerZiv/ObjectiveConvexity.lean:212` | `WynerZivCondEntDiffConvex`（`Prop` 述語） | — 述語。実体は §9.1 |
+| `Shannon/MultipleAccess/TimeSharing.lean:566` | `Convex ℝ (macCapacityRegion W)` | ✗ 領域の凸性 |
+
+```
+-- InformationTheory/Shannon/EPI/G2/KLVariationalLower.lean:87-91 逐語
+theorem klDiv_variational_lower_bound [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    (hμν : μ ≪ ν) (h_int : Integrable (llr μ ν) μ)
+    {g : α → ℝ} (hg_meas : Measurable g) {C : ℝ} (hg_bdd : ∀ x, |g x| ≤ C) :
+    (∫ x, g x ∂μ) - Real.log (∫ x, Real.exp (g x) ∂ν) ≤ (klDiv μ ν).toReal
+```
+
+⚠ **Donsker–Varadhan の `≤` 方向だけ**である。「アフィン族の `inf` ⟹ 凹」を回すには
+**等号 / 上限到達**が要るが、それは in-project に無い。さらに Mathlib 側のコンビネータも無い:
+
+| クエリ（逐語） | 出力（逐語） |
+|---|---|
+| `ConcaveOn _ _ (fun _ => iInf _)` | `Found 0 declarations mentioning iInf and ConcaveOn.` / `Of these, 0 match your pattern(s).` |
+| `"convexOn_iSup"` | `Found 0 declarations whose name contains "convexOn_iSup".` |
+
+⟹ **ルート B（Gibbs 変分）は「片側だけの資産 + コンビネータ 0 件」で二重に詰まっている。**
+仮に採るなら (i) 上限到達の証明 + (ii) `ConcaveOn` の `iInf` コンビネータ自作の 2 本が新規に立つ。
+**ルート C（§9.1.3、45 行 / 新規 0 本）と比べる意味が無い。**
+
+### 9.4 Q4 — `ConvexOn` コンビネータ在庫（`#check` の逐語）
+
+**在る**（すべて Mathlib、`#check @…` 逐語の型クラス前提つき）:
+
+| decl | 型クラス前提（逐語） | 結論形（逐語） |
+|---|---|---|
+| `ConvexOn.comp_linearMap` | `[Semiring 𝕜] [PartialOrder 𝕜] [AddCommMonoid E] [AddCommMonoid F] [AddCommMonoid β] [PartialOrder β] [Module 𝕜 E] [Module 𝕜 F] [SMul 𝕜 β]` | `ConvexOn 𝕜 s f → ∀ (g : E →ₗ[𝕜] F), ConvexOn 𝕜 (⇑g ⁻¹' s) (f ∘ ⇑g)` |
+| `ConvexOn.comp_affineMap` | `[Field 𝕜] [LinearOrder 𝕜] [AddCommGroup E] [AddCommGroup F] [AddCommMonoid β] [PartialOrder β] [Module 𝕜 E] [Module 𝕜 F] [SMul 𝕜 β]` | `ConvexOn 𝕜 s f → ConvexOn 𝕜 (⇑g ⁻¹' s) (f ∘ ⇑g)`（`(g : E →ᵃ[𝕜] F)` は明示引数） |
+| `ConcaveOn.comp_affineMap` | 同上 | `ConcaveOn 𝕜 s f → ConcaveOn 𝕜 (⇑g ⁻¹' s) (f ∘ ⇑g)` |
+| `ConvexOn.add` | `[Semiring 𝕜] [PartialOrder 𝕜] [AddCommMonoid E] [AddCommMonoid β] [PartialOrder β] [IsOrderedAddMonoid β] [SMul 𝕜 E] [DistribMulAction 𝕜 β]` | `ConvexOn 𝕜 s f → ConvexOn 𝕜 s g → ConvexOn 𝕜 s (f + g)` |
+| `ConvexOn.sub` | `[Semiring 𝕜] [PartialOrder 𝕜] [AddCommMonoid E] [AddCommGroup β] [PartialOrder β] [IsOrderedAddMonoid β] [SMul 𝕜 E] [Module 𝕜 β]` | `ConvexOn 𝕜 s f → **ConcaveOn** 𝕜 s g → ConvexOn 𝕜 s (f - g)` |
+| `ConvexOn.smul` | `[CommSemiring 𝕜] [PartialOrder 𝕜] … [PosSMulMono 𝕜 β]` | `0 ≤ c → ConvexOn 𝕜 s f → ConvexOn 𝕜 s fun x => c • f x` |
+| `ConvexOn.neg` / `ConcaveOn.neg` | `[Semiring 𝕜] [PartialOrder 𝕜] [AddCommMonoid E] [AddCommGroup β] [PartialOrder β] [IsOrderedAddMonoid β] [SMul 𝕜 E] [Module 𝕜 β]` | `ConvexOn 𝕜 s f → ConcaveOn 𝕜 s (-f)` / `ConcaveOn 𝕜 s f → ConvexOn 𝕜 s (-f)` |
+| `ConvexOn.subset` | `[Semiring 𝕜] [PartialOrder 𝕜] [AddCommMonoid E] [AddCommMonoid β] [PartialOrder β] [SMul 𝕜 E] [SMul 𝕜 β]` | `ConvexOn 𝕜 t f → s ⊆ t → Convex 𝕜 s → ConvexOn 𝕜 s f` |
+| `LinearMap.convexOn` | `[Semiring 𝕜] [PartialOrder 𝕜] [AddCommMonoid E] [AddCommMonoid β] [PartialOrder β] [Module 𝕜 E] [Module 𝕜 β]` | `(f : E →ₗ[𝕜] β) → Convex 𝕜 s → ConvexOn 𝕜 s ⇑f` |
+| `convexOn_const` | `[Semiring 𝕜] [PartialOrder 𝕜] … [Module 𝕜 β]` | `(c : β) → Convex 𝕜 s → ConvexOn 𝕜 s fun x => c` |
+| `Real.concaveOn_negMulLog` | 無し | `ConcaveOn ℝ (Set.Ici 0) Real.negMulLog` |
+| `Real.strictConcaveOn_negMulLog` | 無し | `StrictConcaveOn ℝ (Set.Ici 0) Real.negMulLog` |
+| `Real.convexOn_mul_log` | 無し | `ConvexOn ℝ (Set.Ici 0) fun x => x * Real.log x` |
+| `convex_Ici` | — | `Convex 𝕜 (Set.Ici _)` |
+
+⚠ **`LinearMap.convexOn` + `convexOn_const` が在るので、文献分解の「線型な項」と「定数項」は
+1 行ずつで載る**（自作ゼロ）。
+
+**無い**（Mathlib、逐語 0 件）:
+
+| 欲しかったもの | クエリ（逐語） | 出力（逐語） | 代替 |
+|---|---|---|---|
+| perspective 関数 | `"perspective"` | `Found 0 declarations whose name contains "perspective".` | **ルート A は Mathlib 資産ゼロから** ⟹ 却下 |
+| `ConvexOn.sum`（有限和） | `"ConvexOn.sum"` | `Found 0 declarations whose name contains "ConvexOn.sum".` | **in-project に `ConcaveOn` 版が在る**（下記） |
+| `iSup` / `iInf` 版 | `"convexOn_iSup"` / `ConcaveOn _ _ (fun _ => iInf _)` | 両方 0 件 | ルート B が詰まる主因（§9.3） |
+
+**`ConvexOn.sum` の in-project 代替（`#check` 逐語）**:
+
+```
+@InformationTheory.Shannon.Portfolio.concaveOn_finset_sum : ∀ {E : Type u_1} [inst : AddCommMonoid E]
+  [inst_1 : Module ℝ E] {s : Set E},
+  Convex ℝ s →
+    ∀ {ι : Type u_2} (f : ι → E → ℝ) (t : Finset ι),
+      (∀ i ∈ t, ConcaveOn ℝ s (f i)) → ConcaveOn ℝ s fun x => ∑ i ∈ t, f i x
+```
+
+`InformationTheory/Shannon/Portfolio/Basic.lean:93`（`Convexity.lean:91-92` のコメントが
+「Mathlib lacks a `ConcaveOn.sum`」と逐語で述べている）。⚠ **`ConcaveOn` 版しか無い**ので
+`ConvexOn` 版が要るなら `.neg` で挟むか同型の 10 行を写す。
+⚠ ただし**ルート C ではこれを使わない**（`negCondEnt_convexOn` が和ごと 1 本で出るため）。
+
+### 9.5 Q5 — §4.5 の「`entropy` の橋は `rfl`」の逐語確認 → **正しい**
+
+```lean
+-- InformationTheory/Shannon/Bridge.lean:39-41 逐語（今回 Read で再確認）
+/-- Shannon entropy of a discrete random variable taking values in a finite alphabet. -/
+noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ :=
+  ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})
+```
+
+⚠ 同ファイル `:34-37` の `variable` ブロックは
+`{Ω : Type*} [MeasurableSpace Ω]` / `{X : Type*} [Fintype X] [DecidableEq X] [Nonempty X]
+[MeasurableSpace X] [MeasurableSingletonClass X]` である（`entropy` の署名に載る）。
+
+**判定: §4.5 の主張は正しい。ただし方向を分けて読むこと（⚠ 我々の演繹）**:
+
+- **測度 → ベクトル**: `entropy μ Xs = ∑ x, negMulLog (P.real {x})`（`P := μ.map Xs`）は**定義的一致**。
+  `MaxEntropy/Basic.lean:244` が実際に `:= rfl` で書いている ⟹ **橋は `rfl`、コスト 0**。
+- **ベクトル → 測度**: 逆向き（任意の `q : X → ℝ` を測度に持ち上げる）は `rfl` ではなく
+  `pmfToMeasure` + `pmfToMeasure_apply_singleton`（§4.5 の表）を経由する。
+
+⟹ **本 leg の座標化は「測度 → ベクトル」向きだけで足りる**（`f` はベクトル上で定義し、
+消費側で `entropy` に `rfl` で戻す）ので、§4.5 の「座標化は安い」は**維持される**。
+⚠ 前提は崩れていない。
+
+### 9.6 Q6 — in-project 凸性資産の棚卸し（**前在庫の主張を一部修正**）
+
+実測: `rg -l 'ConvexOn|ConcaveOn|Convex ℝ' InformationTheory/` = **27 ファイル**
+（前在庫のブリーフは 34 と述べていたが実測は 27）。そのうち
+**エントロピー / 相互情報量 / KL の凹凸そのものを述べているもの**だけを抜くと:
+
+| # | decl | file:line | 型クラス前提（逐語） | 結論形（逐語） |
+|---|---|---|---|---|
+| 1 | `InformationTheory.Shannon.negMulLog_marginal_gap_le_joint_gap` | `Shannon/WynerZiv/ConditionalEntropyConvexity.lean:75` | `[Fintype α] [Fintype β] [MeasurableSpace α] [MeasurableSpace β]` | §9.1.1 に逐語 |
+| 2 | `InformationTheory.Shannon.wzCondEntDiff_block_convex` | 同 `:213` | `[Fintype α] [Fintype β] [MeasurableSpace α] [MeasurableSpace β] (U) [Fintype U] [MeasurableSpace U]` | `∑ y, (wzMarginalYU U (a • q₁ + b • q₂) (y, u)).negMulLog - ∑ x, (wzMarginalXU U (a • q₁ + b • q₂) (x, u)).negMulLog ≤ a * (…) + b * (…)` |
+| 3 | `InformationTheory.Shannon.wynerZivCondEntDiffConvex_holds` | 同 `:354` | 同上 | `(∀ p, 0 ≤ P_XY p) → WynerZivCondEntDiffConvex U P_XY` |
+| 4 | `InformationTheory.Shannon.klDiv_joint_convex` | `Shannon/RateDistortion/Convexity.lean:280` | `[MeasurableSpace Ω] [IsFiniteMeasure μ₁] [IsFiniteMeasure μ₂] [IsFiniteMeasure σ₁] [IsFiniteMeasure σ₂]` | §9.2 に逐語 |
+| 5 | `InformationTheory.Shannon.klDiv_mixture_le` | 同 `:336` | `[MeasurableSpace α] [MeasurableSpace β] [IsProbabilityMeasure P] [IsFiniteMeasure ν₁] [IsFiniteMeasure ν₂]` | §9.2 に逐語 |
+| 6 | `InformationTheory.Shannon.rateDistortionFunction_convexOn` | 同 `:378` | `[MeasurableSpace α] [MeasurableSpace β] [IsProbabilityMeasure P]` | `rateDistortionFunction d P (lam * D₁ + (1 - lam) * D₂) ≤ ENNReal.ofReal lam * rateDistortionFunction d P D₁ + ENNReal.ofReal (1 - lam) * rateDistortionFunction d P D₂` |
+| 7 | `InformationTheory.Shannon.CsiszarProjection.klDivPmf_strictConvexOn_left` | `Shannon/CsiszarProjection.lean:99` | `[Fintype α]` | `StrictConvexOn ℝ (stdSimplex ℝ α) fun P => klDivPmf P Q` |
+| 8 | `InformationTheory.Shannon.WynerZiv…` の述語 `WynerZivCondEntDiffConvex` | `Shannon/WynerZiv/ObjectiveConvexity.lean:212` | `[Fintype α] [Fintype β] (U) [Fintype U] [MeasurableSpace U]` | `Prop`（述語。実体は #3） |
+| 9 | `InformationTheory.Shannon.BroadcastChannel.Marton.martonRegion_convex` | `Shannon/BroadcastChannel/MartonUnion.lean:133` | `[MeasurableSpace α] [Fintype β₁] [MeasurableSpace β₁] [Fintype β₂] [MeasurableSpace β₂] [Fintype V₁] [MeasurableSpace V₁] [Fintype V₂] [MeasurableSpace V₂]` | `Convex ℝ (martonRegion pV K W)` |
+
+（除外したもの: `binEntropy` の凹性 (`Fano/BinaryJensen.lean:33`)、`log(1+x/N)` の凹性
+(`DifferentialEntropy.lean:786` / `ShannonHartley/Waterfill.lean:85` / `AWGN/ConverseCapacityBound.lean:541`)、
+`growthRate` の凹性 (`Portfolio/Basic.lean:141`)、Chernoff / Hoeffding の凸性、領域の凸性
+(`TimeSharing.lean:566` ほか) — いずれもエントロピー汎関数の凹凸ではない。）
+
+**判定**: 「BC 家系の `Convex` は `martonRegion_convex` 1 本のみ」（§8.2 の 2. 逐語）は
+**BC 家系に限れば正しい**。しかし前在庫は **#1–#6 の 6 本を数えていない** — これらは
+`WynerZiv` / `RateDistortion` 家系に在り、**本 leg の凸核そのもの**である。
+⚠ **これが本調査の最も重要な発見**であり、CLAUDE.md「Search in-project before concluding 絶対」
+（Shannon–Hartley Leg B Leaf 2 の実例: 一般形が **2 ファイル隣の同家系**に在った）の再現である。
+
+### 9.7 ルート比較 — **C を採る**
+
+| ルート | 核 | Mathlib 資産 | in-project 資産 | 見積り | 判定 |
+|---|---|---|---|---|---|
+| **C. WZ 資産の再利用** ✓ | `negMulLog_marginal_gap_le_joint_gap` を移項 | 不要（コンビネータのみ） | **proof done で在る** | **45 行 / 新規補題 0**（機械検証済） | **✓ 採用** |
+| A. perspective 同時凸性 | `(a,b) ↦ a·log(a/b)` の同時凸性 | **`"perspective"` = 0 件** | 無し | 同時凸性の自作 120–200 行 + 和への持ち上げ | ✗ |
+| B. Gibbs 変分 | `H(V\|Z) = inf_r …` + アフィン族の inf | **`iInf` コンビネータ 0 件** | **片側 (`≤`) のみ** | 上限到達 + コンビネータ自作、200 行超 | ✗ |
+| D. measure 形 KL 同時凸性 | `klDiv_joint_convex` | 0 件 | **proof done で在る** | `ℝ≥0∞ → ℝ` の `.toReal` 橋 + 有限性 + `IsFiniteMeasure` 供給で 80–150 行 | △ 予備 |
+
+⚠ **D を予備として残す理由**: C は `Fintype V/Z` のベクトル形で完結するが、
+消費側の `martonInfo₁ / martonInfo₂ / martonInfoV₁V₂` は**測度形**である（`martonRegion_convex` の
+署名逐語: `pV : Measure (V₁ × V₂)` / `K : Kernel (V₁ × V₂) α`）。C を採る場合、
+§9.5 の「測度 → ベクトル」`rfl` 橋で降ろす段が要る。そこが詰まったときの逃げ道が D。
+
+### 9.8 自己構築が要る要素（優先順）
+
+| # | 要素 | 推奨実装 | 見積り | 落とし穴 |
+|---|---|---|---|---|
+| 1 | `negCondEnt_convexOn`（`−H(V\|Z)` の凸性、ベクトル形） | §9.1.3 逐語をそのまま | **20 行**（機械検証済） | `∑ p : V × Z` と `∑ z, ∑ v` の順序差 — `Finset.sum_comm` + `Fintype.sum_prod_type` の 2 段が要る（`simp` の高階単一化は**発火しない**ので `rw [← hflip …]` を明示する） |
+| 2 | `convex_nonneg_pi` | §9.1.3 逐語 | **3 行** | Mathlib の `convex_Ici` は `Set.Ici` 形。`{q \| 0 ≤ q}` との同一視を挟むより自作が短い |
+| 3 | 線型写像との合成 | §9.1.3 の `negCondEnt_comp_convexOn` | **22 行**（機械検証済） | `ConvexOn.comp_linearMap` は `(⇑g ⁻¹' s)` を返すので `ConvexOn.subset` で `{q \| 0 ≤ q}` に落とす段が必須 |
+| 4 | 線型項 `−H(Y\|U)+H(V\|U)` を載せる | `LinearMap.convexOn` + `ConvexOn.add` | 30–60 行 | `q(u)` について線型であることの証明（`p₀(v,x\|u)` 固定の逐語確認が要る） |
+| 5 | 定数項 `H(Y)` | `convexOn_const` | 5–10 行 | `q` を動かしても `p(x)` が保存されることが前提（`exists_support_card_le_of_convexOn` の `hA` / 結論の `∀ x, ∑ i, q' i * A i x = ∑ i, q i * A i x` がまさにこれ） |
+| 6 | 測度形 ↔ ベクトル形の降ろし | `entropy` の `rfl`（§9.5）+ `pmfToMeasure`（§4.5） | 40–90 行 | ⚠ **ここが C の唯一の未検証段**。`martonInfo*` の定義を Read してから見積り直すこと |
+
+**合計の見積り更新**: §8.2 が (a′-1) = 480–800 行としたうちの「部品 (3a) 凸性そのもの」は
+**200–350 行の想定に対し 120–210 行に下がる**（#1–#3 の 45 行が確定値、#4–#6 が残り）。
+⚠ **総額 480–800 行は動かさない** — 減ったのは (3a) の内数だけであり、部品 1 / 2 / 4 は未着手のままである。
+
+### 9.9 Mathlib の壁の列挙 — **本 leg に壁は 0 件**
+
+⚠ **`@residual(wall:…)` は 1 本も切らない。** 以下は「Mathlib に無い」という事実の列挙であり、
+**すべて in-project 資産または 45 行の自作で埋まる**ので壁ではない
+（親プラン `bc-open-problem-t3-plan.md:264` / facts §L7 行 7 の判定と整合）。
+
+| Mathlib に無いもの | loogle 逐語 | 埋め方 | 壁か |
+|---|---|---|---|
+| 条件付きエントロピー（概念ごと） | `"condEntropy"` → `Found 0 declarations whose name contains "condEntropy".` | in-project #1（§9.6） | **否** |
+| 相互情報量（概念ごと） | `"mutualInfo"` → `Found 0 declarations whose name contains "mutualInfo".` | in-project `mutualInfoPmf`（§4.5） | **否** |
+| `klDiv` の凸性（同時・片側とも） | `ConvexOn, InformationTheory.klDiv` → `Found 0 declarations mentioning InformationTheory.klDiv and ConvexOn.` | in-project #4（§9.6） | **否** |
+| perspective 関数 | `"perspective"` → `Found 0 declarations whose name contains "perspective".` | **不要**（ルート A を採らない） | **否** |
+| `ConvexOn.sum`（有限和） | `"ConvexOn.sum"` → `Found 0 declarations whose name contains "ConvexOn.sum".` | in-project `concaveOn_finset_sum` / ルート C では不要 | **否** |
+| `iSup`/`iInf` の凸凹コンビネータ | `"convexOn_iSup"` → 0 件 / `ConcaveOn _ _ (fun _ => iInf _)` → 0 件 | **不要**（ルート B を採らない） | **否** |
+
+⟹ **共有 sorry 補題の候補は無い。** 本 leg で `sorry` を置く必要のある命題が 1 本も見つからなかった。
+
+### 9.10 撤退ラインとの距離 — **3 本とも触れない / 発火しない**
+
+| 親 §6 の撤退ライン | 触れるか | 判定 |
+|---|---|---|
+| L8 の棚卸しで T3-α が gate を通らず T3-β / γ も第一手を返さない | **触れない** | 本節は L10 の部品調査。むしろ gate の残り 1 部品 (3a) が**通った**（§9.0） |
+| L14 の棚卸しで層 3 に載せられる散文が 1 本も無い | **触れない** | (a′) が生きているどころか、その最重量部品の見積りが下がった |
+| 20 leg を使い切って未達 | **触れない** | L10 時点。予算は §9.8 のとおり総額据え置き |
+
+⚠ **§6.5 の予算警告（層 3 集中枠 L16–L18 を基数境界 1 本が埋めうる）は依然有効**である。
+(3a) が 200–350 行 → 120–210 行に下がっただけで、部品 1 / 2 / 4 と (a′-2) は手つかずである。
+**「凸性が既に在ったのだから全体が軽くなった」と読むのは §7.4 の誤読の再演**になる。
+
+### 9.11 着手スケルトン
+
+新規ファイル `InformationTheory/Shannon/BroadcastChannel/Marton/ObjectiveConvexity.lean`
+（`SupportReduction.lean` の隣）。⚠ §9.1.3 の 3 本は**既に `lake env lean` clean**なので、
+`sorry` を置くのは #4–#6 の段だけでよい。
+
+```lean
+import InformationTheory.Shannon.BroadcastChannel.Marton.SupportReduction
+import InformationTheory.Shannon.WynerZiv.ConditionalEntropyConvexity
+import Mathlib.Analysis.Convex.Function
+
+/-!
+# Convexity of the Marton objective in the auxiliary weights
+
+The support-reduction mechanism (`SupportReduction.lean`) consumes a convex objective on the
+nonnegative orthant.  This file supplies that objective for the Marton inner bound: with the
+conditional law `p(v, x | u)` held fixed, the weighted sum of the three Marton functionals is
+convex in the weight vector `q`.
+
+## Main statements
+
+* `negCondEnt_convexOn` — the negated conditional entropy is convex in the joint law.
+* `martonObjective_convexOn` — the Marton objective is convex in the auxiliary weights.
+-/
+
+namespace InformationTheory.Shannon.BroadcastChannel.Marton
+
+open InformationTheory.Shannon Finset
+
+variable {V Z U : Type*} [Fintype V] [Fintype Z] [Fintype U]
+  [MeasurableSpace V] [MeasurableSpace Z]
+
+-- §9.1.3 の 3 本をここに置く（機械検証済、sorry 不要）
+theorem negCondEnt_convexOn : … := …
+theorem convex_nonneg_pi {ι : Type*} : Convex ℝ {q : ι → ℝ | 0 ≤ q} := …
+theorem negCondEnt_comp_convexOn (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) : … := …
+
+-- 残る段（#4–#6）。ここだけ sorry + @residual(plan:bc-open-problem-t3) で立てる
+theorem martonObjective_convexOn
+    (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) (lin : (U → ℝ) →ₗ[ℝ] ℝ) (c : ℝ) :
+    ConvexOn ℝ {q : U → ℝ | 0 ≤ q}
+      (fun q ↦ c + lin q
+        + ((∑ z, Real.negMulLog (∑ v, ∑ u, q u * k u (v, z)))
+            - ∑ p : V × Z, Real.negMulLog (∑ u, q u * k u p))) :=
+  ((convexOn_const c convex_nonneg_pi).add (lin.convexOn convex_nonneg_pi)).add
+    (negCondEnt_comp_convexOn k hk)
+
+end InformationTheory.Shannon.BroadcastChannel.Marton
+```
+
+⚠ 最後の `martonObjective_convexOn` の**証明項は未検証**（`ConvexOn.add` の連鎖が
+`fun q ↦ c + lin q + …` の構文形にそのまま当たるかは実装時に確認）。
+⚠ **`martonInfo₁ / martonInfo₂ / martonInfoV₁V₂`（測度形）をこの `f` に載せる段は本調査の範囲外**
+であり、そこが §9.8 の #6 = C ルートの唯一の未検証段である。実装は gateway-atom-first で
+#6 を 1 本投げてから残りを決めること。
