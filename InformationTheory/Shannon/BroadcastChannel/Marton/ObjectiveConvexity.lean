@@ -12,9 +12,8 @@ attached to a weight vector `q : U → ℝ` is `c`, plus the linear form `∑ u,
 times the negated conditional entropy `-H(V | Z)` of the mixture `∑ u, q u * k u`.  A general
 coefficient is needed because the entropy differences a cardinality bound has to control come
 with weights of their own, including the degenerate weight `0`.  This is the shape the elementary
-cardinality
-argument for the Marton inner bound optimizes: with the conditional law held fixed, the entropy
-terms split into a part that is affine in the weights and a single genuinely convex part.
+cardinality argument for the Marton inner bound optimizes: with the conditional law held fixed, the
+entropy terms split into a part that is affine in the weights and a single genuinely convex part.
 
 Convexity of the entropy part is `convexOn_negCondEntropy`, stated for the joint law directly and
 transported to the weights along the linear aggregation `q ↦ ∑ u, q u * k u`.  The resulting

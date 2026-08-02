@@ -202,6 +202,7 @@ private lemma exists_support_reduction_aux (A : ι → X → ℝ) (hA : ∀ i, �
 /-- A nonnegative weight vector can be replaced by one supported on at most `Fintype.card X`
 indices, keeping the aggregate `fun x ↦ ∑ i, q i * A i x` and not decreasing a convex objective
 `f`, provided every row `A i` sums to one. -/
+@[entry_point]
 theorem exists_support_card_le_of_convexOn (A : ι → X → ℝ) (hA : ∀ i, ∑ x, A i x = 1)
     (f : (ι → ℝ) → ℝ) (hf : ConvexOn ℝ {q : ι → ℝ | 0 ≤ q} f) (q : ι → ℝ) (hq : 0 ≤ q) :
     ∃ q' : ι → ℝ, 0 ≤ q' ∧ (∀ x, ∑ i, q' i * A i x = ∑ i, q i * A i x) ∧ f q ≤ f q' ∧
