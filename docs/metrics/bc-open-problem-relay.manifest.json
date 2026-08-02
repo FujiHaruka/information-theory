@@ -1,0 +1,73 @@
+{
+  "problem": "一般 2 受信者 BC の計算可能な特徴付け (未解決問題) への 20 leg relay (L0-L20)。層 1 = 散文の候補経路 + 層 2 = 数値 probe まで。Lean 形式化 (層 3) は意図的にスコープ外なので、対象ファイル prefix は InformationTheory/ ではなく docs/shannon/bc-",
+  "proof_log": "docs/proof-logs/proof-log-bc-open-problem-relay.md",
+  "sessions": [
+    {
+      "id": "5f7d4d89",
+      "prompt_ids": ["688f288c", "8214f34d", "487f5969", "1aa099bb"],
+      "note": "r0 = 設計セッション (attack 台帳の idea 行が L(-1) と呼ぶもの)。探索はしておらず、bc-open-problem-plan.md / bc-open-problem-attacks.md を新設して 20 leg 予算・三層・階段・運用規約を確定した。subagent 不使用。"
+    },
+    {
+      "id": "d5bb5331",
+      "prompt_ids": ["2017074b", "61ebe478"],
+      "note": "r1 = L0 (文献ランドスケープ F1-F8 + 外部ノート V6-V10 の逐語確認) + L1 (probe 基盤 bc_probe.py + Markovity 局所最大点の再現)。subagent 5 体 (lit-F / plan-L0 / plan-L1 / probe-L1 / verify-localmax)。"
+    },
+    {
+      "id": "b581a8fe",
+      "prompt_ids": ["31fbc3f4"],
+      "note": "r2 = L2 (定義照合 — 還元 (3) は閉凸包の命題、(11) は偽陽性保証) + L3 (軸 A 第一手 probe-failed) + L4 (棚卸し #1)。"
+    },
+    {
+      "id": "990d9b1d",
+      "prompt_ids": ["f69a9a2f"],
+      "note": "r3 = L5 (軸 G の M2 は数値反例で FALSE) + L6 (軸 B は同定完了・帰結は否定的、39 ステップ対応表)。"
+    },
+    {
+      "id": "a8612829",
+      "prompt_ids": ["c57aaad7"],
+      "note": "r4 = L7 (経路 R1 を起票 12 step + u0 必要性の定量)。"
+    },
+    {
+      "id": "d8c52660",
+      "prompt_ids": ["4f27d648"],
+      "note": "r5 = L8 (R1 は (5) novelty gate 不合格 = 死因 known-result) + L9 (棚卸し #2 = gate-first への組み替え)。"
+    },
+    {
+      "id": "8db0c88a",
+      "prompt_ids": ["88631922"],
+      "note": "r6 = L10 (1 leg で経路 R2 が probed、候補 G1/G3 を kill)。subagent 3 体。"
+    },
+    {
+      "id": "0458e83e",
+      "prompt_ids": ["6f7250fe"],
+      "note": "r7 = L10 の台帳同期 (L11 は余剰枠として消滅) + L12 (軸 A を known-result で閉じ、F8 の出典を確立)。subagent 不使用 = 親セッション単独。"
+    },
+    {
+      "id": "93be3445",
+      "prompt_ids": ["a656647b"],
+      "note": "r8 = L13 (軸 C の候補 3 本を全部 kill、副産物 (H1)(H2)) + L14 (棚卸し #3)。subagent 3 体。"
+    },
+    {
+      "id": "d181e1d0",
+      "prompt_ids": ["b1a2535f"],
+      "note": "r9 = L15 (経路 R3 が立った — (H4) grouping 超加法性を係数相殺で証明)。subagent 不使用 = 親セッション単独。"
+    },
+    {
+      "id": "5b01812a",
+      "prompt_ids": ["42455169"],
+      "note": "r10 = L16 (経路 R4 が立ち目標本数に到達 — (H5) を記号的な連鎖で証明)。subagent 6 体。"
+    },
+    {
+      "id": "dec9ca9d",
+      "prompt_ids": ["9d29414d"],
+      "note": "r11 = L17 ((H6) / Λ_cav、Λ_comb は動かず) + L18 (cell 証明書で R4 step 5 を probed へ、探索の打ち切り)。subagent 4 体。"
+    },
+    {
+      "id": "f52a432c",
+      "prompt_ids": ["0c01031e", "e5c63b15"],
+      "note": "r12 = L19 (収穫 — 合流節の新設 / R1 の圧縮 / rng 損失率の再導出は否定的結果) + L20 (本記録 leg。L20 のターンは本 manifest 作成時点で進行中ゆえ未計上)。subagent 8 体。"
+    }
+  ],
+  "filters": { "file_prefix": "docs/shannon/bc-" },
+  "idle_gap_minutes": 5
+}
