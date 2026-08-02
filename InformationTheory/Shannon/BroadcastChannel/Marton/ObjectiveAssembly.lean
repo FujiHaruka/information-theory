@@ -60,6 +60,12 @@ aggregate `a`: it is `μ₁ + μ₃` times the entropy of the first output margi
 noncomputable def martonOutput₁Aggregate (W : BCChannel α β₁ β₂) (μ₁ μ₃ : ℝ) (a : α → ℝ) : ℝ :=
   (μ₁ + μ₃) * ∑ y₁ : β₁, Real.negMulLog (∑ x : α, a x * ∑ y₂ : β₂, (W x).real {(y₁, y₂)})
 
+/-- The part of the weighted-sum objective attached to the second-receiver weight that reads the
+weights only through the channel-input aggregate `a`: it is `μ₂` times the entropy of the second
+output marginal induced by `a`. -/
+noncomputable def martonOutput₂Aggregate (W : BCChannel α β₁ β₂) (μ₂ : ℝ) (a : α → ℝ) : ℝ :=
+  μ₂ * ∑ y₂ : β₂, Real.negMulLog (∑ x : α, a x * ∑ y₁ : β₁, (W x).real {(y₁, y₂)})
+
 omit [Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁] [Fintype V₂] [Nonempty V₂]
   [MeasurableSingletonClass V₂] [Nonempty α] [MeasurableSingletonClass α] [Nonempty β₁]
   [MeasurableSingletonClass β₁] [Fintype β₂] [Nonempty β₂] [MeasurableSingletonClass β₂] in
@@ -119,6 +125,43 @@ private lemma martonOutput₁Aggregate_eq_mul_entropy
   congr 1
   refine Finset.sum_congr rfl fun y₁ _ ↦ ?_
   rw [marton_map_Y₁_real_singleton_eq_aggregate q κ K W y₁]
+
+private lemma martonOutput₂Aggregate_eq_mul_entropy
+    (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (μ₂ : ℝ) :
+    martonOutput₂Aggregate W μ₂ (fun x ↦ ∑ u : V₁, q.real {u} * martonAuxRow κ K u x)
+      = μ₂ * entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ p.2.2.2.2) := by
+  simp only [martonOutput₂Aggregate, entropy]
+  congr 1
+  refine Finset.sum_congr rfl fun y₂ _ ↦ ?_
+  rw [marton_map_Y₂_real_singleton_eq_aggregate q κ K W y₂]
+
+private lemma sum_negMulLog_martonAuxKernelSlot_transpose_eq_entropy
+    (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
+    ∑ v₂ : V₂, Real.negMulLog
+        (∑ y₂ : β₂, ∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u (v₂, y₂))
+      = entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ p.2.1) := by
+  simp only [entropy]
+  refine Finset.sum_congr rfl fun v₂ _ ↦ ?_
+  rw [sum_martonAuxKernelSlot_mixture_eq_kernel_mixture q κ K W v₂,
+    marton_map_V₂_real_singleton_eq_sum q κ K W v₂]
+
+private lemma mul_martonInfo₂_eq_negCondEntropy_add_aggregate
+    (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (μ₂ : ℝ) :
+    μ₂ * martonInfo₂ (q ⊗ₘ κ) K W
+      = μ₂ * ((∑ v₂ : V₂, Real.negMulLog
+                (∑ y₂ : β₂, ∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u (v₂, y₂)))
+              - ∑ p : V₂ × β₂, Real.negMulLog
+                (∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u p))
+        + martonOutput₂Aggregate W μ₂ (fun x ↦ ∑ u, q.real {u} * martonAuxRow κ K u x) := by
+  rw [martonInfo₂, sum_negMulLog_martonAuxKernelSlot_transpose_eq_entropy q κ K W,
+    sum_negMulLog_martonAuxKernelSlot_eq_entropy q κ K W,
+    martonOutput₂Aggregate_eq_mul_entropy q κ K W μ₂]
+  ring
 
 /-- The weighted sum of the three informations of the region inequalities is the auxiliary-weight
 objective at the weight vector of the outer auxiliary marginal, plus a term reading the weights

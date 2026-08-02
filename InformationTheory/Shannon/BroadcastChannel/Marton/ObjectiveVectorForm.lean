@@ -51,6 +51,8 @@ argument has to preserve, and the two output marginals are functions of that agg
   outer auxiliary letter alone is linear in the weights.
 * `sum_martonAuxKernelSlot_mixture_eq_aggregate` — the mixture of the conditional laws, summed
   over the inner auxiliary letter, is the second output marginal in aggregate form.
+* `sum_martonAuxKernelSlot_mixture_eq_kernel_mixture` — the mixture of the conditional laws,
+  summed over the second output letter, is the inner auxiliary marginal.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -450,6 +452,35 @@ and the second output letter. -/
 noncomputable def martonAuxKernelSlot (κ : Kernel V₁ V₂) (K : Kernel (V₁ × V₂) α)
     (W : BCChannel α β₁ β₂) (u : V₁) (p : V₂ × β₂) : ℝ :=
   (κ u).real {p.1} * ∑ x : α, (K (u, p.1)).real {x} * ∑ y₁ : β₁, (W x).real {(y₁, p.2)}
+
+omit [Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁] [Fintype V₂] [Nonempty V₂]
+  [MeasurableSingletonClass V₂] [Nonempty α] [Nonempty β₁] [Nonempty β₂] in
+private lemma sum_martonAuxKernelSlot_eq_kernel_real_singleton (κ : Kernel V₁ V₂)
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (u : V₁) (v₂ : V₂) :
+    ∑ y₂ : β₂, martonAuxKernelSlot κ K W u (v₂, y₂) = (κ u).real {v₂} := by
+  have hinner : ∑ y₂ : β₂, ∑ x : α, (K (u, v₂)).real {x} * ∑ y₁ : β₁, (W x).real {(y₁, y₂)}
+      = ∑ x : α, (K (u, v₂)).real {x} := by
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl fun x _ ↦ ?_
+    rw [← Finset.mul_sum, Finset.sum_comm, sum_bcChannel_real_singleton_eq_one W x, mul_one]
+  simp only [martonAuxKernelSlot]
+  rw [← Finset.mul_sum, hinner, sum_measureReal_singleton_univ_eq_one (K (u, v₂)), mul_one]
+
+omit [Nonempty V₁] [MeasurableSingletonClass V₁] [Fintype V₂] [Nonempty V₂]
+  [MeasurableSingletonClass V₂] [Nonempty α] [Nonempty β₁] [Nonempty β₂] in
+/-- Summing the mixture of the conditional laws over the second output letter recovers the inner
+auxiliary marginal in weighted-sum form: the weights are read through `κ` alone. -/
+@[entry_point]
+theorem sum_martonAuxKernelSlot_mixture_eq_kernel_mixture
+    (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+    (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
+    (v₂ : V₂) :
+    ∑ y₂ : β₂, ∑ u : V₁, q.real {u} * martonAuxKernelSlot κ K W u (v₂, y₂)
+      = ∑ u : V₁, q.real {u} * (κ u).real {v₂} := by
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun u _ ↦ ?_
+  rw [← Finset.mul_sum, sum_martonAuxKernelSlot_eq_kernel_real_singleton κ K W u v₂]
 
 omit [Nonempty V₁] [MeasurableSingletonClass V₁] [Nonempty V₂] [MeasurableSingletonClass V₂]
   [Nonempty α] [MeasurableSingletonClass α] [Nonempty β₁] [MeasurableSingletonClass β₁]
