@@ -30,6 +30,8 @@ objective is convex on the nonnegative orthant, so it can be fed to
 * `convexOn_auxWeightObjective` — the objective is convex on the nonnegative orthant.
 * `exists_support_card_le_auxWeightObjective` — the weights can be replaced by weights supported
   on at most `Fintype.card X` indices without decreasing the objective.
+* `exists_support_card_le_auxWeightObjective_add_aggregate` — the same conclusion for the
+  objective carrying an additional term that reads the weights only through the aggregate.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel.Marton
@@ -108,5 +110,20 @@ theorem exists_support_card_le_auxWeightObjective (A : U → X → ℝ) (hA : �
       {u | q' u ≠ 0}.ncard ≤ Fintype.card X :=
   exists_support_card_le_of_convexOn A hA (auxWeightObjective k w c t)
     (convexOn_auxWeightObjective k hk w c t ht) q hq
+
+/-- Support reduction for the auxiliary-weight objective still applies when the objective carries
+an additional term `g` that reads the weights only through the aggregate
+`fun x ↦ ∑ u, q u * A u x`.  Nothing is assumed about `g`, because the reduced weights leave the
+aggregate unchanged. -/
+@[entry_point]
+theorem exists_support_card_le_auxWeightObjective_add_aggregate (A : U → X → ℝ)
+    (hA : ∀ u, ∑ x, A u x = 1) (k : U → V × Z → ℝ) (hk : ∀ u p, 0 ≤ k u p) (w : U → ℝ) (c t : ℝ)
+    (ht : 0 ≤ t) (g : (X → ℝ) → ℝ) (q : U → ℝ) (hq : 0 ≤ q) :
+    ∃ q' : U → ℝ, 0 ≤ q' ∧ (∀ x, ∑ u, q' u * A u x = ∑ u, q u * A u x) ∧
+      auxWeightObjective k w c t q + g (fun x ↦ ∑ u, q u * A u x)
+        ≤ auxWeightObjective k w c t q' + g (fun x ↦ ∑ u, q' u * A u x) ∧
+      {u | q' u ≠ 0}.ncard ≤ Fintype.card X :=
+  exists_support_card_le_of_convexOn_add_aggregate A hA (auxWeightObjective k w c t)
+    (convexOn_auxWeightObjective k hk w c t ht) g q hq
 
 end InformationTheory.Shannon.BroadcastChannel.Marton

@@ -21,7 +21,7 @@ argument has to preserve, and the two output marginals are functions of that agg
 
 * `martonAuxRow` — the row, indexed by the outer auxiliary letter, of the stochastic matrix that
   aggregates the weights into the channel-input marginal.
-* `martonAuxOutputRow` — the row, indexed by the same letter, of the stochastic matrix that
+* `martonAuxOutput₁Row` — the row, indexed by the same letter, of the stochastic matrix that
   aggregates the weights into the first output marginal.
 * `martonAuxKernelSlot` — the conditional law, indexed by the outer auxiliary letter, on the pair
   formed by the inner auxiliary letter and the second output letter.
@@ -46,7 +46,7 @@ argument has to preserve, and the two output marginals are functions of that agg
   through the channel-input aggregate.
 * `marton_entropy_V₁V₂_sub_entropy_V₁_eq_sum` — the entropy the auxiliary pair adds over the
   outer auxiliary letter alone is linear in the weights.
-* `sum_martonAuxOutputRow_eq_one` — each row of the first-output aggregation matrix sums to one.
+* `sum_martonAuxOutput₁Row_eq_one` — each row of the first-output aggregation matrix sums to one.
 * `marton_entropy_V₁Y₁_sub_entropy_V₁_eq_sum` — the entropy the `(V₁, Y₁)`-pair adds over the
   outer auxiliary letter alone is linear in the weights.
 * `sum_martonAuxKernelSlot_mixture_eq_aggregate` — the mixture of the conditional laws, summed
@@ -401,7 +401,7 @@ theorem marton_entropy_V₁V₂_sub_entropy_V₁_eq_sum
 weight vector on `V₁` to the induced law on the first output: the mass `u` contributes to the
 output letter `y₁` after the inner auxiliary letter, the channel input and the channel output
 have been generated. -/
-noncomputable def martonAuxOutputRow (κ : Kernel V₁ V₂) (K : Kernel (V₁ × V₂) α)
+noncomputable def martonAuxOutput₁Row (κ : Kernel V₁ V₂) (K : Kernel (V₁ × V₂) α)
     (W : BCChannel α β₁ β₂) (u : V₁) (y₁ : β₁) : ℝ :=
   ∑ v₂ : V₂, (κ u).real {v₂} * ∑ x : α, (K (u, v₂)).real {x} * ∑ y₂ : β₂, (W x).real {(y₁, y₂)}
 
@@ -410,10 +410,10 @@ omit [Fintype V₁] [Nonempty V₁] [MeasurableSingletonClass V₁] [Nonempty V�
 /-- Each row of the first-output aggregation matrix is a probability vector on the first output
 alphabet. -/
 @[entry_point]
-theorem sum_martonAuxOutputRow_eq_one (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
+theorem sum_martonAuxOutput₁Row_eq_one (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
-    (u : V₁) : ∑ y₁ : β₁, martonAuxOutputRow κ K W u y₁ = 1 := by
-  simp only [martonAuxOutputRow]
+    (u : V₁) : ∑ y₁ : β₁, martonAuxOutput₁Row κ K W u y₁ = 1 := by
+  simp only [martonAuxOutput₁Row]
   rw [Finset.sum_comm]
   have hrow : ∀ v₂ : V₂, ∑ y₁ : β₁, (κ u).real {v₂} *
       ∑ x : α, (K (u, v₂)).real {x} * ∑ y₂ : β₂, (W x).real {(y₁, y₂)} = (κ u).real {v₂} := by
@@ -428,21 +428,21 @@ theorem sum_martonAuxOutputRow_eq_one (κ : Kernel V₁ V₂) [IsMarkovKernel κ
   exact sum_measureReal_singleton_univ_eq_one (κ u)
 
 /-- The entropy the `(V₁, Y₁)`-pair adds over the outer auxiliary letter alone is linear in the
-weights: the coefficient at `u` is the entropy of the row `martonAuxOutputRow κ K W u`. -/
+weights: the coefficient at `u` is the entropy of the row `martonAuxOutput₁Row κ K W u`. -/
 @[entry_point]
 theorem marton_entropy_V₁Y₁_sub_entropy_V₁_eq_sum
     (q : Measure V₁) [IsProbabilityMeasure q] (κ : Kernel V₁ V₂) [IsMarkovKernel κ]
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K] (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     entropy (martonJointDistribution (q ⊗ₘ κ) K W) (fun p ↦ (p.1, p.2.2.2.1))
         - entropy (martonJointDistribution (q ⊗ₘ κ) K W) Prod.fst
-      = ∑ u : V₁, q.real {u} * ∑ y₁ : β₁, Real.negMulLog (martonAuxOutputRow κ K W u y₁) := by
+      = ∑ u : V₁, q.real {u} * ∑ y₁ : β₁, Real.negMulLog (martonAuxOutput₁Row κ K W u y₁) := by
   have hpair : ∀ (u : V₁) (y₁ : β₁),
       ((martonJointDistribution (q ⊗ₘ κ) K W).map (fun p ↦ (p.1, p.2.2.2.1))).real {(u, y₁)}
-        = q.real {u} * martonAuxOutputRow κ K W u y₁ :=
+        = q.real {u} * martonAuxOutput₁Row κ K W u y₁ :=
     marton_map_V₁Y₁_real_singleton_eq_sum q κ K W
   simp only [entropy, Fintype.sum_prod_type, hpair, marton_map_V₁_real_singleton_eq q κ K W]
-  exact sum_negMulLog_mul_sub_eq (fun u ↦ q.real {u}) (martonAuxOutputRow κ K W)
-    (sum_martonAuxOutputRow_eq_one κ K W)
+  exact sum_negMulLog_mul_sub_eq (fun u ↦ q.real {u}) (martonAuxOutput₁Row κ K W)
+    (sum_martonAuxOutput₁Row_eq_one κ K W)
 
 /-- The conditional law, indexed by the outer auxiliary letter `u`, that the vector-level
 objective mixes: the mass `u` contributes to the pair consisting of the inner auxiliary letter
