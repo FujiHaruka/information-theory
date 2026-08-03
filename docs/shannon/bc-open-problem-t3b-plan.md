@@ -246,6 +246,8 @@ CLAUDE.md の Definition of Done がそのまま効く (Standard B)。
 
 **leg 冒頭宣言 (M4)**: 側 = (C2) / 動かすもの = `Thm7` の `∀T_J` の層が潰れるかを測り、判定は **未決**。層は `∀T_{J|X,Y,Z}` ⟺ `∀T_{J|X}` まで**部分的に潰れた**が 1 点には潰れず、⟹ **(H1) は不成立のまま・route (iii) の状態は S7 から不動**。決着した 3 点: (a) 対角 witness が全 `T_J` で (19a)–(19c) を恒等的に満たす ⟹ **`∀T_J` が効くのは (20a)/(20b) だけ** / (b) その対角 witness のレート制約は**ちょうど UV 外界** (Remark 12 逐語と一致) ⟹ **UV 超えは非対角 witness からしか来ない** / (c) 文献の唯一の UV 超え実例が使う `J` は**内点** (`Y` の enhancement) でその仮定が `J = X` を排除する。逐語の SoT は [`bc-facts.md`](bc-facts.md) `## M4 (T3b)`、状態の SoT は [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md)
 
+**leg 冒頭宣言 (M5)**: 側 = (C2) / 動かすもの = [probc] 積 BC クラスでの `Thm7` の領域レベルのタイト性を測り、判定は **未決** (`Thm7 ⊋ C` も `Thm7 = C` も立たず、**NO-GO は出ていない**)。比較平面は 3 レートで揃っている。⭐ 代わりに **この的が S7 (積 glue) と同型の争点であり独立な的ではない**ことが判明 (`C` は積補助変数上の和集合、`UV ⊋ C` の源はブロック間相関補助変数、`Thm7` は積構造を知らない)。⭐ **`Thm7 ⊊ UV` の機構も特定** — (18h) が冗長で (18i) が UV の和レート式そのものなので、UV 超えは **witness 適格性が `(W,U,V)` を制限すること**からのみ生じる。逐語の SoT は [`bc-facts.md`](bc-facts.md) `## M5 (T3b)`、状態の SoT は [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md)
+
 ### 5.2 ⚠ はみ出し禁止条項 — 「(a′) と同じ流れ方をしたら止める」
 
 前 relay の (a′) は**形式化債務が可変枠を 14 leg 連続で食った形**である。同じ流れ方を具体で禁じる:
