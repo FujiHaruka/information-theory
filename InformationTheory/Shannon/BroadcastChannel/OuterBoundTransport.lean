@@ -490,7 +490,9 @@ private lemma min_sub_right_eq_of_sub_eq {a b c d : ℝ} (h : a - b = c - d) :
 /-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₁ + R₂` that is stated
 through the two enhanced systems and the auxiliary receiver output `J`:
 `min {I(Ŵ; Y) - I(Ŵ; J), I(W̃; Z) - I(W̃; J)} + I(X; J) + I(Û; Y | Ŵ) - I(Û; J | Ŵ)
-  + I(Ṽ; Z | W̃) - I(Ṽ; J | W̃)`. -/
+  + I(Ṽ; Z | W̃) - I(Ṽ; J | W̃)`.
+
+@audit:ok -/
 noncomputable def enhancedSumRateBound (μ : Measure Ω) [IsFiniteMeasure μ]
     (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
     (wt : Ω → Wt) (vt : Ω → Vt) (wh : Ω → Wh) (uh : Ω → Uh) : ℝ :=
@@ -504,7 +506,9 @@ noncomputable def enhancedSumRateBound (μ : Measure Ω) [IsFiniteMeasure μ]
 through the plain system alone:
 `min {I(W; Y), I(W; Z)} + min {I(V; Z | W) + I(X; Y | W, V), I(U; Y | W) + I(X; Z | W, U)}`.
 
-Each conditioning pair puts `W` first, so that the chain rule reads it as the conditioner. -/
+Each conditioning pair puts `W` first, so that the chain rule reads it as the conditioner.
+
+@audit:ok -/
 noncomputable def plainSumRateBound (μ : Measure Ω) [IsFiniteMeasure μ]
     (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂)
     (w : Ω → Wp) (u : Ω → Up) (v : Ω → Vp) : ℝ :=
@@ -516,7 +520,9 @@ noncomputable def plainSumRateBound (μ : Measure Ω) [IsFiniteMeasure μ]
 the first enhanced system to the input:
 `I(Ṽ; Z | W̃) - I(Ṽ; J | W̃) - (I(X; Z | W̃, Ũ) - I(X; J | W̃, Ũ))`.
 
-The conditioning pair puts `W̃` first, so that the chain rule reads it as the conditioner. -/
+The conditioning pair puts `W̃` first, so that the chain rule reads it as the conditioner.
+
+@audit:ok -/
 noncomputable def secondUserSlack (μ : Measure Ω) [IsFiniteMeasure μ]
     (x : Ω → A) (z : Ω → B₂) (j : Ω → D)
     (wt : Ω → Wt) (ut : Ω → Ut) (vt : Ω → Vt) : ℝ :=
@@ -530,7 +536,9 @@ slack of the second user's compatibility condition.
 `hcommon` and `hfirst` are the compatibility conditions tying the plain system to the two
 enhanced ones at the level of `W` and of `U`, and `hbalance` is the one equating the two branches
 of the inner minimum of `plainSumRateBound`. The slack is not assumed to be nonnegative, so the
-identity holds on either side of the condition that bounds it. -/
+identity holds on either side of the condition that bounds it.
+
+@audit:ok -/
 @[entry_point]
 theorem enhancedSumRateBound_sub_plainSumRateBound_eq_secondUserSlack (μ : Measure Ω)
     [IsProbabilityMeasure μ]
@@ -594,7 +602,9 @@ theorem enhancedSumRateBound_sub_plainSumRateBound_eq_secondUserSlack (μ : Meas
   linarith
 
 /-- Under the second user's compatibility condition the sum-rate constraint carrying the
-auxiliary receiver output is the weaker of the two. -/
+auxiliary receiver output is the weaker of the two.
+
+@audit:ok -/
 @[entry_point]
 theorem plainSumRateBound_le_enhancedSumRateBound (μ : Measure Ω)
     [IsProbabilityMeasure μ]
@@ -629,7 +639,9 @@ theorem plainSumRateBound_le_enhancedSumRateBound (μ : Measure Ω)
 meets the constraint stated through the plain system meets it too.
 
 The two sides are right-hand sides of constraints of one and the same bound, so this says which
-of the two constraints is redundant, not what the bound's rate region is. -/
+of the two constraints is redundant, not what the bound's rate region is.
+
+@audit:ok -/
 @[entry_point]
 theorem le_enhancedSumRateBound_of_le_plainSumRateBound (μ : Measure Ω)
     [IsProbabilityMeasure μ]
