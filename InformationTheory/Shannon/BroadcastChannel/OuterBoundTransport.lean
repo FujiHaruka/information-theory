@@ -37,9 +37,11 @@ conditions at the level of `U` and of `V` then rewrite whatever tail still reads
 the plain system. So `J` survives only in the conditions that say which witnesses the bound
 admits, not in the right-hand sides those witnesses produce.
 
-Feeding one and the same system to the plain slot and to both enhanced slots is admissible for
-these right-hand sides, none of which mixes the two enhanced systems, and collapses all of them
-onto four: the three that are stated through the plain system alone, and the sum-rate one.
+Feeding one and the same system to the plain slot and to both enhanced slots turns the
+compatibility conditions tying the three systems together into identities, and collapses the five
+right-hand sides on `R₀`, on `R₀ + R₁` and on `R₀ + R₂` onto the three that are stated through
+the plain system alone. With the sum-rate right-hand side, which is already stated through that
+system, four of the constraints survive.
 
 Everything below relates right-hand sides of constraints to one another. Turning such a relation
 into a statement about the rate regions the two bounds cut out needs the constraints themselves,
