@@ -30,6 +30,17 @@ systems together with `J` and once through the plain system alone. Those two rig
 differ by exactly the slack in one of the compatibility conditions the same bound imposes on its
 witnesses, so the first of the two constraints follows from the second and never binds.
 
+The auxiliary receiver output can be eliminated altogether from the remaining right-hand sides.
+Each of them opens with a minimum of two branches, one reading `J` and one not, and the
+compatibility condition at the level of `W` forces the minimum onto the branch that does not; the
+conditions at the level of `U` and of `V` then rewrite whatever tail still reads `J` in terms of
+the plain system. So `J` survives only in the conditions that say which witnesses the bound
+admits, not in the right-hand sides those witnesses produce.
+
+Feeding one and the same system to the plain slot and to both enhanced slots is admissible for
+these right-hand sides, none of which mixes the two enhanced systems, and collapses all of them
+onto four: the three that are stated through the plain system alone, and the sum-rate one.
+
 Everything below relates right-hand sides of constraints to one another. Turning such a relation
 into a statement about the rate regions the two bounds cut out needs the constraints themselves,
 and that step is not taken here.
@@ -39,6 +50,15 @@ and that step is not taken here.
 * `singleAuxCommonBound`, `singleAuxFirstUserBound`, `singleAuxSecondUserBound` — the
   right-hand sides of the one-auxiliary-receiver constraints on `R₀`, on `R₀ + R₁` and on
   `R₀ + R₂` that participate in the comparison.
+* `singleAuxFirstUserBoundFromZ` and `singleAuxSecondUserBoundFromZ` — the companion constraints
+  on `R₀ + R₁` and on `R₀ + R₂`, whose leading minimum opens at the first enhanced system rather
+  than at the second.
+* `singleAuxFirstUserBoundJFree`, `singleAuxFirstUserBoundFromZJFree`,
+  `singleAuxSecondUserBoundJFree`, `singleAuxSecondUserBoundFromZJFree` — the same four
+  right-hand sides written without the auxiliary receiver output.
+* `plainCommonBound`, `plainFirstUserBound`, `plainSecondUserBound` — the right-hand sides of the
+  one-auxiliary-receiver constraints on `R₀`, on `R₀ + R₁` and on `R₀ + R₂` that are stated
+  through the plain system alone.
 * `twoAuxCommonBound`, `twoAuxFirstUserBound`, `twoAuxFirstUserBoundInput`,
   `twoAuxSecondUserBound`, `twoAuxSecondUserBoundInput` — the five right-hand sides of the
   two-auxiliary-receiver bound at `(const, X)`. The `Input` suffix marks the two of them whose
@@ -64,6 +84,16 @@ and that step is not taken here.
 * `plainSumRateBound_le_enhancedSumRateBound` and
   `le_enhancedSumRateBound_of_le_plainSumRateBound` — the resulting order and the redundancy of
   the sum-rate constraint that carries `J`.
+* `singleAuxFirstUserBound_eq_jFree`, `singleAuxFirstUserBoundFromZ_eq_jFree`,
+  `singleAuxSecondUserBound_eq_jFree` and `singleAuxSecondUserBoundFromZ_eq_jFree` — the four
+  right-hand sides that read the auxiliary receiver output equal ones that do not.
+* `singleAuxCommonBound_diagonal_eq_plainCommonBound`,
+  `singleAuxFirstUserBound_diagonal_eq_plainFirstUserBound`,
+  `singleAuxFirstUserBoundFromZ_diagonal_eq_plainFirstUserBound`,
+  `singleAuxSecondUserBound_diagonal_eq_plainSecondUserBound` and
+  `singleAuxSecondUserBoundFromZ_diagonal_eq_plainSecondUserBound` — feeding one system to all
+  three slots collapses five of the constraints onto the three stated through the plain system
+  alone, whatever the auxiliary receiver output is.
 
 None of the five comparisons uses the compatibility conditions tying the three systems of the
 one-auxiliary-receiver bound together; the chain rule and the data processing inequality
@@ -669,6 +699,224 @@ theorem le_enhancedSumRateBound_of_le_plainSumRateBound (μ : Measure Ω)
     r ≤ enhancedSumRateBound μ x y z j wt vt wh uh :=
   hr.trans (plainSumRateBound_le_enhancedSumRateBound μ x y z j w u v wt ut vt wh uh
     hx hy hz hj hw hu hv hwt hut hvt hplain htilde hcommon hfirst hbalance hsecond)
+
+/-! ### Eliminating the auxiliary receiver output -/
+
+private lemma min_add_min_zero_eq_left {a c d : ℝ} (h : c = a + d) :
+    min (a + min 0 d) c = a + min 0 d :=
+  min_eq_left (by have := min_le_right (0 : ℝ) d; linarith)
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₁` that is centered on
+the second enhanced system, with the auxiliary receiver output eliminated:
+`I(Ŵ; Y) + min {0, I(W; Z) - I(W; Y)} + I(Û; Y | Ŵ)`. -/
+noncomputable def singleAuxFirstUserBoundJFree (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (wh : Ω → Wh) (uh : Ω → Uh) : ℝ :=
+  mutualInfoReal μ wh y + min 0 (mutualInfoReal μ w z - mutualInfoReal μ w y)
+    + condMutualInfoReal μ uh y wh
+
+/-- The auxiliary receiver output drops out of the `R₀ + R₁` constraint centered on the second
+enhanced system: its leading minimum is attained at the branch that does not read `J`. -/
+@[entry_point]
+theorem singleAuxFirstUserBound_eq_jFree (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
+    (w : Ω → Wp) (wt : Ω → Wt) (wh : Ω → Wh) (uh : Ω → Uh)
+    (hcommon : mutualInfoReal μ wt z - mutualInfoReal μ wt j
+        + (mutualInfoReal μ wh j - mutualInfoReal μ wh y)
+      = mutualInfoReal μ w z - mutualInfoReal μ w y) :
+    singleAuxFirstUserBound μ y z j w wt wh uh
+      = singleAuxFirstUserBoundJFree μ y z w wh uh := by
+  unfold singleAuxFirstUserBound singleAuxFirstUserBoundJFree
+  rw [min_add_min_zero_eq_left (by linarith)]
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₁` that is centered on
+the first enhanced system:
+`min {I(W̃; Z) + min {0, I(W; Y) - I(W; Z)}, I(W̃; J) + I(Ŵ; Y) - I(Ŵ; J)}
+  + I(Ũ; J | W̃) + I(Û; Y | Ŵ) - I(Û; J | Ŵ)`. -/
+noncomputable def singleAuxFirstUserBoundFromZ (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
+    (w : Ω → Wp) (wt : Ω → Wt) (ut : Ω → Ut) (wh : Ω → Wh) (uh : Ω → Uh) : ℝ :=
+  min (mutualInfoReal μ wt z + min 0 (mutualInfoReal μ w y - mutualInfoReal μ w z))
+      (mutualInfoReal μ wt j + mutualInfoReal μ wh y - mutualInfoReal μ wh j)
+    + condMutualInfoReal μ ut j wt
+    + condMutualInfoReal μ uh y wh - condMutualInfoReal μ uh j wh
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₁` that is centered on
+the first enhanced system, with the auxiliary receiver output eliminated:
+`I(W̃; Z) + min {0, I(W; Y) - I(W; Z)} + I(Ũ; Z | W̃) - I(U; Z | W) + I(U; Y | W)`.
+
+Eliminating `J` from the tail trades the second enhanced system for the plain one, so this form
+reads the first enhanced system and the plain system only. -/
+noncomputable def singleAuxFirstUserBoundFromZJFree (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂)
+    (w : Ω → Wp) (u : Ω → Up) (wt : Ω → Wt) (ut : Ω → Ut) : ℝ :=
+  mutualInfoReal μ wt z + min 0 (mutualInfoReal μ w y - mutualInfoReal μ w z)
+    + condMutualInfoReal μ ut z wt
+    - condMutualInfoReal μ u z w + condMutualInfoReal μ u y w
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₂` that carries the
+first enhanced system in its tail, with the auxiliary receiver output eliminated:
+`I(Ŵ; Y) + min {0, I(W; Z) - I(W; Y)} + I(V̂; Y | Ŵ) + I(V; Z | W) - I(V; Y | W)`.
+
+Eliminating `J` from the tail trades the first enhanced system for the plain one, so this form
+reads the second enhanced system and the plain system only. -/
+noncomputable def singleAuxSecondUserBoundJFree (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂)
+    (w : Ω → Wp) (v : Ω → Vp) (wh : Ω → Wh) (vh : Ω → Vh) : ℝ :=
+  mutualInfoReal μ wh y + min 0 (mutualInfoReal μ w z - mutualInfoReal μ w y)
+    + condMutualInfoReal μ vh y wh
+    + condMutualInfoReal μ v z w - condMutualInfoReal μ v y w
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₂` that is centered on
+the first enhanced system:
+`min {I(W̃; Z) + min {0, I(W; Y) - I(W; Z)}, I(W̃; J) + I(Ŵ; Y) - I(Ŵ; J)} + I(Ṽ; Z | W̃)`. -/
+noncomputable def singleAuxSecondUserBoundFromZ (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
+    (w : Ω → Wp) (wt : Ω → Wt) (vt : Ω → Vt) (wh : Ω → Wh) : ℝ :=
+  min (mutualInfoReal μ wt z + min 0 (mutualInfoReal μ w y - mutualInfoReal μ w z))
+      (mutualInfoReal μ wt j + mutualInfoReal μ wh y - mutualInfoReal μ wh j)
+    + condMutualInfoReal μ vt z wt
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₂` that is centered on
+the first enhanced system, with the auxiliary receiver output eliminated:
+`I(W̃; Z) + min {0, I(W; Y) - I(W; Z)} + I(Ṽ; Z | W̃)`. -/
+noncomputable def singleAuxSecondUserBoundFromZJFree (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (wt : Ω → Wt) (vt : Ω → Vt) : ℝ :=
+  mutualInfoReal μ wt z + min 0 (mutualInfoReal μ w y - mutualInfoReal μ w z)
+    + condMutualInfoReal μ vt z wt
+
+/-- The auxiliary receiver output drops out of the `R₀ + R₁` constraint centered on the first
+enhanced system: its leading minimum is attained at the branch that does not read `J`, and the
+compatibility condition at the level of `U` rewrites the tail. -/
+@[entry_point]
+theorem singleAuxFirstUserBoundFromZ_eq_jFree (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
+    (w : Ω → Wp) (u : Ω → Up) (wt : Ω → Wt) (ut : Ω → Ut) (wh : Ω → Wh) (uh : Ω → Uh)
+    (hcommon : mutualInfoReal μ wt z - mutualInfoReal μ wt j
+        + (mutualInfoReal μ wh j - mutualInfoReal μ wh y)
+      = mutualInfoReal μ w z - mutualInfoReal μ w y)
+    (hfirst : condMutualInfoReal μ ut z wt - condMutualInfoReal μ ut j wt
+        + (condMutualInfoReal μ uh j wh - condMutualInfoReal μ uh y wh)
+      = condMutualInfoReal μ u z w - condMutualInfoReal μ u y w) :
+    singleAuxFirstUserBoundFromZ μ y z j w wt ut wh uh
+      = singleAuxFirstUserBoundFromZJFree μ y z w u wt ut := by
+  unfold singleAuxFirstUserBoundFromZ singleAuxFirstUserBoundFromZJFree
+  rw [min_add_min_zero_eq_left (by linarith)]
+  linarith
+
+/-- The auxiliary receiver output drops out of the `R₀ + R₂` constraint that carries the first
+enhanced system in its tail: its leading minimum is attained at the branch that does not read
+`J`, and the compatibility condition at the level of `V` rewrites the tail. -/
+@[entry_point]
+theorem singleAuxSecondUserBound_eq_jFree (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
+    (w : Ω → Wp) (v : Ω → Vp) (wt : Ω → Wt) (vt : Ω → Vt) (wh : Ω → Wh) (vh : Ω → Vh)
+    (hcommon : mutualInfoReal μ wt z - mutualInfoReal μ wt j
+        + (mutualInfoReal μ wh j - mutualInfoReal μ wh y)
+      = mutualInfoReal μ w z - mutualInfoReal μ w y)
+    (hsecond : condMutualInfoReal μ vt z wt - condMutualInfoReal μ vt j wt
+        + (condMutualInfoReal μ vh j wh - condMutualInfoReal μ vh y wh)
+      = condMutualInfoReal μ v z w - condMutualInfoReal μ v y w) :
+    singleAuxSecondUserBound μ y z j w wt vt wh vh
+      = singleAuxSecondUserBoundJFree μ y z w v wh vh := by
+  unfold singleAuxSecondUserBound singleAuxSecondUserBoundJFree
+  rw [min_add_min_zero_eq_left (by linarith)]
+  linarith
+
+/-- The auxiliary receiver output drops out of the `R₀ + R₂` constraint centered on the first
+enhanced system: its leading minimum is attained at the branch that does not read `J`. -/
+@[entry_point]
+theorem singleAuxSecondUserBoundFromZ_eq_jFree (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
+    (w : Ω → Wp) (wt : Ω → Wt) (vt : Ω → Vt) (wh : Ω → Wh)
+    (hcommon : mutualInfoReal μ wt z - mutualInfoReal μ wt j
+        + (mutualInfoReal μ wh j - mutualInfoReal μ wh y)
+      = mutualInfoReal μ w z - mutualInfoReal μ w y) :
+    singleAuxSecondUserBoundFromZ μ y z j w wt vt wh
+      = singleAuxSecondUserBoundFromZJFree μ y z w wt vt := by
+  unfold singleAuxSecondUserBoundFromZ singleAuxSecondUserBoundFromZJFree
+  rw [min_add_min_zero_eq_left (by linarith)]
+
+/-! ### The diagonal witness -/
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on the common rate `R₀` stated
+through the plain system alone: `min {I(W; Y), I(W; Z)}`. -/
+noncomputable def plainCommonBound (μ : Measure Ω)
+    (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) : ℝ :=
+  min (mutualInfoReal μ w y) (mutualInfoReal μ w z)
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₁` stated through the
+plain system alone: `min {I(W; Y), I(W; Z)} + I(U; Y | W)`. -/
+noncomputable def plainFirstUserBound (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (u : Ω → Up) : ℝ :=
+  min (mutualInfoReal μ w y) (mutualInfoReal μ w z) + condMutualInfoReal μ u y w
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₂` stated through the
+plain system alone: `min {I(W; Y), I(W; Z)} + I(V; Z | W)`. -/
+noncomputable def plainSecondUserBound (μ : Measure Ω) [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (v : Ω → Vp) : ℝ :=
+  min (mutualInfoReal μ w y) (mutualInfoReal μ w z) + condMutualInfoReal μ v z w
+
+private lemma add_min_zero_sub (a b : ℝ) : a + min 0 (b - a) = min a b := by
+  rcases le_total a b with h | h
+  · rw [min_eq_left (by linarith : (0 : ℝ) ≤ b - a), min_eq_left h]
+    ring
+  · rw [min_eq_right (by linarith : b - a ≤ (0 : ℝ)), min_eq_right h]
+    ring
+
+/-- At the diagonal witness the `R₀` constraint of the one-auxiliary-receiver bound is the one
+stated through the plain system alone. -/
+@[entry_point]
+theorem singleAuxCommonBound_diagonal_eq_plainCommonBound (μ : Measure Ω)
+    (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) :
+    singleAuxCommonBound μ y z w w w = plainCommonBound μ y z w := by
+  simp [singleAuxCommonBound, plainCommonBound, min_self]
+
+/-- At the diagonal witness the `R₀ + R₁` constraint centered on the second enhanced system is
+the one stated through the plain system alone, for every auxiliary receiver output. -/
+@[entry_point]
+theorem singleAuxFirstUserBound_diagonal_eq_plainFirstUserBound (μ : Measure Ω)
+    [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D) (w : Ω → Wp) (u : Ω → Up) :
+    singleAuxFirstUserBound μ y z j w w w u = plainFirstUserBound μ y z w u := by
+  rw [singleAuxFirstUserBound_eq_jFree μ y z j w w w u (by ring)]
+  unfold singleAuxFirstUserBoundJFree plainFirstUserBound
+  rw [add_min_zero_sub]
+
+/-- At the diagonal witness the `R₀ + R₁` constraint centered on the first enhanced system is
+the one stated through the plain system alone, for every auxiliary receiver output. -/
+@[entry_point]
+theorem singleAuxFirstUserBoundFromZ_diagonal_eq_plainFirstUserBound (μ : Measure Ω)
+    [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D) (w : Ω → Wp) (u : Ω → Up) :
+    singleAuxFirstUserBoundFromZ μ y z j w w u w u = plainFirstUserBound μ y z w u := by
+  rw [singleAuxFirstUserBoundFromZ_eq_jFree μ y z j w u w u w u (by ring) (by ring)]
+  unfold singleAuxFirstUserBoundFromZJFree plainFirstUserBound
+  rw [add_min_zero_sub, min_comm (mutualInfoReal μ w z) (mutualInfoReal μ w y)]
+  ring
+
+/-- At the diagonal witness the `R₀ + R₂` constraint that carries the first enhanced system in
+its tail is the one stated through the plain system alone, for every auxiliary receiver
+output. -/
+@[entry_point]
+theorem singleAuxSecondUserBound_diagonal_eq_plainSecondUserBound (μ : Measure Ω)
+    [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D) (w : Ω → Wp) (v : Ω → Vp) :
+    singleAuxSecondUserBound μ y z j w w v w v = plainSecondUserBound μ y z w v := by
+  rw [singleAuxSecondUserBound_eq_jFree μ y z j w v w v w v (by ring) (by ring)]
+  unfold singleAuxSecondUserBoundJFree plainSecondUserBound
+  rw [add_min_zero_sub]
+  ring
+
+/-- At the diagonal witness the `R₀ + R₂` constraint centered on the first enhanced system is
+the one stated through the plain system alone, for every auxiliary receiver output. -/
+@[entry_point]
+theorem singleAuxSecondUserBoundFromZ_diagonal_eq_plainSecondUserBound (μ : Measure Ω)
+    [IsFiniteMeasure μ]
+    (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D) (w : Ω → Wp) (v : Ω → Vp) :
+    singleAuxSecondUserBoundFromZ μ y z j w w v w = plainSecondUserBound μ y z w v := by
+  rw [singleAuxSecondUserBoundFromZ_eq_jFree μ y z j w w v w (by ring)]
+  unfold singleAuxSecondUserBoundFromZJFree plainSecondUserBound
+  rw [add_min_zero_sub, min_comm (mutualInfoReal μ w z) (mutualInfoReal μ w y)]
 
 end Transport
 
