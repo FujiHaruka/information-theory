@@ -25,6 +25,15 @@ independence of each system from the receiver outputs given the input, which the
 into its witnesses; the comparisons that need that structure again carry it as an explicit
 hypothesis.
 
+The one-auxiliary-receiver bound constrains the sum rate twice over, once through the enhanced
+systems together with `J` and once through the plain system alone. Those two right-hand sides
+differ by exactly the slack in one of the compatibility conditions the same bound imposes on its
+witnesses, so the first of the two constraints follows from the second and never binds.
+
+Everything below relates right-hand sides of constraints to one another. Turning such a relation
+into a statement about the rate regions the two bounds cut out needs the constraints themselves,
+and that step is not taken here.
+
 ## Main definitions
 
 * `singleAuxCommonBound`, `singleAuxFirstUserBound`, `singleAuxSecondUserBound` — the
@@ -34,6 +43,10 @@ hypothesis.
   `twoAuxSecondUserBound`, `twoAuxSecondUserBoundInput` — the five right-hand sides of the
   two-auxiliary-receiver bound at `(const, X)`. The `Input` suffix marks the two of them whose
   leading term reads the channel input `X` where its partner reads a receiver output.
+* `enhancedSumRateBound` and `plainSumRateBound` — the two right-hand sides of the
+  one-auxiliary-receiver bound on `R₀ + R₁ + R₂`.
+* `secondUserSlack` — the slack in the upper half of the compatibility condition that ties the
+  second user's tail in the first enhanced system to the input.
 
 ## Main statements
 
@@ -46,10 +59,16 @@ hypothesis.
 * `condMutualInfoReal_sub_eq_condMutualInfoReal_prod` — the closed form
   `I(Ṽ; X | W̃) - I(Ṽ; Z | W̃) = I(Ṽ; X | W̃, Z)` of the tail that the `R₀ + R₂` comparison
   discards.
+* `enhancedSumRateBound_sub_plainSumRateBound_eq_secondUserSlack` — the two sum-rate right-hand
+  sides differ by `secondUserSlack`.
+* `plainSumRateBound_le_enhancedSumRateBound` and
+  `le_enhancedSumRateBound_of_le_plainSumRateBound` — the resulting order and the redundancy of
+  the sum-rate constraint that carries `J`.
 
 None of the five comparisons uses the compatibility conditions tying the three systems of the
 one-auxiliary-receiver bound together; the chain rule and the data processing inequality
-suffice.
+suffice. The sum-rate identity is the opposite case: three of those conditions enter it, and
+each is carried as an explicit hypothesis.
 
 ## Implementation notes
 
@@ -155,6 +174,25 @@ private lemma condMutualInfoReal_add_eq_of_markov (μ : Measure Ω) [IsProbabili
   rw [← ENNReal.toReal_add (condMutualInfo_ne_top μ Vs Zs Ws hVs hZs hWs)
     (condMutualInfo_ne_top μ Vs Xs (fun ω ↦ (Ws ω, Zs ω)) hVs hXs hWZ), hswap]
 
+private lemma mutualInfoReal_add_condMutualInfoReal_eq_of_markov (μ : Measure Ω)
+    [IsProbabilityMeasure μ]
+    (Cs : Ω → R) (Xs : Ω → S) (Zs : Ω → T)
+    (hCs : Measurable Cs) (hXs : Measurable Xs) (hZs : Measurable Zs)
+    (hmarkov : IsMarkovChain μ Cs Xs Zs) :
+    mutualInfoReal μ Cs Zs + condMutualInfoReal μ Xs Zs Cs = mutualInfoReal μ Xs Zs := by
+  have hswap : mutualInfoReal μ (fun ω ↦ (Cs ω, Xs ω)) Zs
+      = mutualInfoReal μ (fun ω ↦ (Xs ω, Cs ω)) Zs := by
+    unfold mutualInfoReal
+    rw [show (fun ω ↦ (Cs ω, Xs ω))
+        = (fun ω ↦ (MeasurableEquiv.prodComm : S × R ≃ᵐ R × S) (Xs ω, Cs ω)) from rfl,
+      mutualInfo_map_left_measurableEquiv μ (fun ω ↦ (Xs ω, Cs ω)) Zs (hXs.prodMk hCs) hZs
+        MeasurableEquiv.prodComm]
+  have hzero : condMutualInfoReal μ Cs Zs Xs = 0 := by
+    unfold condMutualInfoReal
+    rw [condMutualInfo_eq_zero_of_markov μ Cs Xs Zs hCs hXs hZs hmarkov, ENNReal.toReal_zero]
+  rw [← mutualInfoReal_pair_eq_add μ Xs Zs Cs hXs hZs hCs, hswap,
+    mutualInfoReal_pair_eq_add μ Cs Zs Xs hCs hZs hXs, hzero, add_zero]
+
 private lemma condMutualInfoReal_le_of_markov (μ : Measure Ω) [IsProbabilityMeasure μ]
     {Q : Type*} [Fintype Q] [MeasurableSpace Q] [MeasurableSingletonClass Q]
     [StandardBorelSpace Q] [Nonempty Q]
@@ -186,6 +224,10 @@ variable {D : Type*} [Fintype D] [MeasurableSpace D] [MeasurableSingletonClass D
 -- the plain system `(W, U, V)`
 variable {Wp : Type*} [Fintype Wp] [MeasurableSpace Wp] [MeasurableSingletonClass Wp]
   [StandardBorelSpace Wp] [Nonempty Wp]
+variable {Up : Type*} [Fintype Up] [MeasurableSpace Up] [MeasurableSingletonClass Up]
+  [StandardBorelSpace Up] [Nonempty Up]
+variable {Vp : Type*} [Fintype Vp] [MeasurableSpace Vp] [MeasurableSingletonClass Vp]
+  [StandardBorelSpace Vp] [Nonempty Vp]
 
 -- the first enhanced system `(W̃, Ũ, Ṽ)`
 variable {Wt : Type*} [Fintype Wt] [MeasurableSpace Wt] [MeasurableSingletonClass Wt]
@@ -434,6 +476,186 @@ theorem twoAuxSecondUserBound_le_twoAuxSecondUserBoundInput (μ : Measure Ω)
         (hwh.prodMk (huh.prodMk hvh)) hx (hy.prodMk hz) measurable_fst hhat)
   have := mutualInfoReal_le_of_markov μ wh x y hwh hx hy hchain
   linarith
+
+/-! ### The two sum-rate constraints of the one-auxiliary-receiver bound -/
+
+private lemma min_sub_right_eq_of_sub_eq {a b c d : ℝ} (h : a - b = c - d) :
+    min a b - b = min c d - d := by
+  rcases le_total a b with hab | hab
+  · rw [min_eq_left hab, min_eq_left (show c ≤ d by linarith)]
+    linarith
+  · rw [min_eq_right hab, min_eq_right (show d ≤ c by linarith)]
+    linarith
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₁ + R₂` that is stated
+through the two enhanced systems and the auxiliary receiver output `J`:
+`min {I(Ŵ; Y) - I(Ŵ; J), I(W̃; Z) - I(W̃; J)} + I(X; J) + I(Û; Y | Ŵ) - I(Û; J | Ŵ)
+  + I(Ṽ; Z | W̃) - I(Ṽ; J | W̃)`. -/
+noncomputable def enhancedSumRateBound (μ : Measure Ω) [IsFiniteMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
+    (wt : Ω → Wt) (vt : Ω → Vt) (wh : Ω → Wh) (uh : Ω → Uh) : ℝ :=
+  min (mutualInfoReal μ wh y - mutualInfoReal μ wh j)
+      (mutualInfoReal μ wt z - mutualInfoReal μ wt j)
+    + mutualInfoReal μ x j
+    + (condMutualInfoReal μ uh y wh - condMutualInfoReal μ uh j wh)
+    + (condMutualInfoReal μ vt z wt - condMutualInfoReal μ vt j wt)
+
+/-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₁ + R₂` that is stated
+through the plain system alone:
+`min {I(W; Y), I(W; Z)} + min {I(V; Z | W) + I(X; Y | W, V), I(U; Y | W) + I(X; Z | W, U)}`.
+
+Each conditioning pair puts `W` first, so that the chain rule reads it as the conditioner. -/
+noncomputable def plainSumRateBound (μ : Measure Ω) [IsFiniteMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂)
+    (w : Ω → Wp) (u : Ω → Up) (v : Ω → Vp) : ℝ :=
+  min (mutualInfoReal μ w y) (mutualInfoReal μ w z)
+    + min (condMutualInfoReal μ v z w + condMutualInfoReal μ x y (fun ω ↦ (w ω, v ω)))
+        (condMutualInfoReal μ u y w + condMutualInfoReal μ x z (fun ω ↦ (w ω, u ω)))
+
+/-- Slack in the upper half of the compatibility condition that ties the second user's tail in
+the first enhanced system to the input:
+`I(Ṽ; Z | W̃) - I(Ṽ; J | W̃) - (I(X; Z | W̃, Ũ) - I(X; J | W̃, Ũ))`.
+
+The conditioning pair puts `W̃` first, so that the chain rule reads it as the conditioner. -/
+noncomputable def secondUserSlack (μ : Measure Ω) [IsFiniteMeasure μ]
+    (x : Ω → A) (z : Ω → B₂) (j : Ω → D)
+    (wt : Ω → Wt) (ut : Ω → Ut) (vt : Ω → Vt) : ℝ :=
+  condMutualInfoReal μ vt z wt - condMutualInfoReal μ vt j wt
+    - (condMutualInfoReal μ x z (fun ω ↦ (wt ω, ut ω))
+        - condMutualInfoReal μ x j (fun ω ↦ (wt ω, ut ω)))
+
+/-- The two sum-rate constraints of the one-auxiliary-receiver bound differ by exactly the
+slack of the second user's compatibility condition.
+
+`hcommon` and `hfirst` are the compatibility conditions tying the plain system to the two
+enhanced ones at the level of `W` and of `U`, and `hbalance` is the one equating the two branches
+of the inner minimum of `plainSumRateBound`. The slack is not assumed to be nonnegative, so the
+identity holds on either side of the condition that bounds it. -/
+@[entry_point]
+theorem enhancedSumRateBound_sub_plainSumRateBound_eq_secondUserSlack (μ : Measure Ω)
+    [IsProbabilityMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
+    (w : Ω → Wp) (u : Ω → Up) (v : Ω → Vp)
+    (wt : Ω → Wt) (ut : Ω → Ut) (vt : Ω → Vt) (wh : Ω → Wh) (uh : Ω → Uh)
+    (hx : Measurable x) (hy : Measurable y) (hz : Measurable z) (hj : Measurable j)
+    (hw : Measurable w) (hu : Measurable u) (hv : Measurable v)
+    (hwt : Measurable wt) (hut : Measurable ut) (hvt : Measurable vt)
+    (hplain : IsMarkovChain μ (fun ω ↦ (w ω, u ω, v ω)) x (fun ω ↦ (y ω, z ω, j ω)))
+    (htilde : IsMarkovChain μ (fun ω ↦ (wt ω, ut ω, vt ω)) x (fun ω ↦ (y ω, z ω, j ω)))
+    (hcommon : mutualInfoReal μ wt z - mutualInfoReal μ wt j
+        + (mutualInfoReal μ wh j - mutualInfoReal μ wh y)
+      = mutualInfoReal μ w z - mutualInfoReal μ w y)
+    (hfirst : condMutualInfoReal μ ut z wt - condMutualInfoReal μ ut j wt
+        + (condMutualInfoReal μ uh j wh - condMutualInfoReal μ uh y wh)
+      = condMutualInfoReal μ u z w - condMutualInfoReal μ u y w)
+    (hbalance : condMutualInfoReal μ v z w + condMutualInfoReal μ x y (fun ω ↦ (w ω, v ω))
+      = condMutualInfoReal μ u y w + condMutualInfoReal μ x z (fun ω ↦ (w ω, u ω))) :
+    enhancedSumRateBound μ x y z j wt vt wh uh - plainSumRateBound μ x y z w u v
+      = secondUserSlack μ x z j wt ut vt := by
+  have hyzj : Measurable (fun ω ↦ (y ω, z ω, j ω)) := hy.prodMk (hz.prodMk hj)
+  have hwu : Measurable (fun ω ↦ (w ω, u ω)) := hw.prodMk hu
+  have hwtut : Measurable (fun ω ↦ (wt ω, ut ω)) := hwt.prodMk hut
+  -- the two systems stay conditionally independent of the outputs after dropping a component
+  have hplainPair : IsMarkovChain μ (fun ω ↦ (w ω, u ω)) x (fun ω ↦ (y ω, z ω, j ω)) :=
+    isMarkovChain_map_left μ (fun ω ↦ (w ω, u ω, v ω)) x (fun ω ↦ (y ω, z ω, j ω))
+      (hw.prodMk (hu.prodMk hv)) hx hyzj
+      (measurable_fst.prodMk (measurable_fst.comp measurable_snd)) hplain
+  have htildePair : IsMarkovChain μ (fun ω ↦ (wt ω, ut ω)) x (fun ω ↦ (y ω, z ω, j ω)) :=
+    isMarkovChain_map_left μ (fun ω ↦ (wt ω, ut ω, vt ω)) x (fun ω ↦ (y ω, z ω, j ω))
+      (hwt.prodMk (hut.prodMk hvt)) hx hyzj
+      (measurable_fst.prodMk (measurable_fst.comp measurable_snd)) htilde
+  have hplainZ : IsMarkovChain μ (fun ω ↦ (w ω, u ω)) x z :=
+    isMarkovChain_map_right μ (fun ω ↦ (w ω, u ω)) x (fun ω ↦ (y ω, z ω, j ω))
+      hwu hx hyzj (measurable_fst.comp measurable_snd) hplainPair
+  have htildeZ : IsMarkovChain μ (fun ω ↦ (wt ω, ut ω)) x z :=
+    isMarkovChain_map_right μ (fun ω ↦ (wt ω, ut ω)) x (fun ω ↦ (y ω, z ω, j ω))
+      hwtut hx hyzj (measurable_fst.comp measurable_snd) htildePair
+  have htildeJ : IsMarkovChain μ (fun ω ↦ (wt ω, ut ω)) x j :=
+    isMarkovChain_map_right μ (fun ω ↦ (wt ω, ut ω)) x (fun ω ↦ (y ω, z ω, j ω))
+      hwtut hx hyzj (measurable_snd.comp measurable_snd) htildePair
+  -- each conditioning pair can be peeled off the input's mutual informations
+  have hCz := mutualInfoReal_add_condMutualInfoReal_eq_of_markov μ (fun ω ↦ (wt ω, ut ω)) x z
+    hwtut hx hz htildeZ
+  have hCj := mutualInfoReal_add_condMutualInfoReal_eq_of_markov μ (fun ω ↦ (wt ω, ut ω)) x j
+    hwtut hx hj htildeJ
+  have hPz := mutualInfoReal_add_condMutualInfoReal_eq_of_markov μ (fun ω ↦ (w ω, u ω)) x z
+    hwu hx hz hplainZ
+  have hCchainZ := mutualInfoReal_pair_eq_add μ ut z wt hut hz hwt
+  have hCchainJ := mutualInfoReal_pair_eq_add μ ut j wt hut hj hwt
+  have hPchain := mutualInfoReal_pair_eq_add μ u z w hu hz hw
+  -- the two leading minima cancel each other
+  have hmin : min (mutualInfoReal μ wh y - mutualInfoReal μ wh j)
+        (mutualInfoReal μ wt z - mutualInfoReal μ wt j)
+      - (mutualInfoReal μ wt z - mutualInfoReal μ wt j)
+      = min (mutualInfoReal μ w y) (mutualInfoReal μ w z) - mutualInfoReal μ w z :=
+    min_sub_right_eq_of_sub_eq (by linarith)
+  unfold enhancedSumRateBound plainSumRateBound secondUserSlack
+  rw [min_eq_right hbalance.ge]
+  linarith
+
+/-- Under the second user's compatibility condition the sum-rate constraint carrying the
+auxiliary receiver output is the weaker of the two. -/
+@[entry_point]
+theorem plainSumRateBound_le_enhancedSumRateBound (μ : Measure Ω)
+    [IsProbabilityMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
+    (w : Ω → Wp) (u : Ω → Up) (v : Ω → Vp)
+    (wt : Ω → Wt) (ut : Ω → Ut) (vt : Ω → Vt) (wh : Ω → Wh) (uh : Ω → Uh)
+    (hx : Measurable x) (hy : Measurable y) (hz : Measurable z) (hj : Measurable j)
+    (hw : Measurable w) (hu : Measurable u) (hv : Measurable v)
+    (hwt : Measurable wt) (hut : Measurable ut) (hvt : Measurable vt)
+    (hplain : IsMarkovChain μ (fun ω ↦ (w ω, u ω, v ω)) x (fun ω ↦ (y ω, z ω, j ω)))
+    (htilde : IsMarkovChain μ (fun ω ↦ (wt ω, ut ω, vt ω)) x (fun ω ↦ (y ω, z ω, j ω)))
+    (hcommon : mutualInfoReal μ wt z - mutualInfoReal μ wt j
+        + (mutualInfoReal μ wh j - mutualInfoReal μ wh y)
+      = mutualInfoReal μ w z - mutualInfoReal μ w y)
+    (hfirst : condMutualInfoReal μ ut z wt - condMutualInfoReal μ ut j wt
+        + (condMutualInfoReal μ uh j wh - condMutualInfoReal μ uh y wh)
+      = condMutualInfoReal μ u z w - condMutualInfoReal μ u y w)
+    (hbalance : condMutualInfoReal μ v z w + condMutualInfoReal μ x y (fun ω ↦ (w ω, v ω))
+      = condMutualInfoReal μ u y w + condMutualInfoReal μ x z (fun ω ↦ (w ω, u ω)))
+    (hsecond : condMutualInfoReal μ x z (fun ω ↦ (wt ω, ut ω))
+        - condMutualInfoReal μ x j (fun ω ↦ (wt ω, ut ω))
+      ≤ condMutualInfoReal μ vt z wt - condMutualInfoReal μ vt j wt) :
+    plainSumRateBound μ x y z w u v ≤ enhancedSumRateBound μ x y z j wt vt wh uh := by
+  have hid := enhancedSumRateBound_sub_plainSumRateBound_eq_secondUserSlack μ x y z j w u v
+    wt ut vt wh uh hx hy hz hj hw hu hv hwt hut hvt hplain htilde hcommon hfirst hbalance
+  have hnonneg : 0 ≤ secondUserSlack μ x z j wt ut vt := by
+    unfold secondUserSlack
+    linarith
+  linarith
+
+/-- The sum-rate constraint carrying the auxiliary receiver output is never binding: a rate that
+meets the constraint stated through the plain system meets it too.
+
+The two sides are right-hand sides of constraints of one and the same bound, so this says which
+of the two constraints is redundant, not what the bound's rate region is. -/
+@[entry_point]
+theorem le_enhancedSumRateBound_of_le_plainSumRateBound (μ : Measure Ω)
+    [IsProbabilityMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
+    (w : Ω → Wp) (u : Ω → Up) (v : Ω → Vp)
+    (wt : Ω → Wt) (ut : Ω → Ut) (vt : Ω → Vt) (wh : Ω → Wh) (uh : Ω → Uh)
+    (hx : Measurable x) (hy : Measurable y) (hz : Measurable z) (hj : Measurable j)
+    (hw : Measurable w) (hu : Measurable u) (hv : Measurable v)
+    (hwt : Measurable wt) (hut : Measurable ut) (hvt : Measurable vt)
+    (hplain : IsMarkovChain μ (fun ω ↦ (w ω, u ω, v ω)) x (fun ω ↦ (y ω, z ω, j ω)))
+    (htilde : IsMarkovChain μ (fun ω ↦ (wt ω, ut ω, vt ω)) x (fun ω ↦ (y ω, z ω, j ω)))
+    (hcommon : mutualInfoReal μ wt z - mutualInfoReal μ wt j
+        + (mutualInfoReal μ wh j - mutualInfoReal μ wh y)
+      = mutualInfoReal μ w z - mutualInfoReal μ w y)
+    (hfirst : condMutualInfoReal μ ut z wt - condMutualInfoReal μ ut j wt
+        + (condMutualInfoReal μ uh j wh - condMutualInfoReal μ uh y wh)
+      = condMutualInfoReal μ u z w - condMutualInfoReal μ u y w)
+    (hbalance : condMutualInfoReal μ v z w + condMutualInfoReal μ x y (fun ω ↦ (w ω, v ω))
+      = condMutualInfoReal μ u y w + condMutualInfoReal μ x z (fun ω ↦ (w ω, u ω)))
+    (hsecond : condMutualInfoReal μ x z (fun ω ↦ (wt ω, ut ω))
+        - condMutualInfoReal μ x j (fun ω ↦ (wt ω, ut ω))
+      ≤ condMutualInfoReal μ vt z wt - condMutualInfoReal μ vt j wt)
+    {r : ℝ} (hr : r ≤ plainSumRateBound μ x y z w u v) :
+    r ≤ enhancedSumRateBound μ x y z j wt vt wh uh :=
+  hr.trans (plainSumRateBound_le_enhancedSumRateBound μ x y z j w u v wt ut vt wh uh
+    hx hy hz hj hw hu hv hwt hut hvt hplain htilde hcommon hfirst hbalance hsecond)
 
 end Transport
 
