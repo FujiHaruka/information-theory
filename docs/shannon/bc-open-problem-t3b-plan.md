@@ -242,6 +242,8 @@ CLAUDE.md の Definition of Done がそのまま効く (Standard B)。
 
 **leg 冒頭宣言 (M2)**: 側 = (C2) / 動かすもの = route (iii) の gateway atom を決着させた — **残余不等式 (★) は等式制約 (19a)–(19c) / (20a)–(20c) と両立して破れる** (明示 witness の直接評価、破れ幅は理論最大の `I(X₁;X₂|J)`) ⟹ 積 witness の貼り合わせ構成は閉じない。⚠ **優加法性の反証ではなく NO-GO も出ていない** (破れは (18i) に吸収され領域には現れない) ⟹ attack `t3-auxrec-multiletter` は **UNDECIDED のまま**。副産物として残余の員数を 1 本から 4 本へ訂正し ((E1)–(E3) + (★))、`Thm7` が P3 の (H1) を満たさないことを確定した。逐語の SoT は [`bc-facts.md`](bc-facts.md) `## M2 (T3b)`、状態の SoT は [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md)
 
+**leg 冒頭宣言 (M3)**: 側 = (C2) / 動かすもの = M2 行 5 の inert 性を決着させた — 判定は **構造的 (乙)**。**(18h) は任意の適格 witness に対し (18i) から従う** (恒等式 `(18h)−(18i) = (20a) の緩み ≥ 0`) ので (18h) を拘束的にする witness 族は存在せず、さらに **(19a)–(19c) の下でレート制約 (18a)–(18g)/(18i) からは `J` が全部消える** ⟹ (★) は残余から外れ、積 glue の義務は witness 適格性 3 本 ((E1)(E2)(E3) + (20a)/(20b)) に縮んだ。⚠ **NO-GO は出ていない** (証拠はすべて優加法性 = route (iii) KILL 側を支持するが未証明)。M2 の S6 の宿題は**肯定で決着** (族 `{(1/n)Thm7(W^⊗n)}` は `n` 一様に半計算可能)。逐語の SoT は [`bc-facts.md`](bc-facts.md) `## M3 (T3b)`、状態の SoT は [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md)
+
 ### 5.2 ⚠ はみ出し禁止条項 — 「(a′) と同じ流れ方をしたら止める」
 
 前 relay の (a′) は**形式化債務が可変枠を 14 leg 連続で食った形**である。同じ流れ方を具体で禁じる:
