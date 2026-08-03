@@ -67,8 +67,9 @@ and that step is not taken here.
 
 None of the five comparisons uses the compatibility conditions tying the three systems of the
 one-auxiliary-receiver bound together; the chain rule and the data processing inequality
-suffice. The sum-rate identity is the opposite case: three of those conditions enter it, and
-each is carried as an explicit hypothesis.
+suffice. The sum-rate identity is the opposite case: two of those conditions enter it, together
+with a third that equates the two branches of the inner minimum of `plainSumRateBound`, and each
+is carried as an explicit hypothesis.
 
 ## Implementation notes
 
