@@ -20,7 +20,10 @@ auxiliary receivers `(const, X)`, where the input itself is handed to the second
 nothing to the first. Under that choice the first system of the two-receiver bound drops out
 and each right-hand side collapses to a closed form in the second system alone. The
 specialization is taken as a definition; deriving those closed forms from the general shape is
-not done here.
+not done here. Besides the substitution itself, some of its steps use the conditional
+independence of each system from the receiver outputs given the input, which the bound builds
+into its witnesses; the comparisons that need that structure again carry it as an explicit
+hypothesis.
 
 ## Main definitions
 
@@ -201,7 +204,9 @@ variable {Vh : Type*} [Fintype Vh] [MeasurableSpace Vh] [MeasurableSingletonClas
 /-! ### One auxiliary receiver -/
 
 /-- Right-hand side of the one-auxiliary-receiver constraint on the common rate `R₀`:
-`min {I(W; Y), I(Ŵ; Y), I(W; Z), I(W̃; Z)}`. -/
+`min {I(W; Y), I(Ŵ; Y), I(W; Z), I(W̃; Z)}`.
+
+@audit:ok -/
 noncomputable def singleAuxCommonBound (μ : Measure Ω)
     (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (wt : Ω → Wt) (wh : Ω → Wh) : ℝ :=
   min (mutualInfoReal μ w y)
@@ -210,7 +215,9 @@ noncomputable def singleAuxCommonBound (μ : Measure Ω)
 
 /-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₁` that is centered on
 the second enhanced system:
-`min {I(Ŵ; Y) + min {0, I(W; Z) - I(W; Y)}, I(Ŵ; J) + I(W̃; Z) - I(W̃; J)} + I(Û; Y | Ŵ)`. -/
+`min {I(Ŵ; Y) + min {0, I(W; Z) - I(W; Y)}, I(Ŵ; J) + I(W̃; Z) - I(W̃; J)} + I(Û; Y | Ŵ)`.
+
+@audit:ok -/
 noncomputable def singleAuxFirstUserBound (μ : Measure Ω) [IsFiniteMeasure μ]
     (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
     (w : Ω → Wp) (wt : Ω → Wt) (wh : Ω → Wh) (uh : Ω → Uh) : ℝ :=
@@ -221,7 +228,9 @@ noncomputable def singleAuxFirstUserBound (μ : Measure Ω) [IsFiniteMeasure μ]
 /-- Right-hand side of the one-auxiliary-receiver constraint on `R₀ + R₂` that carries the
 first enhanced system in its tail:
 `min {I(Ŵ; Y) + min {0, I(W; Z) - I(W; Y)}, I(Ŵ; J) + I(W̃; Z) - I(W̃; J)}
-  + I(V̂; J | Ŵ) + I(Ṽ; Z | W̃) - I(Ṽ; J | W̃)`. -/
+  + I(V̂; J | Ŵ) + I(Ṽ; Z | W̃) - I(Ṽ; J | W̃)`.
+
+@audit:ok -/
 noncomputable def singleAuxSecondUserBound (μ : Measure Ω) [IsFiniteMeasure μ]
     (y : Ω → B₁) (z : Ω → B₂) (j : Ω → D)
     (w : Ω → Wp) (wt : Ω → Wt) (vt : Ω → Vt) (wh : Ω → Wh) (vh : Ω → Vh) : ℝ :=
@@ -236,8 +245,10 @@ noncomputable def singleAuxSecondUserBound (μ : Measure Ω) [IsFiniteMeasure μ
 `(const, X)`: `I(Ŵ; Y)`.
 
 In general the constraint reads `min {I(W̃; J) + I(Ŵ; Y | J), I(W̃; Z | Ĵ) + I(Ŵ; Ĵ)}`; at
-`(J, Ĵ) = (const, X)` the first system drops out and the `min` collapses to its first
-branch. -/
+`(J, Ĵ) = (const, X)` the first system drops out, the second branch reads `I(Ŵ; X)` and the
+`min` collapses to its first branch, which `I(Ŵ; X)` dominates.
+
+@audit:ok -/
 noncomputable def twoAuxCommonBound (μ : Measure Ω) (y : Ω → B₁) (wh : Ω → Wh) : ℝ :=
   mutualInfoReal μ wh y
 
@@ -246,25 +257,44 @@ noncomputable def twoAuxCommonBound (μ : Measure Ω) (y : Ω → B₁) (wh : Ω
 
 In general the constraint reads `I(Ũ, W̃; J) + I(Û, Ŵ; Y | J)`, whose first summand vanishes
 at `J = const`. The pair is written `(Ŵ, Û)` to match the conclusion of
-`mutualInfo_chain_rule`, which puts the variable that becomes the conditioner first. -/
+`mutualInfo_chain_rule`, which puts the variable that becomes the conditioner first.
+
+@audit:ok -/
 noncomputable def twoAuxFirstUserBound (μ : Measure Ω)
     (y : Ω → B₁) (wh : Ω → Wh) (uh : Ω → Uh) : ℝ :=
   mutualInfoReal μ (fun ω ↦ (wh ω, uh ω)) y
 
 /-- Right-hand side of the second two-auxiliary-receiver constraint on `R₀ + R₁`, at
-`(const, X)`: `I(Ŵ; X) + I(Û; Y | Ŵ)`. -/
+`(const, X)`: `I(Ŵ; X) + I(Û; Y | Ŵ)`.
+
+In general the constraint reads
+`I(W̃; Z | Ĵ) + I(Ŵ, J; Ĵ) + I(Ũ; J | W̃, Ĵ) + I(Û; Y | Ŵ, J)`, whose first three summands
+vanish at `(J, Ĵ) = (const, X)`.
+
+@audit:ok -/
 noncomputable def twoAuxFirstUserBoundInput (μ : Measure Ω) [IsFiniteMeasure μ]
     (x : Ω → A) (y : Ω → B₁) (wh : Ω → Wh) (uh : Ω → Uh) : ℝ :=
   mutualInfoReal μ wh x + condMutualInfoReal μ uh y wh
 
 /-- Right-hand side of the first two-auxiliary-receiver constraint on `R₀ + R₂`, at
-`(const, X)`: `I(Ŵ; Y) + I(V̂; X | Ŵ)`. -/
+`(const, X)`: `I(Ŵ; Y) + I(V̂; X | Ŵ)`.
+
+In general the constraint reads
+`I(W̃, Ĵ; J) + I(Ŵ; Y | J) + I(Ṽ; Z | W̃, Ĵ) + I(V̂; Ĵ | Ŵ, J)`, whose first and third summands
+vanish at `(J, Ĵ) = (const, X)`.
+
+@audit:ok -/
 noncomputable def twoAuxSecondUserBound (μ : Measure Ω) [IsFiniteMeasure μ]
     (x : Ω → A) (y : Ω → B₁) (wh : Ω → Wh) (vh : Ω → Vh) : ℝ :=
   mutualInfoReal μ wh y + condMutualInfoReal μ vh x wh
 
 /-- Right-hand side of the second two-auxiliary-receiver constraint on `R₀ + R₂`, at
-`(const, X)`: `I(Ŵ, V̂; X)`. -/
+`(const, X)`: `I(Ŵ, V̂; X)`.
+
+In general the constraint reads `I(V̂, Ŵ; Ĵ) + I(Ṽ, W̃; Z | Ĵ)`, whose second summand vanishes
+at `Ĵ = X`.
+
+@audit:ok -/
 noncomputable def twoAuxSecondUserBoundInput (μ : Measure Ω)
     (x : Ω → A) (wh : Ω → Wh) (vh : Ω → Vh) : ℝ :=
   mutualInfoReal μ (fun ω ↦ (wh ω, vh ω)) x
@@ -272,7 +302,9 @@ noncomputable def twoAuxSecondUserBoundInput (μ : Measure Ω)
 /-! ### The five comparisons -/
 
 /-- The common-rate constraint transports: the one-auxiliary-receiver bound on `R₀` is at most
-the two-auxiliary-receiver one at `(const, X)`. -/
+the two-auxiliary-receiver one at `(const, X)`.
+
+@audit:ok -/
 @[entry_point]
 theorem singleAuxCommonBound_le_twoAuxCommonBound (μ : Measure Ω) [IsProbabilityMeasure μ]
     (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (wt : Ω → Wt) (wh : Ω → Wh) :
@@ -280,7 +312,9 @@ theorem singleAuxCommonBound_le_twoAuxCommonBound (μ : Measure Ω) [IsProbabili
   unfold singleAuxCommonBound twoAuxCommonBound
   exact le_trans (min_le_right _ _) (min_le_left _ _)
 
-/-- The first `R₀ + R₁` constraint transports, for every auxiliary receiver output `j`. -/
+/-- The first `R₀ + R₁` constraint transports, for every auxiliary receiver output `j`.
+
+@audit:ok -/
 @[entry_point]
 theorem singleAuxFirstUserBound_le_twoAuxFirstUserBound (μ : Measure Ω)
     [IsProbabilityMeasure μ]
@@ -299,7 +333,9 @@ theorem singleAuxFirstUserBound_le_twoAuxFirstUserBound (μ : Measure Ω)
   linarith
 
 /-- The two `R₀ + R₁` constraints of the two-auxiliary-receiver bound are ordered, the gap
-being `I(Ŵ; X | Y) ≥ 0`. -/
+being `I(Ŵ; X | Y) ≥ 0`.
+
+@audit:ok -/
 @[entry_point]
 theorem twoAuxFirstUserBound_le_twoAuxFirstUserBoundInput (μ : Measure Ω)
     [IsProbabilityMeasure μ]
@@ -318,7 +354,9 @@ theorem twoAuxFirstUserBound_le_twoAuxFirstUserBoundInput (μ : Measure Ω)
   have := mutualInfoReal_le_of_markov μ wh x y hwh hx hy hchain
   linarith
 
-/-- The `R₀ + R₂` constraint transports at the single auxiliary receiver `J := X`. -/
+/-- The `R₀ + R₂` constraint transports at the single auxiliary receiver `J := X`.
+
+@audit:ok -/
 @[entry_point]
 theorem singleAuxSecondUserBound_le_twoAuxSecondUserBound (μ : Measure Ω)
     [IsProbabilityMeasure μ]
@@ -348,7 +386,9 @@ theorem singleAuxSecondUserBound_le_twoAuxSecondUserBound (μ : Measure Ω)
   linarith
 
 /-- The tail of the one-auxiliary-receiver constraint on `R₀ + R₂` at `J := X`, in closed form:
-`I(Ṽ; X | W̃) - I(Ṽ; Z | W̃) = I(Ṽ; X | W̃, Z)`, which is what makes that tail nonpositive. -/
+`I(Ṽ; X | W̃) - I(Ṽ; Z | W̃) = I(Ṽ; X | W̃, Z)`, which is what makes that tail nonpositive.
+
+@audit:ok -/
 @[entry_point]
 theorem condMutualInfoReal_sub_eq_condMutualInfoReal_prod (μ : Measure Ω)
     [IsProbabilityMeasure μ]
@@ -372,7 +412,9 @@ theorem condMutualInfoReal_sub_eq_condMutualInfoReal_prod (μ : Measure Ω)
   linarith
 
 /-- The two `R₀ + R₂` constraints of the two-auxiliary-receiver bound are ordered, the gap
-being `I(Ŵ; X | Y) ≥ 0`. -/
+being `I(Ŵ; X | Y) ≥ 0`.
+
+@audit:ok -/
 @[entry_point]
 theorem twoAuxSecondUserBound_le_twoAuxSecondUserBoundInput (μ : Measure Ω)
     [IsProbabilityMeasure μ]
