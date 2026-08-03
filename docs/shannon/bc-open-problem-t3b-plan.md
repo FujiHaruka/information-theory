@@ -244,6 +244,8 @@ CLAUDE.md の Definition of Done がそのまま効く (Standard B)。
 
 **leg 冒頭宣言 (M3)**: 側 = (C2) / 動かすもの = M2 行 5 の inert 性を決着させた — 判定は **構造的 (乙)**。**(18h) は任意の適格 witness に対し (18i) から従う** (恒等式 `(18h)−(18i) = (20a) の緩み ≥ 0`) ので (18h) を拘束的にする witness 族は存在せず、さらに **(19a)–(19c) の下でレート制約 (18a)–(18g)/(18i) からは `J` が全部消える** ⟹ (★) は残余から外れ、積 glue の義務は witness 適格性 3 本 ((E1)(E2)(E3) + (20a)/(20b)) に縮んだ。⚠ **NO-GO は出ていない** (証拠はすべて優加法性 = route (iii) KILL 側を支持するが未証明)。M2 の S6 の宿題は**肯定で決着** (族 `{(1/n)Thm7(W^⊗n)}` は `n` 一様に半計算可能)。逐語の SoT は [`bc-facts.md`](bc-facts.md) `## M3 (T3b)`、状態の SoT は [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md)
 
+**leg 冒頭宣言 (M4)**: 側 = (C2) / 動かすもの = `Thm7` の `∀T_J` の層が潰れるかを測り、判定は **未決**。層は `∀T_{J|X,Y,Z}` ⟺ `∀T_{J|X}` まで**部分的に潰れた**が 1 点には潰れず、⟹ **(H1) は不成立のまま・route (iii) の状態は S7 から不動**。決着した 3 点: (a) 対角 witness が全 `T_J` で (19a)–(19c) を恒等的に満たす ⟹ **`∀T_J` が効くのは (20a)/(20b) だけ** / (b) その対角 witness のレート制約は**ちょうど UV 外界** (Remark 12 逐語と一致) ⟹ **UV 超えは非対角 witness からしか来ない** / (c) 文献の唯一の UV 超え実例が使う `J` は**内点** (`Y` の enhancement) でその仮定が `J = X` を排除する。逐語の SoT は [`bc-facts.md`](bc-facts.md) `## M4 (T3b)`、状態の SoT は [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md)
+
 ### 5.2 ⚠ はみ出し禁止条項 — 「(a′) と同じ流れ方をしたら止める」
 
 前 relay の (a′) は**形式化債務が可変枠を 14 leg 連続で食った形**である。同じ流れ方を具体で禁じる:
