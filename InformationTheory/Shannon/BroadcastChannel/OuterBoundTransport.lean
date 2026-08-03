@@ -32,7 +32,8 @@ hypothesis.
   `R₀ + R₂` that participate in the comparison.
 * `twoAuxCommonBound`, `twoAuxFirstUserBound`, `twoAuxFirstUserBoundInput`,
   `twoAuxSecondUserBound`, `twoAuxSecondUserBoundInput` — the five right-hand sides of the
-  two-auxiliary-receiver bound at `(const, X)`.
+  two-auxiliary-receiver bound at `(const, X)`. The `Input` suffix marks the two of them whose
+  leading term reads the channel input `X` where its partner reads a receiver output.
 
 ## Main statements
 
@@ -46,7 +47,7 @@ hypothesis.
   `I(Ṽ; X | W̃) - I(Ṽ; Z | W̃) = I(Ṽ; X | W̃, Z)` of the tail that the `R₀ + R₂` comparison
   discards.
 
-None of the five uses the compatibility conditions tying the three systems of the
+None of the five comparisons uses the compatibility conditions tying the three systems of the
 one-auxiliary-receiver bound together; the chain rule and the data processing inequality
 suffice.
 
@@ -72,11 +73,12 @@ section RealValued
 variable {Ω : Type*} [MeasurableSpace Ω]
 variable {S T R : Type*} [MeasurableSpace S] [MeasurableSpace T] [MeasurableSpace R]
 
-/-- Mutual information as a real number. -/
+/-- The mutual information `I(f; g)` as a real number, that is `(mutualInfo μ f g).toReal`. -/
 noncomputable def mutualInfoReal (μ : Measure Ω) (f : Ω → S) (g : Ω → T) : ℝ :=
   (mutualInfo μ f g).toReal
 
-/-- Conditional mutual information as a real number. -/
+/-- The conditional mutual information `I(f; g | h)` as a real number, that is
+`(condMutualInfo μ f g h).toReal`. -/
 noncomputable def condMutualInfoReal (μ : Measure Ω) [IsFiniteMeasure μ]
     [StandardBorelSpace S] [Nonempty S] [StandardBorelSpace T] [Nonempty T]
     (f : Ω → S) (g : Ω → T) (h : Ω → R) : ℝ :=

@@ -25,6 +25,8 @@ of plumbing that the degraded converse (`BroadcastChannel.Converse`) did not:
 
 * `mutualInfo_chain_rule_Y_fin_suffix` — reverse-order expansion of `I(W; Bⁿ)`.
 * `condMutualInfo_suffix_chain_rule_full` — the same expansion for `I(Bⁿ; C | Z)`.
+* `condMutualInfo_add_condMutualInfo_swap` — the order in which two variables are inserted
+  into the conditioner does not change the total.
 * `condMutualInfo_le_add_condMutualInfo` — inserting a variable into the conditioner.
 * `csiszar_sum_identity_cond` — the Csiszár sum identity with a background conditioner.
 -/
