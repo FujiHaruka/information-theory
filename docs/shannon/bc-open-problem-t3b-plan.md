@@ -240,6 +240,8 @@ CLAUDE.md の Definition of Done がそのまま効く (Standard B)。
 
 **leg 冒頭宣言 (M1)**: 側 = (C2) / 動かすもの = 還元先 `Thm7(W) = C(W)` の反証試行を実行し、**判定不能** (厳密な分離は 1 本も立たず、同時に反証も塞がっていない) を確定した — 容量既知チャネルからは反例が出ないことを証明し (`Thm7 ⊆ UV` + [probc] 積クラスで `Thm8 = C`)、残る NO-GO ルート 2 本を名指しした。⟹ **§6-1 が発火する**。逐語の SoT は [`bc-facts.md`](bc-facts.md) `## M1 (T3b)`、状態の SoT は [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md) の `t3-thm7-tightness`
 
+**leg 冒頭宣言 (M2)**: 側 = (C2) / 動かすもの = route (iii) の gateway atom を決着させた — **残余不等式 (★) は等式制約 (19a)–(19c) / (20a)–(20c) と両立して破れる** (明示 witness の直接評価、破れ幅は理論最大の `I(X₁;X₂|J)`) ⟹ 積 witness の貼り合わせ構成は閉じない。⚠ **優加法性の反証ではなく NO-GO も出ていない** (破れは (18i) に吸収され領域には現れない) ⟹ attack `t3-auxrec-multiletter` は **UNDECIDED のまま**。副産物として残余の員数を 1 本から 4 本へ訂正し ((E1)–(E3) + (★))、`Thm7` が P3 の (H1) を満たさないことを確定した。逐語の SoT は [`bc-facts.md`](bc-facts.md) `## M2 (T3b)`、状態の SoT は [`bc-open-problem-attacks.md`](bc-open-problem-attacks.md)
+
 ### 5.2 ⚠ はみ出し禁止条項 — 「(a′) と同じ流れ方をしたら止める」
 
 前 relay の (a′) は**形式化債務が可変枠を 14 leg 連続で食った形**である。同じ流れ方を具体で禁じる:
