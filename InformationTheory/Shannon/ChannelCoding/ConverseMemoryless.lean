@@ -26,7 +26,7 @@ open scoped ENNReal NNReal BigOperators
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Graphoid helper lemmas (file-scoped) -/
+/-! ## Graphoid helper lemmas -/
 
 section GraphoidHelpers
 
@@ -202,7 +202,7 @@ private lemma condDistrib_prodMk_right_ae_eq_comap
 
 This is the graphoid weak union axiom: bundle a piece of the joint left endpoint into
 the conditioner. -/
-private lemma isMarkovChain_weakUnion_left_to_conditioner
+lemma isMarkovChain_weakUnion_left_to_conditioner
     {A B : Type*}
     [MeasurableSpace A] [StandardBorelSpace A] [Nonempty A]
     [MeasurableSpace B] [StandardBorelSpace B] [Nonempty B]

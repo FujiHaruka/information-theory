@@ -184,20 +184,19 @@ variable {lam : Type*} [MeasurableSpace lam] [StandardBorelSpace lam] [Nonempty 
 variable {δ : Type*} [MeasurableSpace δ] [StandardBorelSpace δ] [Nonempty δ]
 variable {ζ : Type*} [MeasurableSpace ζ]
 
-/-- Inserting a variable into the conditioner:
-`I(A; C | Z) ≤ I(B; C | Z) + I(A; C | (Z, B))`. Expanding `I((Z, A, B); C)` by the chain rule
-in the two possible orders gives two decompositions that differ by the nonnegative term
-`I(B; C | (Z, A))`, and the inequality is what remains after dropping it. `hZC` cancels the
-background term `I(Z; C)` shared by both decompositions.
+/-- Expanding `I((Z, A, B); C)` by the chain rule in the two possible orders:
+`I(A; C | Z) + I(B; C | (Z, A)) = I(B; C | Z) + I(A; C | (Z, B))`, so which of `A` and `B` is
+inserted into the conditioner first does not matter. `hZC` cancels the background term
+`I(Z; C)` shared by both decompositions.
 
 @audit:ok -/
-lemma condMutualInfo_le_add_condMutualInfo
+lemma condMutualInfo_add_condMutualInfo_swap
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (A : Ω → κ) (B : Ω → lam) (C : Ω → δ) (Z : Ω → ζ)
     (hA : Measurable A) (hB : Measurable B) (hC : Measurable C) (hZ : Measurable Z)
     (hZC : mutualInfo μ Z C ≠ ∞) :
-    condMutualInfo μ A C Z
-      ≤ condMutualInfo μ B C Z + condMutualInfo μ A C (fun ω ↦ (Z ω, B ω)) := by
+    condMutualInfo μ A C Z + condMutualInfo μ B C (fun ω ↦ (Z ω, A ω))
+      = condMutualInfo μ B C Z + condMutualInfo μ A C (fun ω ↦ (Z ω, B ω)) := by
   classical
   have hZB : Measurable (fun ω ↦ (Z ω, B ω)) := hZ.prodMk hB
   have hZA : Measurable (fun ω ↦ (Z ω, A ω)) := hZ.prodMk hA
@@ -219,10 +218,22 @@ lemma condMutualInfo_le_add_condMutualInfo
   rw [h1] at h2
   -- `h2 : I(Z;C) + I(B;C|Z) + I(A;C|(Z,B)) = I(Z;C) + I(A;C|Z) + I(B;C|(Z,A))`
   rw [add_assoc, add_assoc] at h2
-  have hcancel := WithTop.add_left_cancel hZC h2
-  calc condMutualInfo μ A C Z
-      ≤ condMutualInfo μ A C Z + condMutualInfo μ B C (fun ω ↦ (Z ω, A ω)) := le_self_add
-    _ = condMutualInfo μ B C Z + condMutualInfo μ A C (fun ω ↦ (Z ω, B ω)) := hcancel
+  exact WithTop.add_left_cancel hZC h2
+
+/-- Inserting a variable into the conditioner:
+`I(A; C | Z) ≤ I(B; C | Z) + I(A; C | (Z, B))`. What remains of
+`condMutualInfo_add_condMutualInfo_swap` after dropping the nonnegative term `I(B; C | (Z, A))`.
+
+@audit:ok -/
+lemma condMutualInfo_le_add_condMutualInfo
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (A : Ω → κ) (B : Ω → lam) (C : Ω → δ) (Z : Ω → ζ)
+    (hA : Measurable A) (hB : Measurable B) (hC : Measurable C) (hZ : Measurable Z)
+    (hZC : mutualInfo μ Z C ≠ ∞) :
+    condMutualInfo μ A C Z
+      ≤ condMutualInfo μ B C Z + condMutualInfo μ A C (fun ω ↦ (Z ω, B ω)) :=
+  le_self_add.trans
+    (condMutualInfo_add_condMutualInfo_swap μ A B C Z hA hB hC hZ hZC).le
 
 end InsertConditioner
 
