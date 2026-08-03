@@ -1,0 +1,28 @@
+{
+  "problem": "一般 2 受信者 DM-BC の容量領域の計算可能な特徴付け (未解決本体 T3) への第 2 次 20 leg relay (M0-M19)。前 relay と違い、層 3 (Lean) は形式化枠 M16-M18 の 3 leg だけで、可変枠 M2-M15 の 14 leg は散文 + 数値検証器 (scratchpad の Python) で回っている ⟹ 対象ファイル prefix (InformationTheory/Shannon/) を当てた編集数は relay 全体の作業量を代表しない。ツール実行の大半は scratchpad 上の検証器と一次文献 (pdftotext) 側にある。",
+  "proof_log": "docs/proof-logs/proof-log-bc-open-problem-t3b-relay.md",
+  "sessions": [
+    {
+      "id": "be6ec7cb",
+      "note": "M0 (在庫 gate) + M1 (本命 attack の反証試行 = 判定不能 ⟹ §6-1 発火) + ユーザーへ返した 4 択とその決定 + M2 ((★) の破れ) + M3 / M4 / M5 / M7。ユーザーの素のターンが 2 本混じる唯一のセッション。"
+    },
+    {
+      "id": "568e55c7",
+      "note": "M8 (S9 の残余を独立 3 本へ) + M9 (対角 witness の監査 + (31b)/(31e)) + M10 (単一 T_J 経路が反例で死亡) + M11 (2 点適格 ⟺ 線分適格) + M12 (∃∀ swap は偽) + M13 ((const,X) は非拘束)。1 プロンプトで 5h46m・サブエージェント 6 体の最長セッション。"
+    },
+    {
+      "id": "2f3eb1fe",
+      "note": "M16 (形式化枠 1 本目 = 本 relay 初の proof done、実装 + honesty ゲート + style ゲート + 記録) + M14 の gate probe。"
+    },
+    {
+      "id": "7cfe608a",
+      "note": "M14 (2 点同時適格 witness は SR_C を運べる) + M15 (その witness が (31c) を破る = 反例) + M15 の独立監査 (既定の立場を「反例は偽」に置いた敵対的ブリーフ)。"
+    },
+    {
+      "id": "d6d1ee1c",
+      "note": "M6 (可変枠の最後 = 角 R は C の内点、C の閉形) + M17 (形式化枠 2 本目) + M18 (形式化枠 3 本目) + M19 (本記録 leg)。⚠ M19 のターン自身は計測時点で進行中なので数字に完全には入っていない。"
+    }
+  ],
+  "filters": { "file_prefix": "InformationTheory/Shannon/" },
+  "idle_gap_minutes": 5
+}
