@@ -431,3 +431,7 @@ CLAUDE.md の Definition of Done がそのまま効く (Standard B)。
      - **(D) 本丸を終了し、コード面の繰り越し債務を畳む** — `## M19 (T3b)` の M19-6 の 3 件
        (命名軸の統一 5 本改名 / 節移設 + 分割 / 演算子改行規則の human call)。
        ⭐ **改名は「1 lean + 1 docs」で閉じ、今が最も安い**。
+   - **⟹ ユーザーは (A) を選択し、新規 20 leg の予算を切った (2026-08-04)** ⟹ 本 plan は
+     **CLOSED (§0 のゴールは未達)**、後継は
+     [`bc-open-problem-t3c-plan.md`](bc-open-problem-t3c-plan.md) (N0–N19)。
+     ⚠ **§0 / §0.1 は後継でも 1 文字も動いていない**。
