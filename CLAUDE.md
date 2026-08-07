@@ -9,38 +9,9 @@ A Lean 4 + Mathlib formalization project. Scope evolves; for the current focus s
 - `docs/` holds source materials (PDFs / plans / inventories) and per-task `proof-log-*.md` + `metrics/` outputs. Treat plan and inventory files as the source of truth for whatever is currently active.
 - `docs/rules/` is the **SoT for code conventions** — naming, docstrings, module structure, Lean style (`docs/rules/README.md` indexes them). Consult it before writing or editing declarations. Headline policy (Mathlib-PR-quality target): **code-surface prose (`.lean` docstrings + comments) is English** and American-spelled; document only defs / `structure` / `class` / `inductive` + headline (`@[entry_point]`) theorems — internal supporting lemmas stay bare and let the name carry the meaning (`docs/rules/docstrings.md`). Migration status → `docs/docstring-tidyup-plan.md`.
 
-## Scratchpad — what may live there, and what must not
+## Scratchpad
 
-The scratchpad (`/private/tmp/claude-…/<session-uuid>/scratchpad`) is volatile on **three independent axes**, all three verified on this machine:
-
-- **Per session** — a new session gets a new, empty directory. An earlier session's scratchpad is reachable only by absolute path, and only for as long as it still exists.
-- **Wiped at reboot** — nothing under `/private/tmp` outlives a restart (after the last boot, every entry there postdates it).
-- **Deleted after 3 idle days** — `com.apple.tmp_cleaner` runs daily at 00:00 and removes anything in `/tmp` untouched for over 3 days (`daily_clean_tmps_days="3"`).
-
-⟹ the maximum lifetime is **"until the next reboot, and at most 3 days"**, whichever comes first.
-
-**The test, in one line: if anything after this turn will read the file, it does not belong in the scratchpad.**
-
-**Operational tell**: the moment you want to write a scratchpad absolute path into a brief, a handoff, or a plan, the artifact is in the wrong place. ⚠ **"record the absolute path in every brief" is not a mitigation** — it defends against none of the three axes. A plan carrying such a clause is carrying a safeguard already known not to work; replace it, don't propagate it.
-
-**Must not live in the scratchpad** — these are cross-leg assets, and losing one costs a leg:
-
-- numeric verifiers / simulators / evaluators
-- counterexample witnesses and search results
-- type-check probes a later leg is told to start from (a single-turn `#print axioms` probe is fine — the recurring `axcheck.lean` / `ax.lean` files are the most-written scratchpad artifacts in this project's history, and are the *correct* use)
-- prose deliverables: briefs, findings, audit notes, records
-- extracted primary-literature text (see the table for the public-repo caveat)
-
-**Where they go instead**:
-
-| artifact | home |
-|---|---|
-| verifier / simulator / witness data | `docs/<family>/verifiers/` |
-| type-check probe a later leg reuses | `docs/<family>/probes/<leg>/`. ⚠ **not `InformationTheory/`** — a probe is not an in-project asset; `docs/**` sits outside the doc-lint / pre-commit scope, so a `sorry`-laden probe is harmless there |
-| brief / findings / audit note / record | `docs/<family>/` as an ordinary `.md` |
-| primary literature | ⚠ **the repo is public — do not commit extracted paper text.** Commit the retrieval command instead (URL + page range) into the family's facts ledger or a `lit-fetch.sh`, and let the extract stay in the scratchpad |
-
-**Correct use**: single-turn throwaways — a `#print axioms` file, an intermediate grep dump, a one-off aggregation script, the old/new pair for one diff. The rule of thumb is that you read the result in the same turn and never open the file again.
+The scratchpad dies at the next reboot, after 3 idle days, or with its session — so **anything a later turn, leg, or session will read belongs under `docs/<family>/` instead** (verifiers, witnesses, reusable type-check probes, briefs, findings), and recording its absolute path in a brief or plan is not a mitigation. ⚠ The repo is public: for primary literature commit the retrieval command, never the extracted text.
 
 ## Build Setup
 
