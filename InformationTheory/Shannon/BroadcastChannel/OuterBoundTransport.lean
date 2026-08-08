@@ -45,12 +45,12 @@ system, four of the constraints survive.
 
 Two of the right-hand sides stated through the plain system alone, the one on `R₀ + R₁` and the
 one on `R₀ + R₁ + R₂`, can be weighted against each other. Reading the plain system's pair
-`(W, U)` as a single auxiliary variable bounds every such weighting by a single expression whose
-first term is `I(W, U; Y)`: the chain rule at `(W, U)` absorbs the first user's tail, and the
-sum-rate right-hand side is discarded onto the branch of its inner minimum that carries the same
-tail. Conditional independence of `(W, U)` from the second receiver output given the input, which
-the bound builds into its witnesses, then rewrites the remaining conditional term as a difference
-of two mutual informations with that output.
+`(W, U)` as a single auxiliary variable bounds that weighting at every `t ≥ 0` by a single
+expression whose first term is `I(W, U; Y)`: the chain rule at `(W, U)` absorbs the first user's
+tail, and the sum-rate right-hand side is discarded onto the branch of its inner minimum that
+carries the same tail. Conditional independence of `(W, U)` from the second receiver output given
+the input, which the bound builds into its witnesses, then rewrites the remaining conditional
+term as a difference of two mutual informations with that output.
 
 Everything below relates right-hand sides of constraints to one another. Turning such a relation
 into a statement about the rate regions the two bounds cut out needs the constraints themselves,
@@ -110,8 +110,8 @@ and that step is not taken here.
   `singleAuxSecondUserBoundFromZ_diagonal_eq_plainSecondUserBound` — feeding one system to all
   three slots collapses five of the constraints onto the three stated through the plain system
   alone, whatever the auxiliary receiver output is.
-* `plainDirectionalCombination_le_plainDirectionalBound` — every nonnegative weighting of the two
-  plain right-hand sides is at most `I(W, U; Y) + t · I(X; Z | W, U)`.
+* `plainDirectionalCombination_le_plainDirectionalBound` — the weighting of the two plain
+  right-hand sides at every `t ≥ 0` is at most `I(W, U; Y) + t · I(X; Z | W, U)`.
 * `plainDirectionalBound_eq_condFree` and
   `plainDirectionalCombination_le_plainDirectionalBoundCondFree` — the conditional tail of that
   upper bound is the difference `I(X; Z) - I(W, U; Z)` once `(W, U)` is conditionally independent
@@ -946,6 +946,9 @@ theorem singleAuxSecondUserBoundFromZ_diagonal_eq_plainSecondUserBound (μ : Mea
 right-hand sides that the direction `(0, 1, t)` pairs, namely the ones on `R₀ + R₁` and on
 `R₀ + R₁ + R₂` stated through the plain system alone.
 
+Both weights are nonnegative exactly when `0 ≤ t ≤ 1`; for `t > 1` the weight `1 - t` carried by
+`plainFirstUserBound` is negative.
+
 @audit:ok -/
 noncomputable def plainDirectionalCombination (μ : Measure Ω) [IsFiniteMeasure μ]
     (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂)
@@ -961,11 +964,13 @@ noncomputable def plainDirectionalBound (μ : Measure Ω) [IsFiniteMeasure μ]
   mutualInfoReal μ (fun ω ↦ (w ω, u ω)) y
     + t * condMutualInfoReal μ x z (fun ω ↦ (w ω, u ω))
 
-/-- The combination the direction `(0, 1, t)` forms from the two plain right-hand sides is at
-most `I(W, U; Y) + t · I(X; Z | W, U)` for every nonnegative `t`.
+/-- The combination `(1 - t) · plainFirstUserBound + t · plainSumRateBound` of the two plain
+right-hand sides is at most `I(W, U; Y) + t · I(X; Z | W, U)` for every nonnegative `t`.
 
 This relates right-hand sides of constraints to one another, and says nothing about the rate
-regions those constraints cut out. -/
+regions those constraints cut out.
+
+@audit:ok -/
 @[entry_point]
 theorem plainDirectionalCombination_le_plainDirectionalBound (μ : Measure Ω)
     [IsProbabilityMeasure μ]
@@ -1015,13 +1020,15 @@ theorem plainDirectionalBound_eq_condFree (μ : Measure Ω) [IsProbabilityMeasur
   unfold plainDirectionalBound plainDirectionalBoundCondFree
   rw [hgap]
 
-/-- The combination the direction `(0, 1, t)` forms from the two plain right-hand sides is at
-most `I(W, U; Y) + t · (I(X; Z) - I(W, U; Z))` for every nonnegative `t`, once the plain
-system's pair `(W, U)` is conditionally independent of the second receiver output given the
-input.
+/-- The combination `(1 - t) · plainFirstUserBound + t · plainSumRateBound` of the two plain
+right-hand sides is at most `I(W, U; Y) + t · (I(X; Z) - I(W, U; Z))` for every nonnegative `t`,
+once the plain system's pair `(W, U)` is conditionally independent of the second receiver output
+given the input.
 
 This relates right-hand sides of constraints to one another, and says nothing about the rate
-regions those constraints cut out. -/
+regions those constraints cut out.
+
+@audit:ok -/
 @[entry_point]
 theorem plainDirectionalCombination_le_plainDirectionalBoundCondFree (μ : Measure Ω)
     [IsProbabilityMeasure μ]
