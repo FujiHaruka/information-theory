@@ -2034,6 +2034,38 @@
 
 ---
 
+## N8 (T3c) — ⭐ 判定枠の第 3 段 = 層 3 へ載せた。⚠⚠ **載ったのは N7 §2.1 の `(R1)` 1 本だけ**であって「上界の連鎖」ではない ⟹ **`h_Thm7(0,1,t)` の上界そのものは Lean に無い**。⚠⚠ **載ったのは制約の右辺どうしの不等式**であり、**レート領域の包含については何も言っていない**
+
+> 親 plan [`bc-open-problem-t3c-plan.md`](bc-open-problem-t3c-plan.md) §5 の**判定枠 N6–N12 の第 3 段
+> ([層 3 へ載せる])**。散文側の出典 = [`bc-t3c-n7-shoulder-certificate.md`](bc-t3c-n7-shoulder-certificate.md) §2.1 の `(R1)`。
+> 成果物 = `InformationTheory/Shannon/BroadcastChannel/OuterBoundTransport.lean` の**新規 6 宣言**
+> (`/-! ### A directional combination of the plain right-hand sides -/` 節)。
+> commit = `51d1ccb1` (実装) / `72aaef9a` (敵対的独立監査) / `d9fa6558` (style gate)。
+> **leg 冒頭宣言 (N8)**: 側 = (C2) / 動かすもの = N7 が `(18b)`/`(18i)` の 2 本だけで立てた方向 `(0,1,t)` の
+> 上界を、マルコフ性と情報量だけで述べられる形のまま Lean の層 3 へ載せ、散文側の主張が機械で通るかを確定させる。
+>
+> ⚠⚠ **`Thm7 ⊋ C` の材料は本 leg でも 1 つも出ていない** / ⚠ **`Thm7 ⊄ Thm8` は主張していない** /
+> ⚠ **`R ∈ Thm7` とも書いていない** / ⚠⚠ **レート領域の包含について何か言ったかのように読んではならない**。
+>
+> ⭐ **敵対的独立監査 (親 plan §4.6) 済み** = [`bc-t3c-n8-audit.md`](bc-t3c-n8-audit.md)。
+> **判定 = 訂正あり生存** (⚠ **反証は 5 本試して 2 本が成立・3 本が落ちた**)。⚠ **監査由来の行は `N8-d` / `N8-e` / `N8-f`**、`N8-g` は style gate 由来である。
+> **訂正 3 件 + style gate が拾った同種 1 件 = 計 4 件はすべて docstring の読ませ方**であり、
+> ⚠ **Lean の命題・署名・証明は 1 文字も変わっていない** (N8-h)。
+
+| claim | confidence | 再検証コマンド | last-verified | notes |
+|---|---|---|---|---|
+| **⭐⭐ (N8-a、主産物) N7 §2.1 の `(R1)` が Lean に載った** — 名前空間 `InformationTheory.Shannon.BroadcastChannel`、ファイル `InformationTheory/Shannon/BroadcastChannel/OuterBoundTransport.lean`。**def 3 本** = `plainDirectionalCombination` / `plainDirectionalBound` / `plainDirectionalBoundCondFree`、**`@[entry_point]` 定理 3 本** = `plainDirectionalCombination_le_plainDirectionalBound` / `plainDirectionalBound_eq_condFree` / `plainDirectionalCombination_le_plainDirectionalBoundCondFree`。**0 sorry / 0 `@residual`**、3 定理とも `#print axioms` = `[propext, Classical.choice, Quot.sound]` | `machine` | `lake env lean InformationTheory/Shannon/BroadcastChannel/OuterBoundTransport.lean` (出力 0 バイト) + 同モジュールを `import` した 1 ファイルに `#print axioms` 3 行を書いて `lake env lean` | `N8(T3c)` | ⚠⚠ **載ったのは制約の右辺どうしの不等式**であって**レート領域については何も言っていない** — 2 本の不等式定理と module docstring に逐語の免責が入っている (「says nothing about the rate regions those constraints cut out」)。⚠ **`sorryAx`-free は必要条件にすぎない** ⟹ 署名走査を併せた (N8-c / N8-d) |
+| **⭐⭐⭐ (N8-b、⚠⚠ 射程 — 載ったのは `(R1)` 1 本だけである) `(R2)` (`U' := (U,W)` の事後分解) と `(R3)` (2 つの緩和) は**載っていない** ⟹ **`h_Thm7(0,1,t)` の上界そのものは Lean に無い** | `machine` (宣言の不在) | `rg -n 'plainDirectional' <上のファイル>` — 現れる宣言は N8-a の 6 本だけである | `N8(T3c)` | ⚠⚠ **台帳でも plan でも「上界の連鎖が載った」と書かない** (監査 §0 / §6 の C4)。⚠ **実装 commit `51d1ccb1` の件名は「上界の連鎖を層 3 へ」と書いており、その語は過大である** — 件名は書き換えられないので本行が訂正を担う |
+| **⭐⭐ (N8-c、主定理はマルコフ性を 1 本も持たない) `plainDirectionalCombination_le_plainDirectionalBound` の仮説は **`[IsProbabilityMeasure μ]` + 可測性 3 本 (`hy`/`hw`/`hu`) + `0 ≤ t`** だけである。⚠ **`t ≤ 1` は要らない** (命題は `t ≥ 0` 全体で真) | `machine` (署名) + `human-judgment` (LP の読みの範囲) | `#check @InformationTheory.Shannon.BroadcastChannel.plainDirectionalCombination_le_plainDirectionalBound` | `N8(T3c)` | ⚠⚠ **`t ≤ 1` が不要なのは不等式の話であって、`(1−t)(18b) + t(18i)` を方向 `(0,1,t)` の支持値の上界として読む LP の読みは、重みが 2 つとも非負の範囲 = `0 ≤ t ≤ 1` でしか成り立たない** (`t > 1` では負の重みで制約を足すことになり何も上から抑えない) ⟹ **この 2 つを同じ文に置かない**。⭐ **散文 (N7 §2.1) は `t ∈ [0,1]` かつマルコフ性を場に置いていた** ⟹ 載ったのは**弱いものではなく強いもの**である |
+| **⭐⭐ (N8-d、`0 ≤ t` も `hmarkov` も飾りではない ⟹ 署名に load-bearing hypothesis は無い) `ht : 0 ≤ t` を落とすと不等式は偽 (`t = −1`, `I(W;Y)=I(W;Z)=I(U;Y\|W)=第1枝=0`, `I(X;Z\|W,U)=1`)。`hmarkov` を落とすと `plainDirectionalBound_eq_condFree` の等式が偽 (`t=1`, `I(X;Z\|W,U)=0`, `I(X;Z)=0`, `I(W,U;Z)=1`)。⚠ `hmarkov` が消費されるのは等式 1 本の中の連鎖律 (`mutualInfoReal_add_condMutualInfoReal_eq_of_markov`) だけで、**不等式本体は `hmarkov` を引数に取らない** | `machine` (反例の代数) + `human-judgment` (precondition / load-bearing の判別) | 監査 §7 の R1 / R3 の反例と §8 の代数骨格を `example` に落として `lake env lean` (⚠ **probe は repo に無い** — 逐語は [`bc-t3c-n8-audit.md`](bc-t3c-n8-audit.md) §7 / §8 が SoT) | `N8audit(T3c)` | ⚠ **反例はどちらも実現可能な確率変数で書ける** (`t = −1` 側は `W`/`U`/`V` 定数・`X = Z` 一様ビット・`Y` 定数 / `hmarkov` 側は `X` 定数・`Z = U` 一様ビット・`W` 定数)。⚠ **`hmarkov` は L604 の既存 `hplain : IsMarkovChain μ (w,u,v) x (y,z,j)` の特殊化 = より弱い**仮説であり、`## M16 (T3b)` の独立監査が `IsMarkovChain` を precondition と判定済 ⟹ a fortiori |
+| **⭐ (N8-e、監査 = 受け皿 def の出自。⚠ ブリーフの前提「M16 由来」は事実として誤りだった) `plainSumRateBound` の初出は **`1170bbe0` (M17)**、`plainFirstUserBound` の初出は **`78af2268` (M18)**。**M16 (`14217cbf`) が入れたのはファイルそのもの**であって、この 2 つの def ではない | `machine` | `git log -S 'plainSumRateBound' --oneline -- <上のファイル>` / 同 `'plainFirstUserBound'` | `N8audit(T3c)` | ⚠ **`(31a)`–`(31e)` の番号帰属は M16 の別の 5 定理 (`singleAux*_le_twoAux*`) に付いており、N8 はそれらに 1 本も触っていない**。⭐ **この 2 def の台帳側の番号は `(18h)`/`(18i)` と `(18a)`–`(18g)` = いずれも Theorem 7 の番号**である (`## M17 (T3b)` M17-b / `## M18 (T3b)` M18-e) ⟹ N7 / N8 が引く `(18b)`/`(18i)` と同じ定理を指す |
+| **⭐ (N8-f、⚠ 監査が確かめられなかったこと — 名指し) 監査が照合した逐語は **N7 証明書 §2.1 が引用した文字列**であって `$LIT/auxrec.txt` そのものではない (監査環境に当該ファイルが無い) ⟹ **「Lean の def が `(18b)`/`(18i)` の字面と一致する」までが裏取り済**であり、**その字面が auxrec の当該行であることは N7 証明書 + M17/M18 台帳の記録に依存する** | `human-judgment` | — (在庫であって事実ではない) | `N8audit(T3c)` | ⚠ **成果物で番号の帰属を新たに主張するなら、この 1 段は別に裏を取ること**。⚠ 現時点で `51d1ccb1` はコードにも plan にも番号の帰属を書いていない (plan §5 の「M16 が…載せた同じ器」は**ファイルの帰属**であり正しい) ⟹ **指摘事項なし**。⚠ 条件付けの対の順序 (散文 `(U,W)` / Lean `(W,U)`) は **M17 の設計上の分岐として `## M17 (T3b)` M17-d に記録済**で意味の違いではない (移送補題 2 本が in-project に実在) |
+| **⭐ (N8-g、style gate = PASS) `lean_doc_lint.ts` の strict 10 種はすべて 0、ratchet も baseline 不変 | `machine` | `deno run -A scripts/lean_doc_lint.ts` | `N8(T3c)` | ⚠ **gate が拾った 1 件 (module docstring の「every such weighting」) は監査の C2 と同種**であり、`d9fa6558` で C1–C3 と一緒に当てた ⟹ **監査が保留にしていた 2 本は `@audit:ok` へ**。⚠ **保留の理由は「命題が疑わしい」ではなく「語彙に散文の留保つき pass が無い」だった** (監査 §9) |
+| **監査の判定** | `human-judgment` | — (判定であって事実ではない。個々の根拠は N8-a … N8-g) | `N8audit(T3c)` | ⚠ **監査側の演繹**。**判定 = 訂正あり生存**。**主張の本体 3 つは 3 つとも生存** — (i) `t ≤ 1` を落とせる / (ii) マルコフ性なしで立つ / (iii) 載ったものは `(18b)`/`(18i)` の右辺と字面一致する。**反証は 5 本試して 2 本が成立・3 本が落ちた** (⚠ **落ちた 3 本 =「`t ≤ 1` を落としたのは誤り」「def が結論を先取り」「受け皿は M16 由来で番号帰属に裏が無い」であり、これは「潰しにいって潰せなかった」であって追認ではない**)。**訂正 3 件 + style gate の同種 1 件 = 計 4 件はすべて docstring の読ませ方** ⟹ ⚠ **Lean の命題・署名・証明は 1 文字も変わっていない** (N8-h)。**CORE の定型 tell は 6 種とも不検出** (循環 / `:True` / 退化定義悪用 / name laundering / under-hypothesized / def による結論の先取り)。⚠ **`GOAL-CHANGE` の起票はなし** |
+| **判定と残る段 (N8-h)** | `human-judgment` | — (判定であって事実ではない) | `N8(T3c)` | ⚠ **我々の演繹**。**§0 のゴールに対して動いたもの** = **判定枠の 3 段 1 組が 1 周した**こと (N6 = [探索 + gate] / N7 = [構築 + probe] / N8 = [層 3 へ載せる]) と、`(R1)` が層 3 で機械に通ったこと。⚠⚠ **これは「§0 に近づいた」ではない** — 載ったのは制約の右辺どうしの不等式 1 本であり、**`Thm7 ⊋ C` の材料は 1 つも無い**。**残る段**: **(α) 未着手の面「`D = C` か」** (`0 < λ0 < λ1+λ2` の錐、`## N6 (T3c)` N6-n) / **(β) `ε` を厳密 0 にする** (`## N7 (T3c)` N7-p が `t` を含まない 3 変数の不等式へ同値変形済。⚠⚠ **未証明であり「あと少し」ではない**) / **(γ) `(R2)`/`(R3)` を層 3 へ載せて `h_Thm7(0,1,t)` の上界そのものを Lean に立てる** (N8-b)。⚠ **どれを次の leg に採るかは決めていない** |
+
+---
+
 ## 資産 (T3c 以降) — ⚠⚠ scratchpad 資産は **2026-08-05 の再起動で消滅**。⭐ **再生成しない (lazy)**
 
 > 対象 = 前 relay (t3b) と本 relay (t3c) が scratchpad に置いた**一次文献 16 本 + 数値検証器 5 系統 +
