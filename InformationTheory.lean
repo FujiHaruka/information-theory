@@ -138,6 +138,7 @@ import InformationTheory.Shannon.BroadcastChannel.MartonUnion
 import InformationTheory.Shannon.BroadcastChannel.Marton.Swap
 import InformationTheory.Shannon.BroadcastChannel.Marton.CardinalityBound
 import InformationTheory.Shannon.BroadcastChannel.Marton.RegionCardinality
+import InformationTheory.Shannon.BroadcastChannel.Thm7Region
 import InformationTheory.Shannon.BroadcastChannel.MartonFullSupport
 import InformationTheory.Shannon.BroadcastChannel.Superposition.Region
 import InformationTheory.Shannon.BroadcastChannel.Superposition.TimeShare

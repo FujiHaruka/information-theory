@@ -227,19 +227,209 @@ style-auditor) が要る** — ⚠ **自己監査にしない**。
 
 ## 2. 実施したこと
 
-(N17 実行 leg が埋める)
+**昇格先** = `InformationTheory/Shannon/BroadcastChannel/Thm7Region.lean` (**新規 282 行**)、
+namespace = `InformationTheory.Shannon.BroadcastChannel` (既存 BC 家系と同じ。`ProbeThm7` は捨てた)、
+`InformationTheory.lean` に import 行 1 本を追記 (`Marton.RegionCardinality` の直後)。
+⚠ 置き場所は起票の提案どおりで、変更していない。
+
+**(a) in-repo 資産の消費 (⚠ 起票 §0-A ⭐ の実行)** — `miR` / `cmiR` は置かず、`mutualInfoReal`
+(`OuterBoundTransport.lean:149`) / `condMutualInfoReal` (同 `:154`) を **ラッパ 0 本で直接消費**した。
+⭐ **起票が心配した「消費できるかは束縛子の設計に依存する」は、束縛子を設計し直すことで消えた** —
+probe の `cmiR ν (hν : IsFiniteMeasure ν) …` (明示引数) をやめ、`thm7Slots (ν : Measure _)
+[IsFiniteMeasure ν]` の **instance 引数**に揃えた (CLAUDE.md「Mathlib-shape-driven Definitions」=
+支配する既存補題の署名に def を合わせる)。⟹ **薄いラッパも局所 def も置いていない**。
+⚠⚠ **既存 2 本の署名は 1 文字も変えていない** (§3 の `git diff` と `dep_consumers.sh` を参照)。
+
+**(b) 内側の束縛子の取り替え (⚠ 起票 §0-C の 1 行反証を実際に機械へ掛けた)** —
+`⋃ (ν : Measure (Amb …)) (hν : IsFiniteMeasure ν)` を **`⋃ (ν : ProbabilityMeasure (Thm7Ambient …))`**
+へ取り替えた。⚠ **これは証明ではなく def の設計変更である**。⚠⚠ **2 つの def が同じ集合を定めることは
+Lean で証明していない** (§5)。
+
+**(c) 入れ子を 4 段の def のはしごへ分解** — `thm7RegionOfLaw` (1 法則) / `thm7RegionOfAuxReceiver`
+(`⋃_{kv,ν}`) / `thm7RegionOfInput` (`⋂_{kJ,T_J}`) / `thm7Region` (`⋃_p`)。
+理由 = **中核 8 の 3 段を段ごとに名前のある補題として測るため** (段ごとの結末を §4 に分けて書ける形にした)。
+
+**(d) 命名と docstring を `docs/rules/` へ** — `AuxIdx`→`Thm7AuxIdx` / `Amb`→`Thm7Ambient` /
+`slots`→`thm7Slots` / `Thm7Eligible`→`IsThm7Eligible`、`slice_comm` (連言 1 本) →
+`zeroRateSlice` + `zeroRateSlice_iUnion` / `zeroRateSlice_iInter` の 2 本。
+docstring は def と headline のみ・英語・process 語彙なし。
+
+**(e) 転記照合を一次典拠へ当てた** — probe 冒頭が指す retrieval command
+(`pdftotext -layout` + 論文 URL) をそのまま実行して照合した。
+⚠⚠ **抽出テキストは repo に置いていない** (CLAUDE.md「Scratchpad」= public repo に一次文献の本文を
+置かない)。照合の範囲と未了範囲は §5。
 
 ## 3. 機械検証の結果
 
-(N17 実行 leg が埋める)
+⚠ **以下はすべて機械の出力である。散文の印象は入れていない**。
+
+**(0) probe の現在の生存** — `lake env lean docs/shannon/probes/t3c-n2/r1-thm7-region.lean` = **無出力**
+(clean)。⟹ 起票が `lake` を 1 度も走らせていなかった点は、走らせた結果 **probe は生きていた**。
+
+**(1) 昇格 1 回目 — error 2 件 (逐語)**:
+
+```
+Thm7Region.lean:174:24: error: (deterministic) timeout at `whnf`, maximum number of heartbeats (200000) has been reached
+Thm7Region.lean:181:17: error(lean.unknownIdentifier): Unknown identifier `thm7Region`
+```
+
+⭐ **原因は facts N2-c が記録したハザードそのもの** — 174:24 は `thm7RegionOfLaw (ν : Measure _)` の
+**下線 1 個**である。処置 = `(ν : Measure (Thm7Ambient kv kJ α β₁ β₂))` と完全に書く。
+2 件目は 1 件目の巻き添え (def が立たないので参照が未知識別子になる)。
+⟹ **昇格の初期コスト = 往復 1 回 / 修正 2 行**。
+
+**(2) 昇格後** — `lake env lean InformationTheory/Shannon/BroadcastChannel/Thm7Region.lean` = **無出力**。
+型クラス列は probe の 4 本 (`[Fintype] [MeasurableSpace] [StandardBorelSpace] [Nonempty]`) のままで、
+**`failed to synthesize instance` は 0 件**。
+
+**(3) 中核 8 の最終状態** — 同コマンドの出力は **warning 2 件のみ**:
+
+```
+Thm7Region.lean:249:6: warning: declaration uses `sorry`
+Thm7Region.lean:277:8: warning: declaration uses `sorry`
+```
+
+**(4) Prokhorov 側の可用性 (scratchpad の独立 probe、逐語)** — ⚠ **散文で退けず compiler に当てた**:
+
+```lean
+example (E : Type) [Fintype E] [MeasurableSpace E] [TopologicalSpace E] [DiscreteTopology E]
+    [BorelSpace E] : CompactSpace (ProbabilityMeasure E) := inferInstance     -- 通る (出力なし)
+
+example (E : Type) [Fintype E] [MeasurableSpace E] [StandardBorelSpace E] [Nonempty E] :
+    CompactSpace (ProbabilityMeasure E) := inferInstance
+-- error(lean.synthInstanceFailed): failed to synthesize instance of type class
+--   TopologicalSpace (ProbabilityMeasure E)
+```
+
+⟹ **コンパクト性の道具は型クラス 3 本 (`TopologicalSpace` / `DiscreteTopology` / `BorelSpace`) を
+要求し、現行の 4 本の列では位相そのものが存在しない**。⚠ **要求元は補題側であって def 側ではない**
+(def は 4 本のまま 0 error で立っている = 上の (2))。
+
+**(5) `#print axioms` (11 宣言に当てた)**:
+
+| 宣言 | 結果 |
+|---|---|
+| `thm7Region` / `thm7RegionSlice` | **sorryAx-free** |
+| `isClosed_setOf_inThm7` / `isClosed_thm7RegionOfLaw` / `finite_setOf_lt_thm7Cap` | **sorryAx-free** |
+| `zeroRateSlice_iUnion` / `zeroRateSlice_iInter` | **sorryAx-free** |
+| `isClosed_iUnion_thm7RegionOfLaw` (ν 段) | `sorryAx` |
+| `isClosed_thm7RegionOfAuxReceiver` / `isClosed_thm7RegionOfInput` | `sorryAx` (上を経由) |
+| `isClosed_thm7Region` (headline) | `sorryAx` |
+
+⚠ **`sorryAx`-free は必要条件であって十分条件ではない** ⟹ **署名走査も併せた**: 上記 11 本の
+仮定はすべて **データ引数か regularity の instance 引数** (`[IsFiniteMeasure ν]` / `[Fintype α]`) であり、
+**核を担う hypothesis は 1 本も無い**。とくに headline `isClosed_thm7Region (W : BCChannel α β₁ β₂)` は
+**仮定 0 本**である。
+
+**(6) 既存署名の非改変** — `git diff --name-only HEAD` = **`InformationTheory.lean` の 1 本のみ**
+(差分は import 行 1 行の追加)。`scripts/dep_consumers.sh` の実測は
+`mutualInfoReal` = **43 decl / 1 file**、`condMutualInfoReal` = **38 decl / 1 file** で
+**起票 §1-(b) の表と一致**する (⚠ 一致していることが「触っていない」の確認である)。
+
+**(7) code-surface の機械層** — `deno run -A scripts/lean_doc_lint.ts <昇格先>` = **strict 10 規則 /
+ratchet 4 規則すべて 0 件**。
 
 ## 4. 判定 — 見立ての較正と反証条件の発火状況 (⚠⚠ §0 / §1 は 1 文字も書き換えない)
 
-(N17 実行 leg が埋める)
+### 4.1 反証条件の発火 (⚠ 3 本それぞれについて明記する)
+
+- **反証条件 1 (受け皿が 0 error に落ちない)** = ⚠ **不発火**。ただし**無条件の不発火ではない** —
+  1 回目は error 2 件で落ちており (§3-(1))、下線 1 個の修正を経て 0 error になった。
+  ⟹ **「probe で通っているのだから昇格も通る」は成り立たなかった**。
+- **反証条件 2 (中核 8 が 3 段のいずれかで止まる)** = ⚠⚠ **発火**。
+  ⭐ **束縛子の取り替え (`ProbabilityMeasure` 化) を先に実行したうえでの発火である** (§2-(b))。
+  処置は規定どおり **`sorry` + `@residual(plan:bc-computable-region-formalization)` を 2 本**、
+  **署名は証明したい形のまま**で残した (§4.2 に段ごとの結末)。
+  ⚠⚠ **壁とは書かない** — CLAUDE.md の wall 宣言規約を全部通していないので、分類は `plan:` である。
+- **反証条件 3 (既存宣言の署名変更を要求する)** = ⚠ **不発火**。§3-(6) のとおり既存 `.lean` は
+  1 本も diff に出ていない (`InformationTheory.lean` の import 1 行は起票の除外規定どおり)。
+  ⭐ **回避の手段は「局所 def を置く」でも「署名工事」でもなく、第 3 の道 = 昇格先の束縛子を
+  instance 引数へ設計し直して既存 2 本をそのまま消費する**であった (§2-(a))。
+
+### 4.2 中核 8 の 3 段の結末 (⚠ 段ごとに分けて書く)
+
+| 段 | 結末 | 根拠 |
+|---|---|---|
+| **ファイバ** (`thm7RegionOfLaw ν` が閉集合) | ⭐ **通った (sorryAx-free)** | `isClosed_setOf_inThm7` = 9 本の非狭義不等式を `isClosed_le` + `fun_prop` で、`isClosed_thm7RegionOfLaw` = 適格性で場合分け (不適格なら `∅`)。計 **14 行** |
+| **内側 `kv` 段** (有限合併) | ⭐ **通った (`ν` 段を除いて)** | `finite_setOf_lt_thm7Cap` = `Set.Finite.pi` + `Set.finite_Iio` で **6 行**、`Set.Finite.isClosed_biUnion` が**形ごと当たり** **3 行** |
+| **内側 `ν` 段** (法則の合併) | ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)`** | `isClosed_iUnion_thm7RegionOfLaw` (`Thm7Region.lean:249`) |
+| **中間 `⋂_{kJ,T_J}` 段** | ⭐ **通った** | `isClosed_iInter` 3 段、**3 行** |
+| **外側 `⋃_p` 段** (= headline) | ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)`** | `isClosed_thm7Region` (同 `:277`) |
+
+⟹ **段は 3 つではなく実際には 5 つに割れ、うち 3 つが通り 2 つが残った**。
+⚠ **残った 2 つは同じ形の未閉項を共有している** — どちらも「確率測度の空間上の合併」であり、
+未閉項は **(i) 25 スロットが弱位相で連続か** と **(ii) 法則の集合が閉か** である
+(⚠ **コンパクト性そのものではない** — §3-(4) でコンパクト性は型クラス 3 本を足せば出ると機械で確定した)。
+
+### 4.3 見立て 4 本の較正 (⚠ 当てにいくものではない)
+
+- **見立て A (締める)** = **生存**。(a)–(e) の 5 項目はすべて新たに負った。
+  ⚠ **ただし ⭐ の「縮む側」は起票の予想より大きく当たった** — 起票は「消費できるかは束縛子の設計に
+  依存する」と条件つきで書いたが、**設計を変えることでラッパ 0 本で消費できた**。
+  ⚠⚠ **転記義務は縮まなかっただけでなく、照合の結果 1 件の不足を新たに検出した** (§5-(2))。
+- **見立て B (緩める)** = **生存**。probe の 4 型クラス列のまま **0 error / `failed to synthesize
+  instance` 0 件** (§3-(2))。⚠ B が予告した「要求元は中核 8 の道具であって領域 def そのものではない」も
+  **機械で確認された** (§3-(4): 道具側は 3 本を要求し、def 側は 4 本で立っている)。
+- **見立て C (締める)** = **結論は生存、理由の 1 つは死亡**。「現行の束縛子のままでは通らない」は
+  **束縛子を取り替えてもなお通らない**形で生き残った。⚠⚠ **ただし C が挙げた理由 3
+  (Prokhorov のコンパクト性が付かない) は機械で解消できることが確定した** — 型クラス 3 本を
+  **補題側に**足せば `CompactSpace (ProbabilityMeasure E)` は合成される (§3-(4))。
+  ⟹ **実際の未閉項は理由 3 ではなく §4.2 の (i)(ii) である**。⚠ **C の理由 1 / 2 は今回触れていない**
+  (先例が `closure` を取っていることも `isClosed_iUnion` が別物であることも、本 leg では使っていない)。
+- **見立て D (緩める)** = **完全に当たり**。`{kv | ∀ i, kv i < thm7Cap α i}` の `Set.Finite` は
+  `Set.Finite.pi` + `Set.finite_Iio` で **6 行**、`Set.Finite.isClosed_biUnion` は**形ごと当たった**
+  (自前の橋は 0 行)。⚠ **D 自身が但し書きした「ファイバの閉性は本 leg では未検証」も本 leg で閉じた**
+  (`isClosed_thm7RegionOfLaw`、sorryAx-free) ⟹ **D の但し書きの側も外れた (良い方向に)**。
+
+### 4.4 出力型 (起票 §1.1 が固定した 2 軸)
+
+- **受け皿** = **昇格した (0 error)**。
+- **中核 8** = **`sorry` + `@residual(plan:bc-computable-region-formalization)` で退出**
+  (⚠ **5 段のうち 3 段は通った**が、**中核 8 そのものは通っていない**)。
+
+⚠⚠ **これを「単位 B が閉じた」と書かない** — **中核 9 (有界性) / 10 ((α) 合致) は 1 行も触れていない**。
 
 ## 5. ⚠ 確かめて「いない」ことの名指し
 
-(N17 実行 leg が埋める)
+**(1) 転記照合の未了範囲** — ⚠ **照合した範囲と、していない範囲を分ける**。
+
+- ⭐ **照合した (一次典拠に当てた)**: **25 スロットの情報量と 13 変数の対応** (0–24 の全件) /
+  **9 本の制約 (18a)–(18i) の右辺** / **6 本の適格性条件 (19a)–(19c) / (20a)–(20c)** /
+  **上限値** (`|X|+6` と `|X|+1`。⚠ `bcAuxAlphabet k` の濃度が `k+1` なので `kv i < |X|+6` が
+  `濃度 ≤ |X|+6` に対応することまで確認した) / **入れ子の向き** (「ある `p(x)` が存在し、
+  **任意の** 補助チャネルに対し、**ある** 同時分布が」= `⋃_p ⋂_{T_J} ⋃_{aux}`)。
+- ⚠ **照合していない**: 一次典拠の**証明**は 1 行も読んでいない ⟹ **定理 7 の主張そのものが
+  正しいか**は本 leg の対象外である。**`thm7Region` が空でないか**も未検証 (⚠ 空集合も閉集合なので
+  §4.2 の閉性は空虚に真でありうる。⚠⚠ **これは「型検査が実効性を守らない」型の穴である**)。
+
+**(2) ⚠⚠ 照合で見つけた不足 (未修正のまま昇格させた)** — `IsThm7Law` の 4 節は
+**一次典拠の因数分解より弱い**。一次典拠は 13 変数の同時分布が
+「3 つの補助三つ組の条件つき分布 × 入力分布 × チャネル × 補助チャネル」の**積の形**であることを
+要求するが、本 def の第 2–4 節は**周辺分布しか縛っていない** ⟹ **出力が補助変数から入力の下で
+条件つき独立であることを要求していない** ⟹ **この述語は積の形より多くの法則を許す**。
+⚠ **この不足は probe から継承したものであり、本 leg で作ったものではない**。
+⚠ **本 leg では直さなかった** (直すには節の追加という設計変更と、その分の転記照合が新たに要る)。
+⭐ **代わりに `IsThm7Law` の docstring に、4 節が何を言っていて何を言っていないかを明記した**
+(コードが SoT)。⚠⚠ **この事実から他の領域との包含について何も導いていないし、導いてはならない**。
+
+**(3) `R₀ = 0` スライスの実効コンパクト性 (Π01 性)** — ⚠⚠ **1 行も触れていない**。
+本 leg が置いたのは `zeroRateSlice` の**集合レベルの可換性 2 本だけ**であり、
+**半計算可能性については何も言っていない**。
+⚠⚠ **「3 レート版から従う」とは書かない** (子 plan §4-b / R-4 = 判定ではなく禁止条項)。
+
+**(4) 2 つの束縛子が同じ集合を定めるか** — `(ν : Measure _) (hν : IsFiniteMeasure ν)` 版と
+`(ν : ProbabilityMeasure _)` 版が**同じ `thm7Region` を定めることは Lean で証明していない**。
+⚠ facts **N2-l (5)** が名指した未閉項 (法則が総質量を固定することが証明されていない) は**そのまま残る**。
+
+**(5) 型クラス 3 本を証明の中で構成できるか** — §3-(4) は 3 本を**仮定として**与えたときの話である。
+`Fintype α` + `StandardBorelSpace α` から `MeasurableSpace α = ⊤` を出して
+`letI : TopologicalSpace α := ⊥` を構成できるか (= **補題の署名を 4 本のまま保てるか**) は**未検証**。
+
+**(6) 中核 9 / 10** — **有界性も (α) 合致も 1 行も触れていない**。
+
+**(7) 監査** — 本 leg は**自己申告である**。新規 `sorry` 2 本 + `@residual` を入れたので
+**honesty-auditor / style-auditor の 2 gate は未実施**であり、⚠ **分類 (`plan:` であること) と
+署名の正直さは独立に検証されていない**。
 
 ## 6. 波及 (⚠ facts / 親 plan / 子 plan の書き換えは着地 leg の仕事)
 
