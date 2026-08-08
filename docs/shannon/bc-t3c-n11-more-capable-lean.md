@@ -30,7 +30,11 @@ N10 の判定を支えている唯一の解析的入力 `δ ≥ 0` の分だけ�
 **ファイル**: `InformationTheory/Shannon/BroadcastChannel/MoreCapableBinary.lean` (新規)。
 **配線**: `InformationTheory.lean` L134 に `import` を追記済 (`OuterBoundTransport` の直後)。
 
-### 1.1 標的 (起票 §5.1 L419–L423 の逐語形)
+### 1.1 標的 (起票時の §5.1 N11 起票ブロックが置いた逐語形)
+
+⚠ **起票ブロックの逐語 (標的の式・候補式・反証条件・見立て) は N14 の plan 刈り込みで plan から消えており、
+git 履歴のみが持つ** ⟹ **現行 plan の §5.1 を逐語の SoT として読まない**。
+**発火状況と見立ての当たり外れを持つのは [`bc-t3c-n12-stocktake.md`](bc-t3c-n12-stocktake.md) §5 (b)/(c) と本書である**。
 
 `MoreCapableBinary.lean:381`:
 
@@ -59,7 +63,7 @@ theorem log_two_mul_binEntropy_binConv_sub_binEntropy_le (hp₀ : 0 < p) (hp₁ 
 ⟹ 正確な記述は **「`p < 1/2` は必要ではないが、落とさずに置いてある」**である
 (⚠ **`p < 1/2` が必要であるかのように読ませない**)。
 
-### 1.2 半空間版 (起票 §5.1 L425 の「候補」— **置いた**)
+### 1.2 半空間版 (起票時の §5.1 N11 起票ブロックが「候補」として置いた式 — **置いた**。⚠ 逐語の所在は §1.1 と同じ)
 
 `MoreCapableBinary.lean:396`:
 
