@@ -944,14 +944,18 @@ theorem singleAuxSecondUserBoundFromZ_diagonal_eq_plainSecondUserBound (μ : Mea
 
 /-- The combination `(1 - t) · plainFirstUserBound + t · plainSumRateBound` of the two
 right-hand sides that the direction `(0, 1, t)` pairs, namely the ones on `R₀ + R₁` and on
-`R₀ + R₁ + R₂` stated through the plain system alone. -/
+`R₀ + R₁ + R₂` stated through the plain system alone.
+
+@audit:ok -/
 noncomputable def plainDirectionalCombination (μ : Measure Ω) [IsFiniteMeasure μ]
     (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂)
     (w : Ω → Wp) (u : Ω → Up) (v : Ω → Vp) (t : ℝ) : ℝ :=
   (1 - t) * plainFirstUserBound μ y z w u + t * plainSumRateBound μ x y z w u v
 
 /-- The expression `I(W, U; Y) + t · I(X; Z | W, U)`, which reads the plain system's pair
-`(W, U)` as a single auxiliary variable. -/
+`(W, U)` as a single auxiliary variable.
+
+@audit:ok -/
 noncomputable def plainDirectionalBound (μ : Measure Ω) [IsFiniteMeasure μ]
     (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (u : Ω → Up) (t : ℝ) : ℝ :=
   mutualInfoReal μ (fun ω ↦ (w ω, u ω)) y
@@ -985,7 +989,9 @@ theorem plainDirectionalCombination_le_plainDirectionalBound (μ : Measure Ω)
 
 /-- The expression `I(W, U; Y) + t · (I(X; Z) - I(W, U; Z))`, which replaces the conditional
 tail of `plainDirectionalBound` by the gap at the second receiver output between the input's
-mutual information and the auxiliary pair's. -/
+mutual information and the auxiliary pair's.
+
+@audit:ok -/
 noncomputable def plainDirectionalBoundCondFree (μ : Measure Ω) [IsFiniteMeasure μ]
     (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (u : Ω → Up) (t : ℝ) : ℝ :=
   mutualInfoReal μ (fun ω ↦ (w ω, u ω)) y
@@ -993,7 +999,9 @@ noncomputable def plainDirectionalBoundCondFree (μ : Measure Ω) [IsFiniteMeasu
 
 /-- Conditional independence of the plain system's pair `(W, U)` from the second receiver
 output given the input turns the conditional tail of `plainDirectionalBound` into the gap
-`I(X; Z) - I(W, U; Z)`. -/
+`I(X; Z) - I(W, U; Z)`.
+
+@audit:ok -/
 @[entry_point]
 theorem plainDirectionalBound_eq_condFree (μ : Measure Ω) [IsProbabilityMeasure μ]
     (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (u : Ω → Up) (t : ℝ)
