@@ -145,7 +145,8 @@ The last three clauses constrain marginals only. They pin the law of `(X, Y, Z)`
 make the outputs conditionally independent of the auxiliary variables given the input. A joint
 law satisfying the four clauses is therefore not forced to be a product of the conditional laws
 of the three triples with the two channels, and this predicate admits more laws than that
-product form does. -/
+product form does. Every set built from it below is accordingly at least as large as the
+corresponding set built from the product form. -/
 def IsThm7Law (W : BCChannel α β₁ β₂) (TJ : Kernel (α × β₁ × β₂) (bcAuxAlphabet.{u} kJ))
     (p : Measure α) (ν : Measure (Thm7Ambient kv kJ α β₁ β₂)) [IsFiniteMeasure ν] : Prop :=
   @iCondIndepFun (Thm7Ambient kv kJ α β₁ β₂) (Fin 3) _ _ inferInstance
@@ -242,8 +243,10 @@ lemma finite_setOf_lt_thm7Cap (α : Type u) [Fintype α] :
 The index is a space of probability measures on a finite ambient space, so it is compact once it
 carries the weak topology, and the union of a compact family of closed sets is closed as soon as
 the family has a closed graph. The graph is closed exactly when the twenty-five informations
-depend continuously on the joint law and the factorization cuts out a closed set of joint laws;
-neither is available here.
+depend continuously on the joint law and the factorization cuts out a closed set of joint laws.
+Continuity of an unconditional information in the joint pmf is available, as is the pattern that
+composes it with a marginal map; the conditional form and the passage from a measure on the
+ambient space to its pmf are the missing pieces.
 
 @residual(plan:bc-computable-region-formalization) -/
 lemma isClosed_iUnion_thm7RegionOfLaw (W : BCChannel α β₁ β₂) (p : Measure α) {kJ : ℕ}
