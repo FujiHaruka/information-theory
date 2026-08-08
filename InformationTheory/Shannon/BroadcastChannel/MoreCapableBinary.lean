@@ -374,7 +374,9 @@ private lemma gapFun_nonneg (hp₀ : 0 < p) (hp₁ : p < 2⁻¹) (hx₀ : 0 ≤ 
 symmetric channel with crossover probability `p`: at the input law `Bern(x)` the erasure
 channel's mutual information `(1 - h₂(p)) h₂(x)` is at least the symmetric channel's
 `h₂(x ∗ p) - h₂(p)`, where `x ∗ p = x (1 - p) + (1 - x) p`. Both sides are stated in nats and
-scaled by `Real.log 2`, so that `h₂ = Real.binEntropy / Real.log 2` clears. -/
+scaled by `Real.log 2`, so that `h₂ = Real.binEntropy / Real.log 2` clears.
+
+@audit:ok -/
 @[entry_point]
 theorem log_two_mul_binEntropy_binConv_sub_binEntropy_le (hp₀ : 0 < p) (hp₁ : p < 1 / 2)
     (hx₀ : 0 ≤ x) (hx₁ : x ≤ 1) :
@@ -384,10 +386,12 @@ theorem log_two_mul_binEntropy_binConv_sub_binEntropy_le (hp₀ : 0 < p) (hp₁ 
   simp only [gapFun, binConv] at h
   linarith
 
-/-- The comparison at an erasure probability `e` at most `h₂(p)`: the binary erasure channel
-with erasure probability `e` is more capable than the binary symmetric channel with crossover
-probability `p` as soon as `e ≤ h₂(p)`. Only the upper bound on `e` is used, so no lower bound
-on it is assumed. -/
+/-- The binary erasure channel with erasure probability `e` is more capable than the binary
+symmetric channel with crossover probability `p` as soon as `e ≤ h₂(p)`, where `h₂` is the
+binary entropy in bits. Only the upper bound on `e` is used, so no lower bound on it is
+assumed.
+
+@audit:ok -/
 @[entry_point]
 theorem binEntropy_binConv_sub_binEntropy_le {e : ℝ} (hp₀ : 0 < p) (hp₁ : p < 1 / 2)
     (he : e * Real.log 2 ≤ Real.binEntropy p) (hx₀ : 0 ≤ x) (hx₁ : x ≤ 1) :
