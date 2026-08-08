@@ -43,6 +43,15 @@ right-hand sides on `R₀`, on `R₀ + R₁` and on `R₀ + R₂` onto the three
 the plain system alone. With the sum-rate right-hand side, which is already stated through that
 system, four of the constraints survive.
 
+Two of the right-hand sides stated through the plain system alone, the one on `R₀ + R₁` and the
+one on `R₀ + R₁ + R₂`, can be weighted against each other. Reading the plain system's pair
+`(W, U)` as a single auxiliary variable bounds every such weighting by a single expression whose
+first term is `I(W, U; Y)`: the chain rule at `(W, U)` absorbs the first user's tail, and the
+sum-rate right-hand side is discarded onto the branch of its inner minimum that carries the same
+tail. Conditional independence of `(W, U)` from the second receiver output given the input, which
+the bound builds into its witnesses, then rewrites the remaining conditional term as a difference
+of two mutual informations with that output.
+
 Everything below relates right-hand sides of constraints to one another. Turning such a relation
 into a statement about the rate regions the two bounds cut out needs the constraints themselves,
 and that step is not taken here.
@@ -69,6 +78,11 @@ and that step is not taken here.
   one-auxiliary-receiver bound on `R₀ + R₁ + R₂`.
 * `secondUserSlack` — the slack in the upper half of the compatibility condition that ties the
   second user's tail in the first enhanced system to the input.
+* `plainDirectionalCombination` — the weighting `(1 - t) · plainFirstUserBound +
+  t · plainSumRateBound` of the two plain right-hand sides that the direction `(0, 1, t)` pairs.
+* `plainDirectionalBound` and `plainDirectionalBoundCondFree` — the two forms of the upper bound
+  on that weighting, `I(W, U; Y) + t · I(X; Z | W, U)` and
+  `I(W, U; Y) + t · (I(X; Z) - I(W, U; Z))`.
 
 ## Main statements
 
@@ -96,6 +110,12 @@ and that step is not taken here.
   `singleAuxSecondUserBoundFromZ_diagonal_eq_plainSecondUserBound` — feeding one system to all
   three slots collapses five of the constraints onto the three stated through the plain system
   alone, whatever the auxiliary receiver output is.
+* `plainDirectionalCombination_le_plainDirectionalBound` — every nonnegative weighting of the two
+  plain right-hand sides is at most `I(W, U; Y) + t · I(X; Z | W, U)`.
+* `plainDirectionalBound_eq_condFree` and
+  `plainDirectionalCombination_le_plainDirectionalBoundCondFree` — the conditional tail of that
+  upper bound is the difference `I(X; Z) - I(W, U; Z)` once `(W, U)` is conditionally independent
+  of the second receiver output given the input.
 
 None of the five comparisons uses the compatibility conditions tying the three systems of the
 one-auxiliary-receiver bound together; the chain rule and the data processing inequality
@@ -919,6 +939,93 @@ theorem singleAuxSecondUserBoundFromZ_diagonal_eq_plainSecondUserBound (μ : Mea
   rw [singleAuxSecondUserBoundFromZ_eq_jFree μ y z j w w v w (by ring)]
   unfold singleAuxSecondUserBoundFromZJFree plainSecondUserBound
   rw [add_min_zero_sub, min_comm (mutualInfoReal μ w z) (mutualInfoReal μ w y)]
+
+/-! ### A directional combination of the plain right-hand sides -/
+
+/-- The combination `(1 - t) · plainFirstUserBound + t · plainSumRateBound` of the two
+right-hand sides that the direction `(0, 1, t)` pairs, namely the ones on `R₀ + R₁` and on
+`R₀ + R₁ + R₂` stated through the plain system alone. -/
+noncomputable def plainDirectionalCombination (μ : Measure Ω) [IsFiniteMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂)
+    (w : Ω → Wp) (u : Ω → Up) (v : Ω → Vp) (t : ℝ) : ℝ :=
+  (1 - t) * plainFirstUserBound μ y z w u + t * plainSumRateBound μ x y z w u v
+
+/-- The expression `I(W, U; Y) + t · I(X; Z | W, U)`, which reads the plain system's pair
+`(W, U)` as a single auxiliary variable. -/
+noncomputable def plainDirectionalBound (μ : Measure Ω) [IsFiniteMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (u : Ω → Up) (t : ℝ) : ℝ :=
+  mutualInfoReal μ (fun ω ↦ (w ω, u ω)) y
+    + t * condMutualInfoReal μ x z (fun ω ↦ (w ω, u ω))
+
+/-- The combination the direction `(0, 1, t)` forms from the two plain right-hand sides is at
+most `I(W, U; Y) + t · I(X; Z | W, U)` for every nonnegative `t`.
+
+This relates right-hand sides of constraints to one another, and says nothing about the rate
+regions those constraints cut out. -/
+@[entry_point]
+theorem plainDirectionalCombination_le_plainDirectionalBound (μ : Measure Ω)
+    [IsProbabilityMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂)
+    (w : Ω → Wp) (u : Ω → Up) (v : Ω → Vp) (t : ℝ)
+    (hy : Measurable y) (hw : Measurable w) (hu : Measurable u) (ht : 0 ≤ t) :
+    plainDirectionalCombination μ x y z w u v t ≤ plainDirectionalBound μ x y z w u t := by
+  have hchain : mutualInfoReal μ (fun ω ↦ (w ω, u ω)) y
+      = mutualInfoReal μ w y + condMutualInfoReal μ u y w :=
+    mutualInfoReal_pair_eq_add μ u y w hu hy hw
+  have hbranch :
+      min (condMutualInfoReal μ v z w + condMutualInfoReal μ x y (fun ω ↦ (w ω, v ω)))
+          (condMutualInfoReal μ u y w + condMutualInfoReal μ x z (fun ω ↦ (w ω, u ω)))
+        ≤ condMutualInfoReal μ u y w + condMutualInfoReal μ x z (fun ω ↦ (w ω, u ω)) :=
+    min_le_right _ _
+  have hmin : min (mutualInfoReal μ w y) (mutualInfoReal μ w z) ≤ mutualInfoReal μ w y :=
+    min_le_left _ _
+  unfold plainDirectionalCombination plainDirectionalBound plainFirstUserBound plainSumRateBound
+  rw [hchain]
+  linarith [mul_le_mul_of_nonneg_left hbranch ht]
+
+/-- The expression `I(W, U; Y) + t · (I(X; Z) - I(W, U; Z))`, which replaces the conditional
+tail of `plainDirectionalBound` by the gap at the second receiver output between the input's
+mutual information and the auxiliary pair's. -/
+noncomputable def plainDirectionalBoundCondFree (μ : Measure Ω) [IsFiniteMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (u : Ω → Up) (t : ℝ) : ℝ :=
+  mutualInfoReal μ (fun ω ↦ (w ω, u ω)) y
+    + t * (mutualInfoReal μ x z - mutualInfoReal μ (fun ω ↦ (w ω, u ω)) z)
+
+/-- Conditional independence of the plain system's pair `(W, U)` from the second receiver
+output given the input turns the conditional tail of `plainDirectionalBound` into the gap
+`I(X; Z) - I(W, U; Z)`. -/
+@[entry_point]
+theorem plainDirectionalBound_eq_condFree (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂) (w : Ω → Wp) (u : Ω → Up) (t : ℝ)
+    (hx : Measurable x) (hz : Measurable z) (hw : Measurable w) (hu : Measurable u)
+    (hmarkov : IsMarkovChain μ (fun ω ↦ (w ω, u ω)) x z) :
+    plainDirectionalBound μ x y z w u t = plainDirectionalBoundCondFree μ x y z w u t := by
+  have hpeel := mutualInfoReal_add_condMutualInfoReal_eq_of_markov μ (fun ω ↦ (w ω, u ω)) x z
+    (hw.prodMk hu) hx hz hmarkov
+  have hgap : mutualInfoReal μ x z - mutualInfoReal μ (fun ω ↦ (w ω, u ω)) z
+      = condMutualInfoReal μ x z (fun ω ↦ (w ω, u ω)) := by linarith
+  unfold plainDirectionalBound plainDirectionalBoundCondFree
+  rw [hgap]
+
+/-- The combination the direction `(0, 1, t)` forms from the two plain right-hand sides is at
+most `I(W, U; Y) + t · (I(X; Z) - I(W, U; Z))` for every nonnegative `t`, once the plain
+system's pair `(W, U)` is conditionally independent of the second receiver output given the
+input.
+
+This relates right-hand sides of constraints to one another, and says nothing about the rate
+regions those constraints cut out. -/
+@[entry_point]
+theorem plainDirectionalCombination_le_plainDirectionalBoundCondFree (μ : Measure Ω)
+    [IsProbabilityMeasure μ]
+    (x : Ω → A) (y : Ω → B₁) (z : Ω → B₂)
+    (w : Ω → Wp) (u : Ω → Up) (v : Ω → Vp) (t : ℝ)
+    (hx : Measurable x) (hy : Measurable y) (hz : Measurable z)
+    (hw : Measurable w) (hu : Measurable u) (ht : 0 ≤ t)
+    (hmarkov : IsMarkovChain μ (fun ω ↦ (w ω, u ω)) x z) :
+    plainDirectionalCombination μ x y z w u v t
+      ≤ plainDirectionalBoundCondFree μ x y z w u t := by
+  rw [← plainDirectionalBound_eq_condFree μ x y z w u t hx hz hw hu hmarkov]
+  exact plainDirectionalCombination_le_plainDirectionalBound μ x y z w u v t hy hw hu ht
 
 end Transport
 
