@@ -2,6 +2,8 @@
 
 > **Parent**: [`bc-open-problem-t3c-plan.md`](bc-open-problem-t3c-plan.md) §6-5 / §7 判断ログ 3
 > **Status**: 起票 (2026-08-08)。⚠ **未着手** — `InformationTheory/` へは 1 行も書いていない。
+> ⭐ **親 N17 (2026-08-09) で単位 B に着手予定** (親 §7 判断ログ 12 / 起票の凍結先 =
+> [`bc-t3c-n17-unit-b.md`](bc-t3c-n17-unit-b.md)。⚠ **本 Status 行は実際に 1 行書いた後でなければ直さない**)。
 > **退出タグ**: `@residual(plan:bc-computable-region-formalization)`
 > (filename stem は `-plan` つき。slug が末尾の `-plan` を落とすのは家系の先例
 > `@residual(plan:bc-open-problem-t3)` ↔ `bc-open-problem-t3-plan.md` と同じ形)
@@ -17,8 +19,10 @@
 - [ ] **F0** 在庫 Phase (⚠ 実装より先。単位ごとに着手直前) 📋 — **proof-log: no**
 - [ ] **A** 計算可能解析の層 (中核 1–7 + (β) 語彙。BC から独立) 📋 — **proof-log: yes**
       (⚠ 中核 1 本ごとに「何が通って何が通らなかったか」を残す。行数が 1 行も測れていない唯一の単位)
-- [ ] **B** 3 レート `Thm7(W)` の領域層 (受け皿 + 中核 8–10) 📋 — **proof-log: no**
+- [ ] **B** 3 レート `Thm7(W)` の領域層 (受け皿 + 中核 8–10) 🚧 — **proof-log: no**
       (受け皿は `probes/t3c-n2/r1-thm7-region.lean` が出発点。⚠ 中核 8 で詰まったときだけ起こす)
+      ⭐ **親 N17 で着手 (2026-08-09)** — 起票 = [`bc-t3c-n17-unit-b.md`](bc-t3c-n17-unit-b.md)
+      (受け皿の昇格 + gateway atom = 中核 8)。⚠ **完了ではない** / ⚠ **中核 9 / 10 は N18 以降**
 - [ ] **C** 3 レート operational との接続 (中核 11 + D2。B に依存) 📋 — **proof-log: yes**
       (⚠⚠ **員数未測定** ⟹ 測定そのものが成果物になる。§3.3)
 
