@@ -382,7 +382,7 @@ rg -c '^\*\*leg 冒頭宣言 \(N([3-9]|1[0-6])\)\*\*: 側 = \(C2\)' docs/shannon
 
 > 着地 = `InformationTheory/Shannon/BroadcastChannel/OuterBoundTransport.lean` の**新規 6 宣言** (def 3 + `@[entry_point]` 定理 3。**0 sorry / 0 `@residual`**、3 定理とも `#print axioms` が
 > `[propext, Classical.choice, Quot.sound]`) + facts [`bc-facts.md`](bc-facts.md) `## N8 (T3c)`。commit = `51d1ccb1` (実装) / `72aaef9a` (監査) / `d9fa6558` (style gate)。
-> ⚠⚠ **載ったのは N7 §2.1 の `(R1)` 1 本だけである** — ⚠ **「上界の連鎖」と書いてはならない**。`(R2)` (`U' := (U,W)` の事後分解) と `(R3)` (2 つの緩和) は**載っていない**
+> ⚠⚠ **載ったのは N7 §2.1 の `(R1)` 1 本だけである** — ⚠ **上の冒頭宣言と commit `51d1ccb1` の件名が書く「上界の連鎖」は過大であり、以後そう書かない**。`(R2)` (`U' := (U,W)` の事後分解) と `(R3)` (2 つの緩和) は**載っていない**
 > ⟹ **`h_Thm7(0,1,t)` の上界そのものは Lean に無い**。⚠⚠ **載ったのは制約の右辺どうしの不等式**であって、**レート領域の包含については 1 文字も言っていない**。
 > ⭐ **散文より強い形で載った 2 点**: 主定理 `plainDirectionalCombination_le_plainDirectionalBound` は **マルコフ仮説を 1 本も持たず** (可測性 3 本 + `0 ≤ t` のみ)、**`t ≤ 1` も要らない**。
 > ⚠⚠ **ただし `t ≤ 1` が不要なのは不等式の話であって、`(1−t)(18b) + t(18i)` を方向 `(0,1,t)` の支持値の上界として読む LP の読みは、重みが 2 つとも非負の範囲 = `0 ≤ t ≤ 1` でしか成り立たない** (⚠ **この 2 つを混ぜて書かない**)。
