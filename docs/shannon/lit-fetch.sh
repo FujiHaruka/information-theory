@@ -51,6 +51,7 @@ twoclass	https://chandra.ie.cuhk.edu.hk/pub/papers/BC/twoclass-full.pdf
 mp	https://arxiv.org/pdf/1609.06877
 concenve	http://chandra.ie.cuhk.edu.hk/pub/papers/manuscripts/concenve.pdf
 marcon	https://chandra.ie.cuhk.edu.hk/pub/papers/BC/Mar-Con.pdf
+glnsum	https://arxiv.org/pdf/2606.12839
 LIST
 
 # ⚠ stem 名の注意 (台帳の逐語):
@@ -59,8 +60,11 @@ LIST
 #   gjnw  — 台帳は stem `gjnw` = Nair–Wang–Geng とだけ書き、URL を記録していない。
 #           ジャーナル版と思われる `inineq` を別 stem で取ってあるが、⚠ 同定は未確認である。
 #   dou24 — PDF ではなく HTML なので下の別ブロックで取る。
-#   0901.0595 / 2606.12839 — 台帳が novelty gate の掃引対象として id だけ挙げており、
+#   0901.0595 — 台帳が novelty gate の掃引対象として id だけ挙げており、
 #           `$LIT/<stem>.txt` を引く claim 行が無いので本スクリプトには入れていない。
+#   glnsum — Gohari–Liu–Nair, *The Capacity Region for Classes of Sum-Broadcast Channels*
+#           (arXiv:2606.12839)。N15 が逐語で引く (`verifiers/n15_instance_gate.py` の G0)。
+#           ⚠ 以前は id だけが台帳にあり本スクリプトには入っていなかった。
 
 fetch_pdf() {
   local stem="$1" url="$2"
