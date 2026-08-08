@@ -207,6 +207,32 @@ def r_beta(K, sigma):
     return arc(K, beta_of_sigma(K, sigma))[0]
 
 
+def r_L(K, sigma, eps):
+    """max { x : (x, sigma - x) in K_b + [0,eps]^2 }, -inf if the level is empty.
+
+    # corrected by N9audit (訂正 3): the first version took this boundary to be
+    r_beta(sigma) + eps, which is BELOW the truth because r_beta decreases in
+    sigma on [2C, SR_C] -- the shortfall reaches 8.151e-04 = 3921 eps near the
+    sum-rate face, where dr_beta/dsigma blows up.  Writing a point of the level
+    sigma as (a + u, b + v) with (a, b) in K_b and u, v in [0, eps] gives
+    x <= min(eps, t) + r_beta(sigma - t) for t = u + v, and the maximum over
+    t in [0, 2 eps] is taken here.  Its breakpoints are t = 0, eps, 2 eps and
+    the two where sigma - t hits 2C / SR_C; a grid is added for safety.  The
+    level is non-empty up to sigma = SR_C + 2 eps, not SR_C.
+    """
+    cands = [0.0, eps, 2.0 * eps, sigma - K["twoC"], sigma - K["SR"]]
+    cands += list(np.linspace(0.0, 2.0 * eps, 17))
+    best = -np.inf
+    for t in cands:
+        if t < 0.0 or t > 2.0 * eps:
+            continue
+        s = sigma - t
+        if s < 0.0 or s > K["SR"]:
+            continue
+        best = max(best, min(eps, t) + r_beta(K, s))
+    return best
+
+
 # ---------------------------------------------------------- support of a box
 
 
@@ -236,6 +262,31 @@ def level_vertices(sigma, rs):
         return []
     return [(0.0, rs, sigma - rs), (0.0, sigma - rs, rs),
             (2.0 * rs - sigma, sigma - rs, sigma - rs)]
+
+
+def level_vertices_capped(sigma, rs, cap0):
+    """Vertices of {R >= 0 : sum = sigma, R0 <= cap0, R0+R1 <= rs, R0+R2 <= rs}.
+
+    An exact 2-D vertex enumeration in (R0, R1) with R2 = sigma - R0 - R1, so a
+    level can be swept at its extreme points rather than sampled.
+    """
+    cons = [(-1.0, 0.0, 0.0),           # R0 >= 0
+            (0.0, -1.0, 0.0),           # R1 >= 0
+            (1.0, 1.0, sigma),          # R2 >= 0
+            (1.0, 0.0, cap0),           # R0 <= cap0
+            (1.0, 1.0, rs),             # R0 + R1 <= rs
+            (0.0, -1.0, rs - sigma)]    # R0 + R2 <= rs
+    out = []
+    for i in range(len(cons)):
+        for j in range(i + 1, len(cons)):
+            A = np.array([cons[i][:2], cons[j][:2]], dtype=float)
+            if abs(float(np.linalg.det(A))) < 1e-13:
+                continue
+            x = np.linalg.solve(A, np.array([cons[i][2], cons[j][2]]))
+            if all(c0 * x[0] + c1 * x[1] <= rhs + 1e-12 for c0, c1, rhs in cons):
+                out.append((float(x[0]), float(x[1]),
+                            float(sigma - x[0] - x[1])))
+    return out
 
 
 def box_support(caps, lam):
@@ -273,18 +324,33 @@ def in_box(caps, R, tol=1e-12):
 # ---------------------------------------------------------------- D_b itself
 
 
-def in_D(K, R, tol=1e-12, cap0=None, r=None):
-    """Membership in D_b = {R >= 0 : R0 <= 2C, both projections in K_b}."""
+def in_D(K, R, tol=1e-12, cap0=None, r=None, sig_max=None):
+    """Membership in D_b = {R >= 0 : R0 <= 2C, both projections in K_b}.
+
+    # corrected by N9audit (訂正 3): sig_max is now a parameter.  It was hard
+    wired to SR_C, which silently discarded the band sigma in (SR_C, SR_C+2eps]
+    whenever this was called on the eps-inflated set (see c15).
+    """
     r = r or (lambda s: r_beta(K, s))
     cap0 = K["twoC"] if cap0 is None else cap0
+    sig_max = K["SR"] if sig_max is None else sig_max
     R0, R1, R2 = R
     if min(R) < -tol or R0 > cap0 + tol:
         return False
     sigma = R0 + R1 + R2
-    if sigma > K["SR"] + tol:
+    if sigma > sig_max + tol:
         return False
-    rs = r(min(sigma, K["SR"]))
+    rs = r(min(sigma, sig_max))
     return R0 + R1 <= rs + tol and R0 + R2 <= rs + tol
+
+
+def D_violation(K, R):
+    """How far R sits outside D_b (<= 0 means inside), in rate units."""
+    R0, R1, R2 = R
+    sigma = R0 + R1 + R2
+    rs = r_beta(K, min(max(sigma, 0.0), K["SR"]))
+    return max(-min(R), R0 - K["twoC"], sigma - K["SR"],
+               R0 + R1 - rs, R0 + R2 - rs)
 
 
 def D_support_numeric(K, lam, grid=1201):
@@ -433,17 +499,34 @@ def c6_sigma_sweep(K):
 
 def c7_arc_is_concave(K):
     """dR2/dR1 is monotone along the arc, so conv(arc)'s Pareto face is
-    the arc itself (needed for r_beta = R1(beta(sigma)))."""
-    bs = np.linspace(1e-6, K["astar"], 4001)
+    the arc itself (needed for r_beta = R1(beta(sigma))).
+
+    # corrected by N9audit (訂正 5): the slope has NO finite lower bound.
+    The value -4.1735 the first version reported as the start of the range was
+    the bottom end of a linear grid np.linspace(1e-6, alpha*, 4001), not an
+    infimum -- dR2/dR1 ~ -0.209 log2(1/beta) diverges as beta -> 0, so the arc
+    is vertical at the beta = 0 corner and carries no finite Lipschitz constant
+    there.  What the leg actually needs is the monotonicity, which does hold on
+    all of (0, alpha*]; it is re-checked here on a log grid down to 1e-300.
+    """
     p, C = K["p"], K["C"]
-    slope = np.array([-(C * dh2(b)) / ((1.0 - 2.0 * p) * dh2(K["star"](b)))
-                      for b in bs])
+
+    def slope(b):
+        return -(C * dh2(b)) / ((1.0 - 2.0 * p) * dh2(K["star"](b)))
+
     # beta increases => R1 decreases; concavity of R2(R1) <=> slope increasing
-    dmin = float(np.diff(slope).min())
-    record("C7 the arc is the concave Pareto face of K_b", dmin > 0.0,
-           f"dR2/dR1 runs from {slope[0]:.4f} to {slope[-1]:.6f} with min "
-           f"increment {dmin:.3e} -- monotone, so no chord of the arc pokes "
-           f"outside it (slope reaches -1 exactly at alpha*)")
+    lin = np.array([slope(b) for b in np.linspace(1e-6, K["astar"], 4001)])
+    log = np.array([slope(b) for b in np.logspace(-300.0, -6.0, 30001)])
+    dlin, dlog = float(np.diff(lin).min()), float(np.diff(log).min())
+    tail = ", ".join(f"slope({b:.0e}) = {slope(b):.2f}"
+                     for b in (1e-6, 1e-20, 1e-100, 1e-300))
+    record("C7 the arc is the concave Pareto face of K_b",
+           dlin > 0.0 and dlog > 0.0,
+           f"dR2/dR1 is strictly increasing on (0, alpha*] -- min increment "
+           f"{dlog:.3e} on a log grid 1e-300..1e-6 and {dlin:.3e} on a linear "
+           f"grid 1e-6..alpha* -- and reaches {lin[-1]:.6f} at alpha*, so no "
+           f"chord of the arc pokes outside it.  It is NOT bounded below: "
+           f"{tail} (log divergence, i.e. the arc is vertical at beta = 0)")
 
 
 def c8_r_beta_certificate(K):
@@ -583,32 +666,74 @@ def c14_box_projection(rng, draws=20000):
 
 
 def c15_epsilon_bookkeeping(K, rng, draws=4000):
-    """D' subset D_b + {0} x [0,eps]^2, so the tolerance travels with
-    coefficient 1 per rate coordinate and 0 on R0."""
+    """D(K_b + [0,eps]^2) subset D_b + {0} x [0,eps]^2, so the tolerance
+    travels with coefficient 1 per rate coordinate and 0 on R0.
+
+    # corrected by N9audit (訂正 2 / 訂正 3), on three counts:
+      - the translation is the componentwise truncated one, R - (0, min(R1,eps),
+        min(R2,eps)).  The verbatim R - (0,eps,eps) is false at R = (0,0,0)
+        (negative coordinates), and the first version skipped precisely that
+        boundary with `if min(shifted) < -1e-15: continue`.
+      - the outer set uses the true right boundary r_L(sigma) instead of
+        r_beta(sigma) + eps (訂正 3), and the sum level now runs to SR_C + 2 eps,
+        so the band sigma in (SR_C, SR_C + 2 eps] -- the one where eps bites
+        hardest in the sum-rate direction -- is swept instead of discarded.
+      - the extreme points of every level are enumerated exactly; the random
+        draws of the first version are kept alongside but they remain a SCREEN.
+    ⚠ this is still a numerical sweep, not an identity: the identity-level
+    backing for this step is the independent audit (support-function branches +
+    an endpoint sweep on the true r_L), not this test.
+    """
     eps = EPS_N7
-    r_out = lambda s: r_beta(K, max(0.0, s - 0.0)) + eps   # K_b + [0,eps]^2
-    bad, worst_gap = 0, 0.0
-    for _ in range(draws):
-        sigma = rng.uniform(0.0, K["SR"] + 2 * eps)
-        rs = r_beta(K, min(sigma, K["SR"])) + eps
-        R0 = rng.uniform(0.0, max(1e-12, 2 * rs - sigma))
-        R1 = rng.uniform(max(0.0, sigma - R0 - rs), sigma - R0)
+    sig_max = K["SR"] + 2.0 * eps
+    rL = lambda s: r_L(K, s, eps)
+
+    def shift(R):
+        return (R[0], R[1] - min(R[1], eps), R[2] - min(R[2], eps))
+
+    # (a) exact extreme points of every level of D(K_b + [0,eps]^2)
+    sig = np.unique(np.concatenate([
+        np.linspace(0.0, sig_max, 2001),
+        np.linspace(K["SR"] - 2.0 * eps, sig_max, 401),
+        np.linspace(K["twoC"] - 2.0 * eps, K["twoC"] + 2.0 * eps, 401)]))
+    band = int(((sig > K["SR"]) & (sig <= sig_max)).sum())
+    worst_v, checked = -1e9, 0
+    for s in sig:
+        rs = rL(s)
+        if not np.isfinite(rs):
+            continue
+        for R in level_vertices_capped(s, rs, K["twoC"]):
+            if not in_D(K, R, tol=1e-12, r=rL, sig_max=sig_max):
+                continue
+            checked += 1
+            worst_v = max(worst_v, D_violation(K, shift(R)))
+
+    # (b) random interior draws (SCREEN), half of them inside the eps band
+    worst_r, drawn = -1e9, 0
+    for i in range(draws):
+        lo = K["SR"] - 2.0 * eps if i % 2 else 0.0
+        sigma = rng.uniform(lo, sig_max)
+        rs = rL(sigma)
+        if not np.isfinite(rs):
+            continue
+        hi0 = min(K["twoC"], max(0.0, 2.0 * rs - sigma))
+        R0 = rng.uniform(0.0, hi0) if hi0 > 0.0 else 0.0
+        R1 = rng.uniform(max(0.0, sigma - R0 - rs), max(0.0, sigma - R0))
         R = (R0, R1, sigma - R0 - R1)
-        if min(R) < 0 or not in_D(K, R, tol=1e-14, r=r_out):
+        if min(R) < 0.0 or not in_D(K, R, tol=1e-14, r=rL, sig_max=sig_max):
             continue
-        shifted = (R[0], R[1] - eps, R[2] - eps)
-        if min(shifted) < -1e-15:
-            continue
-        if not in_D(K, shifted, tol=1e-14):
-            bad += 1
-    for lam in [(1.1, 1, 1), (1.5, 1, 1), (1.3, 1, 0.7)]:
-        gap = D_support_numeric(K, lam, grid=401)
-        worst_gap = max(worst_gap, gap)
+        drawn += 1
+        worst_r = max(worst_r, D_violation(K, shift(R)))
+
     record("C15 the N7 tolerance travels with coefficient lam1 + lam2",
-           bad == 0,
-           f"{bad} failures of 'R in D(K_b+[0,eps]^2) => R - (0,eps,eps) in "
-           f"D_b' over {draws} draws (eps = {eps:.4e}) -- so h_D' <= h_{{D_b}} "
-           f"+ eps(lam1+lam2), i.e. 2 eps = {2 * eps:.4e} for lam1 = lam2 = 1")
+           worst_v < 1e-9 and worst_r < 1e-9 and band > 0 and drawn > 0,
+           f"max violation of 'R - (0, min(R1,eps), min(R2,eps)) in D_b' = "
+           f"{worst_v:.3e} over {checked} exact extreme points of "
+           f"D(K_b+[0,eps]^2) ({len(sig)} sum levels up to SR_C + 2 eps, of "
+           f"which {band} lie in the band (SR_C, SR_C+2eps]) and {worst_r:.3e} "
+           f"over {drawn} random draws (eps = {eps:.4e}) -- so h_D' <= "
+           f"h_{{D_b}} + eps(lam1+lam2), i.e. 2 eps = {2 * eps:.4e} at "
+           f"lam1 = lam2 = 1")
 
 
 def c16_negative_control_polytope():
