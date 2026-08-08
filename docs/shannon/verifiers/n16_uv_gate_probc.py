@@ -456,8 +456,7 @@ def d_group():
     worst = 1e9
     for t in np.linspace(0.0, 1.0, 21):
         b = inst.argdstar(float(t))
-        s = np.array([(1 - b), 0.0, b, 0.0])          # X1 = 0 deterministic, X2 ~ Bern(b)
-        s = np.array([(1 - b), b, 0.0, 0.0])          # index order (x1,x2): x1=0 fixed
+        s = np.array([(1 - b), b, 0.0, 0.0])          # X1 = 0 deterministic, X2 ~ Bern(b)
         val = t * inst.IXZ(s) - inst.IXY(s)
         worst = min(worst, val - inst.dstar(float(t)))
     check("D8  Omega(t) >= dstar_t by the explicit product law X1=0, X2~Bern(beta*_t) (21 values)",
@@ -650,7 +649,8 @@ def r_group():
     check("R3  power check: the search attains h_C (max shortfall over the 10 directions)",
           max(gaps) < 5e-3, "max shortfall = %.3e" % max(gaps))
 
-    # R4 -- the C-side witness and the identities off the curve e = h(p).
+    # R5 -- the C-side witness and the identities off the curve e = h(p).
+    # (There is no test R4: the R group is R1, R2, R3, R5, R6.)
     bad = []
     for p, e in ((0.1, 0.2), (0.2, 0.3), (0.05, 0.1), (0.3, 0.5), (0.2, h2(0.2))):
         if e > h2(p):
