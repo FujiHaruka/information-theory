@@ -116,9 +116,38 @@ def _ternary(f, lo, hi, iters=250):
     return 0.5 * (lo + hi)
 
 
-ALPHA = _ternary(lambda b: psi_t_s(b, 1.0), 1e-12, 0.5)
+def _bisect(f, lo, hi, iters=200):
+    """f(lo) > 0 > f(hi)."""
+    for _ in range(iters):
+        mid = 0.5 * (lo + hi)
+        if f(mid) > 0.0:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
+
+
+def _dpsi_t(b, t):
+    """d/db of psi_t(b) = t*C*h(b) - h(b*p) + h(p)."""
+    return t * CAP * h2p(b) - (1 - 2 * P) * h2p(bstar(b))
+
+
+# alpha* solves psi'(b) = 0 on (0, 0.4); bisection on the derivative is exact to
+# machine precision, whereas a ternary search on the (flat) maximum is not.
+ALPHA = _bisect(lambda b: _dpsi_t(b, 1.0), 1e-12, 0.4)
 DSTAR = psi_t_s(ALPHA, 1.0)
 SR_C = 2.0 * CAP + DSTAR
+
+
+def dstar_t(t):
+    """max over b in [0, 1/2] of psi_t(b); 0 when the derivative never vanishes."""
+    if t <= 0.0:
+        return 0.0
+    if _dpsi_t(0.4, t) > 0.0:
+        b = _bisect(lambda x: _dpsi_t(x, t), 0.4, 0.5 - 1e-15)
+    else:
+        b = _bisect(lambda x: _dpsi_t(x, t), 1e-15, 0.4)
+    return max(psi_t_s(b, t), 0.0)
 
 
 def R1b(b):
@@ -469,6 +498,34 @@ M, B1, B2, S, _ = theorem3_caps(beta_split_joint(ALPHA, 0.2), beta_split_joint(A
 check("B5 explicit (non-random) informative-aux witness has S < B1+B2-M strictly",
       B1 + B2 - M - S > 1e-6, f"B1+B2-M-S = {B1 + B2 - M - S:.9f}")
 
+# the exact equality class is wider than "aux = const": S1 - (B1+B2-M) =
+# I(X1;Y1|V1,W1) - I(X1;Y1|W1) - I(U2;Y2|W2) - I(V1;Z1|W1) <= 0, with equality
+# iff both auxiliaries are informationally inert.  Build an inert but
+# NON-constant auxiliary (|A| = 3, A independent of (W, X)) and check equality.
+def inert_aux(b, na=3):
+    j = np.zeros((2, na, 2))
+    wts = np.array([0.5, 0.3, 0.2])[:na]
+    wts = wts / wts.sum()
+    for w in range(2):
+        q = b if w == 0 else 1 - b
+        for x in range(2):
+            pxx = q if x == 1 else 1 - q
+            for a in range(na):
+                j[w, a, x] = 0.5 * pxx * wts[a]
+    return j
+
+
+w = 0.0
+for i in range(51):
+    b = ALPHA * i / 50.0
+    M, B1, B2, S, (S1, S2) = theorem3_caps(inert_aux(b), inert_aux(b))
+    w = max(w, abs(S - (B1 + B2 - M)))
+check("B7 the exact equality class of N9 Sec 2.2 is wider than `V1 = U2 = const`: "
+      "any INFORMATIONALLY INERT auxiliary (|A| = 3, A independent of (W,X)) also "
+      "gives S = B1+B2-M exactly => N9's Sec 5-6 reservation can be tightened to an "
+      "identity with an exact equality characterization",
+      w < 1e-12, f"max |S - (B1+B2-M)| = {w:.3e} over 51 betas with |A| = 3")
+
 Ms = []
 for _ in range(300):
     nw1, nw2 = int(rng.integers(1, 5)), int(rng.integers(1, 5))
@@ -510,10 +567,21 @@ def in_thm7(fam, R):
 
 
 viol, tested = 0, 0
-for _ in range(400):
+for _ in range(600):
     fam = make_family(3, 3, 3)
-    for _ in range(60):
-        R = tuple(Fraction(int(rng.integers(0, 25)), 4) for _ in range(3))
+    cand = [tuple(Fraction(int(rng.integers(0, 25)), 4) for _ in range(3))
+            for _ in range(20)]
+    # also sample points drawn from inside the family's own boxes, so that the
+    # in-set population is not dominated by the trivial region near the origin
+    for lvl in fam:
+        for inner in lvl:
+            for A, B1, B2, S in inner:
+                r0 = Fraction(int(rng.integers(0, 9)), 8) * A
+                r1 = Fraction(int(rng.integers(0, 9)), 8) * max(B1 - r0, Fraction(0))
+                r2 = Fraction(int(rng.integers(0, 9)), 8) * \
+                    max(min(B2 - r0, S - r0 - r1), Fraction(0))
+                cand.append((r0, r1, r2))
+    for R in cand:
         if in_thm7(fam, R):
             tested += 1
             if not (in_thm7(fam, phi(R)) and in_thm7(fam, psi_map(R))):
@@ -542,7 +610,7 @@ for _ in range(3000):
     j2 = rng.dirichlet(np.ones(nw2 * na2 * 2)).reshape(nw2, na2, 2)
     M, B1, B2, S, _ = theorem3_caps(j1, j2)
     for _ in range(6):
-        r0 = float(rng.uniform(0, M))
+        r0 = float(rng.uniform(0, max(M, 0.0)))
         r1 = float(rng.uniform(0, max(B1 - r0, 0)))
         r2 = float(rng.uniform(0, max(min(B2 - r0, S - r0 - r1), 0)))
         R = (r0, r1, r2)
@@ -583,28 +651,52 @@ check("D3 the arc is concave: dR2/dR1 is monotone in beta (so R2 is concave in R
       mono and abs(sl[-1] + 1.0) < 1e-4,
       f"slope on this grid: [{sl[0]:.4f}, {sl[-1]:.6f}]")
 
-tiny = [1e-6, 1e-9, 1e-12, 1e-15]
+logb = np.logspace(-300, math.log10(ALPHA), 30000)
+slog = [CAP * h2p(float(b)) / (-(1 - 2 * P) * h2p(bstar(float(b)))) for b in logb]
+check("D3b BREAK: N9's C7 grid starts at beta = 1e-6, so the interval (0, 1e-6) -- "
+      "exactly where the arc is nearly vertical -- carries no machine evidence "
+      "there.  Re-check monotonicity on a log grid down to beta = 1e-300",
+      all(slog[i] <= slog[i + 1] + 1e-12 for i in range(len(slog) - 1)),
+      f"slope monotone across 30000 log-spaced betas, from {slog[0]:.2f} to "
+      f"{slog[-1]:.6f}")
+
+tiny = [1e-6, 1e-20, 1e-100, 1e-300]
 sl_t = [CAP * h2p(b) / (-(1 - 2 * P) * h2p(bstar(b))) for b in tiny]
-check("D4 BREAK/CORRECTION: N9 C7 reports the slope running from -4.1735; the true "
-      "infimum is -infinity (the arc is vertical at the beta = 0 corner)",
-      min(sl_t) < -20.0, "slopes at b=1e-6/-9/-12/-15: "
+check("D4 BREAK/CORRECTION: N9 C7 reports the slope running from -4.1735; that is "
+      "the value at the grid floor beta = 1e-6.  The true infimum is -infinity "
+      "(the slope diverges logarithmically, so the arc is vertical at the beta = 0 "
+      "corner and no finite Lipschitz bound exists on that end)",
+      abs(sl_t[0] + 4.1735) < 5e-3 and sl_t[-1] < -100.0,
+      "slopes at b = 1e-6 / 1e-20 / 1e-100 / 1e-300: "
       + ", ".join(f"{s:.2f}" for s in sl_t))
 
 
-def toy_gap(corners):
-    """corners (R1,R2), R1 decreasing.  Impose M=R1-R2, B1=B2=R1, S=R1+R2 on each box.
+def toy_arc(f, n=61):
+    """R2 = s, R1 = 2 - f(s) for s in [0,1].
 
-    Returns max over corner sum-levels of [top vertex of D(K)] escaping every box.
+    f' < 1 keeps S = R1+R2 strictly increasing (N9's C6 analogue).
+    dR2/dR1 = -1/f'(s) and R1 decreases in s, so the arc is concave in the
+    (R1, R2) plane exactly when f is CONVEX (N9's C7 analogue: the real arc has
+    f' -> 0 at the beta = 0 end, which is the vertical tangent of D4).
     """
-    pts = np.array([[0.0, 0.0]] + [[c[0], c[1]] for c in corners]
+    return [(2.0 - f(i / (n - 1.0)), i / (n - 1.0)) for i in range(n)]
+
+
+def toy_gap(corners):
+    """Impose N9's redundancy identity M = R1-R2, B1 = B2 = R1, S = R1+R2 on each box.
+
+    Returns the largest amount by which the top vertex of D(K) at a corner's
+    sum-level escapes EVERY box of the family (K = lower-closed convex hull).
+    """
+    pts = np.array([[0.0, 0.0]] + [list(c) for c in corners]
                    + [[c[1], c[0]] for c in corners])
-    ts = np.linspace(0.0, 0.999, 400)
+    ts = np.linspace(0.0, 0.9995, 2000)
     worst = -1e9
     for c in corners:
         sig = c[0] + c[1]
         rk = sig
         for t in ts:
-            hh = float(np.max(pts[:, 0] * 1.0 + pts[:, 1] * t))
+            hh = float(np.max(pts[:, 0] + pts[:, 1] * t))
             rk = min(rk, (hh - t * sig) / (1.0 - t))
         rk = max(rk, 0.0)
         m = max(sig - rk, 0.0)
@@ -615,32 +707,36 @@ def toy_gap(corners):
     return worst
 
 
-arc_concave = [(2.0 - (0.9 * i / 40) ** 2, 0.9 * i / 40) for i in range(41)]
-arc_concave2 = [(2.0 - 0.5 * math.sin(1.2 * (0.9 * i / 40)), 0.9 * i / 40) for i in range(41)]
-arc_convex = [(2.0 - math.sqrt(0.9 * i / 40), 0.9 * i / 40) for i in range(41)]
-gc, gc2, gv = toy_gap(arc_concave), toy_gap(arc_concave2), toy_gap(arc_convex)
+# f convex  => arc CONCAVE (the good case);  f concave => arc NON-concave.
+arc_cc1 = toy_arc(lambda s: 0.2 * s + 0.35 * s * s)                    # polynomial
+arc_cc2 = toy_arc(lambda s: 0.35 * (math.exp(s) - 1.0) / (math.e - 1.0))  # exponential
+arc_nc = toy_arc(lambda s: 0.8 * (1.0 - math.exp(-s)))                 # f concave
+gc1, gc2, gv = toy_gap(arc_cc1), toy_gap(arc_cc2), toy_gap(arc_nc)
 check("D5 BREAK (class, not instance): impose N9's redundancy identity on a "
-      "NON-concave arc and D(K) escapes every box; two structurally different "
-      "concave arcs do not => concavity, not the [probc] numbers, is what works",
-      gc < 1e-9 and gc2 < 1e-9 and gv > 1e-3,
-      f"concave gaps {gc:.2e} / {gc2:.2e}, non-concave gap {gv:.6f}")
+      "NON-concave arc (S still strictly increasing) and the top vertex of D(K) "
+      "escapes EVERY box; two structurally different concave arcs do not => the "
+      "load-bearing structure is concavity, not the [probc] numbers",
+      gc1 < 1e-6 and gc2 < 1e-6 and gv > 1e-3,
+      f"concave gaps {gc1:.2e} / {gc2:.2e}, non-concave gap {gv:.6f}")
 
 # --------------------------------------------------------------------------
 print("\n[E] D_beta = U_beta Box(beta)  (N9 Sec 2.3, both directions)")
 # --------------------------------------------------------------------------
 
+# parametrize by beta so that (sigma, r_beta(sigma)) = (S(b), R1(b)) is exact:
+# no interpolation enters, and the arc's vertical tangent at b -> alpha* cannot
+# manufacture a spurious violation.
 w_in = 0.0
-for i in range(1501):
-    sigma = SR_C * i / 1500.0
-    r = r_beta(sigma)
-    b = float(np.interp(min(sigma, SR_C), ASUM_S, ABG_S)) if sigma > 2 * CAP else 0.0
+levels = [(Sb(b), R1b(b), b) for b in (ALPHA * i / 3000.0 for i in range(3001))]
+levels += [(2 * CAP * i / 500.0, 2 * CAP * i / 500.0, 0.0) for i in range(501)]
+for sigma, r, b in levels:
     box = (Mb(b), R1b(b), R1b(b), Sb(b))
     for R in slice_vertices(sigma, r):
         w_in = max(w_in, R[0] - box[0], R[0] + R[1] - box[1],
                    R[0] + R[2] - box[2], sum(R) - box[3])
 check("E1 BREAK: every EXTREME point of every sigma-slice of D_beta lands in "
-      "Box(beta(sigma)) -- 1501 slices x 3 vertices (endpoints, not interior samples)",
-      w_in <= 1e-9, f"max violation = {w_in:.3e}")
+      "Box(beta(sigma)) -- 3502 slices x 3 vertices (endpoints, not interior samples)",
+      w_in <= 1e-12, f"max violation = {w_in:.3e}")
 
 w_out = 0.0
 for i in range(401):
@@ -777,6 +873,23 @@ check("G7 the truncated form `R - (0, min(R1,eps), min(R2,eps)) in D_beta` does 
       "checked on every slice-vertex family of D(L) (endpoints, not random draws)",
       w_tr <= 1e-9, f"max violation = {w_tr:.3e} over {len(sigs)} sigma levels")
 
+# how much of the true D(L) is left untested if the right boundary of
+# L = K_beta + [0,eps]^2 is taken as r_beta(sigma) + eps instead of
+# r_beta(sigma - 2 eps) + eps?  r_beta is DECREASING in sigma with an unbounded
+# derivative at the sum-rate face, so the shortfall is O(sqrt(eps)), not O(eps).
+short = 0.0
+for b in (ALPHA * i / 20000.0 for i in range(20001)):
+    s = Sb(b) + 2 * EPS_N7
+    if s > SR_C:
+        continue
+    short = max(short, (r_beta(s - 2 * EPS_N7) + EPS_N7) - (r_beta(s) + EPS_N7))
+check("G10 BREAK/CORRECTION: taking the right boundary of K_beta+[0,eps]^2 as "
+      "r_beta(sigma)+eps rather than r_beta(sigma-2eps)+eps understates it by up to "
+      "O(sqrt(eps)) near the sum-rate face -- thousands of times eps, not a sliver",
+      short > 100 * EPS_N7,
+      f"max shortfall = {short:.3e} = {short / EPS_N7:.0f} x eps "
+      f"(the vertical tangent of D4 at the other end of the arc)")
+
 check("G8 the cone normalization l1 = l2 = 1 gives width 2*eps = 4.1572e-07",
       abs(2 * EPS_N7 - 4.1572e-07) < 1e-12, f"2*eps = {2 * EPS_N7:.6e}")
 
@@ -793,30 +906,43 @@ check("G9 eps = 0 collapses D(K_beta+[0,eps]^2) onto D_beta exactly (the Sec 4.1
 print("\n[H] the support value in direction (0,1,t) sits on the R0 = 0 slice")
 # --------------------------------------------------------------------------
 
-bad_slice = 0
-for _ in range(300):
+# the honest structural statement: for every in-set R and every t in [0,1] the
+# projected point phi(R) is in the set, has R0 = 0, and has a value >= that of R.
+bad_slice, seen = 0, 0
+for _ in range(500):
     fam = make_family(2, 2, 3)
-    best_all, best_slice = Fraction(-1), Fraction(-1)
-    for _ in range(400):
-        R = tuple(Fraction(int(rng.integers(0, 25)), 4) for _ in range(3))
-        if in_thm7(fam, R):
-            v = R[1] + Fraction(1, 2) * R[2]
-            best_all = max(best_all, v)
-            if R[0] == 0:
-                best_slice = max(best_slice, v)
-    if best_all > best_slice:
-        bad_slice += 1
-check("H1 BREAK: hunt for a Thm7-shaped family whose support value in direction "
-      "(0,1,t) is NOT attained on the R0 = 0 slice (this is what lets N7's "
-      "h_Thm7(0,1,t) bound be read as a statement about Thm7|_{R0=0})",
-      bad_slice == 0, f"{bad_slice} escapes out of 300 families")
+    cand = [tuple(Fraction(int(rng.integers(0, 25)), 4) for _ in range(3))
+            for _ in range(40)]
+    for lvl in fam:
+        for inner in lvl:
+            for A, B1, B2, S in inner:
+                r0 = Fraction(int(rng.integers(0, 9)), 8) * A
+                r1 = Fraction(int(rng.integers(0, 9)), 8) * max(B1 - r0, Fraction(0))
+                r2 = Fraction(int(rng.integers(0, 9)), 8) * \
+                    max(min(B2 - r0, S - r0 - r1), Fraction(0))
+                cand.append((r0, r1, r2))
+    for R in cand:
+        if not in_thm7(fam, R):
+            continue
+        seen += 1
+        Q = phi(R)
+        for tnum in range(0, 5):
+            t = Fraction(tnum, 4)
+            if Q[0] != 0 or not in_thm7(fam, Q) or \
+                    (Q[1] + t * Q[2]) < (R[1] + t * R[2]):
+                bad_slice += 1
+                break
+check("H1 BREAK: hunt for a Thm7-shaped family and an in-set point R such that the "
+      "R0 = 0 slice does not already dominate it in direction (0,1,t) -- this is "
+      "what lets N7's h_Thm7(0,1,t) bound be read as a statement about "
+      "Thm7|_{R0=0}, and hence lets N9 Sec 1.4 feed N7 into the chain",
+      bad_slice == 0 and seen > 3000,
+      f"{seen} in-set points x 5 values of t, {bad_slice} escapes")
 
 w_id = 0.0
 for i in range(0, 201):
     t = i / 200.0
-    b = _ternary(lambda x: psi_t_s(x, t), 0.0, 0.5)
-    dt = max(psi_t_s(b, t), psi_t_s(0.0, t))
-    w_id = max(w_id, abs((2 * CAP + dt) - g_beta(1.0, t)))
+    w_id = max(w_id, abs((2 * CAP + dstar_t(t)) - g_beta(1.0, t)))
 check("H2 the identity N9 Sec 1.4 needs (2C + psi_t(b) = R1(b) + t*R2(b), i.e. "
       "2C + h(p) = C + 1) holds, so N7's tolerance really is stated against K_beta",
       w_id < 5e-9, f"max |2C + d*_t - g_beta(1,t)| = {w_id:.3e}")
