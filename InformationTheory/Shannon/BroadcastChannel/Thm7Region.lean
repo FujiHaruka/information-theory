@@ -30,8 +30,7 @@ laws of the nine auxiliary variables, the input, the two outputs and the auxilia
 ## Main statements
 
 * `isClosed_thm7Region` — the region is closed, without passing to the closure.
-* `thm7Region_nonempty` — the region is inhabited, so its closedness is not a statement about the
-  empty set.
+* `thm7Region_nonempty` — the region is inhabited when the channel is a Markov kernel.
 
 ## Implementation notes
 
@@ -279,6 +278,10 @@ That union is over a space of probability measures on a finite alphabet, and a u
 sets over an index that is merely compact is not closed unless the family also varies
 continuously with the index.
 
+The channel is an arbitrary kernel here, and for the zero kernel the region is empty, so what the
+statement asks for beyond the closedness of the empty set is confined to the channels for which
+the region is inhabited.
+
 @residual(plan:bc-computable-region-formalization) -/
 theorem isClosed_thm7Region (W : BCChannel α β₁ β₂) : IsClosed (thm7Region W) := by
   sorry
@@ -518,7 +521,13 @@ lemma origin_mem_thm7Region (W : BCChannel α β₁ β₂) [IsMarkovKernel W] (x
     norm_num [InThm7, IsThm7Eligible]
 
 omit [Fintype β₁] [Fintype β₂] in
-/-- The region of the auxiliary-receiver outer bound is inhabited: it contains the origin. -/
+/-- The region of the auxiliary-receiver outer bound is inhabited: it contains the origin.
+
+The hypothesis that the channel is a Markov kernel is not removable. For the zero kernel the
+clause pinning the law of the outputs has no solution among the probability measures, so no joint
+law takes part and the region is empty.
+
+@audit:ok -/
 @[entry_point]
 theorem thm7Region_nonempty (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     (thm7Region W).Nonempty :=
