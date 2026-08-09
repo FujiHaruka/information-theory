@@ -26,6 +26,8 @@ laws of the nine auxiliary variables, the input, the two outputs and the auxilia
   the region, one per binder of the nest.
 * `thm7Region` — the region itself, as a subset of `ℝ³`.
 * `zeroRateSlice` and `thm7RegionSlice` — the `R₀ = 0` slice, as a subset of the plane.
+* `thm7DegenerateLaw` — the joint law a point mass on the input induces, with one-point auxiliary
+  alphabets.
 
 ## Main statements
 
@@ -301,7 +303,7 @@ lemma continuous_measureReal_of_discrete (S : Set Ω) :
           ∂(ν : Measure Ω) :=
     ProbabilityMeasure.continuous_integral_boundedContinuousFunction _
   refine hcont.congr fun ν ↦ ?_
-  show ∫ ω, S.indicator (fun _ ↦ (1 : ℝ)) ω ∂(ν : Measure Ω) = _
+  change ∫ ω, S.indicator (fun _ ↦ (1 : ℝ)) ω ∂(ν : Measure Ω) = _
   exact MeasureTheory.integral_indicator_one (isOpen_discrete S).measurableSet
 
 lemma continuous_entropy_of_discrete {T : Type*} [Fintype T] [MeasurableSpace T]
@@ -332,12 +334,6 @@ lemma ae_eq_const_of_map_eq_dirac [MeasurableSingletonClass X] (μ : Measure Ω)
     h, Measure.dirac_apply' _ (measurableSet_singleton c).compl]
   simp
 
-lemma mutualInfo_eq_zero_of_ae_const (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y) (hXs : Measurable Xs) (hYo : Measurable Yo)
-    (c : X) (hc : Xs =ᵐ[μ] fun _ ↦ c) : mutualInfo μ Xs Yo = 0 := by
-  rw [mutualInfo_eq_zero_iff_indep μ Xs Yo hXs hYo]
-  exact (indepFun_const_left c Yo).congr hc.symm (Filter.EventuallyEq.refl _ _)
-
 lemma condMutualInfo_eq_zero_of_ae_const (μ : Measure Ω) [IsProbabilityMeasure μ]
     [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y]
     (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z)
@@ -346,10 +342,10 @@ lemma condMutualInfo_eq_zero_of_ae_const (μ : Measure Ω) [IsProbabilityMeasure
   have h_chain := mutualInfo_chain_rule μ Yo Xs Zc hYo hXs hZc
   have h0 : mutualInfo μ (fun ω ↦ (Zc ω, Yo ω)) Xs = 0 := by
     rw [mutualInfo_comm μ _ Xs (hZc.prodMk hYo) hXs]
-    exact mutualInfo_eq_zero_of_ae_const μ Xs _ hXs (hZc.prodMk hYo) c hc
+    exact mutualInfo_eq_zero_of_ae_const μ Xs _ (hZc.prodMk hYo) c hc
   have h1 : mutualInfo μ Zc Xs = 0 := by
     rw [mutualInfo_comm μ Zc Xs hZc hXs]
-    exact mutualInfo_eq_zero_of_ae_const μ Xs Zc hXs hZc c hc
+    exact mutualInfo_eq_zero_of_ae_const μ Xs Zc hZc c hc
   rw [h0, h1, zero_add] at h_chain
   rw [condMutualInfo_comm μ Xs Yo Zc hXs hYo hZc]
   exact h_chain.symm
@@ -473,13 +469,13 @@ lemma thm7Slots_thm7DegenerateLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel
       mutualInfoReal (thm7DegenerateLaw W TJ x₀) (fun q ↦ q.1 i) g = 0 := by
     intro T _ i g hg
     rw [mutualInfoReal,
-      mutualInfo_eq_zero_of_ae_const _ _ g (by fun_prop) hg default (haux i), ENNReal.toReal_zero]
+      mutualInfo_eq_zero_of_ae_const _ _ g hg default (haux i), ENNReal.toReal_zero]
   have hXMI : ∀ {T : Type u} [MeasurableSpace T]
       (g : Thm7Ambient (fun _ ↦ 0) kJ α β₁ β₂ → T), Measurable g →
       mutualInfoReal (thm7DegenerateLaw W TJ x₀) (fun q ↦ q.2.1) g = 0 := by
     intro T _ g hg
     rw [mutualInfoReal,
-      mutualInfo_eq_zero_of_ae_const _ _ g (by fun_prop) hg x₀ hX, ENNReal.toReal_zero]
+      mutualInfo_eq_zero_of_ae_const _ _ g hg x₀ hX, ENNReal.toReal_zero]
   have hauxCMI : ∀ {T R : Type u} [MeasurableSpace T] [StandardBorelSpace T] [Nonempty T]
       [MeasurableSpace R] (i : Thm7AuxIdx) (g : Thm7Ambient (fun _ ↦ 0) kJ α β₁ β₂ → T)
       (h : Thm7Ambient (fun _ ↦ 0) kJ α β₁ β₂ → R), Measurable g → Measurable h →
