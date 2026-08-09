@@ -2,7 +2,6 @@
 /.venv
 /.claude/plans/
 /.claude/settings.local.json
-/.claude/handoff*.md
 /.claude/scheduled_tasks.lock
 /.claude/.resume-pending
 

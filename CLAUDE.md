@@ -192,7 +192,7 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 
 **Overwrite by default, single file**: 原則 `.claude/handoff.md` 1 本を **上書き** で書く (handoff skill と同じ)。append マージで前の内容を残そうとしない — 上書きが既定。`handoff-<slug>.md` のように **ファイルを分けるのは、ユーザーが明示的にそう指示したときだけ**。その指示がない限り 1 ファイル上書きを守る。複数の作業ラインを 1 ファイル内で並行管理する場合はセクション分割 (e.g. `## Line A — AWGN`, `## Line B — EPI/Stam`) で扱い、完了したラインは削除する (history stays in git; 必要なら `## Closure summary` に 1 行参照を残す)。
 
-**gitignored — don't commit**: `.claude/handoff.md` is deliberately gitignored (local working state, untracked). **Exclude** it from the autonomous-commit scope of the "Commits" section. Don't try to `git add` / `git commit` it after writing the handoff (it just loops: git rejects it every time and you rediscover the gitignore).
+**tracked — commit it**: `.claude/handoff.md` is checked into the repo. After writing a handoff, include it in the autonomous-commit scope of the "Commits" section like any other file.
 
 ## Plan / docs hygiene
 
