@@ -13,15 +13,6 @@ enhanced one `(Û, V̂, Ŵ)` — together with the output `J` of an auxiliary re
 a union over input laws of an intersection over auxiliary receivers of a union over the joint
 laws of the nine auxiliary variables, the input, the two outputs and the auxiliary output.
 
-The ambient space of one such joint law is a product of thirteen factors, and the constraints
-read twenty-five informations off it. Both the constraint bundle and the eligibility conditions
-that select which joint laws take part are stated against those slots rather than against the law,
-so that a slot is named once and used by several constraints.
-
-The joint laws are bound as probability measures rather than as finite measures: a joint law is a
-distribution, and the compactness of the space of probability measures on a finite ambient space
-is what a closedness argument for the union has to reach for.
-
 ## Main definitions
 
 * `Thm7AuxIdx` — the index `(j, i)` of the `i`-th member of the `j`-th auxiliary triple.
@@ -38,8 +29,18 @@ is what a closedness argument for the union has to reach for.
 
 ## Main statements
 
-* `isClosed_thm7RegionOfLaw` — one joint law's worth of the region is closed.
 * `isClosed_thm7Region` — the region is closed, without passing to the closure.
+
+## Implementation notes
+
+The ambient space of one joint law is a product of thirteen factors, and the constraints read
+twenty-five informations off it. Both the constraint bundle and the eligibility conditions that
+select which joint laws take part are stated against those slots rather than against the law, so
+that a slot is named once and used by several constraints.
+
+The joint laws are bound as probability measures rather than as finite measures: a joint law is a
+distribution, and the compactness of the space of probability measures on a finite ambient space
+is what a closedness argument for the union has to reach for.
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -150,8 +151,8 @@ corresponding set built from the product form. -/
 def IsThm7Law (W : BCChannel α β₁ β₂) (TJ : Kernel (α × β₁ × β₂) (bcAuxAlphabet.{u} kJ))
     (p : Measure α) (ν : Measure (Thm7Ambient kv kJ α β₁ β₂)) [IsFiniteMeasure ν] : Prop :=
   @iCondIndepFun (Thm7Ambient kv kJ α β₁ β₂) (Fin 3) _ _ inferInstance
-      (((measurable_fst.comp measurable_snd :
-        Measurable (fun q : Thm7Ambient kv kJ α β₁ β₂ ↦ q.2.1))).comap_le)
+      ((measurable_fst.comp measurable_snd :
+        Measurable (fun q : Thm7Ambient kv kJ α β₁ β₂ ↦ q.2.1)).comap_le)
       (fun j ↦ (i : Fin 3) → bcAuxAlphabet.{u} (kv (j, i))) _
       (fun j q i ↦ q.1 (j, i)) ν inferInstance
   ∧ ν.map (fun q ↦ (q.2.1, q.2.2.1, q.2.2.2.1)) = (ν.map (fun q ↦ q.2.1)) ⊗ₘ W
