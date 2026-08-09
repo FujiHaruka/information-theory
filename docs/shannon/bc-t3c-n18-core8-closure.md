@@ -258,6 +258,9 @@ style-auditor) が要る** — ⚠ **自己監査にしない**。
 `sorry` は **2 本のまま**) + 新規 probe 4 本 (`docs/shannon/probes/t3c-n18/`)。
 commit = `c4ab66a6` (preflight + 殺す 1 行) / `8d4dd999` (材料 (i) の原子 + probe)。
 ⚠ **既存 20 decl の署名は 1 行も動かしていない** (§3-(6))。
+⚠⚠ **本節の 38 decl は着地時点の数である** — **style gate が新規 1 本を in-repo 重複として削除したので
+現況は 37 decl** (commit `a60219e3`。⚠ **削除されたのは下の (b) の `mutualInfo_eq_zero_of_ae_const`** で、
+`sorry` は 2 本のまま。詳細 = §5-(9))。
 
 **(a) step 0 — preflight を宣言として立てて閉じた** — `thm7Region_nonempty` (`@[entry_point]`) と
 `origin_mem_thm7Region`。⚠⚠ **監査 probe P4 の仮定文をそのまま引かず、その仮定を構成した**。
@@ -282,6 +285,15 @@ commit = `c4ab66a6` (preflight + 殺す 1 行) / `8d4dd999` (材料 (i) の原�
 ⭐ **条件つき版は `IsMarkovChain` を経由せずに済んだ** — `mutualInfo_chain_rule` を
 **引数を入れ替えて** (`μ Yo Xs Zc`) 当て、両辺の無条件項が 0 になることから `zero_add` で消す形。
 ⟹ `condDistrib` の一意性論法は 1 行も要らなかった。
+⚠⚠ **「3 本自前」は誤りだった** — **`mutualInfo_eq_zero_of_ae_const` は既存の public 定理の再宣言である**
+(`InformationTheory/Shannon/MutualInfoFiniteRange.lean:63`。⚠ **既存の方が仮定が厳密に弱い**) ⟹
+**自前は 2 本**であり、⚠ **本節の残る 2 本についても「無い」ことを本 leg は結論形で引き直していない**
+(⚠ **`iCondIndepFun_of_subsingleton_codomain` だけは compiler に否定させたうえでの自前建てである**。§4.3 A-(3))。
+詳細と解消 = §5-(9)。
+⚠ **`ae_eq_const_of_map_eq_dirac` を「18 スロットを消した実質」と読まない** — **この補題の仮定は確率測度の
+下で結論と論理的に同値**であり (⚠ **循環ではない** — 型が異なり body は 5 行の実証である)、
+**表現の取り替えであって強化ではない**。実質を担うのは `thm7DegenerateLaw_map_input`
+(`Measure.fst_compProd` 2 段) の側である。
 
 **(c) 見立て C の「殺す 1 行」を機械へ掛けた** (`probes/t3c-n18/kill-lines.lean`) — 生存 (§4.3)。
 
@@ -310,6 +322,13 @@ commit = `c4ab66a6` (preflight + 殺す 1 行) / `8d4dd999` (材料 (i) の原�
 Thm7Region.lean:255:6: warning: declaration uses `sorry`
 Thm7Region.lean:283:8: warning: declaration uses `sorry`
 ```
+
+⚠⚠ **「warning 2 件のみ」は道具相対である** — `lake build InformationTheory.Shannon.BroadcastChannel.Thm7Region`
+では **本 leg が入れた 3 件目**が出た (`The \`show\` tactic should only be used to indicate intermediate
+goal states` = `linter.style.show`、`continuous_measureReal_of_discrete` の中)。⚠ **honesty ではなく
+style gate の対象**である ⟹ ⭐ **style gate が `show` を `change` へ差し替えて消滅済**
+(現況の `lake build` の warning は **`sorry` 2 件 + `linter.style.header` の `Copyright too short!` のみ**で、
+⚠ **後者は project 全体の既存パターンであり本 leg とは無関係**)。
 
 **(2) probe 4 本** — いずれも **error 0**:
 `probes/t3c-n18/preflight.lean` / `kill-lines.lean` / `continuity.lean` / `axioms.lean`。
@@ -376,6 +395,8 @@ error(lean.synthInstanceFailed): failed to synthesize instance of type class
 `isClosed_iUnion_thm7RegionOfLaw` (L255) と `isClosed_thm7Region` (L283)、
 どちらも `@residual(plan:bc-computable-region-formalization)`。
 `rg -c "@residual" <対象 file>` = **2**。
+⚠ **監査と style gate の後の現況は 37 decl / 2 with sorry** (L256 と L288、`@residual` は **2** のまま。
+⚠ **行番号が動いたのは監査が docstring を 3 か所補ったため**)。
 
 **(9) code-surface の機械層** — `deno run -A scripts/lean_doc_lint.ts <対象 file>` =
 **strict 10 規則 / ratchet 4 規則すべて 0 件**。file は **529 行** (1500 行の分割閾値の内)。
@@ -423,7 +444,7 @@ in-project の `rg` も 0 件 ⟹ **`μ ↦ μ ⊗ₘ TJ` の弱位相連続性�
 
 | 段 | 結末 | 根拠 |
 |---|---|---|
-| **preflight** (`thm7Region W ≠ ∅`) | ⭐ **構成した (sorryAx-free)** | `thm7Region_nonempty` / `origin_mem_thm7Region`。⚠ `[IsMarkovKernel W]` つき |
+| **preflight** (`thm7Region W ≠ ∅`) | ⭐ **構成した (sorryAx-free)** | `thm7Region_nonempty` / `origin_mem_thm7Region`。⚠ `[IsMarkovKernel W]` つき。⚠ **witness は原点 1 点ではない** — スロットが全て 0 のとき `InThm7 0 (0, -t, -t)` は **`0 ≤ t` で成り立つ** (監査 probe **A5** の 2 本目。⚠ **スロットベクトル上の算術のみ**)。⚠⚠ **これは領域の上界方向についての主張ではない** (中核 9 には 1 文字も触れていない) |
 | **ファイバ** (`thm7RegionOfLaw ν` が閉集合) | **通っている (N17 で既済、本 leg で変更なし)** | `isClosed_thm7RegionOfLaw` |
 | **内側 `kv` 段** (有限合併) | **通っている (N17 で既済、本 leg で変更なし)** | `finite_setOf_lt_thm7Cap` + `Set.Finite.isClosed_biUnion` |
 | **材料 (i)** (25 スロットの弱位相連続性) | ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)` で退出**。⭐ **ただし原子は閉じた** | `continuous_entropy_of_discrete` (in-tree、sorryAx-free) + probe で **2/25 スロット**を `Continuous` まで機械確認。⚠ **残り 23 は未検証** |
@@ -459,6 +480,17 @@ in-project の `rg` も 0 件 ⟹ **`μ ↦ μ ⊗ₘ TJ` の弱位相連続性�
   `ν ↦ entropy ν f` の連続性 1 本に集約された**。⚠ **C は緩める側なので、この当たりは
   §4.4 の非対称性の下では「安く済んだ」ではなく「外れていたら高くついた賭けに勝った」である**。
   ⚠ **`condMutualInfoPmf` は 1 度も要らなかった** (§3-(4))。
+  ⚠⚠ **本 leg の較正は検証範囲を過小に申告していた** — **機械に掛けた 2 スロット (slot 0 / slot 4) は
+  どちらも α 値の観測量を含まず、構造的に一番易しい 2 本である**。⭐ **監査が構造的に最も重い形
+  (α 値の観測量 + 対条件つき = slot 15 形) を独立に閉じた** — `condMutualInfo_eq_condEntropy_sub_condEntropy`
+  で条件つき entropy の差へ (`(by fun_prop)` 3 本)、`entropy_pair_eq_entropy_add_condEntropy` で 4 本の
+  entropy へ、原子 `continuous_entropy_of_discrete` は **対値の観測量も覆う** (`hf.prodMk hg`) ⟹
+  ⭐ **追加の instance 持ち上げは 1 本も要らなかった** (`classical` も `MeasurableSingletonClass α` の
+  `haveI` も不要であることを機械で確認) ⟹ **C は本 leg が測った範囲より広い範囲で機械に支持される**。
+  ⚠ **スロットの形は 4 つある** — **(a)** 補助変数どうし / 出力の無条件 (slot 0 等) / **(b)** α 値の無条件
+  (slot 14) / **(c)** 補助変数の単変数条件つき (slot 4 等) / **(d)** α 値 + 対条件つき (slot 15/16/21–24)
+  ⟹ **本 leg が測ったのは (a)(c)、監査が測ったのは (d)** で、⚠⚠ **(b) は誰も測っていない**
+  (⚠ **(b) は 4 形のうち最も軽い**)。⚠ **緩める側の当たりであることは変わらない**。
 - **見立て D (緩める)** = ⚠ **生存だが訂正つき**。3 本の型クラスは既存署名を汚さずに
   **証明の中で構成できた** (§3-(5)) が、⚠⚠ **起票が名指していない条件が 2 つ出た** —
   **(a) `CompactSpace (ProbabilityMeasure _)` の instance が import 閉包の外に在る**、
@@ -471,6 +503,11 @@ in-project の `rg` も 0 件 ⟹ **`μ ↦ μ ⊗ₘ TJ` の弱位相連続性�
 
 - **(1) 非空性** = ⭐ **原点 (または 1 点) の所属を構成した (sorryAx-free)**。
   ⚠ **ただし `[IsMarkovKernel W]` を仮定した形である** (閉性 2 本はこれを要求していない) ⟹ §5-(1)。
+  ⚠⚠ **本 leg はこの結末をモジュール docstring で偽の理由節つきに書いていた** — `## Main statements` の
+  「`thm7Region_nonempty` — the region is inhabited, **so its closedness is not a statement about the
+  empty set**」は、**閉性 2 本が `[IsMarkovKernel W]` を要求しない**ため一般の `W` では成り立たない
+  (反例 = §5-(1))。⟹ ⭐ **コードが SoT ゆえ監査が当該行を修正済**である。
+  ⚠ **非空性そのものは動いていない — 動いたのは「それが閉性について何を言うか」の側だけ**である。
 - **(2) 材料 (i)** = ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)` で退出**
   (受け皿は `isClosed_iUnion_thm7RegionOfLaw` の既存 `sorry`)。
   ⚠ **「通った」とは書かない** — 25 スロット全部を `Continuous` として述べる宣言は無く、
@@ -490,16 +527,27 @@ in-project の `rg` も 0 件 ⟹ **`μ ↦ μ ⊗ₘ TJ` の弱位相連続性�
 
 ## 5. ⚠ 確かめて「いない」ことの名指し
 
-**(1) ⚠⚠ 非空性は閉性より狭い仮定の下でしか言っていない** — `origin_mem_thm7Region` /
-`thm7Region_nonempty` は **`[IsMarkovKernel W]`** を取るが、`isClosed_thm7Region` は
-`W : BCChannel α β₁ β₂` (= `Kernel α (β₁ × β₂)`、Markov 性なし) を取る。
-⟹ **`W` が Markov でないとき `thm7Region W` が空でないかは確かめていない**
-⟹ ⚠⚠ **その範囲では「閉性が空虚に真でありうる」穴は塞がっていない**。
+**(1) ⚠⚠ 非空性は閉性より狭い仮定の下でしか言っていない。⭐⭐ しかも「確かめていない」ではなく
+「反例が在る」である** — `origin_mem_thm7Region` / `thm7Region_nonempty` は **`[IsMarkovKernel W]`** を
+取るが、`isClosed_thm7Region` は `W : BCChannel α β₁ β₂` (= `Kernel α (β₁ × β₂)`、Markov 性なし) を取る。
+⚠⚠ **本 leg はここを「`W` が Markov でないとき空でないかは確かめていない」と書いたが、それは弱すぎた** —
+**監査が `thm7Region (0 : BCChannel α β₁ β₂) = ∅` を独立に sorryAx-free で証明した** (probe **A4**)。
+機構 = `BCChannel` は `Kernel α (β₁ × β₂)` の `abbrev` ゆえ `W = 0` が取れ、`Measure.compProd_zero_right`
+で `IsThm7Law` 第 2 節の右辺が `0` になる一方、左辺は `ν` が確率測度ゆえ全測度 1 ⟹ **どの `ν` も
+第 2 節を満たせない** ⟹ 内側の合併が空 ⟹ Markov な `TJ` を 1 本当てれば交わりも空。
+⟹ ⚠⚠ **`[IsMarkovKernel W]` は省けない** (過剰な締め付けでもない) / ⟹ ⚠⚠ **閉性 2 本との間に仮定の
+ギャップが実在し、一般の `W` では閉性が空虚に真になりうる穴は塞がっていない**。
+⭐ **コード側は監査が 2 か所補った** — `thm7Region_nonempty` の docstring (Markov 仮定は省けない旨) と
+`isClosed_thm7Region` の docstring (零核では領域が空ゆえ内容は非空な範囲に限る旨)。
+⚠ **`@residual` の行は 1 文字も動いていない**。
 ⚠ さらに `thm7RegionOfAuxReceiver` / `thm7RegionOfInput` は `p : Measure α` を確率測度に制限せず取る
 (facts N17 §5-(4) が既に名指した向き) ので、**`p` が確率測度でない断面の非空性も確かめていない**。
 
 **(2) 材料 (i) の未検証範囲** — 機械に掛けたのは **slot 0 (無条件) と slot 4 (条件つき)** の 2 本だけで、
 **残り 23 スロットは `Continuous` として 1 度も elaborate していない**。
+⚠⚠ **その 2 本はスロットの 4 形のうち構造的に一番易しい 2 形である** ((a) と (c)。§4.3) —
+⭐ **監査が最も重い (d) 形 (α 値 + 対条件つき) を 1 本閉じたので機械に掛かったのは計 3 本**であり、
+⚠ **(b) 形 (α 値の無条件、slot 14) は誰も測っていない**。
 ⚠ **「同じ形だから通る」は本 leg の機械の出力ではない** (facts N2-d = 型検査は実効性を守らない、の近傍)。
 ⚠ さらに **「25 スロットが連続」から `thm7RegionOfLaw` の族がグラフ閉である」への段は 1 行も書いていない**
 (`InThm7` / `IsThm7Eligible` を通した閉グラフ化は未着手)。
@@ -509,6 +557,13 @@ in-project の `rg` も 0 件 ⟹ **`μ ↦ μ ⊗ₘ TJ` の弱位相連続性�
 Mathlib にも in-project にも無い**ことまでは機械で出たが、⚠⚠ **これを壁とは書かない** —
 有限離散の周囲空間では pmf の多項式であり、自前で建てる路が塞がっている証拠は 1 つも無い。
 ⚠ 第 1 節については **「条件つき独立性の集合が閉か」を検索すらしていない**。
+⭐ **この否定的主張は監査が結論形検索 + in-project `rg` で独立に引き直して生存した** が、
+⚠⚠ **本 leg は最寄りの資産を名指していなかった** — **`MeasureTheory.ProbabilityMeasure.continuous_map`**
+(`Mathlib/MeasureTheory/Measure/ProbabilityMeasure.lean`、⭐ **`Thm7Region.lean` の import 閉包の内側**)
+が**押し出し `ν ↦ ν.map f` の弱位相連続性**を与え、**第 4 節の閉性と第 2–3 節の左辺・第 1 引数はこれで出る**
+⟹ ⭐ **残る欠落は `μ ↦ μ ⊗ₘ TJ` ただ 1 点に絞られる**。⚠ **これは `cause:loogle-blind` の再演ではない**
+(否定的主張そのものは実測で生存した) が、⚠ **「無い」を書くとき最寄りの在る資産を併記していなかった**
+のは本 leg の欠落である。
 
 **(4) headline の経路** — 起票 §0-B が名指した **`p` について一様なグラフ
 `{(p, R) | R ∈ thm7RegionOfInput W p}` の閉性**も、**射影側の道具**
@@ -530,9 +585,36 @@ import 1 行の追加から始まる**。⚠ **その追加が既存の型クラ
 **(7) `R₀ = 0` スライスの Π01 性** — ⚠⚠ **1 行も触れていない**。
 ⚠ **「3 レート版から従う」とは書かない** (子 plan §4-b / R-4 = 判定ではなく禁止条項)。
 
-**(8) 自前で建てた 4 本の一般補題の置き場** — `iCondIndepFun_of_subsingleton_codomain` /
-`mutualInfo_eq_zero_of_ae_const` / `condMutualInfo_eq_zero_of_ae_const` /
-`ae_eq_const_of_map_eq_dirac` は **どれも BroadcastChannel 固有ではない**が、
+**(8) 自前で建てた一般補題の置き場** — `iCondIndepFun_of_subsingleton_codomain` /
+`condMutualInfo_eq_zero_of_ae_const` / `ae_eq_const_of_map_eq_dirac` (+ `continuous_measureReal_of_discrete`
+/ `continuous_entropy_of_discrete`) は **どれも BroadcastChannel 固有ではない**が、
 ⚠ **`Thm7Region.lean` に置いた** (既存 file の署名を触らない方針を優先した)。
-⚠ **これが `docs/rules/` の module 構造に照らして正しい置き場かは評価していない** (style gate の対象)。
+⚠ **本 leg はこれが `docs/rules/` の module 構造に照らして正しい置き場かを評価していない**。
+⟹ ⭐ **style gate が評価し、非 BC 固有の一般補題 6 本の誤配置を flag した** (⚠ **`docs/rules/module-structure.md`
+の「ディレクトリ = 主題」に照らして**)。⚠⚠ **移設は file 移動 + import 書換 + `InformationTheory.lean`
+再登録を伴う blast-radius 項目ゆえ未実行**である (行き先の当ては子 plan §3.2 の残件が持つ)。
 
+**(9) ⭐ in-repo 重複を 1 本作っていた (style gate が compiler で検出・解消済)** — 本 leg が §2-(b) で
+「自前で建てた」と書いた `mutualInfo_eq_zero_of_ae_const` は、**既存の public 定理
+(`InformationTheory/Shannon/MutualInfoFiniteRange.lean:63`) を shadowing していた**。
+⚠⚠ **既存の方が仮定が厳密に弱い** (第 1 引数の可測性を要求しない) ⟹ **新規側を削除して既存を消費する形へ
+解消済** (commit `a60219e3`。`lake env lean` = warning は `sorry` 2 件のみ / decl は 38 → 37)。
+⚠⚠ **CLAUDE.md「In-repo asset search」が名指す「did we already write it?」の再発形をここで止めた** —
+⚠ **loogle はこれを防がない** (Mathlib しか見ない)。⚠ **残る 2 本の自前補題について「既存に無い」ことを
+本 leg は同じ強度で確かめていない** (⚠ `iCondIndepFun_of_subsingleton_codomain` は
+Mathlib 側の候補を compiler に否定させている。§4.3 A-(3))。
+
+
+## 6. 波及 — ⚠ **本 leg の結果でどの文書のどの行が書き換わったか**
+
+⚠ **本節は「どこが書き換わったか」の索引である** — **後続 leg が何をするかは書かない** (本家系の規約)。
+⚠ **監査 訂正 1 / 2 はコード側 (SoT) ゆえ監査自身が Edit 済**、**訂正 3 の消し込みは style gate が Edit 済**
+であり、いずれも本節の対象外である。
+
+| 文書 | 書き換わった箇所 | 由来 |
+|---|---|---|
+| **本書** | **§2 冒頭** (38 decl は着地時点の数である旨) / **§2-(b)** (「3 本自前」は誤り + `ae_eq_const_of_map_eq_dirac` の読み方) / **§3-(1)** (warning 2 件は道具相対である旨と style gate による消滅) / **§3-(8)** (現況 37 decl / 行番号の移動) / **§4.2 preflight 行** (witness は原点 1 点ではない) / **§4.3 見立て C** (検証範囲の過小申告 + スロットの 4 形) / **§4.4-(1)** (module docstring の理由節が偽だった) / **§5-(1)** (「確かめていない」→ **零核では空である**) / **§5-(2)** (測った 2 本は 4 形のうち易しい 2 形) / **§5-(3)** (最寄り資産の名指しと残る欠落 1 点) / **§5-(8)** (置き場は style gate が評価した) / **§5-(9) を新設** (in-repo 重複の検出と解消) | 監査 訂正 1–7 + style gate |
+| [`bc-facts.md`](bc-facts.md) | **`## N18 (T3c)` 節を新設** (claim 行 `N18-a` … `N18-g`) | 本 leg + 監査 + style gate |
+| 親 plan [`bc-open-problem-t3c-plan.md`](bc-open-problem-t3c-plan.md) | **§進捗の N18 行**を消化済へ / **§5.1 に N18 着地ブロック**を追記 / **§5 の「relay 終端の棚卸し」表の形式化枠 N17 / N18 行** / **§7 判断ログ 13 に着地時の追記** (⚠ **(1)–(n) の本文は書き換えていない**) / **§5.2-3 の義務 = §6-4 の配分カウンタを引いた実測** | 本 leg |
+| 子 plan [`bc-computable-region-formalization-plan.md`](bc-computable-region-formalization-plan.md) | **Status 行 / §進捗の B 行** (中核 8 の測定が進んだ状態へ) / **§3.2 (iii)** (未閉項が (i)/(ii) のどちらに絞られたか + 残る欠落 1 点) / **§3.2 に残件を 1 つ追加** (非 BC 固有の一般補題 6 本の置き場) | 本 leg + style gate flag B |
+| 親 moonshot [`broadcast-channel-moonshot-plan.md`](broadcast-channel-moonshot-plan.md) | **t3c の現況行 / facts 節一覧 / N18 の同期ブロック / Sub-plan テーブルの t3c 行** (⚠ **conflict では子が SoT**) | 親子 DAG の同期 |

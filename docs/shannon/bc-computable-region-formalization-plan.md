@@ -1,12 +1,14 @@
 # BC の計算可能な容量領域 — 形式化債務 (T3c §6-5 の切り出し)
 
 > **Parent**: [`bc-open-problem-t3c-plan.md`](bc-open-problem-t3c-plan.md) §6-5 / §7 判断ログ 3
-> **Status**: 起票 (2026-08-08)。⭐ **単位 B に着手済 (親 N17、2026-08-09)** — 受け皿は層 3 に実在し
-> (`InformationTheory/Shannon/BroadcastChannel/Thm7Region.lean`)、**中核 8 は 2 本が `sorry` +
-> `@residual(plan:bc-computable-region-formalization)` で未閉 / 中核 9 / 10 は未着手**。
+> **Status**: 起票 (2026-08-08)。⭐ **単位 B に着手済 (親 N17 / N18、2026-08-09)** — 受け皿は層 3 に実在し
+> (`InformationTheory/Shannon/BroadcastChannel/Thm7Region.lean`)、**領域が空でないことは構成済
+> (`sorryAx`-free。⚠ `[IsMarkovKernel W]` つき、⚠⚠ 零核では領域は空)**、しかし **中核 8 は 2 本が `sorry` +
+> `@residual(plan:bc-computable-region-formalization)` で未閉のまま / 中核 9 / 10 は未着手**。
 > ⚠⚠ **単位 B は完了ではない** / ⚠ **単位 A / C は 1 行も書いていない** (⚠ **状態の逐語 SoT =
-> facts [`bc-facts.md`](bc-facts.md) `## N17 (T3c)` + 成果物 [`bc-t3c-n17-unit-b.md`](bc-t3c-n17-unit-b.md) /
-> 監査 = [`bc-t3c-n17-audit.md`](bc-t3c-n17-audit.md)**)。
+> facts [`bc-facts.md`](bc-facts.md) `## N17 (T3c)` / `## N18 (T3c)` + 成果物
+> [`bc-t3c-n17-unit-b.md`](bc-t3c-n17-unit-b.md) / [`bc-t3c-n18-core8-closure.md`](bc-t3c-n18-core8-closure.md) /
+> 監査 = [`bc-t3c-n17-audit.md`](bc-t3c-n17-audit.md) / [`bc-t3c-n18-audit.md`](bc-t3c-n18-audit.md)**)。
 > **退出タグ**: `@residual(plan:bc-computable-region-formalization)`
 > (filename stem は `-plan` つき。slug が末尾の `-plan` を落とすのは家系の先例
 > `@residual(plan:bc-open-problem-t3)` ↔ `bc-open-problem-t3-plan.md` と同じ形)
@@ -23,8 +25,9 @@
 - [ ] **A** 計算可能解析の層 (中核 1–7 + (β) 語彙。BC から独立) 📋 — **proof-log: yes**
       (⚠ 中核 1 本ごとに「何が通って何が通らなかったか」を残す。行数が 1 行も測れていない唯一の単位)
 - [ ] **B** 3 レート `Thm7(W)` の領域層 (受け皿 + 中核 8–10) 🚧 — **proof-log: no**
-      ⭐ **受け皿は昇格済** (親 N17、2026-08-09。`Thm7Region.lean` = 22 decl、probe の 4 型クラス列のまま
-      0 error) / ⚠ **中核 8 は 2 本が `@residual` で未閉** (段は 5 つに割れた) / ⚠⚠ **中核 9 (有界性) /
+      ⭐ **受け皿は昇格済** (親 N17、2026-08-09。probe の 4 型クラス列のまま 0 error) / ⭐ **領域の非空性は
+      構成済** (親 N18。⚠ `[IsMarkovKernel W]` つき) / ⚠ **中核 8 は 2 本が `@residual` で未閉のまま**
+      (段は 5 つに割れ、N18 で未閉項が (i) 連続性 / (ii) 法則の集合の閉性 に絞られた) / ⚠⚠ **中核 9 (有界性) /
       10 ((α) 合致) は 1 行も触れていない** ⟹ ⚠⚠ **完了ではない**
 - [ ] **C** 3 レート operational との接続 (中核 11 + D2。B に依存) 📋 — **proof-log: yes**
       (⚠⚠ **員数未測定** ⟹ 測定そのものが成果物になる。§3.3)
@@ -152,7 +155,14 @@
 - **(ii) 依存**: **A に依存しない** (閉性は古典側で閉じる)。⭐ 親の **N17 / N18 はここに充てられる**。
 - **(iii) 員数の確度**: **受け皿は昇格済** (親 N17)。⭐ **中核 8 は初めて測った** — **5 段に割れ、
   `sorry` + `@residual` 2 本**で着地した (逐語の SoT = facts `## N17 (T3c)` の **N17-d**)。
-  ⚠ **中核 9 / 10 は 0/2 で未測定のまま**。
+  ⭐ **親 N18 が未閉項を 2 つに切り分けた** (SoT = facts `## N18 (T3c)`): **(i) 25 スロットの弱位相連続性**は
+  **`ν ↦ entropy ν f` の連続性 1 本へ集約され、その原子は in-tree で `sorryAx`-free** (⚠ **機械に掛けたのは
+  25 中 3 本**) / **(ii) 法則の集合の閉性**は **第 4 節のみ機械確認**で第 1–3 節は未評価、⭐ **残る欠落は
+  `μ ↦ μ ⊗ₘ TJ` の弱位相連続性ただ 1 点**である (押し出し側は import 閉包の内側の
+  `MeasureTheory.ProbabilityMeasure.continuous_map` で出る)。⚠⚠ **これを壁と読まない** — **有限離散の
+  周囲空間では pmf の多項式であり、自前で建てる路が塞がっている証拠は 1 つも無い** (§1.1 の ⓓ は 0 件のまま)。
+  ⚠ **中核 9 / 10 は 0/2 で未測定のまま**。⚠⚠ **`IsClosed (thm7Region W)` が真であること自体は誰も
+  判定していない**。
   ⚠ **型検査が保証しないもの 3 件** (**17 スロットと 13 変数の対応** / **入れ子の向き** /
   **上限値が `Thm7` のものであること**) は **N17 と監査の 2 度、一次典拠に逐語で当てて不一致 0 件**
   (facts **N17-f**) ⟹ ⚠⚠ **転記義務が縮んだのではない — 定義を変えれば同じ義務が戻る**。
@@ -169,6 +179,15 @@
   0 error で立つ** (facts `## N17 (T3c)` の **N17-a**。⚠ **起票の見立て B が生存したことによる訂正**)。
 - ⚠ **`(ν : Measure _)` の下線を 1 つ戻すと elaborate が終わらなくなる** (facts N2-c) ⟹
   **係数を合併の外で解決する def を消さないこと**。
+- **⭐ 残件 (親 N18 の style gate が flag。⚠ 未実行)**: **非 BC 固有の一般補題 6 本が `Thm7Region.lean` に
+  置かれている** = [`../rules/module-structure.md`](../rules/module-structure.md) の「ディレクトリ = 主題」に
+  照らして**誤配置**である。移設先の当て = `condMutualInfo_eq_zero_of_ae_const` → `Shannon/MutualInfoFiniteRange.lean`
+  の `section Constant` / `ae_eq_const_of_map_eq_dirac` → `InformationTheory/Probability/` 直下
+  (⚠ **Mathlib に該当なし**) / `iCondIndepFun_of_subsingleton_codomain` と `continuous_measureReal_of_discrete`
+  / `continuous_entropy_of_discrete` → **受け皿が無く新規 file が要る**。
+  ⚠⚠ **移設は file 移動 + import 書換 + `InformationTheory.lean` 再登録を伴う blast-radius 項目ゆえ未実行**。
+  ⭐ **閉性の残り 2 sorry が連続性 2 本を主軸に据える以上、閉性を閉じる leg と同時にやるのが安い**
+  (style gate の判断)。
 - **撤退**: 中核 8–10 のいずれかが立たない ⟹ 受け皿は 0 sorry のまま着地させ、
   当該定理だけを `sorry` + `@residual(plan:bc-computable-region-formalization)` で残す。
 
@@ -277,6 +296,5 @@
 2. **否定側の員数を先に測る路は採らない (オーケストレーター決定、2026-08-08)**: 根拠 3 点は §1.2。
    ⚠⚠ **この決定は否定側の軽重について何も予測していない**。⚠ 射程の限定 (判定は `Thm7` 経路の
    員数からのみ導かれている) は §1.2 に書くことで塞いだ。
-3. **単位 C の波及を実測した (2026-08-08)**: `scripts/dep_consumers.sh` の実値は §3.3 の表。
-   ⚠ **監査 / facts が引く 64 decl / 8 file は `IsUVChannelLaw` の数**であり、接続先 2 本の数ではない
-   ⟹ **単位 C の見積りに 64/8 を使わない**。⚠ **台帳側は本 plan では書き換えない**。
+3. **単位 C の波及を実測した (2026-08-08)**: ⚠ **決着済 = 番号のみ残す (1 行スタブ)** — 実値の表と
+   「⚠ **64 decl / 8 file は `IsUVChannelLaw` の数ゆえ単位 C の見積りに使わない**」条項は **§3.3 が SoT**。
