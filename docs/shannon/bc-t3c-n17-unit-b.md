@@ -352,13 +352,26 @@ ratchet 4 規則すべて 0 件**。
 |---|---|---|
 | **ファイバ** (`thm7RegionOfLaw ν` が閉集合) | ⭐ **通った (sorryAx-free)** | `isClosed_setOf_inThm7` = 9 本の非狭義不等式を `isClosed_le` + `fun_prop` で、`isClosed_thm7RegionOfLaw` = 適格性で場合分け (不適格なら `∅`)。計 **14 行** |
 | **内側 `kv` 段** (有限合併) | ⭐ **通った (`ν` 段を除いて)** | `finite_setOf_lt_thm7Cap` = `Set.Finite.pi` + `Set.finite_Iio` で **6 行**、`Set.Finite.isClosed_biUnion` が**形ごと当たり** **3 行** |
-| **内側 `ν` 段** (法則の合併) | ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)`** | `isClosed_iUnion_thm7RegionOfLaw` (`Thm7Region.lean:249`) |
+| **内側 `ν` 段** (法則の合併) | ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)`** | `isClosed_iUnion_thm7RegionOfLaw` (`Thm7Region.lean`) |
 | **中間 `⋂_{kJ,T_J}` 段** | ⭐ **通った** | `isClosed_iInter` 3 段、**3 行** |
-| **外側 `⋃_p` 段** (= headline) | ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)`** | `isClosed_thm7Region` (同 `:277`) |
+| **外側 `⋃_p` 段** (= headline) | ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)`** | `isClosed_thm7Region` (同ファイル) |
 
-⟹ **段は 3 つではなく実際には 5 つに割れ、うち 3 つが通り 2 つが残った**。
-⚠ **残った 2 つは同じ形の未閉項を共有している** — どちらも「確率測度の空間上の合併」であり、
-未閉項は **(i) 25 スロットが弱位相で連続か** と **(ii) 法則の集合が閉か** である
+⟹ **段は 3 つではなく実際には 5 つに割れた**。
+⚠⚠ **要約語「5 段中 3 段が通り」は使わない** (監査 訂正 7) — 正確な形は
+**`sorryAx`-free は 3 本 (`isClosed_setOf_inThm7` / `isClosed_thm7RegionOfLaw` /
+`finite_setOf_lt_thm7Cap`) であり、残る 2 本の段 (`isClosed_thm7RegionOfAuxReceiver` /
+`isClosed_thm7RegionOfInput`) は `sorry` を経由する配線である**
+(⚠ **§3-(5) の `#print axioms` の表は初めからこのとおり書いており、訂正の対象は要約語だけである**)。
+
+⚠⚠ **残った 2 つは同じ材料を要するが同じ言明ではない** (監査 訂正 3。⚠ **起票時の
+「同じ形の未閉項を共有している」は向きが不正確だった**) — **headline は添字 `p` について一様な
+(グラフの) 形を要し、`ν` 段はその `p` 断面にすぎない** ⟹ **1 本の共有補題へ機械的に集約できる形では
+ない** (⚠ **集約漏れではない**)。⭐ **機械の根拠 (逐語、監査 probe N1)**: 固定 `p` のはしごで headline を
+出そうとすると `error(lean.synthInstanceFailed): failed to synthesize instance of type class
+AlexandrovDiscrete (ℝ × ℝ × ℝ)` で落ちる。
+
+⟹ **2 本が共有しているのは *材料* の側**であり、それは **(i) 25 スロットが弱位相で連続か** と
+**(ii) 法則の集合が閉か** である
 (⚠ **コンパクト性そのものではない** — §3-(4) でコンパクト性は型クラス 3 本を足せば出ると機械で確定した)。
 
 ### 4.3 見立て 4 本の較正 (⚠ 当てにいくものではない)
@@ -385,7 +398,9 @@ ratchet 4 規則すべて 0 件**。
 
 - **受け皿** = **昇格した (0 error)**。
 - **中核 8** = **`sorry` + `@residual(plan:bc-computable-region-formalization)` で退出**
-  (⚠ **5 段のうち 3 段は通った**が、**中核 8 そのものは通っていない**)。
+  (⚠⚠ **「5 段中 3 段が通った」とは書かない** = 監査 訂正 7。正確には **`sorryAx`-free が 3 本**で、
+  **残る 2 本の段は `sorry` を経由する配線**であり、⚠ **その 2 本と headline の関係は §4.2 のとおり
+  「断面と一様形」である**。⚠ **中核 8 そのものは通っていない**)。
 
 ⚠⚠ **これを「単位 B が閉じた」と書かない** — **中核 9 (有界性) / 10 ((α) 合致) は 1 行も触れていない**。
 
@@ -417,9 +432,15 @@ ratchet 4 規則すべて 0 件**。
 **半計算可能性については何も言っていない**。
 ⚠⚠ **「3 レート版から従う」とは書かない** (子 plan §4-b / R-4 = 判定ではなく禁止条項)。
 
-**(4) 2 つの束縛子が同じ集合を定めるか** — `(ν : Measure _) (hν : IsFiniteMeasure ν)` 版と
-`(ν : ProbabilityMeasure _)` 版が**同じ `thm7Region` を定めることは Lean で証明していない**。
-⚠ facts **N2-l (5)** が名指した未閉項 (法則が総質量を固定することが証明されていない) は**そのまま残る**。
+**(4) 2 つの束縛子が同じ集合を定めるか** — ⭐⭐ **確率測度の下では機械で閉じた** (監査 訂正 4)。
+`(ν : Measure _) (hν : IsFiniteMeasure ν)` 版と `(ν : ProbabilityMeasure _)` 版が **`thm7Region` の中で
+同じ集合を定めることは、監査 probe が昇格先の def のまま両向き示した**
+(`docs/shannon/probes/t3c-n17/audit-probes.lean` の **P3**。総質量の強制は同 **P2** = `IsThm7Law` の
+第 4 節 `ν.map (fun q ↦ q.2.1) = p` と `p : ProbabilityMeasure α` から `IsProbabilityMeasure ν` が出る)。
+⟹ ⭐ **facts **N2-l (5)** が名指した未閉項 (法則が総質量を固定することが証明されていない) は閉じた**。
+⚠⚠ **未閉として残るのは中間 def が一般の `p : Measure α` を取る場合である** —
+`thm7RegionOfAuxReceiver` / `thm7RegionOfInput` は `p` を確率測度に制限せず取るので、
+**`p` が確率測度でないときは前者が空・後者が非空でありうる** ⟹ **その水準では 2 つは一致しない**。
 
 **(5) 型クラス 3 本を証明の中で構成できるか** — §3-(4) は 3 本を**仮定として**与えたときの話である。
 `Fintype α` + `StandardBorelSpace α` から `MeasurableSpace α = ⊤` を出して
@@ -427,10 +448,40 @@ ratchet 4 規則すべて 0 件**。
 
 **(6) 中核 9 / 10** — **有界性も (α) 合致も 1 行も触れていない**。
 
-**(7) 監査** — 本 leg は**自己申告である**。新規 `sorry` 2 本 + `@residual` を入れたので
-**honesty-auditor / style-auditor の 2 gate は未実施**であり、⚠ **分類 (`plan:` であること) と
-署名の正直さは独立に検証されていない**。
+**(7) 監査** — 本節を書いた時点で本 leg は**自己申告**であった。⭐ **その後 2 gate は実施済**
+(honesty = [`bc-t3c-n17-audit.md`](bc-t3c-n17-audit.md) **訂正あり生存**・訂正 7 件・**主判定を動かすもの
+0 件**・**tier 5 defect 0 件** / style = **PASS**) ⟹ **分類 (`plan:`) と署名の正直さは独立に検証された**。
+⚠ **ただし監査は honesty gate であり、style 側について確認したのは `lean_doc_lint.ts` の機械層
+(strict 10 / ratchet 4 がすべて 0 件) だけである** — **判断項目は別の gate が見た**。
 
-## 6. 波及 (⚠ facts / 親 plan / 子 plan の書き換えは着地 leg の仕事)
+**⚠⚠ 以下 (8)–(11) は監査 §5 が名指した「監査も確かめていないこと」であり、本 leg でも未確認である**
+(⚠ **自己申告と監査のどちらもこれらを閉じていない**)。
 
-(N17 実行 leg が埋める)
+**(8) ⚠⚠ `IsClosed (thm7Region W)` が真であること自体** — **誰も判定していない**。監査は
+**命題の真偽を判定しておらず、反証も証明も試みていない** (⚠ **有限周囲空間 + 情報量の連続性 +
+閉じた法則集合から真である見込みは高いが、見込みは判定ではない**)。
+⟹ ⚠⚠ **偽であれば `@residual(plan:…)` の分類は `defect:false-statement` へ落ちる**。
+
+**(9) 述語の弱化が領域を真に大きくするか** — **上位集合であることは確実**だが (§5-(2) + 監査 軸 2)、
+**真の包含かは未検証**である。
+
+**(10) 典拠の濃度補題** — 典拠の「上限つきと上限なしが一致する」という主張は **Lean 側で未形式化**であり、
+**監査も検証していない** ⟹ ⚠⚠ **本 def は「上限つき領域」であって、上限なしの `Thm7(W)` と一致するかは
+その補題に依存する**。
+
+**(11) 下流の olean 再生成の影響** — `git diff --name-only` で既存 `.lean` に差分が無いことは確認したが
+(§3-(6))、**下流の olean 再生成の影響は測っていない**。
+
+## 6. 波及 — ⚠ **本 leg の結果でどの文書のどの行が書き換わったか**
+
+⚠ **本節は「どこが書き換わったか」の索引である** — **後続 leg が何をするかは書かない** (本家系の規約)。
+⚠ **監査 訂正 1 / 2 はコード側 (SoT) ゆえ監査自身が Edit 済**であり、本節の対象外である。
+
+| 文書 | 書き換わった箇所 | 由来 |
+|---|---|---|
+| **本書** | **§4.2 末尾** (「同じ形の未閉項を共有している」→「同じ材料を要するが同じ言明ではない」+ `AlexandrovDiscrete (ℝ × ℝ × ℝ)` の逐語) / **§4.2 と §4.4 の要約語** (「5 段中 3 段が通り」→ `sorryAx`-free 3 本 + 配線 2 本) / **§5-(4)** (未証明 → 確率測度の下では機械で閉じた。残るのは一般 `p : Measure α` の場合) / **§5-(7)** (2 gate 未実施 → 実施済) / **§5-(8)–(11) を新設** | 監査 訂正 3 / 7 / 4 + 監査 §5 |
+| [`bc-facts.md`](bc-facts.md) | **`## N17 (T3c)` 節を新設** / **`## N2 (T3c)` の N2-l 行の (5)** (未閉項 → 既閉、再検証コマンドつき) | 本 leg + 監査 訂正 5 |
+| [`../audit/audit-tags.md`](../audit/audit-tags.md) | **`@residual` の `plan` 行の Slug 規約**に「末尾の `-plan` は落としてよい」を追記 (⚠ **in-tree の `plan:` slug を着地 leg が数え直し、`bc-computable-region-formalization` と `epi-debruijn-pertime-closure` の 2 slug / 4 か所・**2/2 とも `-plan` を落としている**ことを確認してから書いた**) | 監査 訂正 6 |
+| 親 plan [`bc-open-problem-t3c-plan.md`](bc-open-problem-t3c-plan.md) | **§5.1 に N17 着地ブロック**を追記 / **§進捗の N17 行**を消化済へ / **予算 600 行**に収めるため §7 の決着済 entry をスタブ化 | 本 leg |
+| 子 plan [`bc-computable-region-formalization-plan.md`](bc-computable-region-formalization-plan.md) | **Status 行** (「未着手 — 1 行も書いていない」は偽になった) / **§進捗の B 行** / **§3.2 (iv)** (⚠ **「領域 def には 3 型クラスが追加で要る」は誤りだった** — 要求元は補題側) / **§3.2 (iii)** (転記照合が実際に行われた範囲) | 本 leg + §3-(2) / §3-(4) の機械実測 + 監査 軸 1-c |
+| 親 moonshot [`broadcast-channel-moonshot-plan.md`](broadcast-channel-moonshot-plan.md) | **t3c の現況行 / facts 節一覧 / N17 の同期ブロック / Sub-plan テーブルの t3c 行** (⚠ **conflict では子が SoT**) | 親子 DAG の同期 |

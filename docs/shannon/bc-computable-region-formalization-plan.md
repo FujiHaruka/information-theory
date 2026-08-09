@@ -1,9 +1,12 @@
 # BC の計算可能な容量領域 — 形式化債務 (T3c §6-5 の切り出し)
 
 > **Parent**: [`bc-open-problem-t3c-plan.md`](bc-open-problem-t3c-plan.md) §6-5 / §7 判断ログ 3
-> **Status**: 起票 (2026-08-08)。⚠ **未着手** — `InformationTheory/` へは 1 行も書いていない。
-> ⭐ **親 N17 (2026-08-09) で単位 B に着手予定** (親 §7 判断ログ 12 / 起票の凍結先 =
-> [`bc-t3c-n17-unit-b.md`](bc-t3c-n17-unit-b.md)。⚠ **本 Status 行は実際に 1 行書いた後でなければ直さない**)。
+> **Status**: 起票 (2026-08-08)。⭐ **単位 B に着手済 (親 N17、2026-08-09)** — 受け皿は層 3 に実在し
+> (`InformationTheory/Shannon/BroadcastChannel/Thm7Region.lean`)、**中核 8 は 2 本が `sorry` +
+> `@residual(plan:bc-computable-region-formalization)` で未閉 / 中核 9 / 10 は未着手**。
+> ⚠⚠ **単位 B は完了ではない** / ⚠ **単位 A / C は 1 行も書いていない** (⚠ **状態の逐語 SoT =
+> facts [`bc-facts.md`](bc-facts.md) `## N17 (T3c)` + 成果物 [`bc-t3c-n17-unit-b.md`](bc-t3c-n17-unit-b.md) /
+> 監査 = [`bc-t3c-n17-audit.md`](bc-t3c-n17-audit.md)**)。
 > **退出タグ**: `@residual(plan:bc-computable-region-formalization)`
 > (filename stem は `-plan` つき。slug が末尾の `-plan` を落とすのは家系の先例
 > `@residual(plan:bc-open-problem-t3)` ↔ `bc-open-problem-t3-plan.md` と同じ形)
@@ -20,9 +23,9 @@
 - [ ] **A** 計算可能解析の層 (中核 1–7 + (β) 語彙。BC から独立) 📋 — **proof-log: yes**
       (⚠ 中核 1 本ごとに「何が通って何が通らなかったか」を残す。行数が 1 行も測れていない唯一の単位)
 - [ ] **B** 3 レート `Thm7(W)` の領域層 (受け皿 + 中核 8–10) 🚧 — **proof-log: no**
-      (受け皿は `probes/t3c-n2/r1-thm7-region.lean` が出発点。⚠ 中核 8 で詰まったときだけ起こす)
-      ⭐ **親 N17 で着手 (2026-08-09)** — 起票 = [`bc-t3c-n17-unit-b.md`](bc-t3c-n17-unit-b.md)
-      (受け皿の昇格 + gateway atom = 中核 8)。⚠ **完了ではない** / ⚠ **中核 9 / 10 は N18 以降**
+      ⭐ **受け皿は昇格済** (親 N17、2026-08-09。`Thm7Region.lean` = 22 decl、probe の 4 型クラス列のまま
+      0 error) / ⚠ **中核 8 は 2 本が `@residual` で未閉** (段は 5 つに割れた) / ⚠⚠ **中核 9 (有界性) /
+      10 ((α) 合致) は 1 行も触れていない** ⟹ ⚠⚠ **完了ではない**
 - [ ] **C** 3 レート operational との接続 (中核 11 + D2。B に依存) 📋 — **proof-log: yes**
       (⚠⚠ **員数未測定** ⟹ 測定そのものが成果物になる。§3.3)
 
@@ -147,16 +150,23 @@
   `|X|+6` / `|X|+1`、13 変数の周囲空間、25 スロット、4 節の法則述語、`R₀=0` スライス + `slice_comm`)
   + N2 §3.2 の**中核 8–10** (合併レベルの閉性 / 有界性 / (α) 合致の証明)。
 - **(ii) 依存**: **A に依存しない** (閉性は古典側で閉じる)。⭐ 親の **N17 / N18 はここに充てられる**。
-- **(iii) 員数の確度**: **受け皿は測定済** — 監査が独立実装で端から端まで通した
-  (`probes/t3c-n2/r1-thm7-region.lean`、167 行 / 0 sorry。SoT = facts N2-c)。
-  ⚠ **中核 8–10 は 0/3 で未測定**。⚠ **型検査が保証しないもの 3 件** (N2 と監査で一致):
-  **17 スロットと 13 変数の対応** / **入れ子の向き** / **上限値が `Thm7` のものであること** ⟹
-  **転記義務は 1 ミリも縮まない** (監査 §4 の B 行)。
+- **(iii) 員数の確度**: **受け皿は昇格済** (親 N17)。⭐ **中核 8 は初めて測った** — **5 段に割れ、
+  `sorry` + `@residual` 2 本**で着地した (逐語の SoT = facts `## N17 (T3c)` の **N17-d**)。
+  ⚠ **中核 9 / 10 は 0/2 で未測定のまま**。
+  ⚠ **型検査が保証しないもの 3 件** (**17 スロットと 13 変数の対応** / **入れ子の向き** /
+  **上限値が `Thm7` のものであること**) は **N17 と監査の 2 度、一次典拠に逐語で当てて不一致 0 件**
+  (facts **N17-f**) ⟹ ⚠⚠ **転記義務が縮んだのではない — 定義を変えれば同じ義務が戻る**。
+  ⚠⚠ **典拠の *証明* は 1 行も読んでいない** / ⚠⚠ **照合が `IsThm7Law` の強度 diff を検出した** —
+  **本 def から作る集合は典拠の領域の上位集合**であり、**逆向きに濃度上限の偏差もある** ⟹
+  **「`thm7Region` は `Thm7(W)` である」とは書けない** (facts **N17-c**)。
 - **(iv) ⭐ gateway atom**: **`IsClosed (thm7Region W)` を合併レベルで、`closure` を付けずに出す**
   (= 中核 8)。⚠ **各ファイバの閉性では足りない** — N2 の `n2_a3_neg` B2 が逐語で落ちており、
   template は**同時閉性**を仮定に持つ。⚠ **`isClosed_iUnion` は `[AlexandrovDiscrete X]` を要求する
-  別物**である。⚠ 領域 def には `[TopologicalSpace α] [DiscreteTopology α] [BorelSpace α]` が
-  追加で要る (N2 の A4 が逐語で落ちて確定) ⟹ **既存 BC 家系 11 本と型クラス列が揃わない**。
+  別物**である。⚠⚠ **「領域 def には `[TopologicalSpace α] [DiscreteTopology α] [BorelSpace α]` が
+  追加で要る ⟹ 既存 BC 家系 11 本と型クラス列が揃わない」は誤りであり、N17 が機械で否定した** —
+  ⭐ **3 本を要求しているのはコンパクト性の道具 (補題側) であって領域 def ではない**。
+  **def は 4 型クラス (`[Fintype]` / `[MeasurableSpace]` / `[StandardBorelSpace]` / `[Nonempty]`) のまま
+  0 error で立つ** (facts `## N17 (T3c)` の **N17-a**。⚠ **起票の見立て B が生存したことによる訂正**)。
 - ⚠ **`(ν : Measure _)` の下線を 1 つ戻すと elaborate が終わらなくなる** (facts N2-c) ⟹
   **係数を合併の外で解決する def を消さないこと**。
 - **撤退**: 中核 8–10 のいずれかが立たない ⟹ 受け皿は 0 sorry のまま着地させ、

@@ -58,7 +58,7 @@ cross-ref (false-negative 事例): `csiszarGap1Source_deriv_le_zero` は audit:P
 
 | Class | 意味 | Slug 規約 | 例 |
 |---|---|---|---|
-| `plan` | 別 plan で closure 予定 | plan filename stem (no `.md`) | `@residual(plan:epi-stam-closure)` |
+| `plan` | 別 plan で closure 予定 | plan filename stem (no `.md`)。**末尾の `-plan` は落としてよい** — in-tree の `plan:` slug は **2 slug / 4 か所すべてがこの形** (`bc-computable-region-formalization` ↔ `bc-computable-region-formalization-plan.md` / `epi-debruijn-pertime-closure` ↔ `epi-debruijn-pertime-closure-plan.md`) ⟹ **片方だけ `-plan` を付け直すと分裂する** | `@residual(plan:epi-stam-closure)` |
 | `wall` | Mathlib に未整備の壁。長期残課題 | wall name (下記 register) | `@residual(wall:stam)`、`@residual(wall:n-dim-gaussian-aep)` |
 | `defect` | (a) 旧 defect の fix 待ち残置 (signature は honest 化済、body だけ `sorry`)、**または (b) signature が false-as-framed で def-fix 待ち** (`sorry` は充填不能 — 下記) | defect kind (下記語彙) | `@residual(defect:circular)`、`@residual(defect:false-statement)` |
 
