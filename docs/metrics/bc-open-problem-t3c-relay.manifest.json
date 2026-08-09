@@ -1,0 +1,88 @@
+{
+  "problem": "一般 2 受信者 DM-BC の容量領域の計算可能な特徴付け (未解決本体 T3) への第 3 次 20 leg relay (N0-N19)。前 relay (T3b) 同様、層 3 (Lean) が動いたのは判定枠 第 3 段 (N8 / N11) と形式化枠 (N17 / N18) の 4 leg だけで、可変枠 14 leg は散文 + 数値検証器 + 一次文献で回っている ⟹ 対象ファイル prefix を当てた編集数は relay 全体の作業量を代表しない。⚠ 本 relay 固有の 3 点: (1) セッション境界と leg 境界は一致せず、さらに relay 境界とも一致しない — 先頭の d6d1ee1c は前 relay (T3b) の記録 leg M19 と本 relay の plan 起票 + N0 を同一セッションで抱えており、前 relay の manifest にも同じ id が載っている (二重計上。両 relay の数値を足してはならない)。(2) 時刻窓だけでは commit をセッションへ一意に割り付けられない — 長い idle 末尾を持つセッション (f5296e13 / 80f23078) が他セッションの窓を丸ごと覆う。下の note は時刻窓ではなく実際の編集ファイルとターン内容で同定したものである。(3) 数値検証器は前 relay と違い repo 側 (docs/shannon/verifiers/) に出ているが、scratchpad 上の probe とログ解析はなお計測外にある。",
+  "proof_log": "docs/proof-logs/proof-log-bc-open-problem-t3c-relay.md",
+  "sessions": [
+    {
+      "id": "d6d1ee1c",
+      "note": "⚠ relay 境界をまたぐセッション。前 relay (T3b) の M6 / M17 / M18 / M19 を回した後、同一セッションのまま本 relay の plan 起票 (5e3fce9a) と N0 (a1e16c3d) を出している ⟹ ⚠⚠ 前 relay の manifest にも同じ id が載っており、本セッションの数値は両 relay に二重計上されている。⚠ 内訳を分ける手段は無い (ターン単位の prompt_ids を切れば分けられるが、本 manifest は切っていない)。"
+    },
+    {
+      "id": "3158161e",
+      "note": "N1 (本命 attack = C の和レート面の端を Thm7 で超えられるか ⟹ 判定 NO-GO) + その敵対的独立監査 (訂正あり生存・余裕 1e-5 が不成立で 6.17e-5 へ訂正 → Lagrange 証明書で 5.211e-7 へ修復) + 親子 DAG 同期。d6d1ee1c の終端と 9 秒だけ重なる (relay の tmux 引き継ぎ)。"
+    },
+    {
+      "id": "716ce498",
+      "note": "N2 (形式化債務の員数見立て) の実作業。⚠ 本セッションからの commit は 0 本 — 成果物 docs/shannon/bc-t3c-n2-estimate.md と scratchpad の Lean probe 12 本を書いたが、commit は次セッション (df6fa733) が拾っている ⟹ ⚠⚠ commit の帰属とセッションの帰属は一致しない。⚠ wall 33h56m は 1 ターンが返らないまま放置された結果であって作業時間ではない (サブエージェント idle 化の機械可視な 1 例)。"
+    },
+    {
+      "id": "df6fa733",
+      "note": "N2 の敵対的独立監査 (消えた probe 13 本のうち load-bearing 2 本を独立再現) + N2 着地 (§6-5 発火 = 形式化債務は残枠に収まらない) + scratchpad 揮発を受けた CLAUDE.md への規則追記。716ce498 の未 commit 分をここで拾っている。"
+    },
+    {
+      "id": "f5296e13",
+      "note": "⚠ leg 番号を持たないユーザー対話セッション。leg 運用改定 (探索アーク枠 6 leg の新設 / 成果物 4 型 / facts 再現本数を進捗指標へ / 撤退ライン 6-6) の起草と適用、および次 leg セッションの tmux 送出。⚠⚠ 本 relay の枠組みそのものを変えたのはこのセッションであって、どの N leg でもない。⚠ 最終ターンの wall 14h20m は idle 末尾であり、時刻窓としては N3 以降のほぼ全セッションを覆ってしまう (時刻での割り付けが効かない実例)。"
+    },
+    {
+      "id": "5fc80860",
+      "note": "探索アーク A1 の宣言起票 + N3 (novelty gate = novel、ただし §0 payoff は 3 点とも不成立) + N4 (SR_C 点で κ=∞ を恒等式で / 構造定理 K1) + N4 の敵対的独立監査。"
+    },
+    {
+      "id": "442fa4e1",
+      "note": "N5 (A1 終端判定 = 続行だが昇格条件は満たさない) + plan 圧縮 (599→520 行) + §6-5 の切り出し (子 plan bc-computable-region-formalization-plan.md の起票) + PAUSED 解除。⚠ wall 6h24m のうち JST 02:25→07:25 の約 5 時間は idle であり active との差が最も大きいセッション。"
+    },
+    {
+      "id": "3dbbd9a5",
+      "note": "N6 (C の境界の面単位棚卸し + gate 選択) と N7 (R0=0 の肩 = NO-GO、許容差 ε=2.0786e-07 の証明書) の 2 leg、および両方の敵対的独立監査。⚠ N6 は本 relay で唯一「監査で判定が一部覆った」leg (未着手の面が 1 枚→2 枚)。"
+    },
+    {
+      "id": "b12900a8",
+      "note": "N8 (判定枠 第 1 組 第 3 段 = 層 3 へ載せる)。OuterBoundTransport.lean へ @[entry_point] 3 本 + def 3 本。⚠ 載ったのは (R1) 1 本で、commit 件名の「上界の連鎖」は過大 (着地時に自己訂正済)。"
+    },
+    {
+      "id": "52e91c77",
+      "note": "N9 (最後の面 = 錐 0<λ0<λ1+λ2 を恒等式で閉じた) + 監査。⚠ 監査の独立検証器を scratchpad から repo (docs/shannon/verifiers/) へ復元したのがこのセッション — 前 relay で「1 leg 溶けた」課金への処方が本 relay で初めて実行された地点。"
+    },
+    {
+      "id": "dd9d418f",
+      "note": "N10 (ε を厳密 0 に閉じた — 恒等式 2 本 + δ≥0 の初等証明、tol / 格子 / 分枝限定を一切使わず) + 監査。サブエージェントのモデル選択規約 (創造的タスクは Fable) の commit もここ。"
+    },
+    {
+      "id": "fe0c8871",
+      "note": "N11 (判定枠 第 2 組 第 3 段 = δ≥0 を層 3 へ)。MoreCapableBinary.lean へ @[entry_point] 2 本、0 sorry / sorryAx-free / @audit:ok。"
+    },
+    {
+      "id": "9d6b5d39",
+      "note": "N12 (判定枠 6 leg の棚卸し、側 = 記録) + 監査。⚠ 監査の訂正で反証条件 (2) の判定が「発火」から「不発火」へ反転した唯一の leg。"
+    },
+    {
+      "id": "a8300136",
+      "note": "探索アーク A2 の起票 + N13 (novelty gate = redundant ⟹ アークは 1 leg 目で死亡) + 監査。⚠ 本 relay で唯一 claude-fable-5 を使ったセッション (創造的タスクの規約適用)。"
+    },
+    {
+      "id": "01623231",
+      "note": "N13 監査の訂正 19 件の伝播 + N14 (A2 を閉じる記録 leg = 残枠 3 の配分決定 + plan 実刈り込み 561→516 行)。"
+    },
+    {
+      "id": "ed3e33de",
+      "note": "N15 (判定枠 第 3 組 第 1 段 = [glnsum] の和チャネル族に GO、検証器 41/41) + 監査。⚠ 起票 md に見立てと反証条件を着手前に凍結する作法 (§4.4-2) が始まったのはこの leg から。"
+    },
+    {
+      "id": "5fc1027f",
+      "note": "N16 (上流 gate = UV = C、検証器 29/29 ⟹ 挟み込みが Thm7 = C を強制していた = 減算方向の較正) + 監査 (60 系統中 15 成立・訂正 14 件)。⚠ wall 6h20m のうち JST 03:22→07:19 の約 4 時間は idle。"
+    },
+    {
+      "id": "a03a002a",
+      "note": "N17 (形式化枠 2/3 = 子 plan 単位 B の受け皿を層 3 へ昇格 / gateway atom 中核 8 は 5 段中 2 段が sorry + @residual で退出) + 監査 + style gate。⚠⚠ 本 relay で初めて sorry + @residual を残した leg。"
+    },
+    {
+      "id": "dfda0aa8",
+      "note": "N18 (形式化枠 3/3 = thm7Region W ≠ ∅ を sorryAx-free で構成 [@[entry_point] 6 本目] / 材料 (i) を連続性 1 本へ集約 / 材料 (ii) の欠落を μ ↦ μ ⊗ₘ TJ 1 点へ) + 監査 (零核で領域が空になることを機械で当てて Markov 仮定の必要性を確定)。⚠ headline 2 本の sorry は動いていない。"
+    },
+    {
+      "id": "d8dac7ae",
+      "note": "N19 (本記録 leg) の起票 (§0 見立て 4 本 + §1 反証条件 3 本の凍結) と実行。⚠⚠ 本セッションは計測時点で進行中であり、数値は本 leg の作業を完全には含まない ⟹ 再実行すると本行だけ増える (再現しない唯一の行)。"
+    }
+  ],
+  "filters": { "file_prefix": "InformationTheory/Shannon/" },
+  "idle_gap_minutes": 5
+}
