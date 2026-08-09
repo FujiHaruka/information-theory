@@ -5,10 +5,9 @@
 > (`InformationTheory/Shannon/BroadcastChannel/Thm7Region.lean`)、**領域が空でないことは構成済
 > (`sorryAx`-free。⚠ `[IsMarkovKernel W]` つき、⚠⚠ 零核では領域は空)**、しかし **中核 8 は 2 本が `sorry` +
 > `@residual(plan:bc-computable-region-formalization)` で未閉のまま / 中核 9 / 10 は未着手**。
-> ⚠⚠ **単位 B は完了ではない** / ⚠ **単位 A / C は 1 行も書いていない** (⚠ **状態の逐語 SoT =
-> facts [`bc-facts.md`](bc-facts.md) `## N17 (T3c)` / `## N18 (T3c)` + 成果物
-> [`bc-t3c-n17-unit-b.md`](bc-t3c-n17-unit-b.md) / [`bc-t3c-n18-core8-closure.md`](bc-t3c-n18-core8-closure.md) /
-> 監査 = [`bc-t3c-n17-audit.md`](bc-t3c-n17-audit.md) / [`bc-t3c-n18-audit.md`](bc-t3c-n18-audit.md)**)。
+> ⚠⚠ **単位 B は完了ではない** / ⚠ **単位 A / C は 1 行も書いていない**。
+> ⚠⚠ **親 relay (T3c) は 20 leg (N0–N19) を使い切って終端した (2026-08-09)** — **親 §6-3 が発火し §0 のゴールは未達である** (親 §7 判断ログ 14 / 親 §5 の relay 終端の棚卸し) ⟹ ⚠⚠ **本 plan は開いたまま残るが、単位 A / B / C は以後どの relay にも所有されていない**。⚠ **これを「孤児」と読まない** — **次にどの単位へ leg を配るかをユーザーが決めるまで未割当なだけである**。⚠ **親の記録 leg (N19) は Lean を 1 行も動かしていない**ので、**A / B / C の状態は親 N18 着地時点から 1 mm も動いていない**。
+> ⚠ **状態の逐語 SoT** = facts [`bc-facts.md`](bc-facts.md) `## N17 (T3c)` / `## N18 (T3c)` / `## N19 (T3c)` + 成果物 [`bc-t3c-n17-unit-b.md`](bc-t3c-n17-unit-b.md) / [`bc-t3c-n18-core8-closure.md`](bc-t3c-n18-core8-closure.md) + 監査 [`bc-t3c-n17-audit.md`](bc-t3c-n17-audit.md) / [`bc-t3c-n18-audit.md`](bc-t3c-n18-audit.md)。
 > **退出タグ**: `@residual(plan:bc-computable-region-formalization)`
 > (filename stem は `-plan` つき。slug が末尾の `-plan` を落とすのは家系の先例
 > `@residual(plan:bc-open-problem-t3)` ↔ `bc-open-problem-t3-plan.md` と同じ形)
