@@ -253,3 +253,286 @@ style-auditor) が要る** — ⚠ **自己監査にしない**。
 ---
 
 ## 2. 実施したこと
+
+**触った file** = `InformationTheory/Shannon/BroadcastChannel/Thm7Region.lean` (**22 decl → 38 decl**、
+`sorry` は **2 本のまま**) + 新規 probe 4 本 (`docs/shannon/probes/t3c-n18/`)。
+commit = `c4ab66a6` (preflight + 殺す 1 行) / `8d4dd999` (材料 (i) の原子 + probe)。
+⚠ **既存 20 decl の署名は 1 行も動かしていない** (§3-(6))。
+
+**(a) step 0 — preflight を宣言として立てて閉じた** — `thm7Region_nonempty` (`@[entry_point]`) と
+`origin_mem_thm7Region`。⚠⚠ **監査 probe P4 の仮定文をそのまま引かず、その仮定を構成した**。
+機構は 4 つ:
+
+1. **入力法則を 1 点測度に取る** (`Measure.dirac x₀`、`x₀ : α` は `Nonempty α` から)。
+   ⟹ スロット 14 / 15 / 16 / 21–24 (X を第 1 引数に持つ 7 本) が落ちる。
+2. **⭐ 起票 §0-A の 1 行反証をそのまま使った** — `kv i = 0` を選ぶと補助変数の型
+   `bcAuxAlphabet 0 = ULift (Fin 1)` が 1 点型 ⟹ スロット 0–13 / 17–20 (補助変数を第 1 引数に持つ
+   18 本) が落ちる。`0 < thm7Cap α i` は `simp only [thm7Cap]; split <;> omega` の 1 行。
+3. **法則そのもの** = `thm7DegenerateLaw W TJ x₀ := ((dirac x₀ ⊗ₘ W) ⊗ₘ TJ).map e`、
+   `e` は 13 因子への埋め込み。⚠ **起票 §0-A-(2) が「測度の等式であって定義の展開ではない」と
+   予告した座標並べ替えは、実際には 3 本とも `rfl` で通った** (§4.3)。
+4. **`IsThm7Law` の第 1 節 (条件つき独立性)** は自前で建てた
+   (`iCondIndepFun_of_subsingleton_codomain`、**25 行**)。⚠ **起票 §0-A-(3) の名指しは正しかった** —
+   Mathlib の `iCondIndepFun.of_subsingleton` は `[Subsingleton ι]` = *添字型* であり `Fin 3` には
+   当たらない。必要なのは *値の型* が subsingleton の版で、`iCondIndepFun_iff_condExp_inter_preimage_eq_mul`
+   から場合分け 2 本 (`sets` が全点を含むか / 含まない i が在るか) で作った。
+
+**(b) スロット消滅の道具を 3 本自前で建てた** — `ae_eq_const_of_map_eq_dirac` /
+`mutualInfo_eq_zero_of_ae_const` / `condMutualInfo_eq_zero_of_ae_const`。
+⭐ **条件つき版は `IsMarkovChain` を経由せずに済んだ** — `mutualInfo_chain_rule` を
+**引数を入れ替えて** (`μ Yo Xs Zc`) 当て、両辺の無条件項が 0 になることから `zero_add` で消す形。
+⟹ `condDistrib` の一意性論法は 1 行も要らなかった。
+
+**(c) 見立て C の「殺す 1 行」を機械へ掛けた** (`probes/t3c-n18/kill-lines.lean`) — 生存 (§4.3)。
+
+**(d) 見立て D の「殺す 1 行」を機械へ掛けた** (同 file) — 生存だが**起票が名指していない条件が 2 つ
+出た** (§4.3)。
+
+**(e) 材料 (i) の原子を閉じて昇格させた** (`continuous_measureReal_of_discrete` /
+`continuous_entropy_of_discrete`、`Thm7Region.lean` の新 section `WeakContinuity`)。
+⟹ **スロット 2 形 (無条件 slot 0 / 条件つき slot 4) の弱位相連続性を probe で機械確認**
+(`probes/t3c-n18/continuity.lean`)。⚠ **残り 23 スロットは機械に掛けていない** (§5-(2))。
+
+**(f) 材料 (ii) は第 4 節だけ閉じた** (同 probe) — `{ν | ν.map X = p}` の閉性。
+⚠ **第 1–3 節は評価していない** (§5-(3))。
+
+**(g) `isClosed_iUnion_thm7RegionOfLaw` の docstring を 3 行差し替えた** — 旧文の
+「pmf への通過が未閉項」は (e) が機械で覆したため。⚠ **`@residual` タグは 1 文字も動かしていない**。
+
+## 3. 機械検証の結果
+
+⚠ **以下はすべて機械の出力である。散文の印象は入れていない**。
+
+**(1) 対象 file** — `lake env lean InformationTheory/Shannon/BroadcastChannel/Thm7Region.lean` の
+出力は **warning 2 件のみ / error 0**:
+
+```
+Thm7Region.lean:255:6: warning: declaration uses `sorry`
+Thm7Region.lean:283:8: warning: declaration uses `sorry`
+```
+
+**(2) probe 4 本** — いずれも **error 0**:
+`probes/t3c-n18/preflight.lean` / `kill-lines.lean` / `continuity.lean` / `axioms.lean`。
+
+**(3) preflight を組む途中で落ちた逐語** (⚠ **不発火が無条件でないことの根拠**):
+
+```
+error(lean.synthInstanceFailed): failed to synthesize instance of type class
+  ∀ (i : Fin 3), Subsingleton ((i_1 : Fin 3) → bcAuxAlphabet ((fun x => 0) (i, i_1)))
+```
+
+原因 = **`Subsingleton (ULift (Fin (0+1)))` が instance 解決に乗らない** (`Fin 1` 版は乗る)。
+処置 = `instSubsingletonBcAuxAlphabetZero` を 1 本置いた (2 行)。
+
+**(4) 見立て C の殺す 1 行** — **無出力 (生存)**。条件つき slot 4 =
+`condMutualInfo_eq_condEntropy_sub_condEntropy` で、無条件 slot 0 =
+`mutualInfo_toReal_eq_entropy_form` で、いずれも `(by fun_prop)` 3 本で当たった。
+⟹ **型クラス列は周囲空間の因子で揃い、`condEntropy` の引数の向きも合った**。
+⚠ **`condMutualInfoPmf` は本 leg で 1 度も要らなかった** — `rg -c "condMutualInfoPmf"
+InformationTheory/` は **0 件のまま** (facts N17-e の実測は今も真)。
+
+**(5) 見立て D の殺す 1 行** — **生存。ただし起票が名指していない条件が 2 つ出た** (逐語):
+
+```
+error(lean.synthInstanceFailed): failed to synthesize instance of type class
+  TopologicalSpace (ProbabilityMeasure (Thm7Ambient kv kJ α β₁ β₂))
+error(lean.synthInstanceFailed): failed to synthesize instance of type class
+  CompactSpace (ProbabilityMeasure (Thm7Ambient kv kJ α β₁ β₂))
+```
+
+- **条件 1** — `CompactSpace (ProbabilityMeasure _)` の instance は
+  **`Mathlib.MeasureTheory.Measure.Prokhorov` に在り、`Thm7Region.lean` の import 閉包の外**である。
+- **条件 2** — 13 因子側の instance 3 本 (`OpensMeasurableSpace` / `BorelSpace` / `CompactSpace`)
+  を `haveI` で**先に持ち上げないと入れ子の探索が届かない**。⚠ `synthInstance.maxSize 2000` +
+  `synthInstance.maxHeartbeats 4000000` に上げても届かない (機械で確認)。持ち上げれば **無出力**。
+- ⚠ **起票 §0-D が焦点と名指した「13 因子の積 / Pi 型で `BorelSpace` と `OpensMeasurableSpace` が
+  合成されるか」は合成される** (どちらも `inferInstance` 1 本)。落ちるのは合成そのものではなく
+  **入れ子の探索の到達**である。
+
+**(6) 既存署名の非改変** — `git diff --unified=0 c4ab66a6~1 -- <対象 file>` の削除行は
+**docstring 散文 3 行のみ** (§2-(g))。⚠ **既存宣言の署名行は 1 行も削除されていない**
+(起票 §1-(b) 3 の判定道具そのもの。docstring 行の除外も同条の規定どおり)。
+`git diff --name-only HEAD~2 HEAD` = 対象 file 1 本 + probe 4 本。
+
+**(7) `#print axioms`** (`probes/t3c-n18/axioms.lean`、19 宣言に当てた):
+
+| 宣言 | 結果 |
+|---|---|
+| `thm7Region_nonempty` / `origin_mem_thm7Region` | **sorryAx-free** |
+| `thm7DegenerateLaw` / `_map_input` / `_map_outputs` / `_map_full` / `_isThm7Law` | **sorryAx-free** |
+| `thm7Slots_thm7DegenerateLaw` | **sorryAx-free** |
+| `iCondIndepFun_of_subsingleton_codomain` | **sorryAx-free** |
+| `mutualInfo_eq_zero_of_ae_const` / `condMutualInfo_eq_zero_of_ae_const` / `ae_eq_const_of_map_eq_dirac` | **sorryAx-free** |
+| `isClosed_setOf_inThm7` / `isClosed_thm7RegionOfLaw` / `finite_setOf_lt_thm7Cap` | **sorryAx-free** |
+| `isClosed_iUnion_thm7RegionOfLaw` / `isClosed_thm7RegionOfAuxReceiver` / `isClosed_thm7RegionOfInput` / `isClosed_thm7Region` | `sorryAx` |
+
+⚠ **`sorryAx`-free は必要条件であって十分条件ではない** ⟹ **署名走査を併せた**: 新規 16 宣言の仮定は
+すべて **データ引数か regularity の instance 引数** (`[IsMarkovKernel W]` / `[IsMarkovKernel TJ]` /
+`[IsProbabilityMeasure μ]` / `[Fintype]` / `[StandardBorelSpace]` / `[Subsingleton (β i)]`) であり、
+**核を担う hypothesis は 1 本も無い**。⚠⚠ **ただし `[IsMarkovKernel W]` は閉性 2 本が要求していない
+仮定である** — §5-(1) に別途書く。
+
+**(8) `scripts/sig_view.ts`** — `--names` = **38 decl / 2 with sorry**、`--sorry` =
+`isClosed_iUnion_thm7RegionOfLaw` (L255) と `isClosed_thm7Region` (L283)、
+どちらも `@residual(plan:bc-computable-region-formalization)`。
+`rg -c "@residual" <対象 file>` = **2**。
+
+**(9) code-surface の機械層** — `deno run -A scripts/lean_doc_lint.ts <対象 file>` =
+**strict 10 規則 / ratchet 4 規則すべて 0 件**。file は **529 行** (1500 行の分割閾値の内)。
+
+**(10) 結論形での loogle 引き直し** (起票 §1-(b) 2 が judgement の道具として名指した検索):
+`|- IsClosed (Set.iUnion _)` = **7 件**。内訳 = 有限 / 局所有限添字が 4 本
+(`isClosed_iUnion_of_finite` / `Set.Finite.isClosed_biUnion` / `isClosed_biUnion_finset` /
+`LocallyFinite.isClosed_iUnion`)、`Topology.AlexandrovDiscrete` の 2 本
+(`isClosed_iUnion` / `isClosed_iUnion₂` = **監査 probe N1 が落ちた先そのもの**)、無関係 1 本。
+⟹ **一般の添字の合併に当たる補題は無く、`ν` 段も headline も「引けば出る」形ではない**。
+⚠⚠ **これは壁宣言ではない** — CLAUDE.md の wall 宣言規約を全部通していないので分類は `plan:` である。
+`Continuous (fun _ => Measure.compProd _ _)` = **0 件**、
+`MeasureTheory.ProbabilityMeasure, ProbabilityTheory.Kernel, Continuous` = **0 件**、
+in-project の `rg` も 0 件 ⟹ **`μ ↦ μ ⊗ₘ TJ` の弱位相連続性は在庫に無い** (§5-(3))。
+
+## 4. 判定 — 見立ての較正と反証条件の発火状況 (⚠⚠ §0 / §1 は 1 文字も書き換えていない)
+
+**凍結の機械確認**: `awk '/^## 0\./,/^## 2\./' … | sed '$d' | grep -v '^[[:space:]]*$' | md5` =
+**186 行 / `8e5b0ff16213479aecfd54cb69107fd0`** (起票時の期待値と一致)。
+
+### 4.1 反証条件の発火 (⚠ 3 本それぞれについて明記する)
+
+- **反証条件 1 (preflight が閉じない / 逆に空が出る)** = ⚠ **不発火**。
+  **(i)(ii)(iii) のどれにも落ちなかった** — 原点の所属は `origin_mem_thm7Region` として 0 error で
+  受け取られ、本体に `sorry` は無く (§3-(7) で `sorryAx`-free)、`thm7Region W = ∅` は出ていない。
+  ⚠⚠ **ただし無条件の不発火ではない**。理由 2 点:
+  **(a)** 途中で instance 解決が 1 度落ちている (§3-(3) の逐語) —
+  「1 点型なのだから subsingleton は自明」は成り立たず、instance を 1 本置く必要があった。
+  **(b)** ⚠⚠ **`[IsMarkovKernel W]` を足している** — 閉性 2 本は `W : BCChannel α β₁ β₂`
+  (= 一般の `Kernel`) を取るので、**非空性は閉性より狭い仮定の下でしか言えていない** (§5-(1))。
+- **反証条件 2 (材料 (i) / (ii) のいずれかが立たない)** = ⚠⚠ **発火**。
+  ⭐ **条件文が要求したとおり、見立て C の 1 行と見立て D の 1 行を先に機械へ掛けたうえでの発火である**
+  (§3-(4) / §3-(5))。処置は規定どおり **`sorry` + `@residual(plan:bc-computable-region-formalization)`
+  を 2 本、署名は証明したい形のまま**で残した (新規に立てた `sorry` は 0 本 = 既存 2 本の据え置き)。
+  ⚠⚠ **壁とは書かない** — §3-(10) の結論形検索は引いたが、CLAUDE.md の wall 宣言規約を全部
+  通していない ⟹ 分類は `plan:` である。
+- **反証条件 3 (既存宣言の署名か def を変える必要が生じる)** = ⚠ **不発火**。
+  **(i)(ii)(iii) のどれも要らなかった**。§3-(6) の `git diff` で削除行は docstring 散文 3 行のみ。
+  ⭐ **回避に使った手は「新規宣言を足す」だけで、既存 def への手当ては 0 だった** —
+  非空性は新 section 2 本 (`WeakContinuity` / `Nonemptiness`) を足すことで、
+  材料 (i)/(ii) の機械確認は **probe 側の `example`** で行った。
+  ⚠ **`(ν : Measure _)` の下線を戻す形 (facts N2-c) には 1 度も触れていない**。
+
+### 4.2 段ごとの結末 (⚠ 段を 1 語に畳まない)
+
+| 段 | 結末 | 根拠 |
+|---|---|---|
+| **preflight** (`thm7Region W ≠ ∅`) | ⭐ **構成した (sorryAx-free)** | `thm7Region_nonempty` / `origin_mem_thm7Region`。⚠ `[IsMarkovKernel W]` つき |
+| **ファイバ** (`thm7RegionOfLaw ν` が閉集合) | **通っている (N17 で既済、本 leg で変更なし)** | `isClosed_thm7RegionOfLaw` |
+| **内側 `kv` 段** (有限合併) | **通っている (N17 で既済、本 leg で変更なし)** | `finite_setOf_lt_thm7Cap` + `Set.Finite.isClosed_biUnion` |
+| **材料 (i)** (25 スロットの弱位相連続性) | ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)` で退出**。⭐ **ただし原子は閉じた** | `continuous_entropy_of_discrete` (in-tree、sorryAx-free) + probe で **2/25 スロット**を `Continuous` まで機械確認。⚠ **残り 23 は未検証** |
+| **材料 (ii)** (法則の集合の閉性) | ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)` で退出**。⚠ **第 4 節のみ probe で閉じた** | `IsThm7Law` 第 4 節 = probe で `IsClosed` を機械確認。**第 1–3 節は評価していない** |
+| **内側 `ν` 段** (法則の合併) | ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)`** | `isClosed_iUnion_thm7RegionOfLaw` (L255) |
+| **中間 `⋂_{kJ,T_J}` 段** | **通っている (N17 で既済、本 leg で変更なし)** | `isClosed_thm7RegionOfInput` (⚠ `ν` 段の `sorry` を経由する配線) |
+| **外側 `⋃_p` 段** (= headline) | ⚠⚠ **1 行も動かなかった (`sorry` のまま)** | `isClosed_thm7Region` (L283)。⚠ **起票 §0-B が名指した「`p` について一様なグラフ」の宣言は 1 本も立てていない** |
+
+### 4.3 見立て 4 本の較正 (⚠ 当てにいくものではない)
+
+- **見立て A (締める)** = **生きたが、内訳は 3 点のうち 2 点が外れた**。
+  **(1) 一様性**は当たり — 原点の所属は `∀ kJ TJ, IsMarkovKernel TJ → …` の形を実際に構成する
+  必要があり、1 つの `TJ` では出なかった。
+  ⚠ **(2) 座標並べ替えは外れた** — 「測度の等式であって定義の展開ではない」と予告されたが、
+  **3 本の周辺分布補題はいずれも合成が `rfl` に落ち、測度レベルの並べ替え論法は 1 行も要らなかった**
+  (埋め込み `e` を先に固定したので射影との合成が定義的に一致する)。
+  ⭐ **(3) は当たり、しかも「無い」側だった** — 値の型が subsingleton の版は Mathlib に無く、
+  自前で **25 行**建てた。⚠ **compiler に否定させたうえでの自前建てである** (§3-(3) の逐語)。
+  ⭐ **A の ⭐ (1 行反証) は決定的に当たった** — `kv i = 0` で補助変数の型が 1 点になる筋が、
+  18 スロットの消滅と第 1 節の両方を同時に与えた。
+  ⟹ **A は「費用が名指した原子を並べるより高い」の形では生き、「並べ替えが要る」の形では死んだ**。
+- **見立て B (締める)** = ⚠ **本 leg では検証していない部分が残る**。
+  **「既存の固定 `p` の 2 本は headline の経路上に無い」は動かしていない** (§4.2 の headline 行) が、
+  ⚠⚠ **「新たに立てる言明」を 1 本も立てていないので、B の費用の見立ては当たりも外れもしていない**。
+  ⭐ **B が要求した結論形の引き直しは実行した** (§3-(10)) — 7 件はいずれも有限 / 局所有限 /
+  Alexandrov 系で、**N1 が落ちた先を含む** ⟹ **B の「無いのは *言明* の側」は少なくとも
+  「合併補題の側には無い」形で機械に支持された**。⚠ **射影側の道具 (`isClosedMap_snd_of_compactSpace`
+  ほか) は 1 度も使っていない**。
+- **見立て C (緩める)** = ⭐ **生存。しかも予告より強く当たった**。
+  25 スロットが entropy 形へ落ちることは 2 形とも `(by fun_prop)` で通り (§3-(4))、
+  ⭐ **さらに `condEntropy` を `entropy_pair_eq_entropy_add_condEntropy` で entropy の差へ潰せたので、
+  条件つきスロットも「4 本の entropy」まで落ちた** ⟹ **材料 (i) の全体が
+  `ν ↦ entropy ν f` の連続性 1 本に集約された**。⚠ **C は緩める側なので、この当たりは
+  §4.4 の非対称性の下では「安く済んだ」ではなく「外れていたら高くついた賭けに勝った」である**。
+  ⚠ **`condMutualInfoPmf` は 1 度も要らなかった** (§3-(4))。
+- **見立て D (緩める)** = ⚠ **生存だが訂正つき**。3 本の型クラスは既存署名を汚さずに
+  **証明の中で構成できた** (§3-(5)) が、⚠⚠ **起票が名指していない条件が 2 つ出た** —
+  **(a) `CompactSpace (ProbabilityMeasure _)` の instance が import 閉包の外に在る**、
+  **(b) 13 因子側の instance 3 本を手で持ち上げないと入れ子の探索が届かない**
+  (`maxSize` / `maxHeartbeats` を上げても届かない)。
+  ⚠ **D が焦点と名指した `BorelSpace` / `OpensMeasurableSpace` の合成そのものは通った** ⟹
+  **焦点の当て先が 1 つずれていた**。⚠ **緩める側の見立てが「条件つきで生存」に着地した形である**。
+
+### 4.4 出力型 (起票 §1.1 が固定した 3 軸。⚠ 1 語に畳まない)
+
+- **(1) 非空性** = ⭐ **原点 (または 1 点) の所属を構成した (sorryAx-free)**。
+  ⚠ **ただし `[IsMarkovKernel W]` を仮定した形である** (閉性 2 本はこれを要求していない) ⟹ §5-(1)。
+- **(2) 材料 (i)** = ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)` で退出**
+  (受け皿は `isClosed_iUnion_thm7RegionOfLaw` の既存 `sorry`)。
+  ⚠ **「通った」とは書かない** — 25 スロット全部を `Continuous` として述べる宣言は無く、
+  機械に掛けたのは **2 形 / 2 本**である。⭐ **原子 `continuous_entropy_of_discrete` は in-tree で
+  sorryAx-free**。
+- **(2) 材料 (ii)** = ⚠ **`sorry` + `@residual(plan:bc-computable-region-formalization)` で退出**
+  (同じ受け皿)。⚠ **`IsThm7Law` 第 4 節のみ probe で `IsClosed` を機械確認**、
+  ⚠⚠ **第 1 節 (条件つき独立性) / 第 2–3 節 (`⊗ₘ` 等式) は評価していない**。
+  ⚠ **(i) と (ii) は同じ受け皿を共有しているが、結末の内訳は上のとおり別である**。
+- **(3) headline (`isClosed_thm7Region`)** = ⚠⚠ **1 行も動かなかった (`sorry` のまま)**。
+  ⚠ **新規宣言も足していない**。
+
+⚠⚠ **これを「単位 B が閉じた」とは書かない** — **中核 9 (有界性) / 10 ((α) 合致) は 1 行も触れていない**。
+⚠ **新規 `sorry` は 1 本も入れていない**が、**新規宣言 16 本と既存 docstring 3 行の差し替えが在る**
+⟹ 親 plan §4.3 / CLAUDE.md の 2 gate (honesty-auditor / style-auditor) の対象である。
+⚠ **自己監査にしない**。
+
+## 5. ⚠ 確かめて「いない」ことの名指し
+
+**(1) ⚠⚠ 非空性は閉性より狭い仮定の下でしか言っていない** — `origin_mem_thm7Region` /
+`thm7Region_nonempty` は **`[IsMarkovKernel W]`** を取るが、`isClosed_thm7Region` は
+`W : BCChannel α β₁ β₂` (= `Kernel α (β₁ × β₂)`、Markov 性なし) を取る。
+⟹ **`W` が Markov でないとき `thm7Region W` が空でないかは確かめていない**
+⟹ ⚠⚠ **その範囲では「閉性が空虚に真でありうる」穴は塞がっていない**。
+⚠ さらに `thm7RegionOfAuxReceiver` / `thm7RegionOfInput` は `p : Measure α` を確率測度に制限せず取る
+(facts N17 §5-(4) が既に名指した向き) ので、**`p` が確率測度でない断面の非空性も確かめていない**。
+
+**(2) 材料 (i) の未検証範囲** — 機械に掛けたのは **slot 0 (無条件) と slot 4 (条件つき)** の 2 本だけで、
+**残り 23 スロットは `Continuous` として 1 度も elaborate していない**。
+⚠ **「同じ形だから通る」は本 leg の機械の出力ではない** (facts N2-d = 型検査は実効性を守らない、の近傍)。
+⚠ さらに **「25 スロットが連続」から `thm7RegionOfLaw` の族がグラフ閉である」への段は 1 行も書いていない**
+(`InThm7` / `IsThm7Eligible` を通した閉グラフ化は未着手)。
+
+**(3) 材料 (ii) の未検証範囲** — `IsThm7Law` の **第 1 節 (`iCondIndepFun`) / 第 2 節 / 第 3 節
+(`⊗ₘ` 等式) の閉性は評価していない**。§3-(10) の検索で **`μ ↦ μ ⊗ₘ TJ` の弱位相連続性は
+Mathlib にも in-project にも無い**ことまでは機械で出たが、⚠⚠ **これを壁とは書かない** —
+有限離散の周囲空間では pmf の多項式であり、自前で建てる路が塞がっている証拠は 1 つも無い。
+⚠ 第 1 節については **「条件つき独立性の集合が閉か」を検索すらしていない**。
+
+**(4) headline の経路** — 起票 §0-B が名指した **`p` について一様なグラフ
+`{(p, R) | R ∈ thm7RegionOfInput W p}` の閉性**も、**射影側の道具**
+(`isClosedMap_snd_of_compactSpace` / `IsCompact.isClosed_image_restrict` /
+`isClosedMap_restrict_of_compactSpace`) も、**1 度も使っていない**。
+⚠ **これらが当たるかどうかについて本 leg は何も言っていない**。
+
+**(5) 見立て D の帰結を配線していない** — `CompactSpace (ProbabilityMeasure (Thm7Ambient …))` は
+probe では出るが、⚠⚠ **`Thm7Region.lean` には `Mathlib.MeasureTheory.Measure.Prokhorov` の
+import を足していない** (消費者がまだ無いため)。⟹ **`ν` 段を実際に閉じにいく leg は
+import 1 行の追加から始まる**。⚠ **その追加が既存の型クラス解決に副作用を持たないかは未検証**
+(facts N2-f が記録した「符号化の副作用」の近傍)。
+
+**(6) 一次典拠との照合** — 本 leg は **1 行も追加照合していない**。
+⚠ N17 §5-(2) が名指した **`IsThm7Law` の第 2–4 節が一次典拠の因数分解より弱い**という不足は
+**そのまま残っている** ⟹ ⚠⚠ **本 leg が構成した非空性の witness は「弱い述語の下での witness」である**。
+⚠ **この事実から他の領域との包含について何も導いていないし、導いてはならない**。
+
+**(7) `R₀ = 0` スライスの Π01 性** — ⚠⚠ **1 行も触れていない**。
+⚠ **「3 レート版から従う」とは書かない** (子 plan §4-b / R-4 = 判定ではなく禁止条項)。
+
+**(8) 自前で建てた 4 本の一般補題の置き場** — `iCondIndepFun_of_subsingleton_codomain` /
+`mutualInfo_eq_zero_of_ae_const` / `condMutualInfo_eq_zero_of_ae_const` /
+`ae_eq_const_of_map_eq_dirac` は **どれも BroadcastChannel 固有ではない**が、
+⚠ **`Thm7Region.lean` に置いた** (既存 file の署名を触らない方針を優先した)。
+⚠ **これが `docs/rules/` の module 構造に照らして正しい置き場かは評価していない** (style gate の対象)。
+
