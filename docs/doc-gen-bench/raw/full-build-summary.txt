@@ -1,1 +1,22 @@
 /dev/disk3s5   239362496 171463532  16003052    92% 2266280 160030520    1%   /System/Volumes/Data
+--- run started 1786263977 ---
+/dev/disk3s5   239362496 171881744  14535540    93% 2276040 145355400    2%   /System/Volumes/Data
+rc=143 wall_seconds=480
+/dev/disk3s5   239362496 171890584  13477604    93% 2277242 134776040    2%   /System/Volumes/Data
+443352	.lake/build/api-docs.db
+227860	.lake/build/doc
+246136	.lake/build/doc-data
+--- run started 1786264472 jobs=4 log=full-build-j4 ---
+/dev/disk3s5   239362496 171893128  13475060    93% 2277243 134750600    2%   /System/Volumes/Data
+rc=1 jobs=4 wall_seconds=1
+/dev/disk3s5   239362496 171893136  13475052    93% 2277244 134750520    2%   /System/Volumes/Data
+443352	.lake/build/api-docs.db
+227860	.lake/build/doc
+246136	.lake/build/doc-data
+--- run started 1786264600 threads=4 log=full-build-t4 ---
+/dev/disk3s5   239362496 171895944  13472244    93% 2277249 134722440    2%   /System/Volumes/Data
+rc=143 threads=4 wall_seconds=117
+/dev/disk3s5   239362496 171882156  13486032    93% 2277515 134860320    2%   /System/Volumes/Data
+443352	.lake/build/api-docs.db
+227860	.lake/build/doc
+247280	.lake/build/doc-data
