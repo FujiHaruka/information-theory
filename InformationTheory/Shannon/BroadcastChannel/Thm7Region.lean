@@ -247,9 +247,9 @@ The index is a space of probability measures on a finite ambient space, so it is
 carries the weak topology, and the union of a compact family of closed sets is closed as soon as
 the family has a closed graph. The graph is closed exactly when the twenty-five informations
 depend continuously on the joint law and the factorization cuts out a closed set of joint laws.
-Continuity of an unconditional information in the joint pmf is available, as is the pattern that
-composes it with a marginal map; the conditional form and the passage from a measure on the
-ambient space to its pmf are the missing pieces.
+Each information is a combination of entropies, whose continuity in the joint law is
+`continuous_entropy_of_discrete`; the missing piece is that the four clauses of the
+factorization cut out a closed set.
 
 @residual(plan:bc-computable-region-formalization) -/
 lemma isClosed_iUnion_thm7RegionOfLaw (W : BCChannel α β₁ β₂) (p : Measure α) {kJ : ℕ}
@@ -284,6 +284,34 @@ theorem isClosed_thm7Region (W : BCChannel α β₁ β₂) : IsClosed (thm7Regio
   sorry
 
 end Closedness
+
+section WeakContinuity
+
+variable {Ω : Type*} [MeasurableSpace Ω] [TopologicalSpace Ω] [DiscreteTopology Ω]
+  [CompactSpace Ω] [OpensMeasurableSpace Ω]
+
+lemma continuous_measureReal_of_discrete (S : Set Ω) :
+    Continuous fun ν : ProbabilityMeasure Ω ↦ (ν : Measure Ω).real S := by
+  have hcont : Continuous fun ν : ProbabilityMeasure Ω ↦
+      ∫ ω, (BoundedContinuousFunction.mkOfCompact
+        (⟨S.indicator fun _ ↦ (1 : ℝ), continuous_of_discreteTopology⟩ : C(Ω, ℝ))) ω
+          ∂(ν : Measure Ω) :=
+    ProbabilityMeasure.continuous_integral_boundedContinuousFunction _
+  refine hcont.congr fun ν ↦ ?_
+  show ∫ ω, S.indicator (fun _ ↦ (1 : ℝ)) ω ∂(ν : Measure Ω) = _
+  exact MeasureTheory.integral_indicator_one (isOpen_discrete S).measurableSet
+
+lemma continuous_entropy_of_discrete {T : Type*} [Fintype T] [MeasurableSpace T]
+    [MeasurableSingletonClass T] (f : Ω → T) (hf : Measurable f) :
+    Continuous fun ν : ProbabilityMeasure Ω ↦ entropy (ν : Measure Ω) f := by
+  have hpt : ∀ (ν : ProbabilityMeasure Ω) (x : T),
+      ((ν : Measure Ω).map f).real {x} = (ν : Measure Ω).real (f ⁻¹' {x}) := fun ν x ↦ by
+    rw [measureReal_def, measureReal_def, Measure.map_apply hf (measurableSet_singleton x)]
+  refine continuous_finsetSum Finset.univ fun x _ ↦ ?_
+  exact (Real.continuous_negMulLog.comp (continuous_measureReal_of_discrete (f ⁻¹' {x}))).congr
+    fun ν ↦ by rw [hpt ν x]; rfl
+
+end WeakContinuity
 
 section Nonemptiness
 
