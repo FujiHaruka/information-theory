@@ -1,0 +1,266 @@
+<html lang="en"><head><meta charset="UTF-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1"></meta><link rel="stylesheet" href="../../.././style.css"></link><link rel="icon" href="../../.././favicon.svg"></link><link rel="mask-icon" href="../../.././favicon.svg" color="#000000"></link><link rel="prefetch" href="../../.././/declarations/declaration-data.bmp" as="image"></link><title>InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule</title><script defer="true" src="../../.././mathjax-config.js"></script><script defer="true" src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="true" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>const SITE_ROOT="../../.././";</script><script>const MODULE_NAME="InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule";</script><script type="module" src="../../.././jump-src.js"></script><script type="module" src="../../.././search.js"></script><script type="module" src="../../.././expand-nav.js"></script><script type="module" src="../../.././how-about.js"></script><script type="module" src="../../.././instances.js"></script><script type="module" src="../../.././importedBy.js"></script></head><body><input id="nav_toggle" type="checkbox"></input><header><h1><label for="nav_toggle"></label><span>Documentation</span></h1><h2 class="header_filename break_within"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCoding</span>.<span class="name">ConverseMemorylessChainRule</span></h2><form id="search_form"><input type="text" name="q" autocomplete="off"></input>&#32;<button id="search_button" onclick="javascript: form.action='../../.././search.html';">Search</button></form></header><nav class="internal_nav"><p><a href="#top">return to top</a></p><p class="gh_nav_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.lean">source</a></p><div class="imports"><details><summary>Imports</summary><ul><li><a href="../../.././Init.html">Init</a></li><li><a href="../../.././InformationTheory/Meta/EntryPoint.html">InformationTheory.Meta.EntryPoint</a></li><li><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html">InformationTheory.Shannon.CondMutualInfo</a></li><li><a href="../../.././InformationTheory/Shannon/MIChainRule.html">InformationTheory.Shannon.MIChainRule</a></li><li><a href="../../.././InformationTheory/Shannon/MutualInfo.html">InformationTheory.Shannon.MutualInfo</a></li><li><a href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseGeneral.html">InformationTheory.Shannon.ChannelCoding.ConverseGeneral</a></li></ul></details><details><summary>Imported by</summary><ul id="imported-by-InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule" class="imported-by-list"></ul></details></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCodingConverseGeneral</span>.<span class="name">IsMemorylessChannel</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel.markovChain"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCodingConverseGeneral</span>.<span class="name">IsMemorylessChannel</span>.<span class="name">markovChain</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_le_of_markov_joint"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCodingConverseGeneral</span>.<span class="name">condMutualInfo_le_of_markov_joint</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_chain_rule_X_2var"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCodingConverseGeneral</span>.<span class="name">condMutualInfo_chain_rule_X_2var</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCodingConverseGeneral</span>.<span class="name">condMutualInfo_chain_rule_Y_2var</span></a></div></nav><main>
+<div class="mod_doc"><h1 id="Channel-coding-converse-general-input-memoryless-per-summand-bound" class="markdown-heading">Channel coding converse (general input) — memoryless per-summand bound <a class="hover-link" href="#Channel-coding-converse-general-input-memoryless-per-summand-bound">#</a></h1><p>A memoryless predicate for a discrete memoryless channel together with the conditional
+mutual-information chain-rule lemmas it needs, used to derive the per-summand inequality of
+the general-input channel coding converse (Cover–Thomas 7.9) from memorylessness alone.</p><h2 id="Main-definitions" class="markdown-heading">Main definitions <a class="hover-link" href="#Main-definitions">#</a></h2><ul><li><code><a href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel">IsMemorylessChannel</a> μ Xs Ys</code> — a memoryless DMC (without feedback), formalized by the
+per-time-step Markov chain <code>(X^{≠i}, Y^{≠i}) → X_i → Y_i</code>, i.e. given <code>X_i</code>, the output
+<code>Y_i</code> is independent of all other inputs and outputs. No explicit channel kernel <code>W</code> is
+referenced.</li></ul><h2 id="Main-statements" class="markdown-heading">Main statements <a class="hover-link" href="#Main-statements">#</a></h2><ul><li><code><a href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_le_of_markov_joint">condMutualInfo_le_of_markov_joint</a></code> — under the joint Markov chain
+<code>(Wc, Xs) → (Wc, Zc) → Yo</code>, <code>I(Xs; Yo | Wc) ≤ I(Zc; Yo | Wc)</code>.</li><li><code><a href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_chain_rule_X_2var">condMutualInfo_chain_rule_X_2var</a></code> / <code><a href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var">condMutualInfo_chain_rule_Y_2var</a></code> — two-variable
+conditional chain rules for <code>condMutualInfo</code> along each axis.</li></ul><h2 id="Implementation-notes" class="markdown-heading">Implementation notes <a class="hover-link" href="#Implementation-notes">#</a></h2><p>The conditional chain-rule lemmas are kept here in local sections rather than in
+<code>CondMutualInfo.lean</code>, which they leave unmodified; they live in
+<code>namespace InformationTheory.Shannon</code>, so promoting them to the general API later is easy.</p><p><code><a href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_le_of_markov_joint">condMutualInfo_le_of_markov_joint</a></code> does not follow from the bare Markov chain
+<code>Xs → Zc → Yo</code> alone, since <code>Wc</code> may break that Markov structure; the augmented chain
+<code>(Wc, Xs) → (Wc, Zc) → Yo</code> is assumed instead, and the common term <code>I(Wc; Yo)</code> is cancelled
+via the chain rule, which requires <code>I(Wc; Yo) ≠ ∞</code> (an <code><a href="../../.././Mathlib/Data/ENNReal/Basic.html#ENNReal">ENNReal</a></code> subtraction).</p></div><div class="mod_doc"><h2 id="The-memoryless-channel-predicate" class="markdown-heading">The memoryless-channel predicate <a class="hover-link" href="#The-memoryless-channel-predicate">#</a></h2></div><div class="decl" id="InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel"><div class="def"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.lean#L55-L73">source</a></div><div class="decl_header"><span class="decl_kind">def</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCodingConverseGeneral</span>.<span class="name">IsMemorylessChannel</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">n</span> : <a href="../../.././Init/Prelude.html#Nat">ℕ</a>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Finite.html#MeasureTheory.IsFiniteMeasure">MeasureTheory.IsFiniteMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><span class="fn"><a href="../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">α</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Ys</span> : <span class="fn"><span class="fn"><a href="../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">β</span></span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><a href="../../.././foundational_types.html">Prop</a></div></div><p>A memoryless DMC (without feedback) is formalized by the per-time-step Markov
+chain property: for each <code>i : <a href="../../.././Init/Prelude.html#Fin">Fin</a> n</code>, the random variables form a Markov chain</p><pre><code>(X^{≠i}, Y^{≠i}) → X_i → Y_i
+</code></pre><p>That is, given <code>X_i</code>, the output <code>Y_i</code> is independent of all other inputs <code>X^{≠i}</code> and
+all other outputs <code>Y^{≠i}</code>. This captures the textbook memoryless DMC property without
+referring to an explicit channel kernel <code>W</code>. This is the feedback-free counterpart of
+<code>IsMemorylessFeedback</code> (no message argument).</p><details><summary>Equations</summary><ul class="equations"><li class="equation">One or more equations did not get rendered due to their size.</li></ul></details><details id="instances-for-list-InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel" class="instances-for-list"><summary>Instances For</summary><ul class="instances-for-enum"></ul></details></div></div><div class="decl" id="InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel.markovChain"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.lean#L75-L85">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel.markovChain"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCodingConverseGeneral</span>.<span class="name">IsMemorylessChannel</span>.<span class="name">markovChain</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">n</span> : <a href="../../.././Init/Prelude.html#Nat">ℕ</a>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Finite.html#MeasureTheory.IsFiniteMeasure">MeasureTheory.IsFiniteMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Xs</span> : <span class="fn"><span class="fn"><a href="../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">α</span></span></span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ys</span> : <span class="fn"><span class="fn"><a href="../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">β</span></span></span>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">h</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel">IsMemorylessChannel</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">Ys</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">i</span> : <span class="fn"><a href="../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html#InformationTheory.Shannon.IsMarkovChain">IsMarkovChain</a> <span class="fn">μ</span>
+  <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn">fun (<span class="fn">j</span> : <a href="../../.././Init/Prelude.html#Subtype">{</a> <span class="fn">j</span> <a href="../../.././Init/Prelude.html#Subtype">:</a> <span class="fn"><a href="../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span> <a href="../../.././Init/Prelude.html#Subtype">//</a> <span class="fn">j</span> <a href="../../.././Init/Core.html#Ne">≠</a> <span class="fn">i</span> <a href="../../.././Init/Prelude.html#Subtype">}</a>) =&gt; <span class="fn"><span class="fn">Xs</span> <span class="fn">(↑<span class="fn">j</span>)</span> <span class="fn">ω</span></span></span><a href="../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn">fun (<span class="fn">j</span> : <a href="../../.././Init/Prelude.html#Subtype">{</a> <span class="fn">j</span> <a href="../../.././Init/Prelude.html#Subtype">:</a> <span class="fn"><a href="../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span> <a href="../../.././Init/Prelude.html#Subtype">//</a> <span class="fn">j</span> <a href="../../.././Init/Core.html#Ne">≠</a> <span class="fn">i</span> <a href="../../.././Init/Prelude.html#Subtype">}</a>) =&gt; <span class="fn"><span class="fn">Ys</span> <span class="fn">(↑<span class="fn">j</span>)</span> <span class="fn">ω</span></span></span><a href="../../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">(<span class="fn">Xs</span> <span class="fn">i</span>)</span>
+  <span class="fn">(<span class="fn">Ys</span> <span class="fn">i</span>)</span></span></div></div><p>Accessor: extract the <code>i</code>-th Markov chain from <code><a href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel">IsMemorylessChannel</a></code>.</p></div></div><div class="mod_doc"><h2 id="Conditional-mutual-information-chain-rule-lemmas" class="markdown-heading">Conditional mutual-information chain-rule lemmas <a class="hover-link" href="#Conditional-mutual-information-chain-rule-lemmas">#</a></h2></div><div class="decl" id="InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_le_of_markov_joint"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.lean#L99-L144">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_le_of_markov_joint"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCodingConverseGeneral</span>.<span class="name">condMutualInfo_le_of_markov_joint</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">X</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Y</span> : <a href="../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Z</span> : <a href="../../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">W</span> : <a href="../../.././foundational_types.html">Type</a> u_5}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Z</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">Z</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">Z</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">X</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Zc</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">Z</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Yo</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">Y</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Wc</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">W</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hXs</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Xs</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hZc</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Zc</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hYo</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Yo</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hWc</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Wc</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hmarkov</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html#InformationTheory.Shannon.IsMarkovChain">IsMarkovChain</a> <span class="fn">μ</span> <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">Wc</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">Xs</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">Wc</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">Zc</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">Yo</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hWcYo_fin</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">Wc</span> <span class="fn">Yo</span></span> <a href="../../.././Init/Core.html#Ne">≠</a> <a href="../../.././Mathlib/Order/Notation.html#Top.top">⊤</a>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html#InformationTheory.Shannon.condMutualInfo">condMutualInfo</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">Yo</span> <span class="fn">Wc</span></span> <a href="../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn"><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html#InformationTheory.Shannon.condMutualInfo">condMutualInfo</a> <span class="fn">μ</span> <span class="fn">Zc</span> <span class="fn">Yo</span> <span class="fn">Wc</span></span></div></div><p>Conditional version of <code>mutualInfo_le_of_markov</code> (augmented form).</p><p>Under the joint Markov chain <code>(Wc, Xs) → (Wc, Zc) → Yo</code> (i.e., <code>Markov</code> holds with
+<code>Wc</code> carried on both sides), and assuming <code>I(Wc; Yo) ≠ ∞</code>, we have</p><pre><code>I(Xs; Yo | Wc) ≤ I(Zc; Yo | Wc).
+</code></pre><p>This is the natural conditional generalization of <code>mutualInfo_le_of_markov</code>. The single
+Markov chain <code>Xs → Zc → Yo</code> alone is not sufficient — <code>Wc</code> may break the Markov property
+unless it is also conditionally compatible, hence the augmented form. The finiteness
+<code>I(Wc; Yo) ≠ ∞</code> is needed to cancel the common term after the chain rule.</p></div></div><div class="decl" id="InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_chain_rule_X_2var"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.lean#L157-L233">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_chain_rule_X_2var"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCodingConverseGeneral</span>.<span class="name">condMutualInfo_chain_rule_X_2var</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">X</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">X'</span> : <a href="../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Y</span> : <a href="../../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">W</span> : <a href="../../.././foundational_types.html">Type</a> u_5}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">X'</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">X'</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">X'</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">X_RV</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">X</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">X'_RV</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">X'</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Yo</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">Y</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Wc</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">W</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hX</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">X_RV</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hX'</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">X'_RV</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hYo</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Yo</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hWc</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Wc</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hWcY_fin</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">Wc</span> <span class="fn">Yo</span></span> <a href="../../.././Init/Core.html#Ne">≠</a> <a href="../../.././Mathlib/Order/Notation.html#Top.top">⊤</a>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html#InformationTheory.Shannon.condMutualInfo">condMutualInfo</a> <span class="fn">μ</span> <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">X_RV</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">X'_RV</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">Yo</span> <span class="fn">Wc</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a>   <span class="fn"><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html#InformationTheory.Shannon.condMutualInfo">condMutualInfo</a> <span class="fn">μ</span> <span class="fn">X_RV</span> <span class="fn">Yo</span> <span class="fn">Wc</span></span> <a href="../../.././Init/Prelude.html#HAdd.hAdd">+</a> <span class="fn"><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html#InformationTheory.Shannon.condMutualInfo">condMutualInfo</a> <span class="fn">μ</span> <span class="fn">X'_RV</span> <span class="fn">Yo</span> <span class="fn">fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">Wc</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">X_RV</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">)</a></span></span></div></div><p>2-variable X-axis conditional chain rule for <code>condMutualInfo</code>.</p><pre><code>I((X, X'); Y | Wc) = I(X; Y | Wc) + I(X'; Y | (Wc, X))
+</code></pre><p>The cancellation of the common term <code>I(Wc; Y)</code> requires <code>I(Wc; Y) ≠ ∞</code>.</p></div></div><div class="decl" id="InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.lean#L236-L264">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/ChannelCoding/ConverseMemorylessChainRule.html#InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">ChannelCodingConverseGeneral</span>.<span class="name">condMutualInfo_chain_rule_Y_2var</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">X</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">W</span> : <a href="../../.././foundational_types.html">Type</a> u_5}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α'</span> : <a href="../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β'</span> : <a href="../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α'</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">α'</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α'</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β'</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β'</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β'</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">X_RV</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">X</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">A</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">α'</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">B</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">β'</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Wc</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">W</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hX</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">X_RV</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hA</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">A</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hB</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">B</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hWc</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Wc</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hWcX_fin</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">Wc</span> <span class="fn">X_RV</span></span> <a href="../../.././Init/Core.html#Ne">≠</a> <a href="../../.././Mathlib/Order/Notation.html#Top.top">⊤</a>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html#InformationTheory.Shannon.condMutualInfo">condMutualInfo</a> <span class="fn">μ</span> <span class="fn">X_RV</span> <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">A</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">B</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">Wc</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a>   <span class="fn"><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html#InformationTheory.Shannon.condMutualInfo">condMutualInfo</a> <span class="fn">μ</span> <span class="fn">X_RV</span> <span class="fn">A</span> <span class="fn">Wc</span></span> <a href="../../.././Init/Prelude.html#HAdd.hAdd">+</a> <span class="fn"><a href="../../.././InformationTheory/Shannon/CondMutualInfo.html#InformationTheory.Shannon.condMutualInfo">condMutualInfo</a> <span class="fn">μ</span> <span class="fn">X_RV</span> <span class="fn">B</span> <span class="fn">fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">Wc</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">A</span> <span class="fn">ω</span></span><a href="../../.././Init/Prelude.html#Prod.mk">)</a></span></span></div></div><p>2-variable Y-axis conditional chain rule for <code>condMutualInfo</code>.</p><pre><code>I(X; (A, B) | Wc) = I(X; A | Wc) + I(X; B | (Wc, A))
+</code></pre><p>Requires <code>I(Wc; X) ≠ ∞</code>.</p></div></div></main>
+<nav class="nav"><iframe src="../../.././navbar.html" class="navframe" frameBorder="0"></iframe></nav></body></html>

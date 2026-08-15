@@ -1,0 +1,295 @@
+<html lang="en"><head><meta charset="UTF-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1"></meta><link rel="stylesheet" href="../../../.././style.css"></link><link rel="icon" href="../../../.././favicon.svg"></link><link rel="mask-icon" href="../../../.././favicon.svg" color="#000000"></link><link rel="prefetch" href="../../../.././/declarations/declaration-data.bmp" as="image"></link><title>InformationTheory.Shannon.WynerZiv.Converse.SingleLetter</title><script defer="true" src="../../../.././mathjax-config.js"></script><script defer="true" src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="true" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>const SITE_ROOT="../../../.././";</script><script>const MODULE_NAME="InformationTheory.Shannon.WynerZiv.Converse.SingleLetter";</script><script type="module" src="../../../.././jump-src.js"></script><script type="module" src="../../../.././search.js"></script><script type="module" src="../../../.././expand-nav.js"></script><script type="module" src="../../../.././how-about.js"></script><script type="module" src="../../../.././instances.js"></script><script type="module" src="../../../.././importedBy.js"></script></head><body><input id="nav_toggle" type="checkbox"></input><header><h1><label for="nav_toggle"></label><span>Documentation</span></h1><h2 class="header_filename break_within"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">WynerZiv</span>.<span class="name">Converse</span>.<span class="name">SingleLetter</span></h2><form id="search_form"><input type="text" name="q" autocomplete="off"></input>&#32;<button id="search_button" onclick="javascript: form.action='../../../.././search.html';">Search</button></form></header><nav class="internal_nav"><p><a href="#top">return to top</a></p><p class="gh_nav_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.lean">source</a></p><div class="imports"><details><summary>Imports</summary><ul><li><a href="../../../.././Init.html">Init</a></li><li><a href="../../../.././InformationTheory/Shannon/WynerZiv/Converse/Prelim.html">InformationTheory.Shannon.WynerZiv.Converse.Prelim</a></li></ul></details><details><summary>Imported by</summary><ul id="imported-by-InformationTheory.Shannon.WynerZiv.Converse.SingleLetter" class="imported-by-list"></ul></details></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.wz_converse_feasible_point"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">wz_converse_feasible_point</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.wyner_ziv_converse_n_letter_singleLetter"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">wyner_ziv_converse_n_letter_singleLetter</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.wynerZivRate_le_of_code"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">wynerZivRate_le_of_code</span></a></div></nav><main>
+<div class="mod_doc"><h1 id="Wyner-Ziv-converse-single-letterization" class="markdown-heading">Wyner–Ziv converse — single-letterization <a class="hover-link" href="#Wyner-Ziv-converse-single-letterization">#</a></h1><p>The per-letter Markov chain from a memoryless source, the single-letterization
+sub-lemmas (the conjuncts of the per-letter witness), and the single-letter rate bound
+<code><a href="../../../.././InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.html#InformationTheory.Shannon.wynerZivRate_le_of_code">wynerZivRate_le_of_code</a></code>.</p></div><div class="mod_doc"><h3 id="Per-letter-Markov-chain-from-a-memoryless-source" class="markdown-heading">Per-letter Markov chain from a memoryless source <a class="hover-link" href="#Per-letter-Markov-chain-from-a-memoryless-source">#</a></h3><p>The single-letterization core needs the per-letter Markov chain <code>Uᵢ − Xᵢ − Yᵢ</code>
+with the auxiliary <code>Uᵢ := (J, Y_{\i})</code> (the encoder output together with all the
+<em>other</em> side-information symbols). This is derived from a general reusable utility:
+if a pair <code>(A, C)</code> is independent of a side variable <code>W</code> and the target <code>U</code> is a
+measurable function <code>g(A, W)</code> of <code>A</code> and <code>W</code> only, then <code>U − A − C</code> is a Markov
+chain (conditionally on <code>A</code>, <code>U</code> is a function of <code>A</code> and the <code>C</code>-independent <code>W</code>,
+hence conditionally independent of <code>C</code>).</p></div><div class="mod_doc"><h3 id="Single-letterization-sub-lemmas-conjuncts-of-the-per-letter-witness" class="markdown-heading">Single-letterization sub-lemmas (conjuncts of the per-letter witness) <a class="hover-link" href="#Single-letterization-sub-lemmas-conjuncts-of-the-per-letter-witness">#</a></h3><p>The per-letter witness <code>wz_converse_perletter_witness</code> is the mechanical assembly of
+three sub-lemmas, one per conjunct, all sharing the auxiliary <code>Uᵢ := (J, Y_{\i})</code>
+(of type <code><a href="../../../.././Init/Prelude.html#Fin">Fin</a> M × ({j // j ≠ i} → β)</code>, the encoder output together with all the other
+side-information symbols):</p><ul><li><code>wz_perletter_factorizable</code> — conjunct (a), per-letter feasibility;</li><li><code>wz_perletter_distortion_avg</code> — conjunct (b), the average distortion budget;</li><li><code>wz_singleletter_rate_le</code> — conjunct (c), the conditional-MI chain (deepest atom).</li></ul></div><div class="decl" id="InformationTheory.Shannon.wz_converse_feasible_point"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.lean#L1047-L1130">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../.././InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.html#InformationTheory.Shannon.wz_converse_feasible_point"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">wz_converse_feasible_point</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">γ</span> : <a href="../../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../../.././foundational_types.html">Type</a> u_5}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M </span><span class="fn">n</span> : <a href="../../../.././Init/Prelude.html#Nat">ℕ</a>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Data/NeZero.html#NeZero">NeZero</a> <span class="fn">M</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hn</span> : <span class="fn">0</span> <a href="../../../.././Init/Prelude.html#LT.lt">&lt;</a> <span class="fn">n</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">c</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode">WynerZivCode</a> <span class="fn">M</span> <span class="fn">n</span> <span class="fn">α</span> <span class="fn">β</span> <span class="fn">γ</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hencoder</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn"><span class="fn">c</span>.<a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode.encoder">encoder</a></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hdecoder</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn"><span class="fn">c</span>.<a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode.decoder">decoder</a></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">d</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/RateDistortion/Achievability.html#InformationTheory.Shannon.DistortionFn">DistortionFn</a> <span class="fn">α</span> <span class="fn">γ</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">α</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Ys</span> : <span class="fn"><span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">β</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hXs</span> : <span class="fn">∀ (<span class="fn">i</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>), <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">(<span class="fn">Xs</span> <span class="fn">i</span>)</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hYs</span> : <span class="fn">∀ (<span class="fn">i</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>), <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">(<span class="fn">Ys</span> <span class="fn">i</span>)</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hindep</span> : <span class="fn"><a href="../../../.././Mathlib/Probability/Independence/Basic.html#ProbabilityTheory.iIndepFun">ProbabilityTheory.iIndepFun</a> <span class="fn">(fun (<span class="fn">i</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>) (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">Xs</span> <span class="fn">i</span> <span class="fn">ω</span></span><a href="../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">Ys</span> <span class="fn">i</span> <span class="fn">ω</span></span><a href="../../../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">μ</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">P_XY</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> (<span class="fn">α</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β</span>)</span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">P_XY</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hlaw</span> : <span class="fn">∀ (<span class="fn">i</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>), <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Map.html#MeasureTheory.Measure.map">MeasureTheory.Measure.map</a> <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">Xs</span> <span class="fn">i</span> <span class="fn">ω</span></span><a href="../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">Ys</span> <span class="fn">i</span> <span class="fn">ω</span></span><a href="../../../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">μ</span></span> <a href="../../../.././Init/Prelude.html#Eq">=</a> <span class="fn">P_XY</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">D</span> : <a href="../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hD</span> : <span class="fn"><span class="fn"><span class="fn">c</span>.<a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode.expectedBlockDistortion">expectedBlockDistortion</a></span> <span class="fn">P_XY</span> <span class="fn">d</span></span> <a href="../../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn">D</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn">∃ (<span class="fn">k</span> : <a href="../../../.././Init/Prelude.html#Nat">ℕ</a>),
+  <span class="fn">∃ <span class="fn">qf</span> ∈ <span class="fn"><a href="../../../.././InformationTheory/Shannon/WynerZiv/FactorizableRate.html#InformationTheory.Shannon.WynerZivFactorizableConstraint">WynerZivFactorizableConstraint</a> <span class="fn">(<a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">k</span>)</span> <span class="fn">(fun (<span class="fn">p</span> : <span class="fn">α</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β</span>) =&gt; <span class="fn"><span class="fn"><span class="fn">P_XY</span>.<a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn">p</span><a href="../../../.././Init/Core.html#Singleton.singleton">}</a></span>)</span> <span class="fn">(fun (<span class="fn">a</span> : <span class="fn">α</span>) (<span class="fn">b</span> : <span class="fn">γ</span>) =&gt; <span class="fn">↑<span class="fn">(<span class="fn">d</span> <span class="fn">a</span> <span class="fn">b</span>)</span></span>)</span> <span class="fn">D</span></span>,
+    <span class="fn"><a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.wzMutualInfoXU">wzMutualInfoXU</a> <span class="fn">(<a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">k</span>)</span> <span class="fn"><span class="fn">qf</span>.1</span></span> <a href="../../../.././Init/Prelude.html#HSub.hSub">-</a> <span class="fn"><a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.wzMutualInfoYU">wzMutualInfoYU</a> <span class="fn">(<a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">k</span>)</span> <span class="fn"><span class="fn">qf</span>.1</span></span> <a href="../../../.././Init/Prelude.html#LE.le">≤</a>       <span class="fn">1</span> <a href="../../../.././Init/Prelude.html#HDiv.hDiv">/</a> <span class="fn">↑<span class="fn">n</span></span> <a href="../../../.././Init/Prelude.html#HMul.hMul">*</a>         <span class="fn">(<span class="fn">(<a href="../../../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <span class="fn"><span class="fn"><span class="fn">c</span>.<a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode.encoder">encoder</a></span> <span class="fn">fun (<span class="fn">j</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>) =&gt; <span class="fn"><span class="fn">Xs</span> <span class="fn">j</span> <span class="fn">ω</span></span></span></span>)</span> <span class="fn">fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) (<span class="fn">j</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>) =&gt; <span class="fn"><span class="fn">Xs</span> <span class="fn">j</span> <span class="fn">ω</span></span></span>)</span> <a href="../../../.././Init/Prelude.html#HSub.hSub">-</a>             <span class="fn"><a href="../../../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <span class="fn"><span class="fn"><span class="fn">c</span>.<a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode.encoder">encoder</a></span> <span class="fn">fun (<span class="fn">j</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>) =&gt; <span class="fn"><span class="fn">Xs</span> <span class="fn">j</span> <span class="fn">ω</span></span></span></span>)</span> <span class="fn">fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) (<span class="fn">j</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>) =&gt; <span class="fn"><span class="fn">Ys</span> <span class="fn">j</span> <span class="fn">ω</span></span></span></span>).<a href="../../../.././Mathlib/Data/ENNReal/Basic.html#ENNReal.toReal">toReal</a></span></span></span></div></div><p>Single-letterization core of the Wyner–Ziv converse (feasible-point form).</p><p>For a block Wyner–Ziv code on an i.i.d. source <code>(Xⁿ, Yⁿ)</code> with expected block
+distortion at most <code>D</code>, there is a <em>single-letterized</em> feasible factorizable point
+— at some finite auxiliary alphabet <code><a href="../../../.././Init/Prelude.html#Fin">Fin</a> k</code> — whose Wyner–Ziv objective
+<code>I(X;U) − I(Y;U)</code> is bounded by the per-symbol block mutual-information difference
+<code>(1/n)(I(J; Xⁿ) − I(J; Yⁿ))</code>.</p><p>This is the analytic heart of the converse (Cover–Thomas §15.9): the auxiliary
+<code>Uᵢ := (J, Y_{\i})</code> gives, via the <strong>conditional</strong> mutual-information chain
+<code>∑ᵢ [I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)] = ∑ᵢ I(Xᵢ;Uᵢ|Yᵢ) = ∑ᵢ I(Xᵢ;J|Yⁿ) ≤ I(Xⁿ;J|Yⁿ) = I(J;Xⁿ) − I(J;Yⁿ)</code> (not the heterogeneous Csiszár sum identity, which is orphaned on
+this route) and per-letter feasibility from the memoryless source (Markov
+<code>Uᵢ − Xᵢ − Yᵢ</code>, <code>wz_perletter_markov</code>), the sum bound
+<code>∑ᵢ [I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)] ≤ I(J;Xⁿ) − I(J;Yⁿ)</code>; the time-sharing auxiliary
+<code>U* = (Q, U_Q)</code> (with <code>Q</code> uniform on the time index <code><a href="../../../.././Init/Prelude.html#Fin">Fin</a> n</code>) assembles the per-letter
+points into one factorizable point of distortion <code>(1/n) ∑ᵢ Dᵢ ≤ D</code> (from <code>hD</code>) and
+objective <code>(1/n) ∑ᵢ [I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)]</code>.</p><p>Landing this point via <code>wynerZivRate_le_of_feasible</code> (with <code><a href="../../../.././Mathlib/Order/Bounds/Defs.html#BddBelow">BddBelow</a></code> supplied by
+<code>wzRateValueSet_bddBelow_of_pmf</code>) yields the converse bound in
+<code><a href="../../../.././InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.html#InformationTheory.Shannon.wyner_ziv_converse_n_letter_singleLetter">wyner_ziv_converse_n_letter_singleLetter</a></code>; that outer landing is discharged
+(sorry-free) from this existence.</p><p><code>hindep</code> (memoryless source) / <code>hlaw</code> (identical marginals <code>= P_XY</code>) / <code>hD</code>
+(distortion budget) are regularity preconditions — the construction
+(Markov <code>Uᵢ − Xᵢ − Yᵢ</code>, distortion budget <code>(1/n)∑Dᵢ ≤ D</code>) is false without them.
+The conclusion is the <em>existence</em> of a feasible witness realizing the objective
+bound; it is strictly weaker than the outer infimum bound (<code>wynerZivRate ≤ …</code>,
+recovered by landing), so this is a decomposition of the single-letterized
+core, not a restatement of it and not a hypothesis bundle.</p><p>The feasible-point existence is discharged by landing the
+uniform time-share of the per-letter witnesses supplied by
+<code>wz_converse_perletter_witness</code> — <code>wzRateValueSet_avg_mem</code> averages the per-letter
+values <code>(1/n) ∑ w i</code> into a value of <code>wzRateValueSet … ((1/n) ∑ Dv i)</code>,
+<code>wzRateValueSet_mono_in_D</code> (with <code>(1/n) ∑ Dv i ≤ D</code>) relaxes it to budget <code>D</code>, and
+<code>mem_wzRateValueSet_iff</code> unpacks the resulting membership into the feasible factorizable
+point at some <code><a href="../../../.././Init/Prelude.html#Fin">Fin</a> k</code>.
+@audit:ok (the conclusion is an existential witness (feasible factorizable point +
+objective bound), not a hypothesis bundle; <code>hindep</code>/<code>hlaw</code>/<code>hD</code> are source-regularity
+preconditions, and the Carathéodory support reduction is not on this single-letterization
+route.)</p></div></div><div class="decl" id="InformationTheory.Shannon.wyner_ziv_converse_n_letter_singleLetter"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.lean#L1132-L1222">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../.././InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.html#InformationTheory.Shannon.wyner_ziv_converse_n_letter_singleLetter"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">wyner_ziv_converse_n_letter_singleLetter</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">γ</span> : <a href="../../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../../.././foundational_types.html">Type</a> u_5}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M </span><span class="fn">n</span> : <a href="../../../.././Init/Prelude.html#Nat">ℕ</a>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Data/NeZero.html#NeZero">NeZero</a> <span class="fn">M</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hn</span> : <span class="fn">0</span> <a href="../../../.././Init/Prelude.html#LT.lt">&lt;</a> <span class="fn">n</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">c</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode">WynerZivCode</a> <span class="fn">M</span> <span class="fn">n</span> <span class="fn">α</span> <span class="fn">β</span> <span class="fn">γ</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hencoder</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn"><span class="fn">c</span>.<a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode.encoder">encoder</a></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hdecoder</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn"><span class="fn">c</span>.<a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode.decoder">decoder</a></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">d</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/RateDistortion/Achievability.html#InformationTheory.Shannon.DistortionFn">DistortionFn</a> <span class="fn">α</span> <span class="fn">γ</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">α</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Ys</span> : <span class="fn"><span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">β</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hXs</span> : <span class="fn">∀ (<span class="fn">i</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>), <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">(<span class="fn">Xs</span> <span class="fn">i</span>)</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hYs</span> : <span class="fn">∀ (<span class="fn">i</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>), <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">(<span class="fn">Ys</span> <span class="fn">i</span>)</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hindep</span> : <span class="fn"><a href="../../../.././Mathlib/Probability/Independence/Basic.html#ProbabilityTheory.iIndepFun">ProbabilityTheory.iIndepFun</a> <span class="fn">(fun (<span class="fn">i</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>) (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">Xs</span> <span class="fn">i</span> <span class="fn">ω</span></span><a href="../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">Ys</span> <span class="fn">i</span> <span class="fn">ω</span></span><a href="../../../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">μ</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">P_XY</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> (<span class="fn">α</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β</span>)</span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">P_XY</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hlaw</span> : <span class="fn">∀ (<span class="fn">i</span> : <span class="fn"><a href="../../../.././Init/Prelude.html#Fin">Fin</a> <span class="fn">n</span></span>), <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Map.html#MeasureTheory.Measure.map">MeasureTheory.Measure.map</a> <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">Xs</span> <span class="fn">i</span> <span class="fn">ω</span></span><a href="../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">Ys</span> <span class="fn">i</span> <span class="fn">ω</span></span><a href="../../../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">μ</span></span> <a href="../../../.././Init/Prelude.html#Eq">=</a> <span class="fn">P_XY</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">D</span> : <a href="../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hD</span> : <span class="fn"><span class="fn"><span class="fn">c</span>.<a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode.expectedBlockDistortion">expectedBlockDistortion</a></span> <span class="fn">P_XY</span> <span class="fn">d</span></span> <a href="../../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn">D</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../../.././InformationTheory/Shannon/WynerZiv/FactorizableRate.html#InformationTheory.Shannon.wynerZivRate">wynerZivRate</a> <span class="fn">(fun (<span class="fn">p</span> : <span class="fn">α</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β</span>) =&gt; <span class="fn"><span class="fn"><span class="fn">P_XY</span>.<a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn">p</span><a href="../../../.././Init/Core.html#Singleton.singleton">}</a></span>)</span> <span class="fn">(fun (<span class="fn">a</span> : <span class="fn">α</span>) (<span class="fn">b</span> : <span class="fn">γ</span>) =&gt; <span class="fn">↑<span class="fn">(<span class="fn">d</span> <span class="fn">a</span> <span class="fn">b</span>)</span></span>)</span> <span class="fn">D</span></span> <a href="../../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn">1</span> <a href="../../../.././Init/Prelude.html#HDiv.hDiv">/</a> <span class="fn">↑<span class="fn">n</span></span> <a href="../../../.././Init/Prelude.html#HMul.hMul">*</a> <span class="fn"><a href="../../../.././Mathlib/Analysis/SpecialFunctions/Log/Basic.html#Real.log">Real.log</a> <span class="fn">↑<span class="fn">M</span></span></span></div></div><p>Wyner–Ziv converse, <code>n</code>-letter single-letterized form (reshaped rate).</p><p>For a block Wyner–Ziv code <code>c</code> with a measurable deterministic encoder / decoder on
+an i.i.d. source of <code>(X, Y)</code> pairs (mutual independence <code>hindep</code> + identical marginals
+<code>hlaw = P_XY</code>), whose expected block distortion is at most <code>D</code>, the reshaped
+Wyner–Ziv rate is bounded by the block log-cardinality rate:</p><pre><code>R_WZ(D) ≤ (1/n) · log M.
+</code></pre><p>Here <code>R_WZ = wynerZivRate</code> is the reshaped operational rate — the infimum of the
+objective over feasible factorizable points at <em>every</em> finite auxiliary alphabet
+<code><a href="../../../.././Init/Prelude.html#Fin">Fin</a> k</code> (<code>FactorizableRate.lean</code> §10). This <code>∀</code>-clean form removes the Carathéodory
+sizing precondition <code>hU_card : |α| + 1 ≤ |U|</code> that the fixed-<code>U</code>
+<code>wynerZivRateFactorizable</code> version required: the single-letterization auxiliary
+<code>Uᵢ := (J, Y_{\i})</code> (whose cardinality grows with <code>n</code>) lands <em>directly</em> as a
+feasible point of the reshaped infimum via <code>wynerZivRate_le_of_feasible</code>, with no
+cardinality bound.</p><p>The independence / i.i.d. preconditions (<code>hindep</code> + <code>hlaw</code>) are regularity
+preconditions (the conclusion is false without them, mirroring
+<code>rate_distortion_converse_n_letter_singleLetter</code>).</p><p>Proof: the block bound <code>(I(J; Xⁿ) − I(J; Yⁿ)).toReal ≤ log M</code> is discharged via
+<code>mutualInfo_diff_le_log_card</code>, and after the <code>(1/n)</code>-scaling the single-letterization step
+<code>h_sl</code> is discharged by landing the feasible-point existence <code><a href="../../../.././InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.html#InformationTheory.Shannon.wz_converse_feasible_point">wz_converse_feasible_point</a></code>:
+<code>wynerZivRate_le_of_feasible</code> (with <code><a href="../../../.././Mathlib/Order/Bounds/Defs.html#BddBelow">BddBelow</a></code> from <code>wzRateValueSet_bddBelow_of_pmf</code>)
+turns &quot;some feasible factorizable point at <code><a href="../../../.././Init/Prelude.html#Fin">Fin</a> k</code> has objective <code>≤ (1/n)(I(J;Xⁿ) − I(J;Yⁿ))</code>&quot; into <code>R_WZ(D) ≤ (1/n)(I(J;Xⁿ) − I(J;Yⁿ)).toReal</code>. No Carathéodory
+support lemma is on this critical path.</p><p>Dropping <code>hU_card</code> is sound: <code>wynerZivRate</code> is the infimum over the union of images across
+<em>all</em> <code><a href="../../../.././Init/Prelude.html#Fin">Fin</a> k</code>, hence <code>≤</code> any single fixed-<code>U</code> rate, i.e. the weakest (smallest-LHS)
+converse claim — the single-letterization auxiliary lands directly, so no sizing
+precondition is needed and no false-statement is introduced. Non-vacuous: <code>wynerZivRate ≥ 0</code>
+via the DPI residual, and <code>M ≥ 1 ⟹ log M ≥ 0</code>, so <code>R_WZ(D) ≤ (1/n) log M</code> is a substantive
+bound. <code>hindep</code> / <code>hlaw</code> are i.i.d. regularity preconditions (conclusion false
+without them), not a bundled core.
+@audit:ok (<code>hindep</code>/<code>hlaw</code>/<code>hD</code> + measurability are operational-regularity preconditions and
+the converse core is proved in the body, not bundled; dropping <code>hU_card</code> is a strengthening
+since <code>wynerZivRate</code> is the infimum over all <code><a href="../../../.././Init/Prelude.html#Fin">Fin</a> k</code>, so no false-statement is introduced.)</p></div></div><div class="decl" id="InformationTheory.Shannon.wynerZivRate_le_of_code"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.lean#L1224-L1271">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../.././InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.html#InformationTheory.Shannon.wynerZivRate_le_of_code"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">wynerZivRate_le_of_code</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">γ</span> : <a href="../../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">M </span><span class="fn">n</span> : <a href="../../../.././Init/Prelude.html#Nat">ℕ</a>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Data/NeZero.html#NeZero">NeZero</a> <span class="fn">M</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hn</span> : <span class="fn">0</span> <a href="../../../.././Init/Prelude.html#LT.lt">&lt;</a> <span class="fn">n</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">c</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode">WynerZivCode</a> <span class="fn">M</span> <span class="fn">n</span> <span class="fn">α</span> <span class="fn">β</span> <span class="fn">γ</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">d</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/RateDistortion/Achievability.html#InformationTheory.Shannon.DistortionFn">DistortionFn</a> <span class="fn">α</span> <span class="fn">γ</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">P_XY</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> (<span class="fn">α</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β</span>)</span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">P_XY</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">D</span> : <a href="../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hD</span> : <span class="fn"><span class="fn"><span class="fn">c</span>.<a href="../../../.././InformationTheory/Shannon/WynerZiv/Basic.html#InformationTheory.Shannon.WynerZivCode.expectedBlockDistortion">expectedBlockDistortion</a></span> <span class="fn">P_XY</span> <span class="fn">d</span></span> <a href="../../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn">D</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../../.././InformationTheory/Shannon/WynerZiv/FactorizableRate.html#InformationTheory.Shannon.wynerZivRate">wynerZivRate</a> <span class="fn">(fun (<span class="fn">p</span> : <span class="fn">α</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β</span>) =&gt; <span class="fn"><span class="fn"><span class="fn">P_XY</span>.<a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn">p</span><a href="../../../.././Init/Core.html#Singleton.singleton">}</a></span>)</span> <span class="fn">(fun (<span class="fn">a</span> : <span class="fn">α</span>) (<span class="fn">b</span> : <span class="fn">γ</span>) =&gt; <span class="fn">↑<span class="fn">(<span class="fn">d</span> <span class="fn">a</span> <span class="fn">b</span>)</span></span>)</span> <span class="fn">D</span></span> <a href="../../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn">1</span> <a href="../../../.././Init/Prelude.html#HDiv.hDiv">/</a> <span class="fn">↑<span class="fn">n</span></span> <a href="../../../.././Init/Prelude.html#HMul.hMul">*</a> <span class="fn"><a href="../../../.././Mathlib/Analysis/SpecialFunctions/Log/Basic.html#Real.log">Real.log</a> <span class="fn">↑<span class="fn">M</span></span></span></div></div><p>Per-code converse bound (i.i.d.-source realization). For a single block
+Wyner–Ziv code <code>c : WynerZivCode M n α β γ</code> with expected block distortion at most
+<code>D</code>, the reshaped Wyner–Ziv rate is bounded by the block log-cardinality rate
+<code>(1/n) · log M</code>.</p><p>This is the i.i.d.-source plumbing of the converse: the canonical i.i.d. source is
+the product measure <code>Measure.pi (fun _ ↦ P_XY)</code> on <code>(α × β)^n</code> with coordinate
+projections <code>Xs i ω := (ω i).1</code>, <code>Ys i ω := (ω i).2</code>, whose independence and
+identical marginals (<code>= P_XY</code>) are supplied by <code>iIndepFun_iff_map_fun_eq_pi_map</code> and
+<code>Measure.pi_map_eval</code>. The bound is then the <code>n</code>-letter single-letterized converse
+<code><a href="../../../.././InformationTheory/Shannon/WynerZiv/Converse/SingleLetter.html#InformationTheory.Shannon.wyner_ziv_converse_n_letter_singleLetter">wyner_ziv_converse_n_letter_singleLetter</a></code>.</p></div></div></main>
+<nav class="nav"><iframe src="../../../.././navbar.html" class="navframe" frameBorder="0"></iframe></nav></body></html>

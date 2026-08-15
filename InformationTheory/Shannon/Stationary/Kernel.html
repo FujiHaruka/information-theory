@@ -1,0 +1,224 @@
+<html lang="en"><head><meta charset="UTF-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1"></meta><link rel="stylesheet" href="../../.././style.css"></link><link rel="icon" href="../../.././favicon.svg"></link><link rel="mask-icon" href="../../.././favicon.svg" color="#000000"></link><link rel="prefetch" href="../../.././/declarations/declaration-data.bmp" as="image"></link><title>InformationTheory.Shannon.Stationary.Kernel</title><script defer="true" src="../../.././mathjax-config.js"></script><script defer="true" src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="true" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>const SITE_ROOT="../../.././";</script><script>const MODULE_NAME="InformationTheory.Shannon.Stationary.Kernel";</script><script type="module" src="../../.././jump-src.js"></script><script type="module" src="../../.././search.js"></script><script type="module" src="../../.././expand-nav.js"></script><script type="module" src="../../.././how-about.js"></script><script type="module" src="../../.././instances.js"></script><script type="module" src="../../.././importedBy.js"></script></head><body><input id="nav_toggle" type="checkbox"></input><header><h1><label for="nav_toggle"></label><span>Documentation</span></h1><h2 class="header_filename break_within"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">Stationary</span>.<span class="name">Kernel</span></h2><form id="search_form"><input type="text" name="q" autocomplete="off"></input>&#32;<button id="search_button" onclick="javascript: form.action='../../.././search.html';">Search</button></form></header><nav class="internal_nav"><p><a href="#top">return to top</a></p><p class="gh_nav_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/Stationary/Kernel.lean">source</a></p><div class="imports"><details><summary>Imports</summary><ul><li><a href="../../.././Init.html">Init</a></li><li><a href="../../.././InformationTheory/Meta/EntryPoint.html">InformationTheory.Meta.EntryPoint</a></li><li><a href="../../.././InformationTheory/Shannon/EntropyRate.html">InformationTheory.Shannon.EntropyRate</a></li><li><a href="../../.././InformationTheory/Shannon/LZ78/PhraseCounting.html">InformationTheory.Shannon.LZ78.PhraseCounting</a></li><li><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html">InformationTheory.Shannon.LZ78.ZivEntropyBridge</a></li><li><a href="../../.././Mathlib/Algebra/BigOperators/Group/Finset/Basic.html">Mathlib.Algebra.BigOperators.Group.Finset.Basic</a></li></ul></details><details><summary>Imported by</summary><ul id="imported-by-InformationTheory.Shannon.Stationary.Kernel" class="imported-by-list"></ul></details></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.parsingBoundary_zero"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">parsingBoundary_zero</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.prefixBlockProb_zero"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">prefixBlockProb_zero</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.prod_condPhraseProb_telescope"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">prod_condPhraseProb_telescope</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.prefixBlockProb_antitone"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">prefixBlockProb_antitone</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.parsingBoundary_complete_le"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">parsingBoundary_complete_le</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.blockProb_le_prod_condPhraseProb"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">blockProb_le_prod_condPhraseProb</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.parsingBoundary_le_n"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">parsingBoundary_le_n</span></a></div></nav><main>
+<div class="mod_doc"><h1 id="Stationary-process-telescoping-layer-LZ78-blockRV-factorization" class="markdown-heading">Stationary-process telescoping layer (LZ78 <code>blockRV</code> factorization) <a class="hover-link" href="#Stationary-process-telescoping-layer-LZ78-blockRV-factorization">#</a></h1><p>This file derives the algebraic telescoping backbone of the LZ78
+per-path parsing factorization <code>Pₙ{block ω} = ∏ⱼ condPhraseProb …</code>
+(<code>IsLZ78PerPathParsingFactorization</code>, <code><a href="../../.././LZ78/ZivEntropyBridge.html">LZ78/ZivEntropyBridge.lean</a></code>).</p><p><code>condPhraseProb μ p n ω j</code> is <em>defined</em> as the ratio of successive
+parsing-prefix block probabilities
+<code>prefixBlockProb ω (boundary (j+1)) / prefixBlockProb ω (boundary j)</code>. Over
+the phrase positions <code>j ∈ range c</code> this product telescopes to
+<code>prefixBlockProb ω (boundary c) / prefixBlockProb ω (boundary 0)</code>
+(<code><a href="../../.././Mathlib/Algebra/BigOperators/Group/Finset/Basic.html#Finset.prod_range_div">Finset.prod_range_div</a></code>). Since <code>boundary 0 = 0</code> and the length-<code>0</code> block
+has probability <code>1</code>, the denominator is <code>1</code>, leaving
+<code>prefixBlockProb ω (boundary c)</code>.</p><p>The remaining content that connects this to <code>Pₙ{block ω}</code> is the
+parse-completeness fact <code>boundary c = n</code> (the parse consumes all <code>n</code>
+symbols) — together with the positivity of each ratio. These are the
+genuinely process-dependent inputs of the factorization; the telescoping
+algebra itself is unconditional and lives here.</p></div><div class="decl" id="InformationTheory.Shannon.parsingBoundary_zero"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/Stationary/Kernel.lean#L41-L46">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/Stationary/Kernel.html#InformationTheory.Shannon.parsingBoundary_zero"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">parsingBoundary_zero</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">p</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess">StationaryProcess</a> <span class="fn">μ</span> <span class="fn">α</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">n</span> : <a href="../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">ω</span> : <span class="fn">Ω</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.parsingBoundary">parsingBoundary</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">n</span> <span class="fn">ω</span> <span class="fn">0</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn">0</span></div></div><p><code>parsingBoundary μ p n ω 0 = 0</code>: the empty parsing prefix consumes no
+symbols.</p></div></div><div class="decl" id="InformationTheory.Shannon.prefixBlockProb_zero"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/Stationary/Kernel.lean#L49-L63">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/Stationary/Kernel.html#InformationTheory.Shannon.prefixBlockProb_zero"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">prefixBlockProb_zero</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">p</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess">StationaryProcess</a> <span class="fn">μ</span> <span class="fn">α</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">ω</span> : <span class="fn">Ω</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.prefixBlockProb">prefixBlockProb</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">ω</span> <span class="fn">0</span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn">1</span></div></div><p><code>prefixBlockProb</code> of the empty prefix is <code>1</code>: <code>Pₘ{block_m ω}</code> at
+<code>m = 0</code> is the probability of the unique length-<code>0</code> block, which is <code>1</code>.</p></div></div><div class="decl" id="InformationTheory.Shannon.prod_condPhraseProb_telescope"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/Stationary/Kernel.lean#L66-L90">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/Stationary/Kernel.html#InformationTheory.Shannon.prod_condPhraseProb_telescope"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">prod_condPhraseProb_telescope</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">p</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess">StationaryProcess</a> <span class="fn">μ</span> <span class="fn">α</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">n</span> : <a href="../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">ω</span> : <span class="fn">Ω</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">c</span> : <a href="../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hpos</span> : <span class="fn">∀ <span class="fn">j</span> ≤ <span class="fn">c</span>, <span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.prefixBlockProb">prefixBlockProb</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">ω</span> <span class="fn">(<a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.parsingBoundary">parsingBoundary</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">n</span> <span class="fn">ω</span> <span class="fn">j</span>)</span></span> <a href="../../.././Init/Core.html#Ne">≠</a> <span class="fn">0</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn">∏ <span class="fn">j</span> ∈ <span class="fn"><a href="../../.././Mathlib/Data/Finset/Range.html#Finset.range">Finset.range</a> <span class="fn">c</span></span>, <span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.condPhraseProb">condPhraseProb</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">n</span> <span class="fn">ω</span> <span class="fn">j</span></span></span> <a href="../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.prefixBlockProb">prefixBlockProb</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">ω</span> <span class="fn">(<a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.parsingBoundary">parsingBoundary</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">n</span> <span class="fn">ω</span> <span class="fn">c</span>)</span></span></div></div><p>Telescoping: the product of the per-phrase conditional
+probabilities over <code>range c</code> telescopes to
+<code>prefixBlockProb ω (boundary c)</code>, using <code>boundary 0 = 0</code> and
+<code>prefixBlockProb ω 0 = 1</code>.</p><p>Proved by induction on <code>c</code> (a <code>ℝ</code> field telescoping, where the <code>prod_range_div</code>
+group lemma does not apply): each step cancels the denominator ratio against
+the previous prefix probability, which is nonzero by <code>hpos</code>.</p></div></div><div class="mod_doc"><h2 id="Reduction-of-the-factorization-to-parse-completeness-+-positivity" class="markdown-heading">Reduction of the factorization to parse-completeness + positivity <a class="hover-link" href="#Reduction-of-the-factorization-to-parse-completeness-+-positivity">#</a></h2><p>The telescoping above reduces the <code>factor</code> field of
+<code>IsLZ78PerPathParsingFactorization</code> to two genuinely process-dependent
+facts about the LZ78 parse: positivity of the intermediate prefix block
+probabilities, and parse-completeness <code>boundary c = n</code> (the parse
+consumes all <code>n</code> symbols). The latter is the load-bearing residual: the
+longest-prefix greedy parse <code>lz78PhraseStrings</code> leaves an
+<em>unfinished tail</em> (<code>lz78PhraseStrings_total_length_le</code> is <code>≤</code>, not <code>=</code>), so
+<code>boundary c = n</code> is not unconditionally true for the present parse — it
+is the Cover–Thomas &quot;last partial phrase&quot; content.</p></div><div class="mod_doc"><h2 id="Ziv-direction-factorization-parse-completeness-defect-fix" class="markdown-heading">Ziv-direction factorization (parse-completeness defect fix) <a class="hover-link" href="#Ziv-direction-factorization-parse-completeness-defect-fix">#</a></h2><p>The <code>factor</code> field of <code>IsLZ78PerPathParsingFactorization</code>
+(<code><a href="../../.././LZ78/ZivEntropyBridge.html">LZ78/ZivEntropyBridge.lean</a></code>) was originally stated as the equality
+<code>Pₙ{block ω} = ∏ⱼ condPhraseProb …</code>. That equality is <em>genuinely false</em>
+in general: the longest-prefix greedy parse <code>lz78PhraseStrings</code> leaves an
+unfinished tail, so the phrase boundaries cover only
+<code>boundary c ≤ n</code> symbols (<code>lz78PhraseStrings_total_length_le</code> is <code>≤</code>, not
+<code>=</code>), and the telescoping product equals <code>prefixBlockProb ω (boundary c)</code>,
+which exceeds <code>Pₙ = prefixBlockProb ω n</code> whenever the parse is incomplete.</p><p>The Ziv chain (Cover–Thomas Eq. 13.122–124) does not need that false
+equality — it needs only the inequality <code>Pₙ{block ω} ≤ ∏ⱼ qⱼ</code>
+(equivalently <code>-log Pₙ ≥ ∑ⱼ -log qⱼ</code>), which is unconditionally true:
+<code>Pₙ = prefixBlockProb ω n ≤ prefixBlockProb ω (boundary c) = ∏ⱼ qⱼ</code> by
+<em>prefix monotonicity</em> of the cylinder block probability (a shorter prefix
+has larger mass). The two ingredients below establish this, fixing
+the defect: the factorization is recast from a false equality to the true
+Ziv inequality. Positivity of the intermediate prefix block probabilities
+(a.s. regularity of the observed cylinders) is the only side condition.</p></div><div class="decl" id="InformationTheory.Shannon.prefixBlockProb_antitone"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/Stationary/Kernel.lean#L126-L146">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/Stationary/Kernel.html#InformationTheory.Shannon.prefixBlockProb_antitone"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">prefixBlockProb_antitone</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">p</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess">StationaryProcess</a> <span class="fn">μ</span> <span class="fn">α</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">ω</span> : <span class="fn">Ω</span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">m₁ </span><span class="fn">m₂</span> : <a href="../../.././Init/Prelude.html#Nat">ℕ</a>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">h</span> : <span class="fn">m₁</span> <a href="../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn">m₂</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.prefixBlockProb">prefixBlockProb</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">ω</span> <span class="fn">m₂</span></span> <a href="../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.prefixBlockProb">prefixBlockProb</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">ω</span> <span class="fn">m₁</span></span></div></div><p>Prefix monotonicity of the block probability (unconditional):
+for <code>m₁ ≤ m₂</code>, the length-<code>m₂</code> cylinder is contained in the length-<code>m₁</code>
+cylinder (matching more coordinates is a stronger constraint), so its mass
+is smaller: <code>prefixBlockProb ω m₂ ≤ prefixBlockProb ω m₁</code>.</p><p>This is the load-bearing measure-theoretic fact that turns the (false)
+factorization <em>equality</em> into the (true) Ziv <em>inequality</em>.</p></div></div><div class="decl" id="InformationTheory.Shannon.parsingBoundary_complete_le"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/Stationary/Kernel.lean#L149-L161">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/Stationary/Kernel.html#InformationTheory.Shannon.parsingBoundary_complete_le"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">parsingBoundary_complete_le</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">p</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess">StationaryProcess</a> <span class="fn">μ</span> <span class="fn">α</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">n</span> : <a href="../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">ω</span> : <span class="fn">Ω</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.parsingBoundary">parsingBoundary</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">n</span> <span class="fn">ω</span> <span class="fn"><span class="fn">(<a href="../../.././InformationTheory/Shannon/LZ78/GreedyLongestPrefix.html#InformationTheory.Shannon.lz78PhraseStrings">lz78PhraseStrings</a> <span class="fn">(<a href="../../.././Init/Data/List/OfFn.html#List.ofFn">List.ofFn</a> <span class="fn">(<span class="fn"><span class="fn">p</span>.<a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess.blockRV">blockRV</a></span> <span class="fn">n</span> <span class="fn">ω</span>)</span>)</span>)</span>.<a href="../../.././Init/Prelude.html#List.length">length</a></span></span> <a href="../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn">n</span></div></div><p>The complete-phrase boundary never exceeds <code>n</code>: the total
+length of the emitted phrase strings is at most the input length
+(<code>lz78PhraseStrings_total_length_le</code>), so the parsing boundary at the full
+phrase count is <code>≤ n</code>. This is the <em>unconditional</em> replacement for the
+false <code>boundary c = n</code> parse-completeness claim.</p></div></div><div class="decl" id="InformationTheory.Shannon.blockProb_le_prod_condPhraseProb"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/Stationary/Kernel.lean#L164-L195">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/Stationary/Kernel.html#InformationTheory.Shannon.blockProb_le_prod_condPhraseProb"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">blockProb_le_prod_condPhraseProb</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">p</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess">StationaryProcess</a> <span class="fn">μ</span> <span class="fn">α</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">n</span> : <a href="../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">ω</span> : <span class="fn">Ω</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hpos</span> :
+  <span class="fn">∀ <span class="fn">j</span> ≤ <span class="fn"><span class="fn">(<a href="../../.././InformationTheory/Shannon/LZ78/GreedyLongestPrefix.html#InformationTheory.Shannon.lz78PhraseStrings">lz78PhraseStrings</a> <span class="fn">(<a href="../../.././Init/Data/List/OfFn.html#List.ofFn">List.ofFn</a> <span class="fn">(<span class="fn"><span class="fn">p</span>.<a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess.blockRV">blockRV</a></span> <span class="fn">n</span> <span class="fn">ω</span>)</span>)</span>)</span>.<a href="../../.././Init/Prelude.html#List.length">length</a></span>, <span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.prefixBlockProb">prefixBlockProb</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">ω</span> <span class="fn">(<a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.parsingBoundary">parsingBoundary</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">n</span> <span class="fn">ω</span> <span class="fn">j</span>)</span></span> <a href="../../.././Init/Core.html#Ne">≠</a> <span class="fn">0</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><span class="fn"><span class="fn">(<a href="../../.././Mathlib/MeasureTheory/Measure/Map.html#MeasureTheory.Measure.map">MeasureTheory.Measure.map</a> <span class="fn">(<span class="fn"><span class="fn">p</span>.<a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess.blockRV">blockRV</a></span> <span class="fn">n</span>)</span> <span class="fn">μ</span>)</span>.<a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn"><span class="fn"><span class="fn">p</span>.<a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess.blockRV">blockRV</a></span> <span class="fn">n</span> <span class="fn">ω</span></span><a href="../../.././Init/Core.html#Singleton.singleton">}</a></span> <a href="../../.././Init/Prelude.html#LE.le">≤</a>   <span class="fn">∏ <span class="fn">j</span> ∈ <span class="fn"><a href="../../.././Mathlib/Data/Finset/Range.html#Finset.range">Finset.range</a> <span class="fn"><span class="fn">(<a href="../../.././InformationTheory/Shannon/LZ78/GreedyLongestPrefix.html#InformationTheory.Shannon.lz78PhraseStrings">lz78PhraseStrings</a> <span class="fn">(<a href="../../.././Init/Data/List/OfFn.html#List.ofFn">List.ofFn</a> <span class="fn">(<span class="fn"><span class="fn">p</span>.<a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess.blockRV">blockRV</a></span> <span class="fn">n</span> <span class="fn">ω</span>)</span>)</span>)</span>.<a href="../../.././Init/Prelude.html#List.length">length</a></span></span>, <span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.condPhraseProb">condPhraseProb</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">n</span> <span class="fn">ω</span> <span class="fn">j</span></span></span></div></div><p>Ziv-direction factorization inequality (parse-completeness
+defect fix): the block probability is bounded above by the product of
+the per-phrase conditional probabilities over the parse,
+<code>Pₙ{block ω} ≤ ∏ⱼ condPhraseProb …</code>. This is the <em>true</em> content the Ziv
+chain needs (replacing the false equality <code>factor</code>): the telescoping gives
+<code>∏ⱼ qⱼ = prefixBlockProb ω (boundary c)</code>
+(<code><a href="../../.././InformationTheory/Shannon/Stationary/Kernel.html#InformationTheory.Shannon.prod_condPhraseProb_telescope">prod_condPhraseProb_telescope</a></code>), and prefix monotonicity
+(<code><a href="../../.././InformationTheory/Shannon/Stationary/Kernel.html#InformationTheory.Shannon.prefixBlockProb_antitone">prefixBlockProb_antitone</a></code>) gives
+<code>Pₙ = prefixBlockProb ω n ≤ prefixBlockProb ω (boundary c)</code> since
+<code>boundary c ≤ n</code> (<code><a href="../../.././InformationTheory/Shannon/Stationary/Kernel.html#InformationTheory.Shannon.parsingBoundary_complete_le">parsingBoundary_complete_le</a></code>).</p><p>The only side condition is positivity of the intermediate prefix block
+probabilities (a.s. regularity of the observed cylinders) — not the false
+parse-completeness claim.</p></div></div><div class="decl" id="InformationTheory.Shannon.parsingBoundary_le_n"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/Stationary/Kernel.lean#L198-L216">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../.././InformationTheory/Shannon/Stationary/Kernel.html#InformationTheory.Shannon.parsingBoundary_le_n"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">parsingBoundary_le_n</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">p</span> : <span class="fn"><a href="../../.././InformationTheory/Shannon/Stationary/Basic.html#InformationTheory.Shannon.StationaryProcess">StationaryProcess</a> <span class="fn">μ</span> <span class="fn">α</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">n</span> : <a href="../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">ω</span> : <span class="fn">Ω</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">j</span> : <a href="../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../.././InformationTheory/Shannon/LZ78/ZivEntropyBridge.html#InformationTheory.Shannon.parsingBoundary">parsingBoundary</a> <span class="fn">μ</span> <span class="fn">p</span> <span class="fn">n</span> <span class="fn">ω</span> <span class="fn">j</span></span> <a href="../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn">n</span></div></div><p>The parsing boundary never exceeds <code>n</code> at any phrase index:
+the cumulative length of the first <code>j</code> phrases is bounded by the total
+phrase length, which is <code>≤ n</code>. (For <code>j ≥ c</code> the prefix is the whole phrase
+list, so the boundary is constant <code>= boundary c ≤ n</code>.)</p></div></div></main>
+<nav class="nav"><iframe src="../../.././navbar.html" class="navframe" frameBorder="0"></iframe></nav></body></html>

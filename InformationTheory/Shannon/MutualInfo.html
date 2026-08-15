@@ -1,0 +1,201 @@
+<html lang="en"><head><meta charset="UTF-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1"></meta><link rel="stylesheet" href="../.././style.css"></link><link rel="icon" href="../.././favicon.svg"></link><link rel="mask-icon" href="../.././favicon.svg" color="#000000"></link><link rel="prefetch" href="../.././/declarations/declaration-data.bmp" as="image"></link><title>InformationTheory.Shannon.MutualInfo</title><script defer="true" src="../.././mathjax-config.js"></script><script defer="true" src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="true" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>const SITE_ROOT="../.././";</script><script>const MODULE_NAME="InformationTheory.Shannon.MutualInfo";</script><script type="module" src="../.././jump-src.js"></script><script type="module" src="../.././search.js"></script><script type="module" src="../.././expand-nav.js"></script><script type="module" src="../.././how-about.js"></script><script type="module" src="../.././instances.js"></script><script type="module" src="../.././importedBy.js"></script></head><body><input id="nav_toggle" type="checkbox"></input><header><h1><label for="nav_toggle"></label><span>Documentation</span></h1><h2 class="header_filename break_within"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">MutualInfo</span></h2><form id="search_form"><input type="text" name="q" autocomplete="off"></input>&#32;<button id="search_button" onclick="javascript: form.action='../.././search.html';">Search</button></form></header><nav class="internal_nav"><p><a href="#top">return to top</a></p><p class="gh_nav_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/MutualInfo.lean">source</a></p><div class="imports"><details><summary>Imports</summary><ul><li><a href="../.././Init.html">Init</a></li><li><a href="../.././InformationTheory/Meta/EntryPoint.html">InformationTheory.Meta.EntryPoint</a></li><li><a href="../.././Mathlib/InformationTheory/KullbackLeibler/Basic.html">Mathlib.InformationTheory.KullbackLeibler.Basic</a></li><li><a href="../.././Mathlib/InformationTheory/KullbackLeibler/ChainRule.html">Mathlib.InformationTheory.KullbackLeibler.ChainRule</a></li><li><a href="../.././Mathlib/Probability/Independence/Basic.html">Mathlib.Probability.Independence.Basic</a></li><li><a href="../.././Mathlib/Probability/Kernel/CondDistrib.html">Mathlib.Probability.Kernel.CondDistrib</a></li><li><a href="../.././Mathlib/Probability/Kernel/Composition/MeasureCompProd.html">Mathlib.Probability.Kernel.Composition.MeasureCompProd</a></li></ul></details><details><summary>Imported by</summary><ul id="imported-by-InformationTheory.Shannon.MutualInfo" class="imported-by-list"></ul></details></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.mutualInfo"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.mutualInfo_nonneg"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo_nonneg</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.mutualInfo_congr_pair"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo_congr_pair</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.klDiv_map_measurableEquiv"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">klDiv_map_measurableEquiv</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.klDiv_prod_const_left"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">klDiv_prod_const_left</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.mutualInfo_comm"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo_comm</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.mutualInfo_eq_zero_iff_indep"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo_eq_zero_iff_indep</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.mutualInfo_ne_top"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo_ne_top</span></a></div></nav><main>
+<div class="mod_doc"><h1 id="Mutual-information-via-KL-divergence" class="markdown-heading">Mutual information via KL divergence <a class="hover-link" href="#Mutual-information-via-KL-divergence">#</a></h1><p><code><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> μ X Y := klDiv (μ.map (X, Y)) ((μ.map X).prod (μ.map Y))</code> and its basic properties.</p><h2 id="Main-definitions" class="markdown-heading">Main definitions <a class="hover-link" href="#Main-definitions">#</a></h2><ul><li><code><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a></code> — <code>I(X; Y) := KL(P_{X,Y} ‖ P_X ⊗ P_Y)</code>.</li></ul><h2 id="Main-statements" class="markdown-heading">Main statements <a class="hover-link" href="#Main-statements">#</a></h2><ul><li><code><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo_nonneg">mutualInfo_nonneg</a></code> — <code>0 ≤ I(X; Y)</code>.</li><li><code><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo_comm">mutualInfo_comm</a></code> — <code>I(X; Y) = I(Y; X)</code>.</li><li><code><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo_eq_zero_iff_indep">mutualInfo_eq_zero_iff_indep</a></code> — <code>I(X; Y) = 0 ↔ X ⊥ Y</code>.</li><li><code><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo_ne_top">mutualInfo_ne_top</a></code> — <code>I(X; Y) ≠ ∞</code> for finite alphabets.</li></ul></div><div class="decl" id="InformationTheory.Shannon.mutualInfo"><div class="def"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/MutualInfo.lean#L34-L39">source</a></div><div class="decl_header"><span class="decl_kind">noncomputable def</span>
+<span class="decl_name"><a class="break_within" href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">X</span> : <a href="../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Y</span> : <a href="../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">X</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Yo</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">Y</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><a href="../.././Mathlib/Data/ENNReal/Basic.html#ENNReal">ENNReal</a></div></div><p>Mutual information via KL divergence:
+<code>I(X; Y) := KL(P_{X,Y} ‖ P_X ⊗ P_Y)</code>.</p><details><summary>Equations</summary><ul class="equations"><li class="equation">One or more equations did not get rendered due to their size.</li></ul></details><details id="instances-for-list-InformationTheory.Shannon.mutualInfo" class="instances-for-list"><summary>Instances For</summary><ul class="instances-for-enum"></ul></details></div></div><div class="decl" id="InformationTheory.Shannon.mutualInfo_nonneg"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/MutualInfo.lean#L41-L44">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo_nonneg"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo_nonneg</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">X</span> : <a href="../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Y</span> : <a href="../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">X</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Yo</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">Y</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn">0</span> <a href="../.././Init/Prelude.html#LE.le">≤</a> <span class="fn"><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">Yo</span></span></div></div><p>Mutual information is nonneg (immediate from <code>klDiv : ℝ≥0∞</code>).</p></div></div><div class="decl" id="InformationTheory.Shannon.mutualInfo_congr_pair"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/MutualInfo.lean#L46-L62">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo_congr_pair"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo_congr_pair</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">X</span> : <a href="../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Y</span> : <a href="../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω'</span> : <a href="../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω'</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">μ'</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω'</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Xs</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">X</span></span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Yo</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">Y</span></span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Xs'</span> : <span class="fn"><span class="fn">Ω'</span> → <span class="fn">X</span></span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Yo'</span> : <span class="fn"><span class="fn">Ω'</span> → <span class="fn">Y</span></span>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hXs</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Xs</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hYo</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Yo</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hXs'</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Xs'</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hYo'</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Yo'</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">h</span> :
+  <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/Map.html#MeasureTheory.Measure.map">MeasureTheory.Measure.map</a> <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω</span>) =&gt; <a href="../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">Xs</span> <span class="fn">ω</span></span><a href="../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">Yo</span> <span class="fn">ω</span></span><a href="../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">μ</span></span> <a href="../.././Init/Prelude.html#Eq">=</a>     <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/Map.html#MeasureTheory.Measure.map">MeasureTheory.Measure.map</a> <span class="fn">(fun (<span class="fn">ω</span> : <span class="fn">Ω'</span>) =&gt; <a href="../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">Xs'</span> <span class="fn">ω</span></span><a href="../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">Yo'</span> <span class="fn">ω</span></span><a href="../.././Init/Prelude.html#Prod.mk">)</a>)</span> <span class="fn">μ'</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">Yo</span></span> <a href="../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ'</span> <span class="fn">Xs'</span> <span class="fn">Yo'</span></span></div></div></div></div><div class="decl" id="InformationTheory.Shannon.klDiv_map_measurableEquiv"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/MutualInfo.lean#L64-L84">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.klDiv_map_measurableEquiv"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">klDiv_map_measurableEquiv</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../.././foundational_types.html">Type</a> u_5}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">e</span> : <span class="fn">α</span> <a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Embedding.html#MeasurableEquiv">≃ᵐ</a> <span class="fn">β</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">μ </span><span class="fn">ν</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">α</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/Typeclasses/Finite.html#MeasureTheory.IsFiniteMeasure">MeasureTheory.IsFiniteMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/Typeclasses/Finite.html#MeasureTheory.IsFiniteMeasure">MeasureTheory.IsFiniteMeasure</a> <span class="fn">ν</span></span>]</span></span>
+</span><span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../.././Mathlib/InformationTheory/KullbackLeibler/Basic.html#InformationTheory.klDiv">klDiv</a> <span class="fn">(<a href="../.././Mathlib/MeasureTheory/Measure/Map.html#MeasureTheory.Measure.map">MeasureTheory.Measure.map</a> <span class="fn">(⇑<span class="fn">e</span>)</span> <span class="fn">μ</span>)</span> <span class="fn">(<a href="../.././Mathlib/MeasureTheory/Measure/Map.html#MeasureTheory.Measure.map">MeasureTheory.Measure.map</a> <span class="fn">(⇑<span class="fn">e</span>)</span> <span class="fn">ν</span>)</span></span> <a href="../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../.././Mathlib/InformationTheory/KullbackLeibler/Basic.html#InformationTheory.klDiv">klDiv</a> <span class="fn">μ</span> <span class="fn">ν</span></span></div></div><p>KL divergence is invariant under pushforward by a <code><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Embedding.html#MeasurableEquiv">MeasurableEquiv</a></code>.</p></div></div><div class="decl" id="InformationTheory.Shannon.klDiv_prod_const_left"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/MutualInfo.lean#L86-L96">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.klDiv_prod_const_left"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">klDiv_prod_const_left</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β</span> : <a href="../.././foundational_types.html">Type</a> u_5}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">α</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">ν₁ </span><span class="fn">ν₂</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">β</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/Typeclasses/Finite.html#MeasureTheory.IsFiniteMeasure">MeasureTheory.IsFiniteMeasure</a> <span class="fn">ν₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/Typeclasses/Finite.html#MeasureTheory.IsFiniteMeasure">MeasureTheory.IsFiniteMeasure</a> <span class="fn">ν₂</span></span>]</span></span>
+</span><span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../.././Mathlib/InformationTheory/KullbackLeibler/Basic.html#InformationTheory.klDiv">klDiv</a> <span class="fn">(<span class="fn"><span class="fn">μ</span>.<a href="../.././Mathlib/MeasureTheory/Measure/Prod.html#MeasureTheory.Measure.prod">prod</a></span> <span class="fn">ν₁</span>)</span> <span class="fn">(<span class="fn"><span class="fn">μ</span>.<a href="../.././Mathlib/MeasureTheory/Measure/Prod.html#MeasureTheory.Measure.prod">prod</a></span> <span class="fn">ν₂</span>)</span></span> <a href="../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../.././Mathlib/InformationTheory/KullbackLeibler/Basic.html#InformationTheory.klDiv">klDiv</a> <span class="fn">ν₁</span> <span class="fn">ν₂</span></span></div></div><p><code>klDiv (μ.prod ν₁) (μ.prod ν₂) = klDiv ν₁ ν₂</code> when <code>μ</code> is a probability measure.</p></div></div><div class="decl" id="InformationTheory.Shannon.mutualInfo_comm"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/MutualInfo.lean#L98-L111">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo_comm"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo_comm</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">X</span> : <a href="../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Y</span> : <a href="../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/Typeclasses/Finite.html#MeasureTheory.IsFiniteMeasure">MeasureTheory.IsFiniteMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">X</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Yo</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">Y</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hXs</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Xs</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hYo</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Yo</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">Yo</span></span> <a href="../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">Yo</span> <span class="fn">Xs</span></span></div></div><p>Mutual information is symmetric: <code>I(X; Y) = I(Y; X)</code>.</p></div></div><div class="decl" id="InformationTheory.Shannon.mutualInfo_eq_zero_iff_indep"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/MutualInfo.lean#L113-L126">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo_eq_zero_iff_indep"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo_eq_zero_iff_indep</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">X</span> : <a href="../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Y</span> : <a href="../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">X</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Yo</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">Y</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hXs</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Xs</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hYo</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Yo</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">Yo</span></span> <a href="../.././Init/Prelude.html#Eq">=</a> <span class="fn">0</span> <a href="../.././Init/Core.html#Iff">↔</a> <span class="fn"><a href="../.././Mathlib/Probability/Independence/Basic.html#ProbabilityTheory.IndepFun">ProbabilityTheory.IndepFun</a> <span class="fn">Xs</span> <span class="fn">Yo</span> <span class="fn">μ</span></span></div></div><p><code>I(X; Y) = 0 ↔ X</code> and <code>Y</code> are independent.</p></div></div><div class="decl" id="InformationTheory.Shannon.mutualInfo_ne_top"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/MutualInfo.lean#L190-L201">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo_ne_top"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">mutualInfo_ne_top</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">X</span> : <a href="../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Y</span> : <a href="../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">X</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">Y</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">μ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">X</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Yo</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">Y</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hXs</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Xs</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hYo</span> : <span class="fn"><a href="../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">Yo</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../.././InformationTheory/Shannon/MutualInfo.html#InformationTheory.Shannon.mutualInfo">mutualInfo</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">Yo</span></span> <a href="../.././Init/Core.html#Ne">≠</a> <a href="../.././Mathlib/Order/Notation.html#Top.top">⊤</a></div></div><p>Mutual information is finite for finite alphabets.</p></div></div></main>
+<nav class="nav"><iframe src="../.././navbar.html" class="navframe" frameBorder="0"></iframe></nav></body></html>

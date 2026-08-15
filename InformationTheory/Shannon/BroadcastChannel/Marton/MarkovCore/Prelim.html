@@ -1,0 +1,334 @@
+<html lang="en"><head><meta charset="UTF-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1"></meta><link rel="stylesheet" href="../../../../.././style.css"></link><link rel="icon" href="../../../../.././favicon.svg"></link><link rel="mask-icon" href="../../../../.././favicon.svg" color="#000000"></link><link rel="prefetch" href="../../../../.././/declarations/declaration-data.bmp" as="image"></link><title>InformationTheory.Shannon.BroadcastChannel.Marton.MarkovCore.Prelim</title><script defer="true" src="../../../../.././mathjax-config.js"></script><script defer="true" src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="true" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>const SITE_ROOT="../../../../.././";</script><script>const MODULE_NAME="InformationTheory.Shannon.BroadcastChannel.Marton.MarkovCore.Prelim";</script><script type="module" src="../../../../.././jump-src.js"></script><script type="module" src="../../../../.././search.js"></script><script type="module" src="../../../../.././expand-nav.js"></script><script type="module" src="../../../../.././how-about.js"></script><script type="module" src="../../../../.././instances.js"></script><script type="module" src="../../../../.././importedBy.js"></script></head><body><input id="nav_toggle" type="checkbox"></input><header><h1><label for="nav_toggle"></label><span>Documentation</span></h1><h2 class="header_filename break_within"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">MarkovCore</span>.<span class="name">Prelim</span></h2><form id="search_form"><input type="text" name="q" autocomplete="off"></input>&#32;<button id="search_button" onclick="javascript: form.action='../../../../.././search.html';">Search</button></form></header><nav class="internal_nav"><p><a href="#top">return to top</a></p><p class="gh_nav_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean">source</a></p><div class="imports"><details><summary>Imports</summary><ul><li><a href="../../../../.././Init.html">Init</a></li><li><a href="../../../../.././InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.html">InformationTheory.Shannon.RateDistortion.AchievabilityJointStrongTypicality</a></li><li><a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/Setup.html">InformationTheory.Shannon.BroadcastChannel.Marton.Setup</a></li></ul></details><details><summary>Imported by</summary><ul id="imported-by-InformationTheory.Shannon.BroadcastChannel.Marton.MarkovCore.Prelim" class="imported-by-list"></ul></details></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.Marton.sum_map_real_singleton_mul"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">sum_map_real_singleton_mul</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.Marton.martonJointDistribution_real_singleton"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">martonJointDistribution_real_singleton</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.Marton.martonJointDistribution_map_VX"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">martonJointDistribution_map_VX</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.Marton.marton_map_V₁V₂"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">marton_map_V₁V₂</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.Marton.stronglyTypicalSet_mono_radius"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">stronglyTypicalSet_mono_radius</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.Marton.jointStronglyTypicalSet_mono_radius"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">jointStronglyTypicalSet_mono_radius</span></a></div></nav><main>
+<div class="mod_doc"><h1 id="Marton-s-inner-bound-coordinate-laws-shared-by-the-two-receivers" class="markdown-heading">Marton's inner bound — coordinate laws shared by the two receivers <a class="hover-link" href="#Marton-s-inner-bound-coordinate-laws-shared-by-the-two-receivers">#</a></h1><p>The conditional AEP of the Marton ensemble is proved once per receiver, and the two proofs share
+the facts about the per-coordinate law that do not see the receiver index: the singleton masses of
+<code>martonJointDistribution</code>, its <code>(V₁, V₂)</code>- and <code>((V₁, V₂), X)</code>-marginals, and the identity
+rewriting a sum against a pushed-forward law as a sum against the source law.  Radius monotonicity
+of the strongly typical sets is collected here as well, because an assembly consuming both
+receivers pins its blocks at the minimum of the two radii and has to reopen each pin at the radius
+its own receiver asks for.</p><h2 id="Main-statements" class="markdown-heading">Main statements <a class="hover-link" href="#Main-statements">#</a></h2><ul><li><code><a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.sum_map_real_singleton_mul">sum_map_real_singleton_mul</a></code> — a finite sum of a statistic against a pushed-forward law equals
+the sum of its pullback against the source law.</li><li><code><a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.martonJointDistribution_real_singleton">martonJointDistribution_real_singleton</a></code> — the mass the per-coordinate law puts on a quintuple
+factors as <code>pV{v} · K(v){x} · W(x){y}</code>.</li><li><code><a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.martonJointDistribution_map_VX">martonJointDistribution_map_VX</a></code> — the <code>((V₁, V₂), X)</code>-marginal of the per-coordinate law is
+<code>pV ⊗ₘ K</code>.</li><li><code><a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.marton_map_V₁V₂">marton_map_V₁V₂</a></code> — the ambient law of the auxiliary pair coordinate is <code>pV</code>.</li><li><code><a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.stronglyTypicalSet_mono_radius">stronglyTypicalSet_mono_radius</a></code> and <code><a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.jointStronglyTypicalSet_mono_radius">jointStronglyTypicalSet_mono_radius</a></code> — the strongly
+typical sets grow with the radius.</li></ul></div><div class="mod_doc"><h3 id="Sums-against-a-pushed-forward-law" class="markdown-heading">Sums against a pushed-forward law <a class="hover-link" href="#Sums-against-a-pushed-forward-law">#</a></h3></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.Marton.sum_map_real_singleton_mul"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean#L45-L59">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.sum_map_real_singleton_mul"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">sum_map_real_singleton_mul</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">γ</span> : <a href="../../../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">P</span> : <span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Finite.html#MeasureTheory.IsFiniteMeasure">MeasureTheory.IsFiniteMeasure</a> <span class="fn">P</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">g</span> : <span class="fn"><span class="fn">Ω</span> → <span class="fn">γ</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hg</span> : <span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#Measurable">Measurable</a> <span class="fn">g</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">f</span> : <span class="fn"><span class="fn">γ</span> → <a href="../../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn">∑ <span class="fn">c</span> : <span class="fn">γ</span>, <span class="fn"><span class="fn"><span class="fn">(<a href="../../../../.././Mathlib/MeasureTheory/Measure/Map.html#MeasureTheory.Measure.map">MeasureTheory.Measure.map</a> <span class="fn">g</span> <span class="fn">P</span>)</span>.<a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn">c</span><a href="../../../../.././Init/Core.html#Singleton.singleton">}</a></span> <a href="../../../../.././Init/Prelude.html#HMul.hMul">*</a> <span class="fn"><span class="fn">f</span> <span class="fn">c</span></span></span> <a href="../../../../.././Init/Prelude.html#Eq">=</a> <span class="fn">∑ <span class="fn">z</span> : <span class="fn">Ω</span>, <span class="fn"><span class="fn"><span class="fn">P</span>.<a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn">z</span><a href="../../../../.././Init/Core.html#Singleton.singleton">}</a></span> <a href="../../../../.././Init/Prelude.html#HMul.hMul">*</a> <span class="fn"><span class="fn">f</span> <span class="fn">(<span class="fn">g</span> <span class="fn">z</span>)</span></span></span></div></div></div></div><div class="mod_doc"><h3 id="Singleton-masses-of-the-per-coordinate-law" class="markdown-heading">Singleton masses of the per-coordinate law <a class="hover-link" href="#Singleton-masses-of-the-per-coordinate-law">#</a></h3></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.Marton.martonJointDistribution_real_singleton"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean#L63-L96">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.martonJointDistribution_real_singleton"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">martonJointDistribution_real_singleton</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">V₁</span> : <a href="../../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">V₂</span> : <a href="../../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₁</span> : <a href="../../../../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₂</span> : <a href="../../../../.././foundational_types.html">Type</a> u_5}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">pV</span> : <span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> (<span class="fn">V₁</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">V₂</span>)</span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">pV</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">K</span> : <span class="fn"><a href="../../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.Kernel">ProbabilityTheory.Kernel</a> (<span class="fn">V₁</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">V₂</span>) <span class="fn">α</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">K</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">W</span> : <span class="fn"><a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Basic.html#InformationTheory.Shannon.BroadcastChannel.BCChannel">BCChannel</a> <span class="fn">α</span> <span class="fn">β₁</span> <span class="fn">β₂</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">v</span> : <span class="fn">V₁</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">V₂</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">x</span> : <span class="fn">α</span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">y</span> : <span class="fn">β₁</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₂</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><span class="fn"><span class="fn">(<a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/Setup.html#InformationTheory.Shannon.BroadcastChannel.Marton.martonJointDistribution">martonJointDistribution</a> <span class="fn">pV</span> <span class="fn">K</span> <span class="fn">W</span>)</span>.<a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../../.././Init/Core.html#Singleton.singleton">{</a><a href="../../../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">v</span>.1</span><a href="../../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">v</span>.2</span><a href="../../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn">x</span><a href="../../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">y</span>.1</span><a href="../../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">y</span>.2</span><a href="../../../../.././Init/Prelude.html#Prod.mk">)</a><a href="../../../../.././Init/Core.html#Singleton.singleton">}</a></span> <a href="../../../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><span class="fn"><span class="fn">pV</span>.<a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn">v</span><a href="../../../../.././Init/Core.html#Singleton.singleton">}</a></span> <a href="../../../../.././Init/Prelude.html#HMul.hMul">*</a> <span class="fn"><span class="fn"><span class="fn">(<span class="fn">K</span> <span class="fn">v</span>)</span>.<a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn">x</span><a href="../../../../.././Init/Core.html#Singleton.singleton">}</a></span> <a href="../../../../.././Init/Prelude.html#HMul.hMul">*</a> <span class="fn"><span class="fn"><span class="fn">(<span class="fn">W</span> <span class="fn">x</span>)</span>.<a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn">y</span><a href="../../../../.././Init/Core.html#Singleton.singleton">}</a></span></div></div></div></div><div class="mod_doc"><h3 id="Marginals-of-the-per-coordinate-law" class="markdown-heading">Marginals of the per-coordinate law <a class="hover-link" href="#Marginals-of-the-per-coordinate-law">#</a></h3></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.Marton.martonJointDistribution_map_VX"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean#L100-L117">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.martonJointDistribution_map_VX"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">martonJointDistribution_map_VX</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">V₁</span> : <a href="../../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">V₂</span> : <a href="../../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₁</span> : <a href="../../../../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₂</span> : <a href="../../../../.././foundational_types.html">Type</a> u_5}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">pV</span> : <span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> (<span class="fn">V₁</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">V₂</span>)</span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">pV</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">K</span> : <span class="fn"><a href="../../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.Kernel">ProbabilityTheory.Kernel</a> (<span class="fn">V₁</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">V₂</span>) <span class="fn">α</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">K</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">W</span> : <span class="fn"><a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Basic.html#InformationTheory.Shannon.BroadcastChannel.BCChannel">BCChannel</a> <span class="fn">α</span> <span class="fn">β₁</span> <span class="fn">β₂</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/Map.html#MeasureTheory.Measure.map">MeasureTheory.Measure.map</a> <span class="fn">(fun (<span class="fn">q</span> : <span class="fn">V₁</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">V₂</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">α</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₁</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₂</span>) =&gt; <a href="../../../../.././Init/Prelude.html#Prod.mk">(</a><a href="../../../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">q</span>.1</span><a href="../../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn"><span class="fn">q</span>.2</span>.1</span><a href="../../../../.././Init/Prelude.html#Prod.mk">)</a><a href="../../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn"><span class="fn"><span class="fn">q</span>.2</span>.2</span>.1</span><a href="../../../../.././Init/Prelude.html#Prod.mk">)</a>)</span>
+    <span class="fn">(<a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/Setup.html#InformationTheory.Shannon.BroadcastChannel.Marton.martonJointDistribution">martonJointDistribution</a> <span class="fn">pV</span> <span class="fn">K</span> <span class="fn">W</span>)</span></span> <a href="../../../../.././Init/Prelude.html#Eq">=</a>   <span class="fn"><span class="fn"><span class="fn">pV</span>.<a href="../../../../.././Mathlib/Probability/Kernel/Composition/MeasureCompProd.html#MeasureTheory.Measure.compProd">compProd</a></span> <span class="fn">K</span></span></div></div></div></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.Marton.marton_map_V₁V₂"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean#L119-L128">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.marton_map_V₁V₂"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">marton_map_V₁V₂</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">V₁</span> : <a href="../../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">V₂</span> : <a href="../../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../../.././foundational_types.html">Type</a> u_3}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₁</span> : <a href="../../../../.././foundational_types.html">Type</a> u_4}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₂</span> : <a href="../../../../.././foundational_types.html">Type</a> u_5}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">V₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">V₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">pV</span> : <span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> (<span class="fn">V₁</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">V₂</span>)</span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">pV</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">K</span> : <span class="fn"><a href="../../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.Kernel">ProbabilityTheory.Kernel</a> (<span class="fn">V₁</span> <a href="../../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">V₂</span>) <span class="fn">α</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">K</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">W</span> : <span class="fn"><a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Basic.html#InformationTheory.Shannon.BroadcastChannel.BCChannel">BCChannel</a> <span class="fn">α</span> <span class="fn">β₁</span> <span class="fn">β₂</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/Map.html#MeasureTheory.Measure.map">MeasureTheory.Measure.map</a> <span class="fn">(<a href="../../../../.././InformationTheory/Shannon/ChannelCoding/Basic.html#InformationTheory.Shannon.ChannelCoding.jointSequence">ChannelCoding.jointSequence</a> <a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/Setup.html#InformationTheory.Shannon.BroadcastChannel.Marton.martonV₁s">martonV₁s</a> <a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/Setup.html#InformationTheory.Shannon.BroadcastChannel.Marton.martonV₂s">martonV₂s</a> <span class="fn">0</span>)</span> <span class="fn">(<a href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/Setup.html#InformationTheory.Shannon.BroadcastChannel.Marton.martonAmbientMeasure">martonAmbientMeasure</a> <span class="fn">pV</span> <span class="fn">K</span> <span class="fn">W</span>)</span></span> <a href="../../../../.././Init/Prelude.html#Eq">=</a> <span class="fn">pV</span></div></div></div></div><div class="mod_doc"><h3 id="Radius-monotonicity-of-the-strongly-typical-sets" class="markdown-heading">Radius monotonicity of the strongly typical sets <a class="hover-link" href="#Radius-monotonicity-of-the-strongly-typical-sets">#</a></h3></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.Marton.stronglyTypicalSet_mono_radius"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean#L140-L143">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.stronglyTypicalSet_mono_radius"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">stronglyTypicalSet_mono_radius</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">γ</span> : <a href="../../../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><a href="../../../../.././Init/Prelude.html#Nat">ℕ</a> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">γ</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">n</span> : <a href="../../../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">ε </span><span class="fn">ε'</span> : <a href="../../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hε</span> : <span class="fn">ε</span> <a href="../../../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn">ε'</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../../../.././InformationTheory/Shannon/StrongTypicality.html#InformationTheory.Shannon.stronglyTypicalSet">stronglyTypicalSet</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">n</span> <span class="fn">ε</span></span> <a href="../../../../.././Init/Core.html#HasSubset.Subset">⊆</a> <span class="fn"><a href="../../../../.././InformationTheory/Shannon/StrongTypicality.html#InformationTheory.Shannon.stronglyTypicalSet">stronglyTypicalSet</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">n</span> <span class="fn">ε'</span></span></div></div></div></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.Marton.jointStronglyTypicalSet_mono_radius"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.lean#L145-L148">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../../.././InformationTheory/Shannon/BroadcastChannel/Marton/MarkovCore/Prelim.html#InformationTheory.Shannon.BroadcastChannel.Marton.jointStronglyTypicalSet_mono_radius"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Marton</span>.<span class="name">jointStronglyTypicalSet_mono_radius</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">Ω</span> : <a href="../../../../.././foundational_types.html">Type</a> u_6}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">Ω</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">γ</span> : <a href="../../../../.././foundational_types.html">Type</a> u_7}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">γ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">δ</span> : <a href="../../../../.././foundational_types.html">Type</a> u_8}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">δ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#DecidableEq">DecidableEq</a> <span class="fn">δ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">δ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">δ</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">δ</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">μ</span> : <span class="fn"><a href="../../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> <span class="fn">Ω</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Xs</span> : <span class="fn"><a href="../../../../.././Init/Prelude.html#Nat">ℕ</a> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">γ</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">Ys</span> : <span class="fn"><a href="../../../../.././Init/Prelude.html#Nat">ℕ</a> → <span class="fn"><span class="fn">Ω</span> → <span class="fn">δ</span></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">n</span> : <a href="../../../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">ε </span><span class="fn">ε'</span> : <a href="../../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hε</span> : <span class="fn">ε</span> <a href="../../../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn">ε'</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../../../.././InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.html#InformationTheory.Shannon.jointStronglyTypicalSet">jointStronglyTypicalSet</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">Ys</span> <span class="fn">n</span> <span class="fn">ε</span></span> <a href="../../../../.././Init/Core.html#HasSubset.Subset">⊆</a> <span class="fn"><a href="../../../../.././InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.html#InformationTheory.Shannon.jointStronglyTypicalSet">jointStronglyTypicalSet</a> <span class="fn">μ</span> <span class="fn">Xs</span> <span class="fn">Ys</span> <span class="fn">n</span> <span class="fn">ε'</span></span></div></div></div></div></main>
+<nav class="nav"><iframe src="../../../../.././navbar.html" class="navframe" frameBorder="0"></iframe></nav></body></html>

@@ -1,0 +1,355 @@
+<html lang="en"><head><meta charset="UTF-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1"></meta><link rel="stylesheet" href="../../../.././style.css"></link><link rel="icon" href="../../../.././favicon.svg"></link><link rel="mask-icon" href="../../../.././favicon.svg" color="#000000"></link><link rel="prefetch" href="../../../.././/declarations/declaration-data.bmp" as="image"></link><title>InformationTheory.Shannon.BroadcastChannel.Superposition.Assembly</title><script defer="true" src="../../../.././mathjax-config.js"></script><script defer="true" src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="true" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script>const SITE_ROOT="../../../.././";</script><script>const MODULE_NAME="InformationTheory.Shannon.BroadcastChannel.Superposition.Assembly";</script><script type="module" src="../../../.././jump-src.js"></script><script type="module" src="../../../.././search.js"></script><script type="module" src="../../../.././expand-nav.js"></script><script type="module" src="../../../.././how-about.js"></script><script type="module" src="../../../.././instances.js"></script><script type="module" src="../../../.././importedBy.js"></script></head><body><input id="nav_toggle" type="checkbox"></input><header><h1><label for="nav_toggle"></label><span>Documentation</span></h1><h2 class="header_filename break_within"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">Superposition</span>.<span class="name">Assembly</span></h2><form id="search_form"><input type="text" name="q" autocomplete="off"></input>&#32;<button id="search_button" onclick="javascript: form.action='../../../.././search.html';">Search</button></form></header><nav class="internal_nav"><p><a href="#top">return to top</a></p><p class="gh_nav_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean">source</a></p><div class="imports"><details><summary>Imports</summary><ul><li><a href="../../../.././Init.html">Init</a></li><li><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/FullSupport.html">InformationTheory.Shannon.BroadcastChannel.Superposition.FullSupport</a></li></ul></details><details><summary>Imported by</summary><ul id="imported-by-InformationTheory.Shannon.BroadcastChannel.Superposition.Assembly" class="imported-by-list"></ul></details></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.uvInfo₂_toReal_sub_slack_le"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">uvInfo₂_toReal_sub_slack_le</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.uvInfoSum₂_toReal_sub_slack_le"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">uvInfoSum₂_toReal_sub_slack_le</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.sub_mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">sub_mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_uv_subset_superposition"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">bc_lessNoisy_uv_subset_superposition</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_capacity_eq_uv"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">bc_lessNoisy_capacity_eq_uv</span></a></div><div class="nav_link"><a class="break_within" href="#InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_superposition_eq_capacity"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">bc_lessNoisy_superposition_eq_capacity</span></a></div></nav><main>
+<div class="mod_doc"><h1 id="Broadcast-channel-the-UV-outer-region-of-a-less-noisy-channel-is-achievable" class="markdown-heading">Broadcast channel — the UV outer region of a less noisy channel is achievable <a class="hover-link" href="#Broadcast-channel-the-UV-outer-region-of-a-less-noisy-channel-is-achievable">#</a></h1><p>The UV outer region is indexed by five-tuple laws whose auxiliaries range over a countable
+alphabet, the superposition inner bound by achievability pairs over a finite one.  Truncating the
+first auxiliary at a level <code>m</code> moves a law of the outer region onto a finite alphabet at a cost
+the tail alone carries, and perturbing the achievability pair it yields toward the uniform law
+repairs that pair's support at a cost any positive slack covers.</p><p>The truncation leaves the corner slot of the first receiver alone, because that slot reads the
+second auxiliary, so the whole cost of the truncation is charged to the second rate once, and the
+same subtraction pays for the sum-rate constraint as well.  The perturbation slack is subtracted
+from both rates.  Neither cost depends on the other, so both vanish along one sequence of indices,
+and the inner bound is a closure, which recovers the rate pair itself from the shifted ones.
+Combined with the outer bound and with the achievability of the inner one, this describes the
+capacity region of a less noisy broadcast channel by a single-letter expression.  Positive mass on
+every output pair is asked for by the achievability step alone; the inclusion of the outer region
+in the inner bound needs nothing beyond the less noisy hypothesis.</p><h2 id="Main-statements" class="markdown-heading">Main statements <a class="hover-link" href="#Main-statements">#</a></h2><ul><li><code><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.html#InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_capacity_eq_uv">bc_lessNoisy_capacity_eq_uv</a></code> — the single-letter characterization: the capacity region of a
+less noisy broadcast channel whose transition law gives every output pair positive mass is its
+UV outer region <code>bcOuterRegionUV</code>.</li><li><code><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.html#InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_superposition_eq_capacity">bc_lessNoisy_superposition_eq_capacity</a></code> — the same capacity region read off the
+two-constraint superposition inner bound instead of the outer bound.</li><li><code><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.html#InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_uv_subset_superposition">bc_lessNoisy_uv_subset_superposition</a></code> — the inclusion the two equalities rest on: the UV
+outer region of a less noisy channel is contained in the two-constraint superposition inner
+bound over the full-support achievability pairs.</li></ul></div><div class="mod_doc"><h2 id="The-reverse-inclusion" class="markdown-heading">The reverse inclusion <a class="hover-link" href="#The-reverse-inclusion">#</a></h2></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.uvInfo₂_toReal_sub_slack_le"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean#L54-L61">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.html#InformationTheory.Shannon.BroadcastChannel.uvInfo₂_toReal_sub_slack_le"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">uvInfo₂_toReal_sub_slack_le</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../.././foundational_types.html">Type</a> u}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₁</span> : <a href="../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₂</span> : <a href="../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">ν</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> (<a href="../../../.././Init/Prelude.html#Nat">ℕ</a> <a href="../../../.././Init/Prelude.html#Prod">×</a> <a href="../../../.././Init/Prelude.html#Nat">ℕ</a> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">α</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₁</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₂</span>)</span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">ν</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">m</span> : <a href="../../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><span class="fn">(<a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Bridge.html#InformationTheory.Shannon.BroadcastChannel.uvInfo₂">uvInfo₂</a> <span class="fn">ν</span>)</span>.<a href="../../../.././Mathlib/Data/ENNReal/Basic.html#ENNReal.toReal">toReal</a></span> <a href="../../../.././Init/Prelude.html#HSub.hSub">-</a> <span class="fn"><span class="fn">(<a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Quantization.html#InformationTheory.Shannon.BroadcastChannel.uvQuantizeSlack">uvQuantizeSlack</a> <span class="fn">ν</span> <span class="fn">m</span>)</span>.<a href="../../../.././Mathlib/Data/ENNReal/Basic.html#ENNReal.toReal">toReal</a></span> <a href="../../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn"><span class="fn">(<a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Bridge.html#InformationTheory.Shannon.BroadcastChannel.uvInfo₂">uvInfo₂</a> <span class="fn">(<a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Quantization.html#InformationTheory.Shannon.BroadcastChannel.uvQuantizeLaw">uvQuantizeLaw</a> <span class="fn">ν</span> <span class="fn">m</span>)</span>)</span>.<a href="../../../.././Mathlib/Data/ENNReal/Basic.html#ENNReal.toReal">toReal</a></span></div></div></div></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.uvInfoSum₂_toReal_sub_slack_le"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean#L64-L72">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.html#InformationTheory.Shannon.BroadcastChannel.uvInfoSum₂_toReal_sub_slack_le"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">uvInfoSum₂_toReal_sub_slack_le</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../.././foundational_types.html">Type</a> u}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₁</span> : <a href="../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₂</span> : <a href="../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">W</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Basic.html#InformationTheory.Shannon.BroadcastChannel.BCChannel">BCChannel</a> <span class="fn">α</span> <span class="fn">β₁</span> <span class="fn">β₂</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">ν</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> (<a href="../../../.././Init/Prelude.html#Nat">ℕ</a> <a href="../../../.././Init/Prelude.html#Prod">×</a> <a href="../../../.././Init/Prelude.html#Nat">ℕ</a> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">α</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₁</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₂</span>)</span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">ν</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">h</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Region.html#InformationTheory.Shannon.BroadcastChannel.IsUVChannelLaw">IsUVChannelLaw</a> <span class="fn">W</span> <span class="fn">ν</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">m</span> : <a href="../../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><span class="fn">(<a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Bridge.html#InformationTheory.Shannon.BroadcastChannel.uvInfoSum₂">uvInfoSum₂</a> <span class="fn">ν</span>)</span>.<a href="../../../.././Mathlib/Data/ENNReal/Basic.html#ENNReal.toReal">toReal</a></span> <a href="../../../.././Init/Prelude.html#HSub.hSub">-</a> <span class="fn"><span class="fn">(<a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Quantization.html#InformationTheory.Shannon.BroadcastChannel.uvQuantizeSlack">uvQuantizeSlack</a> <span class="fn">ν</span> <span class="fn">m</span>)</span>.<a href="../../../.././Mathlib/Data/ENNReal/Basic.html#ENNReal.toReal">toReal</a></span> <a href="../../../.././Init/Prelude.html#LE.le">≤</a> <span class="fn"><span class="fn">(<a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Bridge.html#InformationTheory.Shannon.BroadcastChannel.uvInfoSum₂">uvInfoSum₂</a> <span class="fn">(<a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Quantization.html#InformationTheory.Shannon.BroadcastChannel.uvQuantizeLaw">uvQuantizeLaw</a> <span class="fn">ν</span> <span class="fn">m</span>)</span>)</span>.<a href="../../../.././Mathlib/Data/ENNReal/Basic.html#ENNReal.toReal">toReal</a></span></div></div></div></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.sub_mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean#L74-L90">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.html#InformationTheory.Shannon.BroadcastChannel.sub_mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">sub_mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../.././foundational_types.html">Type</a> u}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₁</span> : <a href="../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₂</span> : <a href="../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">W</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Basic.html#InformationTheory.Shannon.BroadcastChannel.BCChannel">BCChannel</a> <span class="fn">α</span> <span class="fn">β₁</span> <span class="fn">β₂</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hln</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Classes.html#InformationTheory.Shannon.BroadcastChannel.IsBCLessNoisy">IsBCLessNoisy</a> <span class="fn">W</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">ν</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> (<a href="../../../.././Init/Prelude.html#Nat">ℕ</a> <a href="../../../.././Init/Prelude.html#Prod">×</a> <a href="../../../.././Init/Prelude.html#Nat">ℕ</a> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">α</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₁</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₂</span>)</span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">ν</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">h</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Region.html#InformationTheory.Shannon.BroadcastChannel.IsUVChannelLaw">IsUVChannelLaw</a> <span class="fn">W</span> <span class="fn">ν</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">p</span> : <a href="../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a> <a href="../../../.././Init/Prelude.html#Prod">×</a> <a href="../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hp</span> : <span class="fn">p</span> <a href="../../../.././Init/Prelude.html#Membership.mem">∈</a> <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Region.html#InformationTheory.Shannon.BroadcastChannel.uvRegion">uvRegion</a> <span class="fn">ν</span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">m</span> : <a href="../../../.././Init/Prelude.html#Nat">ℕ</a>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">δ</span> : <a href="../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hδ</span> : <span class="fn">0</span> <a href="../../../.././Init/Prelude.html#LT.lt">&lt;</a> <span class="fn">δ</span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><a href="../../../.././Init/Prelude.html#Prod.mk">(</a><span class="fn"><span class="fn">p</span>.1</span> <a href="../../../.././Init/Prelude.html#HSub.hSub">-</a> <span class="fn">δ</span><a href="../../../.././Init/Prelude.html#Prod.mk">,</a> <span class="fn"><span class="fn">p</span>.2</span> <a href="../../../.././Init/Prelude.html#HSub.hSub">-</a> <span class="fn"><span class="fn">(<a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Quantization.html#InformationTheory.Shannon.BroadcastChannel.uvQuantizeSlack">uvQuantizeSlack</a> <span class="fn">ν</span> <span class="fn">m</span>)</span>.<a href="../../../.././Mathlib/Data/ENNReal/Basic.html#ENNReal.toReal">toReal</a></span> <a href="../../../.././Init/Prelude.html#HSub.hSub">-</a> <span class="fn">δ</span><a href="../../../.././Init/Prelude.html#Prod.mk">)</a> <a href="../../../.././Init/Prelude.html#Membership.mem">∈</a> <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Region.html#InformationTheory.Shannon.BroadcastChannel.bcSuperpositionRegionNoSumRate">bcSuperpositionRegionNoSumRate</a> <span class="fn">W</span></span></div></div></div></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean#L92-L109">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.html#InformationTheory.Shannon.BroadcastChannel.mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">mem_bcSuperpositionRegionNoSumRate_of_mem_uvRegion</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../.././foundational_types.html">Type</a> u}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₁</span> : <a href="../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₂</span> : <a href="../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">W</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Basic.html#InformationTheory.Shannon.BroadcastChannel.BCChannel">BCChannel</a> <span class="fn">α</span> <span class="fn">β₁</span> <span class="fn">β₂</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hln</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Classes.html#InformationTheory.Shannon.BroadcastChannel.IsBCLessNoisy">IsBCLessNoisy</a> <span class="fn">W</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">ν</span> : <span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure">MeasureTheory.Measure</a> (<a href="../../../.././Init/Prelude.html#Nat">ℕ</a> <a href="../../../.././Init/Prelude.html#Prod">×</a> <a href="../../../.././Init/Prelude.html#Nat">ℕ</a> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">α</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₁</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₂</span>)</span>}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Measure/Typeclasses/Probability.html#MeasureTheory.IsProbabilityMeasure">MeasureTheory.IsProbabilityMeasure</a> <span class="fn">ν</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">h</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Region.html#InformationTheory.Shannon.BroadcastChannel.IsUVChannelLaw">IsUVChannelLaw</a> <span class="fn">W</span> <span class="fn">ν</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">p</span> : <a href="../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a> <a href="../../../.././Init/Prelude.html#Prod">×</a> <a href="../../../.././Mathlib/Data/Real/Basic.html#Real">ℝ</a>}</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hp</span> : <span class="fn">p</span> <a href="../../../.././Init/Prelude.html#Membership.mem">∈</a> <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Region.html#InformationTheory.Shannon.BroadcastChannel.uvRegion">uvRegion</a> <span class="fn">ν</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn">p</span> <a href="../../../.././Init/Prelude.html#Membership.mem">∈</a> <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Region.html#InformationTheory.Shannon.BroadcastChannel.bcSuperpositionRegionNoSumRate">bcSuperpositionRegionNoSumRate</a> <span class="fn">W</span></span></div></div></div></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_uv_subset_superposition"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean#L111-L122">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.html#InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_uv_subset_superposition"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">bc_lessNoisy_uv_subset_superposition</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../.././foundational_types.html">Type</a> u}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₁</span> : <a href="../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₂</span> : <a href="../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">W</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Basic.html#InformationTheory.Shannon.BroadcastChannel.BCChannel">BCChannel</a> <span class="fn">α</span> <span class="fn">β₁</span> <span class="fn">β₂</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hln</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Classes.html#InformationTheory.Shannon.BroadcastChannel.IsBCLessNoisy">IsBCLessNoisy</a> <span class="fn">W</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Region.html#InformationTheory.Shannon.BroadcastChannel.bcOuterRegionUV">bcOuterRegionUV</a> <span class="fn">W</span></span> <a href="../../../.././Init/Core.html#HasSubset.Subset">⊆</a> <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Region.html#InformationTheory.Shannon.BroadcastChannel.bcSuperpositionRegionNoSumRate">bcSuperpositionRegionNoSumRate</a> <span class="fn">W</span></span></div></div><p>The UV outer region of a less noisy broadcast channel is contained in the two-constraint
+superposition inner bound over the full-support achievability pairs.  The channel needs no
+support hypothesis here: the inclusion compares two single-letter regions, and positive mass on
+every output pair is asked for only where the inner bound is turned into codes
+(<code>bcSuperpositionRegionNoSumRate_subset_capacity</code>).</p></div></div><div class="mod_doc"><h2 id="The-capacity-region-of-a-less-noisy-channel" class="markdown-heading">The capacity region of a less noisy channel <a class="hover-link" href="#The-capacity-region-of-a-less-noisy-channel">#</a></h2></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_capacity_eq_uv"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean#L138-L148">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.html#InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_capacity_eq_uv"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">bc_lessNoisy_capacity_eq_uv</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../.././foundational_types.html">Type</a> u}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₁</span> : <a href="../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₂</span> : <a href="../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">W</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Basic.html#InformationTheory.Shannon.BroadcastChannel.BCChannel">BCChannel</a> <span class="fn">α</span> <span class="fn">β₁</span> <span class="fn">β₂</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hW</span> : <span class="fn">∀ (<span class="fn">a</span> : <span class="fn">α</span>) (<span class="fn">b</span> : <span class="fn">β₁</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₂</span>), <span class="fn">0</span> <a href="../../../.././Init/Prelude.html#LT.lt">&lt;</a> <span class="fn"><span class="fn"><span class="fn">(<span class="fn">W</span> <span class="fn">a</span>)</span>.<a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn">b</span><a href="../../../.././Init/Core.html#Singleton.singleton">}</a></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hln</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Classes.html#InformationTheory.Shannon.BroadcastChannel.IsBCLessNoisy">IsBCLessNoisy</a> <span class="fn">W</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Operational.html#InformationTheory.Shannon.BroadcastChannel.bcCapacityRegion">bcCapacityRegion</a> <span class="fn">W</span></span> <a href="../../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/Region.html#InformationTheory.Shannon.BroadcastChannel.bcOuterRegionUV">bcOuterRegionUV</a> <span class="fn">W</span></span></div></div><p>The capacity region of a less noisy broadcast channel whose transition law gives every output
+pair positive mass is its UV outer region <code>bcOuterRegionUV</code>, a single-letter expression in the
+four information slots of a five-tuple law.</p></div></div><div class="decl" id="InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_superposition_eq_capacity"><div class="theorem"><div class="gh_link"><a href="https://github.com/FujiHaruka/information-theory/blob/ca4fd931952b5e93045d210007bdd7e14c118d34/InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.lean#L150-L155">source</a></div><div class="decl_header"><span class="decl_kind">theorem</span>
+<span class="decl_name"><a class="break_within" href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Assembly.html#InformationTheory.Shannon.BroadcastChannel.bc_lessNoisy_superposition_eq_capacity"><span class="name">InformationTheory</span>.<span class="name">Shannon</span>.<span class="name">BroadcastChannel</span>.<span class="name">bc_lessNoisy_superposition_eq_capacity</span></a></span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">α</span> : <a href="../../../.././foundational_types.html">Type</a> u}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₁</span> : <a href="../../../.././foundational_types.html">Type</a> u_1}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">{<span class="fn">β₂</span> : <a href="../../../.././foundational_types.html">Type</a> u_2}</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">α</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₁</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Data/Fintype/Defs.html#Fintype">Fintype</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Init/Prelude.html#Nonempty">Nonempty</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSpace">MeasurableSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/MeasurableSpace/Defs.html#MeasurableSingletonClass">MeasurableSingletonClass</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/MeasureTheory/Constructions/Polish/Basic.html#StandardBorelSpace">StandardBorelSpace</a> <span class="fn">β₂</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">W</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Basic.html#InformationTheory.Shannon.BroadcastChannel.BCChannel">BCChannel</a> <span class="fn">α</span> <span class="fn">β₁</span> <span class="fn">β₂</span></span>)</span></span>
+<span class="impl_arg"><span class="decl_args">
+<span class="fn">[<span class="fn"><a href="../../../.././Mathlib/Probability/Kernel/Defs.html#ProbabilityTheory.IsMarkovKernel">ProbabilityTheory.IsMarkovKernel</a> <span class="fn">W</span></span>]</span></span>
+</span><span class="decl_args">
+<span class="fn">(<span class="fn">hW</span> : <span class="fn">∀ (<span class="fn">a</span> : <span class="fn">α</span>) (<span class="fn">b</span> : <span class="fn">β₁</span> <a href="../../../.././Init/Prelude.html#Prod">×</a> <span class="fn">β₂</span>), <span class="fn">0</span> <a href="../../../.././Init/Prelude.html#LT.lt">&lt;</a> <span class="fn"><span class="fn"><span class="fn">(<span class="fn">W</span> <span class="fn">a</span>)</span>.<a href="../../../.././Mathlib/MeasureTheory/Measure/MeasureSpaceDef.html#MeasureTheory.Measure.real">real</a></span> <a href="../../../.././Init/Core.html#Singleton.singleton">{</a><span class="fn">b</span><a href="../../../.././Init/Core.html#Singleton.singleton">}</a></span></span>)</span></span>
+<span class="decl_args">
+<span class="fn">(<span class="fn">hln</span> : <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Classes.html#InformationTheory.Shannon.BroadcastChannel.IsBCLessNoisy">IsBCLessNoisy</a> <span class="fn">W</span></span>)</span></span>
+<span class="decl_args"> :</span><div class="decl_type"><span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Superposition/Region.html#InformationTheory.Shannon.BroadcastChannel.bcSuperpositionRegionNoSumRate">bcSuperpositionRegionNoSumRate</a> <span class="fn">W</span></span> <a href="../../../.././Init/Prelude.html#Eq">=</a> <span class="fn"><a href="../../../.././InformationTheory/Shannon/BroadcastChannel/Operational.html#InformationTheory.Shannon.BroadcastChannel.bcCapacityRegion">bcCapacityRegion</a> <span class="fn">W</span></span></div></div></div></div></main>
+<nav class="nav"><iframe src="../../../.././navbar.html" class="navframe" frameBorder="0"></iframe></nav></body></html>
