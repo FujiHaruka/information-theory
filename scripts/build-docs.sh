@@ -25,8 +25,17 @@ DOCGEN="$ROOT/.lake/packages/doc-gen4/.lake/build/bin/doc-gen4"
 DOC_OUT="$ROOT/.lake/build/doc"
 PORT="${PORT:-8000}"
 
-echo "==> [1/4] doc-gen4 executable (no-op if current)"
-lake build doc-gen4/doc-gen4
+# doc-gen4 is a development-only dependency (see lakefile.lean), so it is absent from the
+# committed manifest. Resolving it needs `-R -Kdev=on`, which rewrites lake-manifest.json;
+# the release manifest is restored afterwards so the committed one stays free of tooling.
+echo "==> [1/4] doc-gen4 executable (no-op if already built)"
+if [ ! -x "$DOCGEN" ]; then
+  trap 'lake -R update >/dev/null' EXIT
+  lake -R -Kdev=on update
+  lake -R -Kdev=on build doc-gen4/doc-gen4
+  lake -R update >/dev/null
+  trap - EXIT
+fi
 
 echo "==> [2/4] InformationTheory oleans (no-op if current)"
 lake build InformationTheory

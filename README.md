@@ -198,3 +198,29 @@ Library totals, recounted on every regeneration: **4,111 theorems and lemmas**, 
 <!-- THEOREMS:END -->
 
 The library root [`InformationTheory.lean`](InformationTheory.lean) imports every module.
+
+## Use it as a dependency
+
+Requires the Lean toolchain pinned in [`lean-toolchain`](lean-toolchain) — `leanprover/lean4:v4.31.0`,
+matching Mathlib `v4.31.0`. Add to your `lakefile.toml`:
+
+```toml
+[[require]]
+name = "InformationTheory"
+git = "https://github.com/FujiHaruka/information-theory"
+rev = "v1.0.0"
+```
+
+Each release carries a prebuilt archive of the library's oleans, and Lake downloads it instead
+of compiling the ~130k lines from source. The download applies to tagged revisions only; on any
+untagged revision, or if the fetch fails, Lake reports it and falls back to a source build.
+
+Note that a matching toolchain is what makes the prebuilt artifacts usable — a project on a
+different Lean or Mathlib version will rebuild from source regardless.
+
+## Development
+
+`lake build` and `lake env lean <file>` need no extra flags. The Mathlib search tool (loogle)
+and the API documentation generator (doc-gen4) are deliberately kept out of the published
+dependency set, so rebuilding either of them takes `lake -R -Kdev=on update`; see
+[`CLAUDE.md`](CLAUDE.md) for the round trip that restores the committed manifest.

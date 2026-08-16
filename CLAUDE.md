@@ -13,6 +13,7 @@ A Lean 4 + Mathlib formalization project. Scope evolves; for the current focus s
 
 - This is a theorem-proving project, so **do not add a `[[lean_exe]]` target**. An executable target forces native compilation (`.c.o`) of all of Mathlib, which takes minutes.
 - A single-file `lake env lean <file>` should finish within a few seconds once Mathlib oleans are warm. If it doesn't, suspect the imports.
+- **The dev tooling (`loogle`, `doc-gen4`) is a conditional dependency** (`lakefile.lean`, guarded by `meta if (get_config? dev).isSome`), so that consumers of the library do not clone it. Their already-built binaries under `.lake/packages/*/.lake/build/bin/` keep working without any flag — **only re-resolving or rebuilding a tool needs `lake -R -Kdev=on update`** (`-R` is required: without it Lake reuses the cached config olean and the guard never re-fires). That command rewrites `lake-manifest.json`, so **restore the release manifest with `lake -R update` before committing** — the committed manifest must list Mathlib and its transitive deps only. `scripts/build-docs.sh` already does this round trip itself.
 
 ## Import Policy
 
@@ -46,9 +47,13 @@ Required metadata for wall verdicts, cause tags, and the overturn-analysis table
 
 For "does Mathlib have lemma X?" questions, **try `loogle` before `rg`/`grep`**. Loogle answers authoritatively (e.g., `Found 0 declarations`); negative grep can miss differently-named lemmas.
 
-- **One-time index build** (~2 min, ~350 MB, gitignored under `.lake/`):
+- **One-time index build** (~2 min, ~350 MB, gitignored under `.lake/`) — loogle is a dev-only
+  dependency, so this is the one step that needs the `dev` config, and the release manifest has
+  to be restored afterwards (→ "Build Setup"):
   ```bash
-  mkdir -p .lake/build && lake exe loogle --write-index .lake/build/loogle.index
+  mkdir -p .lake/build && lake -R -Kdev=on update \
+    && lake -R -Kdev=on exe loogle --write-index .lake/build/loogle.index
+  lake -R update   # restore the committed (release) manifest
   ```
 - **Per-query** — invoke the binary directly (skip `lake env`):
   ```bash

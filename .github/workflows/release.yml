@@ -1,0 +1,46 @@
+name: Release
+
+# Attaches prebuilt oleans to the GitHub release for a tag. `preferReleaseBuild` in
+# lakefile.lean makes Lake fetch that archive when this library is used as a dependency, so
+# downstream packages skip a full source build (on a fetch failure Lake warns and builds from
+# source). Lake resolves the download as `<releaseRepo>/releases/download/<tag>/<buildArchive>`,
+# so the asset name must stay in sync with `buildArchive` in lakefile.lean.
+#
+# The build runs on a clean checkout, which keeps documentation output and search indexes —
+# both large, and neither of them a build product a consumer needs — out of the archive.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build and attach the archive to
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+
+      - uses: leanprover/lean-action@v1
+
+      - name: Report what the archive will contain
+        run: du -sh .lake/build/* | sort -rh
+
+      - name: Create the release if it does not exist yet
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 \
+            || gh release create "$TAG" --title "$TAG" --generate-notes
+
+      - name: Pack and upload the build archive
+        run: lake upload "$TAG"
