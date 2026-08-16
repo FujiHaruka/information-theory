@@ -1,836 +1,533 @@
-@import url('https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css');
-@import url('https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.051/juliamono.css');
+/* ==========================================================================
+   lean-doc — the whole stylesheet.
 
-* {
-    box-sizing: border-box;
+   No framework, no webfont, no CDN: a site built by `lean-doc build` has to
+   render from a bare directory with no network at all (plan 決定 1 / 2).
+
+   Three layers, in this order:
+     1. reset     — the handful of browser defaults that get in the way
+     2. tokens    — every colour and metric, once, via `light-dark()`
+     3. component — topbar, sidebar, page, declaration, docstring, search
+
+   The colour pairs are written `light-dark(light, dark)` so both themes sit
+   on one line and cannot drift apart. `color-scheme` on :root decides which
+   half wins; the theme toggle sets `data-theme` and overrides it.
+   ========================================================================== */
+
+/* -- 1. reset ------------------------------------------------------------ */
+
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition-duration: 0ms !important; animation-duration: 0ms !important; }
 }
 
-body {
-    font-size: 17px;
-    font-variant-ligatures: none;
-    font-family: 'Lato Medium';
-    color: var(--text-color);
-    background: var(--body-bg);
-}
+img, svg { display: block; max-width: 100%; }
+button, input, select { font: inherit; color: inherit; }
+button { background: none; border: 0; cursor: pointer; }
+ul, ol { padding: 0; }
+a { color: inherit; }
 
-input, select, textarea, button{font-family:inherit;}
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
 
-a {
-   color: var(--link-color);
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Lato Medium';
-}
-
-body { line-height: 1.5; }
-nav { line-height: normal; }
+/* -- 2. tokens ----------------------------------------------------------- */
 
 :root {
-    --header-height: 3em;
-    --fragment-offset: calc(var(--header-height) + 1em);
-    --content-width: 55vw;
+  color-scheme: light dark;
 
-    --header-bg: #f8f8f8;
-    --body-bg: white;
-    --code-bg: #f3f3f3;
-    --text-color: black;
-    --link-color: hsl(210, 100%, 30%);
+  --bg:        light-dark(#ffffff, #15181c);
+  --bg-sub:    light-dark(#f7f8fa, #1b1f24);
+  --bg-code:   light-dark(#f2f5f8, #21262d);
+  --bg-hover:  light-dark(#eaeef3, #262c33);
+  --bg-sel:    light-dark(#e4edfb, #23324a);
 
-    --implicit-arg-text-color: var(--text-color);
+  --fg:        light-dark(#15191e, #dfe4ea);
+  --fg-dim:    light-dark(#57616e, #a3adb9);
+  /* Not lighter than this: `--fg-faint` carries the `source` links, the
+     breadcrumbs and the sidebar headings, and it has to clear 4.5:1 against
+     both `--bg` and `--bg-sub`. */
+  --fg-faint:  light-dark(#69737f, #8d97a3);
 
-    --def-color: #92dce5;
-    --def-color-hsl-angle: 187;
-    --theorem-color: #8fe388;
-    --theorem-color-hsl-angle: 115;
-    --axiom-and-constant-color: #f44708;
-    --axiom-and-constant-color-hsl-angle: 16;
-    --structure-and-inductive-color: #f0a202;
-    --structure-and-inductive-color-hsl-angle: 40;
-    --starting-percentage: 100;
+  --line:      light-dark(#e2e7ed, #2b3138);
+  --line-soft: light-dark(#eef1f5, #23282e);
 
-    --hamburger-bg-color: #eee;
-    --hamburger-active-color: white;
-    --hamburger-border-color: #ccc;
+  --link:      light-dark(#1a5fbd, #77b0f5);
+  --link-hov:  light-dark(#10448f, #a6ccfb);
+  --focus:     light-dark(#2f80ed, #74a9f0);
 
-    --tags-border-color: #555;
+  /* Declaration kinds. Five families, not one per keyword: a reader is
+     looking for "is this a proposition, a definition or a type", and ten
+     colours would answer a question nobody asked. */
+  --k-prop:    light-dark(#7250c9, #b39cf0);  /* theorem, axiom          */
+  --k-def:     light-dark(#1f7a52, #63c79b);  /* def, abbrev, opaque     */
+  --k-type:    light-dark(#a35410, #e0a061);  /* structure, class, ind.  */
+  --k-inst:    light-dark(#1a6a91, #6cb6d9);  /* instance                */
+  --k-other:   light-dark(#6b7684, #949eaa);  /* ctor, everything else   */
 
-    --fragment-offset: calc(var(--header-height) + 1em);
-    --content-width: 55vw;
-}
-/* automatic dark theme if no javascript */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --header-bg: #111010;
-        --body-bg: #171717;
-        --code-bg: #363333;
-        --text-color: #eee;
-        --link-color: #58a6ff;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+          Arial, "Noto Sans", sans-serif;
+  /* No webfont, so the mathematics has to come out of what is installed.
+     `DejaVu Sans Mono` carries most of Lean's operators on Linux, `Menlo`
+     on macOS, `Consolas` on Windows; the last three are the fallbacks that
+     actually have ℝ ℕ ∑ ∈ ₁ (plan 決定 2, UI-V1). */
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+          "DejaVu Sans Mono", "Liberation Mono", "Noto Sans Mono", monospace;
 
-        --implicit-arg-text-color: var(--text-color);
-
-        --def-color: #1F497F;
-        --def-color-hsl-angle: 214;
-        --theorem-color: #134E2D;
-        --theorem-color-hsl-angle: 146;
-        --axiom-and-constant-color: #6B1B1A;
-        --axiom-and-constant-color-hsl-angle: 1;
-        --structure-and-inductive-color: #73461C;
-        --structure-and-inductive-color-hsl-angle: 29;
-        --starting-percentage: 30;
-
-        --hamburger-bg-color: #2d2c2c;
-        --hamburger-active-color: black;
-        --hamburger-border-color: #717171;
-
-        --tags-border-color: #AAA;
-    }
+  --topbar-h: 3rem;
+  --side-w: 17.5rem;
+  --radius: 6px;
 }
 
-[data-theme="light"] {
-    color-scheme: light;
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
 
-    --header-height: 3em;
-    --fragment-offset: calc(var(--header-height) + 1em);
-    --content-width: 55vw;
+/* -- 3. base ------------------------------------------------------------- */
 
-    --header-bg: #f8f8f8;
-    --body-bg: white;
-    --code-bg: #f3f3f3;
-    --text-color: black;
-    --link-color: hsl(210, 100%, 30%);
-
-    --implicit-arg-text-color: var(--text-color);
-
-    --def-color: #92dce5;
-    --def-color-hsl-angle: 187;
-    --theorem-color: #8fe388;
-    --theorem-color-hsl-angle: 115;
-    --axiom-and-constant-color: #f44708;
-    --axiom-and-constant-color-hsl-angle: 16;
-    --structure-and-inductive-color: #f0a202;
-    --structure-and-inductive-color-hsl-angle: 40;
-    --starting-percentage: 100;
-
-    --hamburger-bg-color: #eee;
-    --hamburger-active-color: white;
-    --hamburger-border-color: #ccc;
-
-    --tags-border-color: #555;
-
-    --fragment-offset: calc(var(--header-height) + 1em);
-    --content-width: 55vw;
+body {
+  font-family: var(--font);
+  line-height: 1.6;
+  color: var(--fg);
+  background: var(--bg);
+  overflow-wrap: break-word;
 }
 
-[data-theme="dark"] {
-    color-scheme: dark;
+a { color: var(--link); text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
+a:hover { color: var(--link-hov); text-decoration-color: currentColor; }
 
-    --header-bg: #111010;
-    --body-bg: #171717;
-    --code-bg: #363333;
-    --text-color: #eee;
-    --link-color: #58a6ff;
+code, pre, .sig, .tree, .toc a, .decl-name, kbd { font-family: var(--mono); }
 
-    --implicit-arg-text-color: var(--text-color);
+.skip {
+  position: absolute; left: .5rem; top: -3rem; z-index: 100;
+  padding: .5rem .75rem; background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--radius); transition: top .15s ease;
+}
+.skip:focus { top: .5rem; }
 
-    --def-color: #1F497F;
-    --def-color-hsl-angle: 214;
-    --theorem-color: #134E2D;
-    --theorem-color-hsl-angle: 146;
-    --axiom-and-constant-color: #6B1B1A;
-    --axiom-and-constant-color-hsl-angle: 1;
-    --structure-and-inductive-color: #73461C;
-    --structure-and-inductive-color-hsl-angle: 29;
-    --starting-percentage: 30;
+/* -- 4. topbar ----------------------------------------------------------- */
 
-    --hamburger-bg-color: #2d2c2c;
-    --hamburger-active-color: black;
-    --hamburger-border-color: #717171;
-
-    --tags-border-color: #AAA;
+.topbar {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: .5rem;
+  height: var(--topbar-h);
+  padding-inline: .75rem;
+  background: color-mix(in srgb, var(--bg-sub) 92%, transparent);
+  -webkit-backdrop-filter: saturate(1.6) blur(8px);
+  backdrop-filter: saturate(1.6) blur(8px);
+  border-bottom: 1px solid var(--line);
 }
 
-@supports (width: min(10px, 5vw)) {
-    :root {
-        --content-width: clamp(20em, 55vw, 60em);
-    }
+.iconbtn {
+  display: grid; place-items: center;
+  width: 2.25rem; height: 2.25rem; flex: none;
+  border-radius: var(--radius); color: var(--fg-dim);
+}
+.iconbtn:hover { background: var(--bg-hover); color: var(--fg); }
+.iconbtn svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.iconbtn[aria-pressed="true"] { color: var(--fg); }
+
+.home {
+  font-weight: 600; color: var(--fg); text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.home:hover { color: var(--link); }
+
+/* -- 5. search ----------------------------------------------------------- */
+
+.search { position: relative; margin-left: auto; flex: 1 1 12rem; max-width: 26rem; }
+.search input {
+  width: 100%; height: 2.25rem;
+  padding: 0 .7rem; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg); color: var(--fg);
+}
+.search input::placeholder { color: var(--fg-faint); }
+.search input:focus { border-color: var(--focus); outline: none; }
+
+.search-results {
+  position: absolute; top: calc(100% + .35rem); right: 0; left: 0; z-index: 40;
+  max-height: min(28rem, 70dvh); overflow-y: auto;
+  list-style: none;
+  background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 8px 28px light-dark(rgb(0 0 0 / .12), rgb(0 0 0 / .5));
+}
+.search-results:empty, .search-results[hidden] { display: none; }
+.search-results li > a {
+  display: flex; align-items: baseline; gap: .5rem;
+  padding: .4rem .6rem; text-decoration: none; color: var(--fg);
+  font-family: var(--mono); font-size: .85rem;
+}
+.search-results li > a:hover,
+.search-results li[aria-selected="true"] > a { background: var(--bg-sel); }
+.search-results .kind { font-size: .68rem; }
+.search-results .where { margin-left: auto; color: var(--fg-faint); font-size: .72rem; }
+.search-empty { padding: .6rem; color: var(--fg-faint); font-size: .85rem; }
+
+/* -- 6. shell and sidebar ------------------------------------------------ */
+
+.shell { display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); }
+
+.sidebar {
+  position: sticky; top: var(--topbar-h);
+  height: calc(100dvh - var(--topbar-h));
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 1rem .6rem 4rem;
+  border-right: 1px solid var(--line);
+  background: var(--bg-sub);
+  font-size: .875rem;
 }
 
-#nav_toggle {
-    display: none;
-}
-label[for="nav_toggle"] {
-    display: none;
-}
-
-header {
-    height: var(--header-height);
-    float: left;
-    position: fixed;
-    width: 100vw;
-    max-width: 100%;
-    left: 0;
-    right: 0;
-    top: 0;
-    --header-side-padding: 1em;
-    padding: 0 var(--header-side-padding);
-    background: var(--header-bg);
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.side + .side { margin-top: 1.5rem; }
+.side-title {
+  font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--fg-faint); padding: 0 .4rem .4rem;
 }
 
-@media screen and (max-width: 1000px) {
-    :root {
-        --content-width: 100vw;
-    }
-
-    .internal_nav {
-        display: none;
-    }
-
-    body .nav {
-        width: 100vw;
-        max-width: 100vw;
-        margin-left: 1em;
-        z-index: 1;
-    }
-
-    body main {
-        width: unset;
-        max-width: unset;
-        margin-left: unset;
-        margin-right: unset;
-    }
-    body .decl > div {
-        overflow-x: unset;
-    }
-
-    #nav_toggle:not(:checked) ~ .nav {
-        display: none;
-    }
-    #nav_toggle:checked ~ main {
-        visibility: hidden;
-    }
-
-    label[for="nav_toggle"]::before {
-        content: '≡';
-    }
-    label[for="nav_toggle"] {
-        display: inline-block;
-        margin-right: 1em;
-        border: 1px solid var(--hamburger-border-color);
-        padding: 0.5ex 1ex;
-        cursor: pointer;
-        background: var(--hamburger-bg-color);
-    }
-    #nav_toggle:checked ~ * label[for="nav_toggle"] {
-        background: var(--hamburger-active-color);
-    }
-
-    body header h1 {
-        font-size: 100%;
-    }
-
-    header {
-        --header-side-padding: 1ex;
-    }
+.toc { list-style: none; }
+.toc a {
+  display: block; padding: .2rem .4rem; border-radius: 4px;
+  font-size: .8rem; text-decoration: none; color: var(--fg-dim);
+  word-break: break-all;
 }
-@media screen and (max-width: 700px) {
-    header h1 span { display: none; }
-    :root { --header-side-padding: 1ex; }
-    #search_form button { display: none; }
-    #search_form input { width: 100%; }
-    header #autocomplete_results {
-        left: 1ex;
-        right: 1ex;
-        width: inherit;
-    }
-    body header > * { margin: 0; }
+.toc .name { word-break: normal; }
+.toc a:hover { background: var(--bg-hover); color: var(--fg); }
+.toc a[aria-current] { background: var(--bg-sel); color: var(--fg); }
+
+/* A row is [disclosure][name]: the two are separate targets because a module
+   can be both a page and a parent. See the note in `app.js`. */
+.tree ul { list-style: none; padding-left: .75rem; }
+.tree > ul { padding-left: 0; }
+.tree li { line-height: 1.5; }
+.tree .row { display: flex; align-items: center; border-radius: 4px; }
+.tree .row:hover { background: var(--bg-hover); }
+.tree .row:has(a[aria-current]) { background: var(--bg-sel); }
+.tree .twisty, .tree .twisty-spacer {
+  flex: none; width: 1.1rem; align-self: stretch;
+  color: var(--fg-faint); font-size: .9rem; line-height: 1;
+}
+.tree .twisty::before {
+  content: "›"; display: inline-block; transition: transform .15s ease;
+}
+.tree .twisty[aria-expanded="true"]::before { transform: rotate(90deg); }
+.tree .twisty:hover { color: var(--fg); }
+.tree a, .tree .node-name {
+  flex: 1; min-width: 0; padding: .2rem .3rem .2rem 0;
+  font-size: .8rem; text-decoration: none; color: var(--fg-dim);
+  word-break: break-all;
+}
+.tree .row:hover a { color: var(--fg); }
+.tree .node-name { color: var(--fg-faint); }
+.tree a[aria-current] { color: var(--fg); font-weight: 600; }
+
+.scrim { display: none; }
+
+/* -- 7. page ------------------------------------------------------------- */
+
+.content {
+  min-width: 0;
+  max-width: 72rem;
+  padding: 1.75rem clamp(1rem, 4vw, 2.5rem) 8rem;
 }
 
-header > * {
-    display: inline-block;
-    padding: 0;
-    margin: 0;
-    vertical-align: middle;
+.modhead { padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
+.modhead h1 {
+  font-family: var(--mono); font-size: clamp(1.25rem, 1rem + 1.4vw, 1.75rem);
+  font-weight: 700; line-height: 1.25; word-break: break-all;
 }
+.modhead h1 .name { word-break: normal; }
+.modactions { margin-top: .4rem; }
 
-header h1 {
-    font-weight: normal;
-    font-size: 1.5em;
+.src {
+  font-family: var(--font); font-size: .78rem; color: var(--fg-faint);
+  text-decoration: none;
 }
+.src:hover { color: var(--link); text-decoration: underline; }
 
-header .header_filename {
-    font-size: 17px;
-    color: gray;
-    text-align: center;
-    line-height: 95%;
+.modmeta { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; padding: .75rem 0; }
+.imports { font-size: .85rem; }
+.imports > summary {
+  cursor: pointer; color: var(--fg-dim); width: fit-content;
+  padding: .15rem .35rem; border-radius: 4px;
 }
+.imports > summary:hover { background: var(--bg-hover); color: var(--fg); }
+.imports .count { color: var(--fg-faint); }
+.imports ul { list-style: none; padding: .35rem 0 0 1.2rem; }
+.imports li { font-family: var(--mono); font-size: .8rem; line-height: 1.7; word-break: break-all; }
+.imports a { text-decoration: none; }
+.imports a:hover { text-decoration: underline; }
 
-/* inserted by nav.js */
-#autocomplete_results {
-    position: absolute;
-    top: var(--header-height);
-    right: calc(var(--header-side-padding));
-    width: calc(20em + 4em);
-    z-index: 1;
-    background: var(--header-bg);
-    border: 1px solid #aaa;
-    border-top: none;
-    overflow-x: hidden;
-    overflow-y: auto;
-    max-height: calc(100vh - var(--header-height));
-}
-
-#autocomplete_results:empty {
-    display: none;
-}
-
-#autocomplete_results[state="loading"]:empty {
-    display: block;
-    cursor: progress;
-}
-#autocomplete_results[state="loading"]:empty::before {
-    display: block;
-    content: ' 🐙 🐙 🐙 🐙 🐙 🐙 🐙 🐙 🐙 🐙 🐙 🐙 🐙 🐙 🐙 ';
-    padding: 1ex;
-    animation: marquee 10s linear infinite;
-}
-@keyframes marquee {
-    0% { transform: translate(100%, 0); }
-    100% { transform: translate(-100%, 0); }
-}
-
-#autocomplete_results[state="done"]:empty {
-    display: block;
-    text-align: center;
-    padding: 1ex;
-}
-#autocomplete_results[state="done"]:empty::before {
-    content: '(no results)';
-    font-style: italic;
-}
-
-#autocomplete_results a {
-    display: block;
-    color: inherit;
-    padding: 1ex;
-    border-left: 0.5ex solid transparent;
-    padding-left: 0.5ex;
-    cursor: pointer;
-}
-
-#autocomplete_results .selected .result_link a {
-    background: var(--body-bg);
-    border-color: var(--structure-and-inductive-color);
-}
-
-
-#search_results {
-    width: 100%;
-}
-#search_results[state="done"]:empty::before {
-    content: '(no results)';
-    font-style: italic;
-}
-
-#search_results .result_link, #search_results .result_doc {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.8);
-}
-
-.search_result_block {
-    width: 100%;
-    content-visibility: auto;
-    contain-intrinsic-size: auto 75em;
-}
-
-.search_result_block_inner {
-    display: table;
-    width: 100%;
-}
-
-.search_result {
-    display: table-row;
-}
-
-.result_link, .result_doc {
-    display: table-cell;
-    overflow: hidden;
-    word-break: break-word;
-}
-
-main, nav {
-    margin-top: calc(var(--header-height) + 1em);
-}
-
-/* extra space for scrolling things to the top */
-main {
-    margin-bottom: 90vh;
-}
-
-main {
-    max-width: var(--content-width);
-    /* center it: */
-    margin-left: auto;
-    margin-right: auto;
-}
-
-nav {
-    float: left;
-    height: calc(100vh - var(--header-height) - 1em);
-    position: fixed;
-    top: 0;
-    overflow: auto;
-    scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
-}
-
-nav:hover {
-    scrollbar-color: gray transparent;
-}
-
-nav {
-    --column-available-space: calc((100vw - var(--content-width) - 5em)/2);
-    --column-width: calc(var(--column-available-space) - 1ex);
-    --dist-to-edge: 1ex;
-    width: var(--content-width);
-    max-width: var(--column-width);
-}
-@supports (width: min(10px, 5vw)) {
-    .nav { --desired-column-width: 20em; }
-    .internal_nav { --desired-column-width: 30em; }
-    nav {
-        --column-available-space: calc(max(0px, (100vw - var(--content-width) - 5em)/2));
-        --column-width: calc(clamp(0px, var(--column-available-space) - 1ex, var(--desired-column-width)));
-        --dist-to-edge: calc(max(1ex, var(--column-available-space) - var(--column-width)));
-    }
-}
-
-.nav { left: var(--dist-to-edge); }
-.internal_nav { right: var(--dist-to-edge); }
-
-.internal_nav .nav_link, .taclink {
-    /* indent everything but first line by 2ex */
-    text-indent: -2ex; padding-left: 2ex;
-}
-
-.navframe {
-    height: 100%;
-    width: 100%;
-}
-
-.navframe .nav {
-    position: absolute;
-    left: 0;
-    margin-left: 0;
-}
-
-.internal_nav .imports {
-    margin-bottom: 1rem;
-}
-
-.tagfilter-div {
-    margin-bottom: 1em;
-}
-.tagfilter-div > summary {
-    margin-bottom: 1ex;
-}
-
-/* top-level modules in left navbar */
-.nav .module_list > details {
-    margin-top: 1ex;
-}
-
-.nav details > * {
-    padding-left: 2ex;
-}
-
-.nav summary {
-    cursor: pointer;
-    padding-left: 0;
-}
-
-.nav summary::marker {
-    font-size: 85%;
-}
-
-.nav .nav_file {
-    display: inline-block;
-}
-
-.nav h3 {
-    margin-block-end: 4px;
-}
-
-/* People use way too long declaration names. */
-.internal_nav, .decl_name {
-    overflow-wrap: break-word;
-}
-
-/* Add a linebreak after a declaration name. */
-.decl_name::after {
-    content: "\A";
-    white-space: pre;
-}
-
-.nav_link {
-    overflow-wrap: break-word;
-}
-
-.navframe {
-    --header-height: 0;
-}
-
-#settings {
-    margin-top: 5em;
-}
-#settings h3 {
-    font-size: inherit;
-}
-
-#color-theme-switcher {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 2ex;
-    flex-flow: row wrap;
-}
-
-/* custom radio buttons for dark/light switch */
-#color-theme-switcher input {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    display: inline-block;
-    box-sizing: content-box;
-    height: 1em;
-    width: 1em;
-    background-clip: content-box;
-    padding: 2px;
-    border: 2px solid transparent;
-    margin-bottom: -4px;
-    border-radius: 50%;
-}
-#color-theme-dark { background-color: #444; }
-#color-theme-light { background-color: #ccc; }
-#color-theme-system {
-    background-image: linear-gradient(60deg, #444, #444 50%, #CCC 50%, #CCC);
-}
-#color-theme-switcher input:checked {
-    border-color: var(--text-color);
-}
-
-.decl > div, .mod_doc {
-    padding-left: 8px;
-    padding-right: 8px;
-}
+/* -- 8. declaration ------------------------------------------------------ */
 
 .decl {
-    margin-top: 20px;
-    margin-bottom: 20px;
+  padding-block: 1.5rem;
+  border-top: 1px solid var(--line-soft);
+  scroll-margin-top: calc(var(--topbar-h) + 1rem);
+}
+.decl:first-of-type { border-top: 0; }
+/* Landing on an anchor should say "here", then get out of the way. A left
+   marker does that without repainting the block the reader came to read. */
+.decl:target { box-shadow: inset 3px 0 0 var(--link); padding-left: .85rem; }
+
+.decl-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem .6rem; }
+.decl-name {
+  font-size: 1.0625rem; font-weight: 700; line-height: 1.35;
+  min-width: 0; word-break: break-all;
+}
+.decl-name .name { word-break: normal; }
+.decl-name a { color: var(--fg); text-decoration: none; }
+.decl-name a:hover { color: var(--link); text-decoration: underline; }
+.decl-head .src { margin-left: auto; align-self: center; }
+
+.kind {
+  flex: none; align-self: center;
+  font-family: var(--font); font-size: .7rem; font-weight: 600; line-height: 1.5;
+  letter-spacing: .015em; white-space: nowrap;
+  padding: .05rem .4rem; border-radius: 4px;
+  color: var(--k-other);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.decl[data-kind="theorem"] .kind,
+.decl[data-kind="axiom"] .kind    { color: var(--k-prop); }
+.decl[data-kind="def"] .kind,
+.decl[data-kind="opaque"] .kind   { color: var(--k-def); }
+.decl[data-kind="structure"] .kind,
+.decl[data-kind="class"] .kind,
+.decl[data-kind="inductive"] .kind { color: var(--k-type); }
+.decl[data-kind="instance"] .kind { color: var(--k-inst); }
+
+.attrs {
+  font-family: var(--mono); font-size: .78rem; color: var(--fg-faint);
+  margin-top: .35rem;
 }
 
-.decl > div {
-    /* sometimes declarations arguments are way too long
-       and would continue into the right column,
-       so put a scroll bar there: */
-    overflow-x: auto;
+/* -- 9. signature -------------------------------------------------------- */
+
+/* The IR's spans carry replayed whitespace, so text *inside* a term is already
+   laid out and `pre-wrap` there is load-bearing, not a preference. It must not
+   go on `.sig` itself: the renderer puts a newline between binders for the sake
+   of the source, and under `pre-wrap` those turn into real line breaks. Inside
+   a `.fn` there is no such newline, so the two rules do not fight. */
+.sig {
+  margin-top: .5rem;
+  font-size: .875rem; line-height: 1.75;
+  overflow-x: auto;
 }
 
-/* Make `#id` links appear below header. */
-.decl, h1[id], h2[id], h3[id], h4[id], h5[id], h6[id] {
-    scroll-margin-top: var(--fragment-offset);
-}
-/* don't need as much vertical space for these
-inline elements */
-a[id], li[id] {
-    scroll-margin-top: var(--header-height);
-}
-
-/* HACK: Safari doesn't support scroll-margin-top for
-fragment links (yet?)
-https://caniuse.com/mdn-css_properties_scroll-margin-top
-https://bugs.webkit.org/show_bug.cgi?id=189265
-*/
-@supports not (scroll-margin-top: var(--fragment-offset)) {
-    .decl::before, h1[id]::before, h2[id]::before, h3[id]::before,
-    h4[id]::before, h5[id]::before, h6[id]::before,
-    a[id]::before, li[id]::before {
-        content: "";
-        display: block;
-        height:      var(--fragment-offset);
-        margin-top:  calc(-1 * var(--fragment-offset));
-        box-sizing: inherit;
-        visibility: hidden;
-        width: 1px;
-    }
-}
-
-
-/* hide # after markdown headings except on hover */
-.markdown-heading:not(:hover) > .hover-link {
-    visibility: hidden;
-}
-
-main h2, main h3, main h4, main h5, main h6 {
-    margin-top: 1rem;
-    margin-bottom: -0.4rem;
-}
-.decl + .mod_doc > h2,
-        .decl + .mod_doc > h3,
-        .decl + .mod_doc > h4,
-        .decl + .mod_doc > h5,
-        .decl + .mod_doc > h6 {
-    margin-top: 4rem;
-}
-
-.def, .instance {
-    border-left: 10px solid var(--text-color);
-    border-top: 2px solid var(--text-color);
-}
-
-.theorem {
-    border-left: 10px solid var(--theorem-color);
-    border-top: 2px solid var(--theorem-color);
-}
-
-.axiom, .opaque {
-    border-left: 10px solid var(--axiom-and-constant-color);
-    border-top: 2px solid var(--axiom-and-constant-color);
-}
-
-.structure, .inductive, .class {
-    border-left: 10px solid var(--structure-and-inductive-color);
-    border-top: 2px solid var(--structure-and-inductive-color);
-}
-
+/* Hanging indent per term, so a wrapped subterm sits under its opener instead
+   of at the left margin. Same trick doc-gen4 uses, and the reason a signature
+   stays readable at 375 px. */
 .fn {
-    display: inline-block;
-    /* border: 1px dashed red; */
-    text-indent: -1ex;
-    padding-left: 1ex;
-    white-space: pre-wrap;
-    vertical-align: top;
+  display: inline-block;
+  text-indent: -1ex; padding-left: 1ex;
+  white-space: pre-wrap;
+  vertical-align: top;
+}
+/* A binder is the unit a line breaks at first. */
+.binder { display: inline-block; vertical-align: top; }
+.binder.implicit { color: var(--fg-dim); }
+.colon { color: var(--fg-faint); }
+.extends { color: var(--fg-faint); font-weight: 600; }
+/* A top-level term is not always wrapped in a `.fn` — `Type u_1` reaches here
+   as bare text — so the whitespace rule has to be on the container too. */
+.sig-type { display: block; padding-left: 1.5ex; white-space: pre-wrap; }
+
+/* Links in a signature are structure, not decoration: colouring every constant
+   turns the type into confetti. Underline only, colour on hover. */
+.sig a, .field-sig a, .equations a {
+  color: inherit; text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 25%, transparent);
+  text-underline-offset: .16em;
+}
+.sig a:hover, .field-sig a:hover, .equations a:hover {
+  color: var(--link); text-decoration-color: currentColor;
 }
 
-.fn { --fn: 1; }
-.fn .fn { --fn: 2; }
-.fn .fn .fn { --fn: 3; }
-.fn .fn .fn .fn { --fn: 4; }
-.fn .fn .fn .fn .fn { --fn: 5; }
-.fn .fn .fn .fn .fn .fn { --fn: 6; }
-.fn .fn .fn .fn .fn .fn .fn { --fn: 7; }
-.fn .fn .fn .fn .fn .fn .fn .fn { --fn: 8; }
-.fn {
-    transition: background-color 100ms ease-in-out;
+.break_within { word-break: break-all; }
+.break_within .name { word-break: normal; }
+
+/* -- 10. structure fields ------------------------------------------------ */
+
+.fields { list-style: none; margin-top: .75rem; }
+.field {
+  padding: .4rem 0 .4rem .85rem;
+  border-left: 2px solid var(--line);
+  scroll-margin-top: calc(var(--topbar-h) + 1rem);
+}
+.field + .field { margin-top: .15rem; }
+.field-sig { font-family: var(--mono); font-size: .84rem; white-space: pre-wrap; }
+.field-name { font-weight: 600; }
+.field.inherited { border-left-style: dashed; }
+.field.inherited .field-name { font-weight: 500; color: var(--fg-dim); }
+.field-doc { margin-top: .2rem; font-size: .9rem; color: var(--fg-dim); }
+.ctor-note { margin-top: .6rem; font-size: .8rem; color: var(--fg-faint); }
+.ctor-note code { font-family: var(--mono); }
+
+/* -- 11. equations / instances ------------------------------------------- */
+
+.extra { margin-top: .75rem; font-size: .85rem; }
+.extra > summary {
+  cursor: pointer; width: fit-content; color: var(--fg-dim);
+  padding: .15rem .35rem; border-radius: 4px;
+}
+.extra > summary:hover { background: var(--bg-hover); color: var(--fg); }
+.extra > ul { list-style: none; padding: .4rem 0 0 1rem; }
+.extra li { font-family: var(--mono); font-size: .82rem; line-height: 1.7; }
+.equations li { white-space: pre-wrap; padding-block: .15rem; }
+
+/* -- 12. docstrings ------------------------------------------------------ */
+
+.moddoc, .doc { max-width: 74ch; }
+.moddoc { padding-block: 1.25rem; }
+.doc { margin-top: .75rem; }
+
+.doc > * + *, .moddoc > * + * { margin-top: .75rem; }
+.moddoc :is(h1, h2, h3, h4, h5, h6),
+.doc :is(h1, h2, h3, h4, h5, h6) {
+  line-height: 1.3; font-weight: 650; margin-top: 1.75rem;
+  scroll-margin-top: calc(var(--topbar-h) + 1rem);
+}
+.moddoc h1, .doc h1 { font-size: 1.4rem; }
+.moddoc h2, .doc h2 { font-size: 1.15rem; }
+.moddoc h3, .doc h3 { font-size: 1rem; }
+.moddoc :is(h4, h5, h6), .doc :is(h4, h5, h6) { font-size: .95rem; }
+.moddoc > :first-child, .doc > :first-child { margin-top: 0; }
+
+.hover-link {
+  margin-left: .3em; color: var(--fg-faint); text-decoration: none;
+  opacity: 0; transition: opacity .12s ease;
+}
+:is(h1, h2, h3, h4, h5, h6):hover > .hover-link,
+.hover-link:focus-visible { opacity: 1; }
+
+.doc :is(ul, ol), .moddoc :is(ul, ol) { padding-left: 1.4rem; }
+.doc li + li, .moddoc li + li { margin-top: .2rem; }
+
+.doc code, .moddoc code, .field-doc code {
+  font-size: .875em;
+  background: var(--bg-code);
+  padding: .12em .32em; border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.doc pre, .moddoc pre {
+  background: var(--bg-code); border: 1px solid var(--line-soft);
+  padding: .75rem 1rem; border-radius: var(--radius);
+  overflow-x: auto; font-size: .84rem; line-height: 1.6;
+}
+.doc pre code, .moddoc pre code { background: none; padding: 0; font-size: 1em; }
+
+.doc blockquote, .moddoc blockquote {
+  padding-left: .9rem; border-left: 3px solid var(--line);
+  color: var(--fg-dim);
+}
+.doc table, .moddoc table {
+  display: block; overflow-x: auto;
+  border-collapse: collapse; font-size: .88rem;
+}
+.doc :is(th, td), .moddoc :is(th, td) {
+  border: 1px solid var(--line); padding: .3rem .6rem; text-align: left;
+}
+.doc th, .moddoc th { background: var(--bg-sub); }
+.doc hr, .moddoc hr { border: 0; border-top: 1px solid var(--line); }
+
+/* -- 13. index, search and not-found pages ------------------------------- */
+
+/* These three have no sidebar: the index *is* the module list, and the other
+   two are one column of results. */
+body.plain .shell { grid-template-columns: minmax(0, 1fr); }
+body.plain .content { max-width: 60rem; }
+
+.lede { margin-top: .6rem; max-width: 66ch; color: var(--fg-dim); }
+
+.stats { display: flex; flex-wrap: wrap; gap: 1.25rem 2.5rem; margin-top: 1.5rem; }
+.stats dt {
+  font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.stats dd { font-family: var(--mono); font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
+
+.section-title { margin-top: 2.5rem; font-size: 1.1rem; }
+
+.modlist { list-style: none; margin-top: .75rem; columns: 20rem; column-gap: 2rem; }
+.modlist li { break-inside: avoid; }
+.modlist a {
+  display: block; padding: .18rem .35rem; border-radius: 4px;
+  font-family: var(--mono); font-size: .85rem;
+  text-decoration: none; color: var(--fg-dim); word-break: break-all;
+}
+.modlist .name { word-break: normal; }
+.modlist a:hover { background: var(--bg-hover); color: var(--fg); }
+
+.bigsearch { margin-top: 1.25rem; }
+.bigsearch input {
+  width: 100%; height: 2.9rem; padding: 0 .9rem; font-size: 1rem;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg); color: var(--fg);
+}
+.bigsearch input:focus { border-color: var(--focus); outline: none; }
+
+.results { list-style: none; margin-top: 1rem; }
+.results a {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem;
+  padding: .45rem .5rem; border-radius: var(--radius);
+  font-family: var(--mono); font-size: .875rem;
+  text-decoration: none; color: var(--fg); word-break: break-all;
+}
+.results a:hover { background: var(--bg-hover); }
+.results .where {
+  margin-left: auto; font-family: var(--font); font-size: .78rem; color: var(--fg-faint);
+  word-break: normal;
+}
+.results-note { margin-top: .75rem; color: var(--fg-faint); font-size: .85rem; }
+
+.missing-path {
+  font-family: var(--mono); font-size: .9em;
+  background: var(--bg-code); padding: .15em .4em; border-radius: 4px;
+  overflow-wrap: anywhere;
 }
 
-.def .fn:hover, .instance .fn:hover {
-    background-color: hsla(var(--def-color-hsl-angle), 61%, calc(var(--starting-percentage) - 5%*var(--fn)));
-    box-shadow: 0 0 0 1px hsla(var(--def-color-hsl-angle), 61%, calc(var(--starting-percentage) - 5%*(var(--fn) + 1)));
-    border-radius: 5px;
-}
-.theorem .fn:hover {
-    background-color: hsla(var(--theorem-color-hsl-angle), 62%, calc(var(--starting-percentage) - 5%*var(--fn)));
-    box-shadow: 0 0 0 1px hsla(var(--theorem-color-hsl-angle), 62%, calc(var(--starting-percentage) - 5%*(var(--fn) + 1)));
-    border-radius: 5px;
-}
-.axiom .fn:hover, .opaque .fn:hover {
-    background-color: hsla(var(--axiom-and-constant-color-hsl-angle), 94%, calc(var(--starting-percentage) - 5%*var(--fn)));
-    box-shadow: 0 0 0 1px hsla(var(--axiom-and-constant-color-hsl-angle), 94%, calc(var(--starting-percentage) - 5%*(var(--fn) + 1)));
-    border-radius: 5px;
-}
-.structure .fn:hover, .inductive .fn:hover, .class .fn:hover {
-    background-color: hsla(var(--structure-and-inductive-color-hsl-angle), 98%, calc(var(--starting-percentage) - 5%*var(--fn)));
-    box-shadow: 0 0 0 1px hsla(var(--structure-and-inductive-color-hsl-angle), 98%, calc(var(--starting-percentage) - 5%*(var(--fn) + 1)));
-    border-radius: 5px;
+/* -- 14. narrow screens -------------------------------------------------- */
+
+@media (min-width: 60.001rem) {
+  #nav-toggle { display: none; }
 }
 
-.decl_args, .decl_type .decl_parent {
-    font-weight: normal;
+@media (max-width: 60rem) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+
+  .sidebar {
+    position: fixed; z-index: 35;
+    top: var(--topbar-h); bottom: 0; left: 0;
+    width: min(21rem, 84vw); height: auto;
+    transform: translateX(-101%);
+    transition: transform .18s ease;
+    box-shadow: 0 0 32px light-dark(rgb(0 0 0 / .16), rgb(0 0 0 / .5));
+  }
+  body[data-nav="open"] .sidebar { transform: none; }
+
+  .scrim {
+    display: block; position: fixed; inset: var(--topbar-h) 0 0; z-index: 34;
+    background: rgb(0 0 0 / .35);
+  }
+  .scrim[hidden] { display: none; }
+
+  .content { padding-top: 1.25rem; }
+  .search { flex-basis: 7rem; }
+  /* Keep the way home reachable — shorten it instead of dropping it. */
+  .home { max-width: 7rem; font-size: .9rem; }
 }
 
-.implicits, .impl_arg {
-    color: var(--text-color);
-    white-space: normal;
+@media (max-width: 26rem) {
+  .decl-head .src { margin-left: 0; }
 }
 
-.decl_kind, .decl_name, .decl_extends {
-    font-weight: bold;
-}
+/* -- 15. print ----------------------------------------------------------- */
 
-/* break long declaration names at periods where possible */
-.break_within {
-    word-break: break-all;
-}
-
-.break_within .name {
-    word-break: normal;
-}
-
-.decl_header {
-    /* indent everything but first line twice as much as decl_type */
-    text-indent: -8ex; padding-left: 8ex;
-}
-
-.decl_type {
-    margin-top: 2px;
-    margin-left: 4ex; /* extra indentation */
-}
-
-.decl.sorried .decl_name {
-    text-decoration: underline wavy #cca733;
-}
-
-.decl .sorry_msg > strong {
-    color: #a90000;
-}
-
-.imports li, code, .decl_header, .attributes, .structure_field_info,
-        .constructor, .instances li, .instances-for-list li, .equation, .structure_ext_ctor {
-    font-size: 92%;
-    font-family: 'JuliaMono', monospace;
-}
-
-pre {
-    white-space: break-spaces;
-}
-
-code, pre { background: var(--code-bg); }
-code, pre { border-radius: 5px; }
-code { padding: 1px 3px; }
-pre { padding: 1ex; }
-pre code { padding: 0 0; }
-
-#howabout code { background: inherit; }
-#howabout li { margin-bottom: 0.5ex; }
-
-.structure_fields, .constructors {
-    display: block;
-    padding-inline-start: 0;
-    margin-top: 1ex;
-    text-indent: -2ex; padding-left: 2ex;
-}
-
-.structure_field {
-    display: block;
-    margin-left: 2ex;
-}
-
-.inductive_ctor_doc  {
-    text-indent: 0;
-    margin-left: 2ex;
-    font-family: 'Lato Medium';
-    font-size: 17px;
-}
-
-.structure_field_doc {
-    text-indent: 0;
-    font-family: 'Lato Medium';
-    font-size: 17px;
-}
-
-.structure_ext_fields {
-    display: block;
-    padding-inline-start: 0;
-    margin-top: 1ex;
-    text-indent: -2ex; padding-left: 2ex;
-}
-
-.structure_ext_fields .structure_field {
-    margin-left: -1ex !important;
-}
-
-.structure_ext_ctor {
-    display: block;
-    text-indent: -3ex;
-}
-
-.constructor {
-    display: block;
-}
-.constructor:before {
-    content: '| ';
-    color: gray;
-}
-
-/** Don't show underline on types, to prevent the ≤ vs < confusion. **/
-a:link, a:visited, a:active {
-    color:var(--link-color);
-    text-decoration: none;
-}
-
-/** Show it on hover though. **/
-a:hover {
-    text-decoration: underline;
-}
-
-.impl_arg {
-    font-style: italic;
-    transition: opacity 300ms ease-in;
-}
-
-.decl_header:not(:hover) .impl_arg,
-        .constructor:not(:hover) .impl_arg,
-        .structure_field_info:not(:hover) .impl_arg {
-    opacity: 30%;
-    transition: opacity 1000ms ease-out;
-}
-
-.inherited_field {
-    transition: opacity 300ms ease-in;
-}
-
-.structure_fields:not(:hover) .inherited_field {
-    opacity: 30%;
-    transition: opacity 1000ms ease-out;
-}
-
-.gh_link {
-    float: right;
-    margin-left: 10px;
-}
-
-.ink_link {
-    float: right;
-    margin-left: 20px;
-}
-
-
-.docfile h2, .note h2 {
-    margin-block-start: 3px;
-    margin-block-end: 0px;
-}
-
-.docfile h2 a {
-    color: var(--text-color);
-}
-
-.tags {
-    margin-bottom: 1ex;
-}
-
-.tags ul {
-    display: inline;
-    padding: 0;
-}
-
-.tags li {
-    border: 1px solid var(--tags-border-color);
-    border-radius: 4px;
-    list-style-type: none;
-    padding: 1px 3px;
-    margin-left: 1ex;
-    display: inline-block;
-}
-
-/* used by nav.js */
-.hide { display: none; }
-
-.tactic, .note {
-    border-top: 3px solid #0479c7;
-    padding-top: 2em;
-    margin-top: 2em;
-    margin-bottom: 2em;
+@media print {
+  .topbar, .sidebar, .scrim, .skip { display: none; }
+  .shell { grid-template-columns: 1fr; }
+  .content { max-width: none; padding: 0; }
+  /* CSS cannot open a `<details>`; `app.js` opens them for `beforeprint`. */
+  .extra > summary, .imports > summary { color: var(--fg); }
+  a { text-decoration: none; }
 }
