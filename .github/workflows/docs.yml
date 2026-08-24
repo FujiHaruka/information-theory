@@ -37,14 +37,20 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Build here rather than inside litedoc4. lean-action keys its `.lake` cache on the
+      # commit, so this job reuses what the CI and release jobs built for the same commit;
+      # a cold `lake build` of the library costs ~17 min, a hit costs seconds.
+      - uses: leanprover/lean-action@v1
+
       # Documents InformationTheory.* only; every Mathlib reference links to that pinned
-      # revision's source. `lib` is required because the package is a lakefile.lean one,
-      # and `cache-get` fetches Mathlib's oleans instead of rebuilding them.
+      # revision's source. `lib` is required because the package is a lakefile.lean one, and
+      # the step above is the build `lake-build: false` relies on — it has to be this job,
+      # because from another job the page cache is cold and the extractor is 5-12x slower.
       - uses: FujiHaruka/litedoc4@v0.1.4
         id: docs
         with:
           lib: InformationTheory
-          cache-get: true
+          lake-build: false
 
       - uses: actions/upload-pages-artifact@v3
         with:

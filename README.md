@@ -220,7 +220,11 @@ different Lean or Mathlib version will rebuild from source regardless.
 
 ## Development
 
-`lake build` and `lake env lean <file>` need no extra flags. The Mathlib search tool (loogle)
-and the API documentation generator (doc-gen4) are deliberately kept out of the published
-dependency set, so rebuilding either of them takes `lake -R -Kdev=on update`; see
-[`CLAUDE.md`](CLAUDE.md) for the round trip that restores the committed manifest.
+`lake build` and `lake env lean <file>` need no extra flags. The Mathlib search tool (loogle) is
+deliberately kept out of the published dependency set, so rebuilding it takes
+`lake -R -Kdev=on update`; see [`CLAUDE.md`](CLAUDE.md) for the round trip that restores the
+committed manifest.
+
+API documentation is built in CI by [litedoc4](https://github.com/FujiHaruka/litedoc4) and
+published to https://fujiharuka.github.io/information-theory/ on every release, so there is no
+local documentation build to run.

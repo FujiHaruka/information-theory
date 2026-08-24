@@ -12,15 +12,12 @@ package InformationTheory where
   buildArchive := "InformationTheory.tar.gz"
   preferReleaseBuild := true
 
--- Development-only tooling, enabled with `-R -Kdev=on`. These are kept out of the default
--- dependency set so that consumers of the library do not clone the toolchain behind them.
--- They are declared ahead of Mathlib so that Mathlib's pinned revisions of the shared
--- transitive dependencies take precedence.
+-- Development-only tooling (the Mathlib search tool loogle), enabled with `-R -Kdev=on`. It is
+-- kept out of the default dependency set so that consumers of the library do not clone the
+-- toolchain behind it, and is declared ahead of Mathlib so that Mathlib's pinned revisions of
+-- the shared transitive dependencies take precedence.
 meta if (get_config? dev).isSome then
 require loogle from git "https://github.com/nomeata/loogle"@"3a988dbfa601ddbbfd9330d90c45e7a68263b9c7"
-
-meta if (get_config? dev).isSome then
-require «doc-gen4» from git "https://github.com/leanprover/doc-gen4"@"v4.31.0"
 
 require "leanprover-community" / mathlib @ git "v4.31.0"
 
