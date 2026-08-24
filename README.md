@@ -208,7 +208,7 @@ matching Mathlib `v4.31.0`. Add to your `lakefile.toml`:
 [[require]]
 name = "InformationTheory"
 git = "https://github.com/FujiHaruka/information-theory"
-rev = "v1.0.0"
+rev = "v1.0.1"
 ```
 
 Each release carries a prebuilt archive of the library's oleans, and Lake downloads it instead

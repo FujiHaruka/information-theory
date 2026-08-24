@@ -3,7 +3,7 @@ import Lake
 open System Lake DSL
 
 package InformationTheory where
-  version := v!"1.0.0"
+  version := v!"1.0.1"
   -- Distribute prebuilt oleans as a GitHub release asset. When this package is used as a
   -- dependency, Lake downloads the archive instead of rebuilding from source; if the fetch
   -- fails it warns and falls back to a source build. The library has no executable target,
