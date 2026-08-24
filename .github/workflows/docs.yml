@@ -1,0 +1,50 @@
+name: docs
+
+# Publishes the API documentation (litedoc4) to GitHub Pages for a release.
+#
+# The trigger is the tag push, not `on: release`: release.yml creates the release with
+# GITHUB_TOKEN, and events raised by that token do not start further workflows, so a
+# `release` trigger would never fire for a tag pushed the usual way.
+#
+# Pages must be set to build from GitHub Actions (Settings -> Pages -> Source), not from a
+# branch; the site is uploaded as an artifact and never committed to the repository.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+# One Pages deployment at a time. Queue instead of cancelling, so a release already in
+# flight finishes publishing.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      # Documents InformationTheory.* only; every Mathlib reference links to that pinned
+      # revision's source. `lib` is required because the package is a lakefile.lean one,
+      # and `cache-get` fetches Mathlib's oleans instead of rebuilding them.
+      - uses: FujiHaruka/litedoc4@v0.1.4
+        id: docs
+        with:
+          lib: InformationTheory
+          cache-get: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.docs.outputs.site }}
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
