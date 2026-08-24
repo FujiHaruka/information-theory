@@ -20,7 +20,7 @@ the converse.
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Thm 9.6.1.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon.ShannonHartley

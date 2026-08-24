@@ -23,7 +23,7 @@ inequality to predicate signatures and assembles them into a pipeline.
 ## Main definitions
 
 * `IsStamInequalityHyp X Y P` — the Stam inequality `1/J(X + Y) ≥ 1/J(X) + 1/J(Y)`
-  (Cover–Thomas Lemma 17.7.2) as a predicate.
+  (Cover–Thomas) as a predicate.
 * `IsDeBruijnRegularityHyp X Z P` — regularity of the heat-flow path needed for the de Bruijn
   identity, bundling `IsRegularDeBruijnHypV2` at each `t > 0` with bounded-window integrability of
   the derivative.
@@ -41,7 +41,7 @@ inequality to predicate signatures and assembles them into a pipeline.
 
 ## References
 
-[CoverThomas2006] Lemma 17.7.2; [Stam1959]; [Blachman1965].
+[CoverThomas2006]; [Stam1959]; [Blachman1965].
 -/
 
 namespace InformationTheory.Shannon.StamEPIBridge
@@ -55,7 +55,7 @@ open InformationTheory.Shannon.EntropyPowerInequality
 
 /-! ## §2 — Stam inequality predicate -/
 
-/-- The 1-dimensional Stam inequality in inverse form (Cover–Thomas Lemma 17.7.2; Stam 1959;
+/-- The 1-dimensional Stam inequality in inverse form (Cover–Thomas; Stam 1959;
 Blachman 1965): for independent `X, Y` with finite Fisher information,
 `1 / J(X + Y) ≥ 1 / J(X) + 1 / J(Y)`, where `J` is the (real-valued) Fisher information.
 
@@ -153,7 +153,7 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## §4 — de Bruijn integration predicate -/
 
-/-- The de Bruijn integration identity along the heat-flow path (Cover–Thomas Lemma 17.7.2):
+/-- The de Bruijn integration identity along the heat-flow path (Cover–Thomas):
 `h(target) - h(X) = ∫₀^T (1/2) · J(X + √t · Z) dt`, i.e. the differential entropy gap equals the
 path integral of half the Fisher information. Stated existentially over the density path `fPath`.
 
@@ -227,7 +227,7 @@ The discharge below is packaged via the Gaussian saturation result
 /-! ## §6 — Stam-to-EPI bridge and assembly wrapper -/
 
 /-- The Stam-to-EPI bridge hypothesis: the implication from the Stam inequality to the entropy
-power inequality hypothesis. Cover–Thomas Lemma 17.7.3 derives the entropy power inequality from
+power inequality hypothesis. Cover–Thomas derives the entropy power inequality from
 the Stam inequality and the de Bruijn identity by a heat-flow path-concavity argument plus a
 saturation argument at the endpoint; this predicate bundles that implication. -/
 def IsStamToEPIBridgeHyp {Ω : Type*} [MeasurableSpace Ω]

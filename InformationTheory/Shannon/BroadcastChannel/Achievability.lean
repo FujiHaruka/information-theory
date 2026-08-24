@@ -7,7 +7,7 @@ import InformationTheory.Shannon.BroadcastChannel.Achievability.Assembly
 
 The superposition (two-tier cloud / satellite) random-coding inner bound of a two-receiver
 broadcast channel, and its specialization to the achievability half of the degraded
-broadcast-channel coding theorem (Cover–Thomas *Elements of Information Theory* Thm 15.6.2).
+broadcast-channel coding theorem (Cover–Thomas *Elements of Information Theory*).
 The net-new tier relative to the multiple-access achievability
 (`InformationTheory.Shannon.MAC`) is the **conditional (superposition) random codebook**:
 satellite codewords are drawn from a conditional product law `Πᵢ K(Uᵢ)` steered by the cloud

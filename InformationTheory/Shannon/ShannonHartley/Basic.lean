@@ -4,7 +4,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Bandlimited Channel / Shannon-Hartley formula
 
-Cover-Thomas Ch.9.6. The continuous-time bandlimited AWGN channel with signal
+Cover-Thomas. The continuous-time bandlimited AWGN channel with signal
 `X(t)` bandlimited to `[-W, W]` Hz and flat noise PSD `N₀ / 2`. Under average
 power constraint `E[X(t)²] ≤ P`, the capacity is
 
@@ -40,7 +40,6 @@ operational definitions.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 9.6.1.
 -/
 
 namespace InformationTheory.Shannon.ShannonHartley

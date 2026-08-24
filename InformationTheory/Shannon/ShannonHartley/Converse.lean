@@ -29,7 +29,6 @@ The chain (mirroring the discrete AWGN converse's wiring):
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Chapter 9 (Gaussian channel) and the parallel-Gaussian water-filling of §9.4.
 -/
 
 namespace InformationTheory.Shannon.ShannonHartley

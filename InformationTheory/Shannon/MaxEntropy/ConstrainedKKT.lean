@@ -54,7 +54,6 @@ not provide).
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 12.1.1.
 -/
 
 namespace InformationTheory.Shannon.MaxEntropyConstrainedKKT

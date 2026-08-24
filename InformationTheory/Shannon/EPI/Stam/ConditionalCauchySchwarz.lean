@@ -11,7 +11,7 @@ import Mathlib.Tactic.Ring
 /-!
 # Stam inequality Step 1 (score-convolution) + Step 2 (Cauchy-Schwarz) body
 
-The 1-dimensional Stam inequality (Cover-Thomas Lemma 17.7.2 / Blachman 1965)
+The 1-dimensional Stam inequality (Cover-Thomas / Blachman 1965)
 splits into four steps:
 
 1. Score-convolution (Blachman): `s_Z(z) = E[s_X(X) | X+Y = z]`.
@@ -286,7 +286,7 @@ theorem stamCauchySchwarzOptimal_of_scoreConvHyp_of_condExpCSHyp {Ω : Type*} [M
 
 /-- Full chain: Steps 1 and 2 imply the published Stam signature `IsStamInequalityHyp`. Composes
 the typed Step-1/Step-2 predicates with the body bridge `isStamInequalityHyp_via_body`, closing the
-chain from the conditional Cauchy–Schwarz body to the Cover–Thomas Lemma 17.7.2 form
+chain from the conditional Cauchy–Schwarz body to the Cover–Thomas form
 `1 / J(Z) ≥ 1 / J(X) + 1 / J(Y)`. The analytic input is the typed
 `h_cs : IsStamCondExpCSHyp X Y P` (the `∀λ` convex Fisher bound).
 

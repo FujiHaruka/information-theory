@@ -39,7 +39,7 @@ derive the entropy power inequality.
 
 ## Implementation notes
 
-The Stam-to-EPI bridge (Cover–Thomas Lemma 17.7.3, Csiszár-style coupling) enters as
+The Stam-to-EPI bridge (Cover–Thomas, Csiszár-style coupling) enters as
 follows:
 - The Stam inequality is received as an `IsStamInequalityHyp X Y P` argument.
 - de Bruijn integration uses `IsDeBruijnIntegrationHyp` and
@@ -65,15 +65,15 @@ open InformationTheory.Shannon.EPIGaussianDensityRoute (convDensityAdd_gaussian_
 
 /-- The integrated pipeline predicate.
 
-Carries the Stam inequality (Cover–Thomas Lemma 17.7.2 signature) as its
-single field. The Stam-to-EPI *bridge* (Cover–Thomas Lemma 17.7.3 coupling) is
+Carries the Stam inequality (Cover–Thomas signature) as its
+single field. The Stam-to-EPI *bridge* (Cover–Thomas coupling) is
 deliberately not a field: consumers that need the entropy power inequality supply
 `IsStamToEPIBridgeHyp` separately (`epi_via_stam`) rather than threading a
 `bridge : IsStamToEPIBridgeHyp` predicate hypothesis through the pipeline. -/
 @[entry_point]
 structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop where
-  /-- Stam inequality (Cover–Thomas Lemma 17.7.2) signature. -/
+  /-- Stam inequality (Cover–Thomas) signature. -/
   stam : IsStamInequalityHyp X Y P
 
 /-! ## Gaussian pipeline witness -/

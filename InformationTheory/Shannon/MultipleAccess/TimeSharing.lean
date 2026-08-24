@@ -11,7 +11,7 @@ import Mathlib.Data.Fin.Tuple.Basic
 /-!
 # Multiple access channel — time-sharing achievability (full convex-hull form)
 
-Operational time-sharing for the two-user MAC (Cover–Thomas Theorem 15.3.1, convex-hull
+Operational time-sharing for the two-user MAC (Cover–Thomas, convex-hull
 form).  The single-input corner-point achievability `mac_achievability` is the input; this
 file lifts it to the convex hull of the per-input pentagons via block concatenation.
 
@@ -888,8 +888,8 @@ theorem mac_pentagon_subset_capacityRegion
 /-! ## Achievability headline: the closed convex hull of the pentagons -/
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- Time-sharing achievability for the MAC in convex-hull form (Cover–Thomas Theorem
-15.3.1): the closed convex hull of the per-input pentagons of full-support product inputs is
+/-- Time-sharing achievability for the MAC in convex-hull form (Cover–Thomas):
+the closed convex hull of the per-input pentagons of full-support product inputs is
 contained in the operational capacity region.
 @audit:ok -/
 @[entry_point]

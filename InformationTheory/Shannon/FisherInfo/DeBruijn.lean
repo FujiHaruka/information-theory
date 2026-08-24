@@ -36,7 +36,7 @@ regularity predicate, and the Gaussian discharge of the de Bruijn identity.
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 17.7.2.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon.FisherInfo

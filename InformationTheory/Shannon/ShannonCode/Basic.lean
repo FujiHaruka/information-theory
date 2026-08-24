@@ -9,7 +9,7 @@ import Mathlib.Algebra.Order.Floor.Semiring
 
 For a probability distribution `P` on a finite alphabet `α`, the Shannon codeword length
 `l(a) := ⌈−logb D P(a)⌉₊` satisfies `H_D(P) ≤ E[L] < H_D(P) + 1`
-(Cover–Thomas 5.4, 5.5, 5.8.1).
+(Cover–Thomas).
 
 ## Main definitions
 
@@ -325,7 +325,7 @@ theorem expectedLength_shannon_lt_entropyD_add_one
 /-! ### Sandwich theorem -/
 
 omit [DecidableEq α] in
-/-- Shannon code sandwich (Cover–Thomas 5.4 + 5.8.1): for a probability measure `P`
+/-- Shannon code sandwich (Cover–Thomas): for a probability measure `P`
 with full support on a finite alphabet, the Shannon codeword lengths satisfy
 `H_D(P) ≤ E[L_Shannon] < H_D(P) + 1`. -/
 @[entry_point]

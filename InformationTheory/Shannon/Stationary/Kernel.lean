@@ -112,7 +112,7 @@ unfinished tail, so the phrase boundaries cover only
 `=`), and the telescoping product equals `prefixBlockProb ω (boundary c)`,
 which exceeds `Pₙ = prefixBlockProb ω n` whenever the parse is incomplete.
 
-The Ziv chain (Cover–Thomas Eq. 13.122–124) does not need that false
+The Ziv chain (Cover–Thomas) does not need that false
 equality — it needs only the inequality `Pₙ{block ω} ≤ ∏ⱼ qⱼ`
 (equivalently `-log Pₙ ≥ ∑ⱼ -log qⱼ`), which is unconditionally true:
 `Pₙ = prefixBlockProb ω n ≤ prefixBlockProb ω (boundary c) = ∏ⱼ qⱼ` by

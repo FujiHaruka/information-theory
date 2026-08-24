@@ -14,7 +14,7 @@ import Mathlib.Probability.Independence.Basic
 /-!
 # Stam inequality body — Step 3 (Cauchy–Schwarz to symmetric Fisher coupling)
 
-The 1-dimensional Stam inequality proof (Cover–Thomas Lemma 17.7.2 / Stam 1959 / Blachman 1965)
+The 1-dimensional Stam inequality proof (Cover–Thomas / Stam 1959 / Blachman 1965)
 splits into four steps: the convolution score representation `s_Z = E[s_X | Z] = E[s_Y | Z]`,
 pointwise Cauchy–Schwarz on the conditional expectation, total expectation against `p_Z` giving the
 symmetric Fisher coupling `J(X + Y) ≤ λ² J(X) + (1 - λ)² J(Y)`, and optimization over `λ` giving
@@ -37,7 +37,7 @@ giving the convex Fisher bound and its `λ`-optimum — is localized to the sing
 
 ## References
 
-[CoverThomas2006] Lemma 17.7.2; [Stam1959]; [Blachman1965].
+[CoverThomas2006]; [Stam1959]; [Blachman1965].
 -/
 
 namespace InformationTheory.Shannon.StamFisherCoupling
@@ -66,7 +66,7 @@ theorem stam_optimal_lambda_mem_unit {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
 /-! ## §4 — Full Step 1 → 4 chain to the Stam signature -/
 
 /-- The full Step 1 → 4 chain to the Stam signature: produces `IsStamInequalityHyp`
-(Cover–Thomas Lemma 17.7.2) from regularity preconditions alone. The Step 2-3 convex Fisher bound
+(Cover–Thomas) from regularity preconditions alone. The Step 2-3 convex Fisher bound
 is supplied internally by `stamCauchySchwarzOptimal_of_indepFun`, and the remaining steps are
 discharged arithmetically by `isStamInequalityHyp_via_body`. The hypotheses are only measurability,
 independence, and the probability-measure instance.

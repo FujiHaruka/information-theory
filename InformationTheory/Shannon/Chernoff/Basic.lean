@@ -10,7 +10,7 @@ import Mathlib.Data.Real.ConjExponents
 # Chernoff information and the Hoeffding tradeoff exponent
 
 The Chernoff exponent `C(P₁, P₂)` and the Hoeffding tradeoff exponent `E₂(α)`
-(Cover–Thomas 11.7 / 11.9) for finite-alphabet pmfs `P₁, P₂ : α → ℝ`, together with the
+(Cover–Thomas) for finite-alphabet pmfs `P₁, P₂ : α → ℝ`, together with the
 convexity of `λ ↦ log Z(λ)` and the achievability side of the Chernoff bound on the Bayes
 error of an `n`-sample binary hypothesis test.
 
@@ -43,7 +43,7 @@ compact set, so attainment follows from `IsCompact.exists_sInf_image_eq`. The co
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 11.9.1.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon.Chernoff
@@ -331,7 +331,7 @@ theorem hoeffdingE2_nonneg
 
 /-! ### Convexity of `log Z(λ)` via Hölder
 
-The convexity of `λ ↦ log Z(λ)` on `Icc 0 1` (Cover–Thomas 11.9.1). From Hölder's inequality one
+The convexity of `λ ↦ log Z(λ)` on `Icc 0 1` (Cover–Thomas). From Hölder's inequality one
 obtains the multiplicative form `Z(αλ₁ + βλ₂) ≤ Z(λ₁)^α · Z(λ₂)^β`; taking logarithms gives the
 convexity. The endpoints `α = 0` and `α = 1` are handled separately, since they fall outside the
 `1 < p` requirement of `Real.HolderConjugate`. -/
@@ -630,7 +630,7 @@ theorem hoeffdingE2_unique
 
 /-! ### Chernoff achievability (Bayes error upper bound)
 
-The achievability side of Cover–Thomas Theorem 11.9.1: the Chernoff bound
+The achievability side of Cover–Thomas: the Chernoff bound
 `bayesErrorMinPmf P₁ P₂ n ≤ (1/2) · Z(λ)^n` for every `λ ∈ Icc 0 1` yields
 `liminf_n -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂`. The `n`-fold IID structure is written
 directly with a finite sum `∑_{x : Fin n → α}` of finite products `∏ i, P (x i)`. -/

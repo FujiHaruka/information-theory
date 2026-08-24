@@ -13,7 +13,7 @@ per-symbol Kraft / Gibbs framework (`InformationTheory/Shannon/ShannonCode/Basic
 McMillan itself is not reproved here; this file is a bridge, not a
 re-derivation.
 
-The result is an expectation-level source-coding converse (Cover–Thomas 5.4):
+The result is an expectation-level source-coding converse (Cover–Thomas):
 for any finite-alphabet source `P` whose codeword assignment `c : α → List β`
 is injective with a uniquely-decodable image, the entropy lower-bounds the
 expected code length,

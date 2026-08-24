@@ -10,7 +10,7 @@ This file builds the threading foundation for the LZ78 achievability bound
 `ziv_aseventual_le_blockLogAvg₂`
 (`InformationTheory/Shannon/LZ78/AsymptoticOptimality/ParentBridgeAchievability.lean`).
 
-The Ziv `(k-state, length)`-grouping (Cover-Thomas Lemma 13.5.5) needs to
+The Ziv `(k-state, length)`-grouping (Cover-Thomas) needs to
 identify the `k`-Markov negative log-likelihood of a block,
 `negLogQk μ p k n ω = ∑_{i<n} pmfLogCondMarkov μ p k i ω`
 (`SMB/AlgoetCover/KMarkovApproximation.lean`), with a sum over the LZ phrases,

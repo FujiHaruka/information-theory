@@ -7,7 +7,7 @@ import InformationTheory.Shannon.NormalizedSinc
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Whittaker–Shannon sampling theorem (Fourier-series route, Cover–Thomas Ch. 9.6)
+# Whittaker–Shannon sampling theorem (Fourier-series route, Cover–Thomas)
 
 This file proves the Whittaker–Shannon (cardinal series) sampling theorem via the
 **L² Fourier series on the circle** route, reusing the normalized sinc scaffolding of

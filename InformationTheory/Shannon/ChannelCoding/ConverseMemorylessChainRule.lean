@@ -9,7 +9,7 @@ import InformationTheory.Shannon.MutualInfo
 
 A memoryless predicate for a discrete memoryless channel together with the conditional
 mutual-information chain-rule lemmas it needs, used to derive the per-summand inequality of
-the general-input channel coding converse (Cover–Thomas 7.9) from memorylessness alone.
+the general-input channel coding converse (Cover–Thomas) from memorylessness alone.
 
 ## Main definitions
 

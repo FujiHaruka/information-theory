@@ -12,7 +12,7 @@ For probability measures `P, Q` on a finite alphabet `α` with `P ≪ Q`, the to
 norm `tvNorm P Q := (1/2) * ∑ x, |P.real {x} - Q.real {x}|` is bounded by the square root of
 the Kullback–Leibler divergence: `tvNorm P Q ≤ √((klDiv P Q).toReal)`.
 
-This is the weak form with constant `1`; the sharp Cover–Thomas (11.6) form
+This is the weak form with constant `1`; the sharp Cover–Thomas form
 `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)` is proved separately in `Pinsker/Sharp.lean`.
 
 ## Main definitions
@@ -32,7 +32,7 @@ Cauchy–Schwarz factorization `|p - q| = |√p - √q| · (√p + √q)`, bound
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Section 11.6.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon.Pinsker

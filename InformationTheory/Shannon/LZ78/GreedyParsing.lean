@@ -11,7 +11,7 @@ import Mathlib.Data.List.Range
 This file publishes the per-phrase bit-length cost of an LZ78
 phrase: the number of bits needed to encode one `(parent-index, symbol)`
 pair given a dictionary size and an alphabet size. This is the
-Cover–Thomas Ch.13.5 per-phrase cost form
+Cover–Thomas per-phrase cost form
 
 ```
 LZ78Phrase.bitLength c a = Nat.log 2 (c + 1) + Nat.log 2 a + 2
@@ -55,7 +55,7 @@ Given dictionary size `c` and alphabet size `a`, encoding one phrase
   `+ 1` for the floor-vs-ceil `Nat.log` gap).
 * `Nat.log 2 a + 1` bits for the alphabet symbol.
 
-This is the Cover–Thomas Ch.13.5 per-phrase cost form. -/
+This is the Cover–Thomas per-phrase cost form. -/
 def LZ78Phrase.bitLength (c a : ℕ) : ℕ :=
   (Nat.log 2 (c + 1) + 1) + (Nat.log 2 a + 1)
 

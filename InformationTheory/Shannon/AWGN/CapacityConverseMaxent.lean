@@ -25,7 +25,7 @@ This discharges the `h_max_ent` hypothesis of
 
 ## Implementation notes
 
-The argument follows Cover–Thomas 9.1. `I(X;Y) = h(Y) − h(Y|X)` (chain rule
+The argument follows Cover–Thomas. `I(X;Y) = h(Y) − h(Y|X)` (chain rule
 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`) combines with the Gaussian
 max-entropy bound `differentialEntropy_le_gaussian_of_variance_le`:
 
@@ -830,7 +830,7 @@ theorem awgn_per_input_mi_le_log
 /-! ## Capacity closed form -/
 
 open InformationTheory.Shannon.ChannelCoding in
-/-- AWGN capacity closed form (Cover-Thomas 9.1).
+/-- AWGN capacity closed form (Cover-Thomas).
 
 `awgnCapacity P N = (1/2) log(1 + P/N)`. This supersedes
 `awgnCapacity_eq` (`AWGN/Basic.lean`): there the converse

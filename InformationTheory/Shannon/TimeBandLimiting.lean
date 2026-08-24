@@ -7,7 +7,7 @@ import InformationTheory.Shannon.TimeBandLimiting.Count
 /-!
 # The time-and-band-limiting operator on `L²(ℝ;ℂ)`
 
-Cover–Thomas Ch. 9.6 (Shannon–Hartley). This file builds the
+Cover–Thomas (Shannon–Hartley). This file builds the
 self-adjoint positive contraction
 
     `A = P_W ∘ Q_T ∘ P_W`

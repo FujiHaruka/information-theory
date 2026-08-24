@@ -28,7 +28,6 @@ avoids a swap step via `mutualInfo_map_left_measurableEquiv`.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 7.12.
 -/
 
 namespace InformationTheory.Shannon.ChannelCodingFeedback

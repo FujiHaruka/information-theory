@@ -11,7 +11,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Piecewise
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Log-optimal portfolios (Cover–Thomas Chapter 16)
+# Log-optimal portfolios (Cover–Thomas)
 
 For a market on a finite outcome space `α` with true law `p : α → ℝ` and price
 relatives `X : α → (Fin m → ℝ)` (the factor by which stock `i` multiplies wealth in
@@ -30,18 +30,17 @@ This is the non-diagonal generalization of the horse-race doubling rate
 
 ## Main statements
 
-* `competitive_optimality` — Theorem 16.6.1: for a Kuhn–Tucker portfolio `bs`, every
+* `competitive_optimality` — for a Kuhn–Tucker portfolio `bs`, every
   portfolio `b` satisfies `E[S_b / S_bs] ≤ 1`.
-* `growthRate_concaveOn` — Theorem 16.2.2: the growth rate is concave on the simplex.
-* `logOptimal_of_kuhnTucker` — Theorem 16.2.1 (reverse): the Kuhn–Tucker condition
+* `growthRate_concaveOn` — the growth rate is concave on the simplex.
+* `logOptimal_of_kuhnTucker` — reverse: the Kuhn–Tucker condition
   implies log-optimality.
-* `kuhnTucker_of_logOptimal` — Theorem 16.2.1 (forward): log-optimality implies the
+* `kuhnTucker_of_logOptimal` — forward: log-optimality implies the
   Kuhn–Tucker condition.
 
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Chapter 16.
 -/
 
 namespace InformationTheory.Shannon.Portfolio
@@ -59,7 +58,7 @@ noncomputable def wealthRelative (X : α → Fin m → ℝ) (b : Fin m → ℝ) 
 noncomputable def growthRate (p : α → ℝ) (X : α → Fin m → ℝ) (b : Fin m → ℝ) : ℝ :=
   ∑ a, p a * Real.log (wealthRelative X b a)
 
-/-- Theorem 16.6.1 (Cover–Thomas): competitive optimality of a Kuhn–Tucker portfolio
+/-- (Cover–Thomas): competitive optimality of a Kuhn–Tucker portfolio
 `bs`. If `bs` satisfies the Kuhn–Tucker condition `∀ i, ∑ a, p a · X a i / S_bs(a) ≤ 1`,
 then every portfolio `b` on the simplex has expected wealth ratio at most one,
 `∑ a, p a · (S_b(a) / S_bs(a)) ≤ 1`.
@@ -132,7 +131,7 @@ theorem growthTerm_concaveOn (p : α → ℝ) (X : α → Fin m → ℝ) (a : α
   have := hconc.smul hpa
   simpa only [smul_eq_mul, Function.comp_apply, hgeval] using this
 
-/-- Theorem 16.2.2 (Cover–Thomas): the growth rate is concave in the portfolio.
+/-- (Cover–Thomas): the growth rate is concave in the portfolio.
 
 @audit:ok -/
 @[entry_point]
@@ -146,7 +145,7 @@ theorem growthRate_concaveOn (p : α → ℝ) (X : α → Fin m → ℝ) (hp : p
     (fun a b ↦ p a * Real.log (wealthRelative X b a)) Finset.univ key
   exact h
 
-/-- Theorem 16.2.1 (Cover–Thomas), reverse direction: a portfolio `bs` satisfying the
+/-- (Cover–Thomas), reverse direction: a portfolio `bs` satisfying the
 Kuhn–Tucker condition is log-optimal (maximizes the growth rate on the simplex).
 
 @audit:ok -/
@@ -184,7 +183,7 @@ theorem logOptimal_of_kuhnTucker (p : α → ℝ) (X : α → Fin m → ℝ) (bs
     exact Finset.sum_nonneg (fun a _ ↦ mul_nonneg (hp.1 a) (hratio_pos a).le)
   linarith [hdecomp, hjensen, hlog_nonpos]
 
-/-- Theorem 16.2.1 (Cover–Thomas), forward direction: a log-optimal portfolio `bs`
+/-- (Cover–Thomas), forward direction: a log-optimal portfolio `bs`
 satisfies the Kuhn–Tucker condition `∀ i, ∑ a, p a · X a i / S_bs(a) ≤ 1`.
 
 @audit:ok -/

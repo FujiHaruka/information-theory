@@ -6,7 +6,7 @@ import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 /-!
 # Incompressible binary sequences obey the law of large numbers
 
-Cover–Thomas (2nd ed.) Theorem 14.5.1. An incompressible length-`n` binary
+Cover–Thomas (2nd ed.). An incompressible length-`n` binary
 string — one whose conditional Kolmogorov complexity is at least its own length,
 `n ≤ C(encodeBlock n b ∣ n)` — has empirical frequency of ones
 `typeCount b true / n` close to `1/2`, and for a family of such strings the

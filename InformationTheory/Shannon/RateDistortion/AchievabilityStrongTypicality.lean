@@ -11,7 +11,7 @@ import InformationTheory.Shannon.RateDistortion.AchievabilityStrongTypicality.Fa
 
 The rate-distortion achievability theorem, assembled from the
 strong-encoder random-coding chain via `conditionalStronglyTypicalSlice_mass_ge`
-(`ConditionalMethodOfTypes.lean`), the Cover–Thomas 10.6.1 strong-typicality
+(`ConditionalMethodOfTypes.lean`), the Cover–Thomas strong-typicality
 conditional slice mass lower bound.
 
 ## Architectural note

@@ -22,9 +22,9 @@ import Mathlib.Analysis.Calculus.Deriv.Slope
 import InformationTheory.Shannon.Portfolio.StationaryMarket
 
 /-!
-# Measurable selection of a log-optimal portfolio (Cover–Thomas §16.5)
+# Measurable selection of a log-optimal portfolio (Cover–Thomas)
 
-Gateway lemma for the stationary-market `W_∞` AEP (Theorem 16.5.1): a concave Carathéodory
+Gateway lemma for the stationary-market `W_∞` AEP: a concave Carathéodory
 objective (measurable in the sample point, continuous and concave in the portfolio) admits a
 measurable selection of an argmax over the standard simplex. This is a measurable-maximum
 theorem. Mathlib has no ready measurable-selection lemma (see
@@ -37,7 +37,6 @@ maximizer of `F ω` (the point of the argmax set nearest the origin).
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  §16.5.
 -/
 
 namespace InformationTheory.Shannon.Portfolio
@@ -315,7 +314,7 @@ theorem exists_measurable_argmax_on_stdSimplex [Nonempty (Fin m)]
 end MeasurableArgmax
 
 /-!
-## Monotone convergence of the conditional-optimal growth rate (Cover–Thomas §16.5)
+## Monotone convergence of the conditional-optimal growth rate (Cover–Thomas)
 
 For an increasing filtration `ℱ` of the market's past, the conditional log-optimal portfolio at
 stage `k` (past-`ℱ k`-measurable) has an expected growth `condOptGrowth k`. Conditioning on more
@@ -727,7 +726,7 @@ theorem condOptGrowth_bddAbove (μ : Measure Ω) (X : Ω → Fin m → ℝ)
   exact hC (bstar k) (hsimplex k) (hintb k)
 
 /-- The conditional-optimal expected growth converges monotonically to the infinite-past optimal
-growth `W_∞` (Cover–Thomas §16.5). There is a stagewise conditional log-optimal portfolio
+growth `W_∞` (Cover–Thomas). There is a stagewise conditional log-optimal portfolio
 sequence `bstar` (past-measurable, dominating all past-measurable competitors) whose expected
 growth `condOptGrowth` is monotone, bounded above, and converges to its supremum
 `condOptGrowthInfty = W_∞`. The monotone-convergence conclusion is proved, not assumed:
@@ -781,7 +780,7 @@ private noncomputable def condExpPortfolioPatched [Nonempty (Fin m)] (μ : Measu
   if condExpPortfolio μ ℱ g k ω ∈ stdSimplex ℝ (Fin m) then condExpPortfolio μ ℱ g k ω
   else Pi.single (Classical.arbitrary (Fin m)) 1
 
-/-- Gateway identity for the stationary-market `W_∞` AEP (Cover–Thomas §16.5): the growth-rate
+/-- Gateway identity for the stationary-market `W_∞` AEP (Cover–Thomas): the growth-rate
 integral of the infinite-past (`⨆ k, ℱ k`) conditional log-optimal portfolio `bstarInf` equals the
 increasing limit `W_∞ = condOptGrowthInfty` of the stagewise conditional-optimal growths. This is
 the identity that lets the Algoet–Cover sandwich for `(1/n) log S*_n → W_∞` reduce to a direct
@@ -979,7 +978,7 @@ theorem exists_infPast_condLogOptimal [StandardBorelSpace Ω] [Nonempty Ω]
 
 /-- A fixed infinite-past conditional log-optimal portfolio `bstarInf` achieves the optimal growth
 rate `W_∞ = condOptGrowthInfty` as the almost-sure Birkhoff time average of its per-epoch log
-return under a measure-preserving ergodic shift `T` (Cover–Thomas §16.5). The optimal
+return under a measure-preserving ergodic shift `T` (Cover–Thomas). The optimal
 sequence `bstar` and its infinite-past companion `bstarInf` are constructed internally
 (`exists_condOptGrowth_tendsto_condOptGrowthInfty` and `exists_infPast_condLogOptimal`) and their
 conditional-dominance properties are established, so the conclusion carries no optimization
@@ -1069,7 +1068,7 @@ private theorem condExp_nonpos_of_forall_setIntegral_nonpos {α : Type*}
   exact H s hs
 
 /-- Conditional Kuhn–Tucker inequality for the infinite-past (`⨆ j, ℱ j`) conditional log-optimal
-portfolio `bstarInf` (Cover–Thomas §16.5). For every `⨆ j, ℱ j`-measurable simplex
+portfolio `bstarInf` (Cover–Thomas). For every `⨆ j, ℱ j`-measurable simplex
 competitor `c`, the conditional expectation of the one-step wealth ratio
 `(∑ⱼ cⱼ Xⱼ) / (∑ⱼ bstarInfⱼ Xⱼ)` given the infinite past is at most `1`. This is the multiplicative
 form of the additive dominance `hInf_dom` — the one-step supermartingale bound at the heart of the

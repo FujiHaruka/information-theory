@@ -4,7 +4,7 @@ import InformationTheory.Shannon.Sanov.Basic
 import Mathlib.MeasureTheory.Order.Group.Lattice
 
 /-!
-# Strong typicality (Cover-Thomas Theorem 11.2)
+# Strong typicality (Cover-Thomas)
 
 Three main theorems for the strongly typical set
 `A^*_ε^n := { x : Fin n → α | ∀ a, |(typeCount x a : ℝ)/n - P(a)| ≤ ε }`:
@@ -37,7 +37,6 @@ probability convergence.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 11.2.
 -/
 
 namespace InformationTheory.Shannon

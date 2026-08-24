@@ -16,12 +16,12 @@ real-analysis content rather than a hypothesis pass-through.
 
 The target predicate unfolds to
 `(fun n => ((p n).count : ℝ)) =O[atTop] (fun n => (n : ℝ) / Real.log n)`,
-i.e. the Cover–Thomas Eq. 13.124 statement `c(n) = O(n / log n)`.
+i.e. the Cover–Thomas statement `c(n) = O(n / log n)`.
 
 ## Approach
 
 The substantive ingredient is the inversion of the Ziv counting
-inequality. Cover–Thomas Lemma 13.5.2 gives, for an LZ78 parsing of a
+inequality. Cover–Thomas gives, for an LZ78 parsing of a
 length-`n` string over a `b`-symbol alphabet, the *primitive* bound
 
 ```
@@ -187,7 +187,7 @@ variable {α : Type*}
 /-- The primitive Ziv `c·log c` product predicate.
 
 For a family of parsings `p : ℕ → LZ78Parsing α` and constant `K : ℝ`,
-this asserts the Cover–Thomas Lemma 13.5.2 primitive bound `(★)`:
+this asserts the Cover–Thomas primitive bound `(★)`:
 eventually `c(n) · log c(n) ≤ K · n`. This is *strictly more primitive*
 than `IsLZ78PhraseCountAsymptotic` — the latter is derived from it by the
 inversion lemma of §2. -/

@@ -5,7 +5,7 @@ import Mathlib.Data.Nat.Choose.Multinomial
 # Multinomial lower bound (Stirling-free)
 
 The Stirling-free multinomial lower bound for the type class cardinality
-(Cover-Thomas 11.1.3):
+(Cover-Thomas):
 `(n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ |T_c|`.
 
 ## Main statements
@@ -23,7 +23,7 @@ The Stirling-free multinomial lower bound for the type class cardinality
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 11.1.3.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

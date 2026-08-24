@@ -7,7 +7,7 @@ import Mathlib.Tactic.Positivity
 /-!
 # Stam convex Fisher bound — Gaussian instance
 
-EPI (Ch.17) follow-up to the Stam inequality core `J(X+Y) ≤ λ² J(X) + (1-λ)² J(Y)`.
+EPI follow-up to the Stam inequality core `J(X+Y) ≤ λ² J(X) + (1-λ)² J(Y)`.
 
 Keyed on the V2 Fisher information `fisherInfoOfMeasureV2`, which evaluates to the
 closed form `1/v` for a Gaussian with variance `v`. The proof reduces the convex

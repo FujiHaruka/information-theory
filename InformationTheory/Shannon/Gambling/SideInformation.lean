@@ -3,7 +3,7 @@ import InformationTheory.Shannon.Gambling.Basic
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# Gambling with side information (Cover–Thomas Theorem 6.1.3)
+# Gambling with side information (Cover–Thomas)
 
 A horse race on a finite alphabet `α` (the outcome `X`) is run while a gambler observes
 side information `Y` on a finite alphabet `γ`. The joint law is presented in factored
@@ -23,13 +23,12 @@ information `I(X; Y)`.
 
 * `condDoublingRate_le_proportional` — conditional Kelly optimality: proportional betting on
   each observed `y` maximizes the conditional doubling rate.
-* `sideInfo_doublingRate_increment_eq_mutualInfo` — Theorem 6.1.3: the increment of the
+* `sideInfo_doublingRate_increment_eq_mutualInfo` — the increment of the
   optimal doubling rate due to the side information `Y` equals `I(X; Y)`.
 
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 6.1.3.
 -/
 
 namespace InformationTheory.Shannon.Gambling
@@ -118,8 +117,8 @@ lemma condDoublingRate_proportional_eq (o : α → ℝ) (pY : γ → ℝ) (pXgiv
     rw [doublingRate_proportional_eq (pXgivenY y) o (hcond y) ho, mul_sub]
   rw [key, sideInfo_logOdds_cancel]
 
-/-- Chain rule bridge `H(X, Y) = H(Y) + H(X | Y)` in pmf form (the honesty linchpin of
-Theorem 6.1.3: it lets the symmetric `sideInfoMutualInfo` be recognized as the doubling-rate
+/-- Chain rule bridge `H(X, Y) = H(Y) + H(X | Y)` in pmf form (the honesty linchpin of the
+theorem: it lets the symmetric `sideInfoMutualInfo` be recognized as the doubling-rate
 increment without defining the latter to match).
 sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`); an independent identity via the unconditional `Real.negMulLog_mul`
@@ -156,8 +155,7 @@ lemma sideInfoJointEntropy_eq_chain (pY : γ → ℝ) (pXgivenY : γ → α → 
 
 /-- Proportional (Kelly) betting on each observed value of the side information maximizes
 the conditional doubling rate: for any full-support strategy `b` and positive odds `o`,
-`W(b | Y) ≤ W(pXgivenY | Y)`. This is the conditional step towards Cover–Thomas
-Theorem 6.1.3.
+`W(b | Y) ≤ W(pXgivenY | Y)`. This is the conditional step towards Cover–Thomas.
 sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`); per-`y` reuse of `doublingRate_le_proportional` weighted by
 `pY y ≥ 0`, no bundling. All hypotheses are regularity preconditions (`hpY`/`hcond` pmf,
@@ -180,7 +178,7 @@ theorem condDoublingRate_le_proportional
 /-- The increment of the optimal doubling rate obtained from the side information `Y` equals
 the mutual information `I(X; Y)`. Writing `W*(X | Y)` for the optimal conditional doubling
 rate and `W*(X)` for the optimal doubling rate of the `X`-marginal,
-`W*(X | Y) − W*(X) = I(X; Y)`. This is Cover–Thomas Theorem 6.1.3 (gambling with side
+`W*(X | Y) − W*(X) = I(X; Y)`. This is Cover–Thomas (gambling with side
 information).
 sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). Not trivial-circular: the increment reduces to `H(X) − H(X|Y)`, but the RHS

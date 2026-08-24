@@ -8,7 +8,7 @@ import Mathlib.Topology.Order.LiminfLimsup
 /-!
 # Lempel–Ziv 78 asymptotic optimality
 
-Cover–Thomas Theorem 13.5.3 (Ch.13 Universal Source Coding): for a
+Cover–Thomas (Universal Source Coding): for a
 stationary ergodic source `{X_i}` on a finite alphabet `α`, the per-symbol
 output length of the LZ78 dictionary code converges almost surely to the
 entropy rate:
@@ -45,10 +45,10 @@ and derives a.s. convergence of `lz/n` to `L` by
 hypotheses on whatever encoding the caller supplies, not a claim that some
 encoding achieves the entropy rate.
 
-For the greedy LZ78 parser the two halves carry the substance of Theorem
-13.5.3: the achievability upper bound `∀ᵐ ω, limsup (lz/n) ≤ entropyRate₂`
-(Ziv's inequality, Cover–Thomas Lemma 13.5.5, Eq. 13.124) and the converse
-lower bound `∀ᵐ ω, entropyRate₂ ≤ liminf (lz/n)` (Eq. 13.130). They are
+For the greedy LZ78 parser the two halves carry the substance:
+the achievability upper bound `∀ᵐ ω, limsup (lz/n) ≤ entropyRate₂`
+(Ziv's inequality, Cover–Thomas) and the converse
+lower bound `∀ᵐ ω, entropyRate₂ ≤ liminf (lz/n)`. They are
 `lz78Greedy_achievability_ae` (`AsymptoticOptimality/ParentBridgeAchievability.lean`)
 and `lz78Greedy_converse_ae` (`AsymptoticOptimality/ParentBridgeConverse.lean`);
 the headline instantiating the combinator with them at `L = entropyRate₂` is
@@ -81,7 +81,7 @@ section LZ78Structures
 `none` for the empty-prefix root (the very first phrase ever emitted).
 * `symbol : α` is the single new alphabet symbol appended.
 
-This is the Cover–Thomas Ch.13.5 dictionary entry encoded at the type
+This is the Cover–Thomas dictionary entry encoded at the type
 level. Concrete `lz78Encode : List α → LZ78Parsing α` parsing is supplied
 externally; see the file-level docstring. -/
 structure LZ78Phrase (α : Type*) where
@@ -123,7 +123,7 @@ end LZ78Phrase
 together with the structural invariant that every `parent = some k`
 references an earlier (strictly smaller) phrase index.
 
-This is the minimal Cover–Thomas Ch.13.5 LZ78 dictionary structure: a list
+This is the minimal Cover–Thomas LZ78 dictionary structure: a list
 of phrases whose parent references back-point into the already-emitted
 prefix of the list. -/
 structure LZ78Parsing (α : Type*) where

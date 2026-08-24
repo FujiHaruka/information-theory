@@ -25,7 +25,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ### Source-coding theorem, weak converse
 
-The source-coding converse (Cover-Thomas Theorem 5.4.1) is stated in
+The source-coding converse (Cover-Thomas) is stated in
 `Filter.liminf` form. The block entropy identity `H(X^n) = n · H(X)` is not
 available from the `Pairwise IndepFun` hypothesis used elsewhere in this family,
 so the converse takes mutual independence (`iIndepFun`) as a hypothesis.

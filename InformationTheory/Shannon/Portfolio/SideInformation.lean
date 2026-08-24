@@ -3,7 +3,7 @@ import InformationTheory.Shannon.Portfolio.Basic
 import InformationTheory.Shannon.Gambling.SideInformation
 
 /-!
-# Log-optimal portfolios with side information (Cover–Thomas §16.4)
+# Log-optimal portfolios with side information (Cover–Thomas)
 
 An investor allocating wealth across `m` stocks with price relatives
 `X : α → (Fin m → ℝ)` observes side information `Y` on a finite alphabet `γ`. The joint
@@ -28,13 +28,12 @@ log-optimal portfolio.
 
 ## Main statements
 
-* `sideInfo_growthRate_increment_le_mutualInfo` — Theorem 16.4.1: the increment of the
+* `sideInfo_growthRate_increment_le_mutualInfo` — the increment of the
   growth rate due to side information `Y` is at most the mutual information `I(X; Y)`.
 
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Section 16.4.
 -/
 
 namespace InformationTheory.Shannon.Portfolio
@@ -124,7 +123,7 @@ lemma increment_eq (X : α → Fin m → ℝ) (bs : Fin m → ℝ) (bcond : γ �
   refine congrArg (pY y * ·) (Finset.sum_congr rfl (fun x _ ↦ ?_))
   rw [← mul_sub]
 
-/-- Theorem 16.4.1 (Cover–Thomas, portfolio with side information): the increment of the
+/-- (Cover–Thomas, portfolio with side information): the increment of the
 growth rate obtained from the side information `Y` is bounded above by the mutual
 information `I(X; Y)`. Here `bs` is a marginal log-optimal (Kuhn–Tucker) portfolio and
 `bcond y` an arbitrary portfolio on the simplex for each observed `y`, so

@@ -4,7 +4,7 @@ import InformationTheory.Shannon.Huffman.SwapNormCompletion
 import InformationTheory.Shannon.Huffman.SwapNormProof
 
 /-!
-# Swap normalization and Huffman optimality (Cover–Thomas Theorem 5.8.1)
+# Swap normalization and Huffman optimality (Cover–Thomas)
 
 Provides the constructive proof that `SwapNormalizationHypothesis` holds
 (`swap_normalization_proof`), and thereby establishes the unconditional optimality theorem
@@ -28,7 +28,7 @@ The swap normalization proof proceeds in three steps:
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 5.8.1.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon.Huffman

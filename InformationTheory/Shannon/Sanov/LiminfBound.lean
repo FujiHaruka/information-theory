@@ -3,7 +3,7 @@ import InformationTheory.Shannon.Sanov.MultinomialLowerBound
 /-!
 # Sanov LDP liminf lower bound
 
-The liminf lower bound for Sanov's theorem (Cover-Thomas Theorem 11.4.1):
+The liminf lower bound for Sanov's theorem (Cover-Thomas):
 `liminf (1/n) log Q^n(⋃ c ∈ E n, T_c) ≥ -D`, extracted by sandwiching the
 per-`n` lower bound with `|α| log(n+1)/n → 0`.
 
@@ -18,7 +18,7 @@ per-`n` lower bound with `|α| log(n+1)/n → 0`.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 11.4.1.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

@@ -1201,7 +1201,7 @@ theorem bc_achievability_of_infoJoint_ge
     (by rw [max_eq_left hR₁.le]; linarith) hε'
 
 /-- Achievability half of the degraded broadcast channel coding theorem, in the superposition
-inner-bound form of Cover–Thomas *Elements of Information Theory* Thm 15.6.2.  Over a physically
+inner-bound form of Cover–Thomas *Elements of Information Theory*.  Over a physically
 degraded broadcast channel `W` with cloud law `pU` and conditional input kernel `K`, any
 rate pair strictly inside the auxiliary-variable region
 

@@ -6,7 +6,7 @@ import Mathlib.Analysis.Asymptotics.Lemmas
 /-!
 # Sanov's theorem — LDP upper bound (B form)
 
-Cover-Thomas Theorem 11.4.1: for any family `E n ⊆ TypeCountIndex α n`,
+Cover-Thomas: for any family `E n ⊆ TypeCountIndex α n`,
 
 ```
 (1/n) log Q^n({x | typeCount x ∈ E n}) ≤ -D* + ε   (eventually)
@@ -41,7 +41,7 @@ where `D* = inf_{c ∈ E n} klDivIndex c n Q`.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 11.4.1.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

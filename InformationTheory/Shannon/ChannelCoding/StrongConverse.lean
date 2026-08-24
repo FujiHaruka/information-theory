@@ -6,7 +6,7 @@ import Mathlib.MeasureTheory.Constructions.Pi
 /-!
 # Channel coding strong converse — Verdú-Han single-shot lower bound
 
-Single-shot Verdú-Han lower bound (Lemma 4.2.2) for the channel coding strong converse.
+Single-shot Verdú-Han lower bound for the channel coding strong converse.
 For any code `c`, reference output law `Q^n`, and `γ > 0`, with `threshold := log M + γ`:
 
 ```

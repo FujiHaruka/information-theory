@@ -2,9 +2,9 @@ import InformationTheory.Shannon.Portfolio.StationaryWinftyAEP
 import InformationTheory.Probability.TwoSidedExtension.Backward
 
 /-!
-# Concrete two-sided market instantiation of the growing-memory `W_∞` AEP (Cover–Thomas §16.5)
+# Concrete two-sided market instantiation of the growing-memory `W_∞` AEP (Cover–Thomas)
 
-The abstract Theorem 16.5.1 headline
+The abstract headline
 `growingMemory_logWealth_tendsto_condOptGrowthInfty` is stated for an arbitrary increasing
 filtration `ℱ` and measure-preserving map `T`, conditional on two measurability-only shift/past
 *coherence* hypotheses (`hcoh`, `hcoh_inf`) linking the filtration to the shift orbit. This file
@@ -194,7 +194,7 @@ private lemma coherence_upper
 
 /-! ## Concrete headline -/
 
-/-- Growing-memory `W_∞` AEP (Cover–Thomas Theorem 16.5.1) for the concrete two-sided market: the
+/-- Growing-memory `W_∞` AEP (Cover–Thomas) for the concrete two-sided market: the
 growing-memory log-wealth average converges almost surely to the infinite-past optimal growth rate
 `W_∞ = condOptGrowthInfty`. The sequence space is `Ω = ∀ _ : ℤ, Fin m → ℝ`, the dynamics is the
 two-sided shift `shiftZ`, the per-epoch price relative is the coordinate-0 projection `coord0`, and

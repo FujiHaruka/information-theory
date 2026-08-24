@@ -10,7 +10,7 @@ import Mathlib.Analysis.Convex.Function
 # Differential entropy and Gaussian max-entropy
 
 Differential entropy `h(X) = -∫ f log f dx` for real-valued random variables
-and the Gaussian maximum-entropy theorem (Cover–Thomas §8.1, §8.6.1, §9.6).
+and the Gaussian maximum-entropy theorem (Cover–Thomas).
 
 ## Main definitions
 

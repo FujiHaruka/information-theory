@@ -8,7 +8,7 @@ import Mathlib.Algebra.BigOperators.Fin
 # Rounded type sequence (achievable type index)
 
 The achievable type sequence `roundedTypeIndex P n` for Sanov's theorem
-(Cover-Thomas Theorem 11.4.1), built by floor rounding with a single absorber
+(Cover-Thomas), built by floor rounding with a single absorber
 letter to satisfy the sum constraint exactly.
 
 ## Implementation notes
@@ -23,7 +23,7 @@ letter to satisfy the sum constraint exactly.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 11.4.1.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

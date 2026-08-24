@@ -4,7 +4,7 @@ import InformationTheory.Shannon.MultipleAccess.Achievability.Codebook
 /-!
 # Multiple access channel — two-codebook random-coding average and achievability
 
-The random-coding argument on top of the codebook plumbing (Cover–Thomas §15.3.1): the
+The random-coding argument on top of the codebook plumbing (Cover–Thomas): the
 per-event codebook-average swaps, the arithmetic aggregating them, the two-codebook average
 bound, the random → deterministic pigeonhole, and the achievability headline `mac_achievability`.
 -/
@@ -941,7 +941,7 @@ theorem mac_E3_lt_of_rate {Iboth R₁ R₂ ε ε' : ℝ}
 /-! ### Headline -/
 
 omit [DecidableEq α₁] [DecidableEq α₂] [DecidableEq β] in
-/-- Achievability of the MAC corner-point region (Cover–Thomas Theorem 15.3.1): for an
+/-- Achievability of the MAC corner-point region (Cover–Thomas): for an
 independent product input `p₁ ⊗ p₂` with full-support marginals and a full-support MAC
 channel `W`, any rate pair `(R₁, R₂)` strictly inside the corner-point region
 `R₁ < I(X₁; (X₂, Y))`, `R₂ < I(X₂; (X₁, Y))`, `R₁ + R₂ < I((X₁, X₂); Y)` is

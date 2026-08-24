@@ -14,7 +14,7 @@ import InformationTheory.Meta.EntryPoint
 
 The Legendre transform of a real-valued function and the Cramér rate
 function (`I(a) = Λ^*(a)` for `Λ = cgf X μ`), together with the upper bound of
-Cramér's large deviation theorem (Cover–Thomas, Theorem 11.4.1, upper half) in
+Cramér's large deviation theorem (Cover–Thomas, upper half) in
 per-`n` Chernoff, log, and limsup forms. The lower bound is developed downstream
 in `CramerGeneralLower.lean`.
 
@@ -35,7 +35,7 @@ in `CramerGeneralLower.lean`.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley,
-  2006. Theorem 11.4.1.
+  2006.
 -/
 
 namespace InformationTheory.Shannon.Cramer

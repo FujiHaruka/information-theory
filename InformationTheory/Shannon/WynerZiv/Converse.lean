@@ -6,7 +6,7 @@ import InformationTheory.Shannon.WynerZiv.Converse.Headline
 # Wyner–Ziv converse (operational lower bound on the rate)
 
 This file provides the converse leg of the Wyner–Ziv operational main theorem
-(Cover–Thomas Thm 15.9.1): every achievable rate `R` at distortion `D` for the
+(Cover–Thomas): every achievable rate `R` at distortion `D` for the
 i.i.d. source `P_XY` with decoder side information satisfies
 `R_WZ(D) ≤ R`, where `R_WZ` is the reshaped Wyner–Ziv rate function
 `wynerZivRate` — the infimum of the objective over feasible factorizable points

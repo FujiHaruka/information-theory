@@ -18,7 +18,7 @@ import Mathlib.Probability.Independence.Basic
 
 The EPI proof pieces:
 
-* The Stam inequality (Cover-Thomas Lemma 17.7.2). Step 4 (λ-optimization closed
+* The Stam inequality (Cover-Thomas). Step 4 (λ-optimization closed
   form `J_sum ≤ J_X J_Y / (J_X + J_Y)`) is *fully arithmetic*, in
   `EPI/Stam/Inequality.lean` (`stam_lambda_min`, `stam_lambda_lower_bound`,
   `stam_inverse_form_of_harmonic_mean`). The Step 2-3 analytic core (the
@@ -69,13 +69,13 @@ claim.
 
 ## Implementation notes
 
-The conditional Cauchy-Schwarz plus convex Fisher bound (Cover-Thomas 17.7.2's
+The conditional Cauchy-Schwarz plus convex Fisher bound (Cover-Thomas's
 deepest analytic content) is localized to `stamCauchySchwarzOptimal_of_indepFun`, which
 produces it from regularity preconditions alone via
 `convex_fisher_bound_of_ready`; `isStamInequalityHyp_via_body`
 (`EPI/Stam/Inequality.lean`) reshapes that harmonic-mean bound into the published
 `IsStamInequalityHyp` signature. The Stam→EPI bridge (`IsStamToEPIBridgeHyp`,
-Csiszár scaling-path coupling, Cover-Thomas Lemma 17.7.3) is not a field of the
+Csiszár scaling-path coupling, Cover-Thomas) is not a field of the
 integrated pipeline: consumers that need the entropy power inequality supply it
 separately through `epi_via_stam`, discharged in the Gaussian case by
 `isStamToEPIBridgeHyp_of_gaussian`.

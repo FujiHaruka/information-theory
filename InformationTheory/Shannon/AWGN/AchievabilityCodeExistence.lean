@@ -15,7 +15,7 @@ import Mathlib.MeasureTheory.Constructions.Pi
 # AWGN achievability assembly
 
 The assembled achievability statement for the AWGN channel coding theorem
-(Cover–Thomas 9.2, Theorem 9.1.1): combining the random Gaussian codebook, the
+(Cover–Thomas): combining the random Gaussian codebook, the
 joint-typicality decoder and union bound, the power-constraint witness, and
 worst-half expurgation into the existence of good `(M, n)` codes for any rate
 below the Gaussian capacity.

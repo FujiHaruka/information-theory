@@ -4,7 +4,7 @@ import Mathlib.InformationTheory.KullbackLeibler.Basic
 /-!
 # Sanov's theorem — type class probability upper bound (A form)
 
-Cover-Thomas Theorem 11.1.4 (method of types):
+Cover-Thomas (method of types):
 
 ```
 Q^n(T(P)) ≤ exp(-n · D(P‖Q))
@@ -36,7 +36,7 @@ where `T(P) := { x : Fin n → α | ∀ a, #{i | x i = a} = n · P(a) }`.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 11.1.4.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

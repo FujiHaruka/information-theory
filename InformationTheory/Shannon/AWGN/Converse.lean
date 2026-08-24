@@ -7,7 +7,7 @@ import InformationTheory.Shannon.ChannelCoding.MIDecomp
 /-!
 # AWGN channel coding theorem: the converse
 
-The converse half of the AWGN channel coding theorem (Cover–Thomas, Chapter 9.1.2):
+The converse half of the AWGN channel coding theorem (Cover–Thomas):
 for every power-constrained block code, the rate is bounded by the channel capacity
 plus the Fano error terms.
 
@@ -39,7 +39,7 @@ The proof follows the standard route:
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley,
-  2006. Theorem 9.1.2.
+  2006.
 -/
 
 namespace InformationTheory.Shannon.AWGN

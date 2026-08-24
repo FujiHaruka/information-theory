@@ -34,7 +34,7 @@ term and the high-information-density tail term to `0`.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 7.9.1 (strong converse).
+ (strong converse).
 * J. Wolfowitz, *Coding Theorems of Information Theory*, Springer, 1978.
 -/
 

@@ -16,7 +16,7 @@ import InformationTheory.Shannon.AWGN.ConverseMutualInfoFiniteness
 
 /-! # AWGN channel-coding converse — Gaussian capacity bound and assembly
 
-Builds the capacity-bound layer of the AWGN channel-coding converse (Cover–Thomas, 9.1.2):
+Builds the capacity-bound layer of the AWGN channel-coding converse (Cover–Thomas):
 the per-letter input second moment, the per-letter Gaussian maximum-entropy bound, Jensen's
 inequality, the sum-form capacity bound `∑ᵢ I(Xᵢ; Yᵢ) ≤ n · (1/2) log(1 + P/N)`, and the
 final assembly into `log M ≤ n · (1/2) log(1 + P/N) + binEntropy(Pe) + Pe · log(M − 1)`.

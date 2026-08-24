@@ -18,7 +18,7 @@ Umbrella module re-exporting the three parts under `Achievability/`:
 * The codebook average is taken over the `p`-i.i.d. law
   `codebookMeasure p M n := Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))`
   on the finite space `Codebook M n α`. The probabilistic-method form matches
-  Cover-Thomas Theorem 7.7.3-4.
+  Cover-Thomas.
 * Decoder = `Classical.dec`-based "unique joint-typical `m`, else fallback `⟨0, hM⟩`".
 * Rate slack `ε := (I - R) / 6`; `M := Nat.ceil (Real.exp (n · R))`.
 -/

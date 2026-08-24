@@ -873,7 +873,7 @@ The body is split into four parts:
 
 `hindep` is load-bearing (both `hstep2` and `hsum` are false without memorylessness); it is a
 memoryless-source regularity precondition, not a bundled proof core. The chain is the standard
-Wyner–Ziv converse (Cover–Thomas §15.9).
+Wyner–Ziv converse (Cover–Thomas).
 @audit:ok (`hstep2` (memoryless collapse) and `hsum` (super-additivity) are closed by
 lemma applications — `condMutualInfo_chain_rule_Y_2var`, `condMutualInfo_prefix_chain_rule`,
 `wz_inputs_cond_indep`, deterministic-encoder Markov — not a load-bearing `*Hypothesis` bundle;
@@ -972,7 +972,7 @@ factorizable feasible point at its own budget `Dv i` (`w i ∈ wzRateValueSet �
 the block mutual-information difference,
 `∑ᵢ w i ≤ (I(J; Xⁿ) − I(J; Yⁿ)).toReal`.
 
-This is the single-letterization core (Cover–Thomas §15.9). The per-letter
+This is the single-letterization core (Cover–Thomas). The per-letter
 auxiliary is `Uᵢ := (J, Y_{\i})` — the encoder output `J` together with *all the
 other* side-information symbols `Y_{\i} = (Yⱼ)_{j≠i}` (the full block `Yⁿ = (Y_{\i},
 Yᵢ)` is forced onto `Uᵢ` because the reconstruction `X̂ᵢ = (decoder (J, Yⁿ))ᵢ` depends
@@ -1052,7 +1052,7 @@ distortion at most `D`, there is a *single-letterized* feasible factorizable poi
 `I(X;U) − I(Y;U)` is bounded by the per-symbol block mutual-information difference
 `(1/n)(I(J; Xⁿ) − I(J; Yⁿ))`.
 
-This is the analytic heart of the converse (Cover–Thomas §15.9): the auxiliary
+This is the analytic heart of the converse (Cover–Thomas): the auxiliary
 `Uᵢ := (J, Y_{\i})` gives, via the **conditional** mutual-information chain
 `∑ᵢ [I(Xᵢ;Uᵢ) − I(Yᵢ;Uᵢ)] = ∑ᵢ I(Xᵢ;Uᵢ|Yᵢ) = ∑ᵢ I(Xᵢ;J|Yⁿ) ≤ I(Xⁿ;J|Yⁿ) =
 I(J;Xⁿ) − I(J;Yⁿ)` (not the heterogeneous Csiszár sum identity, which is orphaned on

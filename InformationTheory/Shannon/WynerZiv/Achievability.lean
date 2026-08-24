@@ -11,7 +11,7 @@ import InformationTheory.Shannon.WynerZiv.Achievability.Headline
 # Wyner–Ziv operational achievability (binning + covering)
 
 This file assembles the operational achievability leg of the Wyner–Ziv theorem
-(Cover–Thomas Theorem 15.9.1): a rate `R` above the information-theoretic rate
+(Cover–Thomas): a rate `R` above the information-theoretic rate
 `wynerZivRate` is achievable at distortion `D` for the i.i.d. source `P_XY` with
 decoder side information `Y`.
 

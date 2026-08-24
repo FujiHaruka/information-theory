@@ -5,8 +5,8 @@ import InformationTheory.Shannon.AEP.Basic.Achievability
 /-!
 # AEP — Asymptotic Equipartition Property
 
-Formalization of the asymptotic equipartition property, Cover-Thomas Theorem
-3.1.1–3.1.2. This module re-exports the AEP core, the source-coding converse, and
+Formalization of the asymptotic equipartition property, Cover-Thomas.
+This module re-exports the AEP core, the source-coding converse, and
 the achievability development from the `AEP.Basic.*` submodules.
 
 ## Main definitions

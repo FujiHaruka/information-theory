@@ -3,7 +3,7 @@ import InformationTheory.Shannon.Sanov.LiminfBound
 /-!
 # Sanov LDP equality form (Tendsto sandwich)
 
-Cover-Thomas Theorem 11.4.1, simplified open-set form:
+Cover-Thomas, simplified open-set form:
 
 ```
 (1/n) log Q^n(⋃ c ∈ E n, T_c)  →  -D   as n → ∞
@@ -23,7 +23,7 @@ where `D = klDivSumForm_ofVec P (Q.real ∘ singleton)`, given `E n` eventually 
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 11.4.1.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

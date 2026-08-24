@@ -6,7 +6,7 @@ import InformationTheory.Shannon.ChannelCoding.Basic
 # Slepian–Wolf conditional typical slice
 
 This file publishes the conditional typical slice size bound, the key new
-ingredient for the full Slepian–Wolf rate region (Cover–Thomas Theorem 15.4.1).
+ingredient for the full Slepian–Wolf rate region (Cover–Thomas).
 For a fixed `Y`-block `y : Fin n → β`, the `X`-fiber of the jointly typical set
 is bounded in size by `exp(n · (H(X|Y) + 2ε))`, where `H(X|Y) := H(X, Y) - H(Y)`.
 

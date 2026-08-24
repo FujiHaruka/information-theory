@@ -3,8 +3,8 @@ import InformationTheory.Shannon.MultipleAccess.Converse
 /-!
 # Relay channel — cut-set outer bound (structure + single-letterization)
 
-The relay channel (Cover–Thomas §15.10) has a single sender, a single relay, and a single
-receiver. The cut-set outer bound (Thm 15.10.1) bounds any achievable rate by the minimum of
+The relay channel (Cover–Thomas) has a single sender, a single relay, and a single
+receiver. The cut-set outer bound bounds any achievable rate by the minimum of
 two mutual-information quantities, evaluated at the worst joint input distribution:
 
 * the **broadcast cut** `I(X; Y₁, Y | X₁)` — information leaving the sender, conditioned on
@@ -133,7 +133,7 @@ variable {α α₁ β : Type*}
   [Fintype β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 variable {M n : ℕ} [NeZero M]
 
-/-- The operational outer bound at the MAC cut of a relay channel (Cover–Thomas Thm 15.10.1): for
+/-- The operational outer bound at the MAC cut of a relay channel (Cover–Thomas): for
 a uniformly distributed message `W` decoded from the receiver output `Yⁿ`, the rate is bounded by
 the per-letter MAC-cut sum plus a Fano slack,
 `log M ≤ ∑ᵢ I(Xᵢ, X₁ᵢ; Yᵢ) + h(Pe) + Pe · log(M - 1)`, where `Pe` is the block decoding error
@@ -205,8 +205,8 @@ variable {α α₁ β β₁ : Type*}
 variable {M n : ℕ} [NeZero M]
 
 omit [DecidableEq α] [DecidableEq α₁] [DecidableEq β] [DecidableEq β₁] in
-/-- Message-level telescoping at the broadcast cut of a relay channel (Cover–Thomas
-Thm 15.10.1): the message–output mutual information `I(W; Yⁿ)` is bounded directly by the
+/-- Message-level telescoping at the broadcast cut of a relay channel (Cover–Thomas):
+the message–output mutual information `I(W; Yⁿ)` is bounded directly by the
 per-letter conditional sum `∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ)`, where `Xᵢ = encoder(W)ᵢ` is the i-th
 sender symbol and `X₁ᵢ = relay i (Y₁^{<i})` is the i-th relay symbol read causally from the
 relay's past observations.
@@ -426,8 +426,8 @@ variable {α α₁ β β₁ : Type*}
     [MeasurableSpace β₁] [MeasurableSingletonClass β₁] [StandardBorelSpace β₁]
 variable {M n : ℕ} [NeZero M]
 
-/-- The operational outer bound at the broadcast cut of a relay channel (Cover–Thomas
-Thm 15.10.1): for a uniformly distributed message `W` decoded from the receiver output `Yⁿ`, the
+/-- The operational outer bound at the broadcast cut of a relay channel (Cover–Thomas):
+for a uniformly distributed message `W` decoded from the receiver output `Yⁿ`, the
 rate is bounded by the per-letter broadcast-cut sum plus a Fano slack,
 `log M ≤ ∑ᵢ I(Xᵢ; Y₁ᵢ, Yᵢ | X₁ᵢ) + h(Pe) + Pe · log(M - 1)`, where `Xᵢ = encoder(W)ᵢ`,
 `X₁ᵢ = relay i (Y₁^{<i})`, and `Pe` is the block decoding error probability.
@@ -475,7 +475,7 @@ theorem relay_broadcast_cut_outer_bound
   have hStep2 := relay_broadcast_cut_message_telescope μ W c Ys Y₁s hW hYs hY₁s h_memo
   linarith [hStep1, hStep2]
 
-/-- **Cut-set outer bound** (relay channel, Cover–Thomas Thm 15.10.1): for a uniformly distributed
+/-- **Cut-set outer bound** (relay channel, Cover–Thomas): for a uniformly distributed
 message `W` decoded from the receiver output `Yⁿ`, the rate is bounded by the `min` of the two cut
 rates, each taken as its per-letter sum plus a common Fano slack:
 

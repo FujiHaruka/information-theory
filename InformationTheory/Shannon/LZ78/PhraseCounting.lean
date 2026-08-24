@@ -17,7 +17,7 @@ the longest-prefix greedy parse `lz78PhraseStrings` together with
 its distinct invariant `lz78PhraseStrings_nodup` and the
 total-length conservation `lz78PhraseStrings_total_length_le`.
 
-This file supplies the Cover–Thomas Lemma 13.5.2 counting bound as a
+This file supplies the Cover–Thomas counting bound as a
 combinatorial inequality on any `Nodup` list of non-empty strings
 over a finite alphabet:
 
@@ -403,7 +403,7 @@ theorem lz78PhraseStrings_mul_log_le_of_length
 (`lz78PhraseStrings_mul_log_le`) with the inversion lemma
 `isBigO_natCast_div_log_of_mul_log_le` (`LZ78/PhraseCountAsymptotics.lean`)
 gives `c(n) = O(n / log n)`. This connects the distinct-phrase invariant to the
-Cover–Thomas Eq. 13.124 envelope, with the length normalization
+Cover–Thomas envelope, with the length normalization
 `(input n).length = n` as the only hypothesis. -/
 @[entry_point]
 theorem lz78PhraseStrings_count_isBigO

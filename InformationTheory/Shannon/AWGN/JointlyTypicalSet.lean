@@ -5,7 +5,7 @@ import InformationTheory.Shannon.AWGN.ChannelMeasurability
 # AWGN jointly typical set
 
 The continuous jointly typical set for the AWGN channel coding theorem
-(Cover–Thomas Ch. 9).
+(Cover–Thomas).
 
 ## Main definitions
 
@@ -28,7 +28,7 @@ open scoped ENNReal NNReal BigOperators Topology
 
 /-! ## AWGN jointly typical set -/
 
-/-- The AWGN continuous jointly typical set (Cover–Thomas 9.2).
+/-- The AWGN continuous jointly typical set (Cover–Thomas).
 
 On `ℝⁿ × ℝⁿ`, the joint typical set for an AWGN channel with input power `P`,
 noise power `N`, and slack `ε > 0`, consists of pairs `(x, y)` such that

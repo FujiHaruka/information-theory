@@ -11,7 +11,7 @@ import InformationTheory.Shannon.SlepianWolf.ConditionalTypicalSlice
 /-!
 # Broadcast channel — superposition achievability setup and infrastructure
 
-Cover–Thomas §15.6.2 superposition coding. The structural setup: the per-coordinate joint
+Cover–Thomas superposition coding. The structural setup: the per-coordinate joint
 distribution and its i.i.d. ambient measure, the auxiliary-variable informations, the two-tier
 (cloud / satellite) random codebook, the i.i.d. coordinate facts and positivity of the BC
 ambient law, the `(U, X)` marginal factorization, typical-set relabeling invariance, the two
@@ -530,7 +530,7 @@ argument.  For a fixed *typical* cloud codeword `u` and a fixed *typical* receiv
 the probability under the conditional product law `Πᵢ K(uᵢ)` that an independently drawn
 satellite `x` is jointly typical with `(u, y₁)` is at most `exp(−n (I(X; Y₁ ∣ U) − 4ε))`.
 This is the receiver-1 "wrong satellite, correct cloud" sub-event of the superposition
-random-coding argument (Cover–Thomas Thm 15.6.2); the exponent matches `bcInfo₁`, with the
+random-coding argument (Cover–Thomas); the exponent matches `bcInfo₁`, with the
 `4ε` slack the sum of the four entropy-typicality windows (matching the `3ε` slack of the
 MAC lemmas `macJTS_indep_prob_le_*`).  Full support (`hpU`/`hK`/`hW`) is a regularity
 precondition of the AEP mass bounds, not load-bearing.

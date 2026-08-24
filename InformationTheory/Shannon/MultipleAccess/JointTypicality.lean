@@ -6,7 +6,7 @@ import InformationTheory.Shannon.MultipleAccess.Basic
 
 The three-way jointly typical set for a two-user MAC, following the single-user
 `InformationTheory.Shannon.ChannelCoding.jointlyTypicalSet` conventions
-(Cover–Thomas §15.3.1).
+(Cover–Thomas).
 
 ## Design
 

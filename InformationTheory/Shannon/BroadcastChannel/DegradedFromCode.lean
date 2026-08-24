@@ -18,7 +18,7 @@ hypothesis of the degraded converse, which therefore lands at a bare broadcast c
   is conditionally independent of the receiver-2 prefix given message 2 and the receiver-1
   prefix, on the ambient measure of a broadcast code.  This is the hypothesis `h_deg_block` of
   `bc_degraded_converse` at `bcConverseAmbient`.
-* `bc_degraded_converse_from_code` — the degraded outer bound (Cover–Thomas Thm 15.6.2) at a
+* `bc_degraded_converse_from_code` — the degraded outer bound (Cover–Thomas) at a
   bare broadcast code, with the auxiliary `Uᵢ = (W₂, Y₂^{i-1})` read off the ambient.
 
 ## Implementation notes
@@ -166,7 +166,7 @@ lemma bcConverse_degradedBlock
     (Kernel.prodMkLeft (Fin M₂) (piBlockKernel Q))
     (bcConverse_prefix_append c W Q hQ i)
 
-/-- The degraded outer bound instantiated at a bare broadcast code (Cover–Thomas Thm 15.6.2):
+/-- The degraded outer bound instantiated at a bare broadcast code (Cover–Thomas):
 for a physically degraded Markov channel `W` and any two-receiver block code `c`, the canonical
 ambient measure `bcConverseAmbient c W` discharges every hypothesis of the message-level
 converse `bc_degraded_converse`, so the rate pair `(log M₁, log M₂)` lies in the auxiliary-variable

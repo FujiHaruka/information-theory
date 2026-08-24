@@ -15,7 +15,7 @@ import InformationTheory.Shannon.MultivariateDiffEntropy
 
 /-! # AWGN channel-coding converse — mutual-information finiteness and chain
 
-Builds the mutual-information layer of the AWGN channel-coding converse (Cover–Thomas, 9.1.2):
+Builds the mutual-information layer of the AWGN channel-coding converse (Cover–Thomas):
 the canonical joint law of `(W, Yⁿ)`, Fano's inequality dispatch, the block-mixture output
 density used to bound `I(W; Yⁿ)`, the finiteness of `I(W; Yⁿ)` and `I(Xⁿ; Yⁿ)` via the
 discrete-input `compProd` chain rule, the data-processing inequality, and the

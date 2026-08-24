@@ -10,7 +10,7 @@ import Mathlib.Topology.Order.Compact
 /-!
 # Hoeffding tradeoff exponent — scaffolding and variational form
 
-Scaffolding towards Cover-Thomas Theorem 11.7.x:
+Scaffolding towards Cover-Thomas.x:
 
 ```
 -(1/n) log β_n(alpha) → hoeffdingE2 P₁ P₂ alpha

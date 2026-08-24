@@ -10,7 +10,7 @@ import InformationTheory.Shannon.AWGN.Converse
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Continuous-time Shannon-Hartley: achievability (Cover-Thomas Ch. 9.6)
+# Continuous-time Shannon-Hartley: achievability (Cover-Thomas)
 
 The `≥` half of the operational Shannon-Hartley sandwich,
 
@@ -47,7 +47,7 @@ the reduction:
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 9.6.1 (achievability).
+ (achievability).
 -/
 
 namespace InformationTheory.Shannon.ShannonHartley

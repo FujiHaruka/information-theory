@@ -4,7 +4,7 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Whittaker-Shannon sampling (partial, Cover-Thomas Ch.9.6)
+# Whittaker-Shannon sampling (partial, Cover-Thomas)
 
 Companion to `ShannonHartley/Main.lean`. Mathlib does not ship the Whittaker-Shannon
 sampling theorem `f(t) = Σ_{n ∈ ℤ} f(n/(2W)) · sincN(2W·t - n)` for

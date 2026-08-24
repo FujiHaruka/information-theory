@@ -29,7 +29,7 @@ Both analytic halves of `∂_t g_t = (1/2) Δ_x g_t` for the centred Gaussian he
 
 Remaining open hypotheses consumed as arguments:
 - `Z_law : P.map Z = gaussianReal 0 1` — definitional hypothesis that `Z` is standard normal.
-- `IsIBPHypothesis` — integration-by-parts / dominated-convergence step (Cover-Thomas 17.7.2).
+- `IsIBPHypothesis` — integration-by-parts / dominated-convergence step (Cover-Thomas).
 -/
 
 namespace InformationTheory.Shannon.FisherInfo

@@ -17,7 +17,7 @@ the hypothesis-free Shannon–McMillan–Breiman theorem `shannon_mcmillan_breim
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 16.8.1.
+  Wiley, 2006.
 -/
 namespace InformationTheory.Shannon
 

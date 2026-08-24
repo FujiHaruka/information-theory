@@ -11,7 +11,7 @@ import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessChainRule
 # Degraded broadcast channel — converse single-letterization
 
 Chain-rule material for the converse of the degraded broadcast channel (BC) coding theorem
-(Cover–Thomas Thm 15.6.2). The single-letterization introduces auxiliary variables
+(Cover–Thomas). The single-letterization introduces auxiliary variables
 `Uᵢ = (W₂, Y₂^{i-1})` and splits into two bounds:
 
 * the `R₂`-side bound `I(W₂; Y₂ⁿ) ≤ ∑ᵢ I(Uᵢ; Y_{2,i})` — chain-rule plumbing on a *prefix*

@@ -9,14 +9,14 @@ import Mathlib.Topology.Order.Compact
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Cover's universal portfolio (Cover–Thomas Section 16.7)
+# Cover's universal portfolio (Cover–Thomas)
 
 For a market on `Fin (d + 1)` stocks with a fixed data stream of price relatives
 `xs : ℕ → Fin (d + 1) → ℝ`, the wealth of a constant-rebalanced portfolio `b` on the
 simplex after `n` periods is `constWealth xs b n = ∏ i < n, (b · xs i)`. Cover's
 *universal portfolio* averages the constant-rebalanced wealth uniformly over the
 simplex, giving `universalWealth xs n = (∫ b, constWealth xs b n) / vol`. The main
-result (Theorem 16.7.1) is that this achieves the same exponential growth rate as the
+result is that this achieves the same exponential growth rate as the
 best constant-rebalanced portfolio chosen in hindsight: the per-period regret
 `(1 / n) · (log S*_n − log Ŝ_n)` tends to `0`.
 
@@ -38,7 +38,7 @@ Mathlib API, whereas the corner parametrization only needs `volume` on `Fin d �
 
 ## Main statements
 
-* `universal_portfolio_regret_tendsto_zero` — Theorem 16.7.1: the per-period regret of
+* `universal_portfolio_regret_tendsto_zero` — the per-period regret of
   the universal portfolio tends to `0`.
 
 ## Implementation notes
@@ -53,7 +53,6 @@ stays within a factor `(1 − λ) ^ n ≥ e⁻¹` of the optimum.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Section 16.7.
 -/
 
 namespace InformationTheory.Shannon.Portfolio
@@ -452,7 +451,7 @@ theorem bestConstantWealth_le_mul_universalWealth
     _ ≤ Real.exp 1 * ((n : ℝ) + 1) ^ d * universalWealth xs n :=
         mul_le_mul_of_nonneg_left hkey (by positivity)
 
-/-- Theorem 16.7.1 (Cover–Thomas): the per-period regret of the universal portfolio
+/-- (Cover–Thomas): the per-period regret of the universal portfolio
 relative to the best constant-rebalanced portfolio chosen in hindsight tends to `0`.
 
 @audit:ok — sorryAx-free (`[propext, Classical.choice, Quot.sound]`). `hpos` (positive

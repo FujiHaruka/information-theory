@@ -5,7 +5,7 @@ import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.Logic.Equiv.Defs
 
 /-!
-# Arithmetic Coding / Shannon-Fano-Elias (Cover-Thomas Theorem 13.3.3)
+# Arithmetic Coding / Shannon-Fano-Elias (Cover-Thomas)
 
 For a finite-alphabet probability distribution `P` on `α`, the arithmetic code
 assigns each symbol `a : α` a binary codeword of length `ℓ(a) = ⌈-log₂ P(a)⌉ + 1`,
@@ -37,7 +37,7 @@ equivalence is out of scope — it gives the same code and is not needed for the
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 13.3.3 (Shannon-Fano-Elias coding); Theorem 5.2.2 (unique decodability).
+ (Shannon-Fano-Elias coding); (unique decodability).
 -/
 
 namespace InformationTheory.Shannon.ArithmeticCoding

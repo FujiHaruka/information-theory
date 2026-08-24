@@ -177,7 +177,7 @@ amplification).
 
 The pieces assembled here (`floorMatrix` + `floorMatrix_row_sum` +
 `floorMatrix_total` + `productMass_eq_columnProd` + `conditionalTypeClass_card_ge`
-+ `conditionalStronglyTypicalSlice_mass_ge`) yield the Cover–Thomas 10.6.1 form
++ `conditionalStronglyTypicalSlice_mass_ge`) yield the Cover–Thomas form
 for downstream consumers.
 
 ### Note on the entropy form

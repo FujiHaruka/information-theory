@@ -4,7 +4,7 @@ import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass
 /-!
 # Conditional method of types — `conditionalStronglyTypicalSlice_mass_ge`
 
-Cover-Thomas 10.6.1: for a fixed X-strongly-typical `x : Fin n → α`, lower-bound the
+Cover-Thomas: for a fixed X-strongly-typical `x : Fin n → α`, lower-bound the
 Y-product mass of the conditional strongly-typical slice
 `{y | (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε}` under `μ_Y^n`:
 

@@ -4,8 +4,7 @@ import InformationTheory.Shannon.RateDistortion.Converse
 /-!
 # Rate-distortion converse (specified-distortion form)
 
-The specified-distortion form of the rate-distortion converse (Cover–Thomas
-10.4):
+The specified-distortion form of the rate-distortion converse (Cover–Thomas):
 ```
 D̃ := 𝔼 d(X, decoder(encoder X)) ≤ D
 ⟹ (rateDistortionFunction (μ.map X) D).toReal ≤ Real.log M

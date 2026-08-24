@@ -13,7 +13,7 @@ set `K ⊆ stdSimplex ℝ α`:
 
 - Existence: there is `Q* ∈ K` minimizing `klDivPmf · Q` over `K`.
 - Uniqueness: the minimizer is unique.
-- The Pythagorean inequality (Cover-Thomas 11.6.1): for all `P ∈ K`,
+- The Pythagorean inequality (Cover-Thomas): for all `P ∈ K`,
   `klDivPmf P Q ≥ klDivPmf P Q* + klDivPmf Q* Q`.
 
 ## Main definitions
@@ -38,7 +38,6 @@ Combined with the algebraic identity
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 11.6.1.
 -/
 
 namespace InformationTheory.Shannon.CsiszarProjection

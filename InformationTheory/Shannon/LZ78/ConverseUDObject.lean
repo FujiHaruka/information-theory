@@ -41,7 +41,7 @@ expectation-level source-coding converse for the LZ78 per-phrase
 The §3 converse is an expectation-level bound: it instantiates
 `McMillanKraftBridge.entropyD_le_expectedLength_of_uniquelyDecodable` at an
 explicitly constructed UD code rather than at an abstract `UniquelyDecodable`
-hypothesis. The LZ78 block-rate converse (Cover–Thomas Eq. 13.130,
+hypothesis. The LZ78 block-rate converse (Cover–Thomas,
 `lz78Greedy_converse_ae` in `LZ78/AsymptoticOptimality/ParentBridgeConverse.lean`)
 is instead an a.s.-eventual, per-realization `liminf` bound. Passing from the
 token-level Kraft bound to it needs the averaged ⟶ a.s. lift (Barron /
@@ -246,9 +246,9 @@ binary entropy is bounded by the (constant) token code length:
 entropyD 2 P ≤ E[L] = bitLength c |α|.
 ```
 
-This is the Cover–Thomas 5.4 converse, instantiated at the LZ78
+This is the Cover–Thomas converse, instantiated at the LZ78
 `(parent, symbol)` token code via the McMillan bridge. The block-rate form
-(Cover–Thomas Eq. 13.130, `lz78Greedy_converse_ae`) needs the averaged ⟶ a.s.
+(Cover–Thomas, `lz78Greedy_converse_ae`) needs the averaged ⟶ a.s.
 lift and is not addressed here. -/
 @[entry_point]
 theorem lz78TokenCode_entropyD_le_expectedLength (c : ℕ)

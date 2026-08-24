@@ -8,7 +8,7 @@ import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 import InformationTheory.Meta.EntryPoint
 
 /-!
-# Minkowski determinant inequality (Cover-Thomas Theorem 17.9.1)
+# Minkowski determinant inequality (Cover-Thomas)
 
 For positive-definite matrices `A, B : Matrix n n ℝ`,
 `det(A + B)^(1/n) ≥ det A^(1/n) + det B^(1/n)`.
@@ -21,7 +21,7 @@ superadditivity bound (`geom_mean_superadditive`).
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 17.9.1.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon
@@ -35,7 +35,7 @@ For a positive-definite `A : Matrix n n ℝ`, the `n`-th root of the determinant
 bounded above by the arithmetic mean of its eigenvalues:
 `(det A)^(1/n) ≤ (1/n) ∑ᵢ λᵢ(A)`.
 
-Building block for the Minkowski determinant inequality (Cover-Thomas 17.9.1):
+Building block for the Minkowski determinant inequality (Cover-Thomas):
 `p = 1/n ≤ 1` direction of weighted AM-GM applied to the eigenvalues,
 using `det A = ∏ᵢ λᵢ(A)`.
 @audit:ok -/

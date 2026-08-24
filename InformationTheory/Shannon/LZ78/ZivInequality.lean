@@ -10,7 +10,7 @@ import Mathlib.Data.Fintype.Prod
 # LZ78 Ziv's inequality — combinatorial counting layer
 
 This file publishes the combinatorial counting plumbing layer of
-Ziv's inequality (Cover–Thomas Lemma 13.5.5; the upper-bound half of the
+Ziv's inequality (Cover–Thomas; the upper-bound half of the
 LZ78 asymptotic optimality theorem). It establishes the *combinatorial*
 layer (Nat-level phrase-space cardinality bound) as concrete `theorem`s,
 consumed by the `IsLZ78PhraseCountAsymptotic` asymptotic layer; the
@@ -244,7 +244,7 @@ For a parsing `p` and a real-valued upper bound `B : ℝ`, this predicate
 asserts that the *combinatorial* layer of the Ziv inequality holds:
 the cast `(p.count : ℝ)` is bounded by `B`. The predicate is shaped
 so that the entropy-side layer can supply `B = n / log c(n)`
-(Cover–Thomas Eq. 13.124) or any analogous real-valued upper bound and
+(Cover–Thomas) or any analogous real-valued upper bound and
 plug it into the `IsLZ78PhraseCountAsymptotic` envelope.
 
 The combinatorial layer of `B` is established by `card_phraseSet_le_pow`

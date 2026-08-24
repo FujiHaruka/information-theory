@@ -12,7 +12,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Continuous-time Shannon-Hartley operational capacity
 
-Cover-Thomas Ch. 9.6. This file gives a *non-circular, operational* definition of the capacity of
+Cover-Thomas. This file gives a *non-circular, operational* definition of the capacity of
 the continuous-time band-limited AWGN channel and states the Shannon-Hartley identity
 
     `contAwgnOperationalCapacity W N₀ P = W · log(1 + P / (N₀ · W))`
@@ -80,7 +80,6 @@ The definition aims to make `contAwgn_eq_shannonHartley` *true*, *non-circular*,
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 9.6.1.
 -/
 
 namespace InformationTheory.Shannon.ShannonHartley

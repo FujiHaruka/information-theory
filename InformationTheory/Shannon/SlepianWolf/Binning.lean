@@ -31,7 +31,7 @@ collapse `𝔼_f[1_{f x = f x'}] = 1/M` for `x ≠ x'` (and `= 1` for `x = x'`).
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 15.4.1.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

@@ -11,7 +11,7 @@ import Mathlib.MeasureTheory.Constructions.Pi
 /-!
 # The random Gaussian codebook
 
-The random codebook law for AWGN achievability (Cover–Thomas 9.2): `M` codewords,
+The random codebook law for AWGN achievability (Cover–Thomas): `M` codewords,
 each with `n` i.i.d. `𝒩(0, σsq)` components, carried by `Fin M → Fin n → ℝ` and
 built as a two-stage `Measure.pi` so that it is definitionally equal to
 `AwgnCode.encoder`.

@@ -5,7 +5,7 @@ import InformationTheory.Shannon.ChannelCoding.Basic
 # Multiple access channel — primitive definitions
 
 Two-user multiple access channel (MAC) primitives, following the single-user
-`InformationTheory.Shannon.ChannelCoding.Basic` conventions (Cover–Thomas §15.3).
+`InformationTheory.Shannon.ChannelCoding.Basic` conventions (Cover–Thomas).
 
 ## Main definitions
 
@@ -133,7 +133,7 @@ meaning. Two distinct instantiations are intended:
 
 * **message level** (proven, `mac_converse_message_level`): `I₁, I₂, Iboth` are the n-letter
   message–output mutual informations plus Fano terms.
-* **single letter** (not yet done — the standard Cover–Thomas Thm 15.3.1 form): after
+* **single letter** (not yet done — the standard Cover–Thomas form): after
   single-letterization, `I₁ = I(X₁; Y | X₂)`, `I₂ = I(X₂; Y | X₁)`,
   `Iboth = I(X₁, X₂; Y)`.
 

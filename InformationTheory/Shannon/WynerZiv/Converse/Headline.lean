@@ -894,7 +894,7 @@ theorem wynerZivRate_le_of_forall_pos_add_endpoint
 
 /-! ## Operational converse headline -/
 
-/-- Wyner–Ziv converse (Cover–Thomas Thm 15.9.1, operational lower bound).
+/-- Wyner–Ziv converse (Cover–Thomas, operational lower bound).
 
 If rate `R` is achievable at distortion `D` for the i.i.d. source `P_XY` with decoder
 side information, then the reshaped Wyner–Ziv rate satisfies `R_WZ(D) ≤ R`.

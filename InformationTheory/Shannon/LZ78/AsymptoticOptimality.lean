@@ -16,7 +16,7 @@ parent-theorem bridge** on top of that genuine parse:
   against the genuine distinct phrase count
   `c = (lz78PhraseStrings (List.ofFn x)).length` (each of the `c` phrases
   costs at most `bitLength c |α|` bits at the final dictionary size);
-* the Cover–Thomas Lemma 13.5.2 bit-length upper bound
+* the Cover–Thomas bit-length upper bound
   `n · (log(n+1) + log|α| + 2)` holds via `c ≤ n` and
   `bitLength`-monotonicity;
 * the encoding length plugs into the parent

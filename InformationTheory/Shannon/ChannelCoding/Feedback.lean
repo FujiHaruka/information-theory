@@ -8,7 +8,7 @@ import InformationTheory.Shannon.CondMutualInfo
 /-!
 # Channel coding feedback converse — chain-rule form
 
-Cover-Thomas Theorem 7.12: for a DMC with feedback, capacity equals the memoryless
+Cover-Thomas: for a DMC with feedback, capacity equals the memoryless
 capacity. The per-letter inequality `I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` is left as
 a hypothesis `h_per_letter`; its internal proof is in `FeedbackComplete`.
 
@@ -31,7 +31,6 @@ a hypothesis `h_per_letter`; its internal proof is in `FeedbackComplete`.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 7.12.
 -/
 
 namespace InformationTheory.Shannon.ChannelCodingFeedback

@@ -7,7 +7,7 @@ import InformationTheory.Shannon.AWGN.AchievabilityCodeExistence
 /-!
 # AWGN channel coding theorem — achievability
 
-The achievability headline `awgn_achievability` (Cover–Thomas 9.2: sphere packing,
+The achievability headline `awgn_achievability` (Cover–Thomas: sphere packing,
 continuous joint typicality, Gaussian random codebook).
 
 ## Main statements
@@ -24,7 +24,7 @@ and the sphere volume formula). This file imports the `Achievability*` discharge
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley,
-  2006. Theorem 9.1.1.
+  2006.
 -/
 
 namespace InformationTheory.Shannon.AWGN

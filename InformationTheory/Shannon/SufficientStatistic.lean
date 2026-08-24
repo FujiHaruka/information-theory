@@ -6,7 +6,7 @@ import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.CondMutualInfo
 
 /-!
-# Sufficient statistics and mutual information (Cover-Thomas 2.9)
+# Sufficient statistics and mutual information (Cover-Thomas)
 
 If `T` is sufficient for `θ` (i.e., the chain `X → T(X) → θ` is Markov), then
 `I(θ; X) = I(θ; T(X))`.
@@ -34,7 +34,7 @@ Equivalence with the Neyman-Fisher form is proved via Mathlib's conditional inde
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Section 2.9.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

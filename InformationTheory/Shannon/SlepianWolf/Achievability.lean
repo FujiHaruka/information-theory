@@ -7,7 +7,7 @@ import InformationTheory.Shannon.SlepianWolf.Basic
 
 Starting from the single-shot converse, this file publishes the **deterministic
 achievability** of the separate encoder pair `(f_X^n, f_Y^n) + d^n` at the corner
-point `R_X = log|α|, R_Y > H(Y)` (Cover–Thomas 15.4).
+point `R_X = log|α|, R_Y > H(Y)` (Cover–Thomas).
 
 ## Main statements
 

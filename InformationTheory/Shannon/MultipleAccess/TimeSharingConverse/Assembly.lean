@@ -913,8 +913,8 @@ theorem mac_achievable_clamp_iff (W : MACChannel α₁ α₂ β) (R₁ R₂ : �
     · rw [← key R₁ n]; exact hM₁
     · rw [← key R₂ n]; exact hM₂
 
-/-- Full first-quadrant characterization of the MAC capacity region (Cover–Thomas Theorem
-15.3.1): for a channel whose transition probabilities are all strictly positive, the operational
+/-- Full first-quadrant characterization of the MAC capacity region (Cover–Thomas):
+for a channel whose transition probabilities are all strictly positive, the operational
 capacity region, intersected with the first quadrant, equals the closed convex hull of the union
 of all per-input pentagons `macPentagon p₁ p₂ W` over probability inputs `p₁`, `p₂`.  The `⊆`
 half is the converse (`mac_timesharing_converse`, with negative rates clamped back to the axis

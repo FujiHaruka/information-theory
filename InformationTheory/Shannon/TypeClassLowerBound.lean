@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.Sanov.TendstoSandwich
 
 /-!
-# Type-class size lower bound (Cover-Thomas 11.1.3)
+# Type-class size lower bound (Cover-Thomas)
 
 For a count vector `c : α → ℕ` with `∑ c = n`, the type class
 `T(c) := { x : Fin n → α | ∀ a, typeCount x a = c a }` satisfies

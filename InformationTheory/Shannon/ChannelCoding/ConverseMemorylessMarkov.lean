@@ -16,7 +16,7 @@ import Mathlib.MeasureTheory.MeasurableSpace.Embedding
 
 * `h_markov_xprefix_of_strong`: augmented prefix Markov chain from `IsMemorylessChannelStrong`.
 * `h_split_of_strong`: conditional mutual information two-variable chain rule reshape.
-* `channel_coding_converse_general_memoryless_strong`: Cover-Thomas Thm 7.9 converse
+* `channel_coding_converse_general_memoryless_strong`: Cover-Thomas converse
   via entropy subadditivity, yielding `log |M| ≤ ∑ I(X_i; Y_i).toReal + Fano`.
 
 ## Implementation notes
@@ -30,7 +30,6 @@ and `h_split_of_strong` are not called in the main proof but are retained for po
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 7.9.
 -/
 
 namespace InformationTheory.Shannon.ChannelCodingConverseGeneral
@@ -209,7 +208,7 @@ degenerate encoder + iid Bernoulli(1/4) noise) showed the claim is false
 under arbitrary encoders — the joint distribution of `(X_i, X^{≠i})` is
 unconstrained, so `Y^{≠i} ⊥/ X_i | Y_i` in general.
 
-The fix is the entropy-subadditivity route of Cover-Thomas Thm 7.9
+The fix is the entropy-subadditivity route of Cover-Thomas
 (see `mutualInfo_le_sum_per_letter_of_memoryless_strong` in the next section,
 backed by `InformationTheory/Shannon/CondEntropyMemoryless.lean`), which bypasses
 `h_yother_zero` entirely and works for any encoder. -/
@@ -277,7 +276,7 @@ theorem channel_coding_converse_general_memoryless_strong
       hMsg hY_pi h_encoder hdecoder hmarkov hMsg_uniform hcard hMI_finite
   -- Normalize `(encoder ∘ Msg)` to `fun ω => encoder (Msg ω)`.
   rw [show (encoder ∘ Msg) = fun ω ↦ encoder (Msg ω) from rfl] at h_single
-  -- Step 2: Cover-Thomas Thm 7.9 — per-letter MI bound.
+  -- Step 2: Cover-Thomas — per-letter MI bound.
   -- `fun ω => encoder (Msg ω) = fun ω j => Xs j ω` (definitional).
   have h_pi_eq : (fun ω ↦ encoder (Msg ω)) = (fun ω j ↦ Xs j ω) := by
     funext ω j; rfl

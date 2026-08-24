@@ -6,7 +6,7 @@ import Mathlib.Probability.IdentDistrib
 import Mathlib.Probability.Independence.Basic
 
 /-!
-# Operational log-optimal portfolios over i.i.d. markets (Cover–Thomas §16.3)
+# Operational log-optimal portfolios over i.i.d. markets (Cover–Thomas)
 
 For an i.i.d. sequence of market outcomes `As : ℕ → Ω → α` on a finite alphabet `α`, an
 investor reinvesting all wealth with a fixed rebalanced portfolio `b : Fin m → ℝ` and
@@ -26,7 +26,7 @@ single-shot log-optimality theorem `logOptimal_of_kuhnTucker`.
 
 ## Main statements
 
-* `seqLogWealth_div_tendsto_growthRate` — §16.3: for a fixed portfolio `b`, `(1/n)·log S_n`
+* `seqLogWealth_div_tendsto_growthRate` — for a fixed portfolio `b`, `(1/n)·log S_n`
   converges almost surely to `growthRate (lawPmf μ (As 0)) X b`.
 * `seqLogWealth_asymptotically_optimal` — a log-optimal (Kuhn–Tucker) portfolio `bs` is
   asymptotically optimal: almost surely both growth rates exist and the arbitrary portfolio
@@ -47,7 +47,6 @@ is fully absorbed by that static theorem; the strong-law skeleton is bet-indepen
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Section 16.3.
 -/
 
 namespace InformationTheory.Shannon.Portfolio
@@ -96,7 +95,7 @@ lemma indepFun_portfolioLogReturn (μ : Measure Ω) (X : α → Fin m → ℝ) (
   intro i j hij
   exact (hindep hij).comp (measurable_portfolioLogReturn X b) (measurable_portfolioLogReturn X b)
 
-/-- Operational log-optimal portfolio theorem (Cover–Thomas §16.3): for an i.i.d.
+/-- Operational log-optimal portfolio theorem (Cover–Thomas): for an i.i.d.
 market sequence `As`, a fixed rebalanced portfolio `b` under price relatives `X`, the
 time-averaged log-wealth growth `(1/n)·log S_n` converges almost surely to the growth rate
 `growthRate (lawPmf μ (As 0)) X b`, where `lawPmf μ (As 0)` is the law of a single
@@ -127,14 +126,14 @@ theorem seqLogWealth_div_tendsto_growthRate
   filter_upwards [h_lln] with ω hω
   simpa only [seqLogWealth, h_lim] using hω
 
-/-- Operational asymptotic optimality (Cover–Thomas §16.3): a log-optimal
+/-- Operational asymptotic optimality (Cover–Thomas): a log-optimal
 (Kuhn–Tucker) portfolio `bs` is asymptotically optimal. Almost surely both the arbitrary
 portfolio `b` and `bs` have a growth rate, and the arbitrary portfolio does not beat `bs`.
 @audit:ok — sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). `hKT` is the first-order Kuhn–Tucker condition on `bs` alone (gradient
 inequalities `∀ i, ∑ a, p a · X a i / S_bs(a) ≤ 1`), NOT the conclusion `W(b) ≤ W(bs)`:
 it is bridged to global optimality by the concavity/Jensen content proved sorry-free in
-`logOptimal_of_kuhnTucker` (Cover–Thomas Thm 16.2.1). Non-vacuous — a non-log-optimal `bs`
+`logOptimal_of_kuhnTucker` (Cover–Thomas). Non-vacuous — a non-log-optimal `bs`
 fails `hKT` (by `kuhnTucker_of_logOptimal`), so the hypothesis genuinely pins the optimum
 rather than smuggling the comparison. `hb`/`hbs` are simplex membership, `hpos` is the
 log-domain positivity precondition; the two a.s. conjuncts come from H1 (×2) and the third

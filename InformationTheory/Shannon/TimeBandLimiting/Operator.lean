@@ -15,7 +15,7 @@ import InformationTheory.Shannon.ShannonHartley.Achievability
 /-!
 # The time-and-band-limiting operator on `L²(ℝ;ℂ)` — the operator itself
 
-Cover–Thomas Ch. 9.6 (Shannon–Hartley). The base module for the
+Cover–Thomas (Shannon–Hartley). The base module for the
 `Shannon/TimeBandLimiting/` family: the Hilbert space `E = L²(ℝ;ℂ)`, the time- and band-limited
 closed subspaces, the operator `A = P_W ∘ Q_T ∘ P_W`, its self-adjointness, positivity, norm
 bound `‖A‖ ≤ 1`, compactness, and the parameter-boundary degeneracy (`A = 0` for `T ≤ 0` or

@@ -6,7 +6,7 @@ import InformationTheory.Shannon.ChannelCoding.Basic
 
 Two-receiver broadcast channel (BC) primitives, following the single-user
 `InformationTheory.Shannon.ChannelCoding.Basic` and the multiple-access
-`InformationTheory.Shannon.MultipleAccess.Basic` conventions (Cover–Thomas §15.6).
+`InformationTheory.Shannon.MultipleAccess.Basic` conventions (Cover–Thomas).
 
 ## Main definitions
 
@@ -22,8 +22,8 @@ Two-receiver broadcast channel (BC) primitives, following the single-user
   that carries only one, which is what brings a code of a zero rate into the scope of a converse
   asking for at least two messages per receiver.
 * `InBCCapacityRegion R₁ R₂ I₁ I₂` — the auxiliary-variable capacity-region predicate
-  bundling the two corner inequalities `R₁ ≤ I₁`, `R₂ ≤ I₂` (degraded BC, Cover–Thomas
-  Thm 15.6.2: `I₁ = I(X; Y₁ | U)`, `I₂ = I(U; Y₂)`).
+  bundling the two corner inequalities `R₁ ≤ I₁`, `R₂ ≤ I₂` (degraded BC,
+  Cover–Thomas: `I₁ = I(X; Y₁ | U)`, `I₂ = I(U; Y₂)`).
 -/
 
 namespace InformationTheory.Shannon.BroadcastChannel
@@ -204,7 +204,7 @@ end BroadcastCode
 
 * **message level** (`bc_converse_message_level`): `I₁ = I(W₁; (W₂, Y₁ⁿ))`,
   `I₂ = I(W₂; Y₂ⁿ)` plus Fano terms.
-* **single letter** (the standard Cover–Thomas Thm 15.6.2 form, `bc_degraded_converse`): with an
+* **single letter** (the standard Cover–Thomas form, `bc_degraded_converse`): with an
   auxiliary `U`, `I₁ = ∑ᵢ I(Xᵢ; Y_{1,i} | Uᵢ)`, `I₂ = ∑ᵢ I(Uᵢ; Y_{2,i})`.
 
 Unlike the symmetric MAC region, the two receivers are asymmetric (receiver 2 is the degraded

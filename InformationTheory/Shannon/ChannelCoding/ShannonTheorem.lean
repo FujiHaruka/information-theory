@@ -8,7 +8,7 @@ import Mathlib.Order.ConditionallyCompleteLattice.Basic
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# Shannon noisy channel coding theorem — full form (Cover-Thomas 7.7.1)
+# Shannon noisy channel coding theorem — full form (Cover-Thomas)
 
 Integrates input distribution maximization, expurgation (average → max error),
 and the main achievability argument.
@@ -36,7 +36,6 @@ and the main achievability argument.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorems 7.5, 7.7.1.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding

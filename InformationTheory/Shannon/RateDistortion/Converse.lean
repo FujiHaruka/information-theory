@@ -9,7 +9,7 @@ import InformationTheory.Shannon.Pi
 /-!
 # Rate-distortion converse (single-shot)
 
-The single-shot form of the rate-distortion converse (Cover–Thomas 10.4):
+The single-shot form of the rate-distortion converse (Cover–Thomas):
 `R(D̃) ≤ log M` for the achieved distortion `D̃ := 𝔼 d(X, decoder(encoder X))`,
 obtained from the chain
 ```
@@ -37,7 +37,6 @@ Finiteness of the mutual information is taken as a hypothesis.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 10.4.
 -/
 
 namespace InformationTheory.Shannon

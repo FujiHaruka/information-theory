@@ -10,7 +10,7 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 
 /-!
-# Entropy power inequality (Cover–Thomas Theorem 17.7.3)
+# Entropy power inequality (Cover–Thomas)
 
 The entropy power inequality (EPI) for independent real-valued random variables `X, Y`:
 

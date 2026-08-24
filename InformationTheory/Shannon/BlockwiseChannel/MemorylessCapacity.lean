@@ -19,7 +19,7 @@ equality `capacityN_ofMemoryless_eq` via:
 * the structural bridge `toBlock_compProd_pi_factor` (`compProd ↔ pi`),
 * i.i.d. input MI multiplicativity `mutualInfoOfChannel_pi_iid_eq_nsmul`
   (the ≥ direction),
-* the per-letter marginal bridge and Cover-Thomas Thm 7.9 chain
+* the per-letter marginal bridge and Cover-Thomas chain
   (the ≤ direction).
 
 ## Main statements
@@ -315,7 +315,7 @@ private theorem mutualInfoOfChannel_pi_iid_eq_nsmul
 /-! ## ≤ direction — per-letter marginal bridge
 
 The ≤ direction `capacityN_ofMemoryless_le` reduces per-block MI to a sum of
-per-letter MIs via the Cover-Thomas Thm 7.9 chain (subadditivity + memoryless
+per-letter MIs via the Cover-Thomas chain (subadditivity + memoryless
 splitting of conditional entropy). The chain reduces to two `IsMarkovChain`
 facts about `μ := q ⊗ₘ (Channel.toBlock W n)`, each established via a
 `condDistrib` identification.
@@ -1082,7 +1082,7 @@ private theorem capacityN_ofMemoryless_ge
 
 /-- Per-`n` block-capacity equality for memoryless `W`.
 
-Note: `[StandardBorelSpace α/β]` is added to satisfy the Cover-Thomas Thm 7.9
+Note: `[StandardBorelSpace α/β]` is added to satisfy the Cover-Thomas
 route used in the ≤ direction (`mutualInfo_le_sum_per_letter_of_memoryless_strong`).
 Both are auto-derived on `[Fintype α] [MeasurableSingletonClass α]` via the
 `MeasurableSingletonClass + Countable → DiscreteMeasurableSpace → StandardBorelSpace`

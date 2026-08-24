@@ -17,7 +17,7 @@ Compared to `channel_coding_converse_iid` (which collapses `I(X^n; Y^n)` to
 `n · I(X_0; Y_0)` under the i.i.d. assumption), this form removes the i.i.d.
 hypothesis and instead decomposes `I(X^n; Y^n)` via `mutualInfo_chain_rule_fin`.
 A subsequent per-summand bound `I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)` (from
-memoryless channel properties) would yield Cover-Thomas 7.9, but that step is
+memoryless channel properties) would yield Cover-Thomas, but that step is
 handled in `ConverseMemorylessPure`.
 -/
 

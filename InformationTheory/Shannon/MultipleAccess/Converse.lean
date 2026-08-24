@@ -9,7 +9,7 @@ import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessMarkov
 /-!
 # Multiple access channel — converse (outer bound)
 
-The converse to the MAC coding theorem (Cover–Thomas Thm 15.3.1, eq. 15.85–15.90):
+The converse to the MAC coding theorem (Cover–Thomas):
 for uniformly distributed, independent messages decoded by a joint decoder, the rate pair
 satisfies the three corner-point inequalities of `InMACCapacityRegion`.
 
@@ -149,7 +149,7 @@ information bounds, packaged as `InMACCapacityRegion`.
 
 The information slots are the `n`-letter message–output mutual informations, not the
 single-letter channel quantities `I(X₁; Y | X₂)` etc.; the single-letterized form of the
-converse (Cover–Thomas Theorem 15.3.1) is `mac_converse`. -/
+converse (Cover–Thomas) is `mac_converse`. -/
 @[entry_point]
 theorem mac_converse_message_level
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -806,7 +806,7 @@ theorem mac_singleletterize_bound_sum
           (fun ω j ↦ Ys j ω) := hReshape.symm
     _ ≤ _ := h_single_lift
 
-/-- Per-letter-sum outer bound for the MAC (Cover–Thomas Theorem 15.3.1): for uniform,
+/-- Per-letter-sum outer bound for the MAC (Cover–Thomas): for uniform,
 independent messages sent over a memoryless joint channel and decoded jointly, the rate pair
 `(log |M₁|, log |M₂|)` lies in the capacity region whose information bounds are the per-letter
 single-letter channel sums (plus the Fano error slack).

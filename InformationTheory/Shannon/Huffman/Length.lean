@@ -16,7 +16,7 @@ import InformationTheory.Shannon.ShannonCode.KraftReverse
 # Huffman code lengths
 
 Constructs the binary Huffman code length function `huffmanLength` for a finite alphabet `α`
-equipped with a probability measure, following Cover–Thomas Theorem 5.8.1. This file holds the
+equipped with a probability measure, following Cover–Thomas. This file holds the
 recursive construction and its positivity invariant; the Kraft sum and the cost-level recurrence
 live in `KraftSum` and `ExpectedLength`.
 

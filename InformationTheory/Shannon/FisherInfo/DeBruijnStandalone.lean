@@ -15,7 +15,7 @@ import Mathlib.Analysis.Calculus.FDeriv.Measurable
 import Mathlib.Analysis.SpecificLimits.Basic
 
 /-!
-# de Bruijn identity — standalone headlines (Cover–Thomas Theorem 17.7.2)
+# de Bruijn identity — standalone headlines (Cover–Thomas)
 
 This file assembles the sorry-free parts already present in the project into clean,
 self-contained statements of the **de Bruijn identity** along the Gaussian heat flow:
@@ -40,7 +40,7 @@ producer.
 
 ## References
 
-[CoverThomas2006] Theorem 17.7.2.
+[CoverThomas2006].
 -/
 
 namespace InformationTheory.Shannon.FisherInfo
@@ -81,7 +81,7 @@ noncomputable def isRegularDeBruijnHypV2_of_density
 
 /-! ## The per-time de Bruijn identity -/
 
-/-- **de Bruijn identity (per-time, density form, Cover–Thomas Theorem 17.7.2).**
+/-- **de Bruijn identity (per-time, density form, Cover–Thomas).**
 
 For `X ⊥ Z` with `Z ∼ 𝒩(0, 1)` and an explicit Lebesgue density `pX` of `X` (a probability
 density with finite second moment), the heat-flow entropy `h(X + √s·Z)` has, at every time
@@ -93,7 +93,7 @@ The class is non-vacuous: Gaussian `X ∼ 𝒩(m, v)` instantiates it with
 absolutely-continuous `X` with finite second
 moment supplies `pX = (P.map X).rnDeriv volume` (see `isDeBruijnPathRegular_of_heat_flow`).
 
-References: [CoverThomas2006] Theorem 17.7.2.
+References: [CoverThomas2006].
 
 @audit:ok -/
 @[entry_point]
@@ -183,12 +183,12 @@ noncomputable def isDeBruijnPathRegular_gaussian
         linarith
       exact this.ne'
 
-/-- **Integrated de Bruijn identity (gaussian, Cover–Thomas Theorem 17.7.2).** The integrated
+/-- **Integrated de Bruijn identity (gaussian, Cover–Thomas).** The integrated
 form `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt` for a Gaussian `X ∼ 𝒩(m, v)`,
 obtained by
 applying `debruijnIntegrationIdentity_holds` to the Gaussian path-regularity witness.
 
-References: [CoverThomas2006] Theorem 17.7.2.
+References: [CoverThomas2006].
 
 @audit:ok -/
 @[entry_point]
@@ -414,12 +414,12 @@ noncomputable def isDeBruijnPathRegular_of_heat_flow
     debruijnHeatPath_intervalIntegrable X Z hX hZ hXZ hZ_law pX hpX_nn hpX_meas hpX_law
       hpX_int hpX_mass hpX_mom hpX_ent T
 
-/-- **Integrated de Bruijn identity (general a.c., Cover–Thomas Theorem 17.7.2).** The integrated
+/-- **Integrated de Bruijn identity (general a.c. Cover–Thomas).** The integrated
 form `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt` for a general absolutely-continuous
 `X`, obtained by applying `debruijnIntegrationIdentity_holds` to the general path-regularity
 producer `isDeBruijnPathRegular_of_heat_flow`.
 
-References: [CoverThomas2006] Theorem 17.7.2.
+References: [CoverThomas2006].
 
 @audit:ok -/
 @[entry_point]

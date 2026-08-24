@@ -4,7 +4,7 @@ import InformationTheory.Shannon.Kolmogorov.PrefixComputability
 /-!
 # Chaitin's constant is not computably approximable
 
-Cover–Thomas (2nd ed.) §14.9. Running the self-delimiting machine
+Cover–Thomas (2nd ed.). Running the self-delimiting machine
 `prefixUniversalEval` with a finite budget yields a total function
 `prefixEvaln`, primitive recursive in the budget and the program, which is sound
 and complete for the unbounded machine. Summing `2 ^ (-|p|)` over the programs

@@ -9,7 +9,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 # Sharp Pinsker inequality (constant `1/√2`)
 
 For probability measures `P, Q` on a finite alphabet `α` with `P ≪ Q`, the sharp Cover–Thomas
-(11.6) form of Pinsker's inequality: `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`. The total-variation
+form of Pinsker's inequality: `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`. The total-variation
 norm `tvNorm` is shared with the weak form in `Pinsker/Basic.lean`.
 
 ## Main statements
@@ -28,7 +28,7 @@ Cauchy–Schwarz step and `∑ (p + 2q) = 3`.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Section 11.6.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon.PinskerSharp

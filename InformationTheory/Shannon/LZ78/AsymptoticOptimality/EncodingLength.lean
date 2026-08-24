@@ -30,7 +30,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α]
 the genuine longest-prefix-match greedy parse `lz78PhraseStrings`, count its
 `c` distinct emitted phrases, and charge `c · bitLength c |α|` bits (each of
 the `c` phrases costs at most `bitLength c |α|` bits, the uniform Cover–Thomas
-Ch.13.5 per-phrase cost at the final dictionary size). This plugs into the
+ per-phrase cost at the final dictionary size). This plugs into the
 parent `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` parameter of
 `lz78_asymptotic_optimality`.
 
@@ -62,7 +62,7 @@ theorem lz78GreedyPhraseCount_ofFn_le (n : ℕ) (x : Fin n → α) :
 is bounded by `n · (log(n+1) + log|α| + 2)`, since the parse has `c ≤ n` distinct
 phrases, each costing at most `bitLength n |α|` bits. Combines the distinct-phrase
 count bound `c ≤ n` with `bitLength`-monotonicity in the dictionary size. This is
-the bit-length upper bound of Cover–Thomas Lemma 13.5.2. -/
+the bit-length upper bound of Cover–Thomas. -/
 @[entry_point]
 theorem lz78_encoding_length_le_n_log_n_plus_const (n : ℕ) (x : Fin n → α) :
     lz78GreedyEncodingLength n x ≤
@@ -330,7 +330,7 @@ def IsLZ78EncodingLengthBoundPassthrough (B : ℕ → ℕ) : Prop :=
       ∀ (n : ℕ) (x : Fin n → α), lz78GreedyEncodingLength n x ≤ B n := Iff.rfl
 
 /-- The canonical bound `n · (log(n+1) + log|α| + 2)` satisfies the
-encoding-length pass-through predicate, supplied by the Cover–Thomas Lemma 13.5.2
+encoding-length pass-through predicate, supplied by the Cover–Thomas
 bound `lz78_encoding_length_le_n_log_n_plus_const`. -/
 @[entry_point]
 theorem IsLZ78EncodingLengthBoundPassthrough.canonical :

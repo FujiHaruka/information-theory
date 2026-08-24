@@ -5,7 +5,7 @@ import InformationTheory.Shannon.MultipleAccess.JointTypicality
 # Multiple access channel — achievability analytic core
 
 The conditional independent-pair probability bounds `E1` / `E2` / `E3` for the two-user
-MAC random-coding argument (Cover–Thomas §15.3.1).  These are the genuinely analytic
+MAC random-coding argument (Cover–Thomas).  These are the genuinely analytic
 ingredient of MAC achievability; the rest of the achievability proof (Bonferroni union
 bound + two-codebook averaging) is plumbing over these bounds.
 

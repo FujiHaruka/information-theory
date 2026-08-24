@@ -3,9 +3,9 @@ import InformationTheory.Probability.TwoSidedExtension.CondExpMeasurePreserving
 import Mathlib.MeasureTheory.Function.ConditionalLExpectation
 
 /-!
-# Growing-memory `W_∞` AEP for stationary markets (Cover–Thomas §16.5)
+# Growing-memory `W_∞` AEP for stationary markets (Cover–Thomas)
 
-Theorem 16.5.1: the growing-memory log-wealth average `growingMemoryLogAvg` converges almost surely
+The growing-memory log-wealth average `growingMemoryLogAvg` converges almost surely
 to the infinite-past optimal growth rate `W_∞ = condOptGrowthInfty`
 (`growingMemory_logWealth_tendsto_condOptGrowthInfty`). The proof is the Algoet–Cover sandwich: the
 eventual upper bound `≤ W_∞ + ε` from the wealth-ratio supermartingale against the infinite-past
@@ -169,7 +169,7 @@ section CondOptimalGrowth
 
 variable {Ω : Type*} {m0 : MeasurableSpace Ω} {m : ℕ}
 
-/-- Growing-memory log-wealth average (Cover–Thomas §16.5): the time average up to horizon `n` of
+/-- Growing-memory log-wealth average (Cover–Thomas): the time average up to horizon `n` of
 the per-epoch log returns of the stagewise conditional log-optimal portfolios `bstar i` along the
 shift orbit of `T`. At epoch `i` the causal strategy uses the `i`-past optimal portfolio `bstar i`,
 so `growingMemoryLogAvg X bstar T n ω = (1/(n+1)) log S*_n` where `S*_n = ∏ᵢ (bstar i · Xᵢ)` is the
@@ -224,7 +224,7 @@ private theorem wealthRatioProcess_log_eq {X : Ω → Fin m → ℝ} {bstar : �
       hpos (T^[i] ω) (bstarInf (T^[i] ω)) (hInf_simplex (T^[i] ω))
     exact div_ne_zero hnum.ne' hden.ne'
 
--- Supermartingale integral bound for the wealth-ratio process (Cover–Thomas §16.5): the mean
+-- Supermartingale integral bound for the wealth-ratio process (Cover–Thomas): the mean
 -- wealth ratio `E[Mₙ]` stays at most `1`. Base case `n = 0` = conditional Kuhn–Tucker
 -- `condKuhnTucker_infPast` (the `⨆ⱼℱⱼ`-conditional one-step ratio is `≤ 1`) plus the tower
 -- property. Inductive step (`∫⁻ M_{k+1} ≤ ∫⁻ M_k`) factors `M_{k+1} = M_k · (ρ_{k+1} ∘ Tᵏ⁺¹)`,
@@ -617,7 +617,7 @@ private theorem stagewise_condKuhnTucker [StandardBorelSpace Ω] [Nonempty Ω]
     ((hbstar_meas K).mono (le_trans (ℱ.mono hKi) (le_of_eq hconst.symm))) (hbstar_simplex K)
   rwa [hconst] at hkt
 
--- Supermartingale integral bound for the lower wealth-ratio process (Cover–Thomas §16.5): the mean
+-- Supermartingale integral bound for the lower wealth-ratio process (Cover–Thomas): the mean
 -- fixed-to-growing wealth ratio `E[Nₙ]` stays at most `1`. Mirrors the tower argument of
 -- `wealthRatioProcess_lintegral_le_one`, but the per-epoch conditioning σ-algebra is `ℱ i` (not
 -- `⨆ⱼℱⱼ`) and the increment bound is the stagewise Kuhn–Tucker `stagewise_condKuhnTucker`
@@ -769,7 +769,7 @@ private theorem lowerRatioProcess_lintegral_le_one [StandardBorelSpace Ω] [None
       simp_rw [hN]
       simp
 
-/-- Upper half of the growing-memory `W_∞` AEP (Cover–Thomas Theorem 16.5.1): the growing-memory
+/-- Upper half of the growing-memory `W_∞` AEP (Cover–Thomas): the growing-memory
 log-wealth average is eventually below `W_∞ = condOptGrowthInfty` up to any margin `ε`, almost
 surely. The proof decomposes `growingMemoryLogAvg n = (1/n) log Mₙ + (1/n) ∑ᵢ log(bstarInf · Xᵢ)`:
 the first term is eventually below any positive threshold (`wealthRatio_logAvg_eventually_le`, from
@@ -840,7 +840,7 @@ theorem growingMemory_eventually_le_condOptGrowthInfty [StandardBorelSpace Ω] [
   rw [hdecomp n]
   linarith
 
-/-- Lower half of the growing-memory `W_∞` AEP (Cover–Thomas Theorem 16.5.1): the growing-memory
+/-- Lower half of the growing-memory `W_∞` AEP (Cover–Thomas): the growing-memory
 log-wealth average is eventually above `W_∞ = condOptGrowthInfty` down to any margin `ε`, almost
 surely. For a fixed finite memory `K`, the growing-memory returns dominate the fixed-`K` strategy up
 to the lower wealth ratio: `growingMemoryLogAvg n = (1/n) ∑ᵢ log(bstar K · Xᵢ) + (head)/n
@@ -960,7 +960,7 @@ theorem growingMemory_eventually_ge_condOptGrowthInfty [StandardBorelSpace Ω] [
   rw [hdecomp]
   linarith
 
-/-- Growing-memory `W_∞` AEP (Cover–Thomas Theorem 16.5.1): the growing-memory log-wealth average
+/-- Growing-memory `W_∞` AEP (Cover–Thomas): the growing-memory log-wealth average
 converges almost surely to the infinite-past optimal growth rate `W_∞ = condOptGrowthInfty`. This
 is the Algoet–Cover sandwich: the eventual upper bound `≤ W_∞ + ε`
 (`growingMemory_eventually_le_condOptGrowthInfty`, from the wealth-ratio supermartingale against the

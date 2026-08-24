@@ -6,7 +6,7 @@ import InformationTheory.Shannon.RateDistortion.ConverseNLetter
 # Wyner–Ziv lossy distributed coding
 
 The rate-distortion function for Wyner–Ziv lossy compression with side
-information `Y` available at the decoder only (Cover–Thomas, Theorem 15.9.1):
+information `Y` available at the decoder only (Cover–Thomas):
 
 ```
 R_WZ(D) = min_{p(u|x), f : U × Y → X̂} [ I(X ; U) − I(Y ; U) ]
@@ -167,7 +167,7 @@ end PmfForm
 The decoder `f : U × β → γ` is carried as an *external* second component, so
 the constraint set lives on the product `(α × β × U → ℝ) × (U × β → γ)`. The
 Markov constraint `U − X − Y` is encoded in cross-product form, well-defined
-even where marginals vanish (inventory §6.5).
+even where marginals vanish (inventory).
 -/
 
 section Constraint

@@ -17,8 +17,8 @@ import InformationTheory.Shannon.Pi
 # General broadcast channel — the UV outer bound (Nair–El Gamal)
 
 Single-letterization of the four information inequalities of the Nair–El Gamal outer bound
-for a general (not necessarily degraded) two-receiver broadcast channel, El Gamal–Kim
-Ch. 8. The bound reads
+for a general (not necessarily degraded) two-receiver broadcast channel, El Gamal–Kim.
+The bound reads
 
 ```
 R₁ ≤ I(V; Y₁),                R₂ ≤ I(U; Y₂),
@@ -791,7 +791,7 @@ private lemma mutualInfo_le_condMutualInfo_of_indep_markov
       W₁ (fun ω j ↦ Xs j ω) (fun ω j ↦ Ys j ω) W₂ hW₁ hXpi hYpi hW₂ hmarkov
       (mutualInfo_ne_top μ W₂ (fun ω j ↦ Ys j ω) hW₂ hYpi))
 
-/-- Message-level UV outer bound for the general broadcast channel (El Gamal–Kim, Ch. 8):
+/-- Message-level UV outer bound for the general broadcast channel (El Gamal–Kim):
 for uniform, independent messages sent over a memoryless broadcast channel and decoded per
 receiver, the rate pair lies in the Nair–El Gamal region whose four information bounds are
 the per-letter sums over the auxiliaries `Uᵢ = (W₂, Y₁^{<i}, Y₂^{>i})` and

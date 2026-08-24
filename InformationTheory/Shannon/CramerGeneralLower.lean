@@ -31,7 +31,7 @@ breaks (Gaussian median `1/2` / window mass `1/4` lower bounds collapse).
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley,
-  2006. Theorem 11.4.1.
+  2006.
 -/
 
 namespace InformationTheory.Shannon.Cramer

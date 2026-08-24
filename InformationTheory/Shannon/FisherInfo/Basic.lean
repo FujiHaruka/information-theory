@@ -17,7 +17,7 @@ density `f`.
 
 ## Main definitions
 
-* `IsRegularDensity` — the regularity predicate (Cover–Thomas 17.7) bundling the
+* `IsRegularDensity` — the regularity predicate (Cover–Thomas) bundling the
   differentiability, positivity, tail-vanishing, and integrability conditions on a smooth
   representative of the PDF.
 
@@ -40,7 +40,7 @@ set_option linter.unusedSectionVars false
 open MeasureTheory Real ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal Real
 
-/-- The regularity predicate of Cover–Thomas 17.7, bundling the differentiability,
+/-- The regularity predicate of Cover–Thomas, bundling the differentiability,
 positivity, tail-vanishing, and integrability conditions needed for
 `integral_logDeriv_pdf_eq_zero`. It is exposed as a predicate to be discharged downstream
 rather than verified for a general random variable `X`.
@@ -72,7 +72,7 @@ structure IsRegularDensity {Ω : Type*} [MeasurableSpace Ω]
   `MeasureTheory.integral_deriv_eq_sub` or its improper variants. -/
   integral_deriv_eq_zero : ∫ x, deriv density x ∂volume = 0
 
-/-- The score function has zero expectation (Cover–Thomas 17.7). For the smooth
+/-- The score function has zero expectation (Cover–Thomas). For the smooth
 representative `density` of `IsRegularDensity`, the integral of
 `logDeriv density · density = deriv density` over `ℝ` is `0`. Stated on the
 representative `h_reg.density`; combine with `h_reg.pdf_ae_eq` to recast in terms of

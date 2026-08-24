@@ -30,7 +30,7 @@ selects in the surrounding achievability wrapper, not the analytic core.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 10.5.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

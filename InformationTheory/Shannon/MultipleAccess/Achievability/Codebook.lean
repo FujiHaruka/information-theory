@@ -6,7 +6,7 @@ import InformationTheory.Shannon.ChannelCoding.Achievability.Main
 /-!
 # Multiple access channel — codebook, decoder, and Bonferroni decomposition
 
-The two-user codebook plumbing for MAC achievability (Cover–Thomas §15.3.1): the codebook
+The two-user codebook plumbing for MAC achievability (Cover–Thomas): the codebook
 type, the joint-typical pair decoder, the `MACCode` bundle, the four-event Bonferroni
 decomposition of the per-pair error probability, the corner-point information quantities,
 and the block-law / channel-fold helpers feeding the two-codebook random-coding average.

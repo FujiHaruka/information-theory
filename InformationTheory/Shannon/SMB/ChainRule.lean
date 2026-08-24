@@ -9,7 +9,7 @@ import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 # SMB chain rule decomposition
 
 For a stationary process `p : StationaryProcess μ α` over a finite alphabet,
-this file establishes the Cover–Thomas 16.8 chain rule for log-likelihood:
+this file establishes the Cover–Thomas chain rule for log-likelihood:
 
   `-log P_n({block_n ω}) = ∑_{i<n} -log P(obs i | block_i)(block_i ω){obs i ω}`
 
@@ -34,7 +34,7 @@ Cesàro sandwich use to discharge the four hypotheses of
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Section 16.8, equation (16.107).
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

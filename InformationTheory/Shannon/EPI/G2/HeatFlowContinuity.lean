@@ -345,7 +345,7 @@ bridge (`pPath_eq_convDensityAdd`) and the entropy-integral machinery
 `t = 0⁺`:
 
 * `hX_meas` / `hZ_meas` / `hXZ_indep` — measurability + independence of the de
-  Bruijn pair `X ⊥ Z` (Cover–Thomas 17.7.2 standing assumptions).
+  Bruijn pair `X ⊥ Z` (Cover–Thomas standing assumptions).
 * `v_Z` / `hv_Z_pos` / `hZ_law` — the Gaussian noise law `P.map Z = 𝒩(0, v_Z)`
   (general variance, so the sum instance `Z_X+Z_Y ∼ 𝒩(0,2)` fits).
 * `pX` / `hpX_nn` / `hpX_meas` / `hpX_law` — a Real density witness for `P.map X`.

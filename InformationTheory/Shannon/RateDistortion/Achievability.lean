@@ -7,7 +7,7 @@ import Mathlib.Topology.Order.Compact
 /-!
 # Rate-distortion achievability — structure and pmf-direct `R(D)`
 
-The structural layer for the achievability half of Cover–Thomas 10.5: block
+The structural layer for the achievability half of Cover–Thomas: block
 lossy codes and the pmf-direct rate-distortion function with its compactness /
 continuity / minimizer-existence apparatus.
 

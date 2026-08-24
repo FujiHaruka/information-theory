@@ -16,7 +16,7 @@ import InformationTheory.Shannon.EPI.Conv.Density
 /-!
 # Fisher information V2 — de Bruijn heat flow
 
-Heat-flow scaffolding for the general-`X` de Bruijn identity (Cover–Thomas 17.7.2's
+Heat-flow scaffolding for the general-`X` de Bruijn identity (Cover–Thomas's
 differentiate-under-the-integral via heat equation plus integration by parts), built on the
 definitions of `FisherInfo/DeBruijn.lean`. The heat equation and the integration-by-parts step
 are exposed as predicates that compose into the de Bruijn statement.

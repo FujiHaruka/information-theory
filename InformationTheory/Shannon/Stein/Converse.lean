@@ -17,7 +17,7 @@ concrete rate bound.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 11.8.3.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

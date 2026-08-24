@@ -9,7 +9,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
 /-!
 # Kraft inequality converse: existence of prefix codes
 
-Converse direction of Cover–Thomas 5.2.1 (McMillan converse): if a length function
+Converse direction of Cover–Thomas (McMillan converse): if a length function
 `l : α → ℕ` satisfies the Kraft inequality `∑_a D^{−l(a)} ≤ 1`, then there exists
 a prefix-free code `c : α → List (Fin D)` with `(c a).length = l a` for all `a`.
 

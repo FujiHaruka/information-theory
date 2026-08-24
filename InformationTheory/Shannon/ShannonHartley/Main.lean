@@ -26,7 +26,6 @@ conditionally-complete `ℝ` and made both false as framed (see `contAwgnOperati
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 9.6.1.
 -/
 
 namespace InformationTheory.Shannon.ShannonHartley

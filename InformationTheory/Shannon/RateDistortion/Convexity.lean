@@ -5,7 +5,7 @@ import InformationTheory.Meta.EntryPoint
 # Rate-distortion convexity
 
 Convexity of the rate-distortion function in the distortion threshold
-(Cover–Thomas, Theorem 10.4): for all `D₁ D₂ : ℝ` and `λ ∈ [0, 1]`,
+(Cover–Thomas): for all `D₁ D₂ : ℝ` and `λ ∈ [0, 1]`,
 `R(λ D₁ + (1-λ) D₂) ≤ λ R(D₁) + (1-λ) R(D₂)`.
 
 ## Main definitions
@@ -18,7 +18,7 @@ Convexity of the rate-distortion function in the distortion threshold
 
 ## Implementation notes
 
-The joint convexity of `klDiv` (Cover–Thomas 2.7.2) is not available directly in
+The joint convexity of `klDiv` (Cover–Thomas) is not available directly in
 Mathlib, so it is derived along the data-processing route in three layers:
 `klDiv_joint_convex` (a selector-extension on `Bool × Ω` combined with the
 pushforward DPI `klDiv_map_le` and the per-slice KL additivity of mutually
@@ -29,7 +29,7 @@ The infimum over feasible joints is pressed through
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 10.4.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

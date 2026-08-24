@@ -186,7 +186,7 @@ theorem entropy_nonneg_rv
 
 /-! ### Mutual information -/
 
-/-- `I(X; Y) = I(Y; X)` (Cover–Thomas 2.4.1). -/
+/-- `I(X; Y) = I(Y; X)` (Cover–Thomas). -/
 @[entry_point]
 theorem mutualInfo_comm_rv
     {α : Type*} [MeasurableSpace α]
@@ -200,7 +200,7 @@ theorem mutualInfo_comm_rv
 /-! ### Data processing inequality -/
 
 /-- Data processing inequality: post-processing cannot increase mutual information.
-`I(X; f(Y)) ≤ I(X; Y)` — Cover–Thomas 2.8.1. -/
+`I(X; f(Y)) ≤ I(X; Y)` — Cover–Thomas. -/
 @[entry_point]
 theorem mutualInfo_le_of_postprocess_rv
     {α : Type*} [MeasurableSpace α]

@@ -7,14 +7,14 @@ import Mathlib.Topology.Order.LiminfLimsup
 /-!
 # Shannon-McMillan-Breiman theorem (sandwich form)
 
-Cover–Thomas Theorem 16.8.1: for a stationary ergodic process with finite
+Cover–Thomas: for a stationary ergodic process with finite
 alphabet `α`, the per-symbol negative log-likelihood
 
   `-(1/n) log P(X_0, …, X_{n-1})`
 
 converges almost surely to the entropy rate `H`. This file packages the
 sandwich form of the conclusion: assuming `liminf ≥ H` and `limsup ≤ H`
-almost surely (the two halves of the Cover–Thomas 16.8 bound which Birkhoff
+almost surely (the two halves of the Cover–Thomas bound which Birkhoff
 supplies), we deduce a.s. convergence via `tendsto_of_le_liminf_of_limsup_le`.
 
 The hypothesis-free capstone `shannon_mcmillan_breiman` lives in
@@ -54,7 +54,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 /-- Per-block negative log-likelihood average for the observed sample.
 
 `blockLogAvg μ p n ω := -(1/n) * log P_n({block_n ω})` where
-`P_n = μ.map (blockRV n)`. Cover–Thomas 16.8 calls this `-(1/n) log p(X^n)`.
+`P_n = μ.map (blockRV n)`. Cover–Thomas calls this `-(1/n) log p(X^n)`.
 
 For `n = 0` the value is `0` (multiplication by `1/0 = 0`); only `n > 0`
 behavior is informative. -/
@@ -77,7 +77,7 @@ lemma measurable_blockLogAvg
     exact measurable_of_finite _
   exact h_disc.comp h_block
 
-/-! ## Sandwich form (Cover–Thomas 16.8.1) -/
+/-! ## Sandwich form (Cover–Thomas) -/
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **Shannon–McMillan–Breiman theorem** (sandwich form): if the per-symbol

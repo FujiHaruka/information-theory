@@ -6,7 +6,7 @@ import InformationTheory.Shannon.AWGN.Converse
 /-!
 # AWGN channel coding theorem
 
-The AWGN noisy-channel coding theorem (Cover–Thomas Theorems 9.1.1 + 9.1.2):
+The AWGN noisy-channel coding theorem (Cover–Thomas):
 achievability, converse, and the closed-form capacity assembled into one statement.
 
 ## Main statements
@@ -26,7 +26,7 @@ that it can import both `Achievability` and `Converse` without creating an impor
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley,
-  2006. Theorems 9.1.1–9.1.2.
+  2006.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -63,7 +63,7 @@ theorem awgn_channel_coding_theorem
 
 /-! ## Closed-form capacity corollary -/
 
-/-- AWGN capacity closed form (Cover-Thomas 9.1, restated as a public corollary).
+/-- AWGN capacity closed form (Cover-Thomas, restated as a public corollary).
 
 `awgnCapacity P N h_meas = (1/2) log(1 + P/N)`.
 

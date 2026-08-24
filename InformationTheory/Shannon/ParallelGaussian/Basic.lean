@@ -10,7 +10,7 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 
 The capacity of `n` parallel AWGN channels `Y_i = X_i + Z_i`, `Z_i ∼ 𝒩(0, N_i)`
 (`i : Fin n`) under the total power constraint `∑_i E[X_i²] ≤ P`, and its water-filling
-solution (Cover–Thomas, Theorem 9.4.1).
+solution (Cover–Thomas).
 
 ## Main definitions
 
@@ -45,7 +45,6 @@ solution (Cover–Thomas, Theorem 9.4.1).
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 9.4.1.
 -/
 
 namespace InformationTheory.Shannon.ParallelGaussian

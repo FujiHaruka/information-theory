@@ -5,7 +5,7 @@ import InformationTheory.Shannon.Kolmogorov.PrefixMachine
 /-!
 # The universal probability of a natural number
 
-Cover–Thomas (2nd ed.) Theorem 14.6.1. The universal probability `universalProb x`
+Cover–Thomas (2nd ed.). The universal probability `universalProb x`
 is the total weight `∑ 2^{-|p|}` of the self-delimiting programs `p` that output
 `x`. Since the shortest such program has length `prefixComplexity x`, its single
 term already gives the lower bound `2^{-K(x)} ≤ P_U(x)`, while the Kraft bound on

@@ -10,7 +10,7 @@ import Mathlib.Analysis.Convex.SpecificFunctions.Basic
 # Water-filling KKT level and optimality
 
 The KKT water level and the optimality of the water-filling allocation for the parallel
-Gaussian channel (Cover–Thomas, Theorem 9.4.1).
+Gaussian channel (Cover–Thomas).
 
 ## Main statements
 

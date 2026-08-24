@@ -4,7 +4,7 @@ import InformationTheory.Shannon.ConditionalMethodOfTypes.Mass.Concentration
 # Conditional method of types — slice mass lower bound
 
 The headline conditional slice-mass lower bound
-`conditionalStronglyTypicalSlice_mass_ge` (Cover-Thomas 10.6.1, strong form),
+`conditionalStronglyTypicalSlice_mass_ge` (Cover-Thomas, strong form),
 assembled from the entropy-concentration helpers in `Mass.Concentration`.
 -/
 namespace InformationTheory.Shannon
@@ -21,7 +21,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 variable [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
-/-- Conditional slice mass lower bound (Cover-Thomas 10.6.1, strong form,
+/-- Conditional slice mass lower bound (Cover-Thomas, strong form,
 mutual-information form). For `x` X-strongly-typical and `Y ∼ μ.map (Ys 0)^n`
 i.i.d., the Y-product mass of the joint strongly-typical slice at `x` is bounded
 below by `exp(-n · (I(X;Y) + slack)) = exp(-n · (H(X) + H(Y) - H(Z) + slack))`,

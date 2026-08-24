@@ -3,7 +3,7 @@ import InformationTheory.Shannon.EPI.Blachman.GeneralDensity
 import InformationTheory.Shannon.EPI.Stam.Inequality
 
 /-!
-# Stam's inequality — standalone density-level headline (Cover–Thomas Lemma 17.7.2)
+# Stam's inequality — standalone density-level headline (Cover–Thomas)
 
 This file assembles the genuine, sorry-free parts already present in the project into a clean,
 self-contained statement of **Stam's inequality** at the density level, for the non-vacuous class
@@ -22,7 +22,7 @@ and `IsBlachmanConvReady` producers, the convolution Fisher finiteness bound) is
 
 ## References
 
-[CoverThomas2006] Lemma 17.7.2; [Blachman1965].
+[CoverThomas2006]; [Blachman1965].
 -/
 
 namespace InformationTheory.Shannon.StamInequality
@@ -116,7 +116,7 @@ theorem fisherInfoOfDensity_convDensityAdd_gaussian_pos
     lt_of_le_of_lt hle ENNReal.ofReal_lt_top
   exact ENNReal.toReal_pos hne_zero hlt.ne
 
-/-- **Stam's inequality (density-level headline, Cover–Thomas Lemma 17.7.2 / Blachman 1965).**
+/-- **Stam's inequality (density-level headline, Cover–Thomas / Blachman 1965).**
 
 For probability densities `pX, pY` and a Gaussian heat kernel `g_t` (`t > 0`), the
 Gaussian-smoothed densities `fX = pX ∗ g_t`, `fY = pY ∗ g_t` satisfy the inverse (harmonic-mean)
@@ -127,7 +127,7 @@ Fisher information inequality
 The Gaussian-smoothed class is non-vacuous (it contains every heat-flow smoothing of an arbitrary
 probability density, not just Gaussian equality cases), so the inequality is not vacuously true.
 
-References: [CoverThomas2006] Lemma 17.7.2; [Blachman1965].
+References: [CoverThomas2006]; [Blachman1965].
 
 @audit:ok -/
 @[entry_point]

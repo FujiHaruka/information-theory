@@ -10,7 +10,7 @@ import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 /-!
 # Stein's lemma: achievability
 
-Stein's lemma for binary hypothesis testing (Cover–Thomas, Theorem 11.8.3): the optimal
+Stein's lemma for binary hypothesis testing (Cover–Thomas): the optimal
 type-II error of an `n`-sample test with type-I error at most `ε` decays exponentially in `n`
 at the rate of the Kullback–Leibler divergence `klDiv P Q`. This file develops the achievability
 (lower bound) side: the log-likelihood-ratio plumbing, the Stein-typical set, and the
@@ -42,7 +42,7 @@ tensorization of the KL divergence.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 11.8.3.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon

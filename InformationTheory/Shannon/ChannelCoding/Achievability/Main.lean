@@ -18,7 +18,6 @@ from `...Achievability.RandomCodebook` with the pigeonhole.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 7.7.1.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding

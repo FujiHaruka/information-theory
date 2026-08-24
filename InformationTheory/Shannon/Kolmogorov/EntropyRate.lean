@@ -1025,7 +1025,7 @@ theorem kolmogorov_entropy_rate_lower
 
 /-- Kolmogorov complexity converges to the entropy rate: for an i.i.d. source, the
 normalized expected conditional complexity of a length-`n` block tends to the
-bit-rebased entropy `H(X) / log 2` (CT 2nd ed. Thm 14.3.1).
+bit-rebased entropy `H(X) / log 2` (CT 2nd ed.).
 @audit:ok -/
 @[entry_point]
 theorem kolmogorov_entropy_rate

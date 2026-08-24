@@ -654,7 +654,7 @@ bound on the X-fiber of `jointlyTypicalSet`). The cardinality is lower-bounded
 via `stronglyTypicalSet_card_ge_eventually` on `Z` and the individual fiber
 masses upper-bounded via `typicalSet_prob_le` on `Y`, yielding the
 per-source-typical match-probability lower bound `exp(-n(I(X;Y) + δ(ε)))` of
-Cover–Thomas 10.6.1. -/
+Cover–Thomas. -/
 
 /-- Conditional strong-typical slice. For a fixed X-block `x : Fin n → α`,
 the Y-fiber of the joint strongly-typical set at `x`. -/

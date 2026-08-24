@@ -5,7 +5,7 @@ import InformationTheory.Shannon.SlepianWolf.Basic
 /-!
 # Conditional entropy on `Fin n` under strong memoryless DMC
 
-The Cover-Thomas Thm 7.9 route to the per-letter MI bound goes via entropy
+The Cover-Thomas route to the per-letter MI bound goes via entropy
 subadditivity, avoiding a false-statement `h_yother_zero` hypothesis that a
 hypothesis-form converse would require. The chain:
 
@@ -57,7 +57,7 @@ omit [DecidableEq β] in
 /-- Entropy is subadditive on `Fin n`: `H(Y^n) ≤ ∑ H(Y_i)`.
 
 This is encoder-agnostic — holds for any family `Ys : Fin n → Ω → β` without any
-memoryless or independence assumption. Cover-Thomas Thm 2.6.6.
+memoryless or independence assumption. Cover-Thomas.
 
 Proof: combine the n-variable chain rule `H(Y^n) = ∑ H(Y_i | Y^{<i})`
 (`jointEntropy_chain_rule`) with `H(Y_i | Y^{<i}) ≤ H(Y_i)`
@@ -251,7 +251,7 @@ lemma condEntropy_pi_chain_rule_aux
 omit [DecidableEq α] [DecidableEq β] in
 /-- The conditional joint entropy chain rule on `Fin n` (specialization of
 `condEntropy_pi_chain_rule_aux` with conditioner `Xs : Ω → (Fin n → α)`).
-`H(Y^n | X^n) = ∑ i, H(Y_i | X^n, Y^{<i})`. Building Block 2 of Cover-Thomas Thm 7.9. -/
+`H(Y^n | X^n) = ∑ i, H(Y_i | X^n, Y^{<i})`. Building Block 2 of Cover-Thomas. -/
 @[entry_point]
 lemma condEntropy_pi_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -646,7 +646,7 @@ lemma condEntropy_pi_eq_sum_of_memoryless_strong
 
 end StrongMemorylessCondEntropy
 
-/-! ## Central theorem — Cover-Thomas Thm 7.9 bound -/
+/-! ## Central theorem — Cover-Thomas bound -/
 
 section CentralTheorem
 
@@ -657,7 +657,7 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- The per-letter mutual-information bound from a strong memoryless DMC (Cover-Thomas Thm 7.9):
+/-- The per-letter mutual-information bound from a strong memoryless DMC (Cover-Thomas):
 `(I(X^n; Y^n)).toReal ≤ ∑ i, (I(X_i; Y_i)).toReal`.
 
 The encoder-agnostic Cover-Thomas chain:

@@ -8,7 +8,7 @@ import Mathlib.Analysis.Convex.Jensen
 # LZ78 Ziv-inequality entropy bridge — foundational lemmas
 
 This file hosts the foundational, mutually-independent lemmas of the LZ78
-Ziv-inequality entropy bridge (Cover–Thomas §13.5), built on top of the SMB
+Ziv-inequality entropy bridge (Cover–Thomas), built on top of the SMB
 layer (`blockLogAvg`, `SMB/McMillanBreiman.lean`).
 
 ## Main statements
@@ -23,7 +23,7 @@ layer (`blockLogAvg`, `SMB/McMillanBreiman.lean`).
 
 ## Per-path parsing factorization
 
-The Ziv chain (Cover–Thomas §13.5) needs the pushforward block probability
+The Ziv chain (Cover–Thomas) needs the pushforward block probability
 `Pₙ{block ω}` bounded above by a product of per-phrase conditional
 probabilities along the LZ78 parse: `Pₙ ≤ ∏ⱼ qⱼ`. This inequality is
 unconditionally true by prefix monotonicity (`blockProb_le_prod_condPhraseProb`,
@@ -150,7 +150,7 @@ noncomputable def prefixBlockProb
     (μ : Measure Ω) (p : StationaryProcess μ α) (ω : Ω) (m : ℕ) : ℝ :=
   (μ.map (p.blockRV m)).real {p.blockRV m ω}
 
-/-- The per-phrase conditional probability (Cover–Thomas §13.5, chain-rule
+/-- The per-phrase conditional probability (Cover–Thomas, chain-rule
 per-path form), indexed by phrase position `j`.
 
 Concretely the ratio of the block probabilities of the parsing prefix after
@@ -171,7 +171,7 @@ noncomputable def condPhraseProb
 /-- The per-path
 block probability of a stationary process is bounded above by the
 product of the LZ78 parse's per-phrase conditional probabilities,
-`Pₙ{block ω} ≤ ∏ⱼ condPhraseProb …` (Cover–Thomas §13.5, the per-path /
+`Pₙ{block ω} ≤ ∏ⱼ condPhraseProb …` (Cover–Thomas, the per-path /
 per-realization form of the entropy chain rule, in the inequality direction
 the Ziv chain consumes).
 
@@ -244,7 +244,7 @@ The LZ78 encoding length `lz78GreedyEncodingLength`
 (`LZ78/AsymptoticOptimality/EncodingLength.lean`) is measured in bits
 (`LZ78Phrase.bitLength` uses `Nat.log 2`, the binary code-length), whereas
 `blockLogAvg` / `entropyRate` are natural-log quantities (nats). The
-Cover–Thomas Theorem 13.5.3 statement is bit-based:
+Cover–Thomas statement is bit-based:
 
 ```
 (lz n x)/n → H₂   where  H₂ = (entropy rate in bits) = entropyRate / log 2.

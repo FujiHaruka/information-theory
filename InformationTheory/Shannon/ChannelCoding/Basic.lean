@@ -28,7 +28,6 @@ import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 7.6.1.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -238,7 +237,7 @@ end Code
 
 /-! ## Jointly typical set (definitions + bounds (a), (b), (c))
 
-Cover-Thomas Theorem 7.6.1. The jointly typical set is the intersection of three
+Cover-Thomas. The jointly typical set is the intersection of three
 single-axis typical conditions (X, Y, and (X, Y) jointly). Bounds (a) and (b) follow
 directly from the AEP single-axis theorems (`typicalSet_prob_tendsto_one` and
 `typicalSet_card_le`) applied to the joint sequence `i ↦ (Xs i, Ys i)`. The

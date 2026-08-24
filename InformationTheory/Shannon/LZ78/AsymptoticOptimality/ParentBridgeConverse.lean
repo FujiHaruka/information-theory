@@ -622,7 +622,7 @@ The math is `O(n)`, so any polynomial degree `≥ 1` is a true bound; the degree
 Borel–Cantelli lift (`blockLogAvg₂_minus_error_le_rate_ae`).
 
 This is the combinatorial core of the LZ78 converse
-(Cover–Thomas Thm 13.5.3 lower bound, distinct-phrase counting).
+(Cover–Thomas lower bound, distinct-phrase counting).
 
 The proof is assembled from three parts:
 * Part A — fiberwise regrouping of the Kraft sum by the distinct-phrase
@@ -867,7 +867,7 @@ least `blockLogAvg₂ n ω` minus the vanishing error
 ∀ᵐ ω, ∀ᶠ n,  blockLogAvg₂ n ω − (2 log n + 2 log(n+1))/(n log 2) ≤ lz/n.
 ```
 
-This is the Barron competitive-optimality a.s. lift (Cover–Thomas Thm 13.5.3):
+This is the Barron competitive-optimality a.s. lift (Cover–Thomas):
 a per-realization LZ78 codeword can be *shorter* than `−log₂ Pₙ{xⁿ}`, so the
 expectation-level converse `H_D ≤ E[L]` does not transfer pointwise. The lift
 is a Markov + first Borel–Cantelli argument on the bad set
@@ -937,7 +937,7 @@ theorem blockLogAvg₂_minus_error_le_rate_ae
   exact hn
 
 /-- The almost-sure LZ78 converse lower bound for the longest-prefix-match greedy
-parser (Cover–Thomas Theorem 13.5.3, lower-bound half): for a stationary ergodic
+parser (Cover–Thomas, lower-bound half): for a stationary ergodic
 source `p` the per-symbol length of the greedy LZ78 parse
 `lz78GreedyEncodingLength` is, almost surely, asymptotically at least the bit
 entropy rate:

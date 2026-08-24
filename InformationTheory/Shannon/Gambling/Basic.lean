@@ -5,7 +5,7 @@ import InformationTheory.Shannon.Hoeffding.TradeoffExp
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# Kelly gambling and the doubling rate (Cover–Thomas Theorem 6.1.2)
+# Kelly gambling and the doubling rate (Cover–Thomas)
 
 For a horse race on a finite alphabet `α` with true win probabilities `p : α → ℝ`,
 betting fractions `b : α → ℝ`, and odds `o : α → ℝ` (payoff per unit staked on `x`),
@@ -22,7 +22,7 @@ rate, and does so uniquely.
 
 ## Main statements
 
-* `doublingRate_le_proportional` — Theorem 6.1.2: `W(b, o, p) ≤ W(p, o, p)` for any
+* `doublingRate_le_proportional` — `W(b, o, p) ≤ W(p, o, p)` for any
   full-support bet `b`, i.e. proportional betting is optimal.
 * `doublingRate_eq_proportional_iff` — equality holds iff `b = p`.
 * `doublingRate_proportional_eq` — the optimal doubling rate in closed form,
@@ -54,7 +54,6 @@ theorems.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Theorem 6.1.2.
 -/
 
 namespace InformationTheory.Shannon.Gambling
@@ -115,7 +114,7 @@ lemma doublingRate_gap_eq_klDivPmf (p b o : α → ℝ)
     ring
 
 /-- Proportional (Kelly) betting maximizes the doubling rate: for any full-support bet `b`
-and positive odds `o`, `W(b, o, p) ≤ W(p, o, p)`. This is Cover–Thomas Theorem 6.1.2.
+and positive odds `o`, `W(b, o, p) ≤ W(p, o, p)`. This is Cover–Thomas.
 @audit:ok — sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`); `hb_pos` is a genuine correctness precondition (counterexample without it:
 `p=(1/2,1/2)`, `o=(2,2)`, `b=(1,0)` gives `W(b,o,p)=(1/2)log 2 > 0 = W(p,o,p)` since

@@ -12,7 +12,7 @@ import Mathlib.MeasureTheory.Constructions.Pi
 /-!
 # Joint-typicality decoder and the random-coding union bound
 
-The decoder side of AWGN achievability (Cover–Thomas 9.2): the joint-typicality
+The decoder side of AWGN achievability (Cover–Thomas): the joint-typicality
 decoder, the measurability plumbing for the per-message error event, and the
 random-coding union bound culminating in `awgn_avg_error_union_bound`.
 
@@ -44,7 +44,7 @@ lemma directly instead of taking a predicate hypothesis. -/
 
 /-! ## Joint typical decoder and union bound -/
 
-/-- The joint-typicality decoder (Cover–Thomas 9.2). Given a typical set
+/-- The joint-typicality decoder (Cover–Thomas). Given a typical set
 `A ⊆ (Fin n → ℝ) × (Fin n → ℝ)` and a candidate codebook, it maps each received
 vector `y` to the smallest codeword index `m` with `(codebook m, y) ∈ A`; if no
 such `m` exists it returns the default `⟨0, …⟩ : Fin M` (well-defined under
@@ -851,7 +851,7 @@ private lemma awgn_unionBound_errorEvent_subset
     exact ⟨m', hm'_ne, hm'_mem⟩
   · exact Or.inl hmA
 
-/-- The random-coding union bound (Cover–Thomas 9.2, with the typicality slack
+/-- The random-coding union bound (Cover–Thomas, with the typicality slack
 `δ` separated from the error target `ε`). With the codebook drawn from the
 two-stage Gaussian product law and the decoder fixed to the joint-typicality
 decoder against `A`, there is a threshold `N₀` such that for every `n ≥ N₀`,

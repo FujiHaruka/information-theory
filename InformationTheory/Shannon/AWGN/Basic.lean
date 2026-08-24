@@ -9,7 +9,7 @@ import Mathlib.MeasureTheory.Measure.GiryMonad
 # AWGN channel capacity
 
 The continuous specialization of the Shannon noisy-channel coding theorem to the
-additive white Gaussian noise channel (Cover–Thomas, Chapter 9): the
+additive white Gaussian noise channel (Cover–Thomas): the
 power-constrained capacity has the closed form `C = (1/2) log(1 + P/N)`.
 
 ## Main definitions
@@ -228,7 +228,7 @@ theorem awgnCapacity_le_gaussian
   · rintro y ⟨p, hp_mem, rfl⟩
     exact h_max_ent p hp_mem
 
-/-- AWGN capacity closed form (Cover–Thomas, Theorem 9.1): the supremum over
+/-- AWGN capacity closed form (Cover–Thomas): the supremum over
 power-constrained inputs equals `(1/2) log(1 + P/N)`, obtained as the sandwich of
 the Gaussian-achievable lower bound and the max-entropy upper bound. The hypotheses
 `h_bridge_gauss`, `h_max_ent`, `h_bdd` carry the closed-form mutual information and

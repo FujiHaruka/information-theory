@@ -422,7 +422,7 @@ theorem ziv_aseventual_le_entropyRate₂
 /-- The a.s.-eventual Ziv comparison: the limsup of the greedy bit-rate is at
 most the limsup of `blockLogAvg₂`.
 
-The achievability crux (Cover–Thomas Lemma 13.5.5): combining the Ziv product
+The achievability crux (Cover–Thomas): combining the Ziv product
 bound `c·log c ≤ 8·log(|α|+1)·n` with the length-grouping overhead control
 `c = O(n/log n)` and the `-log Pₙ = n·blockLogAvg` identity, the greedy
 bit-rate is asymptotically dominated by `blockLogAvg₂`. Stated as an
@@ -436,7 +436,7 @@ The Ziv→AEP connection is supplied by the composition
 
 @audit:ok (non-circular, non-bundled (signature is `(μ, p)` +
 `[IsProbabilityMeasure μ]` regularity only), non-degenerate, sufficiency
-TRUE-as-framed (Cover–Thomas 13.5.5; per-block form correctly avoided;
+TRUE-as-framed (Cover–Thomas; per-block form correctly avoided;
 degenerate `entropyRate = 0` boundary stays alive)). -/
 theorem ziv_aseventual_le_blockLogAvg₂
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
@@ -462,7 +462,7 @@ limsup_n (1/n) · lz78GreedyEncodingLength(X^n) ≤ entropyRate₂ μ p   a.s.
 ```
 
 This is the achievability (upper-bound) half of LZ78 asymptotic optimality
-(Cover–Thomas Lemma 13.5.5 / Theorem 13.5.3), i.e. the a.s.-eventual Ziv inequality
+(Cover–Thomas), i.e. the a.s.-eventual Ziv inequality
 `limsup (c·log₂ c / n) ≤ H₂` combined with the SMB upper bound.
 
 Units: the encoding length is a base-2 code length (`bitLength` uses
@@ -514,7 +514,7 @@ theorem lz78Greedy_achievability_ae
   exact h_ziv.trans h_smb.limsup_eq.le
 
 /-- LZ78 asymptotic optimality for the concrete greedy parser
-`lz78GreedyEncodingLength` (Cover–Thomas Theorem 13.5.3). For a stationary
+`lz78GreedyEncodingLength` (Cover–Thomas). For a stationary
 ergodic source `p : ErgodicProcess μ α` on a finite alphabet `α`, the per-symbol
 output length of the longest-prefix-match greedy LZ78 parse converges almost
 surely to the bit entropy rate:

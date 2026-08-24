@@ -26,7 +26,7 @@ variable {α : Type*} [Fintype α] [Nonempty α]
 
 /-! ### Source-coding theorem, achievability
 
-The source-coding achievability theorem (Cover-Thomas Theorem 5.4.2) is stated
+The source-coding achievability theorem (Cover-Thomas) is stated
 in `Tendsto` form. With codebook size `M_n := ⌈exp(n · R)⌉`, the encoder and
 decoder are built from a bijection between the typical set and `Fin M_n`; the
 error rate vanishes via `typicalSet_prob_tendsto_one`, and `log M_n / n → R`
@@ -34,8 +34,8 @@ follows from a `Nat.le_ceil` / `Nat.ceil_lt_add_one` squeeze.
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 3.1.2.
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 5.4.2.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
 -/
 
 /-- The codebook size used in the achievability proof: `M_n := ⌈exp(n · R)⌉`. -/

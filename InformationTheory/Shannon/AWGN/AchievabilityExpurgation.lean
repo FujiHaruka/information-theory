@@ -13,8 +13,8 @@ import Mathlib.MeasureTheory.Constructions.Pi
 /-!
 # Expurgation, power-constraint witness, and code extraction
 
-The expurgation and feasibility apparatus for AWGN achievability (Cover–Thomas
-9.2): worst-half expurgation, the power-constraint slack witness producing a
+The expurgation and feasibility apparatus for AWGN achievability (Cover–Thomas):
+worst-half expurgation, the power-constraint slack witness producing a
 strictly smaller variance, and the bridge from a deterministic codebook to the
 `AwgnCode` type.
 

@@ -8,7 +8,7 @@ import InformationTheory.Shannon.CondMIChainRule
 # General broadcast channel — chain-rule gateway for the UV outer bound
 
 Chain-rule material for the Nair–El Gamal (UV) outer bound of the general two-receiver
-broadcast channel (El Gamal–Kim, Ch. 8). The auxiliary variables of that bound mix a
+broadcast channel (El Gamal–Kim). The auxiliary variables of that bound mix a
 *prefix* of one output sequence with a *suffix* of the other,
 `Uᵢ = (W₂, Y₁^{<i}, Y₂^{>i})` and `Vᵢ = (W₁, Y₁^{<i}, Y₂^{>i})`, which needs three pieces
 of plumbing that the degraded converse (`BroadcastChannel.Converse`) did not:

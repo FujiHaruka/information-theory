@@ -12,7 +12,7 @@ import Mathlib.Order.Filter.AtTopBot.CompleteLattice
 
 For a stationary process `p : StationaryProcess μ α` on a finite alphabet `α`,
 the block entropy is `H_n := H(X_0, …, X_{n-1})` and the entropy rate
-is `H := lim_{n → ∞} H_n / n` (Cover–Thomas 4.2.1). Existence of the limit is
+is `H := lim_{n → ∞} H_n / n` (Cover–Thomas). Existence of the limit is
 the principal content of this file.
 
 The Birkhoff ergodic theorem and the Shannon–McMillan–Breiman theorem build on
@@ -61,7 +61,7 @@ noncomputable def conditionalEntropyTail
     (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (n : ℕ) : ℝ :=
   InformationTheory.MeasureFano.condEntropy μ (p.obs n) (p.blockRV n)
 
-/-- Entropy rate `lim H(X_0, …, X_{n-1}) / n` (Cover-Thomas 4.2.1). Existence
+/-- Entropy rate `lim H(X_0, …, X_{n-1}) / n` (Cover-Thomas). Existence
 proven by `entropyRate_exists_of_stationary`. -/
 @[entry_point]
 noncomputable def entropyRate (μ : Measure Ω) (p : StationaryProcess μ α) : ℝ :=

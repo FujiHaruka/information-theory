@@ -38,7 +38,7 @@ This file builds the body of the Stam inequality `1 / J(X + Y) ≥ 1 / J(X) + 1 
 
 ## Implementation notes
 
-The standard 1-dimensional Stam inequality proof (Cover–Thomas Lemma 17.7.2) follows the path:
+The standard 1-dimensional Stam inequality proof (Cover–Thomas) follows the path:
 score representation of the convolution (Blachman 1965), conditional Cauchy–Schwarz, total
 expectation giving `J(Z) ≤ λ² J(X) + (1 - λ)² J(Y)`, and optimization over `λ` at
 `λ = J(Y) / (J(X) + J(Y))`. The analytic core (Steps 2-3) is localized to
@@ -47,7 +47,7 @@ expectation giving `J(Z) ≤ λ² J(X) + (1 - λ)² J(Y)`, and optimization over
 
 ## References
 
-[CoverThomas2006] Lemmas 17.7.1, 17.7.2; [Blachman1965].
+[CoverThomas2006]; [Blachman1965].
 -/
 
 namespace InformationTheory.Shannon.StamInequality
@@ -62,7 +62,7 @@ open InformationTheory.Shannon.StamEPIBridge
 
 /-! ## §1 — Convolution score representation predicate (Step 1) -/
 
-/-- The score-convolution representation (Blachman 1965 / Cover–Thomas Lemma 17.7.1): for
+/-- The score-convolution representation (Blachman 1965 / Cover–Thomas): for
 independent `X, Y` with smooth densities, the score of `Z := X + Y` is the conditional expectation
 `s_Z(z) = E[λ s_X(X) + (1 - λ) s_Y(Y) | X + Y = z]` for every `λ`. This predicate reifies the
 *output* of that identity — the existence of the optimal `λ`-witness `λ* = J_Y / (J_X + J_Y)` in
@@ -233,7 +233,7 @@ def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
     InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY →
     J_sum ≤ J_X * J_Y / (J_X + J_Y)
 
-/-- The analytic core of the Stam inequality's Steps 2-3 (Cover–Thomas Lemma 17.7.2 /
+/-- The analytic core of the Stam inequality's Steps 2-3 (Cover–Thomas /
 Blachman 1965): for independent `X, Y` with smooth densities, the conditional Cauchy–Schwarz
 `s_Z(z)² ≤ E[(λ s_X + (1 - λ) s_Y)² | X + Y = z]` integrated against `p_Z` gives the convex Fisher
 bound `J(Z) ≤ λ² J(X) + (1 - λ)² J(Y)`, whose `λ`-optimum is the optimal Cauchy–Schwarz form
@@ -303,7 +303,7 @@ theorem stam_inequality_via_predicate_optimal
   exact stam_inverse_form_of_harmonic_mean hJX hJY hJsum h_le
 
 /-- Bridge from the body-level optimal Cauchy–Schwarz predicate to the published Stam signature
-`IsStamInequalityHyp` (Cover–Thomas Lemma 17.7.2). It introduces the
+`IsStamInequalityHyp` (Cover–Thomas). It introduces the
 matching hypotheses, applies `h_cs_opt` to get the harmonic-mean bound
 `J_sum ≤ J_X · J_Y / (J_X + J_Y)`, and reshapes to the inverse form via
 `stam_inverse_form_of_harmonic_mean`. The

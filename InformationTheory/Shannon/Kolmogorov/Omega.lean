@@ -5,7 +5,7 @@ import InformationTheory.Shannon.Kolmogorov.PrefixMachine
 /-!
 # Chaitin's halting probability
 
-Cover–Thomas (2nd ed.) §14.9. The halting probability of the self-delimiting
+Cover–Thomas (2nd ed.). The halting probability of the self-delimiting
 machine is the total weight `∑ 2^{-|p|}` of its halting programs. Because the
 halting set is prefix-free, the Kraft bound applies to every finite subsum, so
 `Ω` is a subprobability; the literal echo program halts, so `Ω` is positive.

@@ -5,7 +5,7 @@ import Mathlib.Topology.Order.LiminfLimsup
 /-!
 # Strong Stein's lemma — convergence to KL divergence
 
-The strong converse for binary hypothesis testing (Cover–Thomas, Theorem 11.8.3):
+The strong converse for binary hypothesis testing (Cover–Thomas):
 for any `ε ∈ (0, 1)`,
 `-(1/n) * log (steinOptimalBeta P Q n ε)` converges to `(klDiv P Q).toReal` as `n → ∞`.
 
@@ -25,7 +25,7 @@ modification.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 11.8.3.
+  Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon.StrongStein

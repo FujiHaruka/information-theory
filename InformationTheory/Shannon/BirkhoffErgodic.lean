@@ -12,8 +12,8 @@ import Mathlib.Topology.Algebra.Order.LiminfLimsup
 # Birkhoff individual ergodic theorem via Garsia's maximal ergodic inequality
 
 This file proves the **Birkhoff individual ergodic theorem** (Petersen
-*Ergodic Theory* Thm 2.3, Walters *An Introduction to Ergodic Theory*
-Thm 1.14, 1931):
+*Ergodic Theory*, Walters *An Introduction to Ergodic Theory*,
+1931):
 
 > Let `T : Ω → Ω` be a measure-preserving ergodic transformation of a
 > probability space `(Ω, μ)`, and let `f : Ω → ℝ` be integrable. Then
@@ -30,13 +30,13 @@ inequality**, followed by a sandwich argument bounding both
 `limsup A_n` and `liminf A_n` by `∫f dμ`.
 
 > Historical note. A previous iteration of this file attempted the
-> backward-martingale Hopf identity route (Williams §14.4). That route
+> backward-martingale Hopf identity route (Williams). That route
 > is only valid for i.i.d. processes and is mathematically false
 > for general measure-preserving ergodic systems: the cyclic system on
 > `{0, 1, 2}` with `T(x) = (x + 1) mod 3` and `f(x) = x` is a concrete
 > counter-example to the would-be exchangeability lemma
 > `μ[f ∘ T | σ(S_3, S_4, …)] =ᵐ μ[f | σ(S_3, S_4, …)]`. The Petersen
-> Thm 2.2 reference for the "Hopf identity" was conflated with the
+> reference for the "Hopf identity" was conflated with the
 > (different) Hopf maximal ergodic inequality used here.
 
 ## Proof structure

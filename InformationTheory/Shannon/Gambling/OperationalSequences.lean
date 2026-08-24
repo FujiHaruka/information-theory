@@ -6,7 +6,7 @@ import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.Integral.Bochner.SumMeasure
 
 /-!
-# Operational gambling over horse-race sequences (Cover–Thomas §6.3)
+# Operational gambling over horse-race sequences (Cover–Thomas)
 
 For an i.i.d. sequence of horse races `Xs : ℕ → Ω → α` on a finite alphabet `α`, a
 gambler reinvesting all wealth with a fixed bet `b : α → ℝ` and odds `o : α → ℝ`
@@ -25,7 +25,7 @@ equipartition property `aep_ae`.
 
 ## Main statements
 
-* `seqLogWealth_div_tendsto_doublingRate` — §6.3: for a general bet, `(1/n)·log S_n`
+* `seqLogWealth_div_tendsto_doublingRate` — for a general bet, `(1/n)·log S_n`
   converges almost surely to `doublingRate b o (lawPmf μ (Xs 0))`.
 * `seqLogWealth_proportional_asymptotically_optimal` — the proportional (Kelly) bet
   `b = p` is asymptotically optimal: almost surely both growth rates exist and the
@@ -43,7 +43,6 @@ the finite-sum collapse `integral_fintype`).
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Section 6.3.
 -/
 
 namespace InformationTheory.Shannon.Gambling
@@ -121,7 +120,7 @@ lemma lawPmf_mem_stdSimplex (μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω 
 /-- For an i.i.d. horse-race sequence `Xs` and a fixed bet `b` under odds `o`, the
 time-averaged log-wealth growth `(1/n)·log S_n` converges almost surely to the doubling
 rate `doublingRate b o (lawPmf μ (Xs 0))`, where `lawPmf μ (Xs 0)` is the law of a single
-race (Cover–Thomas §6.3).
+race (Cover–Thomas).
 sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). `lawPmf μ (Xs 0)` is a definitional binding (the pushforward law
 of `Xs 0`, computed from the existing `μ`/`Xs`), NOT a bundled hypothesis: there is no
@@ -175,7 +174,7 @@ theorem seqLogWealth_proportional_div_tendsto
   rwa [h_closed] at hω
 
 /-- The proportional (Kelly) bet `b = p` is asymptotically optimal at the sequence level
-(Cover–Thomas §6.3): almost surely both the arbitrary full-support bet `b` and the Kelly
+(Cover–Thomas): almost surely both the arbitrary full-support bet `b` and the Kelly
 bet `p` have a growth rate, and the arbitrary bet does not beat the Kelly bet.
 sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). `lawPmf μ (Xs 0)` is a definitional binding; `hb`/`hb_pos`/`ho`
@@ -208,7 +207,7 @@ theorem seqLogWealth_proportional_asymptotically_optimal
 
 /-- If the doubling rate is positive, the log-wealth `log S_n` diverges to `+∞` almost
 surely, i.e. wealth grows exponentially: a positive doubling rate means the gambler gets
-rich (Cover–Thomas §6.3).
+rich (Cover–Thomas).
 sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). Pure corollary of `seqLogWealth_div_tendsto_doublingRate` via
 `log S_n = (log S_n / n)·n` + `Tendsto.pos_mul_atTop`; the limit `W*` comes from that
@@ -236,7 +235,7 @@ theorem seqLogWealth_tendsto_atTop_of_pos_doublingRate
 
 /-- If the doubling rate is negative, the log-wealth `log S_n` diverges to `−∞` almost
 surely, i.e. wealth decays to zero exponentially: a negative doubling rate means the
-gambler goes broke (Cover–Thomas §6.3).
+gambler goes broke (Cover–Thomas).
 sorryAx-free (`[propext, Classical.choice,
 Quot.sound]`). Pure corollary of `seqLogWealth_div_tendsto_doublingRate` via
 `log S_n = (log S_n / n)·n` + `Tendsto.neg_mul_atTop`; the limit `W*` comes from that

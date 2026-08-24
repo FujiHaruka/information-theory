@@ -13,8 +13,8 @@ combinatorial `ZivCountingBound` predicate already published in
 `InformationTheory/Shannon/LZ78/ZivInequality.lean`. It is a *predicate-level*
 extension: the per-`n` real-valued bound `(p.count : ℝ) ≤ B` is lifted
 to families `(p : ℕ → LZ78Parsing α)` indexed by the block length, and
-the asymptotic shape `c(n) · log c(n) ≤ n · log b + O(1)` (Cover–Thomas
-Eq. 13.124, the Ziv-counting asymptotic) is exposed as a hypothesis
+the asymptotic shape `c(n) · log c(n) ≤ n · log b + O(1)` (Cover–Thomas,
+the Ziv-counting asymptotic) is exposed as a hypothesis
 pass-through `IsLZ78PhraseCountAsymptotic` that future discharges can
 plug in. The genuine a.s. achievability residual is scoped out as
 `lz78Greedy_achievability_ae` in `AsymptoticOptimality.lean`.
@@ -29,9 +29,9 @@ plug in. The genuine a.s. achievability residual is scoped out as
 * (engaged) — bridge theorems showing how a uniform
   per-`n` Ziv counting bound implies the asymptotic predicate.
 * (deferred) — the *concrete* derivation of
-  `c(n) ≤ n / log_b n · (1 + o(1))` from Cover–Thomas Eq. 13.122–13.124
+  `c(n) ≤ n / log_b n · (1 + o(1))` from Cover–Thomas
   is supplied as hypothesis; the numerical asymptotic
-  `c(n) · log c(n) − n · log b = o(n)` is the Cover–Thomas Lemma 13.5.5
+  `c(n) · log c(n) − n · log b = o(n)` is the Cover–Thomas
   body and remains out of scope here.
 
 ## Pattern source
@@ -60,7 +60,7 @@ variable {α : Type*}
 For a family of parsings `p : ℕ → LZ78Parsing α` indexed by block
 length, this predicate asserts a uniform per-`n` real-valued upper
 bound on `((p n).count : ℝ)` by `B n`. The bound function `B : ℕ → ℝ`
-plays the role of the Cover–Thomas Eq. 13.124 asymptotic envelope
+plays the role of the Cover–Thomas asymptotic envelope
 `n / log_b n · (1 + o(1))`; concrete witnesses come from
 `card_phraseSet_le_pow`-style combinatorial counts. -/
 def IsZivCountingAsymptoticBound (p : ℕ → LZ78Parsing α) (B : ℕ → ℝ) : Prop :=
@@ -116,7 +116,7 @@ envelope function `B : ℕ → ℝ` (in the textbook this is
 `n ↦ n / Real.log n` or similar), this predicate asserts that the
 phrase-count sequence `n ↦ ((p n).count : ℝ)` is `O[atTop]` of `B`.
 
-Cover–Thomas Eq. 13.124 reads
+Cover–Thomas reads
 `c(n) ≤ n / log_b(c(n)) ≤ n / log_b n · (1 + o(1))`,
 and this predicate captures exactly the `IsBigO` half: the
 `(1 + o(1))` slack is absorbed into the constant of `IsBigO`. -/
@@ -199,7 +199,7 @@ section LogEnvelopes
 variable {α : Type*}
 
 /-- The `n / Real.log n` envelope is eventually non-negative.
-Cover–Thomas Eq. 13.124 envelope sanity. -/
+Cover–Thomas envelope sanity. -/
 theorem natCast_div_real_log_eventually_nonneg :
     ∀ᶠ n : ℕ in atTop, 0 ≤ (n : ℝ) / Real.log (n : ℝ) := by
   refine Filter.Eventually.of_forall ?_
@@ -238,11 +238,11 @@ real-valued envelope `B : ℕ → ℝ`, if the per-`n` Ziv counting bound
 `(p n).count ≤ B n` holds and `B` is eventually non-negative, then the
 asymptotic predicate `IsLZ78PhraseCountAsymptotic p B` holds.
 
-This is the *predicate-level* statement of Cover–Thomas Eq. 13.124,
+This is the *predicate-level* statement of Cover–Thomas,
 shaped so that downstream callers can supply any concrete envelope
 function (e.g. `n / log_b n`, `n / log n`, `n`) without changing the
 external signature. The substantive arithmetic
-`c(n) · log c(n) ≤ n · log b + O(1)` (Cover–Thomas Lemma 13.5.5
+`c(n) · log c(n) ≤ n · log b + O(1)` (Cover–Thomas
 asymptotic body) remains out of scope here, but is *encapsulated* inside
 `B n` and so does not surface in this signature.
 
@@ -256,8 +256,8 @@ theorem lz78_phrase_count_asymptotic
     IsLZ78PhraseCountAsymptotic p B :=
   IsLZ78PhraseCountAsymptotic.of_ZivCountingBound h_bound h_nonneg
 
-/-- Specialized to the `n / Real.log n` envelope (Cover–Thomas
-13.124). -/
+/-- Specialized to the `n / Real.log n` envelope (Cover–Thomas).
+-/
 @[entry_point]
 theorem lz78_phrase_count_asymptotic_n_div_log
     (p : ℕ → LZ78Parsing α)
@@ -286,7 +286,7 @@ variable {α : Type*}
 `IsLZ78PhraseCountAsymptotic p B_upper` and a lower-bound predicate
 `B_lower =O[atTop] (p.count)` (i.e. the phrase count *dominates*
 `B_lower`) into a sandwich. This is the predicate-level analogue of the
-Cover–Thomas Eq. 13.124 ⟺ Eq. 13.130 sandwich. -/
+Cover–Thomas ⟺ sandwich. -/
 def IsLZ78PhraseCountSandwich
     (p : ℕ → LZ78Parsing α) (B_lower B_upper : ℕ → ℝ) : Prop :=
   IsLZ78PhraseCountAsymptotic p B_upper ∧

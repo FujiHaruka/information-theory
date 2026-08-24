@@ -4,7 +4,7 @@ import InformationTheory.Shannon.AWGN.MutualInfoBridge
 /-!
 # AWGN mutual-information decomposition
 
-The AWGN mutual-information bridge (Cover–Thomas 9.2.1) states the channel MI
+The AWGN mutual-information bridge (Cover–Thomas) states the channel MI
 decomposition `I(X;Y) = h(Y) − h(Y∣X)`, with the conditional differential entropy
 `h(Y∣X)` realized as the integral of the fibrewise differential entropies. The
 AWGN-specific form is `IsAwgnMIDecomp`.

@@ -40,7 +40,7 @@ The intersection of `jointlyTypicalSet` with the empirical-distortion constraint
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 10.5, equation (10.85).
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon
@@ -118,7 +118,7 @@ theorem blockDistortion_le_of_mem_distortionTypicalSet
 /-! ### Lower-bound joint-AEP independent probability
 
 The lower-bound counterpart to `ChannelCoding.jointlyTypicalSet_indep_prob_le`
-for the single-codeword typical-match probability (Cover–Thomas 10.5, (10.85)).
+for the single-codeword typical-match probability (Cover–Thomas).
 The input hypothesis is in joint-law form `μ.real {ω | (jX, jY) ∈ JTS} ≥ 1 - η`,
 as supplied by `jointlyTypicalSet_prob_tendsto_one`.
 -/

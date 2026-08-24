@@ -12,7 +12,7 @@ import InformationTheory.Shannon.ChannelCoding.ConverseMemorylessMarkov
 /-!
 # Degraded broadcast channel — converse (outer bound)
 
-The converse to the degraded BC coding theorem (Cover–Thomas Thm 15.6.2): for uniformly
+The converse to the degraded BC coding theorem (Cover–Thomas): for uniformly
 distributed, independent messages `(W₁, W₂)` sent over a degraded broadcast channel
 `X → Y₁ → Y₂` and decoded by per-receiver decoders, the rate pair `(log |M₁|, log |M₂|)`
 lies in the auxiliary-variable capacity region with `Uᵢ = (W₂, Y₂^{i-1})`.
@@ -555,7 +555,7 @@ theorem bc_singleletterize_bound₁
 
 /-! ## Single-letterized headline -/
 
-/-- Single-letter outer bound for the degraded broadcast channel (Cover–Thomas Thm 15.6.2):
+/-- Single-letter outer bound for the degraded broadcast channel (Cover–Thomas):
 for uniform, independent messages sent over a degraded memoryless broadcast channel
 `X → Y₁ → Y₂` and decoded per receiver, the rate pair `(log |M₁|, log |M₂|)` lies in the
 auxiliary-variable capacity region whose information bounds are the per-letter channel sums

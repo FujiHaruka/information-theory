@@ -56,7 +56,7 @@ an arbitrary prefix-free set rather than for the machine's domain.
 ## References
 
 The universal probability and its relation to prefix complexity follow
-Cover–Thomas (2nd ed.) §14.6.
+Cover–Thomas (2nd ed.).
 
 ## Tags
 

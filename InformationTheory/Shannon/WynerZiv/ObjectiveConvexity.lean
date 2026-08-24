@@ -2,7 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.WynerZiv.FactorizableRate
 
 /-!
-# Wyner–Ziv objective convexity (Cover–Thomas Lemma 15.9)
+# Wyner–Ziv objective convexity (Cover–Thomas)
 
 This file discharges the `h_obj_convex` hypothesis carried by
 `WynerZiv/FactorizableRate.lean` (`wynerZivRateFactorizable_convex`,
@@ -34,7 +34,7 @@ After both cancellations the objective reads
 `objective(q) = (H(P_X) − H(P_Y)) + (H(m_YU) − H(m_XU))`,
 where `m_XU = wzMarginalXU U q`, `m_YU = wzMarginalYU U q`, and
 `H(m) = ∑ negMulLog(m ·)` is the joint Shannon block.  The whole
-non-trivial content of Lemma 15.9 is therefore exactly the **convexity of
+non-trivial content is therefore exactly the **convexity of
 the conditional-entropy difference** `κ ↦ H(m_YU) − H(m_XU)` (this is the
 conditional mutual information `I(X;U|Y)`).
 
@@ -50,7 +50,7 @@ re-published with `h_obj_convex` replaced by the strictly more primitive
 
 The bare convexity of the conditional-entropy difference
 `WynerZivCondEntDiffConvex` is the irreducible analytic core of Cover–Thomas
-Lemma 15.9 (convexity of `I(X;U|Y)` in `κ`, a joint-convexity-of-KL argument);
+ (convexity of `I(X;U|Y)` in `κ`, a joint-convexity-of-KL argument);
 it is carried as a predicate rather than proved here. Everything around it — the
 `H(U)` cancellation, the `H(X)−H(Y)` constancy, and the assembly into
 `h_obj_convex` — is discharged.
@@ -206,7 +206,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 /-- The irreducible Lemma-15.9 core.  Convexity of the conditional
 entropy difference `H(m_YU) − H(m_XU) = I(X;U|Y)` along convex combinations
 of factorizable joints.  This is the genuine analytic content of
-Cover–Thomas Lemma 15.9 (a joint-convexity-of-KL argument); it is *strictly
+Cover–Thomas (a joint-convexity-of-KL argument); it is *strictly
 more primitive* than `h_obj_convex` because both the `H(U)` cancellation and
 the `H(X)−H(Y)` constancy have been factored out. -/
 def WynerZivCondEntDiffConvex (P_XY : α × β → ℝ) : Prop :=

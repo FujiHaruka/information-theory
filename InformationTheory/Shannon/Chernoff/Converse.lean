@@ -1,5 +1,5 @@
 /-
-Chernoff converse (Cover–Thomas Theorem 11.9.1, converse half).
+Chernoff converse (Cover–Thomas, converse half).
 
 The achievability half (`chernoff_lemma_achievability`, `Chernoff/Basic.lean`) gives
 `chernoffInfo P₁ P₂ ≤ liminf_n -(1/n) log bayesErrorMinPmf`. This file builds the converse
@@ -634,8 +634,8 @@ private lemma chernoffRegion_rate_isBoundedUnder_below
   have h := mul_le_mul_of_nonneg_left h_log_pow_le h_n_inv_pos.le
   rwa [show (1 / (n : ℝ)) * ((n : ℝ) * Real.log m) = Real.log m by field_simp] at h
 
-/-- The optimal Bayes error exponent cannot exceed the Chernoff information (Cover–Thomas
-Theorem 11.9.1, converse half). Proved on the interior `0 < λ* < 1`
+/-- The optimal Bayes error exponent cannot exceed the Chernoff information (Cover–Thomas,
+converse half). Proved on the interior `0 < λ* < 1`
 (the overlapping-support / non-degenerate case; `hlam_io` is a non-degeneracy precondition,
 not load-bearing).
 @audit:ok -/

@@ -4,7 +4,7 @@ import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 /-!
-# Log-optimal portfolios over stationary ergodic markets (Cover–Thomas §16.5)
+# Log-optimal portfolios over stationary ergodic markets (Cover–Thomas)
 
 For a stationary ergodic market driven by a measure-preserving ergodic shift `T : Ω → Ω`,
 with the price-relative vector at the first epoch given by an observation
@@ -22,7 +22,7 @@ replacing the strong law of large numbers with the Birkhoff individual ergodic t
 
 ## Main statements
 
-* `seqLogWealth_div_tendsto_stationary` — §16.5 (fixed portfolio): the Birkhoff time
+* `seqLogWealth_div_tendsto_stationary` — fixed portfolio: the Birkhoff time
   average of the log return converges almost surely to `∫ ω, log (b · X ω) ∂μ`.
 
 ## Implementation notes
@@ -37,7 +37,6 @@ the in-project `birkhoffAverageReal`, whose time average uses `n + 1` terms
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
-  Section 16.5.
 -/
 
 namespace InformationTheory.Shannon.Portfolio
@@ -53,7 +52,7 @@ of wealth when the price-relative vector is `X ω` and the portfolio is `b`. -/
 noncomputable def stationaryLogReturn (X : Ω → Fin m → ℝ) (b : Fin m → ℝ) : Ω → ℝ :=
   fun ω ↦ Real.log (∑ j, b j * X ω j)
 
-/-- Stationary ergodic log-optimal portfolio theorem (Cover–Thomas §16.5): for a
+/-- Stationary ergodic log-optimal portfolio theorem (Cover–Thomas): for a
 measure-preserving ergodic shift `T` on a probability space, a fixed rebalanced portfolio
 `b`, and an integrable per-epoch log return, the Birkhoff time average of the log-wealth
 growth converges almost surely to the expected log return `∫ ω, log (b · X ω) ∂μ`.
@@ -75,7 +74,7 @@ theorem seqLogWealth_div_tendsto_stationary
   filter_upwards [birkhoff_ergodic_ae hT hT_erg hint] with ω hω
   exact hω
 
-/-- Stationary asymptotic optimality (Cover–Thomas §16.5): a log-optimal portfolio `bs`
+/-- Stationary asymptotic optimality (Cover–Thomas): a log-optimal portfolio `bs`
 satisfying the integral Kuhn–Tucker condition `∀ i, ∫ X_i / (bs · X) ∂μ ≤ 1` maximizes the
 expected log return: every simplex portfolio `b` has `∫ log (b · X) ≤ ∫ log (bs · X)`.
 

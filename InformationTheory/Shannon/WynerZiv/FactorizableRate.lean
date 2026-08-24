@@ -4,7 +4,7 @@ import InformationTheory.Shannon.WynerZiv.RateMonotonicity
 /-!
 # Wyner–Ziv convexity under the factorization predicate
 
-Convexity of the Wyner–Ziv rate function (Cover–Thomas, §15.9). The Markov
+Convexity of the Wyner–Ziv rate function (Cover–Thomas). The Markov
 cross-product constraint `q(x,y,u) · Σ q(x,y',u') = q(x,y,u') · Σ q(x,y',u)` is
 quadratic, so the "convex hull of two feasible points is feasible" argument fails
 on the raw joint pmf. The standard route re-parameterizes the constraint by an
@@ -39,8 +39,8 @@ combinations of feasible points stay feasible.
 
 ## Implementation notes
 
-The convexity of the objective `I(X;U) − I(Y;U)` in the kernel `κ` (Cover–Thomas
-Lemma 15.9) is carried as a hypothesis `h_obj_convex` on the convexity theorems
+The convexity of the objective `I(X;U) − I(Y;U)` in the kernel `κ` (Cover–Thomas)
+is carried as a hypothesis `h_obj_convex` on the convexity theorems
 rather than proved here.
 -/
 
@@ -70,7 +70,7 @@ a transition kernel `κ : α → U → ℝ` (per-row non-negative and per-row su
 q(x, y, u) = κ(u | x) · P_XY(x, y).
 ```
 
-This is the *affine* re-parameterization underlying Cover–Thomas §15.9; the
+This is the *affine* re-parameterization underlying Cover–Thomas; the
 quadratic Markov cross-product constraint is automatically satisfied (see
 `IsWynerZivFactorizable_markov` below). -/
 def IsWynerZivFactorizable
@@ -377,7 +377,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 /-- Wyner–Ziv rate function restricted to factorizable joints.
 `R_WZ_fact(D) := sInf { I(X;U) − I(Y;U) | (q, f) ∈ WynerZivFactorizableConstraint U P_XY d D }`.
 
-This is the form Cover–Thomas §15.9 directly addresses: the minimization
+This is the form Cover–Thomas directly addresses: the minimization
 over auxiliary kernels `κ(u|x)` with side-information decoders `f(u,y)`. -/
 noncomputable def wynerZivRateFactorizable
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) : ℝ :=
@@ -723,7 +723,7 @@ theorem wynerZivRate_antitone
   unfold wynerZivRate
   exact csInf_le_csInf h_bdd h_ne (wzRateValueSet_mono_in_D hD)
 
-/-! ### §10.1 Time-sharing infrastructure -/
+/-! ### Time-sharing infrastructure -/
 
 /-- Time-sharing helper. From `X ≤ c · s` for every `s` in a nonempty set `S`
 together with `0 ≤ c`, conclude `X ≤ c · sInf S`. Isolates the `c = 0` boundary
@@ -922,7 +922,7 @@ lemma wzRateValueSet_reindex_mem
       rw [hmarg, mutualInfoPmf_reindex_right e.symm (wzMarginalYU U q)]
     rw [hXeq, hYeq]
 
-/-! ### §10.2 Time-sharing of the reshaped value set and rate -/
+/-! ### Time-sharing of the reshaped value set and rate -/
 
 /-- The set of attainable Wyner–Ziv objective values is closed under time-sharing,
 that is, under convex combination across distortion

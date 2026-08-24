@@ -5,7 +5,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 
 /-!
-# Constrained maximum entropy (Cover–Thomas Theorem 12.1.1)
+# Constrained maximum entropy (Cover–Thomas)
 
 For a pmf `P : α → ℝ` on a finite alphabet, the distribution maximizing Shannon entropy
 `H(P) = ∑ x, negMulLog (P x)` subject to moment constraints `∑ x, P x · f i x = c i`
@@ -45,7 +45,7 @@ world, and `Real.exp / log` arithmetic suffices without `rnDeriv` or `=ᵐ` argu
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Theorem 12.1.1.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon.MaxEntropyConstrained

@@ -376,7 +376,7 @@ theorem swError_EXY_strict_expectation_le
         exact ENNReal.ofReal_ne_top
     _ = C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := ENNReal.toReal_ofReal hRHS_nn
 
-/-! ## Pigeonhole and finalize (Cover–Thomas 15.4.1)
+/-! ## Pigeonhole and finalize (Cover–Thomas)
 
 Combines the four-event decomposition with the per-term binning bounds, takes a total
 bound over the binning expectation, extracts a deterministic encoder pair by
@@ -1027,7 +1027,7 @@ tends to `0`.
 ## References
 
 * T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.),
-  Wiley, 2006. Theorem 15.4.1.
+  Wiley, 2006.
 -/
 
 omit [DecidableEq α] [DecidableEq β] in

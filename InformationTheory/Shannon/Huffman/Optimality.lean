@@ -11,7 +11,7 @@ import InformationTheory.Shannon.Huffman.KraftSum
 import InformationTheory.Shannon.Huffman.ExpectedLength
 
 /-!
-# Huffman optimality — Cover–Thomas Theorem 5.8.1
+# Huffman optimality — Cover–Thomas
 
 Proves that `huffmanLength` minimizes expected codeword length among all Kraft-feasible
 length functions, via the sibling property and `n → n-1` strong induction.
@@ -35,7 +35,7 @@ Huffman tree) and instead uses the cost-level equality `expectedLength_merged_co
 
 ## References
 
-* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006. Lemma 5.8.1.
+* T. M. Cover and J. A. Thomas, *Elements of Information Theory* (2nd ed.), Wiley, 2006.
 -/
 
 namespace InformationTheory.Shannon.Huffman
