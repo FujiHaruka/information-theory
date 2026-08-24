@@ -8,6 +8,10 @@ name: docs
 #
 # Pages must be set to build from GitHub Actions (Settings -> Pages -> Source), not from a
 # branch; the site is uploaded as an artifact and never committed to the repository.
+#
+# The `github-pages` environment also limits which refs may deploy, and GitHub seeds that
+# list with branches only (main), so a tag push is rejected before the job starts (no logs,
+# a few seconds). The environment carries a `tag: v*` deployment branch policy to allow it.
 on:
   push:
     tags:
