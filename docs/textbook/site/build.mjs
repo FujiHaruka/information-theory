@@ -74,9 +74,11 @@ h3 { font-size: 1.12rem; margin-top: 1.9rem; }
 a { color: #0b67d0; }
 blockquote { border-left: 3px solid #e3e3e3; margin: 1.1rem 0; padding: .15rem 0 .15rem 1rem; color: #8a8a8a; background: none; }
 blockquote p { margin: .4rem 0; }
-code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .88em; background: rgba(0,0,0,.05); color: inherit; padding: .08em .3em; border-radius: 4px; }
+/* 宣言名 / ファイルパスの長い識別子が狭い画面で横にはみ出すため、行内 code は折り返す。
+   コードブロック (pre code) は Lean コードの整形を保つので折り返さず横スクロールさせる。 */
+code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .88em; background: rgba(0,0,0,.05); color: inherit; padding: .08em .3em; border-radius: 4px; overflow-wrap: anywhere; }
 pre { background: #f4f4f2; border-radius: 6px; margin: 1rem 0; }
-pre code { display: block; padding: .8rem 1rem; overflow-x: auto; background: none; color: inherit; font-size: .85em; }
+pre code { display: block; padding: .8rem 1rem; overflow-x: auto; background: none; color: inherit; font-size: .85em; overflow-wrap: normal; }
 hr { border: none; border-top: 1px solid #e0e0e0; margin: 2.4rem 0; }
 table { border-collapse: collapse; margin: 1rem 0; }
 th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
