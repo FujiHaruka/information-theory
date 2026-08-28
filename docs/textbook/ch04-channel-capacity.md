@@ -1,12 +1,12 @@
-# 第7章 通信路容量 (Channel Capacity)
+# 第4章 通信路容量 (Channel Capacity)
 
 > **このファイルについて**
 >
-> 本章は Cover & Thomas *Elements of Information Theory* (2nd ed.) Chapter 7
-> (Channel Capacity) を題材に、**検証済み Lean 定理を骨格にした教科書原稿**である。
+> 本章は Cover & Thomas *Elements of Information Theory* (2nd ed.) の
+> 通信路容量 (Channel Capacity) を題材に、**検証済み Lean 定理を骨格にした教科書原稿**である。
 > 本文の各主要結果には「**Verified**: `定理名` (`InformationTheory/...`)」という形で、
 > その命題に対応する Lean 4 + Mathlib の formal declaration を紐付けてある。
-> 第2章 (`ch02-entropy.md`) の形式を踏襲する。
+> 第1章 (`ch01-entropy.md`) の形式を踏襲する。
 >
 > **検証強度の注記** — 本章で `**Verified**` と記した定理はすべて、本プロジェクトの
 > 完成判定 **proof done**（当該 declaration のファイルが `0 sorry` かつ `0 @residual`、
@@ -32,7 +32,7 @@
 
 ---
 
-## 7.1 通信路容量の定義 (Channel Capacity of a DMC)
+## 4.1 通信路容量の定義 (Channel Capacity of a DMC)
 
 離散無記憶通信路 (DMC) は遷移確率 \(W(y \mid x)\) で与えられ、本ライブラリでは
 Markov カーネル `W : Channel α β` として扱う。入力分布 \(p(x)\) のもとでの
@@ -107,7 +107,7 @@ theorem exists_capacity_achiever (W : Channel α β) [IsMarkovKernel W] :
 
 ---
 
-## 7.5 通信路符号化定理 — 達成可能性 (Channel Coding Theorem, Achievability)
+## 4.2 通信路符号化定理 — 達成可能性 (Channel Coding Theorem, Achievability)
 
 シャノンの通信路符号化定理（達成可能性）：レート \(R < C\) であれば、十分大きな
 ブロック長 \(n\) に対し、誤り確率を任意に小さくできる符号 \((M, n)\)
@@ -166,7 +166,7 @@ theorem jointlyTypicalSet_card_le
 
 ---
 
-## 7.9 ファノ不等式と逆定理 (Fano's Inequality and the Converse)
+## 4.3 ファノ不等式と逆定理 (Fano's Inequality and the Converse)
 
 逆定理（converse）：信頼できる通信にはレートが容量を超えないこと \(R \le C\) が必要。
 証明の核はファノ不等式と相互情報量のデータ処理不等式・チェイン則である。
@@ -286,10 +286,10 @@ theorem channel_coding_converse_general_chainRule
           Real.log ((Fintype.card M : ℝ) - 1)
 ```
 
-### 無記憶通信路の完全形 (Cover-Thomas Thm 7.9, memoryless)
+### 無記憶通信路の完全形 (memoryless)
 
 無記憶通信路 `IsMemorylessChannel` の仮定を加えると、各和項に対する per-letter 評価
-\(I(X_i; Y^n \mid X^{<i}) \le I(X_i; Y_i)\) が成立し、教科書 7.9 の完全形
+\(I(X_i; Y^n \mid X^{<i}) \le I(X_i; Y_i)\) が成立し、教科書の完全形
 
 \[
 \log |M| \le \sum_i I(X_i; Y_i) + H_b(P_e) + P_e \log(|M| - 1)
@@ -332,7 +332,7 @@ theorem channel_coding_converse_general_memoryless_pure
 
 ---
 
-## 7.12 フィードバック容量 (Feedback Capacity)
+## 4.4 フィードバック容量 (Feedback Capacity)
 
 フィードバックは DMC の容量を増やさない \(C_{FB} = C\)。逆定理側の核心は、
 無記憶・因果的フィードバック下で per-letter 評価 \(I(\mathrm{Msg}; Y_i \mid Y^{<i}) \le I(X_i; Y_i)\)
@@ -400,10 +400,10 @@ theorem channel_coding_feedback_converse_memoryless
 
 ---
 
-## 7.* 強逆定理 — Verdú–Han 単発下界 (Strong Converse, single-shot)
+## 4.5 強逆定理 — Verdú–Han 単発下界 (Strong Converse, single-shot)
 
 強逆定理（Wolfowitz）：\(R > C\) では誤り確率が \(1\) に収束する。本ライブラリは
-その核となる **情報密度 (information density) 型の単発下界**を Verdú–Han Lemma 4.2.2 の
+その核となる **情報密度 (information density) 型の単発下界**を Verdú–Han の
 形で形式化する。任意の符号 `c`、任意の参照出力分布 `Q^n`、しきい値
 \(t = \log M + \gamma\) に対し、各符号語ごとの分解
 
@@ -453,7 +453,7 @@ deferred（「未形式化の項目」参照）。
 
 ---
 
-## 7.* 一般 DMC 容量 — 極限形と単一文字容量の一致 (General DMC capacity)
+## 4.6 一般 DMC 容量 — 極限形と単一文字容量の一致 (General DMC capacity)
 
 一般（ブロック単位）通信路 `BlockwiseChannel α β` に対し、容量を極限形
 \(C_\infty = \lim_{n\to\infty} \frac{1}{n}\sup_p I(p; W_n)\) で定義し、無記憶の場合に
@@ -491,11 +491,11 @@ per-letter 容量列の収束（Tendsto 形）も形式化済み：
 
 ## 本章で未形式化の項目
 
-Cover & Thomas Ch.7 のうち、本作成時点で proof done な独立定理を確認できなかった、
+Cover & Thomas の対応章のうち、本作成時点で proof done な独立定理を確認できなかった、
 あるいは **sorry / load-bearing hypothesis を含むため `Verified` 引用から除外した**
 項目を正直に記す。
 
-- **7.5 達成可能性の `hW_pos` 完全除去版**: full-support 仮定 `hW_pos` を平滑化
+- **達成可能性の `hW_pos` 完全除去版**: full-support 仮定 `hW_pos` を平滑化
   (`Channel.smooth W δ`) で除去する版 `shannon_noisy_channel_coding_theorem_general`
   (`ChannelCodingShannonTheoremFull.lean`) は確かにファイル単位では `0 sorry` だが、
   **その達成可能性の核心が load-bearing 仮定 `h_passthrough` に bundle されている**
@@ -503,17 +503,17 @@ Cover & Thomas Ch.7 のうち、本作成時点で proof done な独立定理を
   自身が `@audit:retract-candidate(superseded-by-full-discharge)` とマークしており、
   hypothesis-pass-through MVP である。本章では正直に `Verified` から除外し、
   full-support 前提付きの genuine な `shannon_noisy_channel_coding_theorem`
-  (7.5 節) を達成可能性 headline として採用した。
-- **強逆定理の asymptotic 形 \(P_e \to 1\)**: 7.* 節で引用した Verdú–Han 単発下界は
+  (4.2 節) を達成可能性 headline として採用した。
+- **強逆定理の asymptotic 形 \(P_e \to 1\)**: 4.5 節で引用した Verdú–Han 単発下界は
   proof done だが、high-LLR tail を WLLN で \(0\) に飛ばして \(P_e \to 1\) を結論する
   asymptotic 段は本ライブラリでは別 plan に deferred（本章では未形式化）。
-- **7.2 対称通信路などの具体例 (二元対称通信路 BSC・二元消失通信路 BEC の容量計算)**:
+- **対称通信路などの具体例 (二元対称通信路 BSC・二元消失通信路 BEC の容量計算)**:
   具体通信路の容量閉形式（例 \(C_{BSC} = 1 - H_b(p)\)）の独立定理は本章スコープで未確認
   （本章では未形式化）。
-- **7.3 / 7.4 対称性・容量の凸性 / 凸最適化条件 (KKT)**: 入力分布上の \(I(p;W)\) の
+- **対称性・容量の凸性 / 凸最適化条件 (KKT)**: 入力分布上の \(I(p;W)\) の
   凹性や容量達成条件の独立定理化は本章では未確認（本章では未形式化）。
   なお `exists_capacity_achiever` で最大化子の存在のみは形式化済み。
-- **7.7 / 7.8 結合典型性の定義・性質の網羅**: 達成可能性に必要な
+- **結合典型性の定義・性質の網羅**: 達成可能性に必要な
   `jointlyTypicalSet_*` 3 評価は形式化済みだが、教科書の結合典型性のすべての性質を
   網羅したわけではない。
 - **フィードバック逆定理の hypothesis 分離版 `channel_coding_feedback_converse` /
@@ -528,7 +528,7 @@ Cover & Thomas Ch.7 のうち、本作成時点で proof done な独立定理を
 
 本章で顕在化した、roadmap・docstring ↔ 実コードの乖離と原稿化の課題を記録する。
 
-1. **roadmap 代表名と実 declaration 名の乖離（指示どおり大）**: roadmap の Ch.7 行が
+1. **roadmap 代表名と実 declaration 名の乖離（指示どおり大）**: roadmap の該当行が
    挙げた `shannon_noisy_..._general_full` / `_feedback_complete` /
    `strong_converse_singleShot` はいずれも実在名ではなかった。実体は
    `shannon_noisy_channel_coding_theorem`（full-support 版、genuine）/
@@ -545,7 +545,7 @@ Cover & Thomas Ch.7 のうち、本作成時点で proof done な独立定理を
    `GeneralDMC.lean` の `1` も「0 sorry で publish」「discharged 0-sorry」という
    **完成を主張する docstring** が match したもの。`rg -c` を機械的に honesty 判定に
    使う場合、docstring 内の "sorry" 文字列が偽陽性を生むため、`rg 'by sorry|:= sorry'`
-   など proof body 限定パターンとの併用が必要。（roadmap が Ch.7 を「Draft 2 sorry」と
+   など proof body 限定パターンとの併用が必要。（roadmap が本章相当を「Draft 2 sorry」と
    記すのも、この stale docstring 由来の可能性が高い。）
 
 3. **「0 sorry」と「proof done」が一致しない実例**:
@@ -557,6 +557,6 @@ Cover & Thomas Ch.7 のうち、本作成時点で proof done な独立定理を
    十分条件にならないことの実例。
 
 4. **容量定義 `capacity` が「Draft」扱いのファイルに同居**:
-   Ch.7 中核の単一文字容量 `capacity` (sSup 形) は、roadmap が「Draft 2 sorry」と
+   本章中核の単一文字容量 `capacity` (sSup 形) は、roadmap が「Draft 2 sorry」と
    みなしたファイルに定義されている。実体は proof done だが、章 ↔ ファイルの対応が
    1:1 でなく、stale docstring に惑わされず実コードを Read して確認する必要があった。

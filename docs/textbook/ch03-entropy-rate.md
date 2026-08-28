@@ -1,9 +1,9 @@
-# 第4章 確率過程のエントロピーレート
+# 第3章 確率過程のエントロピーレート
 
 > **このファイルについて**
 >
-> 本章は Cover & Thomas *Elements of Information Theory* (2nd ed.) Chapter 4
-> (Entropy Rates of a Stochastic Process) を題材に、**検証済み Lean 定理を
+> 本章は Cover & Thomas *Elements of Information Theory* (2nd ed.) の
+> エントロピーレート (Entropy Rates of a Stochastic Process) を題材に、**検証済み Lean 定理を
 > 骨格にした教科書原稿**である。本文の各主要結果には
 > 「**Verified**: `定理名` (`InformationTheory/...`)」という形で、その命題に対応する
 > Lean 4 + Mathlib の formal declaration を紐付けてある。
@@ -23,20 +23,20 @@
 > `(X_0, …, X_{n-1}) : Ω → (Fin n → α)`。アルファベット `α` は有限型
 > `[Fintype α]`、`μ` は確率測度 `[IsProbabilityMeasure μ]`。
 > エルゴード性が必要な箇所では `T` のエルゴード性 (`Ergodic T μ`) を加えた
-> `ErgodicProcess` を用いる。エントロピー類は第2章と同じく像測度
+> `ErgodicProcess` を用いる。エントロピー類は第1章と同じく像測度
 > `μ.map (·)` を通じた measure-theoretic 形式で定義される。
 > 対応する Lean library は `InformationTheory/Shannon/`。
 
 ---
 
-## 4.1 定常過程 (Stationary Processes)
+## 3.1 定常過程 (Stationary Processes)
 
 確率過程 \(\{X_i\}\) が**定常 (stationary)** であるとは、任意の有限ブロックの結合分布が
 時間シフトで不変であること、すなわち任意の \(n, \ell\) に対して
 \[
 \Pr[X_1 = x_1, \dots, X_n = x_n] = \Pr[X_{1+\ell} = x_1, \dots, X_{n+\ell} = x_n]
 \]
-が成り立つことをいう (Cover–Thomas 4.1)。
+が成り立つことをいう (Cover–Thomas)。
 
 本ライブラリはこれを**測度保存力学系 (measure-preserving dynamical system)** として
 形式化する。確率空間 \((\Omega, \mu)\) 上の測度を保つシフト \(T\) と観測 \(X\) を与えると、
@@ -74,7 +74,7 @@ def blockRV (p : StationaryProcess μ α) (n : ℕ) : Ω → (Fin n → α) :=
 ### エルゴード過程
 
 定常過程のうちシフト \(T\) がさらに**エルゴード的 (ergodic)** であるものを
-`ErgodicProcess` として分離する。エルゴード性は 4.4–4.5 の Shannon–McMillan–Breiman
+`ErgodicProcess` として分離する。エルゴード性は 3.3–3.4 の Shannon–McMillan–Breiman
 定理で本質的に用いられる（時間平均と空間平均の一致を保証する）。
 
 **Verified (定義)**: `ErgodicProcess` (`InformationTheory/Shannon/Stationary.lean`)
@@ -86,17 +86,17 @@ structure ErgodicProcess (μ : Measure Ω) (α : Type*) [MeasurableSpace α]
   ergodic : Ergodic T μ
 ```
 
-> **注** — 教科書ではマルコフ連鎖を定常過程の代表例として扱う (4.1–4.3) が、
+> **注** — 教科書ではマルコフ連鎖を定常過程の代表例として扱うが、
 > 本ライブラリの中核はマルコフ連鎖固有の遷移行列ではなく、任意の定常（測度保存）
 > 過程に対する一般論である。マルコフ連鎖のエントロピーレートの閉形式
-> \(H = -\sum_{ij} \mu_i P_{ij} \log P_{ij}\)（Cover–Thomas 4.2.4）は
+> \(H = -\sum_{ij} \mu_i P_{ij} \log P_{ij}\)（Cover–Thomas）は
 > 本章では独立定理として未紐付け（「未形式化の項目」参照）。
 
 ---
 
-## 4.2 エントロピーレート (Entropy Rate)
+## 3.2 エントロピーレート (Entropy Rate)
 
-定常過程のエントロピーレートには 2 つの定義がある (Cover–Thomas 4.2)。第一は
+定常過程のエントロピーレートには 2 つの定義がある (Cover–Thomas)。第一は
 ブロックエントロピーの時間平均
 \[
 H(\mathcal{X}) = \lim_{n \to \infty} \frac{1}{n} H(X_1, X_2, \dots, X_n),
@@ -105,12 +105,12 @@ H(\mathcal{X}) = \lim_{n \to \infty} \frac{1}{n} H(X_1, X_2, \dots, X_n),
 \[
 H'(\mathcal{X}) = \lim_{n \to \infty} H(X_n \mid X_{n-1}, \dots, X_1).
 \]
-定常過程では両者が存在し、しかも一致する（Cover–Thomas Theorem 4.2.1）。
+定常過程では両者が存在し、しかも一致する（Cover–Thomas のエントロピーレート定理）。
 
 ### ブロックエントロピーと条件付きエントロピーテール（定義）
 
 ブロックエントロピー \(H_n = H(X_0, \dots, X_{n-1})\) は、ブロック確率変数の
-（第2章の）エントロピーとして定義する。
+（第1章の）エントロピーとして定義する。
 
 **Verified (定義)**: `blockEntropy` (`InformationTheory/Shannon/EntropyRate.lean`)
 
@@ -120,7 +120,7 @@ noncomputable def blockEntropy (μ : Measure Ω) (p : StationaryProcess μ α) (
 ```
 
 各ステップの条件付きエントロピー \(H(X_n \mid X_0, \dots, X_{n-1})\)
-（**conditional entropy tail**）は、第2章の `condEntropy`（名前空間
+（**conditional entropy tail**）は、第1章の `condEntropy`（名前空間
 `InformationTheory.MeasureFano`）を用いて定義する。
 
 **Verified (定義)**: `conditionalEntropyTail` (`InformationTheory/Shannon/EntropyRate.lean`)
@@ -156,7 +156,7 @@ theorem blockEntropy_succ_chain_rule
 ```
 
 反復適用すると、ブロックエントロピーは条件付きエントロピーテールの有限和になる
-（\(H_n = \sum_{i<n} H(X_i \mid X_{<i})\)、Cover–Thomas 4.2.2 の鎖）。
+（\(H_n = \sum_{i<n} H(X_i \mid X_{<i})\)、Cover–Thomas のチェイン則の鎖）。
 基底ケース \(H_0 = 0\) も形式化済み (`blockEntropy_zero`)。
 
 **Verified**: `blockEntropy_eq_sum_conditionalEntropyTail`
@@ -168,11 +168,11 @@ theorem blockEntropy_eq_sum_conditionalEntropyTail
     blockEntropy μ p n = ∑ i ∈ Finset.range n, conditionalEntropyTail μ p i
 ```
 
-### 条件付きエントロピーテールの単調減少 (Cover–Thomas Theorem 4.2.1, 第1段)
+### 条件付きエントロピーテールの単調減少（エントロピーレート定理・第1段）
 
 定常過程では \(H(X_n \mid X_{n-1}, \dots, X_0)\) が \(n\) について**単調非増加**である。
 証明は、定常性（シフトによる結合分布の不変性）で \(H(X_n \mid X_{<n})\) を
-\(H(X_{n+1} \mid X_1, \dots, X_n)\) に書き換え、第2章の「条件を増やすとエントロピーは
+\(H(X_{n+1} \mid X_1, \dots, X_n)\) に書き換え、第1章の「条件を増やすとエントロピーは
 増えない」 (`condEntropy_le_condEntropy_of_pair`) を適用する。
 
 **Verified**: `conditionalEntropyTail_antitone` (`InformationTheory/Shannon/EntropyRate.lean`)
@@ -185,12 +185,12 @@ theorem conditionalEntropyTail_antitone
 
 各テールは非負でもある (`conditionalEntropyTail_nonneg`)。
 
-### エントロピーレートの存在 (Cover–Thomas Theorem 4.2.1, 第2段)
+### エントロピーレートの存在（エントロピーレート定理・第2段）
 
 条件付きエントロピーテールは単調非増加かつ下に有界（\(\ge 0\)）なので、ある極限
 \(L\) に収束する。チェイン則の和分解と**チェザロ平均 (Cesàro mean)** により、
 ブロックエントロピーの時間平均 \(H_n / n\) も同じ \(L\) に収束する。これが
-\(\lim \frac{1}{n}H(X^n) = \lim H(X_n \mid X^{n-1})\) という 4.2 の同値性の核心である。
+\(\lim \frac{1}{n}H(X^n) = \lim H(X_n \mid X^{n-1})\) という 3.2 の同値性の核心である。
 
 **Verified**: `entropyRate_exists_of_stationary` (`InformationTheory/Shannon/EntropyRate.lean`)
 
@@ -203,7 +203,7 @@ theorem entropyRate_exists_of_stationary
 ### 2 つの定義の一致 \(\lim H(X_n \mid X^{n-1}) = H(\mathcal{X})\)
 
 存在が分かれば、条件付きエントロピーテール列がまさに `entropyRate` に収束することが
-言える。これが Cover–Thomas Theorem 4.2.1 の結論
+言える。これが Cover–Thomas のエントロピーレート定理の結論
 \(H(\mathcal{X}) = H'(\mathcal{X})\)（2 つの定義の一致）の形式化である。
 
 **Verified**: `entropyRate_eq_lim_condEntropy` (`InformationTheory/Shannon/EntropyRate.lean`)
@@ -216,10 +216,10 @@ theorem entropyRate_eq_lim_condEntropy
 
 ---
 
-## 4.4 バーコフのエルゴード定理 (Birkhoff's Ergodic Theorem)
+## 3.3 バーコフのエルゴード定理 (Birkhoff's Ergodic Theorem)
 
 Shannon–McMillan–Breiman 定理の解析的な心臓部はバーコフの個別エルゴード定理である
-（Cover–Thomas では 16.8 の証明で用いられる）。確率を保つエルゴード変換 \(T\) と
+（Cover–Thomas でも SMB 定理の証明で用いられる）。確率を保つエルゴード変換 \(T\) と
 可積分な観測 \(f\) に対し、**時間平均が空間平均（期待値）に概収束**する:
 \[
 \frac{1}{n+1}\sum_{i=0}^{n} f(T^{i}\omega) \xrightarrow{\text{a.s.}} \int f \, d\mu.
@@ -268,11 +268,11 @@ theorem birkhoff_ergodic_ae {μ : Measure Ω} [IsProbabilityMeasure μ]
 
 ---
 
-## 4.5 Shannon–McMillan–Breiman 定理 (漸近等分割性, AEP)
+## 3.4 Shannon–McMillan–Breiman 定理 (漸近等分割性, AEP)
 
 定常エルゴード過程に対する **AEP (Asymptotic Equipartition Property)** は、
 1 標本あたりの負の対数尤度がエントロピーレートに概収束する、というものである
-（Cover–Thomas Theorem 16.8.1、第3章 AEP の定常過程への一般化）:
+（Cover–Thomas の SMB 定理、第2章 AEP の定常過程への一般化）:
 \[
 -\frac{1}{n}\log p(X_0, X_1, \dots, X_{n-1}) \xrightarrow{\text{a.s.}} H(\mathcal{X}).
 \]
@@ -431,10 +431,10 @@ theorem expected_blockLogAvg_eq
 
 ---
 
-## 4.補 i.i.d. 過程の AEP（第3章との接続）
+## 3.5 i.i.d. 過程の AEP（第2章との接続）
 
 i.i.d. 過程は定常エルゴード過程の最も単純な特例であり、そのエントロピーレートは
-\(H(\mathcal{X}) = H(X_0)\) に退化する。第3章 AEP（独立同分布版）は大数の強法則から
+\(H(\mathcal{X}) = H(X_0)\) に退化する。第2章 AEP（独立同分布版）は大数の強法則から
 直接得られ、SMB の特例として位置づけられる。参考として独立同分布版の概収束 AEP を
 挙げておく。
 
@@ -456,13 +456,13 @@ theorem aep_ae
 
 ## 本章で未形式化の項目
 
-Cover & Thomas Ch.4 のうち、本原稿のスコープ内で**独立した proof-done 定理を
+Cover & Thomas の対応章のうち、本原稿のスコープ内で**独立した proof-done 定理を
 確認できなかった**項目を正直に記す。
 
-- **4.1–4.3 マルコフ連鎖固有の理論**: 遷移行列・定常分布
+- **マルコフ連鎖固有の理論**: 遷移行列・定常分布
   \(\mu P = \mu\)、マルコフ連鎖のエントロピーレートの閉形式
-  \(H = -\sum_{ij}\mu_i P_{ij}\log P_{ij}\)（Cover–Thomas 4.2.4）、
-  ランダムウォークの例（4.3）は、本ライブラリの一般的測度保存過程の枠組みでは
+  \(H = -\sum_{ij}\mu_i P_{ij}\log P_{ij}\)（Cover–Thomas）、
+  ランダムウォークの例は、本ライブラリの一般的測度保存過程の枠組みでは
   特例として包含されるが、マルコフ遷移行列を明示した独立 declaration は
   本章では未紐付け（未形式化）。
 - **SMB の仮説なし最終定理（最終配線）**: 4 仮説の discharge 定理
@@ -473,9 +473,9 @@ Cover & Thomas Ch.4 のうち、本原稿のスコープ内で**独立した pro
   単一 declaration は本原稿作成時点で `InformationTheory/Shannon/` に**存在しない**
   （`rg 'theorem shannon_mcmillan_breiman\b'` が 0 件）。4 部品 + ラッパーは
   揃っているので結線自体は機械的だが、未配線である点を未形式化として記す。
-- **4.5 関数版 SMB / マルコフ近似定理の系**: ランダムウォークの定常分布等、
+- **関数版 SMB / マルコフ近似定理の系**: ランダムウォークの定常分布等、
   教科書の個別例は未形式化。
-- **エントロピーレートと熱力学第二法則・定常分布への収束 (4.4)**:
+- **エントロピーレートと熱力学第二法則・定常分布への収束**:
   本章では未紐付け（未形式化）。
 
 ---
@@ -490,7 +490,7 @@ Cover & Thomas Ch.4 のうち、本原稿のスコープ内で**独立した pro
    必要がある。
 
 2. **SMB が「サンドイッチ・ラッパー + 4 discharge 部品」に分解されており、
-   仮説フリーの単一定理が未配線**: 教科書 Theorem 16.8.1 は 1 本の主張だが、
+   仮説フリーの単一定理が未配線**: 教科書の SMB 定理は 1 本の主張だが、
    本ライブラリでは `shannon_mcmillan_breiman_of_sandwich`（4 仮説を受け取る配線）と
    4 つの discharge 定理（各仮説を無条件証明）に分かれている。すべて proof done だが、
    両者を結線した「`theorem shannon_mcmillan_breiman`」という名の最終定理は実在しない。

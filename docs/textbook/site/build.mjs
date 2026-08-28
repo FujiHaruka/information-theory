@@ -19,38 +19,38 @@ const siteTitle = 'InformationTheory 教科書（レビュー版）';
 // 章を足すときはこの配列に 1 行足すだけでよい。
 const chapters = [
   {
+    slug: 'ch01',
+    num: '第1章',
+    title: 'エントロピー・相互情報量・データ処理不等式',
+    src: 'ch01-entropy.md',
+    status: '仕上げ済（読者向けパイロット）',
+  },
+  {
     slug: 'ch02',
     num: '第2章',
-    title: 'エントロピー・相互情報量・データ処理不等式',
-    src: 'ch02-entropy.md',
-    status: '仕上げ済（読者向けパイロット）',
+    title: '漸近等分配性 (AEP)',
+    src: 'ch02-aep.md',
+    status: '草稿（末尾に未形式化項目・作業所見あり）',
   },
   {
     slug: 'ch03',
     num: '第3章',
-    title: '漸近等分配性 (AEP)',
-    src: 'ch03-aep.md',
+    title: '確率過程のエントロピーレート',
+    src: 'ch03-entropy-rate.md',
     status: '草稿（末尾に未形式化項目・作業所見あり）',
   },
   {
     slug: 'ch04',
     num: '第4章',
-    title: '確率過程のエントロピーレート',
-    src: 'ch04-entropy-rate.md',
+    title: '通信路容量',
+    src: 'ch04-channel-capacity.md',
     status: '草稿（末尾に未形式化項目・作業所見あり）',
   },
   {
-    slug: 'ch07',
-    num: '第7章',
-    title: '通信路容量',
-    src: 'ch07-channel-capacity.md',
-    status: '草稿（節番号が原典準拠で飛ぶ／末尾に所見あり）',
-  },
-  {
-    slug: 'ch12',
-    num: '第12章',
+    slug: 'ch05',
+    num: '第5章',
     title: '最大エントロピー',
-    src: 'ch12-max-entropy.md',
+    src: 'ch05-max-entropy.md',
     status: '草稿（末尾に未形式化項目・作業所見あり）',
   },
 ];
@@ -124,7 +124,7 @@ function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// 原稿には KaTeX の $ 記法 (ch02) と LaTeX 括弧デリミタ (ch03 以降) が混在する。
+// 原稿には KaTeX の $ 記法 (第1章) と LaTeX 括弧デリミタ (第2章以降) が混在する。
 // markdown-it-katex は $ 記法しか解さないため、\\[ \\] / \\( \\) を $$ / $ に寄せてから渡す。
 // コードブロック・インラインコードの中身は保護する (Lean コードを壊さないため)。
 function normalizeMath(src) {
@@ -196,8 +196,8 @@ const tocItems = chapters
 
 const indexBody = `<h1>${escapeHtml(siteTitle)}</h1>
 <p>Lean 4 + Mathlib で形式化検証した定理に紐づけて書いている情報理論の教科書原稿です。
-掲載順は原典の章番号に従っており、番号は連続していません。各章の末尾には、
-その章で未形式化のまま残している項目と執筆時の所見を載せています（レビュー用にそのまま公開）。</p>
+各章の末尾には、その章で未形式化のまま残している項目と執筆時の所見を載せています
+（レビュー用にそのまま公開）。</p>
 <ul class="toc">
 ${tocItems}
 </ul>`;

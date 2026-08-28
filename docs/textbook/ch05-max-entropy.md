@@ -1,9 +1,9 @@
-# 第12章 最大エントロピー (Maximum Entropy)
+# 第5章 最大エントロピー (Maximum Entropy)
 
 > **このファイルについて**
 >
-> 本章は Cover & Thomas *Elements of Information Theory* (2nd ed.) Chapter 12
-> (Maximum Entropy) を題材に、**検証済み Lean 定理を骨格にした教科書原稿**である。
+> 本章は Cover & Thomas *Elements of Information Theory* (2nd ed.) の
+> 最大エントロピー (Maximum Entropy) を題材に、**検証済み Lean 定理を骨格にした教科書原稿**である。
 > 本文の各主要結果には「**Verified**: `定理名` (`InformationTheory/...`)」という形で、
 > その命題に対応する Lean 4 + Mathlib の formal declaration を紐付けてある。
 >
@@ -16,7 +16,7 @@
 > 含まない。
 >
 > **形式化の枠組み** — 本章は二つの表現を併用する。
-> 無制約の上界 \(H(X) \le \log|\mathcal{X}|\) は第2章と同じ measure-theoretic 形式
+> 無制約の上界 \(H(X) \le \log|\mathcal{X}|\) は第1章と同じ measure-theoretic 形式
 > （確率変数を測度空間 `(Ω, μ)` 上の可測写像 `X : Ω → α` として表現し、
 > エントロピーは像測度 `μ.map X` を通じて定義）で述べる。
 > 一方、モーメント制約付きの最大エントロピー（指数型族・Gibbs 分布）は
@@ -29,11 +29,11 @@
 
 ---
 
-## 12.1 最大エントロピー分布 (Maximum Entropy Distributions)
+## 5.1 最大エントロピー分布 (Maximum Entropy Distributions)
 
 最大エントロピー問題とは、与えられた制約（典型的にはモーメント制約）を満たす分布の
 うち Shannon エントロピーを最大にするものを求める問題である。Cover & Thomas
-Theorem 12.1.1 は、その最大化分布が **Boltzmann–Gibbs 指数型族**
+最大エントロピー定理は、その最大化分布が **Boltzmann–Gibbs 指数型族**
 
 \[
 p^*(x) = \frac{\exp\!\big(\sum_i \lambda_i f_i(x)\big)}{\sum_y \exp\!\big(\sum_i \lambda_i f_i(y)\big)}
@@ -56,7 +56,7 @@ p^*(x) = \frac{\exp\!\big(\sum_i \lambda_i f_i(x)\big)}{\sum_y \exp\!\big(\sum_i
 制約が無い場合、エントロピーを最大化するのは一様分布であり、その値は
 アルファベットサイズの対数 \(\log|\mathcal{X}|\) である。これは
 \(D(P \,\|\, U) \ge 0\)（一様分布 \(U\) への KL ダイバージェンスの非負性、Gibbs 不等式）
-の帰結であり、第2章でも引用した結果である。本章では制約付き理論の特殊ケース
+の帰結であり、第1章でも引用した結果である。本章では制約付き理論の特殊ケース
 （空制約）として再掲する。
 
 **Verified**: `entropy_le_log_card` (`InformationTheory/Shannon/MaxEntropy/Basic.lean`)
@@ -108,7 +108,7 @@ lemma gibbsPmf_mem_stdSimplex [Nonempty α]
     gibbsPmf f lam ∈ stdSimplex ℝ α
 ```
 
-### Theorem 12.1.1（上界）: 制約下で Gibbs 分布がエントロピー最大
+### 最大エントロピー定理（上界）: 制約下で Gibbs 分布がエントロピー最大
 
 モーメント制約 \(\mathbb{E}_P[f_i] = c_i\) を満たす任意の pmf \(P\) について、
 同じ制約を満たす Gibbs ansatz \(p^* = \text{gibbsPmf}\,f\,\lambda\) のエントロピーが
@@ -137,7 +137,7 @@ theorem entropy_le_gibbs_of_constraints [Nonempty α]
     ∑ x, Real.negMulLog (P x) ≤ ∑ x, Real.negMulLog (gibbsPmf f lam x)
 ```
 
-### Theorem 12.1.1（一意性）: 等号成立は \(P = p^*\) のときに限る
+### 最大エントロピー定理（一意性）: 等号成立は \(P = p^*\) のときに限る
 
 最大化分布は本質的に一意である。エントロピー等号 \(H(P) = H(p^*)\) は
 \(P = p^*\) と同値。これは KL ダイバージェンスがゼロになる条件
@@ -159,7 +159,7 @@ theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
 
 ---
 
-## 12.1（続）指数型族と KKT / Lagrange 双対の言葉
+## 5.2 指数型族と KKT / Lagrange 双対の言葉
 
 上の Gibbs 形と等価な、より KKT / Lagrangian に直接対応する表現も形式化されている。
 指数型族 pmf と対数分配関数 \(\psi(\lambda)\) を次のように定義する：
@@ -225,9 +225,9 @@ theorem entropy_expFamilyDist_eq_legendre [Nonempty α]
       = logPartitionψ f S.lam - ∑ i, S.lam i * c i
 ```
 
-### Theorem 12.1.1 — KKT / 指数型族版（主定理）
+### 最大エントロピー定理 — KKT / 指数型族版（主定理）
 
-Cover & Thomas Theorem 12.1.1 を KKT 言語で再述する。制約実行可能な任意の \(P\) は、
+最大エントロピー定理を KKT 言語で再述する。制約実行可能な任意の \(P\) は、
 KKT 証拠を伴う指数型族解のエントロピーを超えない。
 
 **Verified**: `expFamily_maximizes_entropy`
@@ -257,7 +257,7 @@ theorem expFamily_maximizes_entropy_of_KKT [Nonempty α]
     ∑ x, Real.negMulLog (P x) ≤ ∑ x, Real.negMulLog (expFamilyDist f S.lam x)
 ```
 
-### Theorem 12.1.1 — KKT / 指数型族版（一意性）
+### 最大エントロピー定理 — KKT / 指数型族版（一意性）
 
 **Verified**: `expFamily_unique`
 (`InformationTheory/Shannon/MaxEntropyConstrainedKKT.lean`)
@@ -307,9 +307,9 @@ theorem entropy_le_logPartition_sub_inner [Nonempty α]
 
 ---
 
-## 12.1（特例）教科書例題の閉形式
+## 5.3 教科書例題の閉形式
 
-Cover & Thomas 12.1 / 章末問題に現れる代表的な最大エントロピー分布が、
+Cover & Thomas の章末問題に現れる代表的な最大エントロピー分布が、
 上の一般理論の特殊ケースとして閉形式で形式化されている。
 
 ### 空制約 → 一様分布
@@ -327,7 +327,7 @@ theorem entropy_gibbsPmf_zero_eq_log_card [Nonempty α] (lam : Fin k → ℝ) :
       = Real.log (Fintype.card α)
 ```
 
-### 二点分布の指数型族 (Bernoulli, Ex. 12.1)
+### 二点分布の指数型族 (Bernoulli)
 
 \(\alpha = \text{Bool}\)、特徴 \(f_0(b) = \mathbb{1}[b = \text{true}]\)、平均制約 \(\mu\) のとき、
 Gibbs 分布は \(p^*(\text{true}) = \mu\), \(p^*(\text{false}) = 1-\mu\) で、エントロピーは
@@ -343,7 +343,7 @@ theorem entropy_gibbsPmf_bool_eq_binEntropy
     ∑ b : Bool, Real.negMulLog (gibbsPmf boolFeature lam b) = Real.binEntropy μ
 ```
 
-### 離散指数分布 (geometric ratio 形, Ex. 12.2)
+### 離散指数分布 (geometric ratio 形)
 
 \(\alpha = \mathrm{Fin}(N+1)\)、線形特徴 \(f_0(x) = x\) のとき、\(q := \exp(\lambda_0)\) と
 おくと Gibbs 分布は geometric ratio 形 \(x \mapsto q^x / \sum_y q^y\)（閉形式）となる。
@@ -365,7 +365,7 @@ theorem gibbsPmf_linearFeature_eq_geometric {N : ℕ} (lam : Fin 1 → ℝ) :
 
 ## 本章で未形式化の項目
 
-Cover & Thomas Ch.12 のうち、本章スコープ（離散・有限アルファベット）の枠で
+Cover & Thomas の対応章のうち、本章スコープ（離散・有限アルファベット）の枠で
 **本章には対応する独立した proof-done 定理を確認できなかった**項目を正直に記す。
 
 - **Lagrange 乗数 \(\lambda\) の存在性（解の存在定理）**: 本ライブラリの最大化定理は
@@ -375,14 +375,14 @@ Cover & Thomas Ch.12 のうち、本章スコープ（離散・有限アルフ�
   要し、Mathlib は KKT / 凸双対の必要な定理を未整備（`LagrangeMultipliers.lean` に
   TODO）。コード中でも「別 plan (`max-entropy-constrained-existence-*`) のスコープ」
   と明記されており、本章では未形式化。
-- **12.2 連続・微分エントロピー版の最大エントロピー（Gaussian が分散制約下で最大、
+- **連続・微分エントロピー版の最大エントロピー（Gaussian が分散制約下で最大、
   指数分布が平均制約下で最大 等の連続分布版）**: 本章スコープは離散・有限
   アルファベットであり、連続版は未形式化（差分エントロピー側は別章 / 別ファイル
   `DifferentialEntropy.lean` の管轄で、本章には紐付けていない）。
-- **12.3–12.6 スペクトル推定 (Burg の最大エントロピー定理、自己回帰過程、
+- **スペクトル推定 (Burg の最大エントロピー定理、自己回帰過程、
   スペクトル推定の最大エントロピー法)**: 離散有限アルファベットの本章スコープ外で、
   本章では未形式化。
-- **最大エントロピーレート過程（12.6, Burg）**: 本章では未形式化。
+- **最大エントロピーレート過程（Burg）**: 本章では未形式化。
 
 ---
 
@@ -399,7 +399,7 @@ Cover & Thomas Ch.12 のうち、本章スコープ（離散・有限アルフ�
    1 本必要になる。
 
 2. **Lagrange 乗数 \(\lambda\) が「解」でなく「仮説」である点が教科書直感と乖離する**:
-   教科書 Theorem 12.1.1 は「制約から \(\lambda\) が定まり、その指数型族が最大」と
+   教科書の最大エントロピー定理は「制約から \(\lambda\) が定まり、その指数型族が最大」と
    読めるが、本ライブラリは \(\lambda\) の存在性を回避するため \(\lambda\) を
    制約整合証拠つきで仮説として受け取る ansatz pass-through 形。これは
    regularity（前提条件）であって最大化の核心ではないが、原稿では「与えられた
@@ -415,6 +415,6 @@ Cover & Thomas Ch.12 のうち、本章スコープ（離散・有限アルフ�
 4. **roadmap 代表名と実 declaration はおおむね一致**: 本章は roadmap の 4 代表名
    (`entropy_le_log_card`, `entropy_eq_log_card_iff`, `entropy_le_gibbs_of_constraints`,
    `expFamily_maximizes_entropy_of_KKT`) がすべて実在する proof-done declaration と
-   verbatim 一致した（第2章パイロットで見られた roadmap 想起名と実名の乖離は
+   verbatim 一致した（第1章パイロットで見られた roadmap 想起名と実名の乖離は
    本章では発生せず）。ただし `_of_KKT` 版と素の版（`KKTSolution` 包みの有無）の
    ペアが多数あり、どちらを「正典」とするかは原稿側の判断が要る。

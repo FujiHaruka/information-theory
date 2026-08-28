@@ -1,7 +1,7 @@
 # Cover & Thomas Ch.2 未形式化ギャップ — Mathlib + InformationTheory 在庫調査
 
-> 対象: `docs/textbook/ch02-entropy.md:517-531`「本章で未形式化の項目」が挙げる
-> 2.6 / 2.7 / 2.9。本ファイルは在庫調査のみ (実装・計画起草はしない)。
+> 対象: `docs/textbook/ch01-entropy.md`「この章で扱わなかったこと」が挙げる
+> 1.6 / 1.7 / 1.9 節。本ファイルは在庫調査のみ (実装・計画起草はしない)。
 > フォーマット参照: `docs/shannon/shannon-mathlib-inventory.md`。
 
 ## 一行サマリ

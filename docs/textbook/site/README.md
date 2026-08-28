@@ -28,8 +28,8 @@ deno run -A build.mjs       # → dist/index.html を生成
 
 原稿には 2 通りの数式記法が混在している。
 
-- `ch02-entropy.md` — `$ ... $` / `$$ ... $$`
-- `ch03` 以降 — LaTeX 括弧デリミタ `\( ... \)` / `\[ ... \]`
+- `ch01-entropy.md` — `$ ... $` / `$$ ... $$`
+- `ch02` 以降 — LaTeX 括弧デリミタ `\( ... \)` / `\[ ... \]`
 
 markdown-it-katex は `$` 記法しか解さないため、`build.mjs` の `normalizeMath()` が
 括弧デリミタを `$` 記法へ寄せてから渡している。コードフェンスとインラインコードの
