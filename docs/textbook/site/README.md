@@ -1,6 +1,6 @@
-# 教科書パイロット 静的サイト (surge.sh)
+# 教科書レビュー用 静的サイト (surge.sh)
 
-公開 URL: https://common2026-ch2.surge.sh （デプロイ済み）
+公開 URL: https://common2026-ch2.surge.sh （デプロイ済み・全章の目次がトップ）
 
 `docs/textbook/*.md` を **KaTeX でサーバー側レンダリング**した静的 HTML に変換し、
 surge.sh にホストする。数式はビルド時に HTML 化されるためクライアント JS 不要で、
@@ -18,8 +18,22 @@ cd docs/textbook/site
 deno run -A build.mjs       # → dist/index.html を生成
 ```
 
-ビルド対象ページは `build.mjs` の `pages` 配列で管理（現状 `ch02-entropy.md`
-のみ）。新しい章を足すときはここに `{ slug, title, src }` を追加する。
+ビルド対象は `build.mjs` の `chapters` 配列で管理する。新しい章を足すときは
+`{ slug, num, title, src, status }` を 1 行足すだけでよく、目次 (`index.html`) と
+各章の前後ナビゲーションは配列順から自動生成される。
+
+生成物は目次 `dist/index.html` + 章ごとの `dist/<slug>.html`。
+
+### 数式記法について
+
+原稿には 2 通りの数式記法が混在している。
+
+- `ch02-entropy.md` — `$ ... $` / `$$ ... $$`
+- `ch03` 以降 — LaTeX 括弧デリミタ `\( ... \)` / `\[ ... \]`
+
+markdown-it-katex は `$` 記法しか解さないため、`build.mjs` の `normalizeMath()` が
+括弧デリミタを `$` 記法へ寄せてから渡している。コードフェンスとインラインコードの
+中身は退避して保護するので、Lean コードは変換の影響を受けない。
 
 ## デプロイ (surge)
 
