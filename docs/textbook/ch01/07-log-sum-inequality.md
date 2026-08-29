@@ -9,12 +9,14 @@
 前節の $D(p\,\|\,q) \ge 0$ で総和 1 という縛りを外し、$n$ 個の項に分けて述べたものに
 あたる。
 
-**定理 1.7.1（対数和不等式）.** 非負 $a_i$ と正 $b_i$（$i=1,\dots,n$）に対し
+::: theorem 1.7.1 対数和不等式
+非負 $a_i$ と正 $b_i$（$i=1,\dots,n$）に対し
 $$
 \Big(\sum_i a_i\Big) \log\frac{\sum_i a_i}{\sum_i b_i}
   \;\le\; \sum_i a_i \log\frac{a_i}{b_i}.
 $$
 等号は、すべての比 $a_i/b_i$ が等しいときに限る。
+:::
 
 これは $t \mapsto t\log t$ の凸性（＝ $\varphi = -t\log t$ の凹性、1.1.5 の
 信頼の底）を、重み $b_i$ つきで述べ直したものである。情報不等式や、相対エントロピーが
@@ -28,7 +30,8 @@ $$
 $a_i/b_i$ が等しいときに限る、というのも符合する：潰される点たちが真の重みと想定の
 重みを同じ割合で持っているなら、潰しても情報は失われない。
 
-*証明.* $b := \sum_i b_i > 0$ とおき、$\lambda_i := b_i/b$（$\sum_i \lambda_i = 1$、
+::: proof
+$b := \sum_i b_i > 0$ とおき、$\lambda_i := b_i/b$（$\sum_i \lambda_i = 1$、
 $\lambda_i \ge 0$）、$t_i := a_i/b_i \ge 0$ とする。凸関数 $\psi(t) := t\log t$
 （$\varphi = -t\log t$ の凹性、1.1.5 の信頼の底の符号反転）に対する有限 Jensen——補題
 1.1.6 を $-\psi$ に適用して符号を返したもの——は、重み $\lambda_i$・点 $t_i$ に対し
@@ -55,10 +58,13 @@ $$
   \;\le\; \sum_i a_i\log\frac{a_i}{b_i}.
 $$
 等号は補題 1.1.6 の等号条件（$\psi$ は狭義凸）より、正の重みをもつ $t_i = a_i/b_i$ が
-すべて等しいときに限る。$\qquad\blacksquare$
+すべて等しいときに限る。
+:::
 
-> **形式化**: `log_sum_inequality`
-> (`InformationTheory/Shannon/LZ78ZivEntropyBridge.lean`, 名前空間
-> `InformationTheory.Shannon`)。絶対連続条件 $b_i = 0 \Rightarrow a_i = 0$ を許す
-> `negMulLog` 形 `log_sum_inequality_negMulLog` (`InformationTheory/Fano/DPI.lean`) もある。
+::: formalized
+`log_sum_inequality`
+(`InformationTheory/Shannon/LZ78ZivEntropyBridge.lean`, 名前空間
+`InformationTheory.Shannon`)。絶対連続条件 $b_i = 0 \Rightarrow a_i = 0$ を許す
+`negMulLog` 形 `log_sum_inequality_negMulLog` (`InformationTheory/Fano/DPI.lean`) もある。
+:::
 

@@ -9,13 +9,14 @@ $X_1, X_2, \dots, X_n$ を扱う。それらが一つの $Y$ について持つ�
 
 ## 相互情報量のチェイン則（1 個追加）
 
-**定理 1.5.1.**
+::: theorem 1.5.1
 $$
 I(Z, X; Y) \;=\; I(Z; Y) + I(X; Y \mid Z).
 $$
 「対 $(Z,X)$ が $Y$ について持つ情報は、まず $Z$ が $Y$ について持つ情報、次に $Z$ を
 知ったうえで $X$ が $Y$ について追加で持つ情報、の和」と読む。右辺第 2 項は前節の
 **条件付き相互情報量** $I(X; Y \mid Z)$（定義 1.4.1）である。
+:::
 
 これはエントロピーのチェイン則（定理 1.2.3）とまったく同じ「順番に数える」構図
 である。$Y$ について知りたい人が、まず $Z$ を受け取り、次に $X$ を受け取る。$Z$ から
@@ -25,7 +26,8 @@ $$
 注意で見たとおり $I(X;Y\mid Z)$ は $I(X;Y)$ より大きいことも小さいこともあるので、
 この差は本質的である。
 
-*証明.* 定理 1.3.4 の entropy 表現を対 $(Z,X)$ に適用すると
+::: proof
+定理 1.3.4 の entropy 表現を対 $(Z,X)$ に適用すると
 $$
 I(Z,X;Y) \;=\; H(Z,X) - H(Z,X\mid Y).
 $$
@@ -43,23 +45,27 @@ I(Z,X;Y)
   + \underbrace{\big(H(X\mid Z) - H(X\mid Z,Y)\big)}_{=\,I(X;Y\mid Z)}.
 $$
 第 1 のかっこは定理 1.3.4 そのもので $I(Z;Y)$。第 2 のかっこは条件付き相互情報量の
-entropy 表現（定理 1.4.3）で $I(X;Y\mid Z)$。合わせて主張を得る。$\qquad\blacksquare$
+entropy 表現（定理 1.4.3）で $I(X;Y\mid Z)$。合わせて主張を得る。
+:::
 
-> **形式化**: `mutualInfo_chain_rule` (`InformationTheory/Shannon/CondMutualInfo.lean`)。
-> 形式化では $X, Y$ に標準ボレル空間（`StandardBorelSpace`）を課す。これは条件付き分布
-> カーネルを取り扱うための正当な regularity 前提で、定理の核心ではない。
+::: formalized
+`mutualInfo_chain_rule` (`InformationTheory/Shannon/CondMutualInfo.lean`)。
+形式化では $X, Y$ に標準ボレル空間（`StandardBorelSpace`）を課す。これは条件付き分布
+カーネルを取り扱うための正当な regularity 前提で、定理の核心ではない。
+:::
 
 ## $n$ 変数版
 
 定理 1.5.1 を繰り返し適用すると、$n$ 個の変数列に対する完全形が得られる。
 
-**定理 1.5.2（$n$ 変数チェイン則）.**
+::: theorem 1.5.2 $n$ 変数チェイン則
 $$
 I(X_0, \dots, X_{n-1}; Y)
   \;=\; \sum_{i=0}^{n-1} I\big(X_i; Y \mid X_0, \dots, X_{i-1}\big).
 $$
 各項は「先頭 $i$ 個をすでに知ったうえで、$X_i$ が $Y$ について追加で与える情報」である。
 全体の情報量が、変数を 1 個ずつ足したときの増分の総和に等しい、という分解になっている。
+:::
 
 これは定理 1.5.1 を $n-1$ 回繰り返しただけである。$X_0$ を受け取り、次に $X_1$ を
 受け取り、…と順に足していくと、各段階の増分がちょうど prefix 条件付きの項になる。
@@ -70,9 +76,11 @@ $$
 扱いにくい量を「1 文字ずつの寄与の足し算」に落とせる。第4章の通信路容量の議論は、
 ほぼこの一手で回っている。
 
-> **形式化**: `mutualInfo_chain_rule_fin` (`InformationTheory/Shannon/MIChainRule.lean`)。
-> `Fin n` 添字の確率変数列に対する完全形。右辺は各 $i$ における prefix 条件付き相互情報量の
-> 有限和で、verbatim の右辺式はソース `MIChainRule.lean:93` を参照。
+::: formalized
+`mutualInfo_chain_rule_fin` (`InformationTheory/Shannon/MIChainRule.lean`)。
+`Fin n` 添字の確率変数列に対する完全形。右辺は各 $i$ における prefix 条件付き相互情報量の
+有限和で、verbatim の右辺式はソース `MIChainRule.lean:93` を参照。
+:::
 
 ## 独立・同分布（i.i.d.）での加法性
 
@@ -82,18 +90,21 @@ $Y_i$ の組は先頭 $i$ 個の組とまったく無関係なので、条件を
 $I(X_i; Y_i \mid X_0,\dots,X_{i-1}) = I(X_i;Y_i)$ となり、さらに同分布性から
 どの項も $I(X_0;Y_0)$ に等しい。よって
 
-**定理 1.5.3（i.i.d. 加法性）.**
+::: theorem 1.5.3 i.i.d. 加法性
 $$
 I(X^n; Y^n) \;=\; n\, I(X_0; Y_0).
 $$
+:::
 
 **何がうれしいか.** 1 ブロック ($n$ 文字) を通じて運べる情報量が、1 文字あたりの情報量の
 ちょうど $n$ 倍になる。情報を「文字あたりレート」で測ってよいという、符号化定理の
 根拠の一つである。逆に、もし相関や記憶があればこの等式は不等式に崩れ、その「ずれ」が
 通信路容量の議論で効いてくる。
 
-> **形式化**: `mutualInfo_iid_eq_nsmul` (`InformationTheory/Shannon/MIChainRule.lean`)。
-> 一般形 `mutualInfo_pi_eq_sum` もある。形式化では i.i.d. 構造を積測度の分解仮定
-> $h_{\mathrm{iid}}$ として要求する。これは「独立同分布である」という前提条件を表すもので、
-> 結論の核心を仮定に抱えさせるものではない。完全式はソース `MIChainRule.lean:370` を参照。
+::: formalized
+`mutualInfo_iid_eq_nsmul` (`InformationTheory/Shannon/MIChainRule.lean`)。
+一般形 `mutualInfo_pi_eq_sum` もある。形式化では i.i.d. 構造を積測度の分解仮定
+$h_{\mathrm{iid}}$ として要求する。これは「独立同分布である」という前提条件を表すもので、
+結論の核心を仮定に抱えさせるものではない。完全式はソース `MIChainRule.lean:370` を参照。
+:::
 

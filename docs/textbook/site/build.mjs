@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import MarkdownIt from 'npm:markdown-it@14';
 import * as katexPlugin from 'npm:@vscode/markdown-it-katex@1';
+import mdContainer from 'npm:markdown-it-container@4';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..'); // docs/textbook
@@ -126,6 +127,34 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
   font-style: normal; font-weight: 600; letter-spacing: .05em; color: #7a7a7a;
 }
 .qed { float: right; color: #7a7a7a; }
+.env-head { margin-bottom: .55rem; }
+.qed-line { text-align: right; margin-top: -.6rem; }
+.qed-line .qed { float: none; }
+
+/* 形式化ポインタ。主張ブロック (縦罫) とは別の体裁にして取り違えを防ぐ。 */
+.formalized {
+  font-size: .93rem;
+  margin: 1.4rem 0;
+  padding: .55rem .95rem;
+  background: rgba(42,122,134,.07);
+  border-radius: 6px;
+  color: #3a3a3a;
+}
+.formalized > :first-child { margin-top: 0; }
+.formalized > :last-child { margin-bottom: 0; }
+.formalized strong:first-child { color: #22707c; font-weight: 700; }
+
+/* 読み飛ばしてよい傍注 (形式化上の注記 / 記法の先取り)。 */
+.aside {
+  font-size: .93rem;
+  border-left: 3px solid #e3e3e3;
+  margin: 1.4rem 0;
+  padding: .1rem 0 .1rem 1rem;
+  color: #8a8a8a;
+}
+.aside > :first-child { margin-top: 0; }
+.aside > :last-child { margin-bottom: 0; }
+.aside strong:first-child { color: #6f6f6f; }
 
 /* --- multi-page navigation --- */
 .nav-top {
@@ -171,6 +200,10 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
   .proof { color: #c9cdd3; }
   .proof > p:first-child > em:first-child { color: #98a1aa; }
   .qed { color: #98a1aa; }
+  .formalized { background: rgba(122,200,212,.09); color: #c9cdd3; }
+  .formalized strong:first-child { color: #63b5c2; }
+  .aside { border-left-color: #333a42; color: #9aa3ad; }
+  .aside strong:first-child { color: #aeb6bf; }
 }
 `;
 
@@ -193,74 +226,129 @@ function normalizeMath(src) {
   return out.replace(/\u0000(\d+)\u0000/g, (_, i) => stashed[Number(i)]);
 }
 
-// 原稿の決まり文句 (`.claude/rules/textbook-writing.md` §5) を、意味づけした div に包む。
-// 原稿は Markdown のまま (GitHub でそのまま読める) にしておき、体裁だけをサイト側が持つ。
-//   `**定理 1.6.1（…）.**` … 次の空行まで      -> <div class="stmt stmt-theorem">
-//   `*証明.*` … `\blacksquare` / `\square` まで -> <div class="proof">
-// 見出し・次の主張が来たら、閉じ損ねたブロックはそこで打ち切る。
-const STMT_KINDS = new Map([
-  ['定理', 'theorem'], ['命題', 'proposition'], ['補題', 'lemma'],
-  ['系', 'corollary'], ['定義', 'definition'], ['例', 'example'],
+// --- 定理環境コンテナ ---
+// 原稿は種別・番号・名前だけを宣言し (`::: theorem 1.6.1 情報不等式 / Gibbs`)、
+// 「定理 1.6.1（情報不等式 / Gibbs）.」という見出しと証明末尾の ■ はここで組む。
+// 記法の SoT は .claude/rules/textbook-writing.md §5。
+const ENVS = new Map([
+  ['theorem',            { label: '定理',           cls: 'stmt stmt-theorem',       numbered: true }],
+  ['proposition',        { label: '命題',           cls: 'stmt stmt-proposition',   numbered: true }],
+  ['lemma',              { label: '補題',           cls: 'stmt stmt-lemma',         numbered: true }],
+  ['corollary',          { label: '系',             cls: 'stmt stmt-corollary',     numbered: true }],
+  ['definition',         { label: '定義',           cls: 'stmt stmt-definition',    numbered: true }],
+  ['example',            { label: '例',             cls: 'stmt stmt-example',       numbered: true }],
+  ['proof',              { label: '証明',           cls: 'proof' }],
+  ['formalized',         { label: '形式化',         cls: 'formalized', sep: ':' }],
+  ['formalization-note', { label: '形式化上の注記', cls: 'aside aside-formalization' }],
+  ['notation-preview',   { label: '記法の先取り',   cls: 'aside aside-notation' }],
 ]);
-const STMT_RE = /^\*\*(定理|命題|補題|系|定義|例)\s*\d[\d.]*(?:（[^）]*）)?\.\*\*/;
-const PROOF_RE = /^\*証明[^*]*\.\*/;
-const QED_RE = /\\blacksquare|\\square/;
 
-// 行末の $\qquad\blacksquare$ は、字下げではなく右寄せの記号として扱う。
-function markQed(line) {
-  return line.replace(
-    /\$\\qquad(\\blacksquare|\\square)\$\s*$/,
-    (_, sym) => '<span class="qed">$' + sym + '$</span>',
-  );
-}
-
-function decorateStatements(src) {
-  const lines = src.split('\n');
-  const out = [];
-  let fence = false;
-  let inMath = false;
-  let open = null;      // 'stmt' | 'proof' | null
-  let qedInMath = false;
-
-  const start = (cls, kind) => { out.push(`<div class="${cls}">`, ''); open = kind; };
-  const shut = () => { out.push('', '</div>', ''); open = null; qedInMath = false; };
-
-  for (const line of lines) {
-    if (/^\s*```/.test(line)) { fence = !fence; out.push(line); continue; }
-    if (fence) { out.push(line); continue; }
-
-    const wasInMath = inMath;
-    if ((line.match(/\$\$/g) || []).length % 2 === 1) inMath = !inMath;
-
-    // ディスプレイ数式の内側で ■ を見た場合は、その数式が閉じた行で証明を閉じる。
-    if (open === 'proof' && wasInMath && !inMath && qedInMath) { out.push(line); shut(); continue; }
-
-    if (!wasInMath && !inMath) {
-      const opensNext = STMT_RE.test(line) || PROOF_RE.test(line);
-      if (open === 'stmt' && (line.trim() === '' || /^#/.test(line) || opensNext)) shut();
-      else if (open === 'proof' && (/^#/.test(line) || STMT_RE.test(line))) shut();
-    }
-
-    if (open === 'proof' && QED_RE.test(line)) {
-      if (wasInMath) qedInMath = true;
-      else if (!inMath) { out.push(markQed(line)); shut(); continue; }
-    }
-
-    if (open === null) {
-      const m = line.match(STMT_RE);
-      if (m) { start(`stmt stmt-${STMT_KINDS.get(m[1])}`, 'stmt'); out.push(line); continue; }
-      if (PROOF_RE.test(line)) {
-        start('proof', 'proof');
-        if (!inMath && QED_RE.test(line)) { out.push(markQed(line)); shut(); }
-        else out.push(line);
-        continue;
-      }
-    }
-    out.push(line);
+// `theorem 1.6.1 情報不等式 / Gibbs` を {kind, num, name} に割る。
+function parseEnv(info) {
+  const m = info.trim().match(/^([a-z-]+)\s*(.*)$/s);
+  if (!m || !ENVS.has(m[1])) return null;
+  const env = ENVS.get(m[1]);
+  let rest = m[2].trim();
+  let num = '';
+  if (env.numbered) {
+    const n = rest.match(/^(\d[\d.]*?)\.?(?:\s+|$)/);
+    if (n) { num = n[1]; rest = rest.slice(n[0].length).trim(); }
   }
-  if (open) shut();
-  return out.join('\n');
+  return { kind: m[1], env, num, name: rest };
 }
+
+// 見出しを Markdown 断片として返す（名前に $…$ を書けるよう、生 HTML にはしない）。
+function headingMarkdown({ env, num, name }) {
+  const paren = name ? `（${name}）` : '';
+  if (env.sep) return `**${env.label}**${env.sep}`;
+  return `**${env.label}${num ? ' ' + num : ''}${paren}.**`;
+}
+
+md.use(mdContainer, 'env', {
+  validate: (params) => parseEnv(params) !== null,
+  render(tokens, idx) {
+    const t = tokens[idx];
+    if (t.nesting === 1) {
+      const { env } = parseEnv(t.info);
+      return `<div class="${env.cls}">\n`;
+    }
+    return '</div>\n';
+  },
+});
+
+// 見出しの流し込みと ■ の付与は inline 解析の前に済ませる（見出し中の数式を活かすため）。
+md.core.ruler.after('block', 'env_heading', (state) => {
+  const toks = state.tokens;
+  let lastStmt = null;
+
+  const injectParagraph = (at, content, cls) => {
+    const open = new state.Token('paragraph_open', 'p', 1);
+    if (cls) open.attrSet('class', cls);
+    const inline = new state.Token('inline', '', 0);
+    inline.content = content;
+    inline.children = [];
+    const close = new state.Token('paragraph_close', 'p', -1);
+    toks.splice(at, 0, open, inline, close);
+  };
+
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    if (t.type !== 'container_env_open') continue;
+    const spec = parseEnv(t.info);
+    if (spec.env.cls.startsWith('stmt')) lastStmt = spec.kind;
+
+    // 1. 見出し。最初の段落があればその頭に流し込み、無ければ独立した段落にする。
+    const head = headingMarkdown(spec);
+    if (toks[i + 1]?.type === 'paragraph_open' && toks[i + 2]?.type === 'inline') {
+      const inline = toks[i + 2];
+      inline.content = spec.env.sep ? `${head} ${inline.content}` : `${head} ${inline.content}`;
+    } else {
+      injectParagraph(i + 1, head, 'env-head');
+    }
+
+    if (spec.kind !== 'proof') continue;
+    // 終端記号は inline 解析のあとで付ける（下の env_qed）。
+    // 補題の証明は □、それ以外は ■（textbook-writing.md §5）。
+    t.meta = { qed: lastStmt === 'lemma' ? '\\square' : '\\blacksquare' };
+  }
+});
+
+// 証明末尾の ■ / □。KaTeX プラグインは HTML タグ直後の $…$ を数式と見なさないので、
+// 文字列を流し込むのではなくトークンとして組み立てる。
+md.core.ruler.after('inline', 'env_qed', (state) => {
+  const toks = state.tokens;
+  const mk = (type, content, tag = '') => {
+    const tok = new state.Token(type, tag, 0);
+    tok.content = content;
+    return tok;
+  };
+
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    if (t.type !== 'container_env_open' || !t.meta?.qed) continue;
+
+    let close = i + 1;
+    while (close < toks.length && toks[close].type !== 'container_env_close') close++;
+    if (close >= toks.length) continue;
+
+    const marks = [
+      mk('html_inline', '<span class="qed">'),
+      mk('math_inline', t.meta.qed, 'math'),
+      mk('html_inline', '</span>'),
+    ];
+    if (toks[close - 1].type === 'paragraph_close' && toks[close - 2]?.type === 'inline') {
+      toks[close - 2].children.push(...marks);
+    } else {
+      // 証明がディスプレイ数式で終わる場合は、記号だけの行を足す。
+      const open = new state.Token('paragraph_open', 'p', 1);
+      open.attrSet('class', 'qed-line');
+      const inline = new state.Token('inline', '', 0);
+      inline.content = '';
+      inline.children = marks;
+      toks.splice(close, 0, open, inline, new state.Token('paragraph_close', 'p', -1));
+    }
+  }
+});
 
 function page({ title, bodyHtml }) {
 
@@ -336,7 +424,7 @@ mkdirSync(distDir, { recursive: true });
 // --- content pages ---
 pages.forEach((pg, i) => {
   const markdown = readFileSync(resolve(root, pg.src), 'utf8');
-  let bodyHtml = navTop(pg) + md.render(decorateStatements(normalizeMath(markdown)));
+  let bodyHtml = navTop(pg) + md.render(normalizeMath(markdown));
   if (pg.isChapterTop && pg.chapter.sections) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
   const title = pg.section ? `${pg.label} — ${pg.chapter.num}` : pg.label;

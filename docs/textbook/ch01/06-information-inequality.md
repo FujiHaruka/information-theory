@@ -17,10 +17,13 @@ $p$ を同時分布・$q$ を周辺の積にとれば命題 1.3.2 が再現さ�
 
 ## 情報不等式
 
-**定理 1.6.1（情報不等式 / Gibbs）.** 同じアルファベット上の分布 $p, q$ について
+::: theorem 1.6.1 情報不等式 / Gibbs
+同じアルファベット上の分布 $p, q$ について
 $D(p\,\|\,q) \ge 0$。等号は $p = q$ のとき、かつそのときに限る（$q$ が全点で正のとき）。
+:::
 
-*証明.* まずサポートの食い違いを片づける。ある $x$ で $p(x) > 0$ かつ $q(x) = 0$ なら、
+::: proof
+まずサポートの食い違いを片づける。ある $x$ で $p(x) > 0$ かつ $q(x) = 0$ なら、
 その項は $p(x)\log\dfrac{p(x)}{0} = +\infty$ となって $D(p\,\|\,q) = +\infty \ge 0$、主張は
 自明である（このとき $p \neq q$ なので等号も成り立たない）。$p(x) = 0$ の項は
 $0\log\dfrac{0}{q(x)} = 0$ と約束し、和に寄与しない。以下、残る本質的な場合、すなわち
@@ -34,7 +37,7 @@ $$
 両辺を $x$ について和をとると、右辺は $\sum_x q(x) - \sum_x p(x) = 1 - 1 = 0$。左辺は
 $-D(p\,\|\,q)$ だから、$-D(p\,\|\,q) \le 0$、すなわち $D(p\,\|\,q) \ge 0$。等号は
 各 $x$ で $\log t = t-1$、つまり $q(x)/p(x) = 1$、すなわち $p = q$ のときに限る。
-$\qquad\blacksquare$
+:::
 
 1.1.5 の「信頼の底」と同じ初等不等式 $\log t \le t-1$ ただ一つから出ている点に注目
 したい。$\varphi(t) = -t\log t$ の凹性も情報不等式も、結局はこの一枚の不等式の別の顔である。
@@ -63,13 +66,17 @@ $D(p\,\|\,\text{一様}) = \log M - H(p)$ となり、$D \ge 0$ がそのまま�
 $D$ は定義 1.3.1 の相互情報量そのものなので、命題 1.3.2 の非負性が再現される。
 別々に証明した不等式が一つの根に束ねられたことになる。
 
-> **形式化上の注記.** 本ライブラリは pmf 形
-> $\mathrm{klDivPmf}\,P\,Q = \sum_a Q(a)\cdot \mathrm{klFun}(P(a)/Q(a))$ に対して非負性を
-> 独立に形式化している。測度論版の $I(X;Y)\ge 0$ は 1.3 節で述べたとおり、拡張非負実数値
-> であることからほぼ型レベルで従う別ルートで得る。
->
-> **形式化**: 非負性 `klDivPmf_nonneg`
-> (`InformationTheory/Shannon/CsiszarProjection.lean`)、等号条件
-> `klDivPmf_eq_zero_iff_pmf` (`InformationTheory/Shannon/MaxEntropyConstrained.lean`、
-> 参照分布 $Q$ が全点正のとき $\mathrm{klDivPmf}\,P\,Q = 0 \iff P = Q$)
+::: formalization-note
+本ライブラリは pmf 形
+$\mathrm{klDivPmf}\,P\,Q = \sum_a Q(a)\cdot \mathrm{klFun}(P(a)/Q(a))$ に対して非負性を
+独立に形式化している。測度論版の $I(X;Y)\ge 0$ は 1.3 節で述べたとおり、拡張非負実数値
+であることからほぼ型レベルで従う別ルートで得る。
+:::
+
+::: formalized
+非負性 `klDivPmf_nonneg`
+(`InformationTheory/Shannon/CsiszarProjection.lean`)、等号条件
+`klDivPmf_eq_zero_iff_pmf` (`InformationTheory/Shannon/MaxEntropyConstrained.lean`、
+参照分布 $Q$ が全点正のとき $\mathrm{klDivPmf}\,P\,Q = 0 \iff P = Q$)
+:::
 

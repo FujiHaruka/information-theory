@@ -15,11 +15,13 @@ $\hat X = g(Y)$ の誤り確率を $P_e = \Pr[\hat X \neq X]$ とする。直感
 
 ## 主張と証明
 
-**定理 1.10.1（ファノの不等式）.** $|\mathcal X| \ge 2$ のとき
+::: theorem 1.10.1 ファノの不等式
+$|\mathcal X| \ge 2$ のとき
 $$
 H(X \mid Y) \;\le\; H_b(P_e) + P_e \log\big(|\mathcal X| - 1\big),
 $$
 ここで $H_b$ は二値エントロピー関数（例 1.1.2）。
+:::
 
 右辺を読み解くと、$X$ に残る不確かさは「誤ったか否か」の 1 ビット
 $H_b(P_e)$ と、「誤ったとき、残り $|\mathcal X|-1$ 個のどれか」の不確かさ
@@ -27,7 +29,8 @@ $P_e \log(|\mathcal X|-1)$ で説明しきれる、という上限になって�
 $H(X\mid Y)$ が大きいのに $P_e$ を小さく保つことはできない。$H(X\mid Y) \to$ 大
 なら $P_e$ も下から押し上げられる。
 
-*証明.* 誤り指示変数 $E := \mathbf 1[\hat X \neq X]$（$\hat X = g(Y)$）を導入する。これは
+::: proof
+誤り指示変数 $E := \mathbf 1[\hat X \neq X]$（$\hat X = g(Y)$）を導入する。これは
 $\Pr[E=1] = P_e$ の二値確率変数である。結合量 $H(E, X \mid Y)$ を、$Y$ で条件付けた
 チェイン則（定理 1.2.3 を $Y$ のもとで適用）で二通りに展開する：
 $$
@@ -57,8 +60,8 @@ $(X,Y)$ から一意に決まる。決定的な量のエントロピーは 0 だ
 $$
 H(X\mid Y) \;=\; H(E\mid Y) + H(X\mid E,Y)
   \;\le\; H_b(P_e) + P_e\log(|\mathcal X|-1).
-\qquad\blacksquare
 $$
+:::
 
 ## 形式化されている諸形
 
@@ -68,12 +71,16 @@ $$
 誤り確率 $P_e = \mu\{\omega : X(\omega) \neq g(Y(\omega))\}$ に対し、定理 1.10.1 を
 $H(X\mid Y) \le H_b(P_e) + P_e\log(|\mathcal X|-1)$ の形で述べる。
 
-> **形式化**: `fano_inequality_measure_theoretic`
-> (`InformationTheory/Fano/Measure.lean`, 名前空間 `InformationTheory.MeasureFano`)
+::: formalized
+`fano_inequality_measure_theoretic`
+(`InformationTheory/Fano/Measure.lean`, 名前空間 `InformationTheory.MeasureFano`)
+:::
 
 **pmf コア版.** 有限結合 pmf に対する基本形（$\mathrm{qaryEntropy}$ 形）。
 
-> **形式化**: `fano_core` / `fano_inequality` (`InformationTheory/Fano/Core.lean`)
+::: formalized
+`fano_core` / `fano_inequality` (`InformationTheory/Fano/Core.lean`)
+:::
 
 **逆向き（誤り確率の下界）.** ファノの不等式を裏返すと、$H(X\mid Y)$ が大きいときに
 $P_e$ が下から評価される。条件付きエントロピーが二値エントロピー境界を超えるなら、
@@ -87,5 +94,7 @@ $H_b(P_e) + P_e\log(|\mathcal X|-1)$ は $P_e$ について（$P_e$ が小さい
 どんなものであってもよいことが効いている——**どんな復号器を設計しても**という
 逆定理の普遍性は、この不等式が $g$ を任意にとれることから来ている。
 
-> **形式化**: `error_lower_bound` (`InformationTheory/Fano/Core.lean`)
+::: formalized
+`error_lower_bound` (`InformationTheory/Fano/Core.lean`)
+:::
 
