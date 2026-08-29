@@ -329,8 +329,11 @@ md.core.ruler.after('block', 'env_heading', (state) => {
 
     if (spec.kind !== 'proof') continue;
     // 終端記号は inline 解析のあとで付ける（下の env_qed）。
-    // 補題の証明は □、それ以外は ■（textbook-writing.md §5）。
-    t.meta = { qed: lastStmt === 'lemma' ? '\\square' : '\\blacksquare' };
+    // 補題の証明は □、それ以外は ■（textbook-writing.md §5）。証明がどの主張のものかを
+    // 名乗っているとき（`::: proof 定理 1.1.5`）は、直前の主張ではなくその名前で決める。
+    const named = spec.name.match(/^(定理|命題|補題|系)/);
+    const provesLemma = named ? named[1] === '補題' : lastStmt === 'lemma';
+    t.meta = { qed: provesLemma ? '\\square' : '\\blacksquare' };
   }
 });
 
@@ -440,11 +443,52 @@ function sectionToc(c) {
   return `<ul class="toc">\n${items}\n</ul>`;
 }
 
+// --- 主張と証明の対応チェック ---
+// 証明の付いていない主張を列挙する（.claude/rules/textbook-writing.md §4）。読者は証明の
+// ない主張を「意図して証明を略した主張」と読むので、地の文に根拠を書いて proof 環境を
+// 省いた箇所はここで拾う。主張と証明のあいだに形式化ポインタ・傍注が挟まるのは許す。
+const CLAIM_KINDS = new Set(['theorem', 'proposition', 'lemma', 'corollary']);
+const BETWEEN_KINDS = new Set(['formalized', 'formalization-note', 'notation-preview']);
+
+function lintProofs(markdown, src) {
+  const blocks = [];
+  markdown.split('\n').forEach((line, i) => {
+    const m = line.match(/^::: +(\S+)(.*)$/);
+    if (m && ENVS.has(m[1])) blocks.push({ line: i + 1, kind: m[1], info: (m[1] + m[2]).trim() });
+  });
+
+  // `::: proof 定理 1.1.5` のように、どの主張の証明かを名乗るもの（補題を挟むので
+  // 主張の直後に置けない場合）は、離れた位置にあっても証明ありと数える。
+  const provedByName = new Set();
+  for (const b of blocks) {
+    if (b.kind !== 'proof') continue;
+    const m = parseEnv(b.info).name.match(/^(定理|命題|補題|系)\s*([\d.]+)/);
+    if (m) provedByName.add(`${m[1]} ${m[2]}`);
+  }
+
+  let missing = 0;
+  blocks.forEach((b, i) => {
+    if (!CLAIM_KINDS.has(b.kind)) return;
+    const { env, num, name } = parseEnv(b.info);
+    if (provedByName.has(`${env.label} ${num}`)) return;
+    let j = i + 1;
+    while (j < blocks.length && BETWEEN_KINDS.has(blocks[j].kind)) j++;
+    if (blocks[j]?.kind === 'proof') return;
+    missing += 1;
+    const title = `${env.label}${num ? ' ' + num : ''}${name ? `（${name}）` : ''}`;
+    console.warn(`warn: 証明のない主張 ${src}:${b.line} ${title}`);
+  });
+  return missing;
+}
+
+let missingProofs = 0;
+
 mkdirSync(distDir, { recursive: true });
 
 // --- content pages ---
 pages.forEach((pg, i) => {
   const markdown = readFileSync(resolve(root, pg.src), 'utf8');
+  missingProofs += lintProofs(markdown, pg.src);
   let bodyHtml = navTop(pg) + md.render(normalizeMath(markdown));
   if (pg.isChapterTop && pg.chapter.sections) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
@@ -484,4 +528,5 @@ ${tocItems}
 writeFileSync(resolve(distDir, 'index.html'), page({ title: siteTitle, bodyHtml: indexBody }), 'utf8');
 console.log(`built index -> dist/index.html (${pages.length} pages)`);
 
+if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs} 件`);
 console.log('done');
