@@ -101,6 +101,32 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
 .katex { font-size: 1.04em; }
 .site-note { font-size: .82rem; color: #888; margin-top: 4rem; text-align: center; }
 
+/* --- 定理環境 ---
+   原稿 (.claude/rules/textbook-writing.md §5 の決まり文句) は Markdown のままで、
+   ブロック化は build 側の decorateStatements() が行う。色は種別の区別だけを担い、
+   背景は敷かない (紙の数学書に近い見え方を保つ)。 */
+.stmt {
+  --stmt-accent: #8a8a8a;
+  border-left: 2px solid var(--stmt-accent);
+  padding: .05rem 0 .05rem 1.05rem;
+  margin: 1.7rem 0;
+}
+.stmt > :first-child { margin-top: 0; }
+.stmt > :last-child { margin-bottom: 0; }
+.stmt > p:first-child > strong:first-child { color: var(--stmt-accent); font-weight: 700; }
+.stmt-theorem, .stmt-proposition, .stmt-corollary { --stmt-accent: #2f5fa8; }
+.stmt-definition { --stmt-accent: #2c7a5a; }
+.stmt-lemma { --stmt-accent: #8a8a8a; }
+.stmt-example { --stmt-accent: #96702a; }
+
+.proof { margin: 1.3rem 0 1.8rem; padding-left: 1.05rem; color: #2f2f2f; }
+.proof::after { content: ""; display: block; clear: both; }
+.proof > :first-child { margin-top: 0; }
+.proof > p:first-child > em:first-child {
+  font-style: normal; font-weight: 600; letter-spacing: .05em; color: #7a7a7a;
+}
+.qed { float: right; color: #7a7a7a; }
+
 /* --- multi-page navigation --- */
 .nav-top {
   font-size: .85rem; color: #888;
@@ -138,6 +164,13 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
   .toc li { border-color: #2a2e34; background: #1a1d21; }
   .toc .status { color: #8b939c; }
   .subtoc { border-top-color: #2a2e34; }
+  .stmt-theorem, .stmt-proposition, .stmt-corollary { --stmt-accent: #7ba7e8; }
+  .stmt-definition { --stmt-accent: #63b894; }
+  .stmt-lemma { --stmt-accent: #9aa3ad; }
+  .stmt-example { --stmt-accent: #c9a45e; }
+  .proof { color: #c9cdd3; }
+  .proof > p:first-child > em:first-child { color: #98a1aa; }
+  .qed { color: #98a1aa; }
 }
 `;
 
@@ -158,6 +191,75 @@ function normalizeMath(src) {
     .replace(/\\\[([\s\S]*?)\\\]/g, (_, m) => `$$${m}$$`)
     .replace(/\\\(([\s\S]*?)\\\)/g, (_, m) => `$${m}$`);
   return out.replace(/\u0000(\d+)\u0000/g, (_, i) => stashed[Number(i)]);
+}
+
+// 原稿の決まり文句 (`.claude/rules/textbook-writing.md` §5) を、意味づけした div に包む。
+// 原稿は Markdown のまま (GitHub でそのまま読める) にしておき、体裁だけをサイト側が持つ。
+//   `**定理 1.6.1（…）.**` … 次の空行まで      -> <div class="stmt stmt-theorem">
+//   `*証明.*` … `\blacksquare` / `\square` まで -> <div class="proof">
+// 見出し・次の主張が来たら、閉じ損ねたブロックはそこで打ち切る。
+const STMT_KINDS = new Map([
+  ['定理', 'theorem'], ['命題', 'proposition'], ['補題', 'lemma'],
+  ['系', 'corollary'], ['定義', 'definition'], ['例', 'example'],
+]);
+const STMT_RE = /^\*\*(定理|命題|補題|系|定義|例)\s*\d[\d.]*(?:（[^）]*）)?\.\*\*/;
+const PROOF_RE = /^\*証明[^*]*\.\*/;
+const QED_RE = /\\blacksquare|\\square/;
+
+// 行末の $\qquad\blacksquare$ は、字下げではなく右寄せの記号として扱う。
+function markQed(line) {
+  return line.replace(
+    /\$\\qquad(\\blacksquare|\\square)\$\s*$/,
+    (_, sym) => '<span class="qed">$' + sym + '$</span>',
+  );
+}
+
+function decorateStatements(src) {
+  const lines = src.split('\n');
+  const out = [];
+  let fence = false;
+  let inMath = false;
+  let open = null;      // 'stmt' | 'proof' | null
+  let qedInMath = false;
+
+  const start = (cls, kind) => { out.push(`<div class="${cls}">`, ''); open = kind; };
+  const shut = () => { out.push('', '</div>', ''); open = null; qedInMath = false; };
+
+  for (const line of lines) {
+    if (/^\s*```/.test(line)) { fence = !fence; out.push(line); continue; }
+    if (fence) { out.push(line); continue; }
+
+    const wasInMath = inMath;
+    if ((line.match(/\$\$/g) || []).length % 2 === 1) inMath = !inMath;
+
+    // ディスプレイ数式の内側で ■ を見た場合は、その数式が閉じた行で証明を閉じる。
+    if (open === 'proof' && wasInMath && !inMath && qedInMath) { out.push(line); shut(); continue; }
+
+    if (!wasInMath && !inMath) {
+      const opensNext = STMT_RE.test(line) || PROOF_RE.test(line);
+      if (open === 'stmt' && (line.trim() === '' || /^#/.test(line) || opensNext)) shut();
+      else if (open === 'proof' && (/^#/.test(line) || STMT_RE.test(line))) shut();
+    }
+
+    if (open === 'proof' && QED_RE.test(line)) {
+      if (wasInMath) qedInMath = true;
+      else if (!inMath) { out.push(markQed(line)); shut(); continue; }
+    }
+
+    if (open === null) {
+      const m = line.match(STMT_RE);
+      if (m) { start(`stmt stmt-${STMT_KINDS.get(m[1])}`, 'stmt'); out.push(line); continue; }
+      if (PROOF_RE.test(line)) {
+        start('proof', 'proof');
+        if (!inMath && QED_RE.test(line)) { out.push(markQed(line)); shut(); }
+        else out.push(line);
+        continue;
+      }
+    }
+    out.push(line);
+  }
+  if (open) shut();
+  return out.join('\n');
 }
 
 function page({ title, bodyHtml }) {
@@ -234,7 +336,7 @@ mkdirSync(distDir, { recursive: true });
 // --- content pages ---
 pages.forEach((pg, i) => {
   const markdown = readFileSync(resolve(root, pg.src), 'utf8');
-  let bodyHtml = navTop(pg) + md.render(normalizeMath(markdown));
+  let bodyHtml = navTop(pg) + md.render(decorateStatements(normalizeMath(markdown)));
   if (pg.isChapterTop && pg.chapter.sections) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
   const title = pg.section ? `${pg.label} — ${pg.chapter.num}` : pg.label;
