@@ -108,9 +108,7 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
    背景は敷かない (紙の数学書に近い見え方を保つ)。 */
 .stmt {
   --stmt-accent: #8a8a8a;
-  border-left: 2px solid var(--stmt-accent);
-  padding: .05rem 0 .05rem 1.05rem;
-  margin: 1.7rem 0;
+  margin: 1.9rem 0;
 }
 .stmt > :first-child { margin-top: 0; }
 .stmt > :last-child { margin-bottom: 0; }
@@ -120,7 +118,7 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
 .stmt-lemma { --stmt-accent: #8a8a8a; }
 .stmt-example { --stmt-accent: #96702a; }
 
-.proof { margin: 1.3rem 0 1.8rem; padding-left: 1.05rem; color: #2f2f2f; }
+.proof { margin: 1.5rem 0 2rem; color: #2f2f2f; }
 .proof::after { content: ""; display: block; clear: both; }
 .proof > :first-child { margin-top: 0; }
 .proof > p:first-child > em:first-child {
