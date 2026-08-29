@@ -82,6 +82,9 @@ legacy migration は完了済 (active な `@audit:suspect/staged/defer` タグ 0
 
 ## 教科書原稿 (層 3) / 次の一手
 
+原稿の執筆原則 (読者前提・節の構成・前方参照・形式化ポインタ・節分割) は
+`.claude/rules/textbook-writing.md` が SoT。
+
 - **Ch.2 パイロット済** (`docs/textbook/ch01/`): 検証済 33 declaration を §2.1-2.10 の prose に紐付け。判明した課題 = (i) 値の型不一致 (`ℝ≥0∞` vs `ℝ`、橋渡し `.toReal`)、(ii) Markov 定義の表層差 (compProd 分解形)、(iii) n 変数 chain rule の右辺長大、(iv) 章↔file が 1:1 でない。代表名照合済 (2026-06-22、章対応表の backtick 識別子を実 declaration と機械照合)。
 - **原稿起動可能な genuine ✅ 章**: Ch.2 (✅ pilot) / 3 / 4 / 5 / 7 / 8 / 9 / 10 / 12 / 15 (DSC) / 17。
 - **次の一手候補**: (i) Ch.2 パイロット課題を踏まえた原稿生成テンプレ確立 (型注釈 / 代表名照合) → 他完成章 (Ch.3/4/7/12) 横展開。

@@ -34,7 +34,8 @@ deno run -A build.mjs       # → dist/index.html を生成
 
 節を独立したページとして読めるよう、各節ファイルは **文脈と動機の段落から始める**
 （`## 動機` のような見出しは置かない）。ファイル内の見出しレベルは、節タイトルが `#`、
-その下位が `##`。
+その下位が `##`。原稿そのものの書き方（前方参照の扱いなど）は
+[`.claude/rules/textbook-writing.md`](../../../.claude/rules/textbook-writing.md) が SoT。
 
 ### 数式記法について
 

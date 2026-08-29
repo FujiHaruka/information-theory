@@ -171,6 +171,15 @@ Trigger: the user explicitly requests parallel execution ("in parallel", "N seed
 - Keep commit messages short. One concise line, no body unless absolutely necessary.
 - **Implementation subagents may commit on their own**: `lean-implementer` and the like may have already run `git commit` on completion even if the brief said "don't commit". After they finish, **check for existing commits with `git log --oneline -3` + `git status --short` before** committing only the remaining diff (to prevent double commits). Avoid `git add -A` — it sweeps in the embedded repos under `.claude/worktrees/agent-*` — and name the target path explicitly.
 
+## Textbook manuscript
+
+`.claude/rules/textbook-writing.md` is the **SoT for how the manuscript reads** — reader
+assumptions, section shape (context/motivation → definition → example → きもち → proof),
+the forward-reference rule (an unintroduced term may appear as a skippable preview, never as
+what a definition or proof depends on), formalization pointers, and per-section file splitting.
+Consult it before writing or editing anything under `docs/textbook/`. This is the prose
+counterpart of `docs/rules/`, which governs Lean code only.
+
 ## Textbook site deploy
 
 After editing a manuscript under `docs/textbook/`, **always** redeploy the site without asking for confirmation (run `docs/textbook/site/deploy.sh`). It is an outward-facing publish, but per-time approval is not required (the user has stated this — they want the manuscript and the live site always in sync).

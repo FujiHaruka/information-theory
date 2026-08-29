@@ -103,12 +103,31 @@ $$
 $H(X\mid Y, Z=z) > H(X\mid Y)$ となること（個別の観測がかえって混乱を増す状況）は
 あり得る。しかし $Z$ について平均すると、情報は決して不確かさを増やさない。
 
-*証明.* 後述の条件付き相互情報量 $I(X; Z\mid Y)$ は相対エントロピーの平均として定義され、
-つねに非負である（1.5・1.6 節）。一方その entropy 表現（定理 1.5.3）は
-$I(X; Z \mid Y) = H(X \mid Y) - H(X \mid Y, Z)$ であった。左辺 $\ge 0$ より移項して主張を
-得る。$\qquad\blacksquare$
+*証明.* 1.1 節で組み立てた有限 Jensen の不等式（補題 1.1.6）を、$\varphi(t) = -t\log t$ の
+凹性に対して一度だけ使う。まず $Y = y$ を固定する。定義 1.2.2 を $Y=y$ のもとで読むと
+$$
+H(X \mid Y=y, Z)
+  \;=\; \sum_z p(z\mid y) \sum_x \varphi\big(p(x \mid y, z)\big)
+  \;=\; \sum_x \Big( \sum_z p(z\mid y)\, \varphi\big(p(x \mid y, z)\big) \Big),
+$$
+と和の順序を入れ替えられる。内側の和は、重み $p(z\mid y) \ge 0$（$z$ について総和 1）と
+点 $t_z = p(x\mid y,z)$ に対する $\varphi$ の重みつき平均だから、補題 1.1.6 より
+$$
+\sum_z p(z\mid y)\, \varphi\big(p(x\mid y,z)\big)
+  \;\le\; \varphi\Big( \sum_z p(z\mid y)\, p(x\mid y,z) \Big)
+  \;=\; \varphi\big(p(x \mid y)\big).
+$$
+最後の等号は全確率の公式 $\sum_z p(z\mid y)p(x\mid y,z) = p(x\mid y)$ による。$x$ について
+足し合わせると $H(X\mid Y=y,Z) \le H(X\mid Y=y)$ を得る。最後にこれを $p(y)$ で重みづけて
+$y$ について和をとれば、左辺は $H(X\mid Y,Z)$、右辺は $H(X\mid Y)$ になり、主張が従う。
+$\qquad\blacksquare$
+
+**きもち.** 「$Z$ を知る前の分布 $p(x\mid y)$ は、$Z$ を知ったあとの分布 $p(x\mid y,z)$ たちの
+混合である」というのがこの証明のすべてである。凹関数は混ぜると値が上がる。エントロピーは
+$\varphi$ の和なので、混ぜたもの（＝ $Z$ を知らない状態）のほうが不確かさが大きい。
 
 > **形式化**: `condEntropy_le_condEntropy_of_pair`
-> (`InformationTheory/Shannon/Entropy.lean`)。証明はここでの説明どおり、条件付き
-> 相互情報量の非負性から導いている。
+> (`InformationTheory/Shannon/Entropy.lean`)。形式化は本文とは別ルートをとり、条件付き
+> 相互情報量の非負性から導いている（本文はその概念より前にこの定理を置くため、凹性から
+> 直接組み立てた）。結論の定理は同一である。
 
