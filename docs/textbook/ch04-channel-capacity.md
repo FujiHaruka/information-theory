@@ -6,7 +6,7 @@
 > 通信路容量 (Channel Capacity) を題材に、**検証済み Lean 定理を骨格にした教科書原稿**である。
 > 本文の各主要結果には「**Verified**: `定理名` (`InformationTheory/...`)」という形で、
 > その命題に対応する Lean 4 + Mathlib の formal declaration を紐付けてある。
-> 第1章 (`ch01-entropy.md`) の形式を踏襲する。
+> 第1章 (`ch01/`) の形式を踏襲する。
 >
 > **検証強度の注記** — 本章で `**Verified**` と記した定理はすべて、本プロジェクトの
 > 完成判定 **proof done**（当該 declaration のファイルが `0 sorry` かつ `0 @residual`、

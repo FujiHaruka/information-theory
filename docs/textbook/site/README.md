@@ -18,17 +18,29 @@ cd docs/textbook/site
 deno run -A build.mjs       # → dist/index.html を生成
 ```
 
-ビルド対象は `build.mjs` の `chapters` 配列で管理する。新しい章を足すときは
-`{ slug, num, title, src, status }` を 1 行足すだけでよく、目次 (`index.html`) と
-各章の前後ナビゲーションは配列順から自動生成される。
+ビルド対象は `build.mjs` の `chapters` 配列で管理する。章には 2 つの形がある。
 
-生成物は目次 `dist/index.html` + 章ごとの `dist/<slug>.html`。
+- **1 章 1 ページ**（第2〜5章）— `{ slug, num, title, src, status }` を足す。
+- **節ごとにページを分ける**（第1章）— `src` の代わりに `intro`（章トビラの本文）と
+  `sections` 配列を持たせる。各節は `{ slug, num, title, src }`。原稿は
+  `docs/textbook/ch01/` のように章ごとのディレクトリに 1 節 1 ファイルで置く。
+
+目次 (`index.html`)・章トビラの節一覧・全ページを貫く前後ナビゲーションは、いずれも
+この配列順から自動生成される（節分割された章は「章トビラ → 各節」の順に展開される）。
+
+生成物は目次 `dist/index.html` + ページごとの `dist/<slug>.html`。
+
+### 節ページの書き方
+
+節を独立したページとして読めるよう、各節ファイルは **文脈と動機の段落から始める**
+（`## 動機` のような見出しは置かない）。ファイル内の見出しレベルは、節タイトルが `#`、
+その下位が `##`。
 
 ### 数式記法について
 
 原稿には 2 通りの数式記法が混在している。
 
-- `ch01-entropy.md` — `$ ... $` / `$$ ... $$`
+- `ch01/*.md` — `$ ... $` / `$$ ... $$`
 - `ch02` 以降 — LaTeX 括弧デリミタ `\( ... \)` / `\[ ... \]`
 
 markdown-it-katex は `$` 記法しか解さないため、`build.mjs` の `normalizeMath()` が
