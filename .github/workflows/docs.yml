@@ -46,7 +46,7 @@ jobs:
       # revision's source. `lib` is required because the package is a lakefile.lean one, and
       # the step above is the build `lake-build: false` relies on — it has to be this job,
       # because from another job the page cache is cold and the extractor is 5-12x slower.
-      - uses: FujiHaruka/litedoc4@v0.1.4
+      - uses: FujiHaruka/litedoc4@v0.2.0
         id: docs
         with:
           lib: InformationTheory
