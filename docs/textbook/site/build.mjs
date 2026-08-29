@@ -209,6 +209,29 @@ function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// --- 和文の soft line break ---
+// 原稿は表示幅で改行してある (textbook-writing.md §9) が、CommonMark の soft break は
+// HTML では空白になり、和文の語間に不要な空きが出る (「議論を 支える」)。前後どちらかが
+// 和文なら空白を落とし、欧文どうしの折り返しでだけ従来どおり空白を残す。
+const CJK = /[　-〿぀-ヿ㐀-䶿一-鿿豈-﫿＀-￯]/;
+
+// 改行の隣に立つ文字。タグや content を持たないトークン (link_open など) は読み飛ばす。
+function neighborChar(tokens, idx, dir) {
+  for (let i = idx + dir; i >= 0 && i < tokens.length; i += dir) {
+    const t = tokens[i];
+    if (t.type === 'softbreak' || t.type === 'hardbreak') return '';
+    if (t.type === 'html_inline' || !t.content) continue;
+    return dir < 0 ? t.content.at(-1) : t.content[0];
+  }
+  return '';
+}
+
+md.renderer.rules.softbreak = (tokens, idx) => {
+  const glue = CJK.test(neighborChar(tokens, idx, -1)) || CJK.test(neighborChar(tokens, idx, 1));
+  // コメントを挟めば、出力 HTML は原稿どおりに折れたまま表示上の空白だけが消える。
+  return glue ? '<!--\n-->' : '\n';
+};
+
 // 原稿には KaTeX の $ 記法 (第1章) と LaTeX 括弧デリミタ (第2章以降) が混在する。
 // markdown-it-katex は $ 記法しか解さないため、\\[ \\] / \\( \\) を $$ / $ に寄せてから渡す。
 // コードブロック・インラインコードの中身は保護する (Lean コードを壊さないため)。
@@ -451,9 +474,9 @@ const tocItems = chapters
   .join('\n');
 
 const indexBody = `<h1>${escapeHtml(siteTitle)}</h1>
-<p>Lean 4 + Mathlib で形式化検証した定理に紐づけて書いている情報理論の教科書原稿です。
-各章の末尾には、その章で未形式化のまま残している項目と執筆時の所見を載せています
-（レビュー用にそのまま公開）。</p>
+<p>Lean 4 + Mathlib で形式化検証した定理に紐づけて書いている情報理論の教科書原稿です。<!--
+-->各章の末尾には、その章で未形式化のまま残している項目と執筆時の所見を載せています<!--
+-->（レビュー用にそのまま公開）。</p>
 <ul class="toc">
 ${tocItems}
 </ul>`;
