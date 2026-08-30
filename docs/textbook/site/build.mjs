@@ -178,6 +178,11 @@ a.xref:hover, a.xref:focus { color: #0b67d0; border-bottom-color: #0b67d0; }
 a.srcref { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(34,112,124,.45); }
 a.srcref:hover, a.srcref:focus { color: #22707c; border-bottom-color: #22707c; }
 a.srcref code { background: rgba(34,112,124,.09); }
+.ptr-icon {
+  width: .82em; height: .82em; margin-right: .26em; vertical-align: -.09em;
+  fill: currentColor; opacity: .62;
+}
+a.srcref:hover .ptr-icon, a.srcref:focus .ptr-icon { opacity: 1; }
 
 /* 飛んだ先が画面の最上端に貼り付くと、どこに着地したのか読み取れない。余白を空け、
    着地点に薄く色を敷いて示す（box-shadow の spread なので行送りは動かない）。 */
@@ -861,6 +866,31 @@ function resolveLeanPath(spec) {
 const sourceUrl = ({ path, line }) => `${REPO_URL}/blob/${REF}/${path}${line ? `#L${line}` : ''}`;
 const apidocUrl = (d) => `${APIDOC_URL}/${d.path.replace(/\.lean$/, '.html')}#${d.fqn}`;
 
+// 行き先が 2 種類あることは、アイコンで見分けさせる。解説ページには本、GitHub の
+// ソースには GitHub のマーク（どちらも octicons, MIT）。アイコンの意味は章冒頭で 1 度
+// 説明し（執筆原則 §3 の「形式化との関係」）、ホバーと読み上げには役割を語で出す。
+const ICON_PATHS = {
+  doc: [
+    'M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006',
+    '1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0',
+    '0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0',
+    '1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0',
+    '1 1.994.574ZM8.755 4.75l-.004 7.322a3.752 3.752 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0',
+    '0-2.25 2.25Z',
+  ].join(' '),
+  src: [
+    'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38',
+    '0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95',
+    '0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27s-1.36.09-2',
+    '.27c-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.27-.82 2.15 0 3.06 1.86 3.75',
+    '3.64 3.95-.23.2-.44.55-.51',
+    '1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82',
+    '1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0',
+    '1 0 8c0-4.42 3.58-8 8-8Z',
+  ].join(' '),
+};const icon = (kind) => `<svg class="ptr-icon" viewBox="0 0 16 16" aria-hidden="true">`
+  + `<path d="${ICON_PATHS[kind]}"/></svg>`;
+
 const LEAN_PATH_RE = /^[A-Za-z][\w/]*\.lean(?::\d+)?$/;
 const IDENT_RE = new RegExp(`^${NAME}$`);
 const unlinkedCodes = [];
@@ -887,6 +917,7 @@ function linkFormalized(state, tokens, ctx, lineNo) {
       continue;
     }
     c.url = sourceUrl(r);
+    c.kind = 'src';
     c.title = r.path;
     here.add(r.path);
   }
@@ -907,17 +938,22 @@ function linkFormalized(state, tokens, ctx, lineNo) {
     }
     const d = narrowed[0];
     // private 宣言は API ドキュメントに載らないので、ソースの該当行へ送る。
+    c.kind = d.private ? 'src' : 'doc';
     c.url = d.private ? sourceUrl(d) : apidocUrl(d);
-    c.title = d.fqn;
+    c.title = d.private ? `${d.path}#L${d.line}` : d.fqn;
   }
 
   // 差し込みで添字がずれないよう、同じ inline の中を後ろから開く。
   for (const c of codes.filter((c) => c.url).reverse()) {
+    const role = c.kind === 'doc' ? '解説ページ' : `ソース ${REF}`;
     const open = new state.Token('link_open', 'a', 1);
     open.attrSet('class', 'srcref');
     open.attrSet('href', c.url);
-    open.attrSet('title', c.title);
-    c.inline.children.splice(c.k, 1, open, c.inline.children[c.k],
+    open.attrSet('title', `${role}: ${c.title}`);
+    open.attrSet('aria-label', `${role}: ${c.title}`);
+    const mark = new state.Token('html_inline', '', 0);
+    mark.content = icon(c.kind);
+    c.inline.children.splice(c.k, 1, open, mark, c.inline.children[c.k],
       new state.Token('link_close', 'a', -1));
   }
 }

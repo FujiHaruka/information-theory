@@ -85,6 +85,11 @@ warn: 番号の重複 ch01/09-sufficient-statistics.md:78 「1.9.1」は既出
 | `` `InformationTheory/Shannon/Bridge.lean` `` | GitHub のソース（タグ固定） |
 | `` `MIChainRule.lean:93` `` | 同上 + `#L93`（ファイル名だけでも一意なら解決する） |
 
+2 つの行き先は**アイコン**で見分けさせる——解説ページには本、ソースには GitHub のマーク
+（どちらも octicons, MIT）。ラベルの語を添えると、宣言が 2 つ並ぶブロックで語が 4 つ出て
+うるさくなるので、語はホバー（`title`）と読み上げ（`aria-label`）に回してある。アイコンの
+意味は章冒頭ブロックで 1 度だけ説明する（執筆原則 §3 の「形式化との関係」）。
+
 **基準はリリースタグである。** 既定は `git describe --tags --abbrev=0`、
 `TEXTBOOK_REF=v1.0.0 deno run -A build.mjs` で上書きできる。ソースリンクはタグに固定される
 ので、あとでファイルを移してもリンクは腐らない。API ドキュメントは GitHub Pages に 1 版しか
