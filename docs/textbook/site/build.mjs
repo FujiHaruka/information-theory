@@ -978,17 +978,43 @@ function linkFormalized(state, tokens, ctx, lineNo) {
   }
 }
 
+// 傍注が名指しした宣言名 / パスの実在確認。リンクには変えない——ポインタは
+// `::: formalized` の仕事で（執筆原則 §7）、注記まで行き先だらけにすると本筋との差が
+// 消える。ただし名前が腐るのはポインタと同じなので、検査だけは同じものを掛ける。
+// パスは一意に決まるので warn、宣言名は Mathlib の名前と区別できないので監査モードの
+// 一覧に回す（`--audit-refs` の考え方）。
+function checkNoteRefs(tokens, ctx, lineNo) {
+  for (const t of tokens) {
+    if (t.type !== 'inline') continue;
+    for (const c of t.children) {
+      if (c.type !== 'code_inline') continue;
+      const text = c.content.trim();
+      if (LEAN_PATH_RE.test(text)) {
+        if (!resolveLeanPath(text)) {
+          brokenPointers += 1;
+          console.warn(`warn: 注記の形式化ポインタ ${ctx.src}:${lineNo}`
+            + ` 「${text}」は ${REF} に見つからない`);
+        }
+      } else if (AUDIT && IDENT_RE.test(text) && !leanDecls.has(text)) {
+        unlinkedCodes.push(`  ${ctx.src}:${lineNo}  「${text}」（注記）`);
+      }
+    }
+  }
+}
+
 md.core.ruler.push('formalized_links', (state) => {
   const ctx = state.env?.ctx;
   if (!ctx || !REF) return;
   const toks = state.tokens;
   for (let i = 0; i < toks.length; i++) {
     if (toks[i].type !== 'container_env_open') continue;
-    if (parseEnv(toks[i].info)?.kind !== 'formalized') continue;
+    const kind = parseEnv(toks[i].info)?.kind;
+    if (kind !== 'formalized' && kind !== 'formalization-note') continue;
     let j = i + 1;
     while (j < toks.length && toks[j].type !== 'container_env_close') j++;
     const line = (toks[i].map?.[0] ?? toks.slice(i, j).find((t) => t.map)?.map?.[0] ?? 0) + 1;
-    linkFormalized(state, toks.slice(i, j), ctx, line);
+    if (kind === 'formalized') linkFormalized(state, toks.slice(i, j), ctx, line);
+    else checkNoteRefs(toks.slice(i, j), ctx, line);
     i = j;
   }
 });
