@@ -72,6 +72,17 @@ const chapters = [
   },
 ];
 
+// --- 相互参照レジストリ ---
+// 原稿は参照を番号だけで書く（.claude/rules/textbook-writing.md §8）。番号 → 掲載位置の
+// 対応表をビルドの前段で全ページから集め、本文中の「定理 1.2.3」「1.6 節」「第2章」を
+// リンクに変える。番号は章.節.通番で本全体を通じて一意なので、対応表は番号で引ける。
+const stmtRefs = new Map(); // '1.2.3'  -> { slug, id, label, name }
+const secRefs = new Map();  // '1.6'    -> { slug, id, title }
+const chapRefs = new Map(); // '2'      -> { slug, title }
+
+let unresolvedRefs = 0;
+let duplicateNums = 0;
+
 // CSS version pinned to match the KaTeX used for server-side rendering (0.16.47).
 const cssCdn = `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.css" crossorigin="anonymous">`;
 
@@ -155,6 +166,23 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
 .aside > :last-child { margin-bottom: 0; }
 .aside strong:first-child { color: #6f6f6f; }
 
+/* --- 相互参照リンク ---
+   本文の「定理 1.2.3」「1.6 節」はビルドがリンクに変える。数式と地の文のあいだに置かれる
+   ので、リンク色で塗ると本文が騒がしくなる。文字色は地の文のまま、下線の色だけで
+   クリックできることを示し、ホバーでリンク色に寄せる。 */
+a.xref { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(11,103,208,.42); }
+a.xref:hover, a.xref:focus { color: #0b67d0; border-bottom-color: #0b67d0; }
+
+/* 飛んだ先が画面の最上端に貼り付くと、どこに着地したのか読み取れない。余白を空け、
+   着地点に薄く色を敷いて示す（box-shadow の spread なので行送りは動かない）。 */
+[id] { scroll-margin-top: 1.6rem; }
+.stmt:target, .proof:target, .formalized:target, .aside:target,
+h1:target, h2:target, h3:target {
+  background: rgba(11,103,208,.075);
+  box-shadow: 0 0 0 .5rem rgba(11,103,208,.075);
+  border-radius: 2px;
+}
+
 /* --- multi-page navigation --- */
 .nav-top {
   font-size: .85rem; color: #888;
@@ -203,6 +231,13 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
   .formalized strong:first-child { color: #63b5c2; }
   .aside { border-left-color: #333a42; color: #9aa3ad; }
   .aside strong:first-child { color: #aeb6bf; }
+  a.xref { border-bottom-color: rgba(108,182,255,.45); }
+  a.xref:hover, a.xref:focus { color: #6cb6ff; border-bottom-color: #6cb6ff; }
+  .stmt:target, .proof:target, .formalized:target, .aside:target,
+  h1:target, h2:target, h3:target {
+    background: rgba(108,182,255,.1);
+    box-shadow: 0 0 0 .5rem rgba(108,182,255,.1);
+  }
 }
 `;
 
@@ -265,6 +300,12 @@ const ENVS = new Map([
   ['notation-preview',   { label: '記法の先取り',   cls: 'aside aside-notation' }],
 ]);
 
+// 番号つき主張の URL 断片。種別を含めるので、リンク先が何かは URL だけで分かる。
+const ANCHOR = new Map([
+  ['theorem', 'thm'], ['proposition', 'prop'], ['lemma', 'lem'],
+  ['corollary', 'cor'], ['definition', 'def'], ['example', 'ex'],
+]);
+
 // `theorem 1.6.1 情報不等式 / Gibbs` を {kind, num, name} に割る。
 function parseEnv(info) {
   const m = info.trim().match(/^([a-z-]+)\s*(.*)$/s);
@@ -280,8 +321,11 @@ function parseEnv(info) {
 }
 
 // 見出しを Markdown 断片として返す（名前に $…$ を書けるよう、生 HTML にはしない）。
-function headingMarkdown({ env, num, name }) {
-  const paren = name ? `（${name}）` : '';
+// `::: proof 定理 1.1.5` の名乗りは、補題を挟んで主張から離れた位置に置かれる決まりなので
+// （textbook-writing.md §4）、見出しの中の番号もリンクにして主張へ戻れるようにする。
+function headingMarkdown({ env, num, name }, ctx) {
+  const shown = ctx ? linkStatementRefs(name, ctx) : name;
+  const paren = shown ? `（${shown}）` : '';
   if (env.sep) return `**${env.label}**${env.sep}`;
   return `**${env.label}${num ? ' ' + num : ''}${paren}.**`;
 }
@@ -291,8 +335,9 @@ md.use(mdContainer, 'env', {
   render(tokens, idx) {
     const t = tokens[idx];
     if (t.nesting === 1) {
-      const { env } = parseEnv(t.info);
-      return `<div class="${env.cls}">\n`;
+      const { kind, env, num } = parseEnv(t.info);
+      const id = num ? ` id="${ANCHOR.get(kind)}-${num}"` : '';
+      return `<div class="${env.cls}"${id}>\n`;
     }
     return '</div>\n';
   },
@@ -320,7 +365,7 @@ md.core.ruler.after('block', 'env_heading', (state) => {
     if (spec.env.cls.startsWith('stmt')) lastStmt = spec.kind;
 
     // 1. 見出し。最初の段落があればその頭に流し込み、無ければ独立した段落にする。
-    const head = headingMarkdown(spec);
+    const head = headingMarkdown(spec, state.env?.ctx);
     if (toks[i + 1]?.type === 'paragraph_open' && toks[i + 2]?.type === 'inline') {
       const inline = toks[i + 2];
       inline.content = spec.env.sep ? `${head} ${inline.content}` : `${head} ${inline.content}`;
@@ -372,6 +417,18 @@ md.core.ruler.after('inline', 'env_qed', (state) => {
       inline.children = marks;
       toks.splice(close, 0, open, inline, new state.Token('paragraph_close', 'p', -1));
     }
+  }
+});
+
+// 節見出し (`# 1.6 …` / `## 4.2 …`) に id を振る。第1章は 1 節 1 ページ、第2〜5章は
+// 1 章 1 ページなので、節への参照はページ移動になったり同一ページ内の移動になったりする。
+// どちらでも同じ id で引けるよう、見出し側の付け方は章の形に依らせない。
+md.core.ruler.push('section_anchor', (state) => {
+  const toks = state.tokens;
+  for (let i = 0; i < toks.length; i++) {
+    if (toks[i].type !== 'heading_open') continue;
+    const num = toks[i + 1]?.content?.match(/^(\d+\.\d+)\s/);
+    if (num) toks[i].attrSet('id', `sec-${num[1]}`);
   }
 });
 
@@ -509,17 +566,170 @@ function lintTerminology(markdown, src) {
   return found;
 }
 
+// --- 参照の自動リンク ---
+// 原稿は参照を番号だけで書く（textbook-writing.md §8）。ここで番号 → 掲載位置の対応表を
+// 全ページから集め、本文の「定理 1.2.3」「1.6 節」「第2章」をリンクに変える。番号は本
+// 全体で一意なので、参照する側は掲載ページを知らなくてよい（節を別ファイルへ移しても、
+// 章を 1 ページに畳んでも、原稿には手を入れずに済む）。
+// 解決できない番号・種別の食い違い・番号の重複は warn として出す。§8 の「番号を振り直す
+// ときに参照元を rg で洗う」手順は、この検査が肩代わりする。
+
+const REF_RE = /(定理|命題|補題|系|定義|例)[ 　]*(\d+\.\d+\.\d+)|(\d+\.\d+)[ 　]*節|第(\d+)章/g;
+const STMT_RE = /(定理|命題|補題|系|定義|例)[ 　]*(\d+\.\d+\.\d+)/g;
+
+function escapeAttr(s) {
+  return escapeHtml(s).replace(/"/g, '&quot;');
+}
+
+function register(map, key, value, src, line) {
+  if (map.has(key)) {
+    duplicateNums += 1;
+    console.warn(`warn: 番号の重複 ${src}:${line} 「${key}」は既出`);
+    return;
+  }
+  map.set(key, value);
+}
+
+// ページ 1 枚から、参照先になりうるもの（節見出しと番号つき主張）を拾う。
+function collectAnchors(pg) {
+  pg.markdown.split('\n').forEach((line, i) => {
+    const h = line.match(/^#{1,6}\s+(\d+\.\d+)\s+(.+?)\s*$/);
+    if (h) {
+      register(secRefs, h[1], { slug: pg.slug, id: `sec-${h[1]}`, title: `${h[1]} ${h[2]}` },
+        pg.src, i + 1);
+      return;
+    }
+    const m = line.match(/^::: +(\S+)(.*)$/);
+    if (!m) return;
+    const spec = parseEnv((m[1] + m[2]).trim());
+    if (!spec?.num) return;
+    register(stmtRefs, spec.num,
+      { slug: pg.slug, id: `${ANCHOR.get(spec.kind)}-${spec.num}`, label: spec.env.label, name: spec.name },
+      pg.src, i + 1);
+  });
+}
+
+// 同じページの中なら断片だけ、別ページなら相対パスを付ける。
+function href(target, ctx) {
+  const frag = target.id ? `#${target.id}` : '';
+  if (target.slug === ctx.slug) return frag || `./${target.slug}.html`;
+  return `./${target.slug}.html${frag}`;
+}
+
+// ホバーで飛び先が分かるよう title を添える（JS を使わない範囲での予告）。名前の中の
+// $…$ は素の文字として出てしまうので、記号だけ落とす。
+function stmtTitle(num, t) {
+  const name = t.name ? `（${t.name.replace(/\$/g, '')}）` : '';
+  return `${t.label} ${num}${name}`;
+}
+
+function xref(text, target, ctx, title) {
+  const attr = title ? ` title="${escapeAttr(title)}"` : '';
+  return `<a class="xref" href="${href(target, ctx)}"${attr}>${text}</a>`;
+}
+
+function linkStmt(text, kind, num, ctx, lineNo) {
+  const t = stmtRefs.get(num);
+  if (!t) {
+    unresolvedRefs += 1;
+    console.warn(`warn: 未解決の参照 ${ctx.src}:${lineNo} 「${text}」`);
+    return text;
+  }
+  if (t.label !== kind) {
+    unresolvedRefs += 1;
+    console.warn(`warn: 参照の種別ちがい ${ctx.src}:${lineNo} 「${text}」は${t.label}`);
+  }
+  return xref(text, t, ctx, stmtTitle(num, t));
+}
+
+function linkSec(text, num, ctx, lineNo) {
+  const t = secRefs.get(num);
+  if (!t) {
+    unresolvedRefs += 1;
+    console.warn(`warn: 未解決の参照 ${ctx.src}:${lineNo} 「${text}」`);
+    return text;
+  }
+  // 自分の節番号を自己参照しない（§8）。リンクにしてもページの先頭へ戻るだけになる。
+  if (ctx.section?.num === num) {
+    unresolvedRefs += 1;
+    console.warn(`warn: 自節への参照 ${ctx.src}:${lineNo} 「${text}」（「本節」と書く）`);
+    return text;
+  }
+  return xref(text, t, ctx, t.title);
+}
+
+function linkChap(text, num, ctx) {
+  const t = chapRefs.get(num);
+  if (!t || t.slug === ctx.chapter.slug) return text; // 自章への言及はリンクにしない
+  return xref(text, t, ctx, t.title);
+}
+
+// 断片の中の主張参照だけをリンクにする（証明の名乗り `::: proof 定理 1.1.5` 用）。
+function linkStatementRefs(text, ctx) {
+  if (!text) return text;
+  return text.replace(STMT_RE, (m, _kind, num) => {
+    const t = stmtRefs.get(num);
+    return t ? xref(m, t, ctx, stmtTitle(num, t)) : m;
+  });
+}
+
+// 行内 code と数式の中は参照ではない（Lean の識別子・LaTeX が番号の形に当たる）。
+// 退避に使う U+E000/U+E001 は私用領域で、原稿にもレンダリング結果にも現れない。
+const STASH_OPEN = '\uE000';
+const STASH_CLOSE = '\uE001';
+const STASH_RE = /\uE000(\d+)\uE001/g;
+
+function linkInline(line, ctx, lineNo) {
+  const stashed = [];
+  const stash = (m) => `${STASH_OPEN}${stashed.push(m) - 1}${STASH_CLOSE}`;
+  const masked = line
+    .replace(/`[^`]*`/g, stash)
+    .replace(/\$\$[^$]*\$\$/g, stash)
+    .replace(/\$[^$\n]*\$/g, stash);
+  const linked = masked.replace(REF_RE, (m, kind, snum, sec, chap) => {
+    if (snum) return linkStmt(m, kind, snum, ctx, lineNo);
+    if (sec) return linkSec(m, sec, ctx, lineNo);
+    return linkChap(m, chap, ctx);
+  });
+  return linked.replace(STASH_RE, (_, i) => stashed[Number(i)]);
+}
+
+// 見出しは題であって参照ではない。環境タグ行（`::: theorem 1.6.1 …`）は宣言そのもので、
+// 見出しの組み立てに使う文字列なので触らない（名乗りつき証明は headingMarkdown 側で扱う）。
+function linkifyRefs(src, ctx) {
+  let fence = false;
+  let display = false;
+  return src.split('\n').map((line, i) => {
+    const t = line.trim();
+    if (t.startsWith('```')) { fence = !fence; return line; }
+    if (fence) return line;
+    if (display) { if (t === '$$') display = false; return line; }
+    if (t === '$$') { display = true; return line; }
+    if (/^\s{0,3}#{1,6}\s/.test(line) || t.startsWith(':::')) return line;
+    return linkInline(line, ctx, i + 1);
+  }).join('\n');
+}
+
 let missingProofs = 0;
 let termIssues = 0;
 
 mkdirSync(distDir, { recursive: true });
 
+// --- 参照先の収集（本文を組む前に、全ページ分の番号を集めきる） ---
+for (const c of chapters) {
+  chapRefs.set(c.num.replace(/\D/g, ''), { slug: c.slug, title: `${c.num} ${c.title}` });
+}
+for (const pg of pages) {
+  pg.markdown = readFileSync(resolve(root, pg.src), 'utf8');
+  collectAnchors(pg);
+}
+
 // --- content pages ---
 pages.forEach((pg, i) => {
-  const markdown = readFileSync(resolve(root, pg.src), 'utf8');
+  const markdown = pg.markdown;
   missingProofs += lintProofs(markdown, pg.src);
   termIssues += lintTerminology(markdown, pg.src);
-  let bodyHtml = navTop(pg) + md.render(normalizeMath(markdown));
+  let bodyHtml = navTop(pg) + md.render(linkifyRefs(normalizeMath(markdown), pg), { ctx: pg });
   if (pg.isChapterTop && pg.chapter.sections) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
   const title = pg.section ? `${pg.label} — ${pg.chapter.num}` : pg.label;
@@ -560,4 +770,6 @@ console.log(`built index -> dist/index.html (${pages.length} pages)`);
 
 if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs} 件`);
 if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
+if (unresolvedRefs > 0) console.warn(`warn: 参照 ${unresolvedRefs} 件`);
+if (duplicateNums > 0) console.warn(`warn: 番号の重複 ${duplicateNums} 件`);
 console.log('done');
