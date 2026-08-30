@@ -166,10 +166,10 @@ theorem jointlyTypicalSet_card_le
 
 ---
 
-## 4.3 ファノ不等式と逆定理 (Fano's Inequality and the Converse)
+## 4.3 ファノの不等式と逆定理 (Fano's Inequality and the Converse)
 
 逆定理（converse）：信頼できる通信にはレートが容量を超えないこと \(R \le C\) が必要。
-証明の核はファノ不等式と相互情報量のデータ処理不等式・チェイン則である。
+証明の核はファノの不等式と相互情報量のデータ処理不等式・チェイン則である。
 
 ### 単発逆定理 (Single-shot converse)
 
@@ -180,7 +180,7 @@ theorem jointlyTypicalSet_card_le
 \log |M| \le I(\mathrm{Msg}; Y) + H_b(P_e) + P_e \log(|M| - 1).
 \]
 
-ファノ不等式 + データ処理不等式（後処理 \(Y \to \hat M\) で相互情報量は減る）+
+ファノの不等式 + データ処理不等式（後処理 \(Y \to \hat M\) で相互情報量は減る）+
 一様分布のエントロピーが \(\log|M|\) であることから直接導く。
 
 **Verified**: `shannon_converse_single_shot` (`InformationTheory/Shannon/Converse.lean`,
@@ -336,7 +336,7 @@ theorem channel_coding_converse_general_memoryless_pure
 
 フィードバックは DMC の容量を増やさない \(C_{FB} = C\)。逆定理側の核心は、
 無記憶・因果的フィードバック下で per-letter 評価 \(I(\mathrm{Msg}; Y_i \mid Y^{<i}) \le I(X_i; Y_i)\)
-が成り立つことであり、これとファノ不等式を合成すると \(\log|M| \le nC + H_b(P_e) + P_e\log(|M|-1)\)
+が成り立つことであり、これとファノの不等式を合成すると \(\log|M| \le nC + H_b(P_e) + P_e\log(|M|-1)\)
 が得られる（フィードバックがあってもレートは \(C\) で頭打ち）。
 
 ### Per-letter 評価とフィードバック逆定理
