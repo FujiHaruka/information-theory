@@ -269,7 +269,7 @@ theorem source_coding_achievability
 ### 弱逆定理 (Weak Converse): 誤り確率 → 0 なら \(\liminf R_n \ge H\)
 
 誤り確率が 0 に収束する符号は、漸近レートがエントロピーを下回れない。
-ファノの不等式 (`InformationTheory.MeasureFano`、第1章 1.10) を用いて導く。
+ファノの不等式 (`InformationTheory.MeasureFano`、1.10 節) を用いて導く。
 レートが一様に上に有界 (`hM_bdd`) なことを前提にする。
 
 **Verified**: `source_coding_converse` (`InformationTheory/Shannon/AEP.lean`)

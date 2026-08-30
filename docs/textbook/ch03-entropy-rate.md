@@ -74,7 +74,7 @@ def blockRV (p : StationaryProcess μ α) (n : ℕ) : Ω → (Fin n → α) :=
 ### エルゴード過程
 
 定常過程のうちシフト \(T\) がさらに**エルゴード的 (ergodic)** であるものを
-`ErgodicProcess` として分離する。エルゴード性は 3.3–3.4 の Shannon–McMillan–Breiman
+`ErgodicProcess` として分離する。エルゴード性は 3.3 節・3.4 節の Shannon–McMillan–Breiman
 定理で本質的に用いられる（時間平均と空間平均の一致を保証する）。
 
 **Verified (定義)**: `ErgodicProcess` (`InformationTheory/Shannon/Stationary.lean`)
@@ -190,7 +190,7 @@ theorem conditionalEntropyTail_antitone
 条件付きエントロピーテールは単調非増加かつ下に有界（\(\ge 0\)）なので、ある極限
 \(L\) に収束する。チェイン則の和分解と**チェザロ平均 (Cesàro mean)** により、
 ブロックエントロピーの時間平均 \(H_n / n\) も同じ \(L\) に収束する。これが
-\(\lim \frac{1}{n}H(X^n) = \lim H(X_n \mid X^{n-1})\) という 3.2 の同値性の核心である。
+\(\lim \frac{1}{n}H(X^n) = \lim H(X_n \mid X^{n-1})\) という 3.2 節の同値性の核心である。
 
 **Verified**: `entropyRate_exists_of_stationary` (`InformationTheory/Shannon/EntropyRate.lean`)
 

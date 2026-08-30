@@ -574,8 +574,18 @@ function lintTerminology(markdown, src) {
 // 解決できない番号・種別の食い違い・番号の重複は warn として出す。§8 の「番号を振り直す
 // ときに参照元を rg で洗う」手順は、この検査が肩代わりする。
 
-const REF_RE = /(定理|命題|補題|系|定義|例)[ 　]*(\d+\.\d+\.\d+)|(\d+\.\d+)[ 　]*節|第(\d+)章/g;
-const STMT_RE = /(定理|命題|補題|系|定義|例)[ 　]*(\d+\.\d+\.\d+)/g;
+// 参照と番号のあいだは、空白でも改行でも割れる。原稿は表示幅で折り返すので（§9）、
+// 「有限 Jensen——補題 / 1.1.6 を」のように参照が 2 行にまたがることがある。読者に改行位置は
+// 見えないのだから、そこでリンクが切れる理由はない。区切りに改行を含めて拾う。
+const GAP = '[ 　\n]*';
+const KIND = '(定理|命題|補題|系|定義|例)';
+const REF_RE = new RegExp(
+  `${KIND}${GAP}(\\d+\\.\\d+\\.\\d+)|(\\d+\\.\\d+)${GAP}節|第${GAP}(\\d+)${GAP}章`, 'g');
+const STMT_RE = new RegExp(`${KIND}${GAP}(\\d+\\.\\d+\\.\\d+)`, 'g');
+// 種別を伴わない裸の番号。数値と字面が同じなので機械では参照と区別できない（本文には
+// 「約 2.58 ビット」のような数値が出る）。3 成分に限り、かつ実在する番号のときだけ、
+// 「種別を書け」と促す（リンクにはしない。種別のない参照は §8 が禁じている）。
+const BARE_RE = /(?<![\d.])(\d+\.\d+\.\d+)(?![\d.])/g;
 
 function escapeAttr(s) {
   return escapeHtml(s).replace(/"/g, '&quot;');
@@ -679,35 +689,83 @@ const STASH_OPEN = '\uE000';
 const STASH_CLOSE = '\uE001';
 const STASH_RE = /\uE000(\d+)\uE001/g;
 
-function linkInline(line, ctx, lineNo) {
+// --- 取りこぼしの監査 (`build.mjs --audit-refs`) ---
+// 「2.58 ビット」のような数値と、節番号「1.10」は字面では区別できない。だから判定はせず、
+// 参照になりえたのに拾わなかった数字を並べるだけにする。vocab.ts の初出術語リストと同じ
+// 考え方で、機械の仕事は目で読めるサイズまで候補を絞るところまでである。
+const AUDIT = Deno.args.includes('--audit-refs');
+const AUDIT_RE = /(?<![\d.])(\d+\.\d+)(?![\d.])/g;
+const auditHits = [];
+
+function auditLeftovers(masked, leftover, ctx, lineOf) {
+  if (!AUDIT) return;
+  for (const m of leftover.matchAll(AUDIT_RE)) {
+    const window = masked.slice(Math.max(0, m.index - 26), m.index + 26).replace(/\n/g, ' ').trim();
+    auditHits.push(`  ${ctx.src}:${lineOf(m.index)}  「${m[1]}」  …${window}…`);
+  }
+}
+
+// 連続する散文行をまとめて受け取る。退避も検査も改行数を変えないので、警告の行番号は
+// ブロック先頭からの改行の数で引ける。
+function linkInline(text, ctx, startLine) {
   const stashed = [];
   const stash = (m) => `${STASH_OPEN}${stashed.push(m) - 1}${STASH_CLOSE}`;
-  const masked = line
-    .replace(/`[^`]*`/g, stash)
-    .replace(/\$\$[^$]*\$\$/g, stash)
+  const masked = text
+    .replace(/`[^`\n]*`/g, stash)
+    .replace(/\$\$[^$\n]*\$\$/g, stash)
     .replace(/\$[^$\n]*\$/g, stash);
-  const linked = masked.replace(REF_RE, (m, kind, snum, sec, chap) => {
-    if (snum) return linkStmt(m, kind, snum, ctx, lineNo);
-    if (sec) return linkSec(m, sec, ctx, lineNo);
+  const lineOf = (idx) => startLine + (masked.slice(0, idx).match(/\n/g)?.length ?? 0);
+
+  const linked = masked.replace(REF_RE, (m, kind, snum, sec, chap, idx) => {
+    const at = lineOf(idx);
+    if (snum) return linkStmt(m, kind, snum.replace(/\s/g, ''), ctx, at);
+    if (sec) return linkSec(m, sec, ctx, at);
     return linkChap(m, chap, ctx);
   });
+
+  // 参照として拾えた分を伏せた残りから、種別のない番号を探す。
+  const leftover = masked.replace(REF_RE, (m) => m.replace(/[^\n]/g, ' '));
+  for (const m of leftover.matchAll(BARE_RE)) {
+    const t = stmtRefs.get(m[1]);
+    if (!t) continue;
+    unresolvedRefs += 1;
+    console.warn(
+      `warn: 種別のない参照 ${ctx.src}:${lineOf(m.index)} 「${m[1]}」（「${t.label} ${m[1]}」と書く）`);
+  }
+  auditLeftovers(masked, leftover, ctx, lineOf);
+
   return linked.replace(STASH_RE, (_, i) => stashed[Number(i)]);
 }
 
 // 見出しは題であって参照ではない。環境タグ行（`::: theorem 1.6.1 …`）は宣言そのもので、
 // 見出しの組み立てに使う文字列なので触らない（名乗りつき証明は headingMarkdown 側で扱う）。
 function linkifyRefs(src, ctx) {
+  const lines = src.split('\n');
+  const out = [...lines];
+  let block = [];
   let fence = false;
   let display = false;
-  return src.split('\n').map((line, i) => {
+
+  const flush = () => {
+    if (!block.length) return;
+    const linked = linkInline(block.map((i) => lines[i]).join('\n'), ctx, block[0] + 1).split('\n');
+    block.forEach((i, k) => { out[i] = linked[k]; });
+    block = [];
+  };
+
+  lines.forEach((line, i) => {
     const t = line.trim();
-    if (t.startsWith('```')) { fence = !fence; return line; }
-    if (fence) return line;
-    if (display) { if (t === '$$') display = false; return line; }
-    if (t === '$$') { display = true; return line; }
-    if (/^\s{0,3}#{1,6}\s/.test(line) || t.startsWith(':::')) return line;
-    return linkInline(line, ctx, i + 1);
-  }).join('\n');
+    let prose = true;
+    if (t.startsWith('```')) { fence = !fence; prose = false; }
+    else if (fence) prose = false;
+    else if (display) { if (t === '$$') display = false; prose = false; }
+    else if (t === '$$') { display = true; prose = false; }
+    else if (/^\s{0,3}#{1,6}\s/.test(line) || t.startsWith(':::')) prose = false;
+    if (prose) block.push(i);
+    else flush();
+  });
+  flush();
+  return out.join('\n');
 }
 
 let missingProofs = 0;
@@ -772,4 +830,8 @@ if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs
 if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
 if (unresolvedRefs > 0) console.warn(`warn: 参照 ${unresolvedRefs} 件`);
 if (duplicateNums > 0) console.warn(`warn: 番号の重複 ${duplicateNums} 件`);
+if (AUDIT) {
+  console.log(`\n--- 参照にならなかった数字 ${auditHits.length} 件（判定なし・目で読む） ---`);
+  for (const h of auditHits) console.log(h);
+}
 console.log('done');

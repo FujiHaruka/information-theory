@@ -18,7 +18,7 @@ $$
 等号は、すべての比 $a_i/b_i$ が等しいときに限る。
 :::
 
-これは $t \mapsto t\log t$ の凸性（＝ $\varphi = -t\log t$ の凹性、1.1.5 の
+これは $t \mapsto t\log t$ の凸性（＝ $\varphi = -t\log t$ の凹性、定理 1.1.5 の
 信頼の底）を、重み $b_i$ つきで述べ直したものである。情報不等式や、相対エントロピーが
 「まとめる」操作で減ること（次節のデータ処理不等式の心臓部）が、この一枚から従う。
 
@@ -33,8 +33,9 @@ $a_i/b_i$ が等しいときに限る、というのも符合する：潰され�
 ::: proof
 $b := \sum_i b_i > 0$ とおき、$\lambda_i := b_i/b$（$\sum_i \lambda_i = 1$、
 $\lambda_i \ge 0$）、$t_i := a_i/b_i \ge 0$ とする。凸関数 $\psi(t) := t\log t$
-（$\varphi = -t\log t$ の凹性、1.1.5 の信頼の底の符号反転）に対する有限 Jensen——補題
-1.1.6 を $-\psi$ に適用して符号を返したもの——は、重み $\lambda_i$・点 $t_i$ に対し
+（$\varphi = -t\log t$ の凹性、定理 1.1.5 の信頼の底の符号反転）に対する
+有限 Jensen——補題 1.1.6 を $-\psi$ に適用して符号を返したもの——は、
+重み $\lambda_i$・点 $t_i$ に対し
 $$
 \psi\Big(\sum_i \lambda_i t_i\Big) \;\le\; \sum_i \lambda_i\, \psi(t_i)
 \tag{$\dagger$}
