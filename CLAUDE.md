@@ -180,6 +180,13 @@ what a definition or proof depends on), formalization pointers, and per-section 
 Consult it before writing or editing anything under `docs/textbook/`. This is the prose
 counterpart of `docs/rules/`, which governs Lean code only.
 
+Reviewing a chapter is its own workflow: the **`textbook-review` skill** dispatches four
+read-only subagents (mathematical correctness / formalization consistency + honesty /
+writing-rules compliance / reader experience), one at a time, and consolidates every finding
+before any edit lands. Run it at milestones — after a chapter rewrite, before publishing —
+rather than on every edit; the reusable brief templates live in
+`.claude/skills/textbook-review/references/briefs.md`.
+
 ## Textbook site deploy
 
 After editing a manuscript under `docs/textbook/`, **always** redeploy the site without asking for confirmation (run `docs/textbook/site/deploy.sh`). It is an outward-facing publish, but per-time approval is not required (the user has stated this — they want the manuscript and the live site always in sync).
