@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import MarkdownIt from 'npm:markdown-it@14';
 import * as katexPlugin from 'npm:@vscode/markdown-it-katex@1';
 import mdContainer from 'npm:markdown-it-container@4';
+import { TERMS } from './terminology.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..'); // docs/textbook
@@ -33,10 +34,10 @@ const chapters = [
       { slug: 'ch01-03', num: '1.3', title: '相互情報量', src: 'ch01/03-mutual-information.md' },
       { slug: 'ch01-04', num: '1.4', title: '条件付き相互情報量', src: 'ch01/04-conditional-mutual-information.md' },
       { slug: 'ch01-05', num: '1.5', title: 'エントロピー・相互情報量のチェイン則', src: 'ch01/05-chain-rules.md' },
-      { slug: 'ch01-06', num: '1.6', title: '情報不等式（ジェンセンと相対エントロピー）', src: 'ch01/06-information-inequality.md' },
+      { slug: 'ch01-06', num: '1.6', title: '情報不等式（Jensen と相対エントロピー）', src: 'ch01/06-information-inequality.md' },
       { slug: 'ch01-07', num: '1.7', title: '対数和不等式', src: 'ch01/07-log-sum-inequality.md' },
       { slug: 'ch01-08', num: '1.8', title: 'データ処理不等式', src: 'ch01/08-data-processing-inequality.md' },
-      { slug: 'ch01-09', num: '1.9', title: '充足統計量', src: 'ch01/09-sufficient-statistics.md' },
+      { slug: 'ch01-09', num: '1.9', title: '十分統計量', src: 'ch01/09-sufficient-statistics.md' },
       { slug: 'ch01-10', num: '1.10', title: 'ファノの不等式', src: 'ch01/10-fano.md' },
       { slug: 'ch01-notes', title: 'この章で扱わなかったこと（正直な注記）', src: 'ch01/99-notes.md' },
     ],
@@ -481,7 +482,35 @@ function lintProofs(markdown, src) {
   return missing;
 }
 
+// 行内 code と数式の中は検査しない（Lean の識別子・パス・LaTeX が語に当たるため）。
+// 行番号を保つため、伏せる範囲は改行以外を空白に置き換える。
+function stripCodeAndMath(s) {
+  const blank = (m) => m.replace(/[^\n]/g, ' ');
+  return s
+    .replace(/```[\s\S]*?```/g, blank)
+    .replace(/\$\$[\s\S]*?\$\$/g, blank)
+    .replace(/`[^`\n]*`/g, blank)
+    .replace(/\$[^$\n]*\$/g, blank);
+}
+
+function lintTerminology(markdown, src) {
+  const lines = stripCodeAndMath(markdown).split('\n');
+  let found = 0;
+  for (const t of TERMS) {
+    if (t.except?.some((p) => src.includes(p))) continue;
+    for (const bad of t.avoid) {
+      lines.forEach((line, i) => {
+        if (!line.includes(bad)) return;
+        found += 1;
+        console.warn(`warn: 表記ゆれ ${src}:${i + 1} 「${bad}」は使わない（採用: 「${t.use}」）`);
+      });
+    }
+  }
+  return found;
+}
+
 let missingProofs = 0;
+let termIssues = 0;
 
 mkdirSync(distDir, { recursive: true });
 
@@ -489,6 +518,7 @@ mkdirSync(distDir, { recursive: true });
 pages.forEach((pg, i) => {
   const markdown = readFileSync(resolve(root, pg.src), 'utf8');
   missingProofs += lintProofs(markdown, pg.src);
+  termIssues += lintTerminology(markdown, pg.src);
   let bodyHtml = navTop(pg) + md.render(normalizeMath(markdown));
   if (pg.isChapterTop && pg.chapter.sections) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
@@ -529,4 +559,5 @@ writeFileSync(resolve(distDir, 'index.html'), page({ title: siteTitle, bodyHtml:
 console.log(`built index -> dist/index.html (${pages.length} pages)`);
 
 if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs} 件`);
+if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
 console.log('done');
