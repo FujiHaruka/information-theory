@@ -18,11 +18,11 @@ const CHAPTERS: { slug: string; files: string[] }[] = [
   {
     slug: 'ch01',
     files: [
-      'ch01/00-intro.md', 'ch01/01-entropy.md', 'ch01/02-joint-conditional-entropy.md',
+      'ch01/01-entropy.md', 'ch01/02-joint-conditional-entropy.md',
       'ch01/03-mutual-information.md', 'ch01/04-conditional-mutual-information.md',
       'ch01/05-chain-rules.md', 'ch01/06-information-inequality.md',
       'ch01/07-log-sum-inequality.md', 'ch01/08-data-processing-inequality.md',
-      'ch01/09-sufficient-statistics.md', 'ch01/10-fano.md', 'ch01/99-notes.md',
+      'ch01/09-sufficient-statistics.md', 'ch01/10-fano.md',
     ],
   },
   { slug: 'ch02', files: ['ch02-aep.md'] },

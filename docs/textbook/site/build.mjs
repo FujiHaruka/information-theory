@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import MarkdownIt from 'npm:markdown-it@14';
@@ -19,15 +19,14 @@ const siteTitle = 'InformationTheory 教科書（レビュー版）';
 
 // --- chapters to build (順序 = 目次と前後ナビの順序) ---
 // 章を足すときはこの配列に 1 要素足すだけでよい。
-// `sections` を持つ章は「章トビラ + 節ごとのページ」に分割して出力し、
-// 持たない章は 1 章 1 ページで出力する。
+// `sections` を持つ章は節ごとのページに分割して出力し（`intro` を足した章だけ、その手前に
+// 章トビラが 1 枚増える）、持たない章は 1 章 1 ページで出力する。
 const chapters = [
   {
     slug: 'ch01',
     num: '第1章',
     title: 'エントロピー・相互情報量・データ処理不等式',
     status: '仕上げ済（読者向けパイロット）',
-    intro: 'ch01/00-intro.md',
     sections: [
       { slug: 'ch01-01', num: '1.1', title: 'エントロピー', src: 'ch01/01-entropy.md' },
       { slug: 'ch01-02', num: '1.2', title: '結合エントロピー・条件付きエントロピーとチェイン則', src: 'ch01/02-joint-conditional-entropy.md' },
@@ -39,7 +38,6 @@ const chapters = [
       { slug: 'ch01-08', num: '1.8', title: 'データ処理不等式', src: 'ch01/08-data-processing-inequality.md' },
       { slug: 'ch01-09', num: '1.9', title: '十分統計量', src: 'ch01/09-sufficient-statistics.md' },
       { slug: 'ch01-10', num: '1.10', title: 'ファノの不等式', src: 'ch01/10-fano.md' },
-      { slug: 'ch01-notes', title: 'この章で扱わなかったこと（正直な注記）', src: 'ch01/99-notes.md' },
     ],
   },
   {
@@ -466,12 +464,19 @@ ${bodyHtml}
 </html>`;
 }
 
+// 章の入口になるページ。章トビラを持たない章（第1章）は最初の節が入口で、章そのものの
+// ページは無い。目次・パンくず・「第N章」の参照は、いずれもここを見る。
+const chapterHome = (c) => (c.sections && !c.intro ? c.sections[0].slug : c.slug);
+const hasChapterPage = (c) => !c.sections || Boolean(c.intro);
+
 // --- 全ページを掲載順に並べた線形リスト（前後ナビはこの順序に従う） ---
-// 節分割された章は「章トビラ → 各節」の順に展開する。
+// 節分割された章は「（章トビラ →）各節」の順に展開する。
 const pages = [];
 for (const c of chapters) {
   if (c.sections) {
-    pages.push({ chapter: c, src: c.intro, slug: c.slug, label: `${c.num} ${c.title}`, isChapterTop: true });
+    if (c.intro) {
+      pages.push({ chapter: c, src: c.intro, slug: c.slug, label: `${c.num} ${c.title}`, isChapterTop: true });
+    }
     for (const sec of c.sections) {
       const label = sec.num ? `${sec.num} ${sec.title}` : sec.title;
       pages.push({ chapter: c, section: sec, src: sec.src, slug: sec.slug, label });
@@ -484,7 +489,9 @@ for (const c of chapters) {
 function navTop(pg) {
   const crumbs = [`<a href="./index.html">${escapeHtml(siteTitle)}</a>`];
   if (pg.section) {
-    crumbs.push(`<a href="./${pg.chapter.slug}.html">${escapeHtml(pg.chapter.num)}</a>`);
+    crumbs.push(hasChapterPage(pg.chapter)
+      ? `<a href="./${pg.chapter.slug}.html">${escapeHtml(pg.chapter.num)}</a>`
+      : escapeHtml(pg.chapter.num));
     crumbs.push(escapeHtml(pg.section.num ?? pg.section.title));
   } else {
     crumbs.push(escapeHtml(pg.chapter.num));
@@ -867,8 +874,8 @@ const sourceUrl = ({ path, line }) => `${REPO_URL}/blob/${REF}/${path}${line ? `
 const apidocUrl = (d) => `${APIDOC_URL}/${d.path.replace(/\.lean$/, '.html')}#${d.fqn}`;
 
 // 行き先が 2 種類あることは、アイコンで見分けさせる。解説ページには本、GitHub の
-// ソースには GitHub のマーク（どちらも octicons, MIT）。アイコンの意味は章冒頭で 1 度
-// 説明し（執筆原則 §3 の「形式化との関係」）、ホバーと読み上げには役割を語で出す。
+// ソースには GitHub のマーク（どちらも octicons, MIT）。アイコンの意味は目次ページで 1 度
+// 説明し（執筆原則 §7）、ホバーと読み上げには役割を語で出す。
 const ICON_PATHS = {
   doc: [
     'M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006',
@@ -984,11 +991,14 @@ md.core.ruler.push('formalized_links', (state) => {
 let missingProofs = 0;
 let termIssues = 0;
 
+// 出力は毎回まっさらから組む。節を消したときに前回の HTML が残ると、目次から辿れない
+// ページがデプロイ先で生き続ける。
+rmSync(distDir, { recursive: true, force: true });
 mkdirSync(distDir, { recursive: true });
 
 // --- 参照先の収集（本文を組む前に、全ページ分の番号を集めきる） ---
 for (const c of chapters) {
-  chapRefs.set(c.num.replace(/\D/g, ''), { slug: c.slug, title: `${c.num} ${c.title}` });
+  chapRefs.set(c.num.replace(/\D/g, ''), { slug: chapterHome(c), title: `${c.num} ${c.title}` });
 }
 for (const pg of pages) {
   pg.markdown = readFileSync(resolve(root, pg.src), 'utf8');
@@ -1022,16 +1032,18 @@ const tocItems = chapters
           .join('\n')}\n    </ol>`
       : '';
     return `  <li>
-    <a href="./${c.slug}.html">${escapeHtml(c.num)}　${escapeHtml(c.title)}</a>
+    <a href="./${chapterHome(c)}.html">${escapeHtml(c.num)}　${escapeHtml(c.title)}</a>
     <span class="status">${escapeHtml(c.status)}</span>${sub}
   </li>`;
   })
   .join('\n');
 
 const indexBody = `<h1>${escapeHtml(siteTitle)}</h1>
-<p>Lean 4 + Mathlib で形式化検証した定理に紐づけて書いている情報理論の教科書原稿です。<!--
--->各章の末尾には、その章で未形式化のまま残している項目と執筆時の所見を載せています<!--
--->（レビュー用にそのまま公開）。</p>
+<p>Lean 4 + Mathlib で機械検証した定理に紐づけて書いている情報理論の教科書原稿です。<!--
+-->「形式化」と添えた結果は無条件の検証済み定理に対応しています。宣言名はリンクになっていて、<!--
+-->本のアイコンはその定理の解説ページ、GitHub のマークはソースへ飛びます。<!--
+-->本文の証明は人間が読みやすい順序で書いているので、Lean がたどる証明ルートとは<!--
+-->一致しません。保証されるのは定理の正しさであって、証明手順の一致ではありません。</p>
 <ul class="toc">
 ${tocItems}
 </ul>`;
