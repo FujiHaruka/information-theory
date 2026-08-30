@@ -173,6 +173,12 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
 a.xref { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(11,103,208,.42); }
 a.xref:hover, a.xref:focus { color: #0b67d0; border-bottom-color: #0b67d0; }
 
+/* 形式化ポインタの行内 code は掲載先へのリンクになる（宣言名は API ドキュメントの項目、
+   パスは GitHub のソース）。相互参照と同じで、色ではなく下線でクリックできることを示す。 */
+a.srcref { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(34,112,124,.45); }
+a.srcref:hover, a.srcref:focus { color: #22707c; border-bottom-color: #22707c; }
+a.srcref code { background: rgba(34,112,124,.09); }
+
 /* 飛んだ先が画面の最上端に貼り付くと、どこに着地したのか読み取れない。余白を空け、
    着地点に薄く色を敷いて示す（box-shadow の spread なので行送りは動かない）。 */
 [id] { scroll-margin-top: 1.6rem; }
@@ -233,6 +239,9 @@ h1:target, h2:target, h3:target {
   .aside strong:first-child { color: #aeb6bf; }
   a.xref { border-bottom-color: rgba(108,182,255,.45); }
   a.xref:hover, a.xref:focus { color: #6cb6ff; border-bottom-color: #6cb6ff; }
+  a.srcref { border-bottom-color: rgba(99,181,194,.5); }
+  a.srcref:hover, a.srcref:focus { color: #63b5c2; border-bottom-color: #63b5c2; }
+  a.srcref code { background: rgba(99,181,194,.14); }
   .stmt:target, .proof:target, .formalized:target, .aside:target,
   h1:target, h2:target, h3:target {
     background: rgba(108,182,255,.1);
@@ -768,6 +777,166 @@ function linkifyRefs(src, ctx) {
   return out.join('\n');
 }
 
+// --- 形式化ポインタのリンク ---
+// 原稿は宣言名とファイルパスを行内 code で書くだけで、URL は書かない（§7）。掲載先は
+// ここで組む。宣言名は API ドキュメントの該当項目へ、パスは GitHub のソースへ飛ばす。
+// 基準はリリースタグである（TEXTBOOK_REF で上書きできる）。タグ時点のソースから宣言表を
+// 作るので、まだリリースに入っていない宣言も、移動して消えたパスも、リンクにならず warn に
+// 出る。いったん張ったリンクはタグに固定されているから、あとのリネームでは腐らない。
+// API ドキュメントだけは 1 版しか置けず常に最新リリースを指すが、同じブロックにタグ固定の
+// ソースリンクが並ぶので、宣言名を変えても行き先は残る。
+const REPO_URL = 'https://github.com/FujiHaruka/information-theory';
+const APIDOC_URL = 'https://fujiharuka.github.io/information-theory';
+
+function gitOut(...args) {
+  try {
+    const p = new Deno.Command('git', {
+      args, cwd: resolve(root, '../..'), stdout: 'piped', stderr: 'null',
+    }).outputSync();
+    return p.success ? new TextDecoder().decode(p.stdout).trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+const REF = Deno.env.get('TEXTBOOK_REF')?.trim() || gitOut('describe', '--tags', '--abbrev=0') || '';
+
+// 宣言表は Lean を解析せずテキスト走査で作る（sig_view.ts と同じ割り切り）。git grep の
+// 正規表現は POSIX ERE で `\s` を解さないので、粗い前置フィルタで候補行を絞り、判定は
+// JS 側で行う。
+const DECL_PREFILTER = '^(@\\[|theorem|lemma|def|abbrev|structure|class|inductive|instance'
+  + '|opaque|namespace|section|end|private|protected|noncomputable|nonrec|scoped|partial|unsafe)';
+const MODIFIERS = '(?:(?:private|protected|scoped|noncomputable|nonrec|partial|unsafe)\\s+)*';
+const NAME = "[A-Za-z_][A-Za-z0-9_'!?₀-₉ₐ-ₜ.]*";
+const DECL_RE = new RegExp(`^(?:@\\[[^\\]]*\\]\\s*)*${MODIFIERS}`
+  + `(?:theorem|lemma|def|abbrev|structure|class|inductive|instance|opaque)\\s+(${NAME})`);
+// private は他の修飾子より前とは限らない（`noncomputable private def`）。
+const PRIVATE_RE = new RegExp(`^(?:@\\[[^\\]]*\\]\\s*)*${MODIFIERS}private\\s`);
+
+// 短い名前 → 宣言。同名は複数ありうる（`condEntropy` は 3 つ）ので、絞り込みは呼び出し側。
+function scanDecls() {
+  const decls = new Map();
+  const files = new Set();
+  const raw = REF && gitOut('grep', '-nE', DECL_PREFILTER, REF, '--', 'InformationTheory');
+  if (!raw) return { decls, files };
+
+  let scope = [];
+  let file = null;
+  for (const row of raw.split('\n')) {
+    const m = row.match(/^[^:]*:([^:]+):(\d+):(.*)$/);
+    if (!m) continue;
+    const [, path, line, body] = m;
+    if (path !== file) { file = path; scope = []; files.add(path); }
+
+    let g;
+    if ((g = body.match(/^namespace\s+(\S+)/))) { scope.push({ ns: true, name: g[1] }); continue; }
+    if ((g = body.match(/^section\b\s*(\S*)/))) { scope.push({ ns: false, name: g[1] }); continue; }
+    if ((g = body.match(/^end\b\s*(\S*)/))) {
+      // 無名の end が閉じるのは無名 section だけで、namespace は名前つきの end でしか
+      // 閉じない。ここを取り違えると、以降の宣言の名前空間がまるごとずれる。
+      const top = scope[scope.length - 1];
+      if (top && (g[1] === top.name || (g[1] === '' && !top.ns))) scope.pop();
+      continue;
+    }
+    const d = body.match(DECL_RE);
+    if (!d) continue;
+    const fqn = [...scope.filter((s) => s.ns).map((s) => s.name), d[1]].join('.');
+    decls.set(d[1], [...(decls.get(d[1]) ?? []),
+      { fqn, path, line: Number(line), private: PRIVATE_RE.test(body) }]);
+  }
+  return { decls, files };
+}
+
+const { decls: leanDecls, files: leanFiles } = scanDecls();
+
+// 原稿は `InformationTheory/Shannon/Bridge.lean` とも `MIChainRule.lean:93` とも書く。
+// どちらも一意に決まるときだけ拾う。
+function resolveLeanPath(spec) {
+  const [p, line] = spec.split(':');
+  if (leanFiles.has(p)) return { path: p, line };
+  const hits = [...leanFiles].filter((f) => f.endsWith(`/${p}`));
+  return hits.length === 1 ? { path: hits[0], line } : null;
+}
+
+const sourceUrl = ({ path, line }) => `${REPO_URL}/blob/${REF}/${path}${line ? `#L${line}` : ''}`;
+const apidocUrl = (d) => `${APIDOC_URL}/${d.path.replace(/\.lean$/, '.html')}#${d.fqn}`;
+
+const LEAN_PATH_RE = /^[A-Za-z][\w/]*\.lean(?::\d+)?$/;
+const IDENT_RE = new RegExp(`^${NAME}$`);
+const unlinkedCodes = [];
+let brokenPointers = 0;
+
+// ブロック 1 つ分の行内 code をリンクに変える。宣言名が複数のファイルにあるときは、同じ
+// ブロックが名指ししているパスで絞る（原稿はパスを併記する決まりなので、これで足りる）。
+function linkFormalized(state, tokens, ctx, lineNo) {
+  const codes = [];
+  for (const t of tokens) {
+    if (t.type !== 'inline') continue;
+    t.children.forEach((c, k) => {
+      if (c.type === 'code_inline') codes.push({ inline: t, k, text: c.content.trim() });
+    });
+  }
+
+  const here = new Set();
+  for (const c of codes) {
+    if (!LEAN_PATH_RE.test(c.text)) continue;
+    const r = resolveLeanPath(c.text);
+    if (!r) {
+      brokenPointers += 1;
+      console.warn(`warn: 形式化ポインタ ${ctx.src}:${lineNo} 「${c.text}」は ${REF} に見つからない`);
+      continue;
+    }
+    c.url = sourceUrl(r);
+    c.title = r.path;
+    here.add(r.path);
+  }
+
+  for (const c of codes) {
+    if (c.url || !IDENT_RE.test(c.text)) continue;
+    const cand = leanDecls.get(c.text) ?? [];
+    const narrowed = cand.length > 1 ? cand.filter((d) => here.has(d.path)) : cand;
+    if (narrowed.length !== 1) {
+      if (cand.length > 1) {
+        brokenPointers += 1;
+        console.warn(`warn: 形式化ポインタ ${ctx.src}:${lineNo} 「${c.text}」は`
+          + ` ${cand.length} 箇所にある（ファイルを併記して絞る）`);
+      } else if (AUDIT) {
+        unlinkedCodes.push(`  ${ctx.src}:${lineNo}  「${c.text}」`);
+      }
+      continue;
+    }
+    const d = narrowed[0];
+    // private 宣言は API ドキュメントに載らないので、ソースの該当行へ送る。
+    c.url = d.private ? sourceUrl(d) : apidocUrl(d);
+    c.title = d.fqn;
+  }
+
+  // 差し込みで添字がずれないよう、同じ inline の中を後ろから開く。
+  for (const c of codes.filter((c) => c.url).reverse()) {
+    const open = new state.Token('link_open', 'a', 1);
+    open.attrSet('class', 'srcref');
+    open.attrSet('href', c.url);
+    open.attrSet('title', c.title);
+    c.inline.children.splice(c.k, 1, open, c.inline.children[c.k],
+      new state.Token('link_close', 'a', -1));
+  }
+}
+
+md.core.ruler.push('formalized_links', (state) => {
+  const ctx = state.env?.ctx;
+  if (!ctx || !REF) return;
+  const toks = state.tokens;
+  for (let i = 0; i < toks.length; i++) {
+    if (toks[i].type !== 'container_env_open') continue;
+    if (parseEnv(toks[i].info)?.kind !== 'formalized') continue;
+    let j = i + 1;
+    while (j < toks.length && toks[j].type !== 'container_env_close') j++;
+    const line = (toks[i].map?.[0] ?? toks.slice(i, j).find((t) => t.map)?.map?.[0] ?? 0) + 1;
+    linkFormalized(state, toks.slice(i, j), ctx, line);
+    i = j;
+  }
+});
+
 let missingProofs = 0;
 let termIssues = 0;
 
@@ -830,8 +999,12 @@ if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs
 if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
 if (unresolvedRefs > 0) console.warn(`warn: 参照 ${unresolvedRefs} 件`);
 if (duplicateNums > 0) console.warn(`warn: 番号の重複 ${duplicateNums} 件`);
+if (brokenPointers > 0) console.warn(`warn: 形式化ポインタ ${brokenPointers} 件`);
 if (AUDIT) {
   console.log(`\n--- 参照にならなかった数字 ${auditHits.length} 件（判定なし・目で読む） ---`);
   for (const h of auditHits) console.log(h);
+  console.log(
+    `\n--- リンクにならなかった形式化ポインタの語 ${unlinkedCodes.length} 件（判定なし・目で読む） ---`);
+  for (const h of unlinkedCodes) console.log(h);
 }
 console.log('done');

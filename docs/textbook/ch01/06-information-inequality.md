@@ -76,7 +76,7 @@ $\mathrm{klDivPmf}\,P\,Q = \sum_a Q(a)\cdot \mathrm{klFun}(P(a)/Q(a))$ に対し
 ::: formalized
 非負性 `klDivPmf_nonneg`
 (`InformationTheory/Shannon/CsiszarProjection.lean`)、等号条件
-`klDivPmf_eq_zero_iff_pmf` (`InformationTheory/Shannon/MaxEntropyConstrained.lean`、
+`klDivPmf_eq_zero_iff_pmf` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`、
 参照分布 $Q$ が全点正のとき $\mathrm{klDivPmf}\,P\,Q = 0 \iff P = Q$)
 :::
 

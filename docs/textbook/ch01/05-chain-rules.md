@@ -92,7 +92,7 @@ $i = n$ の項である。合わせて主張を得る。
 ::: formalized
 `mutualInfo_chain_rule_fin` (`InformationTheory/Shannon/MIChainRule.lean`)。
 `Fin n` 添字の確率変数列に対する完全形。右辺は各 $i$ において先頭 $i$ 個で条件付けた
-相互情報量の有限和で、右辺の完全な式はソース `MIChainRule.lean:93` を参照。
+相互情報量の有限和である。
 :::
 
 ## 独立・同分布（i.i.d.）での加法性
@@ -136,6 +136,6 @@ $I(X_i; Y^n \mid X^i) = I(X_i; Y_i)$ で、同分布性からどの項も $I(X_0
 `mutualInfo_iid_eq_nsmul` (`InformationTheory/Shannon/MIChainRule.lean`)。
 一般形 `mutualInfo_pi_eq_sum` もある。形式化では i.i.d. 構造を積測度の分解仮定
 $h_{\mathrm{iid}}$ として要求する。これは「独立同分布である」という前提条件を表すもので、
-結論の核心を仮定に抱えさせるものではない。完全式はソース `MIChainRule.lean:370` を参照。
+結論の核心を仮定に抱えさせるものではない。
 :::
 
