@@ -55,7 +55,7 @@ $D\big(p(x,y \mid z)\,\big\|\,p(x\mid z)p(y\mid z)\big)$ と書ける。本節�
 :::
 
 ::: formalization-note
-本ライブラリは条件付き分布カーネルの compProd 形に対する KL として
+本ライブラリは条件付き分布カーネルの `compProd` 形に対する KL として
 定義する（`klDiv` の引数に $\mu.\mathrm{map}\,Z$ と核の合成積を渡す）。値は拡張非負実数。
 :::
 

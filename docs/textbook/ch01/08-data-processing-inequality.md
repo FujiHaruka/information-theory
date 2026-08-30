@@ -16,7 +16,7 @@
 
 ::: theorem 1.8.1
 同じアルファベット上の二つの分布 $p, q$ と写像 $f$ に対し、$f$ で
-送った先の分布（$f_*p$、$f_*q$ と書く）について
+送った先の分布——$f$ による **像測度** といい、$f_*p$、$f_*q$ と書く——について
 $$
 D\big(f_* p \,\big\|\, f_* q\big) \;\le\; D(p\,\|\,q).
 $$
@@ -69,7 +69,7 @@ $$
 ::: proof
 写像 $g(x,y) := (x, f(y))$ を考え、定理 1.8.1 を $p \leftarrow p_{X,Y}$
 （同時分布）、$q \leftarrow p_X \otimes p_Y$（周辺積）に対して $g$ で適用する。鍵は次の
-二つの push-forward 等式である。
+二つの像測度の等式である。
 
 (i) $g$ で同時分布を送ると $(X, f(Y))$ の同時分布になる：
 $g_*\,p_{X,Y} = p_{X, f(Y)}$。実際 $g(X,Y) = (X, f(Y))$ だから定義どおり。
@@ -165,11 +165,12 @@ $I(Z;Y) \ge I(X;Y)$、すなわち $I(X;Y) \le I(Z;Y)$。
 ::: formalization-note
 形式化はマルコフ連鎖を、結合分布の条件付き独立分解
 $\mu.\mathrm{map}(Z,X,Y) = (\mu.\mathrm{map}\,Z) \otimes ((K_X) \times (K_Y))$ という
-compProd 等式 `IsMarkovChain` で定義する。教科書の矢印記法 $X\to Z\to Y$ とは表層が
+`compProd` 等式 `IsMarkovChain` で定義する。教科書の矢印記法 $X\to Z\to Y$ とは表層が
 異なるが、内容は「$Z$ を与えたとき $X \perp Y$」で同じ。まずマルコフ下で
 $I(X;Y\mid Z)=0$（`condMutualInfo_eq_zero_of_markov`）を示し、そこから本定理を導く。
 なお本ライブラリの結論は $I(X;Y) \le I(Z;Y)$ の形（中継 $Z$ を $Y$ 側と組む配置）で、
-教科書でよく見る $I(X;Y) \le I(X;Z)$ とは引数配置が異なるが、どちらも DPI の正しい一形態
+教科書でよく見る $I(X;Y) \le I(X;Z)$ とは引数配置が異なるが、どちらもデータ処理不等式の
+正しい一形態
 である。
 :::
 
@@ -178,9 +179,9 @@ $I(X;Y\mid Z)=0$（`condMutualInfo_eq_zero_of_markov`）を示し、そこから
 (`InformationTheory/Shannon/CondMutualInfo.lean`)
 :::
 
-## 応用：記憶のない通信路の per-letter 分解
+## 応用：記憶のない通信路を 1 文字ごとに分解する
 
-DPI の代表的な応用として、記憶のない（memoryless）通信路では、$n$ 文字をまとめて
+データ処理不等式の代表的な応用として、記憶のない（memoryless）通信路では、$n$ 文字をまとめて
 送ったときの相互情報量が 1 文字ずつの寄与の和を超えない：
 $$
 I(X^n; Y^n) \;\le\; \sum_{i} I(X_i; Y_i).
@@ -188,7 +189,7 @@ $$
 
 「記憶がない」とは、各時刻の出力が同じ時刻の入力だけで決まり、他の時刻を
 経由しないことをいう。すると各文字の入力・出力の組が互いに独立なマルコフ構造をなし、
-チェイン則（定理 1.5.2）で分解した各項を DPI で 1 文字分に抑えられる。全体で運べる
+チェイン則（定理 1.5.2）で分解した各項をデータ処理不等式で 1 文字分に抑えられる。全体で運べる
 情報が 1 文字あたりの情報の $n$ 倍を超えない、というこの上界が、通信路容量を
 「1 文字あたりの量」として定義してよいことの根拠になる。第 4 章を先取りする結果である。
 
@@ -198,7 +199,7 @@ $X_1,\dots,X_n$ に相関を許しているからである。記憶のない通�
 
 ::: formalized
 `mutualInfo_le_sum_per_letter_of_memoryless_strong`
-(`InformationTheory/Shannon/CondEntropyMemoryless.lean`)。形式化では memoryless 構造を
+(`InformationTheory/Shannon/CondEntropyMemoryless.lean`)。形式化では記憶のなさを
 二つの `IsMarkovChain` 仮定（各文字の入力が他文字を経由しないこと、出力が条件付き独立で
 あること）として与える。これらは通信路の構造そのものを表す前提条件で、結論の核心を
 仮定に抱えさせるものではない。

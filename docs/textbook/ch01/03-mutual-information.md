@@ -120,7 +120,7 @@ $I(X; Y) = I(Y; X)$。
 
 ::: formalization-note
 見れば自明な対称性が、形式化では測度同型
-`MeasurableEquiv.prodComm` に沿った pushforward になり、「KL は測度同型で値を保つ」と
+`MeasurableEquiv.prodComm` に沿った像測度の移送になり、「KL は測度同型で値を保つ」と
 いう自作補題 `klDiv_map_measurableEquiv` を要する。
 :::
 
