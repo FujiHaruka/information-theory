@@ -79,7 +79,7 @@ $p(y)$ で積分した形で定義する。定義 1.2.2 の最右辺と一致す
 
 ::: formalized
 `condEntropy`
-(`InformationTheory/Fano/Measure.lean`, 名前空間 `InformationTheory.MeasureFano`)
+(`InformationTheory/Fano/Measure.lean`)
 :::
 
 ## チェイン則

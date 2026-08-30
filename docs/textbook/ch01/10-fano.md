@@ -73,7 +73,7 @@ $H(X\mid Y) \le H_b(P_e) + P_e\log(|\mathcal X|-1)$ の形で述べる。
 
 ::: formalized
 `fano_inequality_measure_theoretic`
-(`InformationTheory/Fano/Measure.lean`, 名前空間 `InformationTheory.MeasureFano`)
+(`InformationTheory/Fano/Measure.lean`)
 :::
 
 **pmf コア版.** 有限結合 pmf に対する基本形（$\mathrm{qaryEntropy}$ 形）。

@@ -64,8 +64,7 @@ $$
 
 ::: formalized
 `log_sum_inequality`
-(`InformationTheory/Shannon/LZ78/ZivEntropyBridge.lean`, 名前空間
-`InformationTheory.Shannon`)。絶対連続条件 $b_i = 0 \Rightarrow a_i = 0$ を許す
+(`InformationTheory/Shannon/LZ78/ZivEntropyBridge.lean`)。絶対連続条件 $b_i = 0 \Rightarrow a_i = 0$ を許す
 `negMulLog` 形 `log_sum_inequality_negMulLog` (`InformationTheory/Fano/DPI.lean`) もある。
 :::
 
