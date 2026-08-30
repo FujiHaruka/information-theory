@@ -953,7 +953,15 @@ function linkFormalized(state, tokens, ctx, lineNo) {
     open.attrSet('aria-label', `${role}: ${c.title}`);
     const mark = new state.Token('html_inline', '', 0);
     mark.content = icon(c.kind);
-    c.inline.children.splice(c.k, 1, open, mark, c.inline.children[c.k],
+    // 宣言名は残す（読者が名前を知る手がかりであり、1 ブロックに 2 つ以上並ぶと互いの
+    // 区別も担う）。パスは行の中でいちばん長いのに読者には用がないので、共通の語に寄せ、
+    // 原稿が書いたパスはホバーと読み上げに回す（原稿側は書き換えない）。
+    let body = c.inline.children[c.k];
+    if (c.kind === 'src') {
+      body = new state.Token('text', '', 0);
+      body.content = 'ソース';
+    }
+    c.inline.children.splice(c.k, 1, open, mark, body,
       new state.Token('link_close', 'a', -1));
   }
 }

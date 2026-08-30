@@ -79,11 +79,17 @@ warn: 番号の重複 ch01/09-sufficient-statistics.md:78 「1.9.1」は既出
 `::: formalized` の中身も、原稿は**宣言名とファイルパスを行内 code で書くだけ**にする
 （執筆原則 §7）。URL は原稿に書かず、ビルドが掲載先に変える。
 
-| 原稿の書き方 | リンク先 |
-|---|---|
-| `` `entropy_nonneg` `` | API ドキュメントのその項目（`…/Shannon/Bridge.html#InformationTheory.Shannon.entropy_nonneg`） |
-| `` `InformationTheory/Shannon/Bridge.lean` `` | GitHub のソース（タグ固定） |
-| `` `MIChainRule.lean:93` `` | 同上 + `#L93`（ファイル名だけでも一意なら解決する） |
+| 原稿の書き方 | 掲載時の表示 | リンク先 |
+|---|---|---|
+| `` `entropy_nonneg` `` | 📖 `entropy_nonneg` | API ドキュメントのその項目（`…/Shannon/Bridge.html#InformationTheory.Shannon.entropy_nonneg`） |
+| `` `InformationTheory/Shannon/Bridge.lean` `` | ● ソース | GitHub のソース（タグ固定） |
+| `` `MIChainRule.lean:93` `` | ● ソース | 同上 + `#L93`（ファイル名だけでも一意なら解決する） |
+
+**パスは表示せず「ソース」に寄せる。** 行の中でいちばん長いのに読者には用がないためで、原稿が
+書いたパスはホバー（`title`）と読み上げ（`aria-label`）に出る。**宣言名はそのまま出す**——
+読者が名前を知る手がかりであり、1 ブロックに 2 つ以上並ぶときは互いの区別も担う。ここを共通の
+語にすると「解説 / 解説」のように区別が消え、散文に埋め込まれた宣言名（「二つの
+`IsMarkovChain` 仮定」）では日本語自体が壊れる。
 
 2 つの行き先は**アイコン**で見分けさせる——解説ページには本、ソースには GitHub のマーク
 （どちらも octicons, MIT）。ラベルの語を添えると、宣言が 2 つ並ぶブロックで語が 4 つ出て
