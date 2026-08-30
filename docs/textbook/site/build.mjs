@@ -43,9 +43,14 @@ const chapters = [
   {
     slug: 'ch02',
     num: '第2章',
-    title: '漸近等分配性 (AEP)',
-    src: 'ch02-aep.md',
-    status: '草稿（末尾に未形式化項目・作業所見あり）',
+    title: '漸近等分配性とデータ圧縮',
+    status: '仕上げ済',
+    sections: [
+      { slug: 'ch02-01', num: '2.1', title: '漸近等分配性', src: 'ch02/01-aep.md' },
+      { slug: 'ch02-02', num: '2.2', title: '典型集合', src: 'ch02/02-typical-set.md' },
+      { slug: 'ch02-03', num: '2.3', title: '源符号化定理', src: 'ch02/03-source-coding.md' },
+      { slug: 'ch02-04', num: '2.4', title: '強典型性', src: 'ch02/04-strong-typicality.md' },
+    ],
   },
   {
     slug: 'ch03',

@@ -25,7 +25,13 @@ const CHAPTERS: { slug: string; files: string[] }[] = [
       'ch01/09-sufficient-statistics.md', 'ch01/10-fano.md',
     ],
   },
-  { slug: 'ch02', files: ['ch02-aep.md'] },
+  {
+    slug: 'ch02',
+    files: [
+      'ch02/01-aep.md', 'ch02/02-typical-set.md',
+      'ch02/03-source-coding.md', 'ch02/04-strong-typicality.md',
+    ],
+  },
   { slug: 'ch03', files: ['ch03-entropy-rate.md'] },
   { slug: 'ch04', files: ['ch04-channel-capacity.md'] },
   { slug: 'ch05', files: ['ch05-max-entropy.md'] },

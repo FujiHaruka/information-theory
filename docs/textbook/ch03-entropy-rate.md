@@ -434,8 +434,8 @@ theorem expected_blockLogAvg_eq
 ## 3.5 i.i.d. 過程の AEP（第2章との接続）
 
 i.i.d. 過程は定常エルゴード過程の最も単純な特例であり、そのエントロピーレートは
-\(H(\mathcal{X}) = H(X_0)\) に退化する。第2章 AEP（独立同分布版）は大数の強法則から
-直接得られ、SMB の特例として位置づけられる。参考として独立同分布版の概収束 AEP を
+\(H(\mathcal{X}) = H(X_0)\) に退化する。第2章 AEP（i.i.d. 版）は大数の強法則から
+直接得られ、SMB の特例として位置づけられる。参考として i.i.d. 版の概収束 AEP を
 挙げておく。
 
 **Verified**: `aep_ae` (`InformationTheory/Shannon/AEP.lean`)
