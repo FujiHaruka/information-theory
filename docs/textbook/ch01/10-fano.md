@@ -16,7 +16,8 @@ $\hat X = g(Y)$ の誤り確率を $P_e = \Pr[\hat X \neq X]$ とする。直感
 ## 主張と証明
 
 ::: theorem 1.10.1 ファノの不等式
-$|\mathcal X| \ge 2$ のとき
+$|\mathcal X| \ge 2$ とし、$g : \mathcal Y \to \mathcal X$ を任意の復号器、
+$\hat X = g(Y)$、$P_e = \Pr[\hat X \neq X]$ とする。このとき
 $$
 H(X \mid Y) \;\le\; H_b(P_e) + P_e \log\big(|\mathcal X| - 1\big),
 $$
@@ -45,56 +46,76 @@ $(X,Y)$ から一意に決まる。決定的な量のエントロピーは 0 だ
 **右の展開を上から評価.** 二項を個別に抑える。
 
 - $H(E\mid Y) \le H(E)$：条件付けは平均エントロピーを増やさない（定理 1.2.4 の基本形）。
-  $E$ は成功確率 $P_e$ の二値なので $H(E) = H_b(P_e)$。よって $H(E\mid Y) \le H_b(P_e)$。
+  $E$ は $\Pr[E = 1] = P_e$ の二値なので $H(E) = H_b(P_e)$。よって
+  $H(E\mid Y) \le H_b(P_e)$。
 
 - $H(X\mid E, Y)$ を $E$ の二値で分ける：
   $$
   H(X\mid E,Y) = (1-P_e)\,H(X\mid Y, E{=}0) + P_e\,H(X\mid Y, E{=}1).
   $$
+  ここで $H(X\mid Y, E{=}e)$ は 1.2 節で断った混合記法、すなわち $E = e$ に固定した
+  世界での $H(X\mid Y)$ である（$y$ についての平均は条件付き分布 $p(y\mid E{=}e)$ で
+  とる）。
   $E=0$ のときは $X = \hat X = g(Y)$ が $Y$ で決まるので $H(X\mid Y, E{=}0) = 0$。
   $E=1$ のときは $X$ が $g(Y)$ 以外、すなわち高々 $|\mathcal X|-1$ 個の値しかとらないので、
   最大エントロピー上界（定理 1.1.5）より $H(X\mid Y, E{=}1) \le \log(|\mathcal X|-1)$。
   したがって $H(X\mid E,Y) \le P_e \log(|\mathcal X|-1)$。
 
-**結合.** 左の展開の等式と右の二つの上界を合わせて
+**左右を突き合わせる.** 左の展開の等式と右の二つの上界を合わせて
 $$
 H(X\mid Y) \;=\; H(E\mid Y) + H(X\mid E,Y)
   \;\le\; H_b(P_e) + P_e\log(|\mathcal X|-1).
 $$
 :::
 
-## 形式化されている諸形
-
-本ライブラリは pmf 形と測度論形の両方を形式化している。
-
-**測度論版（決定論的復号器）.** 復号器 $g : \mathcal Y \to \mathcal X$ と
-誤り確率 $P_e = \mu\{\omega : X(\omega) \neq g(Y(\omega))\}$ に対し、定理 1.10.1 を
-$H(X\mid Y) \le H_b(P_e) + P_e\log(|\mathcal X|-1)$ の形で述べる。
-
-::: formalized
-`fano_inequality_measure_theoretic`
-(`InformationTheory/Fano/Measure.lean`)
+::: formalization-note 実現が二つある
+本ライブラリはこの不等式を、有限結合 pmf に対する形と、測度空間上の確率変数に対する形の
+二通りで実現している。前者は推定値そのもので条件付けた核（`fano_core` /
+`fano_inequality`）で、復号器を経る形はそこからデータ処理不等式で復元する
+（`fano_inequality_decode`）。後者は本文の定理 1.10.1 と同じく復号器 $g$ を引数にとる。
+数学的内容はどれも同じである。
 :::
 
-**pmf コア版.** 有限結合 pmf に対する基本形（$\mathrm{qaryEntropy}$ 形）。
-
 ::: formalized
-`fano_core` / `fano_inequality` (`InformationTheory/Fano/Core.lean`)
+測度論版 `fano_inequality_measure_theoretic` (`InformationTheory/Fano/Measure.lean`)、
+pmf 形の核 `fano_core` / `fano_inequality` (`InformationTheory/Fano/Core.lean`)、
+復号器を明示した pmf 形 `fano_inequality_decode` (`InformationTheory/Fano/DPI.lean`)
 :::
 
-**逆向き（誤り確率の下界）.** ファノの不等式を裏返すと、$H(X\mid Y)$ が大きいときに
-$P_e$ が下から評価される。条件付きエントロピーが二値エントロピー境界を超えるなら、
-誤り確率は対応する閾値より真に大きい。
+## 裏返して使う
 
-これが逆定理で実際に使う向きである。右辺
-$H_b(P_e) + P_e\log(|\mathcal X|-1)$ は $P_e$ について（$P_e$ が小さい範囲で）増加
-なので、$H(X\mid Y)$ の下界を持っていれば $P_e$ の下界が出る。第4章では、レートが
-容量を超えるという仮定から $H(X\mid Y)$ が大きいことを導き、ここを通して
-「誤り確率は 0 に収束しない」を結論する。$P_e$ に何の仮定も置かず、また復号器 $g$ が
-どんなものであってもよいことが効いている——**どんな復号器を設計しても**という
-逆定理の普遍性は、この不等式が $g$ を任意にとれることから来ている。
+ファノの不等式を裏返すと、$H(X\mid Y)$ が大きいときに $P_e$ が下から評価される。これが
+逆定理で実際に使う向きである。
+
+::: corollary 1.10.2 誤り確率の下界
+定理 1.10.1 と同じ設定で、$a$ を $0 \le a \le 1 - 1/|\mathcal X|$ を満たす実数、
+$P_e$ も同じ範囲にあるとする。このとき
+$$
+H_b(a) + a\log\big(|\mathcal X| - 1\big) \;<\; H(X\mid Y)
+\quad\Longrightarrow\quad
+a \;<\; P_e .
+$$
+:::
+
+::: proof
+対偶をとる。$P_e \le a$ とすると、右辺
+$H_b(t) + t\log(|\mathcal X|-1)$ は $t$ について区間 $[0,\, 1 - 1/|\mathcal X|]$ 上で
+増加なので（この区間が「$P_e$ が小さい範囲」の正確な意味である）、
+$H_b(P_e) + P_e\log(|\mathcal X|-1) \le H_b(a) + a\log(|\mathcal X|-1)$。定理 1.10.1 と
+合わせると $H(X\mid Y) \le H_b(a) + a\log(|\mathcal X|-1)$ となり、仮定の狭義不等式に
+反する。
+:::
+
+右辺が増加する範囲に留まっているかぎり、$H(X\mid Y)$ の下界を持っていれば $P_e$ の下界が
+出る。第4章では、レートが容量を超えるという仮定から $H(X\mid Y)$ が大きいことを導き、
+ここを通して「誤り確率は 0 に収束しない」を結論する。効いているのは**復号器 $g$ を
+任意にとれる**ことである——定理 1.10.1 が $g$ について何も仮定していないので、系 1.10.2 も
+どんな復号器に対しても成り立つ。これが「どんな復号器を設計しても」という逆定理の普遍性の
+出どころである。$P_e$ 自身に置いた $P_e \le 1 - 1/|\mathcal X|$ という制約は、右辺の増加域に
+留まるための条件で、逆定理が扱う「誤り確率が小さい」領域では自動的に満たされる。
 
 ::: formalized
-`error_lower_bound` (`InformationTheory/Fano/Core.lean`)
+復号器を明示した形 `error_lower_bound_decode` (`InformationTheory/Fano/DPI.lean`)、
+その核 `error_lower_bound` (`InformationTheory/Fano/Core.lean`)
 :::
 

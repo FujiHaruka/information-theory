@@ -31,11 +31,15 @@ $T(X) = \sum_i X_i$ だけあれば十分である。実際、表の回数を $k
 $X$ が条件付き独立になること（$\theta \perp X \mid T(X)$）である。
 :::
 
+::: formalized
+`IsSufficientStatistic` (`InformationTheory/Shannon/SufficientStatistic.lean`)
+:::
+
 マルコフ連鎖 $\theta \to T(X) \to X$ は「$\theta$ から $X$ への影響が、
 すべて $T(X)$ を経由している」と読む。上のコインの例なら、$\theta$ が決めているのは
 表の回数の分布だけで、回数さえ決まれば列の並びは $\theta$ と無関係に決まる、という
 構造がそのまま矢印になっている。$X$ から $T(X)$ は関数（情報が減る向き）なのに、
-$\theta$ から見ると $T(X)$ で十分——この非対称さが「充足」の内容である。
+$\theta$ から見ると $T(X)$ で十分——この非対称さが「十分」の内容である。
 
 ## 情報の保存
 
@@ -47,9 +51,13 @@ $$
 :::
 
 ::: proof
-一般に後処理不等式（定理 1.8.2）から $I(\theta; T(X)) \le I(\theta; X)$。一方、
-十分性すなわちマルコフ連鎖からデータ処理不等式のマルコフ版（定理 1.8.4）が逆向き
-$I(\theta; X) \le I(\theta; T(X))$ を与える。両者を挟めば等号。
+一般に後処理不等式（定理 1.8.2）から $I(\theta; T(X)) \le I(\theta; X)$。
+
+逆向きは十分性から出る。マルコフ連鎖の定義は両端について対称（1.8 節）なので、
+$\theta \to T(X) \to X$ は $X \to T(X) \to \theta$ と読み替えてよい。この向きで
+データ処理不等式のマルコフ版（定理 1.8.4）を当てると
+$I(X;\theta) \le I(T(X);\theta)$、相互情報量の対称性（命題 1.3.3）で書き直して
+$I(\theta; X) \le I(\theta; T(X))$ を得る。両者を挟めば等号。
 :::
 
 一般のデータ処理は情報を減らしうる（$\le$）。十分統計量はその等号がちょうど
@@ -58,16 +66,14 @@ $T(X)$ 上で行ってよい、という実用上の御利益がある。
 
 ::: formalization-note
 教科書は十分性を因子分解 $p(x\mid\theta) = g(T(x),\theta)\,h(x)$
-（Neyman–Fisher）で導入することが多い。本ライブラリは、定理 1.8.4 の結論に直結する
-**マルコフ連鎖形**でまず定義し（因子分解形をそのまま定義に据えると条件付き分布の
-$\theta$-非依存性を経由する長い橋渡しを要するため）、因子分解形
-`IsSufficientStatisticFactorized` との**同値** `isSufficient_iff_factorized` を別途
-形式化している。同値は Mathlib の条件付き独立性補題（標準ボレル機構）を経由する。
+（Neyman–Fisher）で導入することが多い。測度論でこれを書くと「$T(X)$ を与えたときの
+$X$ の条件付き分布が $\theta$ に依存しない」という形になり、本ライブラリはそれを
+`IsSufficientStatisticFactorized` として持っている。定義に採ったのは定理 1.8.4 の結論に
+直結する**マルコフ連鎖形**のほうで、両者の**同値** `isSufficient_iff_factorized` を
+別に立てている。同値は Mathlib の条件付き独立性補題（標準ボレル機構）を経由する。
 :::
 
 ::: formalized
-定義 `IsSufficientStatistic`、情報保存 `mutualInfo_eq_of_sufficient`、
-因子分解形との同値 `isSufficient_iff_factorized`
-(`InformationTheory/Shannon/SufficientStatistic.lean`)
+`mutualInfo_eq_of_sufficient` (`InformationTheory/Shannon/SufficientStatistic.lean`)
 :::
 

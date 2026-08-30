@@ -45,10 +45,10 @@ $D(\cdot\,\|\,\cdot)$ を使えば $I(X;Y) = D\big(p(x,y)\,\big\|\,p(x)p(y)\big)
 :::
 
 ::: formalization-note
-本ライブラリは相互情報量を、いま先取りした「同時分布と周辺積との KL
-ダイバージェンス」の形でそのまま定義する（Mathlib の `klDiv` を用いる）。KL
-ダイバージェンスは $\mathbb R_{\ge 0}^{\infty}$（拡張非負実数）値なので、相互情報量も
-同じ型をとる。エントロピー表現（後述）との橋渡しでは `.toReal` で実数に落とす一手間が
+本ライブラリは相互情報量を、いま先取りした「同時分布と周辺積との相対エントロピー」の
+形でそのまま定義する（Mathlib の `klDiv` を用いる）。この量は
+$\mathbb R_{\ge 0}^{\infty}$（拡張非負実数）値なので、相互情報量も
+同じ型をとる。エントロピー表現（定理 1.3.4）との橋渡しでは `.toReal` で実数に落とす一手間が
 入るが、これは型をまたぐ技術処理で、数学的内容は変わらない。
 :::
 
@@ -78,7 +78,8 @@ $$
   \;=\; \log \Big( \sum_{S} p(x)\,p(y) \Big)
   \;\le\; \log 1 \;=\; 0 .
 $$
-最後の不等号は $\sum_{S} p(x)p(y) \le \sum_{x,y} p(x)p(y) = 1$ による。よって $I(X;Y) \ge 0$。
+最後の不等号は $\sum_{S} p(x)p(y) \le \sum_{x,y} p(x)p(y) = 1$ による。よって
+$I(X;Y) \ge 0$。
 
 等号を調べる。$I(X;Y) = 0$ なら上の二つの $\le$ がともに等号である。$\log$ は**狭義**凹
 だから、第 1 の等号は補題 1.1.6 の等号条件により「$S$ 上で $t(x,y)$ が定数」を意味する。
@@ -98,11 +99,11 @@ $S$ の外では $p(x)p(y) = 0$ であり、そこでは $p(x,y) = 0$ でもあ�
 
 ::: formalization-note
 本文と形式化で難所が入れ替わる例である。形式化では相互情報量が
-拡張非負実数値なので**非負性は型から自明**（`mutualInfo_nonneg` の中身は「最小元以上」
-一語）で、本文が手をかけた凹性の議論は現れない。代わりに実質的な内容が
-**等号条件の側**（$I(X;Y)=0 \iff$ 独立）に集まり、`mutualInfo_eq_zero_iff_indep` は
-KL の等号条件（`klDiv_eq_zero_iff`）と独立の特徴づけ
-（`indepFun_iff_map_prod_eq_prod_map_map`）の非自明な合成になる。
+拡張非負実数値なので**非負性は型から従い**、本文が手をかけた凹性の議論は現れない。
+代わりに実質的な内容が**等号条件の側**（$I(X;Y)=0 \iff$ 独立）に集まる。
+`mutualInfo_eq_zero_iff_indep` は、相対エントロピーの等号条件（`klDiv_eq_zero_iff`）と
+独立の特徴づけ（`indepFun_iff_map_prod_eq_prod_map_map`）を貼り合わせるだけになる
+——非自明さは Mathlib 側のこの二つが担っている。
 :::
 
 ::: formalized
@@ -120,20 +121,13 @@ $I(X; Y) = I(Y; X)$。
 
 ::: formalization-note
 見れば自明な対称性が、形式化では測度同型
-`MeasurableEquiv.prodComm` に沿った像測度の移送になり、「KL は測度同型で値を保つ」と
+`MeasurableEquiv.prodComm` に沿った像測度の移送になり、「相対エントロピーは測度同型で
+値を保つ」と
 いう自作補題 `klDiv_map_measurableEquiv` を要する。
 :::
 
 ::: formalized
 `mutualInfo_comm` (`InformationTheory/Shannon/MutualInfo.lean`)
-:::
-
-有限アルファベット上では $I(X;Y) < \infty$ も成り立つ（各項が有限で和が有限）。
-
-::: formalized
-`mutualInfo_ne_top` (`InformationTheory/Shannon/MutualInfo.lean`)。
-本文一行の有限性が、形式化では結合分布の周辺積への絶対連続性と対数尤度比の可積分性を
-経て `klDiv_ne_top` に帰着する測度論の補題になる。
 :::
 
 ## エントロピーとの関係
@@ -184,7 +178,7 @@ $H(X\mid Y) = H(X,Y) - H(Y)$ を代入すれば $I(X;Y) = H(X)+H(Y)-H(X,Y)$。
 形式化では $I(X;Y)$ が拡張非負実数値、$H, H(\cdot\mid\cdot)$ が
 実数値なので、橋渡し定理は左辺に `.toReal` を付けた等式として述べる。数学的内容は
 定理 1.3.4 と同一。本文の「$y$ について和をとって $H(X)$」は、共通注記のとおり
-$\mu.\mathrm{map}\,Y$ 上の積分補題（`integral_condDistrib_real_singleton_eq`）に対応する。
+$Y$ の像測度の上の積分補題に対応する。
 :::
 
 ::: formalized
@@ -192,5 +186,28 @@ $\mu.\mathrm{map}\,Y$ 上の積分補題（`integral_condDistrib_real_singleton_
 (`InformationTheory/Shannon/Bridge.lean`)、対称形
 `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`
 (`InformationTheory/Shannon/MIChainRule.lean`)
+:::
+
+## 有限性
+
+::: proposition 1.3.5
+定義 1.1.1 の設定（有限アルファベット）で $I(X;Y) < \infty$。
+:::
+
+::: proof
+定理 1.3.4 より $I(X;Y) = H(X) - H(X\mid Y)$ で、$H(X)$ は有限個の項の有限和だから
+有限、$H(X\mid Y)$ は非負（定義 1.2.2 の直後で見た）。よって $I(X;Y) \le H(X) < \infty$。
+:::
+
+拡張実数値をとりうる量を扱うとき、有限性はいちいち確かめる必要がある。以降ではこの
+命題により、相互情報量を実数として足し引きしてよい。
+
+::: formalization-note
+本文一行の有限性が、形式化では結合分布の周辺積への絶対連続性と対数尤度比の可積分性を
+経て Mathlib の `klDiv_ne_top` に帰着する測度論の補題になる。
+:::
+
+::: formalized
+`mutualInfo_ne_top` (`InformationTheory/Shannon/MutualInfo.lean`)
 :::
 

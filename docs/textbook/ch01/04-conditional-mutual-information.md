@@ -34,7 +34,7 @@ $$
 見えるか」である。$Z$ を知ることで結びつきが説明しつくされていれば 0 になり、$Z$ を
 知ってもなお残る結びつきがあれば正になる。
 
-**注意（無条件版との大きな違い）.** $I(X;Y\mid Z)$ は $I(X;Y)$ より小さいとは限らない。
+**増減の向きは決まらない.** $I(X;Y\mid Z)$ は $I(X;Y)$ より小さいとは限らない。
 条件を付けると相互情報量は**増えることも減ることもある**。
 - 減る例：公平なコイン $W$ を投げ、$X$ も $Y$ も $Z$ もすべて $W$ の値そのものとする。
   $X$ と $Y$ は完全に一致しているので $I(X;Y) = \log 2 > 0$。しかし $Z$ を知れば $X$ も
@@ -55,8 +55,11 @@ $D\big(p(x,y \mid z)\,\big\|\,p(x\mid z)p(y\mid z)\big)$ と書ける。本節�
 :::
 
 ::: formalization-note
-本ライブラリは条件付き分布カーネルの `compProd` 形に対する KL として
-定義する（`klDiv` の引数に $\mu.\mathrm{map}\,Z$ と核の合成積を渡す）。値は拡張非負実数。
+本ライブラリは条件付き分布カーネルの合成積の形に対する相対エントロピーとして定義する
+（Mathlib の `klDiv` に $Z$ の像測度と核の合成積を渡す）。値は拡張非負実数である。
+この定義は条件付き分布カーネルを取り扱うために $X, Y$ に標準ボレル空間
+（`StandardBorelSpace`）を要求する。以降の条件付き量にはこの前提が一貫して付くが、
+これは核を作るための正則性（regularity）条件であって、定理の核心ではない。
 :::
 
 ::: formalized
@@ -66,7 +69,13 @@ $D\big(p(x,y \mid z)\,\big\|\,p(x\mid z)p(y\mid z)\big)$ と書ける。本節�
 ## 基本性質
 
 ::: proposition 1.4.2
-$I(X; Y \mid Z) \ge 0$。また $I(X; Y \mid Z) = I(Y; X \mid Z)$（対称性）。
+$I(X; Y \mid Z) \ge 0$。また $I(X; Y \mid Z) = I(Y; X \mid Z)$（対称性）。さらに
+$I(X;Y\mid Z) = 0$ は、$p(z) > 0$ である各 $z$ について
+$$
+p(x, y \mid z) \;=\; p(x \mid z)\,p(y \mid z)
+$$
+が成り立つこと——$Z$ を与えたとき $X$ と $Y$ が **条件付き独立** であること、記号で
+$X \perp Y \mid Z$——と同値である。
 :::
 
 ::: proof
@@ -74,15 +83,22 @@ $I(X; Y \mid Z) \ge 0$。また $I(X; Y \mid Z) = I(Y; X \mid Z)$（対称性）
 相互情報量そのものである。したがって命題 1.3.2 より $I(X;Y\mid Z=z) \ge 0$ で、非負の項を
 非負の重み $p(z)$ で平均した $I(X;Y\mid Z)$ も非負。対称性も同様に、各 $z$ で命題 1.3.3 が
 成り立つことから従う。
+
+等号条件も各 $z$ に還元する。非負の項を正の重み $p(z)$ で平均した和が 0 になるのは、
+$p(z) > 0$ の各 $z$ で $I(X;Y\mid Z=z) = 0$ となるとき、かつそのときに限る。そして
+命題 1.3.2 の等号条件により、それは条件付き分布 $p(\cdot,\cdot\mid z)$ のもとで $X$ と
+$Y$ が独立であること、すなわち上の積の形にほかならない。
 :::
 
-等号条件も各 $z$ に命題 1.3.2 を適用して読める：$I(X;Y\mid Z) = 0$ は、$p(z) > 0$ の各 $z$ で
-$X$ と $Y$ が条件付き独立であること（$X \perp Y \mid Z$）と同値である。
+::: formalization-note
+非負性は、無条件の相互情報量と同じく拡張非負実数値であることからほぼ型レベルで従う。
+等号条件（条件付き独立との同値）については、マルコフ性から $I = 0$ を出す片方向だけが
+形式化されており、逆向きを含む同値の形は無い。
+:::
 
 ::: formalized
 非負性 `condMutualInfo_nonneg`、対称性 `condMutualInfo_comm`
-(`InformationTheory/Shannon/CondMutualInfo.lean`)。非負性は無条件相互情報量と同じく
-拡張非負実数値であることからほぼ型レベルで従う。
+(`InformationTheory/Shannon/CondMutualInfo.lean`)
 :::
 
 ## エントロピー表現
@@ -123,9 +139,13 @@ $\sum_z p(x,y,z) = p(x,y)$ なので $-\sum_{x,y} p(x,y)\log p(x\mid y) = -H(X\m
 符号を込めて $+H(X\mid Y)$。合わせて $I(X;Z\mid Y) = H(X\mid Y) - H(X\mid Y,Z)$。
 :::
 
+::: formalization-note
+形式化では左辺に `.toReal` を付けた等式として述べる（条件付き相互情報量が拡張非負実数値、
+条件付きエントロピーが実数値のため）。
+:::
+
 ::: formalized
 `condMutualInfo_eq_condEntropy_sub_condEntropy`
-(`InformationTheory/Shannon/Entropy.lean`)。形式化では左辺に `.toReal` を付けた等式
-として述べる（条件付き相互情報量が拡張非負実数値、条件付きエントロピーが実数値のため）。
+(`InformationTheory/Shannon/Entropy.lean`)
 :::
 

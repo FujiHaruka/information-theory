@@ -10,7 +10,8 @@
 あたる。
 
 ::: theorem 1.7.1 対数和不等式
-非負 $a_i$ と正 $b_i$（$i=1,\dots,n$）に対し
+非負 $a_i$ と正 $b_i$（$i=1,\dots,n$）に対し、$a_i = 0$ の項は
+$0\log(0/b_i) = 0$、$\sum_i a_i = 0$ のときは左辺を 0 と約束すると
 $$
 \Big(\sum_i a_i\Big) \log\frac{\sum_i a_i}{\sum_i b_i}
   \;\le\; \sum_i a_i \log\frac{a_i}{b_i}.
@@ -18,8 +19,8 @@ $$
 等号は、すべての比 $a_i/b_i$ が等しいときに限る。
 :::
 
-これは $t \mapsto t\log t$ の凸性（＝ $\varphi = -t\log t$ の凹性、定理 1.1.5 の
-信頼の底）を、重み $b_i$ つきで述べ直したものである。情報不等式や、相対エントロピーが
+これは $t \mapsto t\log t$ の凸性（＝ 1.1 節の信頼の底で認めた $\varphi = -t\log t$ の
+狭義凹性）を、重み $b_i$ つきで述べ直したものである。情報不等式や、相対エントロピーが
 「まとめる」操作で減ること（次節のデータ処理不等式の心臓部）が、この一枚から従う。
 
 なぜ「まとめると減る」に効くのかを見ておこう。左辺は $a_i$ たちと $b_i$ たちをそれぞれ
@@ -62,9 +63,15 @@ $$
 すべて等しいときに限る。
 :::
 
+::: formalization-note
+形式化されているのは不等式だけで、等号条件（すべての比が等しいこと）に対応する単独の
+宣言は無い。$b_i = 0 \Rightarrow a_i = 0$ という絶対連続条件まで許す形も別に用意して
+ある。
+:::
+
 ::: formalized
-`log_sum_inequality`
-(`InformationTheory/Shannon/LZ78/ZivEntropyBridge.lean`)。絶対連続条件 $b_i = 0 \Rightarrow a_i = 0$ を許す
-`negMulLog` 形 `log_sum_inequality_negMulLog` (`InformationTheory/Fano/DPI.lean`) もある。
+不等式 `log_sum_inequality`
+(`InformationTheory/Shannon/LZ78/ZivEntropyBridge.lean`)、絶対連続条件を許す形
+`log_sum_inequality_negMulLog` (`InformationTheory/Fano/DPI.lean`)
 :::
 
