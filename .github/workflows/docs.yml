@@ -8,14 +8,17 @@ name: docs
 # dispatched from a branch, and with the litedoc4 revision as an input so the
 # same job can be run against two implementations.
 #
-# `uses:` cannot take an expression, so litedoc4 is checked out at the requested
-# ref and used as a local action.
+# `uses:` cannot take an expression, so the revision under measurement is written
+# into this file and this branch is pushed again. A local `uses: ./litedoc4` was
+# tried first and is WRONG for this measurement (measured 2026-08-30, runs
+# 33286269732 / 33286423780): the action's `actions/cache` paths then sit inside
+# GITHUB_WORKSPACE and every save fails with `Invalid pattern`, so no run can
+# ever hit the cache; and `github.action_ref` is empty, so no release asset
+# applies and `cargo build` runs instead of the 2.9 s download. Both differences
+# are invisible in the exit code.
 on:
   workflow_dispatch:
     inputs:
-      litedoc4-ref:
-        description: "the litedoc4 revision to measure"
-        default: "v1.2.0"
       cache:
         description: "let the action use actions/cache (false measures the cold path)"
         default: "true"
@@ -30,14 +33,8 @@ jobs:
 
       - uses: leanprover/lean-action@v1
 
-      - name: check out litedoc4 at the ref under measurement
-        uses: actions/checkout@v5
-        with:
-          repository: FujiHaruka/litedoc4
-          ref: ${{ inputs.litedoc4-ref }}
-          path: litedoc4
-
-      - uses: ./litedoc4
+      # THE REVISION UNDER MEASUREMENT — edit this line and push the branch.
+      - uses: FujiHaruka/litedoc4@v1.2.0
         id: docs
         with:
           lib: InformationTheory
