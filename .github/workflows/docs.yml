@@ -1,60 +1,54 @@
 name: docs
 
-# Publishes the API documentation (litedoc4) to GitHub Pages for a release.
+# MEASUREMENT BRANCH — `purelean-ci-bench`. Do not merge this file into main.
 #
-# The trigger is the tag push, not `on: release`: release.yml creates the release with
-# GITHUB_TOKEN, and events raised by that token do not start further workflows, so a
-# `release` trigger would never fire for a tag pushed the usual way.
+# The question it answers: what does litedoc4 cost in CI, and how does that
+# change if its Rust half is replaced by Lean. It is the release docs.yml with
+# the publishing removed (no `environment`, no deploy-pages) so it can be
+# dispatched from a branch, and with the litedoc4 revision as an input so the
+# same job can be run against two implementations.
 #
-# Pages must be set to build from GitHub Actions (Settings -> Pages -> Source), not from a
-# branch; the site is uploaded as an artifact and never committed to the repository.
-#
-# The `github-pages` environment also limits which refs may deploy, and GitHub seeds that
-# list with branches only (main), so a tag push is rejected before the job starts (no logs,
-# a few seconds). The environment carries a `tag: v*` deployment branch policy to allow it.
+# `uses:` cannot take an expression, so litedoc4 is checked out at the requested
+# ref and used as a local action.
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
-
-# One Pages deployment at a time. Queue instead of cancelling, so a release already in
-# flight finishes publishing.
-concurrency:
-  group: pages
-  cancel-in-progress: false
+    inputs:
+      litedoc4-ref:
+        description: "the litedoc4 revision to measure"
+        default: "v1.2.0"
+      cache:
+        description: "let the action use actions/cache (false measures the cold path)"
+        default: "true"
 
 jobs:
   docs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
 
-      # Build here rather than inside litedoc4. lean-action keys its `.lake` cache on the
-      # commit, so this job reuses what the CI and release jobs built for the same commit;
-      # a cold `lake build` of the library costs ~17 min, a hit costs seconds.
       - uses: leanprover/lean-action@v1
 
-      # Documents InformationTheory.* only; every Mathlib reference links to that pinned
-      # revision's source. `lib` is required because the package is a lakefile.lean one, and
-      # the step above is the build `lake-build: false` relies on — it has to be this job,
-      # because from another job the page cache is cold and the extractor is 5-12x slower.
-      - uses: FujiHaruka/litedoc4@v1.2.0
+      - name: check out litedoc4 at the ref under measurement
+        uses: actions/checkout@v5
+        with:
+          repository: FujiHaruka/litedoc4
+          ref: ${{ inputs.litedoc4-ref }}
+          path: litedoc4
+
+      - uses: ./litedoc4
         id: docs
         with:
           lib: InformationTheory
           lake-build: false
+          cache: ${{ inputs.cache }}
 
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ${{ steps.docs.outputs.site }}
-
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: what was produced
+        run: |
+          set -euo pipefail
+          SITE="${{ steps.docs.outputs.site }}"
+          echo "binary-source: ${{ steps.docs.outputs.binary-source }}"
+          echo "pages:        $(find "$SITE" -name '*.html' | wc -l)"
+          echo "bytes:        $(du -sb "$SITE" | cut -f1)"
+          cat "${{ steps.docs.outputs.timings }}" || true
