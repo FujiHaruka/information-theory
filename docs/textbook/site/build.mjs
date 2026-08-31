@@ -48,7 +48,7 @@ const chapters = [
     sections: [
       { slug: 'ch02-01', num: '2.1', title: '漸近等分配性', src: 'ch02/01-aep.md' },
       { slug: 'ch02-02', num: '2.2', title: '典型集合', src: 'ch02/02-typical-set.md' },
-      { slug: 'ch02-03', num: '2.3', title: '源符号化定理', src: 'ch02/03-source-coding.md' },
+      { slug: 'ch02-03', num: '2.3', title: '情報源符号化定理', src: 'ch02/03-source-coding.md' },
       { slug: 'ch02-04', num: '2.4', title: '強典型性', src: 'ch02/04-strong-typicality.md' },
     ],
   },
@@ -581,8 +581,12 @@ function lintTerminology(markdown, src) {
   let found = 0;
   for (const t of TERMS) {
     if (t.except?.some((p) => src.includes(p))) continue;
+    // 採用語が禁止語を丸ごと含むことがある（縮約形を禁じるとき——「情報源符号」に対する
+    // 「源符号」）。素朴に部分文字列を探すと、正しく書いた側が禁止語に当たってしまうので、
+    // 先に採用語を伏せてから探す。
+    const masked = lines.map((line) => line.split(t.use).join(' '.repeat(t.use.length)));
     for (const bad of t.avoid) {
-      lines.forEach((line, i) => {
+      masked.forEach((line, i) => {
         if (!line.includes(bad)) return;
         found += 1;
         console.warn(`warn: 表記ゆれ ${src}:${i + 1} 「${bad}」は使わない（採用: 「${t.use}」）`);

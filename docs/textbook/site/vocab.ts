@@ -2,9 +2,11 @@
 // 原稿の語彙を点検するための候補出し。判定はしない（同義語かどうかは意味の問題で、
 // 字面からは決まらない。字面の近さで機械判定を試みると、偽陽性だけが積み上がる）。
 //
-// 出力は 2 つ。
+// 出力は 3 つ。
 //   (1) 原語混入 — 訳語があるのに原語で書いた箇所。規則が明確なのでここは判定まで機械が行う
-//   (2) 章ごとの初出術語 — 判定なし。目を通して、既出の語と同じ概念を別の語で書いていないかを探す
+//   (2) 本書が名づけた語 — 判定なし。節タイトル・主張名・定義の太字だけを拾う。原稿が意識して
+//       名づけた語はここに全部出るので、1 語ずつ標準名と突き合わせる（執筆原則 §6）
+//   (3) 章ごとの初出術語 — 判定なし。目を通して、既出の語と同じ概念を別の語で書いていないかを探す
 //
 // 使い方: docs/textbook/site/vocab.ts [章スラッグ...]   （既定は全章）
 // 揺れを見つけたら `terminology.mjs` に 1 行足す。以後は build.mjs が毎回検査する。
@@ -89,7 +91,52 @@ for (const c of targets) {
 }
 console.log(foreign === 0 ? '  （なし）\n' : `  計 ${foreign} 件\n`);
 
-// --- (2) 章ごとの初出術語 ---
+// --- (2) 本書が名づけた語 ---
+// 原稿が意識して名づけた語だけを拾う。節タイトル（`# N.M …`）、主張・定義のタグ行の名前、
+// 定義ブロックの中の太字がその全部で、章あたり 20 語前後にしかならない。ここは既出語との
+// 突き合わせではなく、**外の標準名との突き合わせ**をする場所である（本書の中だけを見ていても
+// 標準から外れた命名には気づけない。実例: 情報源と書き続けながら定理名だけ「源符号化定理」に
+// 縮んでいた——標準は「情報源符号化定理」）。
+// 太字は末尾に句点を打つ太字リード（`**面積として読む.**`、執筆原則 §5）を落として拾う。
+function coinedTerms(text: string): string[] {
+  const out: string[] = [];
+  let inDefinition = false;
+  for (const line of text.split('\n')) {
+    const heading = line.match(/^#\s+(?:\d+(?:\.\d+)*\s+)?(.+?)\s*$/);
+    if (heading) { out.push(heading[1]); continue; }
+    const tag = line.match(/^:::\s+(\S+)(.*)$/);
+    if (tag) {
+      inDefinition = tag[1] === 'definition';
+      const name = tag[2].trim().replace(/^\d+(?:\.\d+)*\s*/, '');
+      if (name && /^(definition|theorem|proposition|lemma|corollary|example)$/.test(tag[1])) {
+        out.push(name);
+      }
+      continue;
+    }
+    if (/^:::\s*$/.test(line)) { inDefinition = false; continue; }
+    if (!inDefinition) continue;
+    for (const m of line.matchAll(/\*\*([^*\n]+)\*\*/g)) {
+      const w = m[1].trim();
+      if (/[.。]$/.test(w) || w.length > 14 || /\s/.test(w)) continue;
+      out.push(w);
+    }
+  }
+  return out;
+}
+
+console.log('## 本書が名づけた語（判定なし。1 語ずつ、日本語の標準名と突き合わせる。執筆原則 §6）\n');
+const named = new Set<string>();
+for (const c of CHAPTERS) {
+  const words = c.files.flatMap((f) => coinedTerms(stripCodeAndMath(Deno.readTextFileSync(root + f))));
+  const fresh = [...new Set(words)].filter((w) => !named.has(w));
+  for (const w of words) named.add(w);
+  // 章を絞って呼ばれても初出判定は全章の順序で行う（前章で名づけた語を再掲しないため）。
+  if (!targets.includes(c)) continue;
+  console.log(`### ${c.slug} — 新しく名づけた語 ${fresh.length} 語`);
+  console.log('  ' + fresh.join(' / ') + '\n');
+}
+
+// --- (3) 章ごとの初出術語 ---
 console.log('## 章ごとの初出術語（判定なし。既出の語と同じ概念を別の語で書いていないか探す）\n');
 const seen = new Set<string>();
 for (const c of targets) {
