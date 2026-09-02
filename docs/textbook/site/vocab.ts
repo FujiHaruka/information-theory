@@ -45,7 +45,8 @@ const CHAPTERS: { slug: string; files: string[] }[] = [
     slug: 'ch04',
     files: [
       'ch04/01-capacity.md', 'ch04/02-joint-typicality.md',
-      'ch04/03-random-coding.md',
+      'ch04/03-random-coding.md', 'ch04/04-converse.md',
+      'ch04/05-feedback.md',
     ],
   },
   { slug: 'ch05', files: ['ch05-max-entropy.md'] },
