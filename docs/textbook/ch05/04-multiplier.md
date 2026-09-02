@@ -215,11 +215,11 @@ $$
 $\lim_{\lambda \to -\infty} m(\lambda) = f_{\min}$ を得る。
 
 **中間値の定理を当てる.** $c_1 < f_{\max}$ だから、$\lambda \to +\infty$ での極限より、
-$m(\lambda_2) > c_1$ となる実数 $\lambda_2$ がある。同じく $f_{\min} < c_1$ より、
-$m(\lambda_1) < c_1$ となる実数 $\lambda_1$ がある。$m$ は狭義単調増加だから
-$\lambda_1 < \lambda_2$ である（$\lambda_1 \ge \lambda_2$ なら
-$m(\lambda_1) \ge m(\lambda_2)$ となって矛盾する）。$m$ は閉区間
-$[\lambda_1, \lambda_2]$ の上で連続だから、借用した中間値の定理により
+$m(\lambda_+) > c_1$ となる実数 $\lambda_+$ がある。同じく $f_{\min} < c_1$ より、
+$m(\lambda_-) < c_1$ となる実数 $\lambda_-$ がある。$m$ は狭義単調増加だから
+$\lambda_- < \lambda_+$ である（$\lambda_- \ge \lambda_+$ なら
+$m(\lambda_-) \ge m(\lambda_+)$ となって矛盾する）。$m$ は閉区間
+$[\lambda_-, \lambda_+]$ の上で連続だから、借用した中間値の定理により
 $m(\lambda) = c_1$ を満たす $\lambda$ がこの区間にある。これで存在が言えた。
 
 一意性は狭義単調性から出る。$\lambda < \lambda'$ ならば $m(\lambda) < m(\lambda')$ だから、

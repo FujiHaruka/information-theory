@@ -193,10 +193,7 @@ $\log(M_n - 1) \le n R_n \le nB$ と $P^{(n)}_e \to 0$ から第 2 項が、そ�
 
 ::: formalization-note
 系 4.5.5 に対応する単独の宣言はない。定理 4.5.4 に紐付けた宣言は各時刻の上界 $C$ を引数と
-して受け取る形なので、そこに $C(W)$ を渡し、仮定
-$I(X_i; Y_i) \le C(W)$ を `mutualInfoOfChannel_toReal_le_capacity`
-(`InformationTheory/Shannon/BlockwiseChannel/MemorylessCapacity.lean`) で満たす、という
-合成で得られる。後者はファイルの中に閉じた補題である。
+して受け取る形なので、そこに $C(W)$ を渡した合成で得られる。
 :::
 
 系 4.5.5 が示したのは片側だけである。もう片側——$C(W)$ 未満のレートがフィードバックを

@@ -104,7 +104,7 @@ $$
 :::
 
 ::: proof
-$A_n := \{\Lambda_n \ge n^2\}$ とおく。$\Lambda_n \ge 0$ だからマルコフの不等式が
+$A_n := \{\Lambda_n \ge n^2\}$ とおく。$\Lambda_n \ge 0$ だから Markov の不等式が
 使えて $\Pr[A_n] \le \mathbb E[\Lambda_n]/n^2 \le 1/n^2$ である。したがって任意の
 $N \ge 1$ に対し
 $$
