@@ -1,0 +1,218 @@
+# 5.3 分配関数と Legendre 双対
+
+5.2 節は $\lambda$ を与えられたものとして扱い、その Gibbs 分布が制約を満たすなら
+それが最大化分布である、と示した。そこで分配関数 $Z(\lambda)$ が果たしたのは、重みの
+総和を 1 にそろえる分母という役割だけだった。本節はこの分母を主役の位置に移す。
+
+移してみると、$\lambda$ の関数としての $Z$ に——正確にはその対数
+$\psi(\lambda) = \log Z(\lambda)$ に——最大エントロピー問題の答えが入っていることが
+分かる。最大値そのものが $\psi(\lambda) - \langle \lambda, c\rangle$ という閉じた式で
+書け（定理 5.3.3）、実行可能な分布のエントロピーはどれもこの式で上から押さえられる
+（定理 5.3.4）。極限をとる操作も、分布を動かして最大値を探す操作も現れない。
+$\psi$ と制約の値 $c$ だけから計算できる量として、最大エントロピーが手に入る。
+
+以下、$\mathcal X$ は空でない有限アルファベット、$f_1, \dots, f_k$ はその上の特徴、
+$f(x) = \big(f_1(x), \dots, f_k(x)\big)$、$\langle \lambda, u\rangle = \sum_i \lambda_i u_i$
+は 5.2 節で置いた記法である。
+
+## 対数分配関数と指数型分布族
+
+::: definition 5.3.1 対数分配関数と指数型分布族
+空でない有限アルファベット $\mathcal X$ 上の特徴 $f_1, \dots, f_k$ をとり、
+定義 5.2.1 の分配関数 $Z(\lambda)$ を使って
+$$
+\psi(\lambda) \;:=\; \log Z(\lambda) \qquad (\lambda \in \mathbb R^k)
+$$
+と定める。$\psi$ を **対数分配関数** と呼ぶ。また、$\lambda \in \mathbb R^k$ に対する
+$\mathcal X$ 上の関数
+$$
+x \;\longmapsto\; \exp\big(\langle \lambda, f(x)\rangle - \psi(\lambda)\big)
+$$
+を考え、$\lambda$ が $\mathbb R^k$ 全体を動くときに得られるこれらの関数の全体を、
+特徴 $f_1, \dots, f_k$ の定める **指数型分布族** と呼ぶ。
+:::
+
+::: formalized
+`logPartitionψ`、`expFamilyDist`
+(`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`)
+:::
+
+指数型分布族の書き方では、$\psi$ が指数の中に引き算として入っている。定義 5.2.1 の
+Gibbs 分布は同じものを割り算で書いていた。二つは同じ分布である。
+
+::: proposition 5.3.2
+$\mathcal X$ を空でない有限アルファベット、$f_1, \dots, f_k$ をその上の特徴とする。
+任意の $\lambda \in \mathbb R^k$ と任意の $x \in \mathcal X$ に対して
+$$
+\exp\big(\langle \lambda, f(x)\rangle - \psi(\lambda)\big) \;=\; p^*_\lambda(x)
+$$
+が成り立つ。すなわち指数型分布族の各要素は Gibbs 分布であり、逆にどの Gibbs 分布も
+指数型分布族に属する。
+:::
+
+::: proof
+指数関数の値はつねに正で $\mathcal X$ は空でないから、定義 5.2.1 の $Z(\lambda)$ は
+正の数の有限和として正である。よってその対数がとれて
+$\exp\big(\psi(\lambda)\big) = Z(\lambda)$ である。指数関数が差を商に変えることから
+$$
+\exp\big(\langle \lambda, f(x)\rangle - \psi(\lambda)\big)
+  \;=\; \frac{\exp\big(\langle \lambda, f(x)\rangle\big)}{\exp\big(\psi(\lambda)\big)}
+  \;=\; \frac{\exp\big(\langle \lambda, f(x)\rangle\big)}{Z(\lambda)}
+$$
+となり、右端は定義 5.2.1 の $p^*_\lambda(x)$ そのものである。後半は、$\lambda$ の
+動く範囲が両側とも $\mathbb R^k$ 全体だから、前半の等式から直ちに従う。
+:::
+
+::: formalized
+`expFamilyDist_eq_gibbsPmf`
+(`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`)
+:::
+
+**二つの書き方を使い分ける.** 同じ分布に二つの書き方を用意する理由は、それぞれが
+別のことを見やすくするところにある。割り算の形は、分子が各点の重み・分母がその総和
+だから、これが分布であること——非負で総和が 1——が目で見える。命題 5.2.2 の証明が
+1 行で済んだのはこの形のおかげである。引き算の形は $\psi$ を式の表に出す。両辺の
+対数をとると
+$$
+\log p^*_\lambda(x) \;=\; \langle \lambda, f(x)\rangle \;-\; \psi(\lambda)
+$$
+となって、$\lambda$ に依る部分が $\psi(\lambda)$ という 1 つの数にまとまる。補題 5.2.3
+の証明が最初にしたのもこの変形だった。本節はこの $\psi$ を追う。
+
+## Legendre 双対性
+
+::: theorem 5.3.3 Legendre 双対性
+$\mathcal X$ を空でない有限アルファベットとし、特徴 $f_1, \dots, f_k$ と制約の値
+$c = (c_1, \dots, c_k)$、および $\lambda \in \mathbb R^k$ をとる。Gibbs 分布
+$p^*_\lambda$ がモーメント制約を満たすとする。このとき
+$$
+H\big(p^*_\lambda\big) \;=\; \psi(\lambda) \;-\; \langle \lambda, c\rangle .
+$$
+:::
+
+::: proof
+補題 5.2.3 を $Q := p^*_\lambda$ として使う。左辺は $D(p^*_\lambda \,\|\, p^*_\lambda)$
+であり、定理 1.6.1 の等号条件よりこれは 0 である。右辺に現れる
+$\mathbb E_{p^*_\lambda}[f]$ は、仮定より $c$ に等しい。したがって
+$$
+0 \;=\; -H\big(p^*_\lambda\big) \;-\; \langle \lambda, c\rangle \;+\; \log Z(\lambda)
+$$
+が成り立つ。定義 5.3.1 より $\log Z(\lambda) = \psi(\lambda)$ だから、移項すれば
+主張を得る。
+:::
+
+::: formalized
+`entropy_expFamilyDist_eq_legendre`、$\lambda$ と制約整合の証拠を組にしたもの
+`KKTSolution`
+(`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`)
+:::
+
+**最大値が計算できる形になった.** 定理 5.2.5 は最大値が $H(p^*_\lambda)$ だと言ったが、
+その数を知るには $p^*_\lambda$ を各点で書き出して $-\sum_x p\log p$ を足し上げる必要が
+あった。定理 5.3.3 はその手間を消す。$\psi(\lambda)$ を 1 回計算して
+$\langle \lambda, c\rangle$ を引けばよい。$\mathcal X$ 上の和は $\psi$ の中に 1 度だけ
+現れる。制約の値 $c$ が結果にどう効くかも、この式なら $-\langle \lambda, c\rangle$ と
+いう 1 次の項として見える。
+
+証明が使ったのは補題 5.2.3 を 1 回だけである。しかも代入したのは $Q = p^*_\lambda$、
+すなわち基準に自分自身を入れただけで、隔たりが 0 になる。5.2 節が「基準を実行可能集合の
+中にとる」という方針から Gibbs 分布を導いたその方針が、ここで値の計算にまで届いた
+ことになる。
+
+## 変分上界
+
+::: theorem 5.3.4 変分上界
+$\mathcal X$ を空でない有限アルファベットとし、特徴 $f_1, \dots, f_k$ と制約の値
+$c = (c_1, \dots, c_k)$ をとる。モーメント制約を満たす任意の分布 $P$ と、任意の
+$\lambda \in \mathbb R^k$ に対して
+$$
+H(P) \;\le\; \psi(\lambda) \;-\; \langle \lambda, c\rangle .
+$$
+:::
+
+::: proof
+補題 5.2.3 を $Q := P$ として使うと
+$$
+D\big(P \,\big\|\, p^*_\lambda\big)
+  \;=\; -H(P) \;-\; \big\langle \lambda, \mathbb E_P[f] \big\rangle \;+\; \log Z(\lambda)
+$$
+である。$P$ はモーメント制約を満たすから各 $i$ で $\mathbb E_P[f_i] = c_i$、すなわち
+$\langle \lambda, \mathbb E_P[f]\rangle = \langle \lambda, c\rangle$ である。定理 1.6.1 より
+左辺は 0 以上だから
+$$
+0 \;\le\; -H(P) \;-\; \langle \lambda, c\rangle \;+\; \psi(\lambda)
+$$
+となり、定義 5.3.1 を使って移項すれば主張を得る。
+:::
+
+::: formalization-note
+定理 5.3.4 に対応する宣言 `entropy_le_logPartition_sub_inner`
+(`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`) は、$\lambda$ の
+Gibbs 分布もモーメント制約を満たすという仮定を付けた形で述べられている。本文の主張は
+その仮定を要さないので、機械検証されているのは上界がちょうど達成される場合に限られる。
+:::
+
+**上界が $\lambda$ ごとに 1 本ずつ立つ.** 定理 5.3.4 は $\lambda$ について何も仮定して
+いない。$\mathbb R^k$ の点を 1 つ選ぶたびに、実行可能集合の上のエントロピー全部に
+かかる上界が 1 本得られる、というのがこの定理の内容である。$\lambda$ を動かせば
+上界の束ができる。どの 1 本も無条件に正しいので、どれを選んでも構わない。
+
+定理 5.3.3 が言うのは、$p^*_\lambda$ が制約を満たす $\lambda$ では、その上界が実行可能な
+分布 1 つ——$p^*_\lambda$ 自身——のエントロピーにちょうど一致する、ということである。
+束の中のその 1 本は実行可能集合に触れている。定理 5.2.5 が最大値だと言った
+$H(p^*_\lambda)$ が、ここでは上界の束の 1 本として現れていることになる。
+
+この関係に Legendre 変換という名前がついている。$\lambda$ を止めるごとに上界が 1 本
+立ち、制約を満たす $\lambda$ ではその上界に触れる分布——Gibbs 分布——がある。定理 5.3.4 と
+定理 5.3.3 が並べて言っているのはこの二つで、凸関数とその Legendre 変換の関係がまさに
+この形をしている。本書はこの呼び名を言葉として使うだけで、以降の証明はどれもこれに
+依存しない。
+
+## 例で確かめる
+
+::: example 5.3.5 線形な特徴と等比の形
+$N \ge 0$ を整数、$\mathcal X = \{0, 1, \dots, N\}$、$k = 1$ とし、特徴を
+$f_1(x) = x$ とする。任意の $\lambda \in \mathbb R$ に対し $r := e^{\lambda}$ とおくと、
+Gibbs 分布は
+$$
+p^*_\lambda(x) \;=\; \frac{r^{\,x}}{\sum_{y=0}^{N} r^{\,y}}
+\qquad (x = 0, 1, \dots, N)
+$$
+と書ける。とくに隣り合う 2 点の確率の比 $p^*_\lambda(x+1) / p^*_\lambda(x)$ は
+$x$ によらず $r$ に等しい。
+:::
+
+::: proof
+$k = 1$ だから $\langle \lambda, f(x)\rangle = \lambda x$ であり、指数法則により
+$\exp(\lambda x) = (e^{\lambda})^{x} = r^{\,x}$ である。これを定義 5.2.1 の分子と分母に
+入れると $Z(\lambda) = \sum_{y=0}^{N} r^{\,y}$ となって、最初の式を得る。比については、
+命題 5.2.2 より $p^*_\lambda(x)$ は正だから商がとれて、
+$p^*_\lambda(x+1) / p^*_\lambda(x) = r^{\,x+1} / r^{\,x} = r$ である。
+:::
+
+::: formalized
+`gibbsPmf_linearFeature_eq_geometric`、その特徴 `linearFeature`
+(`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
+:::
+
+::: formalization-note
+形式化されているのは等比の形までで、隣り合う 2 点の確率の比についての後半に対応する
+宣言はない。本節の計算がその保証のすべてである。
+:::
+
+**サイコロがこの形である.** 例 5.1.4 のサイコロは目を $\{1, \dots, 6\}$ と書いたが、
+特徴は同じ $f_1(x) = x$ だから、例 5.3.5 と同じ等比の形になる——添字の始まりが 0 か 1 かの
+違いしかない。5.2 節で数値を求めた $\lambda = 0.3710\ldots$ に対して比は
+$r = e^{\lambda} \approx 1.449$ であり、目 $1$ から目 $6$ まで確率は一定の比で増えていく。
+$\lambda$ が正なら比は 1 より大きく、大きい目ほど確率が大きい。$\lambda = 0$ なら比は 1 で
+一様分布、$\lambda$ が負なら比は 1 より小さい。
+
+形の絞られ方を見ておきたい。$\{1, \dots, 6\}$ 上の分布は 6 個の数で書けて、総和が 1 と
+いう条件で 1 つ減る。制約が言っているのは「平均は $4.5$」という 1 つの数だけだから、
+それを満たす分布はまだ無数にある。にもかかわらず、最大エントロピーという原則を足すと、
+候補は $\lambda$ ただ 1 つで決まる族——等比の形——の中に落ちる。測定 1 つと原則 1 つで、
+分布が 1 つに決まってしまう。
+
+本節までの主張はすべて「その $\lambda$ の Gibbs 分布が制約を満たすなら」という条件の
+もとにある。$\psi$ を微分すると何が出るかを調べれば、その条件を満たす $\lambda$ が
+いつ存在するのかが見えてくる。それが 5.4 節である。

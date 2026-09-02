@@ -84,10 +84,12 @@ const chapters = [
     slug: 'ch05',
     num: '第5章',
     title: '最大エントロピー',
-    status: '書き直し中',
+    status: '仕上げ済',
     sections: [
       { slug: 'ch05-01', num: '5.1', title: '最大エントロピー問題', src: 'ch05/01-problem.md' },
       { slug: 'ch05-02', num: '5.2', title: 'モーメント制約と Gibbs 分布', src: 'ch05/02-gibbs.md' },
+      { slug: 'ch05-03', num: '5.3', title: '分配関数と Legendre 双対', src: 'ch05/03-partition-function.md' },
+      { slug: 'ch05-04', num: '5.4', title: 'Lagrange 乗数の存在', src: 'ch05/04-multiplier.md' },
     ],
   },
 ];
