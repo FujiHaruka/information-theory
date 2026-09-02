@@ -69,8 +69,12 @@ const chapters = [
     slug: 'ch04',
     num: '第4章',
     title: '通信路容量',
-    src: 'ch04-channel-capacity.md',
-    status: '草稿（末尾に未形式化項目・作業所見あり）',
+    status: '書き直し中',
+    sections: [
+      { slug: 'ch04-01', num: '4.1', title: '通信路と通信路容量', src: 'ch04/01-capacity.md' },
+      { slug: 'ch04-02', num: '4.2', title: '通信路符号と結合典型集合', src: 'ch04/02-joint-typicality.md' },
+      { slug: 'ch04-03', num: '4.3', title: 'ランダム符号化と達成可能性', src: 'ch04/03-random-coding.md' },
+    ],
   },
   {
     slug: 'ch05',
