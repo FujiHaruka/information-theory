@@ -34,7 +34,13 @@ const CHAPTERS: { slug: string; files: string[] }[] = [
       'ch02/03-source-coding.md', 'ch02/04-strong-typicality.md',
     ],
   },
-  { slug: 'ch03', files: ['ch03-entropy-rate.md'] },
+  {
+    slug: 'ch03',
+    files: [
+      'ch03/01-stationary.md', 'ch03/02-entropy-rate.md',
+      'ch03/03-markov-rate.md', 'ch03/04-birkhoff.md', 'ch03/05-smb.md',
+    ],
+  },
   { slug: 'ch04', files: ['ch04-channel-capacity.md'] },
   { slug: 'ch05', files: ['ch05-max-entropy.md'] },
 ];
@@ -46,6 +52,7 @@ const ALLOW = new Set([
   'Cauchy', 'Cover', 'Thomas', 'Elements', 'Information', 'Theory', 'ed.',
   'Fisher', 'Gibbs', 'Jensen', 'Neyman', 'Shannon', 'Fano', 'Markov', 'Kraft',
   'McMillan', 'Breiman', 'Birkhoff', 'Huffman', 'Lempel', 'Ziv', 'Csiszar',
+  'Cesàro', 'Lévy', 'Borel', 'Cantelli',
   // 環境タグ（:::）
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
   'proof', 'formalized', 'formalization-note', 'notation-preview',
@@ -78,7 +85,7 @@ for (const c of targets) {
   for (const f of c.files) {
     const lines = stripCodeAndMath(Deno.readTextFileSync(root + f)).split('\n');
     lines.forEach((line, i) => {
-      for (const m of line.matchAll(/[A-Za-z][A-Za-z\-\.']{2,}/g)) {
+      for (const m of line.matchAll(/[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\.']{2,}/g)) {
         const w = m[0];
         if (ALLOW.has(w) || knownAvoid.has(w)) continue; // 既知の禁止語は build.mjs が報告済み
         // 「記憶のない（memoryless）通信路」のような初出の原語併記は認める（執筆原則 §6）

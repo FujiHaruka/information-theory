@@ -55,9 +55,15 @@ const chapters = [
   {
     slug: 'ch03',
     num: '第3章',
-    title: '確率過程のエントロピーレート',
-    src: 'ch03-entropy-rate.md',
-    status: '草稿（末尾に未形式化項目・作業所見あり）',
+    title: '定常情報源のエントロピーレート',
+    status: '仕上げ済',
+    sections: [
+      { slug: 'ch03-01', num: '3.1', title: '定常情報源', src: 'ch03/01-stationary.md' },
+      { slug: 'ch03-02', num: '3.2', title: 'エントロピーレート', src: 'ch03/02-entropy-rate.md' },
+      { slug: 'ch03-03', num: '3.3', title: 'マルコフ情報源のエントロピーレート', src: 'ch03/03-markov-rate.md' },
+      { slug: 'ch03-04', num: '3.4', title: 'エルゴード性と時間平均', src: 'ch03/04-birkhoff.md' },
+      { slug: 'ch03-05', num: '3.5', title: 'Shannon–McMillan–Breiman 定理', src: 'ch03/05-smb.md' },
+    ],
   },
   {
     slug: 'ch04',
