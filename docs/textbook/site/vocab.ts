@@ -46,7 +46,8 @@ const CHAPTERS: { slug: string; files: string[] }[] = [
     files: [
       'ch04/01-capacity.md', 'ch04/02-joint-typicality.md',
       'ch04/03-random-coding.md', 'ch04/04-converse.md',
-      'ch04/05-feedback.md',
+      'ch04/05-feedback.md', 'ch04/06-strong-converse.md',
+      'ch04/07-general-channel.md',
     ],
   },
   { slug: 'ch05', files: ['ch05-max-entropy.md'] },
@@ -59,7 +60,7 @@ const ALLOW = new Set([
   'Cauchy', 'Cover', 'Thomas', 'Elements', 'Information', 'Theory', 'ed.',
   'Fisher', 'Gibbs', 'Jensen', 'Neyman', 'Shannon', 'Fano', 'Markov', 'Kraft',
   'McMillan', 'Breiman', 'Birkhoff', 'Huffman', 'Lempel', 'Ziv', 'Csiszar',
-  'Cesàro', 'Lévy', 'Borel', 'Cantelli', 'Weierstrass',
+  'Cesàro', 'Lévy', 'Borel', 'Cantelli', 'Weierstrass', 'Chebyshev',
   // 環境タグ（:::）
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
   'proof', 'formalized', 'formalization-note', 'notation-preview',
