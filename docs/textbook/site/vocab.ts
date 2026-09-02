@@ -50,7 +50,7 @@ const CHAPTERS: { slug: string; files: string[] }[] = [
       'ch04/07-general-channel.md',
     ],
   },
-  { slug: 'ch05', files: ['ch05-max-entropy.md'] },
+  { slug: 'ch05', files: ['ch05/01-problem.md', 'ch05/02-gibbs.md'] },
 ];
 
 // 原語混入の検査から外す語。固有名詞・環境タグ・訳語のない術語だけを入れる。
@@ -60,7 +60,7 @@ const ALLOW = new Set([
   'Cauchy', 'Cover', 'Thomas', 'Elements', 'Information', 'Theory', 'ed.',
   'Fisher', 'Gibbs', 'Jensen', 'Neyman', 'Shannon', 'Fano', 'Markov', 'Kraft',
   'McMillan', 'Breiman', 'Birkhoff', 'Huffman', 'Lempel', 'Ziv', 'Csiszar',
-  'Cesàro', 'Lévy', 'Borel', 'Cantelli', 'Weierstrass', 'Chebyshev',
+  'Cesàro', 'Lévy', 'Borel', 'Cantelli', 'Weierstrass', 'Chebyshev', 'Lagrange',
   // 環境タグ（:::）
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
   'proof', 'formalized', 'formalization-note', 'notation-preview',

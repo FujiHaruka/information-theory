@@ -84,8 +84,11 @@ const chapters = [
     slug: 'ch05',
     num: '第5章',
     title: '最大エントロピー',
-    src: 'ch05-max-entropy.md',
-    status: '草稿（末尾に未形式化項目・作業所見あり）',
+    status: '書き直し中',
+    sections: [
+      { slug: 'ch05-01', num: '5.1', title: '最大エントロピー問題', src: 'ch05/01-problem.md' },
+      { slug: 'ch05-02', num: '5.2', title: 'モーメント制約と Gibbs 分布', src: 'ch05/02-gibbs.md' },
+    ],
   },
 ];
 
