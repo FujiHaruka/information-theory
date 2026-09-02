@@ -72,7 +72,7 @@ const chapters = [
     status: '仕上げ済',
     sections: [
       { slug: 'ch04-01', num: '4.1', title: '通信路と通信路容量', src: 'ch04/01-capacity.md' },
-      { slug: 'ch04-02', num: '4.2', title: '通信路符号と結合典型集合', src: 'ch04/02-joint-typicality.md' },
+      { slug: 'ch04-02', num: '4.2', title: 'ブロック通信路符号と結合典型集合', src: 'ch04/02-joint-typicality.md' },
       { slug: 'ch04-03', num: '4.3', title: 'ランダム符号化と達成可能性', src: 'ch04/03-random-coding.md' },
       { slug: 'ch04-04', num: '4.4', title: '逆定理', src: 'ch04/04-converse.md' },
       { slug: 'ch04-05', num: '4.5', title: 'フィードバックのある通信路', src: 'ch04/05-feedback.md' },
