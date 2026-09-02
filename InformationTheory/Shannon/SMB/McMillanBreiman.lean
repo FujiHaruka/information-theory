@@ -39,8 +39,6 @@ need Birkhoff.
   Cover–Thomas inequalities (`liminf ≥ H`, `limsup ≤ H`) plus a.s.
   boundedness, derive `Tendsto blockLogAvg n → H` a.s.
 * `expected_blockLogAvg_eq` — `𝔼[blockLogAvg μ p n] = blockEntropy μ p n / n`.
-* `tendsto_expected_blockLogAvg` — the expected-value SMB:
-  `𝔼[blockLogAvg μ p n] → entropyRate μ p` as `n → ∞`.
 -/
 
 namespace InformationTheory.Shannon

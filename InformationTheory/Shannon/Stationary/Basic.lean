@@ -26,8 +26,6 @@ theorem.
 
 * `StationaryProcess.measurable_obs` — each `obs i` is measurable.
 * `StationaryProcess.measurable_blockRV` — `blockRV n` is measurable.
-* `StationaryProcess.identDistrib_obs_zero` — `obs i` has the same law as `obs 0`
-  (stationarity, derived from `MeasurePreserving.iterate`).
 -/
 
 namespace InformationTheory.Shannon

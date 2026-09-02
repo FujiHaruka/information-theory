@@ -834,7 +834,10 @@ const REF = Deno.env.get('TEXTBOOK_REF')?.trim() || gitOut('describe', '--tags',
 const DECL_PREFILTER = '^(@\\[|theorem|lemma|def|abbrev|structure|class|inductive|instance'
   + '|opaque|namespace|section|end|private|protected|noncomputable|nonrec|scoped|partial|unsafe)';
 const MODIFIERS = '(?:(?:private|protected|scoped|noncomputable|nonrec|partial|unsafe)\\s+)*';
-const NAME = "[A-Za-z_][A-Za-z0-9_'!?₀-₉ₐ-ₜ.]*";
+// 宣言名はギリシャ文字で始まりうる（`μZ`）。先頭文字をラテン文字に限ると、その種の
+// 宣言は表にも載らず IDENT_RE も素通りするので、warn が出ないままリンクにならない。
+const LETTER = "A-Za-z_\\u0370-\\u03ff\\u1f00-\\u1fff";
+const NAME = `[${LETTER}][${LETTER}0-9'!?₀-₉ₐ-ₜ.]*`;
 const DECL_RE = new RegExp(`^(?:@\\[[^\\]]*\\]\\s*)*${MODIFIERS}`
   + `(?:theorem|lemma|def|abbrev|structure|class|inductive|instance|opaque)\\s+(${NAME})`);
 // private は他の修飾子より前とは限らない（`noncomputable private def`）。
