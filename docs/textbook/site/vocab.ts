@@ -103,8 +103,10 @@ for (const c of targets) {
       for (const m of line.matchAll(/[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\.']{2,}/g)) {
         const w = m[0];
         if (ALLOW.has(w) || knownAvoid.has(w)) continue; // 既知の禁止語は build.mjs が報告済み
-        // 「記憶のない（memoryless）通信路」のような初出の原語併記は認める（執筆原則 §6）
-        if (/[（(]$/.test(line.slice(0, m.index))) continue;
+        // 「記憶のない（memoryless）通信路」のような初出の原語併記は認める（執筆原則 §6）。
+        // 併記は「（feature function）」のように複数語のこともあるので、開き括弧から
+        // 途切れずに続く欧文の並びを丸ごと外す（間に和文や閉じ括弧が入れば当たらない）。
+        if (/[（(][A-Za-zÀ-ÿ\-\.'’ ]*$/.test(line.slice(0, m.index))) continue;
         foreign += 1;
         console.log(`  ${f}:${i + 1}  ${w}`);
       }

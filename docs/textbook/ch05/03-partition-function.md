@@ -1,4 +1,4 @@
-# 5.3 分配関数と Legendre 双対
+# 5.3 分配関数と Legendre 双対性
 
 5.2 節は $\lambda$ を与えられたものとして扱い、その Gibbs 分布が制約を満たすなら
 それが最大化分布である、と示した。そこで分配関数 $Z(\lambda)$ が果たしたのは、重みの
@@ -11,14 +11,14 @@ $\psi(\lambda) = \log Z(\lambda)$ に——最大エントロピー問題の答�
 （定理 5.3.4）。極限をとる操作も、分布を動かして最大値を探す操作も現れない。
 $\psi$ と制約の値 $c$ だけから計算できる量として、最大エントロピーが手に入る。
 
-以下、$\mathcal X$ は空でない有限アルファベット、$f_1, \dots, f_k$ はその上の特徴、
+以下、$\mathcal X$ は空でない有限アルファベット、$f_1, \dots, f_k$ はその上の特徴関数、
 $f(x) = \big(f_1(x), \dots, f_k(x)\big)$、$\langle \lambda, u\rangle = \sum_i \lambda_i u_i$
 は 5.2 節で置いた記法である。
 
 ## 対数分配関数と指数型分布族
 
 ::: definition 5.3.1 対数分配関数と指数型分布族
-空でない有限アルファベット $\mathcal X$ 上の特徴 $f_1, \dots, f_k$ をとり、
+空でない有限アルファベット $\mathcal X$ 上の特徴関数 $f_1, \dots, f_k$ をとり、
 定義 5.2.1 の分配関数 $Z(\lambda)$ を使って
 $$
 \psi(\lambda) \;:=\; \log Z(\lambda) \qquad (\lambda \in \mathbb R^k)
@@ -29,11 +29,11 @@ $$
 x \;\longmapsto\; \exp\big(\langle \lambda, f(x)\rangle - \psi(\lambda)\big)
 $$
 を考え、$\lambda$ が $\mathbb R^k$ 全体を動くときに得られるこれらの関数の全体を、
-特徴 $f_1, \dots, f_k$ の定める **指数型分布族** と呼ぶ。
+特徴関数 $f_1, \dots, f_k$ の定める **指数型分布族** と呼ぶ。
 :::
 
 ::: formalized
-`logPartitionψ`、`expFamilyDist`
+対数分配関数 `logPartitionψ`、指数型分布族の各要素 `expFamilyDist`
 (`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`)
 :::
 
@@ -41,7 +41,7 @@ $$
 Gibbs 分布は同じものを割り算で書いていた。二つは同じ分布である。
 
 ::: proposition 5.3.2
-$\mathcal X$ を空でない有限アルファベット、$f_1, \dots, f_k$ をその上の特徴とする。
+$\mathcal X$ を空でない有限アルファベット、$f_1, \dots, f_k$ をその上の特徴関数とする。
 任意の $\lambda \in \mathbb R^k$ と任意の $x \in \mathcal X$ に対して
 $$
 \exp\big(\langle \lambda, f(x)\rangle - \psi(\lambda)\big) \;=\; p^*_\lambda(x)
@@ -82,7 +82,7 @@ $$
 ## Legendre 双対性
 
 ::: theorem 5.3.3 Legendre 双対性
-$\mathcal X$ を空でない有限アルファベットとし、特徴 $f_1, \dots, f_k$ と制約の値
+$\mathcal X$ を空でない有限アルファベットとし、特徴関数 $f_1, \dots, f_k$ と制約の値
 $c = (c_1, \dots, c_k)$、および $\lambda \in \mathbb R^k$ をとる。Gibbs 分布
 $p^*_\lambda$ がモーメント制約を満たすとする。このとき
 $$
@@ -102,9 +102,15 @@ $$
 :::
 
 ::: formalized
-`entropy_expFamilyDist_eq_legendre`、$\lambda$ と制約整合の証拠を組にしたもの
-`KKTSolution`
+`entropy_expFamilyDist_eq_legendre`
 (`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`)
+:::
+
+::: formalization-note
+形式化では、$\lambda$ とそれが制約を満たすという証拠を 1 つの対にまとめた
+`KKTSolution` (`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`) を仮定に
+置いている。本文の「Gibbs 分布 $p^*_\lambda$ がモーメント制約を満たすとする」と同じ
+内容である。
 :::
 
 **最大値が計算できる形になった.** 定理 5.2.5 は最大値が $H(p^*_\lambda)$ だと言ったが、
@@ -122,7 +128,7 @@ $\langle \lambda, c\rangle$ を引けばよい。$\mathcal X$ 上の和は $\psi
 ## 変分上界
 
 ::: theorem 5.3.4 変分上界
-$\mathcal X$ を空でない有限アルファベットとし、特徴 $f_1, \dots, f_k$ と制約の値
+$\mathcal X$ を空でない有限アルファベットとし、特徴関数 $f_1, \dots, f_k$ と制約の値
 $c = (c_1, \dots, c_k)$ をとる。モーメント制約を満たす任意の分布 $P$ と、任意の
 $\lambda \in \mathbb R^k$ に対して
 $$
@@ -146,10 +152,13 @@ $$
 :::
 
 ::: formalization-note
-定理 5.3.4 に対応する宣言 `entropy_le_logPartition_sub_inner`
+定理 5.3.4 に対応する単独の宣言はない。名前の近い宣言
+`entropy_le_logPartition_sub_inner`
 (`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`) は、$\lambda$ の
-Gibbs 分布もモーメント制約を満たすという仮定を付けた形で述べられている。本文の主張は
-その仮定を要さないので、機械検証されているのは上界がちょうど達成される場合に限られる。
+Gibbs 分布もモーメント制約を満たすという仮定を付けた形で述べられていて、本文の主張より
+弱い。$\lambda$ に何も仮定しない本文の形は、補題 5.2.3 の形式化と相対エントロピーの
+非負性 `klDivPmf_nonneg` (`InformationTheory/Shannon/CsiszarProjection.lean`) の合成で
+得られる——本文の証明がしているのと同じ組み方である。
 :::
 
 **上界が $\lambda$ ごとに 1 本ずつ立つ.** 定理 5.3.4 は $\lambda$ について何も仮定して
@@ -162,16 +171,29 @@ Gibbs 分布もモーメント制約を満たすという仮定を付けた形�
 束の中のその 1 本は実行可能集合に触れている。定理 5.2.5 が最大値だと言った
 $H(p^*_\lambda)$ が、ここでは上界の束の 1 本として現れていることになる。
 
-この関係に Legendre 変換という名前がついている。$\lambda$ を止めるごとに上界が 1 本
-立ち、制約を満たす $\lambda$ ではその上界に触れる分布——Gibbs 分布——がある。定理 5.3.4 と
-定理 5.3.3 が並べて言っているのはこの二つで、凸関数とその Legendre 変換の関係がまさに
-この形をしている。本書はこの呼び名を言葉として使うだけで、以降の証明はどれもこれに
-依存しない。
+二つを 1 本の式にまとめられる。定理 5.3.4 はどの $\lambda$ でも実行可能な分布の
+エントロピーが $\psi(\lambda) - \langle \lambda, c\rangle$ 以下だと言い、定理 5.3.3 は
+制約を満たす $\lambda$ ではその値がちょうど達成されると言っている。だから、制約を満たす
+$\lambda$ が 1 つでもあれば、実行可能集合の上のエントロピーの最大値は
+$$
+\min_{\lambda \in \mathbb R^k} \big(\psi(\lambda) - \langle \lambda, c\rangle\big)
+$$
+に等しく、最小はその制約を満たす $\lambda$ で達成される。分布を動かして最大を探す問題が、
+$\lambda$ を動かして最小を探す問題に置き換わったことになる。制約を満たす $\lambda$ が
+いつ存在するのかは 5.4 節が扱う。
+
+この掛け替えを、外の文献では Legendre 変換と呼ぶ。凸関数から、傾きを変数にとった別の
+関数を作る操作のことで、本節の名前——Legendre 双対性——は、その関係が最大エントロピー
+問題の設定でそのまま成り立っていることを指している。本書はこの呼び名を言葉として使う
+だけで、以降の証明はどれもこれに依存しない。
 
 ## 例で確かめる
 
-::: example 5.3.5 線形な特徴と等比の形
-$N \ge 0$ を整数、$\mathcal X = \{0, 1, \dots, N\}$、$k = 1$ とし、特徴を
+特徴関数が 1 つで、値が記号そのものである場合を書き下しておく。サイコロの目を 0 から
+始まるように付け替えた一般形である。
+
+::: example 5.3.5 線形な特徴関数と等比の形
+$N \ge 0$ を整数、$\mathcal X = \{0, 1, \dots, N\}$、$k = 1$ とし、特徴関数を
 $f_1(x) = x$ とする。任意の $\lambda \in \mathbb R$ に対し $r := e^{\lambda}$ とおくと、
 Gibbs 分布は
 $$
@@ -191,7 +213,7 @@ $p^*_\lambda(x+1) / p^*_\lambda(x) = r^{\,x+1} / r^{\,x} = r$ である。
 :::
 
 ::: formalized
-`gibbsPmf_linearFeature_eq_geometric`、その特徴 `linearFeature`
+`gibbsPmf_linearFeature_eq_geometric`、その特徴関数 `linearFeature`
 (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
 :::
 
@@ -200,18 +222,21 @@ $p^*_\lambda(x+1) / p^*_\lambda(x) = r^{\,x+1} / r^{\,x} = r$ である。
 宣言はない。本節の計算がその保証のすべてである。
 :::
 
-**サイコロがこの形である.** 例 5.1.4 のサイコロは目を $\{1, \dots, 6\}$ と書いたが、
-特徴は同じ $f_1(x) = x$ だから、例 5.3.5 と同じ等比の形になる——添字の始まりが 0 か 1 かの
-違いしかない。5.2 節で数値を求めた $\lambda = 0.3710\ldots$ に対して比は
-$r = e^{\lambda} \approx 1.449$ であり、目 $1$ から目 $6$ まで確率は一定の比で増えていく。
-$\lambda$ が正なら比は 1 より大きく、大きい目ほど確率が大きい。$\lambda = 0$ なら比は 1 で
-一様分布、$\lambda$ が負なら比は 1 より小さい。
+**サイコロに戻る.** 例 5.1.4 のサイコロは目を $\{1, \dots, 6\}$ と書いた。例 5.3.5 と
+同じ計算をこのアルファベットの上で繰り返せば、同じ等比の形が出る。5.2 節で数値を求めた
+$\lambda = 0.3710\ldots$ に対して比は $r = e^{\lambda} \approx 1.449$ であり、目 $1$ から
+目 $6$ まで確率は一定の比で増えていく。$\lambda$ が正なら比は 1 より大きく、大きい目ほど
+確率が大きい。$\lambda = 0$ なら比は 1 で一様分布、$\lambda$ が負なら比は 1 より小さい。
+最大値のほうも定理 5.3.3 で検算できる。$\psi(0.3710) - 0.3710 \times 4.5 \approx 1.614$
+ナットとなり、5.2 節で各点の確率から足し上げた値と一致する。
 
 形の絞られ方を見ておきたい。$\{1, \dots, 6\}$ 上の分布は 6 個の数で書けて、総和が 1 と
 いう条件で 1 つ減る。制約が言っているのは「平均は $4.5$」という 1 つの数だけだから、
-それを満たす分布はまだ無数にある。にもかかわらず、最大エントロピーという原則を足すと、
-候補は $\lambda$ ただ 1 つで決まる族——等比の形——の中に落ちる。測定 1 つと原則 1 つで、
-分布が 1 つに決まってしまう。
+それを満たす分布はまだ無数にある。それでも探す先は狭い。$\exp$ の形をした分布のうち
+平均が $4.5$ になるものを 1 つ見つければ、定理 5.2.5 によりそれが最大化分布だと決まる
+からである。測定 1 つと原則 1 つで、候補が $\lambda$ ただ 1 つで決まる族
+——等比の形——に絞られる。このサイコロについて、制約に整合する $\lambda$ が実際に
+存在することは 5.4 節で示す。
 
 本節までの主張はすべて「その $\lambda$ の Gibbs 分布が制約を満たすなら」という条件の
 もとにある。$\psi$ を微分すると何が出るかを調べれば、その条件を満たす $\lambda$ が

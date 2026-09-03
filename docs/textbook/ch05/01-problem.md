@@ -33,7 +33,7 @@ $\mathcal X$ は空でない有限集合とし、その上の分布——各点�
 
 ::: definition 5.1.1 モーメント制約と実行可能集合
 空でない有限アルファベット $\mathcal X$ 上の実数値関数 $f_1, \dots, f_k$（$k \ge 0$）を
-**特徴関数**（feature）、実数 $c_1, \dots, c_k$ をその制約の値と呼ぶ。
+**特徴関数**（feature function）、実数 $c_1, \dots, c_k$ をその制約の値と呼ぶ。
 $\mathcal X$ 上の分布 $P$ が **モーメント制約** を満たすとは、
 $$
 \mathbb E_P[f_i] \;:=\; \sum_{x \in \mathcal X} P(x)\, f_i(x) \;=\; c_i
