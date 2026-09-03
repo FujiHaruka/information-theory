@@ -275,9 +275,10 @@ function escapeHtml(s) {
 }
 
 // --- 和文の soft line break ---
-// 原稿は表示幅で改行してある (textbook-writing.md §9) が、CommonMark の soft break は
-// HTML では空白になり、和文の語間に不要な空きが出る (「議論を 支える」)。前後どちらかが
-// 和文なら空白を落とし、欧文どうしの折り返しでだけ従来どおり空白を残す。
+// 原稿は段落を 1 行で書く (textbook-writing.md §9) が、強調が壊れるために折ったままの行が
+// わずかに残る。CommonMark の soft break は HTML では空白になり、和文の語間に不要な空きが
+// 出る (「議論を 支える」)。前後どちらかが和文なら空白を落とし、欧文どうしの折り返しでだけ
+// 従来どおり空白を残す。
 const CJK = /[　-〿぀-ヿ㐀-䶿一-鿿豈-﫿＀-￯]/;
 
 // 改行の隣に立つ文字。タグや content を持たないトークン (link_open など) は読み飛ばす。
@@ -297,8 +298,9 @@ md.renderer.rules.softbreak = (tokens, idx) => {
   return glue ? '<!--\n-->' : '\n';
 };
 
-// 原稿には KaTeX の $ 記法 (第1章) と LaTeX 括弧デリミタ (第2章以降) が混在する。
-// markdown-it-katex は $ 記法しか解さないため、\\[ \\] / \\( \\) を $$ / $ に寄せてから渡す。
+// 原稿は $ 記法で書く (textbook-writing.md §6)。markdown-it-katex は $ 記法しか解さないので、
+// 混ざった LaTeX 括弧デリミタ \\[ \\] / \\( \\) は $$ / $ に寄せてから渡す (現在の原稿に括弧
+// デリミタは無く、これは混ざっても表示が壊れないための保険)。
 // コードブロック・インラインコードの中身は保護する (Lean コードを壊さないため)。
 function normalizeMath(src) {
   const stashed = [];
