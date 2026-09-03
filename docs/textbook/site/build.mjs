@@ -600,9 +600,9 @@ function lintTerminology(markdown, src) {
   let found = 0;
   for (const t of TERMS) {
     if (t.except?.some((p) => src.includes(p))) continue;
-    // 採用語が禁止語を丸ごと含むことがある（縮約形を禁じるとき——「情報源符号」に対する
-    // 「源符号」）。素朴に部分文字列を探すと、正しく書いた側が禁止語に当たってしまうので、
-    // 先に採用語を伏せてから探す。
+    // 採用語が禁止語を丸ごと含むことがある（縮約形を禁じるとき。「情報源符号」に対する
+    // 「源符号」がそれである）。素朴に部分文字列を探すと、正しく書いた側が禁止語に当たって
+    // しまうので、先に採用語を伏せてから探す。
     const masked = lines.map((line) => line.split(t.use).join(' '.repeat(t.use.length)));
     for (const bad of t.avoid) {
       masked.forEach((line, i) => {
@@ -618,7 +618,7 @@ function lintTerminology(markdown, src) {
 // --- 段落の途中の改行 ---
 // 原稿は段落を 1 行で書く（textbook-writing.md §9）。和文の soft break は表示に出ないので、
 // どこで折っても読者には同じものが届く。違いが出るのは検索のほうで、術語や行内数式が行を
-// またぐと、行単位の検査——表記ゆれ・借用宣言の照合・vocab.ts——がその 1 件だけを取りこぼす。
+// またぐと、行単位の検査（表記ゆれ・借用宣言の照合・vocab.ts）がその 1 件だけを取りこぼす。
 // 原稿を読むかぎり正しく書けているので、書いた本人には見つけられない。折らなければ起きない。
 const ASCII_PUNCT = /[!-/:-@[-`{-~]/;
 function lintLineBreaks(markdown, src) {
@@ -639,6 +639,31 @@ function lintLineBreaks(markdown, src) {
       console.warn(`warn: 段落の途中の改行 ${src}:${i + 1} 「${line.trim().slice(0, 20)}…」は前の行につなぐ`);
     }
     prev = line;
+  });
+  return found;
+}
+
+// --- ダッシュ ---
+// 日本語のダッシュが担うのは副題の区切り・会話の中断・注記の導入までで、英語の em dash が
+// 担う挿入句・後置の敷衍・思考の転回は担当外である（textbook-writing.md §9）。ダッシュは
+// 論理関係を名指さずに文をつなげられるので、書き手には楽だが、読者は言い換えなのか理由なのか
+// 但し書きなのかを毎回推測させられる。しかも章が直前の章を手本にする執筆手順では、頻度の
+// 原則がないかぎり密度が単調に増える。見出し行と `:::` のタグ行だけは副題の区切りに使って
+// よい（日本語として正統な用法である。例は執筆原則 §9）ので、対象から外す。
+const DASH_RE = /——/g;
+function lintDashes(markdown, src) {
+  const raw = markdown.split('\n');
+  // 伏せた行で探し、抜粋は元の行から取る（伏せる範囲は空白に置き換わるだけで長さを
+  // 変えないので、位置はそのまま使える）。
+  const lines = stripCodeAndMath(markdown).split('\n');
+  let found = 0;
+  lines.forEach((line, i) => {
+    if (/^\s*#{1,6} /.test(line) || /^\s*:::/.test(line)) return;
+    for (const m of line.matchAll(DASH_RE)) {
+      found += 1;
+      const window = raw[i].slice(Math.max(0, m.index - 12), m.index + 14).trim();
+      console.warn(`warn: ダッシュ ${src}:${i + 1} 「${window}」`);
+    }
   });
   return found;
 }
@@ -1047,9 +1072,9 @@ function linkFormalized(state, tokens, ctx, lineNo) {
   }
 }
 
-// 傍注が名指しした宣言名 / パスの実在確認。リンクには変えない——ポインタは
+// 傍注が名指しした宣言名 / パスの実在確認。リンクには変えない。というのもポインタは
 // `::: formalized` の仕事で（執筆原則 §7）、注記まで行き先だらけにすると本筋との差が
-// 消える。ただし名前が腐るのはポインタと同じなので、検査だけは同じものを掛ける。
+// 消えるからである。ただし名前が腐るのはポインタと同じなので、検査だけは同じものを掛ける。
 // パスは一意に決まるので warn、宣言名は Mathlib の名前と区別できないので監査モードの
 // 一覧に回す（`--audit-refs` の考え方）。
 function checkNoteRefs(tokens, ctx, lineNo) {
@@ -1092,6 +1117,7 @@ let missingProofs = 0;
 let termIssues = 0;
 let titleMismatches = 0;
 let wrappedLines = 0;
+let dashes = 0;
 
 // 出力は毎回まっさらから組む。節を消したときに前回の HTML が残ると、目次から辿れない
 // ページがデプロイ先で生き続ける。
@@ -1114,6 +1140,7 @@ pages.forEach((pg, i) => {
   termIssues += lintTerminology(markdown, pg.src);
   titleMismatches += lintSectionTitle(pg);
   wrappedLines += lintLineBreaks(markdown, pg.src);
+  dashes += lintDashes(markdown, pg.src);
   let bodyHtml = navTop(pg) + md.render(linkifyRefs(normalizeMath(markdown), pg), { ctx: pg });
   if (pg.isChapterTop && pg.chapter.sections) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
@@ -1158,6 +1185,7 @@ if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs
 if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
 if (titleMismatches > 0) console.warn(`warn: 節タイトルの不一致 ${titleMismatches} 件`);
 if (wrappedLines > 0) console.warn(`warn: 段落の途中の改行 ${wrappedLines} 件`);
+if (dashes > 0) console.warn(`warn: ダッシュ ${dashes} 件`);
 if (unresolvedRefs > 0) console.warn(`warn: 参照 ${unresolvedRefs} 件`);
 if (duplicateNums > 0) console.warn(`warn: 番号の重複 ${duplicateNums} 件`);
 if (brokenPointers > 0) console.warn(`warn: 形式化ポインタ ${brokenPointers} 件`);
