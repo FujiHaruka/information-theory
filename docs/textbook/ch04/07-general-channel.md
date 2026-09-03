@@ -64,8 +64,8 @@ $\mathbb W = \big(W^{(n)}\big)_{n \ge 1}$ をブロック通信路とする。�
 $$
 C_n\big(\mathbb W\big) \;:=\; \sup_{p^{(n)}} I\big(p^{(n)}; W^{(n)}\big)
 $$
-で定める（$I(\cdot\,;\cdot)$ は定義 4.1.2 を入力アルファベット $\mathcal X^n$、出力
-アルファベット $\mathcal Y^n$ に対して読んだもの）。1 文字あたりに直した
+で定める（$I(\cdot\,;\cdot)$ は定義 4.1.2 を入力アルファベット $\mathcal X^n$、
+出力アルファベット $\mathcal Y^n$ に対して読んだもの）。1 文字あたりに直した
 $\frac1n C_n(\mathbb W)$ を **容量レート** と呼ぶ。$n \to \infty$ でこの列が収束するとき、
 その極限を
 $$

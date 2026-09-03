@@ -615,6 +615,21 @@ function lintTerminology(markdown, src) {
   return found;
 }
 
+// --- 節タイトルの一致チェック ---
+// 節の題は 2 か所にある。原稿 1 行目の見出しと、上の chapters 配列の `title` である。片方
+// だけ改名しても、原稿もサイトもそれぞれ筋の通った出力になるので、本文の題と目次・パンくず・
+// 前後ナビの題が食い違ったことに誰も気づかない（5.3 節が実際にそうなった）。突き合わせる。
+function lintSectionTitle(pg) {
+  if (!pg.section) return 0; // 1 章 1 ファイルの章に節の題はない
+  const first = pg.markdown.split('\n', 1)[0];
+  const heading = first.match(/^#\s+(.*?)\s*$/);
+  const expected = pg.section.num ? `${pg.section.num} ${pg.section.title}` : pg.section.title;
+  if (heading?.[1] === expected) return 0;
+  console.warn(`warn: 節タイトルの不一致 ${pg.src}:1`
+    + ` 原稿「${heading ? heading[1] : first.trim()}」／build.mjs「${expected}」`);
+  return 1;
+}
+
 // --- 参照の自動リンク ---
 // 原稿は参照を番号だけで書く（textbook-writing.md §8）。ここで番号 → 掲載位置の対応表を
 // 全ページから集め、本文の「定理 1.2.3」「1.6 節」「第2章」をリンクに変える。番号は本
@@ -1047,6 +1062,7 @@ md.core.ruler.push('formalized_links', (state) => {
 
 let missingProofs = 0;
 let termIssues = 0;
+let titleMismatches = 0;
 
 // 出力は毎回まっさらから組む。節を消したときに前回の HTML が残ると、目次から辿れない
 // ページがデプロイ先で生き続ける。
@@ -1067,6 +1083,7 @@ pages.forEach((pg, i) => {
   const markdown = pg.markdown;
   missingProofs += lintProofs(markdown, pg.src);
   termIssues += lintTerminology(markdown, pg.src);
+  titleMismatches += lintSectionTitle(pg);
   let bodyHtml = navTop(pg) + md.render(linkifyRefs(normalizeMath(markdown), pg), { ctx: pg });
   if (pg.isChapterTop && pg.chapter.sections) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
@@ -1110,6 +1127,7 @@ console.log(`built index -> dist/index.html (${pages.length} pages)`);
 
 if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs} 件`);
 if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
+if (titleMismatches > 0) console.warn(`warn: 節タイトルの不一致 ${titleMismatches} 件`);
 if (unresolvedRefs > 0) console.warn(`warn: 参照 ${unresolvedRefs} 件`);
 if (duplicateNums > 0) console.warn(`warn: 番号の重複 ${duplicateNums} 件`);
 if (brokenPointers > 0) console.warn(`warn: 形式化ポインタ ${brokenPointers} 件`);
