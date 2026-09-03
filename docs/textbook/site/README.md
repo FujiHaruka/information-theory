@@ -20,8 +20,8 @@ deno run -A build.mjs       # → dist/index.html を生成
 
 ビルド対象は `build.mjs` の `chapters` 配列で管理する。章には 2 つの形がある。
 
-- **1 章 1 ページ**（第4・5章）— `{ slug, num, title, src, status }` を足す。
-- **節ごとにページを分ける**（第1〜3章）— `src` の代わりに `sections` 配列を持たせる。
+- **1 章 1 ページ** — `{ slug, num, title, src }` を足す。
+- **節ごとにページを分ける**（現行の全章）— `src` の代わりに `sections` 配列を持たせる。
   各節は `{ slug, num, title, src }`。原稿は `docs/textbook/ch01/` のように章ごとの
   ディレクトリに 1 節 1 ファイルで置く。章のページは作られず、最初の節が章の入口になる
   （目次と「第N章」の参照はそこへ飛ぶ）。読み方や範囲を説明する章トビラは置かない

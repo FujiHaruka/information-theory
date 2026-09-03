@@ -26,7 +26,6 @@ const chapters = [
     slug: 'ch01',
     num: '第1章',
     title: 'エントロピー・相互情報量・データ処理不等式',
-    status: '仕上げ済（読者向けパイロット）',
     sections: [
       { slug: 'ch01-01', num: '1.1', title: 'エントロピー', src: 'ch01/01-entropy.md' },
       { slug: 'ch01-02', num: '1.2', title: '結合エントロピー・条件付きエントロピーとチェイン則', src: 'ch01/02-joint-conditional-entropy.md' },
@@ -44,7 +43,6 @@ const chapters = [
     slug: 'ch02',
     num: '第2章',
     title: '漸近等分配性とデータ圧縮',
-    status: '仕上げ済',
     sections: [
       { slug: 'ch02-01', num: '2.1', title: '漸近等分配性', src: 'ch02/01-aep.md' },
       { slug: 'ch02-02', num: '2.2', title: '典型集合', src: 'ch02/02-typical-set.md' },
@@ -56,7 +54,6 @@ const chapters = [
     slug: 'ch03',
     num: '第3章',
     title: '定常情報源のエントロピーレート',
-    status: '仕上げ済',
     sections: [
       { slug: 'ch03-01', num: '3.1', title: '定常情報源', src: 'ch03/01-stationary.md' },
       { slug: 'ch03-02', num: '3.2', title: 'エントロピーレート', src: 'ch03/02-entropy-rate.md' },
@@ -69,7 +66,6 @@ const chapters = [
     slug: 'ch04',
     num: '第4章',
     title: '通信路容量',
-    status: '仕上げ済',
     sections: [
       { slug: 'ch04-01', num: '4.1', title: '通信路と通信路容量', src: 'ch04/01-capacity.md' },
       { slug: 'ch04-02', num: '4.2', title: 'ブロック通信路符号と結合典型集合', src: 'ch04/02-joint-typicality.md' },
@@ -84,7 +80,6 @@ const chapters = [
     slug: 'ch05',
     num: '第5章',
     title: '最大エントロピー',
-    status: '仕上げ済',
     sections: [
       { slug: 'ch05-01', num: '5.1', title: '最大エントロピー問題', src: 'ch05/01-problem.md' },
       { slug: 'ch05-02', num: '5.2', title: 'モーメント制約と Gibbs 分布', src: 'ch05/02-gibbs.md' },
@@ -235,7 +230,6 @@ h1:target, h2:target, h3:target {
   border: 1px solid #e3e3e3; border-radius: 8px; background: #fff;
 }
 .toc a { font-weight: 600; font-size: 1.05rem; text-decoration: none; }
-.toc .status { display: block; font-size: .8rem; color: #8a8a8a; margin-top: .35rem; }
 .subtoc { list-style: none; padding: 0; margin: .8rem 0 0; border-top: 1px solid #ececec; }
 .subtoc li { margin: 0; padding: .3rem 0 0; }
 .subtoc a { font-weight: 400; font-size: .92rem; }
@@ -251,7 +245,6 @@ h1:target, h2:target, h3:target {
   th, td { border-color: #2a2e34; }
   .nav-top, .nav-bottom { border-color: #2a2e34; }
   .toc li { border-color: #2a2e34; background: #1a1d21; }
-  .toc .status { color: #8b939c; }
   .subtoc { border-top-color: #2a2e34; }
   .stmt-theorem, .stmt-proposition, .stmt-corollary { --stmt-accent: #7ba7e8; }
   .stmt-definition { --stmt-accent: #63b894; }
@@ -1136,8 +1129,7 @@ const tocItems = chapters
           .join('\n')}\n    </ol>`
       : '';
     return `  <li>
-    <a href="./${chapterHome(c)}.html">${escapeHtml(c.num)}　${escapeHtml(c.title)}</a>
-    <span class="status">${escapeHtml(c.status)}</span>${sub}
+    <a href="./${chapterHome(c)}.html">${escapeHtml(c.num)}　${escapeHtml(c.title)}</a>${sub}
   </li>`;
   })
   .join('\n');
