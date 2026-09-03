@@ -615,6 +615,34 @@ function lintTerminology(markdown, src) {
   return found;
 }
 
+// --- 段落の途中の改行 ---
+// 原稿は段落を 1 行で書く（textbook-writing.md §9）。和文の soft break は表示に出ないので、
+// どこで折っても読者には同じものが届く。違いが出るのは検索のほうで、術語や行内数式が行を
+// またぐと、行単位の検査——表記ゆれ・借用宣言の照合・vocab.ts——がその 1 件だけを取りこぼす。
+// 原稿を読むかぎり正しく書けているので、書いた本人には見つけられない。折らなければ起きない。
+const ASCII_PUNCT = /[!-/:-@[-`{-~]/;
+function lintLineBreaks(markdown, src) {
+  const lines = markdown.split('\n');
+  const isMath = (s) => /^\s*\$\$/.test(s);
+  const opensBlock = (s) => /^\s*(:::|#{1,6} |\||>|```|([-*_])\s*\2\s*\2[\s\-*_]*$|(?:[-*+]|\d+\.)\s)/.test(s);
+  const continuable = (s) => s.trim() && !/^\s*(:::|#{1,6} |\||>|```)/.test(s) && !isMath(s);
+  let found = 0, inMath = false, prev = '';
+  lines.forEach((line, i) => {
+    if (isMath(line)) { inMath = !inMath; prev = line; return; }
+    if (inMath || !line.trim() || opensBlock(line)) { prev = line; return; }
+    // CommonMark では、強調の開始記号の直後が約物のとき、その手前が空白か約物でなければ
+    // 強調にならない。`**(ii)** …` のような行は、前の行につなぐと太字が外れるので折ってよい。
+    const em = line.match(/^\s*([*_]+)(.?)/);
+    const mustBreak = Boolean(em && em[2] && ASCII_PUNCT.test(em[2]));
+    if (continuable(prev) && !mustBreak) {
+      found += 1;
+      console.warn(`warn: 段落の途中の改行 ${src}:${i + 1} 「${line.trim().slice(0, 20)}…」は前の行につなぐ`);
+    }
+    prev = line;
+  });
+  return found;
+}
+
 // --- 節タイトルの一致チェック ---
 // 節の題は 2 か所にある。原稿 1 行目の見出しと、上の chapters 配列の `title` である。片方
 // だけ改名しても、原稿もサイトもそれぞれ筋の通った出力になるので、本文の題と目次・パンくず・
@@ -638,9 +666,9 @@ function lintSectionTitle(pg) {
 // 解決できない番号・種別の食い違い・番号の重複は warn として出す。§8 の「番号を振り直す
 // ときに参照元を rg で洗う」手順は、この検査が肩代わりする。
 
-// 参照と番号のあいだは、空白でも改行でも割れる。原稿は表示幅で折り返すので（§9）、
-// 「有限 Jensen——補題 / 1.1.6 を」のように参照が 2 行にまたがることがある。読者に改行位置は
-// 見えないのだから、そこでリンクが切れる理由はない。区切りに改行を含めて拾う。
+// 参照と番号のあいだは、空白でも改行でも割れる。原稿は段落を 1 行で書くので（§9）ふつうは
+// 割れないが、強調が壊れるために折ったままの行がわずかに残る。読者に改行位置は見えないのだ
+// から、そこでリンクが切れる理由はない。区切りに改行を含めて拾う。
 const GAP = '[ 　\n]*';
 const KIND = '(定理|命題|補題|系|定義|例)';
 const REF_RE = new RegExp(
@@ -1063,6 +1091,7 @@ md.core.ruler.push('formalized_links', (state) => {
 let missingProofs = 0;
 let termIssues = 0;
 let titleMismatches = 0;
+let wrappedLines = 0;
 
 // 出力は毎回まっさらから組む。節を消したときに前回の HTML が残ると、目次から辿れない
 // ページがデプロイ先で生き続ける。
@@ -1084,6 +1113,7 @@ pages.forEach((pg, i) => {
   missingProofs += lintProofs(markdown, pg.src);
   termIssues += lintTerminology(markdown, pg.src);
   titleMismatches += lintSectionTitle(pg);
+  wrappedLines += lintLineBreaks(markdown, pg.src);
   let bodyHtml = navTop(pg) + md.render(linkifyRefs(normalizeMath(markdown), pg), { ctx: pg });
   if (pg.isChapterTop && pg.chapter.sections) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
@@ -1128,6 +1158,7 @@ console.log(`built index -> dist/index.html (${pages.length} pages)`);
 if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs} 件`);
 if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
 if (titleMismatches > 0) console.warn(`warn: 節タイトルの不一致 ${titleMismatches} 件`);
+if (wrappedLines > 0) console.warn(`warn: 段落の途中の改行 ${wrappedLines} 件`);
 if (unresolvedRefs > 0) console.warn(`warn: 参照 ${unresolvedRefs} 件`);
 if (duplicateNums > 0) console.warn(`warn: 番号の重複 ${duplicateNums} 件`);
 if (brokenPointers > 0) console.warn(`warn: 形式化ポインタ ${brokenPointers} 件`);
