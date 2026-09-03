@@ -1,3 +1,8 @@
+// 教科書サイトのビルド。docs/textbook/ の原稿を KaTeX 済みの静的 HTML（dist/）にする。
+// 原稿の書き方の SoT は `.claude/rules/textbook-writing.md` で、ここはその検査（表記ゆれ・
+// 段落の途中の改行・証明のない主張・節タイトルの不一致…）と、番号参照・形式化ポインタの
+// 自動リンクを実装する。各節のコメントが、対応する執筆原則の §番号を指す。
+// コマンドとデプロイは `README.md`。
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
