@@ -95,7 +95,12 @@ function renderMath(tex, display) {
   return html;
 }
 
-md.renderer.rules.math_inline = (tokens, idx) => renderMath(tokens[idx].content, false);
+md.renderer.rules.math_inline = (tokens, idx) => {
+  const { content, meta } = tokens[idx];
+  const gap = (meta?.gapL ? ' jp-l' : '') + (meta?.gapR ? ' jp-r' : '');
+  const html = renderMath(content, false);
+  return gap ? html.replace('class="MathJax"', `class="MathJax${gap}"`) : html;
+};
 md.renderer.rules.math_block = (tokens, idx) => renderMath(tokens[idx].content, true);
 md.renderer.rules.math_inline_block = md.renderer.rules.math_block;
 md.renderer.rules.math_inline_bare_block = md.renderer.rules.math_block;
@@ -231,6 +236,9 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
    ここで足すのは余白だけにして、overflow には触らない。 */
 mjx-container[display="true"] { margin: 1.1rem 0; }
 mjx-container { font-size: 1.06em; }
+/* 地の文と行内数式のあいだの四分アキ（build 側の math_gap 規則が付けるクラス）。 */
+mjx-container.jp-l { margin-left: .25em; }
+mjx-container.jp-r { margin-right: .25em; }
 mjx-utext { font-feature-settings: normal; }
 .site-note { font-size: .82rem; color: #888; margin-top: 4rem; text-align: center; }
 
@@ -553,6 +561,56 @@ md.core.ruler.after('inline', 'env_qed', (state) => {
       inline.content = '';
       inline.children = marks;
       toks.splice(close, 0, open, inline, new state.Token('paragraph_close', 'p', -1));
+    }
+  }
+});
+
+// 地の文と行内数式のあいだのアキ。原稿は $ の前後に半角空白を置くところと置かないところが
+// 混ざっていて、そのまま組むとアキが空白 1 つ分になったり 0 になったりする（0 のところは
+// 数式が地の文に貼り付いて読めない）。ここで空白の有無を均し、幅は CSS の四分アキ 1 本に
+// 決める。相手が約物（、。（）「」…）のときは約物自身がアキを持つので対象にしない。
+// env_qed より後に登録してあるのは、そちらより先に走らせるため（どちらも inline の直後に
+// 挿さるので、後から登録したほうが前に来る）。証明末尾の ■ は env_qed が後から足すので、
+// この規則からは見えない。
+const JP_TEXT = /[ぁ-ゖァ-ヺー々一-鿿㐀-䶿]/;
+
+md.core.ruler.after('inline', 'math_gap', (state) => {
+  // content を持たないトークン (strong_open など) は透かして、隣の地の文を探す。
+  const neighbor = (kids, idx, dir) => {
+    for (let i = idx + dir; i >= 0 && i < kids.length; i += dir) {
+      const t = kids[i];
+      if (t.type === 'softbreak' || t.type === 'hardbreak') return null;
+      if (t.type === 'html_inline' || !t.content) continue;
+      return t.type === 'text' ? t : null;
+    }
+    return null;
+  };
+  for (const tok of state.tokens) {
+    if (tok.type !== 'inline' || !tok.children) continue;
+    const kids = tok.children;
+    for (let i = 0; i < kids.length; i++) {
+      if (kids[i].type !== 'math_inline') continue;
+      const meta = (kids[i].meta ||= {});
+      const left = neighbor(kids, i, -1);
+      if (left) {
+        const s = left.content;
+        if (s.endsWith(' ') && JP_TEXT.test(s.at(-2) ?? '')) {
+          left.content = s.slice(0, -1);
+          meta.gapL = true;
+        } else if (JP_TEXT.test(s.at(-1) ?? '')) {
+          meta.gapL = true;
+        }
+      }
+      const right = neighbor(kids, i, 1);
+      if (right) {
+        const s = right.content;
+        if (s.startsWith(' ') && JP_TEXT.test(s[1] ?? '')) {
+          right.content = s.slice(1);
+          meta.gapR = true;
+        } else if (JP_TEXT.test(s[0] ?? '')) {
+          meta.gapR = true;
+        }
+      }
     }
   }
 });
