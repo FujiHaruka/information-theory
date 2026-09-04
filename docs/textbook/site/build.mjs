@@ -56,8 +56,13 @@ RegisterHTMLHandler(mjAdaptor);
 const mjOutput = new CHTML({
   fontURL: `${FONT_DIR}/newcm`,
   fontData: MathJaxNewcmFont,
-  // \text{…} は和文が入るので、数式書体ではなく本文の明朝で組ませる。
+  // \text{…} は和文が入るので、数式書体ではなく本文の和文書体で組ませる。
   mtextInheritFont: true,
+  // 桁に収まらないディスプレイ数式は、その数式の中だけを横スクロールさせる。既定の
+  // 'overflow' はページごと横に広げるので、狭い画面では本文まで横スクロールになる。
+  // CSS で overflow-x を足すだけでは足りない。\tag つきの数式は幅いっぱいの flex に
+  // なって min-width を持つため、そちらも外す必要がある（'scroll' が両方を面倒みる）。
+  displayOverflow: 'scroll',
 });
 const mjDoc = MathJax.document('', {
   InputJax: new TeX({ packages: ['base', 'ams', 'newcommand'] }),
@@ -66,6 +71,19 @@ const mjDoc = MathJax.document('', {
 // 動的レンジを先に読み切っておくと、以降の変換が同期関数になり markdown-it の
 // レンダラにそのまま挿せる（markdown-it の render は同期）。
 await mjOutput.font.loadDynamicFiles();
+
+// 組み終えた HTML に実際に現れた書体クラス（`NCM-N` / `NE-N` …）。CSS の間引きに使う。
+// CSS 側の字ごとの規則（`mjx-c.mjx-c1D460.NE-N`）だけを見ると足りない。既定の書体は
+// 字ごとには書かれず、`<mjx-math class="NCM-N">` のように祖先に 1 回置かれるだけなので、
+// 字の規則から集めると既定書体の指定を落としてしまう（≥ や := が本文書体に化ける）。
+const usedFontClasses = new Set();
+function collectFontClasses(html) {
+  for (const attr of html.matchAll(/class="([^"]*)"/g)) {
+    for (const cls of attr[1].split(/\s+/)) {
+      if (/^[A-Z][A-Za-z0-9]*-[A-Za-z0-9-]+$/.test(cls)) usedFontClasses.add(cls);
+    }
+  }
+}
 
 let mathErrors = 0;
 function renderMath(tex, display) {
@@ -209,10 +227,10 @@ pre code { display: block; padding: .8rem 1rem; overflow-x: auto; background: no
 hr { border: none; border-top: 1px solid #e0e0e0; margin: 2.4rem 0; }
 table { border-collapse: collapse; margin: 1rem 0; }
 th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
-/* ディスプレイ数式は狭い画面で横スクロールさせる（本文の左端は動かさない）。 */
-mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: .25rem 0; margin: 1.1rem 0; }
+/* 数式の横スクロールは displayOverflow: 'scroll' が持つ（build 側のコメント参照）。
+   ここで足すのは余白だけにして、overflow には触らない。 */
+mjx-container[display="true"] { margin: 1.1rem 0; }
 mjx-container { font-size: 1.06em; }
-mjx-container[display="true"] > mjx-math { padding: 0; }
 mjx-utext { font-feature-settings: normal; }
 .site-note { font-size: .82rem; color: #888; margin-top: 4rem; text-align: center; }
 
@@ -1256,6 +1274,7 @@ pages.forEach((pg, i) => {
   const title = pg.section ? `${pg.label} — ${pg.chapter.num}` : pg.label;
   const outPath = resolve(distDir, `${pg.slug}.html`);
   const html = page({ title, bodyHtml });
+  collectFontClasses(html);
   writeFileSync(outPath, html, 'utf8');
   console.log(`built ${pg.src} -> dist/${pg.slug}.html (${html.length} bytes)`);
 });
@@ -1299,13 +1318,19 @@ let mathCss = mjAdaptor.textContent(mjOutput.styleSheet(mjDoc));
 // 出力された CSS は、字が 1 つも出なかった書体（キリル・ヘブライ…）の宛先まで並べる。
 // 使われた書体の指定だけを残し、どこからも指されなくなった @font-face を宛先ごと落とす。
 {
-  const used = new Set(
-    [...mathCss.matchAll(/\.mjx-c[0-9A-F]+\.([A-Z0-9-]+)/g)].map((m) => m[1])
+  const declared = new Set(
+    [...mathCss.matchAll(/\.([A-Z][A-Za-z0-9-]*)\s*\{\s*font-family:/g)].map((m) => m[1])
   );
   mathCss = mathCss.replace(
-    /\.([A-Z][A-Z0-9-]*)\s*\{\s*font-family:[^}]*\}\n*/g,
-    (all, id) => (used.has(id) ? all : '')
+    /\.([A-Z][A-Za-z0-9-]*)\s*\{\s*font-family:[^}]*\}\n*/g,
+    (all, id) => (usedFontClasses.has(id) ? all : '')
   );
+  // 間引きすぎの検査。規則を落とされた書体は本文書体に化けるだけで、字は出てしまうので
+  // 目視では気づけない（実際に ≥ が > に化けた）。落としてはいけないものが落ちたら止める。
+  const dropped = [...usedFontClasses].filter(
+    (c) => declared.has(c) && !new RegExp(`\\.${c}\\s*\\{`).test(mathCss)
+  );
+  if (dropped.length) throw new Error(`書体クラスの規則を間引きすぎた: ${dropped.join(', ')}`);
   const faces = [];
   const body = mathCss.replace(
     /@font-face\s*(?:\/\*[^*]*\*\/\s*)?\{\s*font-family:\s*([A-Za-z0-9-]+);[^}]*\}\n*/g,
@@ -1354,8 +1379,9 @@ await Promise.all(
     copied++;
   })
 );
-console.log(`fonts: ${copied} files -> dist/${FONT_DIR}/ (未収録 ${absent})`);
+console.log(`fonts: ${copied} files -> dist/${FONT_DIR}/`);
 
+if (absent > 0) console.warn(`warn: 取得できなかったフォント ${absent} 件`);
 if (mathErrors > 0) console.warn(`warn: 数式 ${mathErrors} 件`);
 if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs} 件`);
 if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
