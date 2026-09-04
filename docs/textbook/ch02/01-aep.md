@@ -48,13 +48,13 @@ $$
 :::
 
 ::: proof
-**和分解.** 独立性より、ブロックの確率は周辺分布の積$p(x_0,\dots,x_{n-1}) = \prod_{i<n} p(x_i)$ に等しい。対数は積を和に変えるので
+独立性より、ブロックの確率は周辺分布の積$p(x_0,\dots,x_{n-1}) = \prod_{i<n} p(x_i)$ に等しい。対数は積を和に変えるので
 $$
 \hat H_n \;=\; -\frac1n \log \prod_{i<n} p(X_i)
   \;=\; \frac1n \sum_{i<n} \big(-\log p(X_i)\big).
 $$
 
-**期待値.** どの $X_i$ も分布 $p$ に従うので、期待値を定義どおり書き下すと
+どの $X_i$ も分布 $p$ に従うので、期待値を定義どおり書き下すと
 $$
 \mathbb E\big[-\log p(X_i)\big] \;=\; \sum_{x \in \mathcal X} p(x)\,\big(-\log p(x)\big)
   \;=\; -\sum_{x} p(x)\log p(x) \;=\; H(X)

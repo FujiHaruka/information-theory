@@ -152,11 +152,14 @@ th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
 .stmt-lemma { --stmt-accent: #8a8a8a; }
 .stmt-example { --stmt-accent: #96702a; }
 
+/* 「証明.」の見出し。太字を三層に割る (主張の見出しは色付き / 証明の開始はグレーの
+   ラベル / 地の文の太字リードは素の太字)。同じ <strong> が三つの役割を兼ねると、
+   どこまでが一つの塊なのかが読者に見えない。 */
 .proof { margin: 1.5rem 0 2rem; color: #2f2f2f; }
 .proof::after { content: ""; display: block; clear: both; }
 .proof > :first-child { margin-top: 0; }
-.proof > p:first-child > em:first-child {
-  font-style: normal; font-weight: 600; letter-spacing: .05em; color: #7a7a7a;
+.proof > p:first-child > strong:first-child {
+  font-weight: 600; letter-spacing: .05em; color: #7a7a7a;
 }
 .qed { float: right; color: #7a7a7a; }
 .env-head { margin-bottom: .55rem; }
@@ -256,7 +259,7 @@ h1:target, h2:target, h3:target {
   .stmt-lemma { --stmt-accent: #9aa3ad; }
   .stmt-example { --stmt-accent: #c9a45e; }
   .proof { color: #c9cdd3; }
-  .proof > p:first-child > em:first-child { color: #98a1aa; }
+  .proof > p:first-child > strong:first-child { color: #98a1aa; }
   .qed { color: #98a1aa; }
   .formalized { background: rgba(122,200,212,.09); color: #c9cdd3; }
   .formalized strong:first-child { color: #63b5c2; }

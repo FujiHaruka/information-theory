@@ -123,14 +123,14 @@ $$
 ::: proof
 $\varepsilon' := \varepsilon L + \delta$ とおくと $\varepsilon L < \varepsilon'$ だから、定理 2.4.4 より $A^{*(n)}_\varepsilon \subseteq T^{(n)}_{\varepsilon'}$ である。
 
-**上界.** 包含と定理 2.2.5 の上界から
+上界を示す。包含と定理 2.2.5 の上界から
 $$
 \big|A^{*(n)}_\varepsilon\big| \;\le\; \big|T^{(n)}_{\varepsilon'}\big|
   \;\le\; 2^{n(H(X)+\varepsilon')}
 $$
 であり、これは任意の $n$ で成り立つ。
 
-**下界.** 定理 2.4.3 より、$n$ を十分大きくとれば$\Pr[X^n \in A^{*(n)}_\varepsilon] \ge 1-\eta$ にできる。包含より$A^{*(n)}_\varepsilon$ の元はすべて $T^{(n)}_{\varepsilon'}$ の元だから、定理 2.2.4 の上界が各元に使えて
+下界に移る。定理 2.4.3 より、$n$ を十分大きくとれば$\Pr[X^n \in A^{*(n)}_\varepsilon] \ge 1-\eta$ にできる。包含より$A^{*(n)}_\varepsilon$ の元はすべて $T^{(n)}_{\varepsilon'}$ の元だから、定理 2.2.4 の上界が各元に使えて
 $$
 1-\eta \;\le\; \sum_{x \in A^{*(n)}_\varepsilon} p(x)
   \;\le\; \big|A^{*(n)}_\varepsilon\big| \cdot 2^{-n(H(X)-\varepsilon')} .

@@ -92,14 +92,14 @@ $$
 :::
 
 ::: proof
-**上界.** 全系列にわたる確率の総和は 1 だから、典型系列だけの和はそれ以下である。定理 2.2.4 の下界を各項に当てると
+上界を示す。全系列にわたる確率の総和は 1 だから、典型系列だけの和はそれ以下である。定理 2.2.4 の下界を各項に当てると
 $$
 1 \;=\; \sum_{x \in \mathcal X^n} p(x) \;\ge\; \sum_{x \in T^{(n)}_\varepsilon} p(x)
   \;\ge\; \big|T^{(n)}_\varepsilon\big| \cdot 2^{-n(H(X)+\varepsilon)} .
 $$
 両辺に $2^{n(H(X)+\varepsilon)}$ を掛ければ上界を得る。
 
-**下界.** 定理 2.2.3 より、$n$ を十分大きくとれば$\Pr[X^n \in T^{(n)}_\varepsilon] \ge 1-\eta$ にできる。この確率は典型系列の確率の和であり、定理 2.2.4 の上界を各項に当てると
+下界に移る。定理 2.2.3 より、$n$ を十分大きくとれば$\Pr[X^n \in T^{(n)}_\varepsilon] \ge 1-\eta$ にできる。この確率は典型系列の確率の和であり、定理 2.2.4 の上界を各項に当てると
 $$
 1 - \eta \;\le\; \sum_{x \in T^{(n)}_\varepsilon} p(x)
   \;\le\; \big|T^{(n)}_\varepsilon\big| \cdot 2^{-n(H(X)-\varepsilon)} .

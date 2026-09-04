@@ -37,19 +37,19 @@ $$
 ::: proof
 $\varepsilon := (R - H(X))/2 > 0$ とおき、$M_n := \lceil 2^{nR} \rceil$ とする。
 
-**符号の構成.** $H(X) + \varepsilon < R$ だから、定理 2.2.5 の上界より
+符号を構成する。$H(X) + \varepsilon < R$ だから、定理 2.2.5 の上界より
 $$
 \big|T^{(n)}_\varepsilon\big| \;\le\; 2^{n(H(X)+\varepsilon)} \;\le\; 2^{nR} \;\le\; M_n
 $$
 であり、典型集合から $\{1,\dots,M_n\}$ への単射がとれる。$c_n$ を、$T^{(n)}_\varepsilon$ の上ではこの単射、$T^{(n)}_\varepsilon$ の外では定数 $1$ と定める。$d_n$ は、$c_n$ が典型系列に与えた番号についてはその典型系列を返し、残りの番号については$\mathcal X^n$ の元を任意に一つ決めて返すものとする。
 
-**誤り確率.** $x \in T^{(n)}_\varepsilon$ なら $c_n$ は単射なので$d_n(c_n(x)) = x$ となり、誤りは起きない。したがって誤りが起きるのは$X^n \notin T^{(n)}_\varepsilon$ のときに限られ、
+誤り確率を抑える。$x \in T^{(n)}_\varepsilon$ なら $c_n$ は単射なので$d_n(c_n(x)) = x$ となり、誤りは起きない。したがって誤りが起きるのは$X^n \notin T^{(n)}_\varepsilon$ のときに限られ、
 $$
 P^{(n)}_e \;\le\; \Pr\big[X^n \notin T^{(n)}_\varepsilon\big]
 $$
 である。右辺は定理 2.2.3 より 0 に収束する。
 
-**レート.** $R > H(X) \ge 0$（命題 1.1.4）だから $2^{nR} \ge 1$ であり、天井関数の定義から $2^{nR} \le M_n < 2^{nR} + 1$。両辺の $\log$ をとって $n$ で割ると
+レートを計算する。$R > H(X) \ge 0$（命題 1.1.4）だから $2^{nR} \ge 1$ であり、天井関数の定義から $2^{nR} \le M_n < 2^{nR} + 1$。両辺の $\log$ をとって $n$ で割ると
 $$
 R \;\le\; R_n \;<\; R + \frac1n \log\big(1 + 2^{-nR}\big)
 $$
@@ -114,7 +114,7 @@ H\big(X^n \,\big|\, \hat X^n\big)
   \;\le\; H_b\big(P^{(n)}_e\big) + P^{(n)}_e \, n \log|\mathcal X| .
 $$
 
-**まとめる.** 三つを合わせると、各 $n$ について
+三つを合わせると、各 $n$ について
 $$
 n\,H(X) \;\le\; \log M_n + H_b\big(P^{(n)}_e\big) + P^{(n)}_e\, n \log|\mathcal X|
 $$
@@ -131,7 +131,7 @@ $$
 **$\liminf$ である理由.** 結論が $\lim$ ではなく $\liminf$ なのは、レートが収束するとは仮定していないからである。$R_n$ は振動してよく、主張しているのは「どんな部分列をとっても $H(X)$ を下回る値に張り付くことはない」ということである。
 
 ::: formalized
-弱逆定理 `source_coding_converse`、証明の「まとめる」段にあたる 1 ブロックごとの評価`source_coding_per_n_bound` (`InformationTheory/Shannon/AEP/Basic/Converse.lean`)
+弱逆定理 `source_coding_converse`、三つの評価を合わせた 1 ブロックごとの不等式`source_coding_per_n_bound` (`InformationTheory/Shannon/AEP/Basic/Converse.lean`)
 :::
 
 ## 両側を合わせる

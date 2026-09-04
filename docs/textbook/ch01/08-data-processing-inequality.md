@@ -137,7 +137,7 @@ $$
 
 **第 1 項は不等号で分解する.** 同じく定理 1.2.3 を繰り返して$H(Y^n) = \sum_i H(Y_i \mid Y_0,\dots,Y_{i-1})$、各項に条件付けの単調性（定理 1.2.4）を当てて $H(Y_i\mid Y_0,\dots,Y_{i-1}) \le H(Y_i)$。よって $H(Y^n) \le \sum_i H(Y_i)$。
 
-**差をとる.** 二つを合わせると
+二つを合わせると
 $$
 I(X^n;Y^n) \;\le\; \sum_i H(Y_i) - \sum_i H(Y_i\mid X_i)
   \;=\; \sum_i \big(H(Y_i) - H(Y_i\mid X_i)\big) \;=\; \sum_i I(X_i;Y_i),
