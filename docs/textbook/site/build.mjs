@@ -485,7 +485,7 @@ ${cssCdn}
 <body>
 <div class="container">
 ${bodyHtml}
-<p class="site-note">InformationTheory — 形式化検証つき情報理論教科書（レビュー版）。数式は KaTeX で事前レンダリング。</p>
+<p class="site-note">InformationTheory — 形式化検証つき情報理論教科書（レビュー版）．数式は KaTeX で事前レンダリング．</p>
 </div>
 </body>
 </html>`;
@@ -666,6 +666,30 @@ function lintDashes(markdown, src) {
       found += 1;
       const window = raw[i].slice(Math.max(0, m.index - 12), m.index + 14).trim();
       console.warn(`warn: ダッシュ ${src}:${i + 1} 「${window}」`);
+    }
+  });
+  return found;
+}
+
+// --- 句読点 ---
+// 原稿の句読点は「，．」で、「、。」は使わない（textbook-writing.md §9）。日本語の数学書・
+// 理工系の学会誌が通している慣行に合わせる。数式と地の文で同じ形の区切りが並ぶので、文の
+// 切れ目と式の切れ目が同じ体裁で読める。半角の `,` `.` は別の役目を持っていて対象外である。
+// 数式の内部末尾（§6）と、amsthm に合わせた見出し・太字リードの末尾（§5）がそれで、どちらも
+// 伏せるか、そもそも当たらない。
+const JP_PUNCT_RE = /[、。]/g;
+function lintPunctuation(markdown, src) {
+  const raw = markdown.split('\n');
+  // ダッシュの検査と同じく、伏せた行で探して抜粋は元の行から取る（伏せる範囲は空白に
+  // 置き換わるだけで長さを変えないので、位置はそのまま使える）。
+  const lines = stripCodeAndMath(markdown).split('\n');
+  let found = 0;
+  lines.forEach((line, i) => {
+    for (const m of line.matchAll(JP_PUNCT_RE)) {
+      found += 1;
+      const window = raw[i].slice(Math.max(0, m.index - 12), m.index + 13).trim();
+      const use = m[0] === '、' ? '，' : '．';
+      console.warn(`warn: 句読点 ${src}:${i + 1} 「${m[0]}」は「${use}」と書く 「${window}」`);
     }
   });
   return found;
@@ -1121,6 +1145,7 @@ let termIssues = 0;
 let titleMismatches = 0;
 let wrappedLines = 0;
 let dashes = 0;
+let punct = 0;
 
 // 出力は毎回まっさらから組む。節を消したときに前回の HTML が残ると、目次から辿れない
 // ページがデプロイ先で生き続ける。
@@ -1144,6 +1169,7 @@ pages.forEach((pg, i) => {
   titleMismatches += lintSectionTitle(pg);
   wrappedLines += lintLineBreaks(markdown, pg.src);
   dashes += lintDashes(markdown, pg.src);
+  punct += lintPunctuation(markdown, pg.src);
   let bodyHtml = navTop(pg) + md.render(linkifyRefs(normalizeMath(markdown), pg), { ctx: pg });
   if (pg.isChapterTop && pg.chapter.sections) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
@@ -1172,11 +1198,11 @@ const tocItems = chapters
   .join('\n');
 
 const indexBody = `<h1>${escapeHtml(siteTitle)}</h1>
-<p>Lean 4 + Mathlib で機械検証した定理に紐づけて書いている情報理論の教科書原稿です。<!--
--->「形式化」と添えた結果は無条件の検証済み定理に対応しています。宣言名はリンクになっていて、<!--
--->本のアイコンはその定理の解説ページ、GitHub のマークはソースへ飛びます。<!--
--->本文の証明は人間が読みやすい順序で書いているので、Lean がたどる証明ルートとは<!--
--->一致しません。保証されるのは定理の正しさであって、証明手順の一致ではありません。</p>
+<p>Lean 4 + Mathlib で機械検証した定理に紐づけて書いている情報理論の教科書原稿です．<!--
+-->「形式化」と添えた結果は無条件の検証済み定理に対応しています．宣言名はリンクになっていて，<!--
+-->本のアイコンはその定理の解説ページ，GitHub のマークはソースへ飛びます．<!--
+-->本文の証明は人間が読みやすい順序で書いているので，Lean がたどる証明ルートとは<!--
+-->一致しません．保証されるのは定理の正しさであって，証明手順の一致ではありません．</p>
 <ul class="toc">
 ${tocItems}
 </ul>`;
@@ -1189,6 +1215,7 @@ if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
 if (titleMismatches > 0) console.warn(`warn: 節タイトルの不一致 ${titleMismatches} 件`);
 if (wrappedLines > 0) console.warn(`warn: 段落の途中の改行 ${wrappedLines} 件`);
 if (dashes > 0) console.warn(`warn: ダッシュ ${dashes} 件`);
+if (punct > 0) console.warn(`warn: 句読点 ${punct} 件`);
 if (unresolvedRefs > 0) console.warn(`warn: 参照 ${unresolvedRefs} 件`);
 if (duplicateNums > 0) console.warn(`warn: 番号の重複 ${duplicateNums} 件`);
 if (brokenPointers > 0) console.warn(`warn: 形式化ポインタ ${brokenPointers} 件`);

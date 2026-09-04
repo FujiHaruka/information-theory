@@ -122,6 +122,7 @@ console.log(foreign === 0 ? '  （なし）\n' : `  計 ${foreign} 件\n`);
 // 標準から外れた命名には気づけない。実例: 情報源と書き続けながら定理名だけ「源符号化定理」に
 // 縮んでいた——標準は「情報源符号化定理」）。
 // 太字は末尾に句点を打つ太字リード（`**面積として読む.**`、執筆原則 §5）を落として拾う。
+// 見出しに倣った半角ピリオドと、地の文の全角ピリオド（執筆原則 §9）の両方が末尾に来る。
 function coinedTerms(text: string): string[] {
   const out: string[] = [];
   let inDefinition = false;
@@ -141,7 +142,7 @@ function coinedTerms(text: string): string[] {
     if (!inDefinition) continue;
     for (const m of line.matchAll(/\*\*([^*\n]+)\*\*/g)) {
       const w = m[1].trim();
-      if (/[.。]$/.test(w) || w.length > 14 || /\s/.test(w)) continue;
+      if (/[.．]$/.test(w) || w.length > 14 || /\s/.test(w)) continue;
       out.push(w);
     }
   }
