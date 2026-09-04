@@ -2482,3 +2482,26 @@
 | `$SP/n1/` (`n1lib.py` + `n1_step0.py` / `n1_step0b.py` / `n1_step1.py` / `n1_step2.py` / `n1_step3.py`) | `max_s D ≤ d* + η` の **DC 分枝限定** / 釘付けの残差 / Klein 群の不変性 / 天井の分枝限定証明書 / `argmin D` の外近似と敵対 LP | `## N1 (T3c)` の **N1-a** / **N1-b** / **N1-c** / **N1-d** / **N1-e** / **N1-g** |
 | `$SP/n1audit/` (`a1_setup.py` / `a2_leak.py` / `a3_bb.py` / `a3b_refine.py` / `a4_break.py` / `a5_witness.py` / `a6_corr.py`) | 漏れ原子と `√` 転送則の実測 / ⭐ **台を使わない Lagrange 証明書** (`η = 1e-13`、証明済み余裕 `5.211e-7`) / 反例探索 7 系統 | `## N1 (T3c)` の **N1-i** / **N1-j** / **N1-k**。⚠⚠ **判定 NO-GO を担っているのは N1-j の Lagrange 証明書**である ⟹ **本 relay で最も再実装価値が高いのはこの 1 本** |
 | `$SP/n2/` **型検査 probe 13 本 / 1017 行** | `(18a)`–`(20c)` の完全形 / 17 スロットの読み出し / (α) 4 節 / `StandardBorelSpace` の合成 / 領域の端から端まで / 合併レベルの閉性 template / (β) 実効性層 / 段 (3)(4) の `rfl` | ⭐ **4 本は `docs/shannon/probes/t3c-n2/` に再生済** (上の N2-c / N2-d / N2-f / N2-i)。⚠ **残る 11 本 (P1a / P4–P8 / P10 / P11 / P13) の実測値は、いま証拠が存在しない主張のままである** (N2-l (3)) |
+
+## 外部決着 (2026-08-20) — Marton 内界は非最適 (Huang–Liu–Liu, arXiv:2608.19869)
+
+> relay 終端 (2026-08-09) の 11 日後に公表された外部の結果。**本節は上の F2 / `## L0 (T3)` 行 10 /
+> `## L3 (T3)` 行 4 / `## L4 (T3)` を上書きする向きで読む** (各行は履歴として書き換えない)。
+> 帰結の整理と経路の再設計 = [`bc-route-ideas-2026-09.md`](bc-route-ideas-2026-09.md)。
+>
+> **取得** = `LIT=<出力先>; curl -sL https://arxiv.org/pdf/2608.19869 -o $LIT/subopt.pdf && pdftotext -layout $LIT/subopt.pdf $LIT/subopt.txt`
+> (⚠ 抽出テキストは repo が public ゆえコミットしない。行番号は `pdftotext -layout` 出力に対する
+> 2026-09-04 の実測値)。Markovity 予想の反例単独の論文 = Liu–Huang, arXiv:2608.13170 (2026-08-13)。
+> 著者らの検証パッケージ = https://github.com/yanxiaoliu-mike/Suboptimality_Marton
+> (`verify_fixed_input_bundle.py` = 固定入力証明書、`verify_unconstrained_lift.cpp` = 320-bit MPFR の持ち上げ検証)。
+
+| claim | confidence | 再検証コマンド | last-verified | notes |
+|---|---|---|---|---|
+| **Marton 内界 (3 補助変数、共通メッセージつきの完全版) は一般 2 受信者 DM-BC の容量領域ではない — 有限 BC `T̃` で `M_{T̃⊗2} > 2 M_{T̃}` (Theorem 5)** | `human-judgment (primary)` | `sed -n '20p;498,501p;568,569p' $LIT/subopt.txt` | `2026-09-04` | **`subopt.txt:498-501` 逐語**: "Theorem 5 (Sub-optimality of Marton's inner bound). There exists a finite two-receiver discrete memoryless broadcast channel T̃ for which M_{T̃⊗2} > 2M_{T̃}. Consequently, the complete one-letter Marton region is strictly contained in the capacity region of T̃." **`:568` 逐語**: "M_{T̃⊗2} − 2M_{T̃} > 1.8821256327185490 × 10−6." ⚠ **反例チャネルの入力アルファベットは `{0,1,2} × [N]`、`N = 2^{2,000,000}`** (`:506` 逐語 "M = 2, 000, 000, N = 2M , L = M log 2") で、行列ではなく receiver-revealed mixture として構造的に定義される。⚠ **三元入力の無制約反例は与えられていない** (三元は固定入力 `p*` での隙間のみ) |
+| **基底チャネル = 三元・全成分正・固定入力 `p*` で 2 文字 Marton が 1 文字の認証済上界を `2.83e-6` nats 上回る (両側とも認証つき)** | `human-judgment (primary)` | `sed -n '467p;478,480p' $LIT/subopt.txt` | `2026-09-04` | **`:478` 逐語**: "Consequently, the gap is at least 2.82753794427556 × 10−6 > 0." 2 文字 witness は `\|W_c\| = 2`, `\|U\| = \|V\| = 4`, `W = (Q, W_c)` (`:467`)。⚠ **共通補助 `W` が本質的** = 我々の attack `selftensor-counterexample` が「3-aux probe が前提」と塞いだ判断は正しかった。**`:480` 逐語**: "It also yields a cost-constrained counterexample to the tensorization (see [31, Conjecture 1]), and hence to the optimality of the one-letter Marton inner bound." ⟹ **additivity 予想 (`## L8` の Conjecture 1 = 経路 R1 の唯一の仮定) は偽** |
+| **Markovity 予想 (Gohari–Liu–Nair ISIT 2025 Conjecture 2) は偽 — 同じ基底チャネルで最適点は `I(U;V\|X) ≈ 0.0668 > 0`、Markov 制限との差 `8.74e-5` nats** | `human-judgment (primary)` | `sed -n '402p;408,410p' $LIT/subopt.txt` | `2026-09-04` | **`:402` 逐語**: "I(U ; V \|X) ≃ 0.06676808506814671821263044747 > 0." / **`:408-410`**: "8.74201195024 × 10−5 nats. Consequently, no distribution satisfying U → X → V can attain the unrestricted optimum, and the channel in (14)–(15) violates the Markovity conjecture." ⟹ `## 外部ノートの文献主張` V8 の「予想自体は生きている」は**上書き** |
+| **道具 2 つ (一般的・独立の価値)**: gradient shaping (Theorem 2) と constraint removal (Theorem 4、receiver-revealed mixture + Prop 3 の線形分解) — 固定入力の多文字分離を無制約の分離へ持ち上げる | `human-judgment (primary)` | `sed -n '252p;340p' $LIT/subopt.txt` | `2026-09-04` | 否定側 (TM → BC 還元) の部品 1 (利得の出現尺度を制御する基底チャネル族) を構成する初めての道具になりうる (メモ §3 N1)。⚠ 用途は我々の見立て |
+| **開いたまま = 二元入力 BC (BSSC を含む) での Marton 最適性。著者らの診断は「反例は非二元入力に要る」** | `human-judgment (primary)` | `sed -n '89p;578p' $LIT/subopt.txt` | `2026-09-04` | **`:578` 逐語**: "It remains interesting to see if Marton's inner bound is tight for binary input broadcast channels." / `:89`: 2011–2012 の二元入力での 2 文字 vs 1 文字の広範なシミュレーションは改善を 1 つも見つけていない |
+| **(訂正) `## L3 (T3)` 行 6 の (3) 「各 `C(W)` は非一様には常に計算可能」は誤り** | `human-judgment` | — (演繹) | `2026-09-04` | 単一のコンパクト凸集合でも境界値が非計算可能実数なら計算可能でない (`[0, Ω]²`)。否定側は (N-a) 単一チャネルで非計算可能な境界値 / (N-b) 写像の非一様性 の 2 形をもつ (メモ §2.2) |
+
+---

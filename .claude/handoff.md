@@ -1,5 +1,11 @@
 # Handoff — 2026-08-09. **T3c relay 終端 (DONE)。20 leg 完走・§0 未達 (§6-3 発火)。次の本線はユーザー判断待ち**
 
+> ⚠⚠ **2026-09-04 追記 (relay の外)**: **Marton 内界の非最適性が 2026-08-20 に外部で確立された**
+> (Huang–Liu–Liu arXiv:2608.19869)。下の本文の「Marton = C なら肯定側決着」「否定側は Marton 反証を含意」
+> という較正はこの事実で上書きされる。SoT = `docs/shannon/bc-facts.md` `## 外部決着 (2026-08-20)`、
+> 経路の再設計 = `docs/shannon/bc-route-ideas-2026-09.md` (§4 に到達目標の再選択肢 (a)/(b)/(c))。
+> ⚠ `.claude/handoff.md` は `3d6014ba` 以降**追跡対象**である (末尾の「gitignore」の行は古い)。
+
 ## State
 
 - Branch: `bc-computable-region` / Uncommitted: **clean**（push 済、HEAD = `4822fd0f`）
