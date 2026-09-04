@@ -169,27 +169,23 @@ let duplicateNums = 0;
 
 // 数式の CSS は MathJax がビルド中に組み立て、全ページ分をまとめて dist/mathjax.css に出す
 // （中身は使われた字だけなので、章が増えても線形にしか伸びない）。
-// 等幅は Inconsolata、和文の受け皿は Klee One（どちらも Google Fonts）。
+// 和文は BIZ UDGothic、等幅は Inconsolata（どちらも Google Fonts）。
 const cssCdn = `<link rel="stylesheet" href="./mathjax.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600&family=Klee+One:wght@400;600&display=swap">`;
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Inconsolata:wght@400;600&display=swap">`;
 
 const styles = `
 :root {
   color-scheme: light dark;
-  /* 和文は教科書体。読みやすさのために設計された UD デジタル教科書体を第一候補にし、
-     それを持たない端末では同系の教科書体へ落とす（Windows は UD デジタル教科書体、
-     macOS は游教科書体、それ以外は webfont の Klee One）。太字は Windows だけ
-     ファミリーが別（NP-B）なので、太字用のスタックを分けて先頭に足す。
-     欧文と数字は教科書体に任せない。教科書体の字形は手書きに寄っていて、1 が l に、
-     0 が o に見える（「確率 1 でとる」「1948 年」が読めなくなる）。数式が AMS Euler
-     なので、同じ Zapf の設計である Palatino を当てる（LaTeX の eulervm + mathpazo と
-     同じ組み合わせ）。和文には無い字だけを拾うので、和文は教科書体のまま残る。 */
-  --latin: Palatino, "Palatino Linotype", "Book Antiqua", "URW Palladio L";
-  --jp: "UD デジタル 教科書体 NP-R", "UD Digi Kyokasho NP-R",
-    "YuKyokasho Yoko", "游教科書体 横用", "Klee One", "Hiragino Sans", sans-serif;
-  --jp-bold: "UD デジタル 教科書体 NP-B", "UD Digi Kyokasho NP-B", var(--jp);
+  /* 和文はモリサワの UD ゴシック（BIZ UDGothic）。読みやすさのために設計された書体で、
+     Google Fonts から配信されるので端末を問わず同じ字面になる。プロポーショナル版
+     (BIZ UDPGothic) ではなく等幅かな版を採るのは、原稿の句読点が「，．」だからである
+     (執筆原則 §9)。プロポーショナルだと，．が詰まって文の切れ目が見えなくなる。
+     欧文と数字は和文書体に任せず、システムのサンセリフを先に置く。数式が AMS Euler
+     なので、地の文の欧文をサンセリフにしておくと、どこからが数式かが字面で分かる。 */
+  --latin: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial;
+  --jp: "BIZ UDGothic", "BIZ UDPGothic", "Hiragino Sans", "Noto Sans JP", sans-serif;
 }
 html { font-size: 18px; }
 body {
@@ -199,7 +195,6 @@ body {
   background: #fbfbfa; color: #1a1a1a;
 }
 .container { max-width: 760px; margin: 0 auto; padding: 2.2rem 1.1rem 6rem; }
-strong, b, h1, h2, h3, th { font-family: var(--latin), var(--jp-bold); }
 h1 { font-size: 1.7rem; line-height: 1.4; border-bottom: 2px solid #ddd; padding-bottom: .5rem; }
 h2 { font-size: 1.35rem; margin-top: 2.6rem; border-bottom: 1px solid #e3e3e3; padding-bottom: .3rem; }
 h3 { font-size: 1.12rem; margin-top: 1.9rem; }
