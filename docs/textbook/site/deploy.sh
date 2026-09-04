@@ -2,7 +2,7 @@
 # 教科書パイロットサイトを build → surge にデプロイする。
 # 使い方:  ./deploy.sh
 #
-# - Deno でビルド（数式を KaTeX でサーバー側レンダリング）し dist/ を生成。
+# - Deno でビルド（数式を MathJax + AMS Euler でサーバー側レンダリング）し dist/ を生成。
 # - surge にデプロイ。ログイン済み (~/.netrc) なら非対話。未ログインなら
 #   surge-credentials.txt の email/password で自動ログイン（expect 経由）。
 # - このマシンの /usr/local/bin/node は署名が壊れて起動不可のため Deno を使う。

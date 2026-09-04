@@ -1,14 +1,27 @@
-// 教科書サイトのビルド。docs/textbook/ の原稿を KaTeX 済みの静的 HTML（dist/）にする。
+// 教科書サイトのビルド。docs/textbook/ の原稿を数式レンダリング済みの静的 HTML（dist/）にする。
 // 原稿の書き方の SoT は `.claude/rules/textbook-writing.md` で、ここはその検査（表記ゆれ・
 // 段落の途中の改行・証明のない主張・節タイトルの不一致…）と、番号参照・形式化ポインタの
 // 自動リンクを実装する。各節のコメントが、対応する執筆原則の §番号を指す。
 // コマンドとデプロイは `README.md`。
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, copyFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import MarkdownIt from 'npm:markdown-it@14';
 import * as katexPlugin from 'npm:@vscode/markdown-it-katex@1';
 import mdContainer from 'npm:markdown-it-container@4';
+// 数式は MathJax v4 をサーバー側で回して CHTML に落とす（本文フォントは §「フォント」参照）。
+// KaTeX ではなく MathJax なのは、数式書体に AMS Euler（Neo Euler）を使うため。Euler は
+// MathJax の font extension としてしか配布されておらず、KaTeX には差し替え口がない。
+import { mathjax as MathJax } from 'npm:@mathjax/src@4/js/mathjax.js';
+import { TeX } from 'npm:@mathjax/src@4/js/input/tex.js';
+import { CHTML } from 'npm:@mathjax/src@4/js/output/chtml.js';
+import { liteAdaptor } from 'npm:@mathjax/src@4/js/adaptors/liteAdaptor.js';
+import { RegisterHTMLHandler } from 'npm:@mathjax/src@4/js/handlers/html.js';
+import 'npm:@mathjax/src@4/js/input/tex/base/BaseConfiguration.js';
+import 'npm:@mathjax/src@4/js/input/tex/ams/AmsConfiguration.js';
+import 'npm:@mathjax/src@4/js/input/tex/newcommand/NewcommandConfiguration.js';
+import { MathJaxNewcmFont } from 'npm:@mathjax/mathjax-newcm-font@4/js/chtml.js';
+import { MathJaxEulerFontExtension } from 'npm:@mathjax/mathjax-euler-font-extension@4/js/chtml.js';
 import { TERMS } from './terminology.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -18,7 +31,56 @@ const distDir = resolve(__dirname, 'dist');
 const katex = katexPlugin.default?.default ?? katexPlugin.default ?? katexPlugin;
 
 const md = new MarkdownIt({ html: true, linkify: true, typographer: false });
+// プラグインは $…$ / $$…$$ の切り出しにだけ使い、組版は下で MathJax に差し替える。
 md.use(katex, { throwOnError: false });
+
+// --- 数式エンジン（MathJax v4 CHTML + AMS Euler） ---
+// 字形の出どころは 2 つ。地文字・可変記号は Neo Euler（AMS Euler の OpenType 版）で、
+// 大かっこ・積分記号・根号など Euler に無いものは土台の New Computer Modern が埋める。
+// eulervm パッケージの組み方と同じで、Euler は立体しか持たないので数式イタリックは
+// 立体で出る（font extension 側がその写像を持っている）。
+const FONT_DIR = 'fonts';
+MathJaxEulerFontExtension.fontURL = `${FONT_DIR}/euler`;
+MathJaxNewcmFont.addExtension(MathJaxEulerFontExtension);
+// 動的レンジ（ギリシャ文字・フラクトゥール・カリグラフィ）は実行時に import される。
+// npm: 指定子へ寄せてから Deno の動的 import に渡す。
+MathJax.asyncLoad = (name) =>
+  import(
+    name.startsWith('[mathjax-euler-extension]/')
+      ? name.replace('[mathjax-euler-extension]/', 'npm:@mathjax/mathjax-euler-font-extension@4/js/')
+      : name.replace(/^@mathjax\/([^/]+)\/js\//, 'npm:@mathjax/$1@4/js/')
+  );
+
+const mjAdaptor = liteAdaptor();
+RegisterHTMLHandler(mjAdaptor);
+const mjOutput = new CHTML({
+  fontURL: `${FONT_DIR}/newcm`,
+  fontData: MathJaxNewcmFont,
+  // \text{…} は和文が入るので、数式書体ではなく本文の明朝で組ませる。
+  mtextInheritFont: true,
+});
+const mjDoc = MathJax.document('', {
+  InputJax: new TeX({ packages: ['base', 'ams', 'newcommand'] }),
+  OutputJax: mjOutput,
+});
+// 動的レンジを先に読み切っておくと、以降の変換が同期関数になり markdown-it の
+// レンダラにそのまま挿せる（markdown-it の render は同期）。
+await mjOutput.font.loadDynamicFiles();
+
+let mathErrors = 0;
+function renderMath(tex, display) {
+  const html = mjAdaptor.outerHTML(mjDoc.convert(tex, { display }));
+  if (html.includes('data-mjx-error')) {
+    mathErrors++;
+    console.warn(`warn: 数式 ${JSON.stringify(tex.slice(0, 60))}`);
+  }
+  return html;
+}
+
+md.renderer.rules.math_inline = (tokens, idx) => renderMath(tokens[idx].content, false);
+md.renderer.rules.math_block = (tokens, idx) => renderMath(tokens[idx].content, true);
+md.renderer.rules.math_inline_block = md.renderer.rules.math_block;
+md.renderer.rules.math_inline_bare_block = md.renderer.rules.math_block;
 
 const siteTitle = 'InformationTheory 教科書（レビュー版）';
 
@@ -105,14 +167,21 @@ const chapRefs = new Map(); // '2'      -> { slug, title }
 let unresolvedRefs = 0;
 let duplicateNums = 0;
 
-// CSS version pinned to match the KaTeX used for server-side rendering (0.16.47).
-const cssCdn = `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.css" crossorigin="anonymous">`;
+// 数式の CSS は MathJax がビルド中に組み立て、全ページ分をまとめて dist/mathjax.css に出す
+// （中身は使われた字だけなので、章が増えても線形にしか伸びない）。
+// 等幅は Inconsolata。和文の明朝は端末にあるものを使う（webfont にすると和文は数 MB になる）。
+const cssCdn = `<link rel="stylesheet" href="./mathjax.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600&display=swap">`;
 
 const styles = `
 :root { color-scheme: light dark; }
 html { font-size: 18px; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Segoe UI", sans-serif;
+  /* 本文は明朝。端末にある明朝を順に拾い、無ければゴシックではなく既定の serif に落とす。 */
+  font-family: "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho", YuMincho,
+    "Noto Serif JP", "Noto Serif CJK JP", "Source Han Serif JP", "Songti SC", serif;
   font-size: 1rem;
   line-height: 1.85; margin: 0; padding: 0;
   background: #fbfbfa; color: #1a1a1a;
@@ -126,14 +195,17 @@ blockquote { border-left: 3px solid #e3e3e3; margin: 1.1rem 0; padding: .15rem 0
 blockquote p { margin: .4rem 0; }
 /* 宣言名 / ファイルパスの長い識別子が狭い画面で横にはみ出すため、行内 code は折り返す。
    コードブロック (pre code) は Lean コードの整形を保つので折り返さず横スクロールさせる。 */
-code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .88em; background: rgba(0,0,0,.05); color: inherit; padding: .08em .3em; border-radius: 4px; overflow-wrap: anywhere; }
+code { font-family: Inconsolata, ui-monospace, "SF Mono", Menlo, monospace; font-size: .95em; background: rgba(0,0,0,.05); color: inherit; padding: .08em .3em; border-radius: 4px; overflow-wrap: anywhere; }
 pre { background: #f4f4f2; border-radius: 6px; margin: 1rem 0; }
-pre code { display: block; padding: .8rem 1rem; overflow-x: auto; background: none; color: inherit; font-size: .85em; overflow-wrap: normal; }
+pre code { display: block; padding: .8rem 1rem; overflow-x: auto; background: none; color: inherit; font-size: .92em; overflow-wrap: normal; }
 hr { border: none; border-top: 1px solid #e0e0e0; margin: 2.4rem 0; }
 table { border-collapse: collapse; margin: 1rem 0; }
 th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
-.katex-display { overflow-x: auto; overflow-y: hidden; padding: .2rem 0; }
-.katex { font-size: 1.04em; }
+/* ディスプレイ数式は狭い画面で横スクロールさせる（本文の左端は動かさない）。 */
+mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: .25rem 0; margin: 1.1rem 0; }
+mjx-container { font-size: 1.06em; }
+mjx-container[display="true"] > mjx-math { padding: 0; }
+mjx-utext { font-feature-settings: normal; }
 .site-note { font-size: .82rem; color: #888; margin-top: 4rem; text-align: center; }
 
 /* --- 定理環境 ---
@@ -485,7 +557,7 @@ ${cssCdn}
 <body>
 <div class="container">
 ${bodyHtml}
-<p class="site-note">InformationTheory — 形式化検証つき情報理論教科書（レビュー版）．数式は KaTeX で事前レンダリング．</p>
+<p class="site-note">InformationTheory — 形式化検証つき情報理論教科書（レビュー版）．数式は MathJax + AMS Euler で事前レンダリング．</p>
 </div>
 </body>
 </html>`;
@@ -1210,6 +1282,73 @@ ${tocItems}
 writeFileSync(resolve(distDir, 'index.html'), page({ title: siteTitle, bodyHtml: indexBody }), 'utf8');
 console.log(`built index -> dist/index.html (${pages.length} pages)`);
 
+// --- 数式の CSS とフォント ---
+// MathJax は変換のあいだ「実際に出た字」を溜めているので、全ページを組み終えてから
+// 1 回だけ書き出す。フォントは CSS が名指ししたものだけを取り寄せて dist に置く
+// （読者側から CDN を引かせない。取り寄せたものは .fonts/ に残して次回以降は使い回す）。
+let mathCss = mjAdaptor.textContent(mjOutput.styleSheet(mjDoc));
+
+// 出力された CSS は、字が 1 つも出なかった書体（キリル・ヘブライ…）の宛先まで並べる。
+// 使われた書体の指定だけを残し、どこからも指されなくなった @font-face を宛先ごと落とす。
+{
+  const used = new Set(
+    [...mathCss.matchAll(/\.mjx-c[0-9A-F]+\.([A-Z0-9-]+)/g)].map((m) => m[1])
+  );
+  mathCss = mathCss.replace(
+    /\.([A-Z][A-Z0-9-]*)\s*\{\s*font-family:[^}]*\}\n*/g,
+    (all, id) => (used.has(id) ? all : '')
+  );
+  const faces = [];
+  const body = mathCss.replace(
+    /@font-face\s*(?:\/\*[^*]*\*\/\s*)?\{\s*font-family:\s*([A-Za-z0-9-]+);[^}]*\}\n*/g,
+    (all, family) => (faces.push([family, all]), '')
+  );
+  const wantedFamilies = new Set(
+    [...body.matchAll(/font-family:\s*([^;}!]+)/g)]
+      .flatMap((m) => m[1].split(','))
+      .map((f) => f.trim())
+  );
+  mathCss = body + faces.filter(([f]) => wantedFamilies.has(f)).map(([, css]) => css).join('');
+}
+
+writeFileSync(resolve(distDir, 'mathjax.css'), mathCss, 'utf8');
+console.log(`built mathjax.css (${mathCss.length} bytes)`);
+
+const FONT_PKGS = {
+  newcm: '@mathjax/mathjax-newcm-font@4.1.3',
+  euler: '@mathjax/mathjax-euler-font-extension@4.1.3',
+};
+const fontCacheDir = resolve(__dirname, '.fonts');
+const wanted = [...mathCss.matchAll(/url\("([^"]+\.woff2)"\)/g)].map((m) => m[1]);
+// CSS の @font-face には、パッケージが同梱していない字種（デーヴァナーガリー等）の宛先も
+// 並ぶ。本書が使う字ではないので、取得できなかったものは落として先へ進む。
+let copied = 0;
+let absent = 0;
+await Promise.all(
+  wanted.map(async (rel) => {
+    const [, dir, file] = rel.match(/^fonts\/([^/]+)\/(.+)$/) ?? [];
+    if (!dir || !FONT_PKGS[dir]) throw new Error(`未知のフォント参照: ${rel}`);
+    const cached = resolve(fontCacheDir, dir, file);
+    if (!existsSync(cached)) {
+      const url = `https://cdn.jsdelivr.net/npm/${FONT_PKGS[dir]}/chtml/woff2/${file}`;
+      const res = await fetch(url);
+      if (res.status === 404) {
+        absent++;
+        return;
+      }
+      if (!res.ok) throw new Error(`フォントを取得できない: ${url} (${res.status})`);
+      mkdirSync(dirname(cached), { recursive: true });
+      writeFileSync(cached, new Uint8Array(await res.arrayBuffer()));
+    }
+    const out = resolve(distDir, rel);
+    mkdirSync(dirname(out), { recursive: true });
+    copyFileSync(cached, out);
+    copied++;
+  })
+);
+console.log(`fonts: ${copied} files -> dist/${FONT_DIR}/ (未収録 ${absent})`);
+
+if (mathErrors > 0) console.warn(`warn: 数式 ${mathErrors} 件`);
 if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs} 件`);
 if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
 if (titleMismatches > 0) console.warn(`warn: 節タイトルの不一致 ${titleMismatches} 件`);

@@ -72,7 +72,7 @@ const ALLOW = new Set([
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
   'proof', 'formalized', 'formalization-note', 'notation-preview',
   // ツール・言語
-  'Lean', 'Mathlib', 'KaTeX',
+  'Lean', 'Mathlib', 'MathJax',
   // 訳語のない術語・標準的な略語
   'i.i.d.', 'pmf', 'AEP', 'KL', 'nat', 'bit',
   // 本プロジェクトの用語（CLAUDE.md の完成判定）
