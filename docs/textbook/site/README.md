@@ -4,11 +4,17 @@
 surge.sh にホストする。数式はビルド時に HTML 化されるためクライアント JS 不要で、
 モバイルでも確実に表示される（GitHub ネイティブ math の不安定さを回避）。
 
-書体は本文がヒラギノ明朝（端末にある明朝を順に拾う）、等幅が Inconsolata、数式が
-AMS Euler（OpenType 版の Neo Euler）。Euler は MathJax の font extension としてしか
-配布されていないので、数式エンジンが KaTeX ではなく MathJax なのはそのためである。
-Euler が持たない大かっこ・根号・黒板太字は土台の New Computer Modern が埋める
-（LaTeX の eulervm パッケージと同じ組み方）。
+書体は 3 系統に分けている。**和文は教科書体**（UD デジタル教科書体 → 游教科書体 →
+Klee One の順に端末にあるものを拾う）、**欧文と数字は Palatino**、**数式は AMS Euler**
+（OpenType 版の Neo Euler）、**等幅は Inconsolata**。
+
+- 和文を教科書体にしたのは読みやすさのため。ただし教科書体の欧文は手書きに寄っていて、
+  1 が l に、0 が o に見える（「確率 1 でとる」「1948 年」が読めない）ので、欧文と数字は
+  教科書体に任せず Palatino を先に置く。和文には無い字だけを拾うので和文は教科書体のまま残る。
+- Palatino は Euler と同じ Zapf の設計で、LaTeX の eulervm + mathpazo と同じ組み合わせになる。
+- Euler は MathJax の font extension としてしか配布されていない。数式エンジンが KaTeX では
+  なく MathJax なのはそのためである。Euler が持たない大かっこ・根号・黒板太字は土台の
+  New Computer Modern が埋める。
 
 > **注意**: このマシンの `/usr/local/bin/node` は署名が壊れていて起動できない
 > （SIGKILL）。そのため **Deno** でビルド・デプロイする。
