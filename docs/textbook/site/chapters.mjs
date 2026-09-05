@@ -59,6 +59,18 @@ export const chapters = [
     ],
   },
   {
+    slug: 'ch05',
+    num: '第5章',
+    title: 'ギャンブルと情報',
+    sections: [
+      { slug: 'ch05-01', num: '5.1', title: '競馬と倍加率', src: 'ch05/01-horse-race.md' },
+      { slug: 'ch05-02', num: '5.2', title: '比例賭けの最適性', src: 'ch05/02-proportional-betting.md' },
+      { slug: 'ch05-03', num: '5.3', title: '倍加率とエントロピー', src: 'ch05/03-doubling-rate-entropy.md' },
+      { slug: 'ch05-04', num: '5.4', title: '副情報の値打ち', src: 'ch05/04-side-information.md' },
+      { slug: 'ch05-05', num: '5.5', title: '資産の長時間のふるまい', src: 'ch05/05-long-run.md' },
+    ],
+  },
+  {
     slug: 'ch06',
     num: '第6章',
     title: '通信路容量',
