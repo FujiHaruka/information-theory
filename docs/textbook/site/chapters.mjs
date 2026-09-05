@@ -91,7 +91,7 @@ export const chapters = [
     sections: [
       { slug: 'ch07-01', num: '7.1', title: '微分エントロピー', src: 'ch07/01-differential-entropy.md' },
       { slug: 'ch07-02', num: '7.2', title: 'ガウス分布の微分エントロピー', src: 'ch07/02-gaussian.md' },
-      { slug: 'ch07-03', num: '7.3', title: '変数変換と微分エントロピー', src: 'ch07/03-change-of-variables.md' },
+      { slug: 'ch07-03', num: '7.3', title: 'アフィン変換と微分エントロピー', src: 'ch07/03-change-of-variables.md' },
       { slug: 'ch07-04', num: '7.4', title: '結合微分エントロピーと劣加法性', src: 'ch07/04-joint-subadditivity.md' },
       { slug: 'ch07-05', num: '7.5', title: '連続な相対エントロピーと相互情報量', src: 'ch07/05-relative-entropy.md' },
     ],
