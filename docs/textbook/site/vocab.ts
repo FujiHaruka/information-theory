@@ -39,6 +39,9 @@ const ALLOW = new Set([
   'Lean', 'Mathlib', 'MathJax',
   // 訳語のない術語・標準的な略語
   'i.i.d.', 'pmf', 'AEP', 'KL', 'nat', 'bit',
+  // 規格名（訳語がなく、日本語の文献もこの綴りで書く）。数字は上の正規表現に入らないので
+  // 「UTF-8」はハイフンまでが 1 語として拾われる
+  'UTF-',
   // 本プロジェクトの用語（CLAUDE.md の完成判定）
   'done', 'sorry', 'residual',
 ]);

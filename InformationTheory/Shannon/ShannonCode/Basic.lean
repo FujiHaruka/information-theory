@@ -33,8 +33,9 @@ The development works at the codeword-length level (`α → ℕ`) because Mathli
 `kraft_mcmillan_inequality` uses a `Finset (List α)` representation. The reverse direction
 (constructing a prefix code from a Kraft-feasible length function) is in
 `ShannonCode/KraftReverse.lean`. We use `Real.logb D` for the D-ary logarithm throughout,
-localizing the `Real.log D` factor. The upper bound (strict inequality) requires full
-support `∀ a, P.real {a} > 0`; the lower bound does not.
+localizing the `Real.log D` factor. Both bounds are stated under full support
+`∀ a, P.real {a} > 0`: the upper bound needs it for the ceiling to be well behaved, the lower
+bound only to keep the `logb` arguments positive.
 -/
 
 namespace InformationTheory.Shannon.ShannonCode
