@@ -1,0 +1,122 @@
+# 7.3 変数変換と微分エントロピー
+
+1.1 節で見たとおり，離散のエントロピーは値の付け替えで変わらない．サイコロの目 $1, \dots, 6$ を色の名前に置き換えても $H(X)$ は同じである．エントロピーが分布だけで決まる量だからで，値そのものはどこにも効いていない．微分エントロピーも密度だけで決まる量だが，値の付け替えに対するふるまいは同じではない．長さの単位を変えれば密度の高さが変わり，$-\int f\log f$ の値も動く．本節はその動き方をアフィン変換について決める．
+
+例 7.1.3 と例 7.1.4 で $h(X) = \log(\text{長さ})$ の形が出たことを思い出すと，長さを $\lvert c\rvert$ 倍すれば $h$ は $\log\lvert c\rvert$ だけ増えるはずである．実際そのとおりになる．
+
+道具は一つ借りる．$1$ 次式による置換積分，すなわち $c \ne 0$ のときの $y = (x - b)/c$ という置き換えである．積分区間の対応と $dx = \lvert c\rvert\,dy$ という関係を，微積分の計算規則として既知とする．
+
+## アフィン変換した確率変数の密度
+
+::: lemma 7.3.1 アフィン変換の密度
+$X$ を密度 $f$ をもつ実数値確率変数とし，$c \ne 0$ と $b$ を実数とする．このとき $cX + b$ は密度をもち，その一つは
+$$
+x \;\longmapsto\; \frac{1}{\lvert c\rvert}\,f\Big(\frac{x - b}{c}\Big)
+$$
+である．
+:::
+
+::: proof
+右辺の関数を $f_c$ と書く．$f_c$ は非負である．
+
+任意の実数 $u \le v$ について $\Pr[u \le cX + b \le v]$ を求める．$c > 0$ のとき，この条件は $\frac{u-b}{c} \le X \le \frac{v-b}{c}$ と同値だから，定義 7.1.1 より
+$$
+\Pr[u \le cX + b \le v] \;=\; \int_{(u-b)/c}^{(v-b)/c} f(y)\,dy
+$$
+である．借りた置換積分を $y = (x-b)/c$ で使うと，積分区間は $[u, v]$ に移り，$dy = dx/c$ だから右辺は $\int_u^v f_c(x)\,dx$ に等しい．$c < 0$ のときは，条件が $\frac{v-b}{c} \le X \le \frac{u-b}{c}$ と同値になり，同じ置き換えで積分の向きが入れ替わるので，$1/c$ ではなく $1/\lvert c\rvert$ が出て，やはり $\int_u^v f_c(x)\,dx$ に等しい．
+
+全積分が $1$ であることも同じ置き換えで従う．$\int_{\mathbb R} f_c(x)\,dx = \int_{\mathbb R} f(y)\,dy = 1$ である．よって $f_c$ は定義 7.1.1 の意味で $cX + b$ の密度である．
+:::
+
+## 平行移動と定数倍
+
+::: proposition 7.3.2 平行移動での不変性
+$X$ を密度をもつ実数値確率変数，$b$ を実数とする．$h(X)$ が定まるならば $h(X + b)$ も定まり，$h(X + b) = h(X)$ である．
+:::
+
+::: proof
+$X$ の密度を $f$ とする．補題 7.3.1 を $c = 1$ ととると，$X + b$ の密度の一つは $x \mapsto f(x - b)$ である．借りた置換積分を $y = x - b$ で使うと
+$$
+\int_{\mathbb R} \big\lvert f(x-b)\log f(x-b)\big\rvert\,dx \;=\; \int_{\mathbb R} \lvert f(y)\log f(y)\rvert\,dy
+$$
+であり，右辺は仮定より有限だから $h(X+b)$ は定まる．同じ置き換えで符号を付けた積分も等しいので $h(X+b) = h(X)$ である．
+:::
+
+::: formalized
+`differentialEntropy_map_add_const` (`InformationTheory/Shannon/DifferentialEntropy.lean`)
+:::
+
+::: proposition 7.3.3 定数倍
+$X$ を密度をもつ実数値確率変数，$c \ne 0$ を実数とする．$h(X)$ が定まるならば $h(cX)$ も定まり
+$$
+h(cX) \;=\; h(X) + \log\lvert c\rvert
+$$
+である．
+:::
+
+::: proof
+$X$ の密度を $f$ とする．補題 7.3.1 を $b = 0$ ととると，$cX$ の密度の一つは $x \mapsto \frac{1}{\lvert c\rvert} f(x/c)$ である．借りた置換積分を $y = x/c$ で使うと $dx = \lvert c\rvert\,dy$ で，
+$$
+-\int_{\mathbb R} \frac{1}{\lvert c\rvert} f\Big(\frac xc\Big)\log\frac{f(x/c)}{\lvert c\rvert}\,dx
+  \;=\; -\int_{\mathbb R} f(y)\Big(\log f(y) - \log\lvert c\rvert\Big)\,dy
+$$
+となる．同じ置き換えで絶対値をとった積分も移せて，右辺は $\int_{\mathbb R} \lvert f\log f\rvert + \lvert\log\lvert c\rvert\rvert$ で抑えられるから有限であり，$h(cX)$ は定まる．値は，$\int f = 1$ より右辺が $h(X) + \log\lvert c\rvert$ に等しいことから従う．
+:::
+
+::: formalized
+`differentialEntropy_map_mul_const` (`InformationTheory/Shannon/DifferentialEntropy.lean`)
+:::
+
+::: corollary 7.3.4 アフィン変換
+$X$ を密度をもつ実数値確率変数，$c \ne 0$ と $b$ を実数とする．$h(X)$ が定まるならば $h(cX + b)$ も定まり
+$$
+h(cX + b) \;=\; h(X) + \log\lvert c\rvert
+$$
+である．
+:::
+
+::: proof
+命題 7.3.3 より $h(cX)$ は定まって $h(cX) = h(X) + \log\lvert c\rvert$ である．これに命題 7.3.2 を確率変数 $cX$ について当てると，$h(cX + b)$ が定まって $h(cX)$ に等しい．
+:::
+
+::: formalized
+`differentialEntropy_map_affine` (`InformationTheory/Shannon/DifferentialEntropy.lean`)
+:::
+
+::: formalization-note
+命題 7.3.3 と系 7.3.4 の形式化は，本文の「$h(X)$ が定まる」にあたる積分可能性を仮定にもち，本文と同じ範囲を覆っている．命題 7.3.2 の形式化はその仮定をもたない．積分できない場合に形式化が $h$ の値を $0$ と定める約束のもとでは，平行移動の前後でどちらも $0$ になって等式が成り立つからである．
+:::
+
+系 7.3.4 は「微分エントロピーは目盛の取り替えを見ている」ことを言っている．$X$ をどこへ動かしても（$b$）値は変わらないが，何倍に引き伸ばすか（$c$）で $\log\lvert c\rvert$ だけ動く．長さをメートルで測っていたのをセンチメートルに変えれば $c = 100$ で，$h$ は $\log 100$ だけ増える．同じ確率変数が，測り方を変えただけで違う値をもつということである．$h(X)$ の数値そのものを「$X$ のもつ情報量」と読むなら，測り方を変えるだけでその情報量が変わってしまう．
+
+定理 7.1.5 の言葉に翻訳しておく．$cX$ を幅 $\delta$ の区間で読み取るのは，$X$ を幅 $\delta/\lvert c\rvert$ の区間で読み取るのと同じことで，読み取った値のエントロピーは両者で等しい．定理 7.1.5 が微分エントロピーを $H + \log(\text{幅})$ の極限として与えているので，幅が $\lvert c\rvert$ 分の $1$ になったぶんの $\log\lvert c\rvert$ が，そのまま $h(cX)$ と $h(X)$ の差として残る．離散のエントロピーが値の付け替えで動かなかったのは，値の付け替えが「どの区間に入ったか」を変えないからである．引き伸ばしは，同じ幅の区間との関係を変えるので事情が違う．
+
+意味をもつのは，同じ目盛で測った二つの微分エントロピーの差である．$X$ と $Y$ を同時に $c$ 倍すれば $h(X)$ と $h(Y)$ はどちらも $\log\lvert c\rvert$ だけ増え，差は変わらない．7.5 節の相対エントロピーと相互情報量が差の形をしているのは偶然ではない．そこでは離散のときと同じ意味づけが戻ってくる．
+
+::: example 7.3.5 一様分布
+$U$ が区間 $[0,1]$ の上の一様分布に従い，$w > 0$ とする．このとき $wU$ は長さ $w$ の区間の上の一様分布に従い，$h(wU) = \log w$ である．
+:::
+
+::: proof
+$U$ の密度は $[0,1]$ の上で $1$，その外で $0$ である．補題 7.3.1 を $c = w$，$b = 0$ ととると，$wU$ の密度の一つは $[0,w]$ の上で $1/w$，その外で $0$ であり，これは長さ $w$ の区間の上の一様分布の密度である．例 7.1.3 を $w = 1$ に当てると $h(U) = \log 1 = 0$ だから，命題 7.3.3 より $h(wU) = 0 + \log w = \log w$ である．
+:::
+
+::: example 7.3.6 ガウス分布
+$Z$ が $\mathcal N(0,1)$ に従い，$\mu$ を実数，$\sigma > 0$ とする．このとき $\sigma Z + \mu$ は $\mathcal N(\mu, \sigma^2)$ に従い，$h(\sigma Z + \mu) = \frac12\log(2\pi e\sigma^2)$ である．
+:::
+
+::: proof
+補題 7.3.1 を $c = \sigma$，$b = \mu$ ととると，$\sigma Z + \mu$ の密度の一つは
+$$
+\frac{1}{\sigma}\,g_{0,1}\Big(\frac{x-\mu}{\sigma}\Big)
+  \;=\; \frac{1}{\sigma\sqrt{2\pi}}\,\exp\!\Big(\!-\frac{(x-\mu)^2}{2\sigma^2}\Big)
+  \;=\; g_{\mu,\sigma^2}(x)
+$$
+である（$g$ は定義 7.2.1 の記号）．よって $\sigma Z + \mu$ は $\mathcal N(\mu,\sigma^2)$ に従う．微分エントロピーは，定理 7.2.2 を $\mathcal N(0,1)$ に当てて $h(Z) = \frac12\log(2\pi e)$ を得たうえで，系 7.3.4 より
+$$
+h(\sigma Z + \mu) \;=\; \frac12\log(2\pi e) + \log\sigma \;=\; \frac12\log\big(2\pi e\sigma^2\big)
+$$
+となる．
+:::
+
+例 7.3.6 の値は定理 7.2.2 が $\mathcal N(\mu,\sigma^2)$ について直接与えたものと一致する．定理 7.2.2 は密度の対数を平均する計算，例 7.3.6 は標準ガウス分布の値に引き伸ばしのぶんを足す計算で，別々の道から同じ値に着いている．例 7.2.6 で見た「一様分布とガウス分布の差が $\sigma$ によらない」ことも，ここから読める．どちらも $\sigma$ 倍で作れる分布なので，$\sigma$ を変えると両方が $\log\sigma$ ずつ動き，差は動かない．
