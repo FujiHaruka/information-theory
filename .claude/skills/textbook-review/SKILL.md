@@ -18,8 +18,8 @@ description: 教科書原稿 (`docs/textbook/`) を 4 観点（数学的正し�
 
 ## 前提
 
-- 原稿は `docs/textbook/`。第1・2章は `ch0N/` ディレクトリに 1 節 1 ファイル、
-  第3〜5章は `ch0N-*.md` の 1 章 1 ファイル（`site/build.mjs` の `chapters` が SoT）。
+- 原稿は `docs/textbook/`。全章 `chNN/` ディレクトリに 1 節 1 ファイル（章立ての SoT は
+  `site/chapters.mjs` の `chapters` 配列。ディレクトリ名の番号 = 本書の章番号）。
 - 執筆原則の SoT は `.claude/rules/textbook-writing.md`。**第1章が基準実装**。
 - 査読エージェントは全員 **read-only**。修正はオーケストレーター（あなた）が当てる。
 - CLAUDE.md「Parallel orchestration」の**同時 1 体キャップ**に従う。4 体は順に回す。

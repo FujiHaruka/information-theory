@@ -85,9 +85,10 @@ legacy migration は完了済 (active な `@audit:suspect/staged/defer` タグ 0
 原稿の執筆原則 (読者前提・節の構成・前方参照・形式化ポインタ・節分割) は
 `.claude/rules/textbook-writing.md` が SoT。
 
-- **Ch.2 パイロット済** (`docs/textbook/ch01/`): 検証済 33 declaration を §2.1-2.10 の prose に紐付け。判明した課題 = (i) 値の型不一致 (`ℝ≥0∞` vs `ℝ`、橋渡し `.toReal`)、(ii) Markov 定義の表層差 (compProd 分解形)、(iii) n 変数 chain rule の右辺長大、(iv) 章↔file が 1:1 でない。代表名照合済 (2026-06-22、章対応表の backtick 識別子を実 declaration と機械照合)。
-- **原稿起動可能な genuine ✅ 章**: Ch.2 (✅ pilot) / 3 / 4 / 5 / 7 / 8 / 9 / 10 / 12 / 15 (DSC) / 17。
-- **次の一手候補**: (i) Ch.2 パイロット課題を踏まえた原稿生成テンプレ確立 (型注釈 / 代表名照合) → 他完成章 (Ch.3/4/7/12) 横展開。
+- **子プラン (SoT)**: [`docs/textbook-manuscript-plan.md`](textbook-manuscript-plan.md) — 残り 11 章の執筆順・章立て・章ごとの進捗。
+- **章立て**: 全 16 章。本書の章番号 ↔ CT 章番号は 1↔2 / 2↔3 / 3↔4 / 4↔5 / 5↔6 / 6↔7 / 7↔8 / 8↔9 / 9↔10 / 10↔12 / 11↔11 / 12↔13 / 13↔14 / 14↔15 / 15↔16 / 16↔17 (最大エントロピーを仮説検定の前に置く 1 点だけ CT 順と入れ替え、理由は子プラン)。
+- **執筆済**: 本書 第1章 (CT2) / 第2章 (CT3) / 第3章 (CT4) / 第6章 (CT7) / 第10章 (CT12)。
+- **Ch.2 パイロットで判明した課題** (以降の章にも効く): (i) 値の型不一致 (`ℝ≥0∞` vs `ℝ`、橋渡し `.toReal`)、(ii) Markov 定義の表層差 (compProd 分解形)、(iii) n 変数 chain rule の右辺長大、(iv) 章↔file が 1:1 でない。
 
 ## 判断ログ (戦略遷移サマリ)
 

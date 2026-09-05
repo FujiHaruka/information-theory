@@ -12,52 +12,16 @@
 // 揺れを見つけたら `terminology.mjs` に 1 行足す。以後は build.mjs が毎回検査する。
 
 import { TERMS } from './terminology.mjs';
+import { chapters } from './chapters.mjs';
 
 const root = new URL('..', import.meta.url).pathname; // docs/textbook
 
-// 章と、その本文ファイル。build.mjs の chapters と揃える（順序が初出判定に効く）。
-const CHAPTERS: { slug: string; files: string[] }[] = [
-  {
-    slug: 'ch01',
-    files: [
-      'ch01/01-entropy.md', 'ch01/02-joint-conditional-entropy.md',
-      'ch01/03-mutual-information.md', 'ch01/04-conditional-mutual-information.md',
-      'ch01/05-chain-rules.md', 'ch01/06-information-inequality.md',
-      'ch01/07-log-sum-inequality.md', 'ch01/08-data-processing-inequality.md',
-      'ch01/09-sufficient-statistics.md', 'ch01/10-fano.md',
-    ],
-  },
-  {
-    slug: 'ch02',
-    files: [
-      'ch02/01-aep.md', 'ch02/02-typical-set.md',
-      'ch02/03-source-coding.md', 'ch02/04-strong-typicality.md',
-    ],
-  },
-  {
-    slug: 'ch03',
-    files: [
-      'ch03/01-stationary.md', 'ch03/02-entropy-rate.md',
-      'ch03/03-markov-rate.md', 'ch03/04-birkhoff.md', 'ch03/05-smb.md',
-    ],
-  },
-  {
-    slug: 'ch04',
-    files: [
-      'ch04/01-capacity.md', 'ch04/02-joint-typicality.md',
-      'ch04/03-random-coding.md', 'ch04/04-converse.md',
-      'ch04/05-feedback.md', 'ch04/06-strong-converse.md',
-      'ch04/07-general-channel.md',
-    ],
-  },
-  {
-    slug: 'ch05',
-    files: [
-      'ch05/01-problem.md', 'ch05/02-gibbs.md',
-      'ch05/03-partition-function.md', 'ch05/04-multiplier.md',
-    ],
-  },
-];
+// 章と、その本文ファイル。順序が初出判定に効くので、build.mjs と同じ配列を読む
+// （章立ての SoT は chapters.mjs 1 箇所）。
+const CHAPTERS: { slug: string; files: string[] }[] = chapters.map((c) => ({
+  slug: c.slug,
+  files: c.sections ? c.sections.map((s) => s.src) : [c.src],
+}));
 
 // 原語混入の検査から外す語。固有名詞・環境タグ・訳語のない術語だけを入れる。
 // 訳語がある語をここに入れてはいけない（それは terminology.mjs の avoid 側の仕事）。
