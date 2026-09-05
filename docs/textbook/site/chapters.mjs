@@ -46,6 +46,19 @@ export const chapters = [
     ],
   },
   {
+    slug: 'ch04',
+    num: '第4章',
+    title: '符号語長と最適符号',
+    sections: [
+      { slug: 'ch04-01', num: '4.1', title: '符号と一意復号可能性', src: 'ch04/01-codes.md' },
+      { slug: 'ch04-02', num: '4.2', title: 'Kraft の不等式', src: 'ch04/02-kraft.md' },
+      { slug: 'ch04-03', num: '4.3', title: '平均符号長の下界', src: 'ch04/03-lower-bound.md' },
+      { slug: 'ch04-04', num: '4.4', title: 'Shannon 符号', src: 'ch04/04-shannon-code.md' },
+      { slug: 'ch04-05', num: '4.5', title: 'McMillan の不等式', src: 'ch04/05-mcmillan.md' },
+      { slug: 'ch04-06', num: '4.6', title: 'Huffman 符号の最適性', src: 'ch04/06-huffman.md' },
+    ],
+  },
+  {
     slug: 'ch06',
     num: '第6章',
     title: '通信路容量',
