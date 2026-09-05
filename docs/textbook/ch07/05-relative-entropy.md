@@ -53,7 +53,7 @@ $$
 :::
 
 ::: proof
-補題 7.3.1 の証明で見たとおり $f_c$ と $q_c$ は $\mathbb R$ 上の密度である．$f_c(x) > 0$ と $f\big(\frac{x-b}{c}\big) > 0$ は同値，$q_c$ についても同様だから，定義 7.5.1 の集合は $S_c = \{x : \frac{x-b}{c} \in S\}$ である．また $S_c$ の上で
+$f_c$ と $q_c$ が $\mathbb R$ 上の密度であることを見る．どちらも非負であり，7.3 節で借りた置換積分を $y = (x-b)/c$ で使うと $\int_{\mathbb R} f_c(x)\,dx = \int_{\mathbb R} f(y)\,dy = 1$ となり，$q_c$ についても同じ計算である．$f_c(x) > 0$ と $f\big(\frac{x-b}{c}\big) > 0$ は同値，$q_c$ についても同様だから，定義 7.5.1 の集合は $S_c = \{x : \frac{x-b}{c} \in S\}$ である．また $S_c$ の上で
 $$
 \log\frac{f_c(x)}{q_c(x)} \;=\; \log\frac{f\big(\frac{x-b}{c}\big)}{q\big(\frac{x-b}{c}\big)}
 $$
@@ -135,7 +135,7 @@ $$
 :::
 
 ::: proof
-$X$ が $\mathcal N(\mu_1,\sigma_1^2)$ に従うとする．どちらの密度も実軸のすべての点で正だから定義 7.5.1 の $S$ は $\mathbb R$ 全体で，$\int_S f = 1$ である．定理 7.2.2 の証明で見た対数の式を二つとって差をとると
+$X$ が $\mathcal N(\mu_1,\sigma_1^2)$ に従うとする．どちらの密度も実軸のすべての点で正だから定義 7.5.1 の $S$ は $\mathbb R$ 全体で，$\int_S f = 1$ である．定義 7.2.1 の二つの密度について対数の差をとると
 $$
 \log\frac{f(x)}{q(x)} \;=\; \frac12\log\frac{\sigma_2^2}{\sigma_1^2}
   \;+\; \log e\left(\frac{(x-\mu_2)^2}{2\sigma_2^2} - \frac{(x-\mu_1)^2}{2\sigma_1^2}\right)

@@ -85,7 +85,7 @@ $$
 ::: proof
 $X$ の密度を $f$，平均を $\mu := \mathbb E[X]$ とし，補題 7.2.3 を $q := g_{\mu,\sigma^2}$（定義 7.2.1）ととって当てる．比べる相手の平均を $X$ の平均に合わせるのは，こちらで選べる設定である．
 
-補題 7.2.3 の仮定を確かめる．借りた正規分布の基本性質より $g_{\mu,\sigma^2}$ は $\mathbb R$ 上の密度である．これは実軸のすべての点で正だから $S = \{x : f(x) > 0\}$ であり，$\int_S f = \int_{\mathbb R} f = 1$ である．また定理 7.2.2 の証明で見たとおり $-\log g_{\mu,\sigma^2}(x)$ は $(x-\mu)^2$ の $1$ 次式であり，仮定より $\mathbb E[(X-\mu)^2]$ は有限だから $\int_S f\lvert\log g_{\mu,\sigma^2}\rvert < \infty$ である．
+補題 7.2.3 の仮定を確かめる．借りた正規分布の基本性質より $g_{\mu,\sigma^2}$ は $\mathbb R$ 上の密度である．これは実軸のすべての点で正だから $S = \{x : f(x) > 0\}$ であり，$\int_S f = \int_{\mathbb R} f = 1$ である．また定義 7.2.1 の密度の対数をとると $-\log g_{\mu,\sigma^2}(x) = \frac12\log(2\pi\sigma^2) + \frac{(x-\mu)^2}{2\sigma^2}\log e$ であり，これは $(x-\mu)^2$ の $1$ 次式で，仮定より $\mathbb E[(X-\mu)^2]$ は有限だから $\int_S f\lvert\log g_{\mu,\sigma^2}\rvert < \infty$ である．
 
 補題 7.2.3 を当てる．$S$ の外では $f = 0$ なので $\int_S f\log g_{\mu,\sigma^2} = \int_{\mathbb R} f\log g_{\mu,\sigma^2}$ であり
 $$
