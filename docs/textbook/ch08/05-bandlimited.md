@@ -42,25 +42,29 @@ $$
 形式化には $1$ 標本あたりの容量を表す `perSampleAwgnCapacity` (`InformationTheory/Shannon/ShannonHartley/Basic.lean`) があるが，これは命題 8.5.2 の右辺をそのまま定義として置いたもので，それがガウス通信路の容量に等しいことを述べる宣言ではない．命題 8.5.2 の内容にあたる単独の宣言はない．
 :::
 
-$1$ 秒あたりに直すには，標本の個数を掛ければよい．
+$1$ 秒あたりに直すには，標本の個数を掛ければよい．掛け算をしているのは単位の換算であって，複数回の使用をまとめて符号化したときに何が起きるかを言っているのではない．
 
 ::: proposition 8.5.3 Shannon–Hartley の公式
-$W > 0$，$N_0 > 0$，$P \ge 0$ とする．このとき
+$W > 0$，$N_0 > 0$，$P > 0$ とする．定義 8.5.1 の帯域制限ガウス通信路が $1$ 秒あたりに達成できるレート，すなわち標本あたりの達成レート $R \in \mathcal R\big(\frac{P}{2W},\, \frac{N_0}{2}\big)$（定義 8.3.2）に $1$ 秒あたりの標本の個数 $2W$ を掛けた値 $2WR$ の全体は空でなく，その上限は
+$$
+W\log\Big(1 + \frac{P}{N_0 W}\Big)
+$$
+である．
+:::
+
+::: proof
+定義 8.5.1 より，この通信路の $1$ 標本は雑音の分散 $N_0/2$，電力制約 $P/(2W)$ のガウス通信路の $1$ 回の使用である．$W > 0$ と $N_0 > 0$ と $P > 0$ より $N_0/2 > 0$ かつ $P/(2W) > 0$ だから，系 8.4.2 をこの二つに当てると $\mathcal R(\frac{P}{2W}, \frac{N_0}{2})$ は空でなく，その上限は $\frac12\log(1 + \frac{P}{N_0W})$ である（右辺が命題 8.5.2 の計算で得た値である）．集合の各元を正の定数 $2W$ 倍すれば上限も $2W$ 倍になるから，求める上限は
 $$
 2W \cdot \frac12\log\Big(1 + \frac{P}{N_0 W}\Big) \;=\; W\log\Big(1 + \frac{P}{N_0 W}\Big)
 $$
 である．
 :::
 
-::: proof
-$2W \cdot \frac12 = W$ である．
+::: formalization-note
+形式化には，$1$ 標本あたりの容量に $2W$ を掛けた値が $W\log(1 + \frac{P}{N_0W})$ に等しいことを述べる `twoW_perSample_eq_shannonHartley` (`InformationTheory/Shannon/ShannonHartley/Basic.lean`) がある．こちらは掛け算そのものについての等式で，命題 8.5.3 のように達成レートの上限を述べたものではないので，紐付け先にはとらない．
 :::
 
-::: formalized
-`twoW_perSample_eq_shannonHartley` (`InformationTheory/Shannon/ShannonHartley/Basic.lean`)
-:::
-
-命題 8.5.2 と命題 8.5.3 を合わせると，定義 8.5.1 の帯域制限ガウス通信路が $1$ 秒あたりに運べるビット数は $W\log(1 + \frac{P}{N_0W})$ である．これが Shannon–Hartley の公式で，帯域幅・信号電力・雑音の強さという三つの物理量だけで通信の限界が決まっている．
+命題 8.5.3 が与えた $W\log(1 + \frac{P}{N_0W})$ が Shannon–Hartley の公式で，帯域幅・信号電力・雑音の強さという三つの物理量だけで通信の限界が決まっている．
 
 ::: formalization-note
 定義 8.5.1 が $2W$ という標本の個数を借りた標本化定理と自由度の数え上げから決めているのに対し，形式化の側はその個数を外から与えずに同じ結論に達している．上の注記で触れた `contAwgnOperationalCapacity` について，`contAwgn_eq_shannonHartley` (`InformationTheory/Shannon/ShannonHartley/ConverseFinal.lean`) が，$W > 0$，$N_0 > 0$，$P \ge 0$ のもとでその値が $W\log(1+\frac{P}{N_0W})$ に等しいことを無条件に与える．本書はこの形の主張を述べない．述べるには帯域制限を Fourier 変換で書き，時間窓の中の自由度の数え上げを主張の中に取り込むことになり，借りた自由度の数え上げがそのまま本文の証明対象になるからである．
