@@ -31,7 +31,8 @@ const ALLOW = new Set([
   'Fisher', 'Gibbs', 'Jensen', 'Neyman', 'Shannon', 'Fano', 'Markov', 'Kraft',
   'McMillan', 'Breiman', 'Birkhoff', 'Huffman', 'Lempel', 'Ziv', 'Csiszar',
   'Cesàro', 'Lévy', 'Borel', 'Cantelli', 'Weierstrass', 'Chebyshev', 'Lagrange',
-  'Legendre', 'Kelly', 'Lebesgue', 'Radon', 'Nikodym',
+  'Legendre', 'Kelly', 'Lebesgue', 'Radon', 'Nikodym', 'Hartley', 'Fourier',
+  'Whittaker', 'Landau', 'Pollak', 'Slepian',
   // 環境タグ（:::）
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
   'proof', 'formalized', 'formalization-note', 'notation-preview',

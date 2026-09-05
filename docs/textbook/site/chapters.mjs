@@ -97,6 +97,19 @@ export const chapters = [
     ],
   },
   {
+    slug: 'ch08',
+    num: '第8章',
+    title: 'ガウス通信路',
+    sections: [
+      { slug: 'ch08-01', num: '8.1', title: 'ガウス通信路', src: 'ch08/01-gaussian-channel.md' },
+      { slug: 'ch08-02', num: '8.2', title: 'ガウス通信路の容量', src: 'ch08/02-capacity.md' },
+      { slug: 'ch08-03', num: '8.3', title: '逆定理', src: 'ch08/03-converse.md' },
+      { slug: 'ch08-04', num: '8.4', title: '達成可能性', src: 'ch08/04-achievability.md' },
+      { slug: 'ch08-05', num: '8.5', title: '帯域制限通信路', src: 'ch08/05-bandlimited.md' },
+      { slug: 'ch08-06', num: '8.6', title: '並列ガウス通信路と注水', src: 'ch08/06-water-filling.md' },
+    ],
+  },
+  {
     slug: 'ch10',
     num: '第10章',
     title: '最大エントロピー',
