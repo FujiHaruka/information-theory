@@ -6,9 +6,9 @@
 
 示し方は上下に分ける．上界は，型の個数の多項式評価と 定理 11.2.1 の上界を合わせた数え上げで出る．下界は，$\mathcal E$ の中の分布を一つ選び，その型類ぶんだけで確率を下から押さえて出す．二つを合わせると，指数が一点で決まるという主張になる．
 
-## 経験分布の落ちる集合
+## 集合に属する型
 
-::: definition 11.3.1 経験分布の落ちる集合
+::: definition 11.3.1 集合に属する型
 $\mathcal X$ を空でない有限アルファベットとし，$\mathcal E$ を $\mathcal X$ 上の分布の集合とする．$n \ge 1$ に対し，$\mathcal E$ に属する長さ $n$ の型（定義 11.1.1）の全体を
 $$
 \mathcal E_n \;:=\; \big\{\, P \in \mathcal E \;:\; P \text{ は長さ } n \text{ の型} \,\big\}
@@ -16,9 +16,11 @@ $$
 と書く．
 :::
 
-$\mathcal E$ は分布の集合であって，系列の集合ではない．系列の側でこれに対応するのは，型が $\mathcal E$ に入る系列の全体 $\{x \in \mathcal X^n : \hat P_x \in \mathcal E\}$ である．どの系列もただ一つの型をもつ（定義 11.1.1）から，この集合は $\mathcal E_n$ に属する型の型類を重なりなく合わせたものにほかならない．$\mathcal E$ が無限に多くの分布を含んでいてもよいが，長さ $n$ の型は有限個しかないので $\mathcal E_n$ は有限集合である．$\mathcal E$ の中に長さ $n$ の型が一つも無いこともあり，そのときこの系列の集合は空になる．本節が測るのは，$\mathcal X$ 上の分布 $Q$ とその $n$ 重の積分布 $Q^n$ に対する，この集合の確率である．
+$\mathcal E$ は分布の集合であって，系列の集合ではない．系列の側でこれに対応するのは，型が $\mathcal E$ に入る系列の全体 $\{x \in \mathcal X^n : \hat P_x \in \mathcal E\}$ である．どの系列もただ一つの型をもつ（定義 11.1.1）から，この集合は $\mathcal E_n$ に属する型の型類を重なりなく合わせたものにほかならない．$\mathcal E$ が無限に多くの分布を含んでいてもよいが，長さ $n$ の型は有限個しかない（命題 11.1.3）ので $\mathcal E_n$ は有限集合である．$\mathcal E$ の中に長さ $n$ の型が一つも無いこともあり，そのときこの系列の集合は空になる．本節が測るのは，$\mathcal X$ 上の分布 $Q$ とその $n$ 重の積分布 $Q^n$ に対する，この集合の確率である．
 
 ## 上界
+
+定理 11.3.2 の $\gamma$ は $\inf_{P \in \mathcal E}D(P\,\|\,Q)$ と思って読めばよい．条件を $\mathcal E_n$ に属する型についてだけ課しているのは，証明が型の上の和しか使わないからで，例 11.6.4 の制約集合のように $\mathcal E$ が型でない分布を多く含むときには，そのぶん条件が緩くなって効く．
 
 ::: theorem 11.3.2 Sanov の上界
 $\mathcal X$ を空でない有限アルファベット，$Q$ を $\mathcal X$ 上の全点で正の分布，$Q^n$ をその $n$ 重の積分布とし，$\mathcal E$ を $\mathcal X$ 上の分布の集合，$\mathcal E_n$ を 定義 11.3.1 のとおりとする．$n \ge 1$ とし，実数 $\gamma$ が，$\mathcal E_n$ に属するどの型 $P$ についても $\gamma \le D(P\,\|\,Q)$ を満たすとすると
@@ -39,9 +41,9 @@ $$
 $$
 Q^n\big(\{x : \hat P_x \in \mathcal E\}\big) \;=\; \sum_{P \in \mathcal E_n} Q^n\big(\mathcal T_n(P)\big)
 $$
-である．右辺の各項に 定理 11.2.1 の上界を当てると $Q^n(\mathcal T_n(P)) \le e^{-nD(P\,\|\,Q)}$ であり，仮定より $\gamma \le D(P\,\|\,Q)$ で，指数関数は単調増加だから $Q^n(\mathcal T_n(P)) \le e^{-n\gamma}$ である．項の個数は $\mathcal E$ に属する長さ $n$ の型の個数だから，長さ $n$ の型の総数以下であり，命題 11.1.3 より $(n+1)^{\lvert\mathcal X\rvert}$ 以下である．よって和は $(n+1)^{\lvert\mathcal X\rvert}e^{-n\gamma}$ 以下である．
+である．右辺の各項に 定理 11.2.1 の上界を当てると $Q^n(\mathcal T_n(P)) \le e^{-nD(P\,\|\,Q)}$ であり，仮定より $\gamma \le D(P\,\|\,Q)$ であり，指数関数は単調増加（補題 8.2.5 の $\log$ の単調性と $\log e^s = s$ から出る）だから $Q^n(\mathcal T_n(P)) \le e^{-n\gamma}$ である．項の個数は $\mathcal E$ に属する長さ $n$ の型の個数だから，長さ $n$ の型の総数以下であり，命題 11.1.3 より $(n+1)^{\lvert\mathcal X\rvert}$ 以下である．よって和は $(n+1)^{\lvert\mathcal X\rvert}e^{-n\gamma}$ 以下である．
 
-第 $2$ の不等式は第 $1$ の両辺の対数をとって $n$ で割ったものである．左辺が正なら対数がとれ，$\log$ は単調増加だから
+第 $2$ の不等式は第 $1$ の両辺の対数をとって $n$ で割ったものである．左辺が正なら対数がとれ，補題 8.2.5 より $\log$ は単調だから
 $$
 \log Q^n\big(\{x : \hat P_x \in \mathcal E\}\big)
   \;\le\; \lvert\mathcal X\rvert\log(n+1) \;-\; n\gamma
@@ -50,7 +52,7 @@ $$
 :::
 
 ::: formalization-note
-定理 11.3.2 に対応する単独の宣言は無い．`typeClassByCount_union_Qn_le_inf` (`InformationTheory/Shannon/Sanov/LDP.lean`) が，型を有限個集めた族について，その合併の確率を「族の要素数に $e^{-n\gamma}$ を掛けたもの」で抑える形を与え，`numTypes_le` (`InformationTheory/Shannon/Sanov/MultinomialLowerBound.lean`) が長さ $n$ の型の個数を $(n+1)^{\lvert\mathcal X\rvert}$ で抑える．二つの合成である．$n$ を大きくした形の 系 11.3.3 のほうは単独で形式化されている．
+定理 11.3.2 に対応する単独の宣言は無い．`typeClassByCount_union_Qn_le_inf` (`InformationTheory/Shannon/Sanov/LDP.lean`) が，型を有限個集めた族について，その合併の確率を「族の要素数に $e^{-n\gamma}$ を掛けたもの」で抑える形を与える．この族の添字は各文字の出現回数の組で，その組の全体の要素数がちょうど $(n+1)^{\lvert\mathcal X\rvert}$ であることを `typeCountIndex_card` (`InformationTheory/Shannon/Sanov/LDP.lean`) が与えるから，族の要素数はこれ以下である．二つの合成である．$n$ を大きくした形の 系 11.3.3 のほうは単独で形式化されている．
 :::
 
 型の個数の多項式評価は，ここで初めて本来の役目を果たす．型ごとの上界 $e^{-n\gamma}$ を項の個数だけ足し合わせても，掛かるのは $n$ の多項式だけなので，$\frac1n\log$ をとると $0$ に向かう項しか足されない．そのことを極限の形にしたのが次の系である．
@@ -81,48 +83,48 @@ $\gamma$ としてどれだけ大きい値がとれるかで，系 11.3.3 の強
 
 ## 下界
 
-下界は，$\mathcal E$ の中の分布を一つ選び，その型類ぶんだけを数えて出す．ただし選んだ分布がそのまま長さ $n$ の型であるとは限らない．長さ $n$ の型がとる値は $0, 1/n, \dots, 1$ に限られる（定義 11.1.1）からである．そこで，選んだ分布に近い型を作って代用する．各文字について $n$ 倍した値を整数に切り下げ，切り下げで足りなくなったぶんを一つの文字にまとめて押し付ければ，個数の総和が $n$ になって型になる．以下，$\lfloor t \rfloor$ で実数 $t$ 以下の最大の整数を表す（$\lfloor t \rfloor \le t < \lfloor t \rfloor + 1$ である）．選ぶ分布は $P^\star$ と書く．星印は本章では最適化して選んだものであることを表す約束で，分布には $\star$ を，値には $*$ を使い分ける．
+下界は，$\mathcal E$ の中の分布を一つ選び，その型類ぶんだけを数えて出す．ただし選んだ分布がそのまま長さ $n$ の型であるとは限らない．長さ $n$ の型がとる値は $0, 1/n, \dots, 1$ に限られる（定義 11.1.1）からである．そこで，選んだ分布に近い型を作って代用する．各文字について $n$ 倍した値を整数に切り下げ，切り下げで足りなくなったぶんを一つの文字にまとめて押し付ければ，個数の総和が $n$ になって型になる．以下，$\lfloor t \rfloor$ で実数 $t$ 以下の最大の整数を表す（$\lfloor t \rfloor \le t < \lfloor t \rfloor + 1$ である）．選ぶ分布は $\tilde P$ と書く．ここで選ぶ分布に最適性は要らないので星印を付けない．星印は本章では最適化して選んだものであることを表す約束で，分布には $\star$ を，値には $*$ を使い分ける．最初に星が付くのは，最小化子であることを仮定に置く 定理 11.3.5 の $P^\star$ である．
 
 ::: theorem 11.3.4 Sanov の下界
-$\mathcal X$ を空でない有限アルファベット，$Q$ を $\mathcal X$ 上の全点で正の分布，$Q^n$ をその $n$ 重の積分布とし，$\mathcal E$ を $\mathcal X$ 上の分布の集合，$\mathcal E_n$ を 定義 11.3.1 のとおりとする．$P^\star$ を $\mathcal X$ 上の分布，$a_0$ を $\mathcal X$ の文字とし，各 $n \ge 1$ について
+$\mathcal X$ を空でない有限アルファベット，$Q$ を $\mathcal X$ 上の全点で正の分布，$Q^n$ をその $n$ 重の積分布とし，$\mathcal E$ を $\mathcal X$ 上の分布の集合，$\mathcal E_n$ を 定義 11.3.1 のとおりとする．$\tilde P$ を $\mathcal X$ 上の分布，$a_0$ を $\mathcal X$ の文字とし，各 $n \ge 1$ について
 $$
-P^\star_n(a) \;:=\; \frac{\lfloor nP^\star(a)\rfloor}{n} \quad (a \ne a_0),
+\tilde P_n(a) \;:=\; \frac{\lfloor n\tilde P(a)\rfloor}{n} \quad (a \ne a_0),
 \qquad
-P^\star_n(a_0) \;:=\; 1 - \sum_{a \ne a_0}\frac{\lfloor nP^\star(a)\rfloor}{n}
+\tilde P_n(a_0) \;:=\; 1 - \sum_{a \ne a_0}\frac{\lfloor n\tilde P(a)\rfloor}{n}
 $$
-で定まる $\mathcal X$ 上の関数を，$a_0$ を端数の引き受け手とする $P^\star$ の **丸め型** と呼ぶ（$\lfloor t\rfloor$ は $t$ 以下の最大の整数）．十分大きいすべての $n$ について $P^\star_n \in \mathcal E_n$ であるならば，十分大きい $n$ で $Q^n(\{x \in \mathcal X^n : \hat P_x \in \mathcal E\})$ は正であり
+で定まる $\mathcal X$ 上の関数を，$a_0$ を端数の引き受け手とする $\tilde P$ の **丸め型** と呼ぶ（$\lfloor t\rfloor$ は $t$ 以下の最大の整数）．十分大きいすべての $n$ について $\tilde P_n \in \mathcal E_n$ であるならば，十分大きい $n$ で $Q^n(\{x \in \mathcal X^n : \hat P_x \in \mathcal E\})$ は正であり
 $$
 \liminf_{n \to \infty}\frac1n\log Q^n\big(\{\, x \in \mathcal X^n \;:\; \hat P_x \in \mathcal E \,\}\big)
-  \;\ge\; -D(P^\star\,\|\,Q)
+  \;\ge\; -D(\tilde P\,\|\,Q)
 $$
 である（$\hat P_x$ は 定義 11.1.1 の型，$D$ は 1.6 節の相対エントロピー）．
 :::
 
 ::: proof
-まず $P^\star_n$ が長さ $n$ の型であることを見る．$a \ne a_0$ については $nP^\star_n(a) = \lfloor nP^\star(a)\rfloor$ で，これは非負整数である．$a_0$ については $nP^\star_n(a_0) = n - \sum_{a \ne a_0}\lfloor nP^\star(a)\rfloor$ で，これも整数であり，$\lfloor t\rfloor \le t$ と $\sum_a P^\star(a) = 1$ から
+まず $\tilde P_n$ が長さ $n$ の型であることを見る．$a \ne a_0$ については $n\tilde P_n(a) = \lfloor n\tilde P(a)\rfloor$ で，これは非負整数である．$a_0$ については $n\tilde P_n(a_0) = n - \sum_{a \ne a_0}\lfloor n\tilde P(a)\rfloor$ で，これも整数であり，$\lfloor t\rfloor \le t$ と $\sum_a \tilde P(a) = 1$ から
 $$
-\sum_{a \ne a_0}\big\lfloor nP^\star(a)\big\rfloor \;\le\; \sum_{a \ne a_0} nP^\star(a) \;\le\; n
+\sum_{a \ne a_0}\big\lfloor n\tilde P(a)\big\rfloor \;\le\; \sum_{a \ne a_0} n\tilde P(a) \;\le\; n
 $$
-なので非負である．よって $\big(nP^\star_n(a)\big)_{a\in\mathcal X}$ は総和が $n$ の非負整数の組であり，各文字をその個数だけ並べた系列の型は $P^\star_n$ だから，$P^\star_n$ は長さ $n$ の型である．
+なので非負である．よって $\big(n\tilde P_n(a)\big)_{a\in\mathcal X}$ は総和が $n$ の非負整数の組であり，各文字をその個数だけ並べた系列の型は $\tilde P_n$ だから，$\tilde P_n$ は長さ $n$ の型である．
 
-次に $P^\star_n$ が各文字で $P^\star$ に収束することを見る．$a \ne a_0$ については $\lfloor t\rfloor \le t < \lfloor t\rfloor + 1$ より $0 \le P^\star(a) - P^\star_n(a) < 1/n$ である．$a_0$ については，$P^\star_n$ と $P^\star$ の総和がどちらも $1$ だから $P^\star_n(a_0) - P^\star(a_0) = \sum_{a \ne a_0}\big(P^\star(a) - P^\star_n(a)\big)$ であり，右辺の各項は $0$ 以上 $1/n$ 未満だから，差の絶対値は $\lvert\mathcal X\rvert/n$ 以下である．よってどの文字でも $P^\star_n(a) \to P^\star(a)$ である．
+次に $\tilde P_n$ が各文字で $\tilde P$ に収束することを見る．$a \ne a_0$ については $\lfloor t\rfloor \le t < \lfloor t\rfloor + 1$ より $0 \le \tilde P(a) - \tilde P_n(a) < 1/n$ である．$a_0$ については，$\tilde P_n$ と $\tilde P$ の総和がどちらも $1$ だから $\tilde P_n(a_0) - \tilde P(a_0) = \sum_{a \ne a_0}\big(\tilde P(a) - \tilde P_n(a)\big)$ であり，右辺の各項は $0$ 以上 $1/n$ 未満だから，差の絶対値は $\lvert\mathcal X\rvert/n$ 以下である．よってどの文字でも $\tilde P_n(a) \to \tilde P(a)$ である．
 
-仮定より，ある $N$ があって $n \ge N$ のとき $P^\star_n \in \mathcal E_n$，とくに $P^\star_n \in \mathcal E$ である．型が $P^\star_n$ である系列は型が $\mathcal E$ に属するから
+仮定より，ある $N$ があって $n \ge N$ のとき $\tilde P_n \in \mathcal E_n$，とくに $\tilde P_n \in \mathcal E$ である．型が $\tilde P_n$ である系列は型が $\mathcal E$ に属するから
 $$
-\mathcal T_n\big(P^\star_n\big) \;\subseteq\; \big\{\, x \in \mathcal X^n \;:\; \hat P_x \in \mathcal E \,\big\}
+\mathcal T_n\big(\tilde P_n\big) \;\subseteq\; \big\{\, x \in \mathcal X^n \;:\; \hat P_x \in \mathcal E \,\big\}
 $$
-であり，包含している側の集合の確率のほうが小さくないから $Q^n(\mathcal T_n(P^\star_n)) \le Q^n(\{x : \hat P_x \in \mathcal E\})$ である．左辺は 定理 11.2.1 の下界より $(n+1)^{-\lvert\mathcal X\rvert}e^{-nD(P^\star_n\|Q)}$ 以上で，これは正だから，$n \ge N$ では右辺も正である．
+であり，包含している側の集合の確率のほうが小さくないから $Q^n(\mathcal T_n(\tilde P_n)) \le Q^n(\{x : \hat P_x \in \mathcal E\})$ である．左辺は 定理 11.2.1 の下界より $(n+1)^{-\lvert\mathcal X\rvert}e^{-nD(\tilde P_n\|Q)}$ 以上で，これは正だから，$n \ge N$ では右辺も正である．
 
-$\log$ は単調増加だから，$n \ge N$ について
+補題 8.2.5 より $\log$ は単調だから，$n \ge N$ について
 $$
 \frac1n\log Q^n\big(\{x : \hat P_x \in \mathcal E\}\big)
-  \;\ge\; \frac1n\log Q^n\big(\mathcal T_n(P^\star_n)\big)
+  \;\ge\; \frac1n\log Q^n\big(\mathcal T_n(\tilde P_n)\big)
 $$
-である．$P^\star_n$ は長さ $n$ の型で各文字で $P^\star$ に収束するから，系 11.2.2 より右辺は $-D(P^\star\,\|\,Q)$ に収束する．よって左辺の下極限は $-D(P^\star\,\|\,Q)$ 以上である．
+である．$\tilde P_n$ は長さ $n$ の型で各文字で $\tilde P$ に収束するから，系 11.2.2 より右辺は $-D(\tilde P\,\|\,Q)$ に収束する．よって左辺の下極限は $-D(\tilde P\,\|\,Q)$ 以上である．
 :::
 
 ::: formalization-note
-定理 11.3.4 に対応する宣言は `sanov_ldp_lower_bound_pointwise` (`InformationTheory/Shannon/Sanov/LiminfBound.lean`) であるが，覆っている範囲が本文より狭い．本文は端数の引き受け手 $a_0$ を主張の中で選べる形にしてあるのに対し，形式化は `roundedTypeIndex` (`InformationTheory/Shannon/Sanov/RoundedTypeSequence.lean`) の定め方でその文字をアルファベットの中の一つに固定しており，しかもどの文字であるかを述べていない．例 11.3.6 のように仮定が引き受け手の選び方によって成り立ったり成り立たなかったりするので，この差は形だけのものではない．形式化はまた $P^\star$ が全点で正であることも仮定に持つ．
+定理 11.3.4 に対応する宣言は `sanov_ldp_lower_bound_pointwise` (`InformationTheory/Shannon/Sanov/LiminfBound.lean`) であるが，覆っている範囲が本文より狭い．本文は端数の引き受け手 $a_0$ を主張の中で選べる形にしてあるのに対し，形式化は `roundedTypeIndex` (`InformationTheory/Shannon/Sanov/RoundedTypeSequence.lean`) の定め方でその文字をアルファベットの中の一つに固定しており，しかもどの文字であるかを述べていない．例 11.3.6 のように仮定が引き受け手の選び方によって成り立ったり成り立たなかったりするので，この差は形だけのものではない．形式化はまた $\tilde P$ が全点で正であることも仮定に持つ．
 :::
 
 ## 二つを合わせる
@@ -190,7 +192,7 @@ $$
 指数の値 $0.0823$ が言っているのは，$\frac1n\log$ をとった量が $-0.0823$ に近づくということであって，有限の $n$ での確率そのものを与えるものではない．公平なコインを投げて表が $7$ 割以上出るのはめったに起きないが，その「めったに」の速さは，表の割合を $0.7$ に固定した分布が公平なコインからどれだけ隔たっているかだけで決まる．
 
 ::: formalization-note
-例 11.3.6 の数値に対応する宣言は無い．形式化には，具体的な分布を入れて Sanov の指数を計算した実例が置かれていない．例 11.3.6 に付した証明が，この主張の保証のすべてである．
+例 11.3.6 の数値に対応する宣言は無い．形式化には，具体的な分布を入れて Sanov の指数を計算した実例が置かれていない．
 :::
 
 本節は，経験分布が指定した集合に落ちる確率を測った．測ったのは $Q$ から引いた系列についてであり，集合 $\mathcal E$ は $Q$ とは関わりなく先に決めておいた．次節は $\mathcal E$ にあたるものを，二つの分布のどちらが真かを当てるという目的から決める．そこでも指数に現れるのは相対エントロピーで，型の方法がそのまま効く．
