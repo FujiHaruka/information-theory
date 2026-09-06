@@ -110,6 +110,19 @@ export const chapters = [
     ],
   },
   {
+    slug: 'ch09',
+    num: '第9章',
+    title: 'レート歪み理論',
+    sections: [
+      { slug: 'ch09-01', num: '9.1', title: '歪みとレート歪み関数', src: 'ch09/01-distortion.md' },
+      { slug: 'ch09-02', num: '9.2', title: 'レート歪み関数の性質', src: 'ch09/02-properties.md' },
+      { slug: 'ch09-03', num: '9.3', title: '二値情報源', src: 'ch09/03-binary.md' },
+      { slug: 'ch09-04', num: '9.4', title: 'ガウス情報源と逆注水', src: 'ch09/04-gaussian.md' },
+      { slug: 'ch09-05', num: '9.5', title: '逆定理', src: 'ch09/05-converse.md' },
+      { slug: 'ch09-06', num: '9.6', title: '達成可能性', src: 'ch09/06-achievability.md' },
+    ],
+  },
+  {
     slug: 'ch10',
     num: '第10章',
     title: '最大エントロピー',

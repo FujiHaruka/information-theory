@@ -29,7 +29,7 @@ const ALLOW = new Set([
   // 人名・書誌（執筆原則 §6: 人名はラテン文字）
   'Cauchy', 'Cover', 'Thomas', 'Elements', 'Information', 'Theory', 'ed.',
   'Fisher', 'Gibbs', 'Jensen', 'Neyman', 'Shannon', 'Fano', 'Markov', 'Kraft',
-  'McMillan', 'Breiman', 'Birkhoff', 'Huffman', 'Lempel', 'Ziv', 'Csiszar',
+  'McMillan', 'Breiman', 'Birkhoff', 'Huffman', 'Hamming', 'Lempel', 'Ziv', 'Csiszar',
   'Cesàro', 'Lévy', 'Borel', 'Cantelli', 'Weierstrass', 'Chebyshev', 'Lagrange',
   'Legendre', 'Kelly', 'Lebesgue', 'Radon', 'Nikodym', 'Hartley', 'Fourier',
   'Whittaker', 'Landau', 'Pollak', 'Slepian', 'Bochner', 'Fubini',
