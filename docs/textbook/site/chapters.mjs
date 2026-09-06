@@ -142,6 +142,8 @@ export const chapters = [
       { slug: 'ch11-02', num: '11.2', title: '型類の確率', src: 'ch11/02-type-class-probability.md' },
       { slug: 'ch11-03', num: '11.3', title: 'Sanov の定理', src: 'ch11/03-sanov.md' },
       { slug: 'ch11-04', num: '11.4', title: '仮説検定と Stein の補題', src: 'ch11/04-stein.md' },
+      { slug: 'ch11-05', num: '11.5', title: 'Bayes 誤り確率と Chernoff 情報', src: 'ch11/05-chernoff.md' },
+      { slug: 'ch11-06', num: '11.6', title: 'I 射影と誤りの指数のトレードオフ', src: 'ch11/06-tradeoff.md' },
     ],
   },
 ];

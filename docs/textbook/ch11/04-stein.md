@@ -96,16 +96,16 @@ $$
 $$
 を得る．
 
-第一種の誤りを抑える．正の実数 $t$ を一つとり，第2章の情報源の分布を $P$ として，幅 $t$ の強典型集合 $A^{*(n)}_t$（定義 2.4.1）を考える（$P$ は全点で正だから，2.4 節の設定を満たす）．$x \in A^{*(n)}_t$ ならどの文字でも $\lvert \hat P_x(a) - P(a)\rvert \le t$ であり，$D(P\,\|\,Q) = \sum_a P(a)\log\frac{P(a)}{Q(a)}$ だから，三角不等式より
+第一種の誤りを抑える．正の実数 $\delta'$ を一つとり，第2章の情報源の分布を $P$ として，幅 $\delta'$ の強典型集合 $A^{*(n)}_{\delta'}$（定義 2.4.1）を考える（$P$ は全点で正だから，2.4 節の設定を満たす）．$x \in A^{*(n)}_{\delta'}$ ならどの文字でも $\lvert \hat P_x(a) - P(a)\rvert \le \delta'$ であり，$D(P\,\|\,Q) = \sum_a P(a)\log\frac{P(a)}{Q(a)}$ だから，三角不等式より
 $$
 \Big\lvert \sum_{a}\hat P_x(a)\log\frac{P(a)}{Q(a)} - D(P\,\|\,Q) \Big\rvert
   \;=\; \Big\lvert \sum_{a}\big(\hat P_x(a) - P(a)\big)\log\frac{P(a)}{Q(a)} \Big\rvert
-  \;\le\; t\sum_{a}\Big\lvert\log\frac{P(a)}{Q(a)}\Big\rvert
+  \;\le\; \delta'\sum_{a}\Big\lvert\log\frac{P(a)}{Q(a)}\Big\rvert
 $$
-である．右端は $t$ に比例し，和は $P$ と $Q$ だけで決まる有限の数だから，$t$ を小さくとれば右端を $\delta$ 以下にできる．そのような $t$ を一つ選んでおく．すると $x \in A^{*(n)}_t$ の型 $\hat P_x$ は $\mathcal A_n$ を定める条件を満たすので $x \in \mathcal T_n(\hat P_x) \subseteq \mathcal A_n$ であり，$A^{*(n)}_t \subseteq \mathcal A_n$ である．第2章 定理 2.4.3 より $P^n(A^{*(n)}_t) \to 1$ だから
+である．右端は $\delta'$ に比例し，和は $P$ と $Q$ だけで決まる有限の数だから，$\delta'$ を小さくとれば右端を $\delta$ 以下にできる．そのような $\delta'$ を一つ選んでおく．すると $x \in A^{*(n)}_{\delta'}$ の型 $\hat P_x$ は $\mathcal A_n$ を定める条件を満たすので $x \in \mathcal T_n(\hat P_x) \subseteq \mathcal A_n$ であり，$A^{*(n)}_{\delta'} \subseteq \mathcal A_n$ である．第2章 定理 2.4.3 より $P^n(A^{*(n)}_{\delta'}) \to 1$ だから
 $$
 \alpha_n(\mathcal A_n) \;=\; P^n\big(\mathcal A_n^{\mathrm c}\big)
-  \;\le\; P^n\big((A^{*(n)}_t)^{\mathrm c}\big) \;\longrightarrow\; 0
+  \;\le\; P^n\big((A^{*(n)}_{\delta'})^{\mathrm c}\big) \;\longrightarrow\; 0
 $$
 であり，十分大きい $n$ で $\alpha_n(\mathcal A_n) \le \varepsilon$ である．
 
