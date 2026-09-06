@@ -89,9 +89,9 @@ $\mathcal Q(D)$ が空でない実数 $D$ の全体を $\mathcal I$ と書く．
 
 $\bar D \in \mathcal I$ であることを見る．$D_0,\dots,D_{n-1}$ の最小値を $D_{\min}$ と書くと，平均は最小値以上だから $D_{\min} \le \bar D$ である．$D_{\min} \in \mathcal I$ だから，いま見たことより $\bar D \in \mathcal I$ であり，とくに $\mathcal Q(\bar D)$ は空でない．
 
-$-R$ が $\mathcal I$ の上で凹であることを見る．$\mathcal I$ の二つの元 $a$，$b$ と $\lambda\in[0,1]$ をとると，$\mathcal Q(a)$ と $\mathcal Q(b)$ はどちらも空でないから命題 9.2.3 が当たり，$R(\lambda a + (1-\lambda)b) \le \lambda R(a) + (1-\lambda)R(b)$ である．両辺の符号を変えれば，これは $-R$ についての凹性の $2$ 点形にほかならない．
+$-R(\cdot)$ が $\mathcal I$ の上で凹であることを見る．$\mathcal I$ の二つの元 $a$，$b$ と $\lambda\in[0,1]$ をとると，$\mathcal Q(a)$ と $\mathcal Q(b)$ はどちらも空でないから命題 9.2.3 が当たり，$R(\lambda a + (1-\lambda)b) \le \lambda R(a) + (1-\lambda)R(b)$ である．両辺の符号を変えれば，これは $-R(\cdot)$ についての凹性の $2$ 点形にほかならない．
 
-そこで補題 1.1.6 を，区間 $\mathcal I$ 上の凹関数 $-R$，点 $D_0,\dots,D_{n-1} \in \mathcal I$，重みをどれも $1/n$ ととって当てると
+そこで補題 1.1.6 を，区間 $\mathcal I$ 上の凹関数 $-R(\cdot)$，点 $D_0,\dots,D_{n-1} \in \mathcal I$，重みをどれも $1/n$ ととって当てると
 $$
 \frac1n\sum_{i=0}^{n-1}\big(-R(D_i)\big) \;\le\; -R\big(\bar D\big)
 $$
