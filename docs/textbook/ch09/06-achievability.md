@@ -20,8 +20,6 @@ $$
 
 ## 借りる道具
 
-記法を一つ引いておく．実数 $t$ に対する天井関数 $\lceil t \rceil$，すなわち $t$ 以上の最小の整数と，その性質 $t \le \lceil t \rceil < t + 1$ は，第4章 4.4 節で既知としたとおりに本節でも使う．
-
 解析の事実を一つ借りる．**区間の上で定義された凸関数は，その区間の内点で連続である**という事実である．当てる相手は，実数の区間の上の実数値関数として見た $R(\cdot)$ だけで，この借用に依存するのは系 9.6.1 の第 $2$ の主張の証明だけである．本書はこの事実を証明しないが，形式化されていないわけではない．Mathlib に無条件の機械検証済みの定理として置かれている．
 
 道具をもう一つ借りる．**レート歪み理論の達成可能性**，すなわち「レートが $R(D)$ を上回っているかぎり，期待歪みを $D$ にいくらでも近いところまで抑える符号がある」という主張である．使う形を書いておく．
@@ -41,7 +39,7 @@ $\mathcal X$ と $\hat{\mathcal X}$ を空でない有限集合，$p$ を $\math
 :::
 
 ::: formalization-note
-形式化の宣言の仮定は，借りた主張と一つずつ対応している．情報源の分布が確率分布であること，制約集合が空でないこと（本文の「$\mathcal Q(D)$ が空でない」にあたる），レートが $R(D)$ より真に大きいこと，$\varepsilon$ が正であることの四つで，これがすべてである．結論も同じ形で，ある番号から先のすべての長さについて，符号語数が上の不等式を満たすレート歪み符号があり，その期待歪みが $D+\varepsilon$ 以下である，という形をしている．ただし宣言は符号語数について $M \ge \lceil 2^{nR}\rceil$ という下からの評価も与える．本文が使うのは符号語数が正であることだけで，それは定義 9.5.1 から出るので，借りる形からはこの評価を落としてある．筋書きに書いた歪み典型は，あちらでは `distortionTypicalSet` (`InformationTheory/Shannon/RateDistortion/AchievabilityJointTypicalEncoder.lean`) として，結合典型集合と，ブロックの歪みについての条件との共通部分に定めてある．ただし探索の規則は本文の筋書きと違う．形式化の符号化器 `jointStronglyTypicalLossyEncoder` (`InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.lean`) が探すのは，強典型性（定義 2.4.1）の意味で結合典型な符号語である．ブロックの歪みが期待歪みの近くにあることは，探索の規則からではなく，そこから `distortionTypicalSet` への包含 `jts_subset_dts_of_dist_slack` (`InformationTheory/Shannon/RateDistortion/AchievabilityUnconditional.lean`) を経て出る．
+形式化の宣言の仮定は，借りた主張と一つずつ対応している．情報源の分布が確率分布であること，制約集合が空でないこと（本文の「$\mathcal Q(D)$ が空でない」にあたる），レートが $R(D)$ より真に大きいこと，$\varepsilon$ が正であることの四つで，これがすべてである．結論も同じ形で，ある番号から先のすべての長さについて，符号語数が上の不等式を満たすレート歪み符号があり，その期待歪みが $D+\varepsilon$ 以下である，という形をしている．ただし宣言は符号語数について，$2^{nR}$ を切り上げた整数以上であるという下からの評価も与える．本文が使うのは符号語数が正であることだけで，それは定義 9.5.1 から出るので，借りる形からはこの評価を落としてある．筋書きに書いた歪み典型は，あちらでは `distortionTypicalSet` (`InformationTheory/Shannon/RateDistortion/AchievabilityJointTypicalEncoder.lean`) として，結合典型集合と，ブロックの歪みについての条件との共通部分に定めてある．ただし探索の規則は本文の筋書きと違う．形式化の符号化器 `jointStronglyTypicalLossyEncoder` (`InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.lean`) が探すのは，強典型性（定義 2.4.1）の意味で結合典型な符号語である．ブロックの歪みが期待歪みの近くにあることは，探索の規則からではなく，そこから `distortionTypicalSet` への包含 `jts_subset_dts_of_dist_slack` (`InformationTheory/Shannon/RateDistortion/AchievabilityUnconditional.lean`) を経て出る．
 :::
 
 ## レート歪み定理
