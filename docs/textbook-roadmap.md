@@ -85,9 +85,9 @@ legacy migration は完了済 (active な `@audit:suspect/staged/defer` タグ 0
 原稿の執筆原則 (読者前提・節の構成・前方参照・形式化ポインタ・節分割) は
 `.claude/rules/textbook-writing.md` が SoT。
 
-- **子プラン (SoT)**: [`docs/textbook-manuscript-plan.md`](textbook-manuscript-plan.md) — 残り 11 章の執筆順・章立て・章ごとの進捗。
+- **子プラン (SoT)**: [`docs/textbook-manuscript-plan.md`](textbook-manuscript-plan.md) — 章立て・執筆順・章ごとの進捗。
 - **章立て**: 全 16 章。本書の章番号 ↔ CT 章番号は 1↔2 / 2↔3 / 3↔4 / 4↔5 / 5↔6 / 6↔7 / 7↔8 / 8↔9 / 9↔10 / 10↔12 / 11↔11 / 12↔13 / 13↔14 / 14↔15 / 15↔16 / 16↔17 (最大エントロピーを仮説検定の前に置く 1 点だけ CT 順と入れ替え、理由は子プラン)。
-- **執筆済**: 本書 第1章 (CT2) / 第2章 (CT3) / 第3章 (CT4) / 第6章 (CT7) / 第10章 (CT12)。
+- **執筆済**: 本書 第1〜10章 (CT2 / CT3 / CT4 / CT5 / CT6 / CT7 / CT8 / CT9 / CT10 / CT12)。第11章 (CT11) は執筆済で査読中。未執筆は 第12〜16章 (CT13 / CT14 / CT15 / CT16 / CT17) の 5 章。
 - **Ch.2 パイロットで判明した課題** (以降の章にも効く): (i) 値の型不一致 (`ℝ≥0∞` vs `ℝ`、橋渡し `.toReal`)、(ii) Markov 定義の表層差 (compProd 分解形)、(iii) n 変数 chain rule の右辺長大、(iv) 章↔file が 1:1 でない。
 
 ## 判断ログ (戦略遷移サマリ)
