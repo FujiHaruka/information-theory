@@ -34,6 +34,7 @@ const ALLOW = new Set([
   'Legendre', 'Kelly', 'Lebesgue', 'Radon', 'Nikodym', 'Hartley', 'Fourier',
   'Whittaker', 'Landau', 'Pollak', 'Slepian', 'Bochner', 'Fubini',
   'Karhunen', 'Loève',
+  'Sanov', 'Stein', 'Chernoff', 'Bayes', 'Hoeffding', 'Pythagoras', 'Hölder', 'Csiszár',
   // 環境タグ（:::）
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
   'proof', 'formalized', 'formalization-note', 'notation-preview',

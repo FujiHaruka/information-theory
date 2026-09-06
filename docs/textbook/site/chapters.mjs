@@ -133,4 +133,13 @@ export const chapters = [
       { slug: 'ch10-04', num: '10.4', title: 'Lagrange 乗数の存在', src: 'ch10/04-multiplier.md' },
     ],
   },
+  {
+    slug: 'ch11',
+    num: '第11章',
+    title: '仮説検定と大偏差',
+    sections: [
+      { slug: 'ch11-01', num: '11.1', title: '型と型類', src: 'ch11/01-types.md' },
+      { slug: 'ch11-02', num: '11.2', title: '型類の確率', src: 'ch11/02-type-class-probability.md' },
+    ],
+  },
 ];
