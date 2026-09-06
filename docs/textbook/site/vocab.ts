@@ -33,6 +33,7 @@ const ALLOW = new Set([
   'Cesàro', 'Lévy', 'Borel', 'Cantelli', 'Weierstrass', 'Chebyshev', 'Lagrange',
   'Legendre', 'Kelly', 'Lebesgue', 'Radon', 'Nikodym', 'Hartley', 'Fourier',
   'Whittaker', 'Landau', 'Pollak', 'Slepian', 'Bochner', 'Fubini',
+  'Karhunen', 'Loève',
   // 環境タグ（:::）
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
   'proof', 'formalized', 'formalization-note', 'notation-preview',
