@@ -122,7 +122,7 @@ $$
 :::
 
 ::: formalization-note
-定理 12.2.4 に対応する宣言は無い．使う道具のうち，命題 11.1.3 の `numTypes_le` と，定理 11.1.8 の挟み込みを与える宣言（第11章 11.1 節の注記が挙げているもの）は在庫にあるが，そこから符号長の期待値を評価した宣言は無い．
+定理 12.2.4 に対応する宣言は無い．使う道具のうち，命題 11.1.3 の `numTypes_le` (`InformationTheory/Shannon/Sanov/MultinomialLowerBound.lean`) と，定理 11.1.8 の上界を与える `typeClassByCount_card_le` (`InformationTheory/Shannon/Sanov/MultinomialLowerBound.lean`)，およびその量を $e^{\,nH(P)}$ に書き換える `pow_div_prod_pow_eq_exp_n_entropyByCount` (`InformationTheory/Shannon/TypeClassLowerBound.lean`) は在庫にあるが，そこから符号長の期待値を評価した宣言は無い．
 :::
 
 ::: corollary 12.2.5
