@@ -23,7 +23,7 @@ import 'npm:@mathjax/src@4/js/input/tex/newcommand/NewcommandConfiguration.js';
 import { MathJaxNewcmFont } from 'npm:@mathjax/mathjax-newcm-font@4/js/chtml.js';
 import { MathJaxEulerFontExtension } from 'npm:@mathjax/mathjax-euler-font-extension@4/js/chtml.js';
 import { TERMS } from './terminology.mjs';
-import { chapters } from './chapters.mjs';
+import { chapters as allChapters } from './chapters.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..'); // docs/textbook
@@ -110,6 +110,39 @@ const siteTitle = 'InformationTheory 教科書（レビュー版）';
 
 // --- chapters to build ---
 // 章と節の一覧は chapters.mjs が持つ（vocab.ts も同じ配列を読む）。
+//
+// まだ原稿を書いていない節は warn で飛ばし、ビルドは止めない。章を分担して書くとき、章の
+// 登録をまとめて先に済ませられるようにするためで、節ごとに登録行を足させると登録漏れと
+// 登録競合が担当の数だけ乗る。ページを組む側だけで飛ばすのでは足りない。章トビラの節目次
+// とトップページの目次が、生成しないページへのリンクを出してしまうからで、下流のすべてが
+// 見るこの配列の側で落とす。
+const chapters = allChapters.flatMap((c) => {
+  const missing = (src) => !existsSync(resolve(root, src));
+  // 1 章 1 ページの章。原稿が無ければ章ごと落ちる。
+  if (!c.sections) {
+    if (!missing(c.src)) return [c];
+    console.warn(`warn: 章ソースが無いので飛ばした ${c.src}（${c.num} ${c.title}）`);
+    return [];
+  }
+  const sections = c.sections.filter((sec) => {
+    if (!missing(sec.src)) return true;
+    console.warn(`warn: 節ソースが無いので飛ばした ${sec.src}（${c.num} ${sec.num ?? sec.title}）`);
+    return false;
+  });
+  let intro = c.intro;
+  if (intro && missing(intro)) {
+    console.warn(`warn: 章トビラのソースが無いので飛ばした ${intro}（${c.num} ${c.title}）`);
+    intro = undefined;
+  }
+  // ページが 1 枚も残らない章は、目次にも前後ナビにも出しようがないので章ごと落とす。
+  if (!sections.length && !intro) {
+    console.warn(`warn: ページが 1 枚も無いので章ごと飛ばした ${c.num} ${c.title}`);
+    return [];
+  }
+  // 落とすものが無いときは元の要素をそのまま渡す（欠けが無ければ従来どおりにする）。
+  if (sections.length === c.sections.length && intro === c.intro) return [c];
+  return [{ ...c, sections, intro }];
+});
 
 // --- 相互参照レジストリ ---
 // 原稿は参照を番号だけで書く（.claude/rules/textbook-writing.md §8）。番号 → 掲載位置の
@@ -1259,7 +1292,8 @@ pages.forEach((pg, i) => {
   dashes += lintDashes(markdown, pg.src);
   punct += lintPunctuation(markdown, pg.src);
   let bodyHtml = navTop(pg) + md.render(linkifyRefs(normalizeMath(markdown), pg), { ctx: pg });
-  if (pg.isChapterTop && pg.chapter.sections) bodyHtml += sectionToc(pg.chapter);
+  // 節が 1 つも残らなかった章トビラには空の節目次を出さない（上の欠け節の間引きの結果）。
+  if (pg.isChapterTop && pg.chapter.sections?.length) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
   const title = pg.section ? `${pg.label} — ${pg.chapter.num}` : pg.label;
   const outPath = resolve(distDir, `${pg.slug}.html`);
@@ -1272,7 +1306,7 @@ pages.forEach((pg, i) => {
 // --- index (table of contents) ---
 const tocItems = chapters
   .map((c) => {
-    const sub = c.sections
+    const sub = c.sections?.length
       ? `\n    <ol class="subtoc">\n${c.sections
           .map((sec) => {
             const label = sec.num ? `${sec.num}　${sec.title}` : sec.title;
