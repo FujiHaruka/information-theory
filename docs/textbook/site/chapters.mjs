@@ -146,4 +146,17 @@ export const chapters = [
       { slug: 'ch11-06', num: '11.6', title: 'I 射影と誤りの指数のトレードオフ', src: 'ch11/06-tradeoff.md' },
     ],
   },
+  {
+    slug: 'ch12',
+    num: '第12章',
+    title: '万能符号',
+    sections: [
+      { slug: 'ch12-01', num: '12.1', title: '万能符号と冗長度', src: 'ch12/01-universal-codes.md' },
+      { slug: 'ch12-02', num: '12.2', title: '型による万能符号', src: 'ch12/02-type-code.md' },
+      { slug: 'ch12-03', num: '12.3', title: 'ミニマックス冗長度と通信路容量', src: 'ch12/03-minimax-capacity.md' },
+      { slug: 'ch12-04', num: '12.4', title: '算術符号', src: 'ch12/04-arithmetic-coding.md' },
+      { slug: 'ch12-05', num: '12.5', title: 'Lempel–Ziv 符号', src: 'ch12/05-lempel-ziv.md' },
+      { slug: 'ch12-06', num: '12.6', title: 'Lempel–Ziv 符号の最適性', src: 'ch12/06-lz-optimality.md' },
+    ],
+  },
 ];
