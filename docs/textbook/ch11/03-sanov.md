@@ -41,9 +41,9 @@ $$
 $$
 Q^n\big(\{x : \hat P_x \in \mathcal E\}\big) \;=\; \sum_{P \in \mathcal E_n} Q^n\big(\mathcal T_n(P)\big)
 $$
-である．右辺の各項に 定理 11.2.1 の上界を当てると $Q^n(\mathcal T_n(P)) \le e^{-nD(P\,\|\,Q)}$ であり，仮定より $\gamma \le D(P\,\|\,Q)$ であり，指数関数は単調増加（補題 8.2.5 の $\log$ の単調性と $\log e^s = s$ から出る）だから $Q^n(\mathcal T_n(P)) \le e^{-n\gamma}$ である．項の個数は $\mathcal E$ に属する長さ $n$ の型の個数だから，長さ $n$ の型の総数以下であり，命題 11.1.3 より $(n+1)^{\lvert\mathcal X\rvert}$ 以下である．よって和は $(n+1)^{\lvert\mathcal X\rvert}e^{-n\gamma}$ 以下である．
+である．右辺の各項に 定理 11.2.1 の上界を当てると $Q^n(\mathcal T_n(P)) \le e^{-nD(P\,\|\,Q)}$ であり，仮定より $\gamma \le D(P\,\|\,Q)$ であり，指数関数は単調増加（$\log$ の単調性と $\log e^s = s$ から出る）だから $Q^n(\mathcal T_n(P)) \le e^{-n\gamma}$ である．項の個数は $\mathcal E$ に属する長さ $n$ の型の個数だから，長さ $n$ の型の総数以下であり，命題 11.1.3 より $(n+1)^{\lvert\mathcal X\rvert}$ 以下である．よって和は $(n+1)^{\lvert\mathcal X\rvert}e^{-n\gamma}$ 以下である．
 
-第 $2$ の不等式は第 $1$ の両辺の対数をとって $n$ で割ったものである．左辺が正なら対数がとれ，補題 8.2.5 より $\log$ は単調だから
+第 $2$ の不等式は第 $1$ の両辺の対数をとって $n$ で割ったものである．左辺が正なら対数がとれ，$\log$ は単調だから
 $$
 \log Q^n\big(\{x : \hat P_x \in \mathcal E\}\big)
   \;\le\; \lvert\mathcal X\rvert\log(n+1) \;-\; n\gamma
@@ -131,7 +131,7 @@ $$
 $$
 であり，包含している側の集合の確率のほうが小さくないから $Q^n(\mathcal T_n(\tilde P_n)) \le Q^n(\{x : \hat P_x \in \mathcal E\})$ である．左辺は 定理 11.2.1 の下界より $(n+1)^{-\lvert\mathcal X\rvert}e^{-nD(\tilde P_n\|Q)}$ 以上で，これは正だから，$n \ge n_0$ では右辺も正である．
 
-補題 8.2.5 より $\log$ は単調だから，$n \ge n_0$ について
+$\log$ は単調だから，$n \ge n_0$ について
 $$
 \frac1n\log Q^n\big(\{x : \hat P_x \in \mathcal E\}\big)
   \;\ge\; \frac1n\log Q^n\big(\mathcal T_n(\tilde P_n)\big)
@@ -184,21 +184,16 @@ $$
 ::: example 11.3.8 コインの表が $7$ 割以上出る確率
 $\mathcal X = \{0,1\}$ とし，$1$ を表と読む．$Q$ を $Q(0) = Q(1) = 1/2$ で定まる分布，$Q^n$ をその $n$ 重の積分布とし，$\mathcal E := \{\, P : P \text{ は } \mathcal X \text{ 上の分布で } P(1) \ge 0.7 \,\}$ とする．$\hat P_x$ を 定義 11.1.1 の型，$H_b$ を 例 1.1.2 の二値エントロピー関数とし，$P^\star$ を $P^\star(0) = 0.3$，$P^\star(1) = 0.7$ で定まる分布とすると，次の四つが成り立つ．
 
-1. $\mathcal X$ 上のどの分布 $P$ についても $D(P\,\|\,Q) = \log 2 - H_b\big(P(1)\big)$ であり，$P \in \mathcal E$ ならば $D(P^\star\,\|\,Q) \le D(P\,\|\,Q)$ である．
+1. $\mathcal E$ に属するどの分布 $P$ についても $D(P^\star\,\|\,Q) \le D(P\,\|\,Q)$ である（$D$ は 1.6 節の相対エントロピー）．
 2. $D(P^\star\,\|\,Q) = \log 2 - H_b(0.7)$ であり，その値は約 $0.0823$ ナットである．
 3. $\dfrac1n\log Q^n\big(\{x \in \mathcal X^n : \hat P_x \in \mathcal E\}\big) \longrightarrow -\big(\log 2 - H_b(0.7)\big)$（$n \to \infty$）である．
 4. 端数の引き受け手を $a_0 := 0$ ととった $P^\star$ の丸め型（定義 11.3.4）は，$n$ が $10$ の倍数でないかぎり $\mathcal E$ に属さない．とくに，その選び方では 定理 11.3.7 の第 $2$ の仮定は成り立たない．
 :::
 
 ::: proof
-1. 相対エントロピーの定義（1.6 節）から，$\mathcal X$ 上の分布 $P$ について
-$$
-D(P\,\|\,Q) \;=\; \sum_{a}P(a)\log\frac{P(a)}{1/2}
-  \;=\; \sum_{a}P(a)\log P(a) \;+\; \log 2 \;=\; \log 2 - H(P)
-$$
-であり，$H(P) = H_b(P(1))$ は 例 1.1.2 のとおりである．$P \in \mathcal E$ とすると $P(1) \in [0.7, 1]$ であり，$1 - P(1) \in [0, 0.3]$ である．補題 9.3.1 の第 $1$ の主張より $H_b(P(1)) = H_b(1 - P(1))$ であり，$0 \le 1 - P(1) \le 0.3 \le 1/2$ だから第 $3$ の主張より $H_b(1 - P(1)) \le H_b(0.3)$ である．ふたたび第 $1$ の主張より $H_b(0.3) = H_b(0.7)$ だから $H_b(P(1)) \le H_b(0.7)$ であり，$\log 2$ から引く向きに直すと $D(P^\star\,\|\,Q) \le D(P\,\|\,Q)$ を得る．
+1. 補題 11.2.5 より，$\mathcal X$ 上のどの分布 $P$ についても $D(P\,\|\,Q) = \log 2 - H_b\big(P(0)\big)$ である．$P \in \mathcal E$ とすると $P(1) \ge 0.7$ だから $P(0) \le 0.3$ であり，$0 \le P(0) \le 0.3 \le 1/2$ だから 補題 9.3.1 の第 $3$ の主張より $H_b(P(0)) \le H_b(0.3)$ である．$P^\star(0) = 0.3$ だから，$\log 2$ から引く向きに直すと $D(P^\star\,\|\,Q) \le D(P\,\|\,Q)$ を得る．
 
-2. 第 $1$ の主張を $P := P^\star$ に当てると $D(P^\star\,\|\,Q) = \log 2 - H_b(0.7)$ である．$H_b(0.7) = -0.7\log 0.7 - 0.3\log 0.3 = 0.61086\ldots$，$\log 2 = 0.69314\ldots$ だから，差は $0.08228\ldots$ である．
+2. 補題 11.2.5 を $P^\star$ に当てると $D(P^\star\,\|\,Q) = \log 2 - H_b\big(P^\star(1)\big) = \log 2 - H_b(0.7)$ である．$H_b(0.7) = -0.7\log 0.7 - 0.3\log 0.3 = 0.61086\ldots$，$\log 2 = 0.69314\ldots$ だから，差は $0.08228\ldots$ である．
 
 3. 定理 11.3.7 の仮定を，端数の引き受け手を $a_0 := 1$ ととって確かめる．第 $1$ の仮定は，$\mathcal E_n \subseteq \mathcal E$ だから第 $1$ の主張から従う．第 $2$ の仮定を見る．丸め型は $P^\star_n(0) = \lfloor 0.3n\rfloor/n$，$P^\star_n(1) = 1 - \lfloor 0.3n\rfloor/n$ である．$nP^\star_n(0) = \lfloor 0.3n\rfloor$ と $nP^\star_n(1) = n - \lfloor 0.3n\rfloor$ はどちらも非負整数で和は $n$ だから，$0$ を $\lfloor 0.3n\rfloor$ 個並べたあと $1$ を並べた系列の型は $P^\star_n$ であり，$P^\star_n$ は長さ $n$ の型である．また $\lfloor 0.3n\rfloor \le 0.3n$ より $P^\star_n(0) \le 0.3$ だから $P^\star_n(1) \ge 0.7$ であり，$P^\star_n \in \mathcal E$ である．よってどの $n \ge 1$ でも $P^\star_n \in \mathcal E_n$ で，第 $2$ の仮定も成り立つ．$Q$ は全点で正だから 定理 11.3.7 が使えて，第 $2$ の主張と合わせて結論を得る．
 
