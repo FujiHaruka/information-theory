@@ -35,7 +35,7 @@ const ALLOW = new Set([
   'Whittaker', 'Landau', 'Pollak', 'Slepian', 'Bochner', 'Fubini',
   'Karhunen', 'Loève',
   'Sanov', 'Stein', 'Chernoff', 'Bayes', 'Hoeffding', 'Pythagoras', 'Hölder', 'Csiszár',
-  'Elias',
+  'Elias', 'Church', 'Turing', 'Kleene', 'Berry',
   // 環境タグ（:::）
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
   'proof', 'formalized', 'formalization-note', 'notation-preview',

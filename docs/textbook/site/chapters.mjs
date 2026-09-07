@@ -159,4 +159,13 @@ export const chapters = [
       { slug: 'ch12-06', num: '12.6', title: 'Lempel–Ziv 符号の最適性', src: 'ch12/06-lz-optimality.md' },
     ],
   },
+  {
+    slug: 'ch13',
+    num: '第13章',
+    title: 'コルモゴロフ複雑性',
+    sections: [
+      { slug: 'ch13-01', num: '13.1', title: '記述の長さと万能機械', src: 'ch13/01-universal-machine.md' },
+      { slug: 'ch13-02', num: '13.2', title: '圧縮できない対象と計算不可能性', src: 'ch13/02-incompressible.md' },
+    ],
+  },
 ];
