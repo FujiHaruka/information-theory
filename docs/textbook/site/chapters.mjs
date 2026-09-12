@@ -172,4 +172,13 @@ export const chapters = [
       { slug: 'ch13-06', num: '13.6', title: '二部記述と最小記述長', src: 'ch13/06-two-part.md' },
     ],
   },
+  {
+    slug: 'ch14',
+    num: '第14章',
+    title: 'ネットワーク情報理論',
+    sections: [
+      { slug: 'ch14-01', num: '14.1', title: '多元接続通信路', src: 'ch14/01-multiple-access.md' },
+      { slug: 'ch14-02', num: '14.2', title: '多元接続通信路の容量領域', src: 'ch14/02-mac-capacity-region.md' },
+    ],
+  },
 ];
