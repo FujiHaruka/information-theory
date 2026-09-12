@@ -5,8 +5,9 @@
 Cover–Thomas *Elements of Information Theory* 2nd ed **Ch.16 "Information Theory and Investment"** のうち、
 親計画で **operational / universal 定理として scope-out** されていた 4 群を形式化する。静的核
 (`growthRate` / `wealthRelative` / KT 4 定理、`Portfolio/Basic.lean`) を **consume のみ** (既存共有補題の署名変更
-ゼロ、ripple 無し) で組み立てる方針。**Leg A/C/D proof-done、Leg B は fixed-b core + W_∞ AEP 完全形 (CT 16.5.1)
-をともに proof-done + @audit:ok (完全形は後継 `portfolio-stationary-woo-plan.md`)。**
+ゼロ、ripple 無し) で組み立てる方針。**Leg A/C/D + Leg B fixed-b core は proof-done + @audit:ok。Leg B 完全形
+(W_∞ AEP、CT 16.5.1) は抽象 headline まで proof-done、具体化 (concrete instantiate) は空虚に真だったため差し戻し
+= 未達** (後継 `portfolio-stationary-woo-plan.md` が SoT)。
 
 ## 進捗 — ✅ core DONE (2026-07-19)
 
@@ -14,7 +15,7 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **Ch.16 "Information Theo
 - [x] Leg A — AO-iid (operational 漸近最適性、CT §16.3 Thm 16.3.1) — proof-done sorryAx-free + @audit:ok
 - [x] Leg C — side-info & growth rate (`ΔW ≤ I(X;Y)`、CT §16.4 Thm 16.4.1) — proof-done + @audit:ok（署名 honesty 修正）
 - [x] Leg B — stationary market fixed-b (定常エルゴード成長率収束 + dominance、CT §16.5) — proof-done + @audit:ok
-- [x] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — ✅ **proof-done + @audit:ok** — (B) Route M 採択。R3-M 全段 (upper/lower/sandwich) + R3-a (coherence 具体 discharge) proof-done。concrete headline `growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete` (`Portfolio/StationaryWinftyConcrete.lean`、`@[entry_point]`、両 gate PASS) 着地 → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
+- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — 🚧 **未達 (抽象 headline のみ proof-done)** — (B) Route M 採択。R3-M 全段 (upper/lower/sandwich) は proof-done で **抽象** headline `growingMemory_logWealth_tendsto_condOptGrowthInfty` が着地。**R3-a の concrete instantiate は空虚に真** (価格写像を座標そのものに固定 + `hpos` の全点量化で仮説が充足不能) ⟹ `@[entry_point]` 撤去 + 公開表から削除、R3-a / R4 再 open。欠陥の SoT はコード側 `@audit:defect(degenerate)` タグ。詳細と def-fix 3 案 → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
 - [x] Leg D — Cover universal portfolio (regret bound、CT §16.7) — proof-done sorryAx-free + @audit:ok（**not-a-wall 判明**）
 
 ## Closure summary
@@ -59,7 +60,7 @@ theorem sideInfo_growthRate_increment_le_mutualInfo
 必須**であり、KT bundling で代替できない。独立 `honesty-auditor` が check 4 (増分不等式が仮説から semantic follow、
 coarse/fine ミスマッチ・向き逆転無し) を含め PASS で `@audit:ok`。
 
-## Leg B 完全形 (W_∞ AEP) — 🚧 R3-M 全段 proof-done (CT 16.5.1 本体着地)、残 = R3-a coherence discharge + R4 配線
+## Leg B 完全形 (W_∞ AEP) — 🚧 R3-M 全段 proof-done (CT 16.5.1 本体 = 抽象 headline 着地)、残 = R3-a def-fix + R4 再配線
 
 fixed-b core (固定 rebalance portfolio の成長率収束 + KT dominance) は proof-done。**CT 16.5.1 完全形** =
 log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | X_{-1..−k}) ↑ W_∞`) + AEP `(1/n) log S*_n → W_∞`
@@ -84,8 +85,11 @@ log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | 
     `Tendsto` = **CT 16.5.1 本体**。3 headline sorryAx-free (再検証: `#print axioms
     growingMemory_logWealth_tendsto_condOptGrowthInfty`)、honesty-auditor が load-bearing hyp なし CONFIRMED。子 plan R3 節 /
     判断ログが SoT。
-- 残る **R3-a (両 coherence 仮説 `hcoh`/`hcoh_inf` の具体 pastFiltration+shift discharge、壁でない plumbing) + R4
-  (growing-memory headline `@[entry_point]` + README/roadmap/facts 配線)**。root import は登録済。
+- 残る **R3-a + R4**。coherence 仮説 `hcoh`/`hcoh_inf` の具体 pastFiltration+shift discharge 自体は通ったが、
+  **その instantiate が価格写像を座標そのものに固定したため concrete headline が空虚に真になり差し戻し**
+  (`hpos` を正象限でない列空間の全点で要求 ⟹ 仮説を満たす入力が無い)。⟹ R3-a は「価格写像の def-fix」として再 open
+  (modeling 判断待ち、3 案は子計画が SoT)、R4 (`@[entry_point]` + README/roadmap/facts 配線) は巻き戻して def-fix 後に
+  やり直す。root import は登録済。
 
 要件:
 
@@ -140,13 +144,16 @@ A/C/D + B core は proof-done で撤退ライン不発。残る active retreat �
 
 - **各 phase**: type-check done (`lake env lean` 0 error) で commit/push 可。proof-done (0 sorry ∧ 0 @residual、
   file 内) が genuine 完成。
-- **headline `@[entry_point]`**: 各 Leg headline proof-done + 独立 `honesty-auditor` PASS で `@audit:ok`（達成済）。
+- **headline `@[entry_point]`**: 各 Leg headline proof-done + 独立 `honesty-auditor` PASS で `@audit:ok`
+  （A / B core / C / D は達成済。Leg B 完全形は子計画で再 open）。**追加条件**: instantiate 形の headline は、
+  全仮説を同時に満たす witness を示せることまで確認してから `@[entry_point]` を付ける（今回の差し戻しの再発防止）。
 
 ## 完了時の配線 (状態)
 
 - **root**: 各 Leg の import 登録済。
 - **README / roadmap / facts**: 別エージェントが `docs/readme-theorems.txt` / `docs/textbook-roadmap.md` /
-  `docs/shannon/portfolio-facts.md` を担当。
+  `docs/shannon/portfolio-facts.md` を担当。Leg B 完全形の concrete headline は差し戻しにより 3 つとも是正済
+  (公開表からは削除)。
 - **parent 同期**: 親 `portfolio-moonshot-plan.md` の sub-plan テーブルに本子計画を登録済 (状態 =
   A/B-core/C/D proof-done + W_∞ deferral)。競合時は本子計画が SoT。
 

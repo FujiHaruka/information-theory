@@ -134,7 +134,6 @@ competitive_optimality
 seqLogWealth_div_tendsto_growthRate
 sideInfo_growthRate_increment_le_mutualInfo
 seqLogWealth_div_tendsto_stationary
-growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete
 universal_portfolio_regret_tendsto_zero
 
 @ 17 | Entropy inequalities

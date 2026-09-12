@@ -199,11 +199,17 @@ growing-memory log-wealth average converges almost surely to the infinite-past o
 `W_∞ = condOptGrowthInfty`. The sequence space is `Ω = ∀ _ : ℤ, Fin m → ℝ`, the dynamics is the
 two-sided shift `shiftZ`, the per-epoch price relative is the coordinate-0 projection `coord0`, and
 the filtration is the finite-past `pastFiltration`. The two shift/past coherences of the abstract
-statement are discharged internally; all remaining hypotheses are market-regularity/ergodicity
-preconditions (measure preservation, ergodicity, simplex membership, positivity, integrability,
-conditional dominance).
-@audit:ok -/
-@[entry_point]
+statement are discharged internally.
+
+Pinning the price relative to `coord0` on the full real sequence space makes `hpos` unsatisfiable:
+applied at the vertex portfolios it forces `0 < ω 0 j` at every point of a space that carries no
+positivity constraint, so no instance of this statement exists and it asserts nothing. The
+first-choice def-fix — restrict the coordinate space to the positive orthant, or compose `coord0`
+with a positive map — changes which market the concrete instantiation names and reopens the
+abstract chain that consumes the pointwise `hpos`, so it is a modeling decision for the owner
+rather than an audit edit. The abstract statement it instantiates is unaffected: with `Ω` and the
+price map free, `hpos` is satisfiable.
+@audit:defect(degenerate) @audit:closed-by-successor(portfolio-stationary-woo-plan) -/
 theorem growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete
     (μ : Measure (∀ _ : ℤ, Fin m → ℝ)) [IsProbabilityMeasure μ]
     (hT : MeasurePreserving (shiftZ (α := Fin m → ℝ)) μ μ)

@@ -7,16 +7,20 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **§16.5 "Investment in S
 **fixed-b core** (固定 rebalance portfolio の成長率収束 + KT dominance) を proof-done 済。本計画は残る
 **log-optimal `W_∞` AEP** = 因果 log-optimal 戦略の富の成長率が無限過去条件付き成長率 `W_∞` に収束する部分を負う。
 
-**現状 = framing fork 解決 → (B) Route M (growing-memory `S*_n` 逐語) 採択。R3-M 全段 (upper / lower / sandwich)
-proof-done — CT 16.5.1 本体 headline `growingMemory_logWealth_tendsto_condOptGrowthInfty` が着地
-(再検証: `#print axioms growingMemory_logWealth_tendsto_condOptGrowthInfty` が sorryAx-free)。crux succ は (b)
-hybrid coherence 仮説で closure、両 gate PASS。**R3-a で 2 coherence を具体 pastFiltration+shift で discharge
-→ concrete headline `growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete` 着地 (`@[entry_point]`、
-両 gate PASS で @audit:ok) ⟹ CT 16.5.1 完全形 proof-done。R4 配線 (README/roadmap/facts/親同期) 完了。全 R 段
-DONE。** (Route M 群は `Portfolio/StationaryWinftyAEP.lean`、concrete instantiate は `StationaryWinftyConcrete.lean`
-に分離、fixed-b core は `StationaryWinfty.lean`)。本計画は scope 境界・要件・進捗・壁リスクの記録。
+**現状 = 抽象 headline は着地、concrete instantiate は差し戻し。** framing fork 解決 → (B) Route M
+(growing-memory `S*_n` 逐語) 採択。R3-M 全段 (upper / lower / sandwich) proof-done — CT 16.5.1 **本体** headline
+`growingMemory_logWealth_tendsto_condOptGrowthInfty` (Ω / 価格写像とも抽象) が着地。crux succ は (b) hybrid
+coherence 仮説で closure、両 gate PASS。**一方 R3-a の concrete instantiate
+`growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete` は空虚に真だった** — 価格写像を座標そのものに固定
+したまま `hpos` (価格正値性) を、正象限に制限されていない実数列空間の**全点**で要求するため、仮説を満たす入力が
+存在しない。欠陥の SoT はコード側 docstring のタグ (`@audit:defect(degenerate)` /
+`@audit:closed-by-successor(portfolio-stationary-woo-plan)`、`StationaryWinftyConcrete.lean`)。⟹ **`@[entry_point]`
+を撤去し公開表からも外した。CT 16.5.1 完全形は未達で R3-a / R4 は再 open** (→「残タスク」)。抽象 headline 側は
+Ω と価格写像が自由ゆえ `hpos` 充足可能で、この欠陥の影響を受けない。 (Route M 群は
+`Portfolio/StationaryWinftyAEP.lean`、concrete instantiate は `StationaryWinftyConcrete.lean` に分離、fixed-b core
+は `StationaryWinfty.lean`)。本計画は scope 境界・要件・進捗・壁リスクの記録。
 
-## 進捗 — ✅ CT 16.5.1 完全形 proof-done (concrete headline 着地、@audit:ok、両 gate PASS、全 R 段完了)
+## 進捗 — 🚧 CT 16.5.1 本体 (抽象) proof-done / concrete instantiate 差し戻し (R3-a・R4 再 open)
 
 - [ ] M0 在庫 — real-valued 条件付き growth / 可測選択 / Algoet–Cover sandwich の Mathlib / in-project 資産確定 📋
 - [x] R1 — 条件付き log-optimal portfolio の可測選択 ✅ proof-done — `exists_measurable_argmax_on_stdSimplex` (`@audit:ok` sorryAx-free)
@@ -26,8 +30,23 @@ DONE。** (Route M 群は `Portfolio/StationaryWinftyAEP.lean`、concrete instan
 - [x] R3-M-upper — growing-memory 上界 ✅ **proof-done** (`growingMemory_eventually_le_condOptGrowthInfty` `:796`、eventual-bound 形)。crux `wealthRatioProcess_lintegral_le_one` (`:244`、`∫⁻ M_n ≤ 1`) を **(b) hybrid ルート** (coherence 仮説 `hcoh` = measurability-only precondition、σ-代数 `(⨆ℱ).comap T^{k+1}` 固定) で succ closure。Markov+BC 骨格は一般補題 `logAvg_eventually_le_of_lintegral_le_one` (`:424`) に抽出 (lower も consume)。両 gate PASS (commit `8d282d2d`/`3f89c71a`)
 - [x] R3-M-lower — 固定K/growing wealth-ratio supermartingale 下界 ✅ **proof-done** (`growingMemory_eventually_ge_condOptGrowthInfty` `:867`、eventual-bound 形)。tail-from-K supermmartingale `N_n^{(K)} = ∏_{i=K}^{n} (bstar_K·X_i)/(bstar_i·X_i)` + stagewise KT (`stagewise_condKuhnTucker` `:599`) + crux `∫⁻ N ≤ 1` (`lowerRatioProcess_lintegral_le_one` `:635`) を tower で closure、sup_K は R2 `exists_condOptGrowth_tendsto_condOptGrowthInfty`。lower coherence `hcoh_inf` (`(ℱ(k+1)).comap T^{k+1}`、upper より強い・coarser) = measurability-only。両 gate PASS (commit `9b5c1d3f`/`fac84779`)
 - [x] R3-M-sandwich — upper+lower を組んで直接 `Tendsto gMLA (𝓝 W_∞)` ✅ **proof-done = CT 16.5.1 本体** (`growingMemory_logWealth_tendsto_condOptGrowthInfty` `:982`、`Metric.tendsto_atTop`)。3 headline すべて honesty-auditor 機械確認で load-bearing hyp なし (再検証: `#print axioms growingMemory_logWealth_tendsto_condOptGrowthInfty`)
-- [x] R3-a — 抽象 ℱ を具体 `pastFiltration`+shift で instantiate ✅ **proof-done** — 2 coherence を discharge 補題 `coherence_lower`（lower、`pastSigma(k+1).comap(shiftZ^{k+1})` = coarser・強い）/ `coherence_upper`（upper、`negPastSigma.comap(shiftZ^{k+1})` = `shiftedPastSigma`）で埋め、concrete headline `growingMemory_logWealth_tendsto_condOptGrowthInfty_concrete`（`StationaryWinftyConcrete.lean`、247 行 / 0 sorry）を landing。gateway verify で非壁確定（pastFiltration/shiftZ/coord0 が非有限 α=Fin m→ℝ で clean instantiate）、engine `measurable_shiftedPastSigma_of_eq_comp` 同型を局所複製。両 gate PASS（honesty: coherence genuine・非バンドル；style: show→change ×5）。commit `00780329`/`7c844c6b`
-- [x] R4 — growing-memory concrete headline `@[entry_point]` 付与 + 配線 (README/roadmap/facts/親同期) + 独立監査 ✅ **DONE** — honesty + style 両 gate PASS で @audit:ok
+- [ ] R3-a — 抽象 ℱ を具体 `pastFiltration`+shift で instantiate 🚧 **差し戻し（concrete headline が空虚に真）** — coherence 部分は健全: discharge 補題 `coherence_lower`（lower、`pastSigma(k+1).comap(shiftZ^{k+1})` = coarser・強い）/ `coherence_upper`（upper、`negPastSigma.comap(shiftZ^{k+1})` = `shiftedPastSigma`）で 2 coherence を埋め、engine `measurable_shiftedPastSigma_of_eq_comp` 同型を局所複製。**欠陥は instantiate の選び方にある** — 価格写像を座標そのものに固定したため `hpos` が充足不能になり、concrete headline は何も主張していない（SoT = コード側の `@audit:defect(degenerate)` タグ）。**当時の「gateway verify で非壁確定（pastFiltration/shiftZ/coord0 が非有限 α=Fin m→ℝ で clean instantiate）」という判断こそが今回の欠陥**: verify は coherence の可測性が通るかだけを見ており、instantiate 後に**残りの仮説（`hpos`）を満たす入力が在るか**を問わなかった。両 gate も同じ穴を通した（honesty gate は coherence 仮説の非バンドル性を見て、価格写像固定と全点量化の組み合わせを見ていない）。commit `00780329`/`7c844c6b`
+- [ ] R4 — concrete headline の配線 🚧 **巻き戻し済** — `@[entry_point]` 撤去 + 公開表 `docs/readme-theorems.txt` Ch.16 から削除（README の表は `scripts/gen_readme_table.ts --write` で再生成）。@audit:ok は取り下げ。抽象 headline への差し替えはしない（2 coherence 仮説が precondition か未監査ゆえ、未監査のものを公開表に載せるのは同じ誤りの別形）。再配線は R3-a の def-fix 後
+
+## 残タスク — concrete instantiate の def-fix (R3-a 再設計)
+
+抽象 headline は無変更でよい。修正は `StationaryWinftyConcrete.lean` 内に閉じ、in-project consumers は 0
+(`scripts/dep_consumers.sh` で都度確認)。3 案あり、**推奨は 1**:
+
+1. **推奨 — 価格比の写像を座標そのものから座標の指数に取り替える** (列空間を対数価格の空間として読む)。可測性が
+   1 行で通ることは機械で確認済。変更は `StationaryWinftyConcrete.lean` 内に閉じ、抽象版は無変更、consumers は 0。
+   概算 30 行。ただし **「具体的な二側市場の価格比を何と定めるか」は modeling の判断**なので、決めてから着手する。
+2. `hpos` を測度についてほとんど至るところに弱める — 同種の仮定が 23 宣言・92 箇所にあり高コスト。
+3. 座標空間を正象限に取り替える — 標準ボレル空間のインスタンスが解決しないことを機械で確認済。
+
+def-fix が入ったら R4 (`@[entry_point]` 再付与 + README/roadmap/facts 再配線 + 独立 honesty / style gate) をやり直す。
+**再監査時の追加チェック**: instantiate 後の headline について、全仮説を同時に満たす witness を 1 つ in-tree で
+示せるか (今回の欠陥はこれを問わなかったために通った)。
 
 ## ゴール / Approach
 
@@ -230,14 +249,17 @@ R3-a discharge 後、CT 16.5.1 本体 headline `growingMemory_logWealth_tendsto_
   SLLN の Mathlib 不在は eventual-bound + Markov/BC 骨格 (`logAvg_eventually_le_of_lintegral_le_one`) で回避、
   supermartingale 収束層に genuine Mathlib gap は無し (壁 slug 新設不要)。coherence (shift-past) は wall でなく
   measurability-only の R3-a plumbing に落ちた。
-- **総評**: R3-M 全段 (upper + lower + sandwich) 非壁確定・proof-done で **CT 16.5.1 本体 headline が着地**。残る
-  唯一の未完 = R3-a (coherence 仮説の具体 pastFiltration+shift discharge、壁でない・既存資産) + R4 配線。壁 slug は
-  本計画では 1 件も新設していない (R1/R2/Route T/Route M すべて not-a-wall で closure)。
+- **総評**: R3-M 全段 (upper + lower + sandwich) 非壁確定・proof-done で **CT 16.5.1 本体 headline (抽象) が着地**。
+  残る未完 = R3-a (coherence discharge 自体は通ったが、instantiate が空虚に真を生んだため差し戻し ⟹ 価格写像の
+  def-fix、modeling 判断待ち) + R4 再配線。壁 slug は本計画では 1 件も新設していない (R1/R2/Route T/Route M すべて
+  not-a-wall で closure) — ただし **「壁でない」は「主張が中身を持つ」を意味しない**。今回の差し戻しは壁判定では
+  なく充足可能性の見落としであり、非壁確定の積み上げでは検出できなかった。
 
 ## 撤退ライン
 
-- **R3-a coherence discharge (唯一の active 残課題)**: 具体 `pastFiltration`+shift の instantiate で coherence
-  `hcoh` / `hcoh_inf` の discharge が詰まった場合、その補題は signature を target 形のまま body を `sorry` +
+- **R3-a def-fix (唯一の active 残課題)**: **充足不能な仮説で 0 sorry を作る形は禁止** — 仮説を強めて
+  instantiate を「通す」のは、空虚に真な主張を量産する経路であり `@audit:defect(degenerate)` (tier 5) に落ちる。
+  価格写像の取り替えで詰まったら、その補題は signature を target 形のまま body を `sorry` +
   `@residual(plan:portfolio-stationary-woo-plan)` (slug = 本ファイル stem、整合)。**adaptedness / 可測性 / W_∞ を
   `*Hypothesis` predicate に抱えさせる load-bearing bundling は禁止** — retreat exit は `sorry` のみ。coherence が
   想定外に genuine Mathlib gap (past-σ の shift 整合が既存資産で埋まらない) を露呈したら analytic core を
@@ -266,10 +288,10 @@ R3-a discharge 後、CT 16.5.1 本体 headline `growingMemory_logWealth_tendsto_
 ## 完了時の配線
 
 - **root**: `Portfolio/StationaryWinfty.lean` の import は既に `InformationTheory.lean:312` に登録済 ⟹ **追加不要**。
-- **README / roadmap / facts**: `docs/readme-theorems.txt` Ch.16 節 / `docs/textbook-roadmap.md` Ch.16 行 /
-  `docs/shannon/portfolio-facts.md` に growing-memory headline (R4 命名) + Route T 3 decl + Route M gateway の
-  sorryAx-free 再検証コマンドを追記 (facts ledger 更新は R4 配線担当 / orchestrator の所掌、本 plan では machine
-  fact を prose に cache しない)。
+- **README / roadmap / facts**: concrete headline は差し戻しにより `docs/readme-theorems.txt` Ch.16 から**削除済**
+  (`docs/textbook-roadmap.md` Ch.16 行 / `docs/shannon/portfolio-facts.md` の当該行も実態に是正済)。def-fix 後の
+  再配線で growing-memory headline + Route T 3 decl + Route M gateway の sorryAx-free 再検証コマンドを載せる
+  (facts ledger 更新は R4 配線担当 / orchestrator の所掌、本 plan では machine fact を prose に cache しない)。
 - **parent 同期**: 状態変化時は親 [`portfolio-operational-plan.md`](portfolio-operational-plan.md) の Leg B 完全形
   行を同期 (子が SoT、衝突時は親を子に合わせる)。
 
@@ -305,4 +327,10 @@ R3-a discharge 後、CT 16.5.1 本体 headline `growingMemory_logWealth_tendsto_
    (bstar_K·X_i)/(bstar_i·X_i)` (i<K は KT 不成立ゆえ i=K から) + stagewise KT + `∫⁻ N ≤ 1` tower + sup_K に書き換え
    (隠れた supermartingale 論法を要した)。**R3-a = shared bottleneck**: lower coherence `hcoh_inf` (σ-代数
    `(ℱ(k+1)).comap T^{k+1}` = coarser) は upper `hcoh` より **強い** ⟹ R3-a は lower の強い need に合わせて設計
-   (upper 専用に作って lower で再 open しない)。**次アクション = R3-a (両 coherence discharge) → R4 配線**。
+   (upper 専用に作って lower で再 open しない)。
+5. **R3-a concrete instantiate は空虚に真 → 差し戻し (active、当初仮定の修正)**: instantiate の設計を
+   coherence (可測性) の通りやすさだけで決め、価格写像を座標そのものに固定した。その結果 `hpos` が、正象限に
+   制限されていない実数列空間の全点での正値性要求になり、仮説を満たす入力が存在しなくなった。**教訓 = instantiate
+   の gateway verify は「discharge 対象の仮説が通るか」だけでなく「残りの仮説が instantiate 後も充足可能か」を
+   問う**。前者だけを見ると、抽象定理を空虚に真な具体形に落とす経路が honesty gate も含めて素通りする。次アクション
+   = 価格写像の def-fix (→「残タスク」、modeling 判断待ち) → R4 再配線。
