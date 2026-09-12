@@ -187,4 +187,14 @@ export const chapters = [
       { slug: 'ch14-08', num: '14.8', title: '中継通信路', src: 'ch14/08-relay.md' },
     ],
   },
+  {
+    slug: 'ch15',
+    num: '第15章',
+    title: 'ポートフォリオ理論',
+    sections: [
+      { slug: 'ch15-01', num: '15.1', title: '市場とポートフォリオ', src: 'ch15/01-market.md' },
+      { slug: 'ch15-02', num: '15.2', title: '対数最適ポートフォリオ', src: 'ch15/02-log-optimal.md' },
+      { slug: 'ch15-03', num: '15.3', title: '競争最適性', src: 'ch15/03-competitive.md' },
+    ],
+  },
 ];
