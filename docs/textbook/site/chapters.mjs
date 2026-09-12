@@ -195,6 +195,9 @@ export const chapters = [
       { slug: 'ch15-01', num: '15.1', title: '市場とポートフォリオ', src: 'ch15/01-market.md' },
       { slug: 'ch15-02', num: '15.2', title: '対数最適ポートフォリオ', src: 'ch15/02-log-optimal.md' },
       { slug: 'ch15-03', num: '15.3', title: '競争最適性', src: 'ch15/03-competitive.md' },
+      { slug: 'ch15-04', num: '15.4', title: '副情報の値打ち', src: 'ch15/04-side-information.md' },
+      { slug: 'ch15-05', num: '15.5', title: 'i.i.d. 市場での長期のふるまい', src: 'ch15/05-iid-long-run.md' },
+      { slug: 'ch15-06', num: '15.6', title: '定常エルゴード市場', src: 'ch15/06-stationary.md' },
     ],
   },
 ];
