@@ -198,6 +198,8 @@ export const chapters = [
       { slug: 'ch15-04', num: '15.4', title: '副情報の値打ち', src: 'ch15/04-side-information.md' },
       { slug: 'ch15-05', num: '15.5', title: 'i.i.d. 市場での長期のふるまい', src: 'ch15/05-iid-long-run.md' },
       { slug: 'ch15-06', num: '15.6', title: '定常エルゴード市場', src: 'ch15/06-stationary.md' },
+      { slug: 'ch15-07', num: '15.7', title: '記憶が伸びる戦略と $W_\\infty$', src: 'ch15/07-growing-memory.md' },
+      { slug: 'ch15-08', num: '15.8', title: '万能ポートフォリオ', src: 'ch15/08-universal-portfolio.md' },
     ],
   },
 ];
