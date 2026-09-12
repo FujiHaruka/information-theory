@@ -15,7 +15,7 @@ Cover–Thomas *Elements of Information Theory* 2nd ed **Ch.16 "Information Theo
 - [x] Leg A — AO-iid (operational 漸近最適性、CT §16.3 Thm 16.3.1) — proof-done sorryAx-free + @audit:ok
 - [x] Leg C — side-info & growth rate (`ΔW ≤ I(X;Y)`、CT §16.4 Thm 16.4.1) — proof-done + @audit:ok（署名 honesty 修正）
 - [x] Leg B — stationary market fixed-b (定常エルゴード成長率収束 + dominance、CT §16.5) — proof-done + @audit:ok
-- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — 🚧 **未達 (抽象 headline のみ proof-done)** — (B) Route M 採択。R3-M 全段 (upper/lower/sandwich) は proof-done で **抽象** headline `growingMemory_logWealth_tendsto_condOptGrowthInfty` が着地。**R3-a の concrete instantiate は空虚に真** (価格写像を座標そのものに固定 + `hpos` の全点量化で仮説が充足不能) ⟹ `@[entry_point]` 撤去 + 公開表から削除、R3-a / R4 再 open。欠陥の SoT はコード側 `@audit:defect(degenerate)` タグ。詳細と def-fix 3 案 → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
+- [ ] Leg B 完全形 — W_∞ AEP (CT 16.5.1 完全形) — 🚧 **未達 (抽象 headline のみ proof-done)** — (B) Route M 採択。R3-M 全段 (upper/lower/sandwich) は proof-done で **抽象** headline `growingMemory_logWealth_tendsto_condOptGrowthInfty` が着地。**R3-a の concrete instantiate は空虚に真** (価格写像を座標そのものに固定 + `hpos` の全点量化で仮説が充足不能) ⟹ `@[entry_point]` 撤去 + 公開表から削除、R3-a / R4 再 open。欠陥の SoT はコード側 `@audit:defect(degenerate)` タグ。**別件で、Route T 踏み台 headline `stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty` の結論が `∃` の witness に最適性を課していない**（定数ポートフォリオと Birkhoff だけで満たせる）。詳細・def-fix 3 案・(b) の直し方 → [`portfolio-stationary-woo-plan.md`](portfolio-stationary-woo-plan.md)
 - [x] Leg D — Cover universal portfolio (regret bound、CT §16.7) — proof-done sorryAx-free + @audit:ok（**not-a-wall 判明**）
 
 ## Closure summary
@@ -74,7 +74,9 @@ log-optimal `W_∞` (無限過去条件付き成長率の増加極限 `W*(X_0 | 
   disintegration) 経由で closure。R2 は抽象 `Filtration ℕ m0` でパラメータ化 (R3/R4 が具体化を負う)。
 - **R3 = real-valued SMB 級 AEP → (B) Route M (growing-memory `S*_n` 逐語) 全段 proof-done** (`StationaryWinftyAEP.lean`、
   1031 行 / 0 sorry)。Route T (固定 bstarInf の fixed-stationary AEP、3 decl `@audit:ok`) は **踏み台**として残置し
-  Route M の W_∞ 同定 (恒等式 `condOptGrowthInfty_eq_integral_infPast`) に再利用。
+  Route M の W_∞ 同定 (恒等式 `condOptGrowthInfty_eq_integral_infPast`) に再利用。ただし Route T の headline
+  は結論の `∃` が witness に最適性を課しておらず、名前が名乗る主張を検証していない (子 plan「残タスク」(b)。
+  再利用しているのは恒等式のほうなので Route M への ripple は無い)。
 - **R3-M 全段 proof-done + 両 gate PASS** (commit `8d282d2d`/`3f89c71a`/`9b5c1d3f`/`fac84779`):
   - **upper** (`growingMemory_eventually_le_condOptGrowthInfty`、eventual-bound `∀ε>0 ∀ᶠ n, gMLA ≤ W_∞+ε`) = wealth-ratio
     supermartingale + crux `∫⁻ M_n ≤ 1` (base=KT + tower) + Markov/BC。coherence `hcoh` は (b) hybrid で R3-a に deferral。

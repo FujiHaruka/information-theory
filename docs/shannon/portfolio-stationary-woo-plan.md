@@ -15,8 +15,10 @@ coherence 仮説で closure、両 gate PASS。**一方 R3-a の concrete instant
 したまま `hpos` (価格正値性) を、正象限に制限されていない実数列空間の**全点**で要求するため、仮説を満たす入力が
 存在しない。欠陥の SoT はコード側 docstring のタグ (`@audit:defect(degenerate)` /
 `@audit:closed-by-successor(portfolio-stationary-woo-plan)`、`StationaryWinftyConcrete.lean`)。⟹ **`@[entry_point]`
-を撤去し公開表からも外した。CT 16.5.1 完全形は未達で R3-a / R4 は再 open** (→「残タスク」)。抽象 headline 側は
-Ω と価格写像が自由ゆえ `hpos` 充足可能で、この欠陥の影響を受けない。 (Route M 群は
+を撤去し公開表からも外した。CT 16.5.1 完全形は未達で R3-a / R4 は再 open** (→「残タスク」(a))。抽象 headline 側は
+Ω と価格写像が自由ゆえ `hpos` 充足可能で、この欠陥の影響を受けない。**別件で、Route T 踏み台の headline
+`stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty` の結論が `∃` の witness に最適性を一つも
+課していないことも見つかっている** (→「残タスク」(b))。 (Route M 群は
 `Portfolio/StationaryWinftyAEP.lean`、concrete instantiate は `StationaryWinftyConcrete.lean` に分離、fixed-b core
 は `StationaryWinfty.lean`)。本計画は scope 境界・要件・進捗・壁リスクの記録。
 
@@ -25,7 +27,7 @@ coherence 仮説で closure、両 gate PASS。**一方 R3-a の concrete instant
 - [ ] M0 在庫 — real-valued 条件付き growth / 可測選択 / Algoet–Cover sandwich の Mathlib / in-project 資産確定 📋
 - [x] R1 — 条件付き log-optimal portfolio の可測選択 ✅ proof-done — `exists_measurable_argmax_on_stdSimplex` (`@audit:ok` sorryAx-free)
 - [x] R2 — 条件付き成長率の単調収束 `W*_k ↑ W_∞` ✅ proof-done — `condOptGrowth_monotone` / `condOptGrowth_bddAbove` + 選択補題 `exists_condLogOptimalSeq` + headline `exists_condOptGrowth_tendsto_condOptGrowthInfty` すべて `@audit:ok` sorryAx-free。選択補題は `condExpKernel` (正則条件付き分布 / disintegration) 経由で closure — R1 gateway を ambient=`ℱ k` に instantiate + crux self-build `condExpKernel_ae_const` (ℱk-可測関数は κ_ω 下 a.e. 定数) + pull-out `condExp_causalLogReturn_eq`
-- [x] R3 (Route T 踏み台) — real-valued SMB 級 AEP: ✅ **fixed-stationary W_∞ AEP proof-done + 両 gate PASS** — 積分恒等式 `condOptGrowthInfty_eq_integral_infPast` (`:807`) + bstarInf 存在 `exists_infPast_condLogOptimal` (`:965`) + headline `stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty` (`:990`) すべて `@audit:ok` sorryAx-free。Route T は固定 bstarInf の漸近最適性 companion ⟹ **(B) 採択後は踏み台**として残置し Route M の下界/極限同定に再利用 (恒等式で W_∞ 同定)
+- [x] R3 (Route T 踏み台) — real-valued SMB 級 AEP: ✅ **fixed-stationary W_∞ AEP proof-done + 両 gate PASS** — 積分恒等式 `condOptGrowthInfty_eq_integral_infPast` (`:807`) + bstarInf 存在 `exists_infPast_condLogOptimal` (`:965`) + headline `stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty` (`:990`) すべて `@audit:ok` sorryAx-free。**ただし headline の結論は `∃` の二つの witness に最適性を課しておらず、定数ポートフォリオと Birkhoff だけで満たせる (→「残タスク」(b))** — 恒等式と存在補題の 2 本はこの軸に当たらない。Route T は固定 bstarInf の漸近最適性 companion ⟹ **(B) 採択後は踏み台**として残置し Route M の下界/極限同定に再利用 (恒等式で W_∞ 同定)
 - [x] R3-M gateway — 加法→乗法変換 crux `condKuhnTucker_infPast` (`:1089`) ✅ **非壁確定 proof-done sorryAx-free @audit:ok** — R2 加法 dominance を wealth-ratio supermartingale が要する乗法 one-step 上界 `μ[(∑c·X)/(∑bstarInf·X)|⨆ℱ] ≤ᵐ 1` に変換。凸摂動一次条件 + setIntegral DCT で closure (κ_ω 還元不要)。補助 3 本 (`log_slope_tendsto_nhdsWithin`:1021 / `log_slope_bounds`:1036 / `condExp_nonpos_of_forall_setIntegral_nonpos`:1057) とも @audit:ok
 - [x] R3-M-upper — growing-memory 上界 ✅ **proof-done** (`growingMemory_eventually_le_condOptGrowthInfty` `:796`、eventual-bound 形)。crux `wealthRatioProcess_lintegral_le_one` (`:244`、`∫⁻ M_n ≤ 1`) を **(b) hybrid ルート** (coherence 仮説 `hcoh` = measurability-only precondition、σ-代数 `(⨆ℱ).comap T^{k+1}` 固定) で succ closure。Markov+BC 骨格は一般補題 `logAvg_eventually_le_of_lintegral_le_one` (`:424`) に抽出 (lower も consume)。両 gate PASS (commit `8d282d2d`/`3f89c71a`)
 - [x] R3-M-lower — 固定K/growing wealth-ratio supermartingale 下界 ✅ **proof-done** (`growingMemory_eventually_ge_condOptGrowthInfty` `:867`、eventual-bound 形)。tail-from-K supermmartingale `N_n^{(K)} = ∏_{i=K}^{n} (bstar_K·X_i)/(bstar_i·X_i)` + stagewise KT (`stagewise_condKuhnTucker` `:599`) + crux `∫⁻ N ≤ 1` (`lowerRatioProcess_lintegral_le_one` `:635`) を tower で closure、sup_K は R2 `exists_condOptGrowth_tendsto_condOptGrowthInfty`。lower coherence `hcoh_inf` (`(ℱ(k+1)).comap T^{k+1}`、upper より強い・coarser) = measurability-only。両 gate PASS (commit `9b5c1d3f`/`fac84779`)
@@ -33,7 +35,9 @@ coherence 仮説で closure、両 gate PASS。**一方 R3-a の concrete instant
 - [ ] R3-a — 抽象 ℱ を具体 `pastFiltration`+shift で instantiate 🚧 **差し戻し（concrete headline が空虚に真）** — coherence 部分は健全: discharge 補題 `coherence_lower`（lower、`pastSigma(k+1).comap(shiftZ^{k+1})` = coarser・強い）/ `coherence_upper`（upper、`negPastSigma.comap(shiftZ^{k+1})` = `shiftedPastSigma`）で 2 coherence を埋め、engine `measurable_shiftedPastSigma_of_eq_comp` 同型を局所複製。**欠陥は instantiate の選び方にある** — 価格写像を座標そのものに固定したため `hpos` が充足不能になり、concrete headline は何も主張していない（SoT = コード側の `@audit:defect(degenerate)` タグ）。**当時の「gateway verify で非壁確定（pastFiltration/shiftZ/coord0 が非有限 α=Fin m→ℝ で clean instantiate）」という判断こそが今回の欠陥**: verify は coherence の可測性が通るかだけを見ており、instantiate 後に**残りの仮説（`hpos`）を満たす入力が在るか**を問わなかった。両 gate も同じ穴を通した（honesty gate は coherence 仮説の非バンドル性を見て、価格写像固定と全点量化の組み合わせを見ていない）。commit `00780329`/`7c844c6b`
 - [ ] R4 — concrete headline の配線 🚧 **巻き戻し済** — `@[entry_point]` 撤去 + 公開表 `docs/readme-theorems.txt` Ch.16 から削除（README の表は `scripts/gen_readme_table.ts --write` で再生成）。@audit:ok は取り下げ。抽象 headline への差し替えはしない（2 coherence 仮説が precondition か未監査ゆえ、未監査のものを公開表に載せるのは同じ誤りの別形）。再配線は R3-a の def-fix 後
 
-## 残タスク — concrete instantiate の def-fix (R3-a 再設計)
+## 残タスク
+
+### (a) concrete instantiate の def-fix (R3-a 再設計)
 
 抽象 headline は無変更でよい。修正は `StationaryWinftyConcrete.lean` 内に閉じ、in-project consumers は 0
 (`scripts/dep_consumers.sh` で都度確認)。3 案あり、**推奨は 1**:
@@ -47,6 +51,29 @@ coherence 仮説で closure、両 gate PASS。**一方 R3-a の concrete instant
 def-fix が入ったら R4 (`@[entry_point]` 再付与 + README/roadmap/facts 再配線 + 独立 honesty / style gate) をやり直す。
 **再監査時の追加チェック**: instantiate 後の headline について、全仮説を同時に満たす witness を 1 つ in-tree で
 示せるか (今回の欠陥はこれを問わなかったために通った)。
+
+### (b) Route T headline の結論が witness に最適性を課していない — (a) とは別件
+
+`stationaryInfPast_logOptimal_growth_tendsto_condOptGrowthInfty` (`StationaryWinfty.lean`、Route T の踏み台
+headline) の **結論が `∃ bstar bstarInf, …` の形で、二つの witness に最適性を一つも課していない**
+(課しているのは `bstarInf` の可測性と simplex 帰属だけ)。`condOptGrowthInfty μ X bstar` は `bstar` の関数として
+定義されているので、`bstar k` と `bstarInf` を同じ定数ポートフォリオにとれば結論は Birkhoff だけで成り立つ。
+⟹ この宣言が機械検証しているのは「無限の過去についての条件付き対数最適ポートフォリオが `W_∞` を達成する」
+ではない。名前と docstring は最適性を名乗るが、結論がそれを担っていない。
+
+**(a) とは別の軸である**: 仮説側は market-regularity + 測度保存 + エルゴード性だけで load-bearing bundling は
+無く、`hpos` も (抽象 Ω ゆえ) 充足可能なので、(a) の空虚さ (仮説が充足不能) には当たらない。同じ `∃` 形でも
+`exists_condLogOptimalSeq` / `exists_infPast_condLogOptimal` / `exists_condOptGrowth_tendsto_condOptGrowthInfty`
+は witness に条件付き優越性を課しているので、この軸に当たるのは本 headline だけである。
+
+**直し方は結論を強めること** — witness に、選択補題が与える条件付き優越性 (`exists_infPast_condLogOptimal` の
+第 3 連言) を課す。**仮説に足すのは不可** (足すと load-bearing bundling になる)。コード側の `@audit:ok` タグは
+この軸を見ていないので、タグの見直しも同じ leg でやる (本 plan はコードを編集しない)。着手時に
+`scripts/dep_consumers.sh` で consumers を確認する — Route M が本 headline ではなく
+`condOptGrowthInfty_eq_integral_infPast` を再利用しているかどうかで ripple が変わる。
+
+一般化した検査項目は `docs/audit/audit-tags.md` の honesty 4 check のうち退化 check に 1 項として登録した
+(結論の内側の `∃` は witness に何が課されているかを別に見る)。
 
 ## ゴール / Approach
 
