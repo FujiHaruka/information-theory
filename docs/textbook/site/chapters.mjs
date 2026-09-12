@@ -179,6 +179,12 @@ export const chapters = [
     sections: [
       { slug: 'ch14-01', num: '14.1', title: '多元接続通信路', src: 'ch14/01-multiple-access.md' },
       { slug: 'ch14-02', num: '14.2', title: '多元接続通信路の容量領域', src: 'ch14/02-mac-capacity-region.md' },
+      { slug: 'ch14-03', num: '14.3', title: '相関のある情報源の符号化', src: 'ch14/03-slepian-wolf.md' },
+      { slug: 'ch14-04', num: '14.4', title: '副情報つきレート歪み', src: 'ch14/04-wyner-ziv.md' },
+      { slug: 'ch14-05', num: '14.5', title: 'ブロードキャスト通信路と重ね合わせ符号化', src: 'ch14/05-broadcast.md' },
+      { slug: 'ch14-06', num: '14.6', title: '通信路のクラスと UV 外界', src: 'ch14/06-outer-bound.md' },
+      { slug: 'ch14-07', num: '14.7', title: 'Marton の内界', src: 'ch14/07-marton.md' },
+      { slug: 'ch14-08', num: '14.8', title: '中継通信路', src: 'ch14/08-relay.md' },
     ],
   },
 ];

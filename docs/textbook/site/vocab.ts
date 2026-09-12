@@ -36,6 +36,7 @@ const ALLOW = new Set([
   'Karhunen', 'Loève',
   'Sanov', 'Stein', 'Chernoff', 'Bayes', 'Hoeffding', 'Pythagoras', 'Hölder', 'Csiszár',
   'Elias', 'Church', 'Turing', 'Kleene', 'Berry', 'Levin', 'Chaitin',
+  'Wolf', 'Marton',
   // 環境タグ（:::）
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
   'proof', 'formalized', 'formalization-note', 'notation-preview',
