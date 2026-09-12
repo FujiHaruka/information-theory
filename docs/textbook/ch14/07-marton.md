@@ -144,7 +144,7 @@ $$
 :::
 
 ::: formalization-note
-証明の途中で示した「一組の $(p_V, K)$ についての四辺形が $\mathcal{UV}(\nu)$ に含まれる」にも，単独の宣言 `marton_region_subset_uv` (`InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/MartonBridge.lean`) がある．こちらにも，$p_V$・$K$・$W$ が全点で正であることは求められていない．
+定理 14.7.5 の証明は $(p_V, K)$ を一組固定するところから始まるが，形式化にもその段に対応する単独の宣言 `marton_region_subset_uv` (`InformationTheory/Shannon/BroadcastChannel/OuterBoundUV/MartonBridge.lean`) がある．ただしその結論は，証明が途中で示す $\mathcal M(p_V, K) \subseteq \mathcal{UV}(\nu)$ ではなく，一組の四辺形が UV 外界そのものに含まれること，すなわち合併と閉包に移す段まで済ませた形である．宣言が合併の中で名指す法も，本文の $\nu$ そのものではなく，$\nu$ の二つの補助アルファベットを自然数へ付け替えたものである（定義 14.6.6 の合併が自然数を補助アルファベットとする法をわたることは，14.6 節の注記で断ったとおりである）．この宣言にも，$p_V$・$K$・$W$ が全点で正であることは求められていない．
 :::
 
 ## 挟み込み
