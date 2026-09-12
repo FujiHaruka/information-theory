@@ -167,7 +167,7 @@ export const chapters = [
       { slug: 'ch13-01', num: '13.1', title: '記述の長さと万能機械', src: 'ch13/01-universal-machine.md' },
       { slug: 'ch13-02', num: '13.2', title: '圧縮できない対象と計算不可能性', src: 'ch13/02-incompressible.md' },
       { slug: 'ch13-03', num: '13.3', title: '複雑性とエントロピー', src: 'ch13/03-entropy-rate.md' },
-      { slug: 'ch13-04', num: '13.4', title: '自己限定機械と万能確率', src: 'ch13/04-prefix-machine.md' },
+      { slug: 'ch13-04', num: '13.4', title: '自己限定万能機械と万能確率', src: 'ch13/04-prefix-machine.md' },
       { slug: 'ch13-05', num: '13.5', title: '停止確率', src: 'ch13/05-omega.md' },
       { slug: 'ch13-06', num: '13.6', title: '二部記述と最小記述長', src: 'ch13/06-two-part.md' },
     ],
