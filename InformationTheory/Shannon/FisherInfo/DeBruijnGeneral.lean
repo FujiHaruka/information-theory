@@ -47,8 +47,8 @@ theorem deBruijn_identity_v2
 
 /-- The integrated **de Bruijn identity**: integrating the per-time identity
 `debruijnIdentityV2_holds_assembled` along the heat-flow path `(0, T)` via FTC gives
-`h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt`. The Fisher information on the right is
-taken of the density path `h_path.fPath` carried by the regularity bundle, which
+`h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt`. The Fisher information on the right is that
+of the density path `h_path.fPath` carried by the regularity bundle, which
 `IsDeBruijnPathRegular.reg_t` pins to the genuine density of `P.map (X + √t·Z)`. Here
 `hT : 0 ≤ T` and `h_path` are regularity and integrability preconditions. -/
 @[entry_point]

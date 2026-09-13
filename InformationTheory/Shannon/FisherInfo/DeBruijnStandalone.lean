@@ -183,10 +183,9 @@ noncomputable def isDeBruijnPathRegular_gaussian
         linarith
       exact this.ne'
 
-/-- **Integrated de Bruijn identity (gaussian, Cover–Thomas).** The integrated
-form `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt` for a Gaussian `X ∼ 𝒩(m, v)`,
-obtained by
-applying `debruijnIntegrationIdentity_holds` to the Gaussian path-regularity witness.
+/-- **Integrated de Bruijn identity (Gaussian, Cover–Thomas).** The integrated
+form `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt` for a Gaussian `X ∼ 𝒩(m, v)`, obtained
+by applying `debruijnIntegrationIdentity_holds` to the Gaussian path-regularity witness.
 The time-`t` density is the explicit `gaussianPDFReal m (v + t)`.
 
 References: [CoverThomas2006].

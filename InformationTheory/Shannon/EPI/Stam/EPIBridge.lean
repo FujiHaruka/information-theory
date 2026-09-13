@@ -17,8 +17,8 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 /-!
 # Entropy power inequality via the Stam inequality and de Bruijn integration
 
-This file raises the Stam-inequality and de Bruijn-integration ingredients of the entropy power
-inequality to predicate signatures and assembles them into a pipeline.
+This file raises the Stam-inequality and de Bruijn heat-flow-regularity ingredients of the
+entropy power inequality to predicate signatures and assembles them into a pipeline.
 
 ## Main definitions
 
@@ -51,7 +51,7 @@ open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
 
-/-! ## §2 — Stam inequality predicate -/
+/-! ## Stam inequality predicate -/
 
 /-- The 1-dimensional Stam inequality in inverse form (Cover–Thomas; Stam 1959;
 Blachman 1965): for independent `X, Y` with finite Fisher information,
@@ -106,7 +106,7 @@ theorem isStamInequalityHyp_symm
     hregX hregY hnormX hnormY hconv' hready'
   linarith
 
-/-! ## §3 — de Bruijn regularity predicate -/
+/-! ## de Bruijn regularity predicate -/
 
 /-- Regularity of the heat-flow path needed for the de Bruijn identity. For each `t > 0` it
 bundles the family-level regularity `IsRegularDeBruijnHypV2 X Z P t` (which carries genuine
@@ -149,16 +149,16 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
               (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
         volume 0 T
 
-/-! ## §5 — Gaussian saturation full discharge of the upstream hypotheses
+/-! ## Gaussian saturation full discharge of the upstream hypotheses
 
 When both `P.map X` and `P.map Y` are Gaussian, the upstream Stam / de Bruijn hypotheses are all
 discharged for free: Stam becomes the trivial inverse identity (since `J(N(m, v)) = 1/v` in closed
 form), and de Bruijn integration collapses to the linear variance increase along the heat flow.
 The discharge below is packaged via the Gaussian saturation result
-`entropyPower_gaussian_additivity` reused in §7.
+`entropyPower_gaussian_additivity`, reused by `epi_via_stam_gaussian`.
 -/
 
-/-! ## §6 — Stam-to-EPI bridge and assembly wrapper -/
+/-! ## Stam-to-EPI bridge and assembly wrapper -/
 
 /-- The Stam-to-EPI bridge hypothesis: the implication from the Stam inequality to the entropy
 power inequality hypothesis. Cover–Thomas derives the entropy power inequality from
@@ -191,7 +191,7 @@ theorem epi_via_stam
     IsEntropyPowerInequalityHypothesis X Y P :=
   h_bridge h_stam
 
-/-! ## §7 — Gaussian full discharge (`epi_via_stam_gaussian`) -/
+/-! ## Gaussian full discharge (`epi_via_stam_gaussian`) -/
 
 /-- For independent Gaussian `X, Y` with non-zero variance,
 `IsStamToEPIBridgeHyp X Y P` is discharged with no upstream hypothesis (the EPI
@@ -210,8 +210,8 @@ theorem isStamToEPIBridgeHyp_of_gaussian
   exact isStamToEPIBridgeHyp_of_epi h_epi
 
 /-- For independent Gaussians `X, Y`, EPI holds with equality via the Gaussian
-saturation discharge — no upstream hypothesis required. Routes through the §6
-wrapper to demonstrate the Stam-bridge pipeline structure. -/
+saturation result `entropyPower_gaussian_additivity` — no upstream Stam or de Bruijn
+hypothesis is required. -/
 @[entry_point]
 theorem epi_via_stam_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -227,7 +227,7 @@ theorem epi_via_stam_gaussian
   -- `=` implies `≥`.
   exact h_eq.ge
 
-/-! ## §8 — corollaries + sanity check exports -/
+/-! ## Corollaries and sanity-check exports -/
 
 /-- Symmetric form of `epi_via_stam`.
 
@@ -251,7 +251,7 @@ theorem isStamToEPIBridgeHyp_of_forall
     IsStamToEPIBridgeHyp X Y P :=
   h
 
-/-! ## §9 — 3-arg EPI via Stam (chain application) -/
+/-! ## 3-arg EPI via Stam (chain application) -/
 
 /-- Chains `epi_via_stam` twice to obtain the 3-argument EPI via the Stam
 pipeline.
@@ -272,7 +272,7 @@ theorem epi_via_stam_three_arg
   have h_xyz_epi := epi_via_stam (fun ω ↦ X ω + Y ω) Z G h_xyz_stam h_xyz_bridge
   exact entropy_power_inequality_three_arg P X Y Z h_xyz_epi h_xy_epi
 
-/-! ## §10 — Stam predicate manipulation -/
+/-! ## Stam predicate manipulation -/
 
 /-- The Stam predicate is preserved under arithmetic equivalent rephrasings: if
 two functions `X, Y` are pointwise equal to `X', Y'` then their Stam predicates
@@ -316,7 +316,7 @@ theorem isStamInequalityHyp_of_fisherInfo_eq
     rw [hJsum_def, hJsum]
   exact h J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def' hJY_def' hJsum_def'
 
-/-! ## §12 — Stam-to-EPI bridge: symmetry / composability -/
+/-! ## Stam-to-EPI bridge: symmetry / composability -/
 
 /-- The Stam-to-EPI bridge is *not* symmetric in the usual sense (Stam is
 symmetric while the bridge picks up `Y + X` vs `X + Y` from the
@@ -344,7 +344,7 @@ theorem isStamToEPIBridgeHyp_const
     IsStamToEPIBridgeHyp X Y P :=
   isStamToEPIBridgeHyp_of_epi h_epi
 
-/-! ## §13 — Gaussian saturation corollaries -/
+/-! ## Gaussian saturation corollaries -/
 
 /-- Variance-additive form of Gaussian saturation: the entropy power of
 the Gaussian sum equals `2πe (v₁ + v₂) = 2πe v₁ + 2πe v₂`, matching the
@@ -361,7 +361,7 @@ theorem entropyPower_gaussian_sum_eq
   entropyPower_gaussian_additivity P X Y hX hY hXY m₁ m₂ v₁ v₂
     hv₁ hv₂ hLawX hLawY
 
-/-! ## §15 — 4-arg EPI chain via Stam pipeline -/
+/-! ## 4-arg EPI chain via Stam pipeline -/
 
 /-- Chains `epi_via_stam` three times to obtain the 4-argument EPI via the Stam
 pipeline.
@@ -386,7 +386,7 @@ theorem epi_via_stam_four_arg
   have h_xyzw_epi := epi_via_stam (fun ω ↦ X ω + Y ω + Z ω) W G h_xyzw_stam h_xyzw_bridge
   exact entropy_power_inequality_four_arg P X Y Z W h_xyzw_epi h_xyz_epi h_xy_epi
 
-/-! ## §16 — Stam pipeline composability witnesses -/
+/-! ## Stam pipeline composability witnesses -/
 
 /-- Any conjunction `(Stam X Y P) ∧ (StamToEPIBridge X Y P)` yields the EPI
 hypothesis.
@@ -445,7 +445,7 @@ theorem epi_via_stam_three_arg_normalized
   rw [ge_iff_le, h_sum_div]
   exact div_le_div_of_nonneg_right h_3arg hc_pos.le
 
-/-! ## §17 — Sanity check / regression theorems -/
+/-! ## Sanity check / regression theorems -/
 
 /-- If we have the Stam-derived EPI, the `EntropyPowerInequality` predicate is
 exactly the result of the bridge applied to Stam.
