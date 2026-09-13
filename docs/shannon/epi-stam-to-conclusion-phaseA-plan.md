@@ -7,6 +7,8 @@
 > 親 `epi-stam-to-conclusion-plan.md` は判断ログ #5 で **3-noise lift + two-time route** (`EPIDensityForm.lean`)
 > に載せ替え済 (sum-instance 𝒩(0,2) の uninhabitable 構造制約)。本 plan が A-1 で staged した richness predicate
 > **`IsStamScalingNoiseHyp` は削除済** (commit `4cd6b12`)、joint-indep は caller 側 5-tuple `iIndepFun` inline 自己導出に。
+> 本文が参照する **`IsDeBruijnIntegrationHyp` も削除済** — 非固定の `∃ fPath` 形だったため撤回され、
+> 積分形の恒等式は `FisherInfo.debruijnIntegrationIdentity_holds` (密度パス固定) に一本化。
 > 現 Phase A の実態 = 親 plan §Phase A (CLOSED 要約) を参照。本 plan は当時の Csiszár-scaling route の履歴記録。
 >
 > **Parent**: [`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md) §Phase A (CLOSED 要約)
