@@ -37,7 +37,7 @@ const ALLOW = new Set([
   'Sanov', 'Stein', 'Chernoff', 'Bayes', 'Hoeffding', 'Pythagoras', 'Hölder', 'Csiszár',
   'Elias', 'Church', 'Turing', 'Kleene', 'Berry', 'Levin', 'Chaitin',
   'Wolf', 'Marton', 'Kuhn', 'Tucker', 'Han', 'Shearer',
-  'Loomis', 'Whitney', 'Brascamp', 'Lieb', 'Minkowski',
+  'Loomis', 'Whitney', 'Brascamp', 'Lieb', 'Minkowski', 'Bruijn', 'Stam',
   // 環境タグ（:::）
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
   'proof', 'formalized', 'formalization-note', 'notation-preview',

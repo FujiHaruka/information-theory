@@ -213,6 +213,18 @@ export const chapters = [
       { slug: 'ch16-04', num: '16.4', title: '数え上げへの応用', src: 'ch16/04-counting.md' },
       { slug: 'ch16-05', num: '16.5', title: '超立方体の辺等周', src: 'ch16/05-hypercube-edge.md' },
       { slug: 'ch16-06', num: '16.6', title: '行列式の不等式', src: 'ch16/06-determinant.md' },
+      {
+        slug: 'ch16-07',
+        num: '16.7',
+        title: 'エントロピーべきと Fisher 情報量',
+        src: 'ch16/07-entropy-power-fisher.md',
+      },
+      {
+        slug: 'ch16-08',
+        num: '16.8',
+        title: 'Stam の不等式とエントロピーべき不等式',
+        src: 'ch16/08-stam-epi.md',
+      },
     ],
   },
 ];
