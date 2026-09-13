@@ -210,6 +210,9 @@ export const chapters = [
       { slug: 'ch16-01', num: '16.1', title: '部分集合のエントロピー', src: 'ch16/01-subset-entropy.md' },
       { slug: 'ch16-02', num: '16.2', title: 'Han の不等式', src: 'ch16/02-han.md' },
       { slug: 'ch16-03', num: '16.3', title: 'Shearer の不等式', src: 'ch16/03-shearer.md' },
+      { slug: 'ch16-04', num: '16.4', title: '数え上げへの応用', src: 'ch16/04-counting.md' },
+      { slug: 'ch16-05', num: '16.5', title: '超立方体の辺等周', src: 'ch16/05-hypercube-edge.md' },
+      { slug: 'ch16-06', num: '16.6', title: '行列式の不等式', src: 'ch16/06-determinant.md' },
     ],
   },
 ];
