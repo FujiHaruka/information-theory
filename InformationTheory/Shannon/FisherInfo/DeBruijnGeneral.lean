@@ -47,26 +47,20 @@ theorem deBruijn_identity_v2
 
 /-- The integrated **de Bruijn identity**: integrating the per-time identity
 `debruijnIdentityV2_holds_assembled` along the heat-flow path `(0, T)` via FTC gives
-`h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt`. Here `hT : 0 ≤ T` and the path-regularity
-bundle `h_path : IsDeBruijnPathRegular` are regularity and integrability preconditions. -/
+`h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt`. The Fisher information on the right is that
+of the density path `h_path.fPath` carried by the regularity bundle, which
+`IsDeBruijnPathRegular.reg_t` pins to the genuine density of `P.map (X + √t·Z)`. Here
+`hT : 0 ≤ T` and `h_path` are regularity and integrability preconditions.
+
+@audit:ok -/
 @[entry_point]
 theorem debruijnIntegrationIdentity_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
     (T : ℝ) (hT : 0 ≤ T)
     (h_path : IsDeBruijnPathRegular X Z P T) :
-    ∃ (fPath : ℝ → ℝ → ℝ),
-      ∀ (h_X h_target : ℝ),
-        h_X = differentialEntropy (P.map X) →
-        h_target = differentialEntropy (P.map (gaussianConvolution X Z T)) →
-        h_target - h_X
-          = ∫ t in Set.Ioo 0 T, (1/2)
-            * (fisherInfoOfMeasureV2
-                (P.map (gaussianConvolution X Z t)) (fPath t)).toReal ∂volume := by
-  refine ⟨h_path.fPath, ?_⟩
-  intro h_X h_target hX_def htarget_def
-  -- The integrand `(1/2) * (fisherInfoOfMeasureV2 _ (fPath t)).toReal` is defeq to
-  -- `(1/2) * fisherInfoOfDensityReal (fPath t)`.
+    differentialEntropy (P.map (gaussianConvolution X Z T)) - differentialEntropy (P.map X)
+      = ∫ t in Set.Ioo 0 T, (1/2) * fisherInfoOfDensityReal (h_path.fPath t) ∂volume := by
   set f : ℝ → ℝ :=
     fun s ↦ differentialEntropy (P.map (gaussianConvolution X Z s)) with hf_def
   set f' : ℝ → ℝ := fun t ↦ (1/2) * fisherInfoOfDensityReal (h_path.fPath t) with hf'_def
@@ -93,14 +87,8 @@ theorem debruijnIntegrationIdentity_holds
     have h_path0 : gaussianConvolution X Z 0 = X := by
       funext ω; simp [gaussianConvolution]
     simp only [hf_def, h_path0]
-  -- Step 5: identify the goal integrand with `f'` (defeq).
-  have h_integrand :
-      (fun t ↦ (1/2)
-        * (fisherInfoOfMeasureV2 (P.map (gaussianConvolution X Z t)) (h_path.fPath t)).toReal)
-      = f' := rfl
   -- Assemble.
-  rw [hX_def, htarget_def]
-  show differentialEntropy (P.map (gaussianConvolution X Z T))
+  change differentialEntropy (P.map (gaussianConvolution X Z T))
         - differentialEntropy (P.map X)
       = ∫ t in Set.Ioo 0 T, f' t ∂volume
   rw [← h_f0, ← h_ftc, h_ioc, h_ioo_eq_ioc]

@@ -380,10 +380,14 @@ lemma liftMeasure3_pairwise_indep
 
 /-- Entropy power inequality for absolutely continuous distributions with regular densities.
 
-All 16 hypotheses are regularity preconditions (measurability, independence, absolute
+Every hypothesis is a regularity precondition (measurability, independence, absolute
 continuity, finite second moment, `IsRegularDensityV2`, normalization, `IsBlachmanConvReady`,
-finite Fisher information, finite entropy) for `X`, `Y`, and `X + Y`; they do not encode
-the EPI inequality core. The proof derives EPI via a 3-noise lift and two-time terminal. -/
+finite Fisher information, finite entropy) for `X`, `Y`, and `X + Y`; none encodes
+the EPI inequality core. The proof derives EPI via a 3-noise lift and two-time terminal.
+
+`entropyPowerExt_add_ge` states the same inequality in the `EReal`-valued form from
+measurability and independence alone; this density form is the `ℝ`-valued statement under the
+regularity hypotheses above. -/
 @[entry_point]
 theorem entropy_power_inequality_of_density
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]

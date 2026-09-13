@@ -17,8 +17,8 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 /-!
 # Entropy power inequality via the Stam inequality and de Bruijn integration
 
-This file raises the Stam-inequality and de Bruijn-integration ingredients of the entropy power
-inequality to predicate signatures and assembles them into a pipeline.
+This file raises the Stam-inequality and de Bruijn heat-flow-regularity ingredients of the
+entropy power inequality to predicate signatures and assembles them into a pipeline.
 
 ## Main definitions
 
@@ -27,8 +27,6 @@ inequality to predicate signatures and assembles them into a pipeline.
 * `IsDeBruijnRegularityHyp X Z P` — regularity of the heat-flow path needed for the de Bruijn
   identity, bundling `IsRegularDeBruijnHypV2` at each `t > 0` with bounded-window integrability of
   the derivative.
-* `IsDeBruijnIntegrationHyp X Z P T` — the de Bruijn integration identity
-  `h(target) - h(X) = ∫₀^T (1/2) J(X + √t Z) dt` as a predicate.
 * `IsStamToEPIBridgeHyp X Y P` — the implication from the Stam inequality to the entropy power
   inequality hypothesis.
 
@@ -53,7 +51,7 @@ open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
 
-/-! ## §2 — Stam inequality predicate -/
+/-! ## Stam inequality predicate -/
 
 /-- The 1-dimensional Stam inequality in inverse form (Cover–Thomas; Stam 1959;
 Blachman 1965): for independent `X, Y` with finite Fisher information,
@@ -108,25 +106,29 @@ theorem isStamInequalityHyp_symm
     hregX hregY hnormX hnormY hconv' hready'
   linarith
 
-/-! ## §3 — de Bruijn regularity predicate -/
+/-! ## de Bruijn regularity predicate -/
 
 /-- Regularity of the heat-flow path needed for the de Bruijn identity. For each `t > 0` it
-bundles the family-level regularity `IsRegularDeBruijnHypV2 X Z P t` (which carries genuine
-`HasDerivAt` content) with a shared density witness `density_path`, the pin `density_t_eq` tying it
-to the per-`t` internal density, and bounded-window integrability of the derivative.
+bundles the family-level regularity `IsRegularDeBruijnHypV2 X Z P t` (the standard-normal law of
+the noise `Z`, a density witness `pX` for `P.map X` with its nonnegativity and measurability, a
+density witness for the law of `X + √t · Z` pinned to the heat-kernel convolution of `pX`, and a
+finite second moment) with a shared density witness `density_path`, the pin tying it to the
+per-`t` internal density, and bounded-window integrability of the derivative.
 
-The structure carries genuine `HasDerivAt` content via `reg_at` and the `density_t_eq` pin, so its
-body cannot be reduced to `sorry`. It is load-bearing rather than a regularity precondition; the
-tag flags it for eventual decomposition into a regularity precondition plus the genuine de Bruijn
-lemma.
+Every field is density-level regularity; none of them is the de Bruijn identity. The identity
+`(d/dt) h(X + √t · Z) = (1/2) · J(X + √t · Z)` is supplied separately by `deBruijn_identity_v2`,
+which consumes `IsRegularDeBruijnHypV2` as a precondition. The bundle is non-vacuous:
+`isDeBruijnRegularityHyp_of_explicitDensity` builds it from regularity of an explicit density
+alone.
 
-@audit:retract-candidate(load-bearing-predicate) -/
+@audit:ok -/
 structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] where
   /-- Shared density witness. `density_path t` is intended to be the density
   of `P.map (X + √t · Z)`. The same witness drives both `reg_at` (via
-  `density_t_eq` below) and `integrable_deriv`, structurally closing the
-  trivial-zero bypass that the previous independent existentials allowed. -/
+  `density_t_eq` below) and `integrable_deriv`; sharing one witness across the
+  fields, rather than quantifying each field over its own existential,
+  structurally closes the trivial-zero bypass. -/
   density_path : ℝ → ℝ → ℝ
   /-- For each strictly positive `t`, the family is regular in the de Bruijn
   sense (V2 form, RHS keyed on V2 Fisher info; `IsRegularDeBruijnHypV2` carries
@@ -151,85 +153,26 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
               (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
         volume 0 T
 
-/-! ## §4 — de Bruijn integration predicate -/
-
-/-- The de Bruijn integration identity along the heat-flow path (Cover–Thomas):
-`h(target) - h(X) = ∫₀^T (1/2) · J(X + √t · Z) dt`, i.e. the differential entropy gap equals the
-path integral of half the Fisher information. Stated existentially over the density path `fPath`.
-
-The predicate carries the integration-identity content, so its `def` body cannot be reduced to
-`sorry`; it is load-bearing. There are no hypothesis-form consumers: the general witness
-`isDeBruijnIntegrationHyp_holds` produces it from `0 ≤ T` and a path-regularity precondition by
-delegating to `debruijnIntegrationIdentity_holds`.
-
-@audit:retract-candidate(load-bearing-predicate) -/
-def IsDeBruijnIntegrationHyp {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω) (T : ℝ) : Prop :=
-  ∃ (fPath : ℝ → ℝ → ℝ),
-    ∀ (h_X h_target : ℝ),
-      h_X = InformationTheory.Shannon.differentialEntropy (P.map X) →
-      h_target = InformationTheory.Shannon.differentialEntropy
-                  (P.map (fun ω ↦ X ω + Real.sqrt T * Z ω)) →
-      h_target - h_X
-        = ∫ t in Set.Ioo 0 T, (1/2)
-          * (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-              (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)) (fPath t)).toReal ∂volume
-
-/-- Trivial degenerate case: when `T ≤ 0` the integration interval `(0, T)` is
-empty, so the identity is `h_target - h_X = 0`. This holds whenever
-`h_target = h_X`, which is the natural boundary case (`T = 0`). -/
-theorem isDeBruijnIntegrationHyp_at_zero
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω)
-    (h_boundary :
-      InformationTheory.Shannon.differentialEntropy (P.map X) =
-        InformationTheory.Shannon.differentialEntropy
-          (P.map (fun ω ↦ X ω + Real.sqrt 0 * Z ω))) :
-    IsDeBruijnIntegrationHyp X Z P 0 := by
-  refine ⟨fun _ _ ↦ 0, ?_⟩
-  intro h_X h_target hX_def htarget_def
-  -- Integral over the empty set `Ioo 0 0` is 0.
-  have h_empty : Set.Ioo (0 : ℝ) 0 = ∅ := by
-    ext x
-    constructor
-    · intro hx
-      have := hx.1
-      have := hx.2
-      linarith
-    · intro hx
-      exact hx.elim
-  rw [h_empty, MeasureTheory.setIntegral_empty]
-  rw [hX_def, htarget_def, ← h_boundary]
-  ring
-
-/-- `IsDeBruijnIntegrationHyp X Z P T` holds whenever `0 ≤ T` and the heat-flow path is regular
-(`IsDeBruijnPathRegular`), by delegation to `debruijnIntegrationIdentity_holds`. The integration
-identity reduces to the per-time de Bruijn identity via the fundamental theorem of calculus; the
-upstream lemma carries only a path-regularity precondition and `0 ≤ T`. -/
-@[entry_point]
-theorem isDeBruijnIntegrationHyp_holds
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
-    (T : ℝ) (hT : 0 ≤ T)
-    (h_path : InformationTheory.Shannon.FisherInfo.IsDeBruijnPathRegular X Z P T) :
-    IsDeBruijnIntegrationHyp X Z P T :=
-  InformationTheory.Shannon.FisherInfo.debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT h_path
-
-/-! ## §5 — Gaussian saturation full discharge of the upstream hypotheses
+/-! ## Gaussian saturation full discharge of the upstream hypotheses
 
 When both `P.map X` and `P.map Y` are Gaussian, the upstream Stam / de Bruijn hypotheses are all
 discharged for free: Stam becomes the trivial inverse identity (since `J(N(m, v)) = 1/v` in closed
 form), and de Bruijn integration collapses to the linear variance increase along the heat flow.
 The discharge below is packaged via the Gaussian saturation result
-`entropyPower_gaussian_additivity` reused in §7.
+`entropyPower_gaussian_additivity`, reused by `epi_via_stam_gaussian`.
 -/
 
-/-! ## §6 — Stam-to-EPI bridge and assembly wrapper -/
+/-! ## Stam-to-EPI bridge and assembly wrapper -/
 
 /-- The Stam-to-EPI bridge hypothesis: the implication from the Stam inequality to the entropy
 power inequality hypothesis. Cover–Thomas derives the entropy power inequality from
 the Stam inequality and the de Bruijn identity by a heat-flow path-concavity argument plus a
-saturation argument at the endpoint; this predicate bundles that implication. -/
+saturation argument at the endpoint; this predicate bundles that implication.
+
+When both push-forwards are absolutely continuous with finite differential entropy,
+`isStamToEPIBridgeHyp_of_ac` supplies this predicate from regularity preconditions alone. That
+producer proves the entropy power inequality on an independent route and then discards the Stam
+antecedent, so it does not formalize the Cover–Thomas derivation named above. -/
 def IsStamToEPIBridgeHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   IsStamInequalityHyp X Y P → IsEntropyPowerInequalityHypothesis X Y P
@@ -244,10 +187,15 @@ theorem isStamToEPIBridgeHyp_of_epi
   fun _ ↦ h_epi
 
 /-- Assembles the Stam inequality and the Stam-to-EPI bridge into the entropy power inequality
-hypothesis `IsEntropyPowerInequalityHypothesis`.
+hypothesis `IsEntropyPowerInequalityHypothesis`. The bridge argument is supplied by
+`isStamToEPIBridgeHyp_of_ac` in the absolutely continuous case and by
+`isStamToEPIBridgeHyp_of_gaussian` in the Gaussian case.
 
-@audit:ok -/
-@[entry_point]
+The conclusion is the consequent of `h_bridge`, so that hypothesis carries the derivation and the
+body is one modus ponens; for a general pair `X, Y` neither producer applies. The entropy power
+inequality that needs only measurability and independence is `entropyPowerExt_add_ge`.
+
+@audit:retract-candidate(load-bearing-predicate) -/
 theorem epi_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω}
@@ -257,7 +205,7 @@ theorem epi_via_stam
     IsEntropyPowerInequalityHypothesis X Y P :=
   h_bridge h_stam
 
-/-! ## §7 — Gaussian full discharge (`epi_via_stam_gaussian`) -/
+/-! ## Gaussian full discharge (`epi_via_stam_gaussian`) -/
 
 /-- For independent Gaussian `X, Y` with non-zero variance,
 `IsStamToEPIBridgeHyp X Y P` is discharged with no upstream hypothesis (the EPI
@@ -276,8 +224,8 @@ theorem isStamToEPIBridgeHyp_of_gaussian
   exact isStamToEPIBridgeHyp_of_epi h_epi
 
 /-- For independent Gaussians `X, Y`, EPI holds with equality via the Gaussian
-saturation discharge — no upstream hypothesis required. Routes through the §6
-wrapper to demonstrate the Stam-bridge pipeline structure. -/
+saturation result `entropyPower_gaussian_additivity` — no upstream Stam or de Bruijn
+hypothesis is required. -/
 @[entry_point]
 theorem epi_via_stam_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -293,12 +241,12 @@ theorem epi_via_stam_gaussian
   -- `=` implies `≥`.
   exact h_eq.ge
 
-/-! ## §8 — corollaries + sanity check exports -/
+/-! ## Corollaries and sanity-check exports -/
 
-/-- Symmetric form of `epi_via_stam`.
+/-- Symmetric form of `epi_via_stam`. The bridge hypothesis carries the conclusion here exactly as
+it does there.
 
-`@audit:ok` -/
-@[entry_point]
+@audit:retract-candidate(load-bearing-predicate-empty-consumers) -/
 theorem epi_via_stam_symm
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω}
@@ -309,7 +257,10 @@ theorem epi_via_stam_symm
   epi_via_stam Y X Z h_stam h_bridge
 
 /-- Pass-through bridge: `IsStamToEPIBridgeHyp` is implied by the conjunction
-`Stam → EPI`. -/
+`Stam → EPI`. The hypothesis is the unfolding of the conclusion, so the body is the hypothesis
+itself.
+
+@audit:retract-candidate(circular-passthrough) -/
 theorem isStamToEPIBridgeHyp_of_forall
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -317,13 +268,13 @@ theorem isStamToEPIBridgeHyp_of_forall
     IsStamToEPIBridgeHyp X Y P :=
   h
 
-/-! ## §9 — 3-arg EPI via Stam (chain application) -/
+/-! ## 3-arg EPI via Stam (chain application) -/
 
 /-- Chains `epi_via_stam` twice to obtain the 3-argument EPI via the Stam
-pipeline.
+pipeline. Both pairwise entropy power inequalities come from the bridge hypotheses (see
+`epi_via_stam`); only the chaining happens here.
 
-`@audit:ok` -/
-@[entry_point]
+@audit:retract-candidate(load-bearing-predicate) -/
 theorem epi_via_stam_three_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -338,7 +289,7 @@ theorem epi_via_stam_three_arg
   have h_xyz_epi := epi_via_stam (fun ω ↦ X ω + Y ω) Z G h_xyz_stam h_xyz_bridge
   exact entropy_power_inequality_three_arg P X Y Z h_xyz_epi h_xy_epi
 
-/-! ## §10 — Stam predicate manipulation -/
+/-! ## Stam predicate manipulation -/
 
 /-- The Stam predicate is preserved under arithmetic equivalent rephrasings: if
 two functions `X, Y` are pointwise equal to `X', Y'` then their Stam predicates
@@ -351,11 +302,10 @@ theorem isStamInequalityHyp_congr
     IsStamInequalityHyp X' Y' P := by
   subst hX; subst hY; exact h
 
-/-- The Stam predicate is preserved by adding a constant to `X` and `Y` when the
-distributional shape of `P.map X`, `P.map Y`, and `P.map (X+Y)` (and hence
-Fisher information) is preserved by the translation. This is the *predicate-
-level* statement; the corresponding distributional invariance (Fisher info
-is translation-invariant) is in the downstream discharge plan. -/
+/-- The Stam predicate transports to any `X'`, `Y'` whose Fisher information agrees with that of
+`X`, `Y` on `P.map X`, `P.map Y`, and `P.map (X + Y)`; adding a constant to both arguments is the
+motivating instance. The Fisher-information equalities are hypotheses here, not consequences of
+translation invariance. -/
 theorem isStamInequalityHyp_of_fisherInfo_eq
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
@@ -382,26 +332,7 @@ theorem isStamInequalityHyp_of_fisherInfo_eq
     rw [hJsum_def, hJsum]
   exact h J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def' hJY_def' hJsum_def'
 
-/-! ## §11 — de Bruijn regularity manipulation -/
-
-/-- de Bruijn integration `T = 0` always holds in the structurally trivial
-case where `X + √0 · Z = X` pointwise. -/
-theorem isDeBruijnIntegrationHyp_at_zero_pointwise
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω)
-    (h_pt : (fun ω ↦ X ω + Real.sqrt 0 * Z ω) = X) :
-    IsDeBruijnIntegrationHyp X Z P 0 := by
-  apply isDeBruijnIntegrationHyp_at_zero
-  rw [h_pt]
-
-/-- The `√0 = 0` specialization: at `T = 0`, the heat-flow path returns
-`X + 0 · Z = X`. Used to discharge `isDeBruijnIntegrationHyp_at_zero`. -/
-theorem heat_flow_path_at_zero {Ω : Type*} (X Z : Ω → ℝ) :
-    (fun ω ↦ X ω + Real.sqrt 0 * Z ω) = X := by
-  funext ω
-  rw [Real.sqrt_zero, zero_mul, add_zero]
-
-/-! ## §12 — Stam-to-EPI bridge: symmetry / composability -/
+/-! ## Stam-to-EPI bridge: symmetry / composability -/
 
 /-- The Stam-to-EPI bridge is *not* symmetric in the usual sense (Stam is
 symmetric while the bridge picks up `Y + X` vs `X + Y` from the
@@ -429,7 +360,7 @@ theorem isStamToEPIBridgeHyp_const
     IsStamToEPIBridgeHyp X Y P :=
   isStamToEPIBridgeHyp_of_epi h_epi
 
-/-! ## §13 — Gaussian saturation corollaries -/
+/-! ## Gaussian saturation corollaries -/
 
 /-- Variance-additive form of Gaussian saturation: the entropy power of
 the Gaussian sum equals `2πe (v₁ + v₂) = 2πe v₁ + 2πe v₂`, matching the
@@ -446,13 +377,13 @@ theorem entropyPower_gaussian_sum_eq
   entropyPower_gaussian_additivity P X Y hX hY hXY m₁ m₂ v₁ v₂
     hv₁ hv₂ hLawX hLawY
 
-/-! ## §15 — 4-arg EPI chain via Stam pipeline -/
+/-! ## 4-arg EPI chain via Stam pipeline -/
 
 /-- Chains `epi_via_stam` three times to obtain the 4-argument EPI via the Stam
-pipeline.
+pipeline. All three pairwise entropy power inequalities come from the bridge hypotheses (see
+`epi_via_stam`); only the chaining happens here.
 
-`@audit:ok` -/
-@[entry_point]
+@audit:retract-candidate(load-bearing-predicate-empty-consumers) -/
 theorem epi_via_stam_four_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -471,12 +402,13 @@ theorem epi_via_stam_four_arg
   have h_xyzw_epi := epi_via_stam (fun ω ↦ X ω + Y ω + Z ω) W G h_xyzw_stam h_xyzw_bridge
   exact entropy_power_inequality_four_arg P X Y Z W h_xyzw_epi h_xyz_epi h_xy_epi
 
-/-! ## §16 — Stam pipeline composability witnesses -/
+/-! ## Stam pipeline composability witnesses -/
 
 /-- Any conjunction `(Stam X Y P) ∧ (StamToEPIBridge X Y P)` yields the EPI
-hypothesis.
+hypothesis. Statement and body are those of `epi_via_stam`, so the bridge hypothesis carries the
+conclusion.
 
-`@audit:ok` -/
+@audit:retract-candidate(load-bearing-predicate-empty-consumers) -/
 theorem isEntropyPowerInequalityHypothesis_of_stam_pair
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -486,9 +418,10 @@ theorem isEntropyPowerInequalityHypothesis_of_stam_pair
   h_bridge h_stam
 
 /-- Given the entropy-power-inequality form already, the Stam pipeline trivially
-returns the same hypothesis.
+returns the same hypothesis. The hypothesis `h_epi` already has the conclusion's type and the body
+reduces to it.
 
-`@audit:ok` -/
+@audit:retract-candidate(circular-passthrough) -/
 theorem epi_pipeline_idempotent
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -500,10 +433,11 @@ theorem epi_pipeline_idempotent
 /-- The three-summand entropy power inequality, normalized by `gaussianEntropyPowerConst`,
 from Stam inequality and Stam-to-EPI bridge hypotheses on the pairs `(X, Y)` and
 `(X + Y, Z)` rather than from entropy-power-inequality hypotheses directly. It shows that
-the Stam-pipeline three-summand form composes with `entropy_power_inequality_three_arg`.
+the Stam-pipeline three-summand form composes with `entropy_power_inequality_three_arg`. It
+divides the conclusion of `epi_via_stam_three_arg` by a positive constant, so the bridge
+hypotheses still carry the inequality.
 
-`@audit:ok` -/
-@[entry_point]
+@audit:retract-candidate(load-bearing-predicate-empty-consumers) -/
 theorem epi_via_stam_three_arg_normalized
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -530,12 +464,13 @@ theorem epi_via_stam_three_arg_normalized
   rw [ge_iff_le, h_sum_div]
   exact div_le_div_of_nonneg_right h_3arg hc_pos.le
 
-/-! ## §17 — Sanity check / regression theorems -/
+/-! ## Sanity check / regression theorems -/
 
 /-- If we have the Stam-derived EPI, the `EntropyPowerInequality` predicate is
-exactly the result of the bridge applied to Stam.
+exactly the result of the bridge applied to Stam. This restates `epi_via_stam`; the bridge
+hypothesis carries the conclusion.
 
-`@audit:ok` -/
+@audit:retract-candidate(load-bearing-predicate-empty-consumers) -/
 theorem epi_via_stam_recovers_predicate
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}

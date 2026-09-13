@@ -1,6 +1,6 @@
 # EPI Stam → EPI conclusion — B-wire honest discharge plan
 
-**Status**: CLOSED ✅ — 一般 EPI は親 moonshot が無条件 dispatch + route T で別ルート closure 済 (`entropyPowerExt_add_ge`)。本 plan の Phase B (legacy 実数 `entropy_power_inequality` の Stam-bridge 経由 closure) は textbook goal に不要となり SUPERSEDED。closure 対象だった legacy Stam-bridge + 露出 decl は物理削除済。Phase A (`entropy_power_inequality_of_density`、`EPIDensityForm.lean`) は CLOSED のまま生存。(Stam Step 2: re-scope candidate — see 要点)
+**Status**: CLOSED ✅ — 一般 EPI は親 moonshot が無条件 dispatch + route T で別ルート closure 済 (`entropyPowerExt_add_ge`)。本 plan の Phase B (legacy 実数 `entropy_power_inequality` の Stam-bridge 経由 closure) は textbook goal に不要となり SUPERSEDED。closure 対象だった legacy Stam-bridge + 露出 decl は物理削除済。Phase A (`entropy_power_inequality_of_density`) は CLOSED のまま生存。(Stam Step 2: re-scope candidate — see 要点)
 **SoT**: `docs/shannon/ch17-inequalities-status.md` + `docs/shannon/epi-facts.md` + `docs/textbook-roadmap.md` Ch.17。詳細履歴は git。
 
 - 親: [`epi-unconditional-moonshot-plan.md`](epi-unconditional-moonshot-plan.md) (無条件 EPI moonshot、B-wire = 最終 wall)
@@ -25,4 +25,16 @@ honest precondition 16 本 (measurability / indep / a.c. / moment + (X/Y/sum)×(
 
 **Phase B 真の analytic 壁 (再開時の核心)**: 完全一般形は一般 a.c. 密度に対し score-of-convolution Fisher monotonicity を genuine に解く必要 — Phase A が要求する `IsRegularDensityV2`/`IsBlachmanConvReady` は一般 a.c. 密度では出ない。これが density 枝の最深 gap。**Stam Step 2 re-scope candidate**: Rioul 2011 §II-C (score-conditional-mean identity + total variance decomposition) で ~100 行 density-level computation の見積りあり (従来 ~300 行 PR 級より小) → roadmap Ch.17 行参照。退化境界値 `differentialEntropy_dirac = 0` (`entropyPower (dirac)` は親 plan で旧値1→新値0 へ retype 移行中、設計は新定義側で)。
 
+**Stam ⇒ EPI の bridge は in-tree に存在しない (Stam Step 2 を再開する前に読むこと)**: `IsStamToEPIBridgeHyp`
+は定義上 `IsStamInequalityHyp → IsEntropyPowerInequalityHypothesis` で、後件が EPI の結論そのもの。HEAD の producer は
+いずれも EPI を別ルートで出して Stam の前件を捨てており、**Stam を証明しても、そこから EPI へ渡す導出は本 repo に
+無い**。ラッパー群は `@audit:retract-candidate(load-bearing-predicate)` へ格下げ + `@[entry_point]` 除去済で、
+コード側のタグと docstring がこの判断の SoT。一般 EPI 自体は `entropyPowerExt_add_ge` が無条件に与える。
+
 **Phase B feasibility verdict (L-PhB-stop 発動済)**: smoothing route は出発点で詰む (Gaussian 畳込みは裾を保存し有限分散/有限エントロピー precondition を剥がせない、循環)。truncate→smooth 二重近似 + entropy-power 弱収束 LSC は Mathlib 不在 → 別 moonshot 規模 (後継 = route β'、`epi-uncond-truncation-lsc-plan` で別途 closure 済)。
+
+## Sub-plan
+
+- [`epi-stam-to-conclusion-phaseA-plan.md`](epi-stam-to-conclusion-phaseA-plan.md) — 旧 Csiszár-scaling route の
+  **履歴記録** (SUPERSEDED / CLOSED、本線ではない)。当時「完了」とした宣言はいずれも HEAD に無く、
+  同 plan の slug を名乗る `@residual` もコードに残っていない。

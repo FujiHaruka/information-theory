@@ -1,58 +1,48 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.BlockwiseChannel.CapacityLimit
-import Mathlib.Analysis.Subadditive
 
 /-!
 # General DMC capacity (limit form) — publish layer
 
 This file is a thin publish layer on top of `BlockwiseChannel/`. It
-re-exports the limit-form capacity definition and four publish-surface
-theorems under a dedicated `GeneralDMC` namespace so that downstream modules
+re-exports the limit-form capacity definition and its memoryless corollaries
+under a dedicated `GeneralDMC` namespace so that downstream modules
 (`AWGN`, `MAC`, `BC`, `RelayCutset`, …) can refer to
 `GeneralDMC.capacity_lim` directly without depending on `BlockwiseChannel`
 plumbing names.
 
-For the memoryless case, every publish theorem
-is fully discharged via `BlockwiseChannel.capacity_lim_eq_capacity_of_memoryless`.
-For the fully general case (Han–Verdú spectral form / informationally
-stable channels) the publish theorems are exposed in hypothesis-form: the
-limit-existence / monotonicity hypothesis is taken as an explicit argument and
-consumed pass-through. The Han–Verdú spectral form itself is out of scope.
+For the memoryless case the statements here come from `BlockwiseChannel/`: the per-letter
+rate from `capacityN_ofMemoryless_eq`, and the capacity identity as an alias of
+`ChannelCoding.capacity_lim_eq_capacity_of_memoryless`. The fully general case
+(Han–Verdú spectral form / informationally stable channels) is out of scope; the only
+general-case statement is the pass-through from an eventually-constant per-letter rate.
 
-## Main publish surface
+## Main definitions
 
+* `GeneralDMC.Channel` — namespace abbrev for `BlockwiseChannel`.
 * `GeneralDMC.capacity_lim` — namespace abbrev for
   `BlockwiseChannel.capacity_lim`.
+* `GeneralDMC.capacityRate` — the per-letter capacity sequence whose limit
+  defines `capacity_lim`.
+
+## Main statements
+
+* `GeneralDMC.capacityRate_ofMemoryless_eventually_const` — for `ofMemoryless W`
+  the per-letter sequence is eventually the constant `capacity W`.
 * `GeneralDMC.capacity_lim_tendsto_of_memoryless` — for `ofMemoryless W`, the
   per-letter capacity sequence converges to `capacity W` (memoryless concrete
   limit form).
-* `GeneralDMC.capacity_lim_exists_of_memoryless` — limit-existence corollary
-  in `∃ ℓ, Tendsto …` shape (memoryless concrete limit form).
-* `GeneralDMC.capacity_lim_exists_of_subadditive` — Fekete-based general
-  limit-existence pass-through: given a real-valued subadditive
-  surrogate that bounds the per-letter capacity, the limit exists.
 * `GeneralDMC.capacity_lim_eq_capacity_of_memoryless` — alias of the
   `BlockwiseChannel` main theorem (the main publish target).
-* `GeneralDMC.capacity_lim_nonneg_of_memoryless` — nonnegativity in the
-  memoryless case (direct from the equality + `capacity_nonneg`).
-* `GeneralDMC.capacity_lim_monotone_in_n_of_memoryless` — the per-letter
-  sequence `(capacityN _ n).toReal / n` is monotone in `n` for memoryless
-  channels (in fact eventually constant).
-* `GeneralDMC.capacity_lim_pass_through_of_eventually_const` — monotonicity
-  pass-through: if the per-letter sequence is eventually equal to
-  some constant `c`, then `capacity_lim = c`.
+* `GeneralDMC.capacity_lim_pass_through_of_eventually_const` — if the
+  per-letter sequence is eventually equal to some constant `c`, then
+  `capacity_lim = c`.
 
-## Design
+## Implementation notes
 
 This file is intentionally signature-stable: it does not redefine
 `BlockwiseChannel`, `capacityN`, or `capacity_lim`, and adds no new
-mathematical content beyond statement-level pass-through. The four
-publish surfaces (`capacity_lim_exists`,
-`capacity_lim_nonneg`, `capacity_lim_monotone_in_n`,
-`capacity_lim_eq_capacity_of_memoryless`) are split into a concrete
-memoryless flavour (discharged 0-sorry from `BlockwiseChannel`) and a
-general hypothesis-form flavour (limit-existence / monotonicity taken
-as an explicit argument).
+mathematical content beyond statement-level pass-through.
 
 ## References
 
@@ -93,10 +83,10 @@ This is the sequence whose `lim_{n→∞}` defines `capacity_lim`. -/
 noncomputable def capacityRate (W : BlockwiseChannel α β) (n : ℕ) : ℝ :=
   (W.capacityN n).toReal / n
 
-/-! ## Memoryless concrete flavour
+/-! ## Memoryless concrete flavor
 
-Pass-through of `BlockwiseChannel.capacity_lim_eq_capacity_of_memoryless` plus
-its three immediate corollaries (existence, nonnegativity, monotonicity).
+Pass-through of `ChannelCoding.capacity_lim_eq_capacity_of_memoryless` and
+the eventually-constant per-letter rate it rests on.
 -/
 
 section Memoryless
@@ -108,9 +98,9 @@ variable
     [MeasurableSingletonClass β] [StandardBorelSpace β]
 
 omit [DecidableEq α] [DecidableEq β] in
-/-- For memoryless `W`, the per-letter capacity sequence is **eventually
-constant** equal to `capacity W`. This is the workhorse used by all three
-memoryless-flavour corollaries below. -/
+/-- For memoryless `W`, the per-letter capacity sequence is eventually
+constant equal to `capacity W`. This is the workhorse behind
+`capacity_lim_tendsto_of_memoryless` below. -/
 @[entry_point]
 theorem capacityRate_ofMemoryless_eventually_const
     (W : ChannelCoding.Channel α β) [IsMarkovKernel W] :
@@ -141,7 +131,7 @@ theorem capacity_lim_tendsto_of_memoryless
 omit [DecidableEq α] [DecidableEq β] in
 /-- Main bridge: for memoryless `W`, the general DMC
 limit-form capacity coincides with the single-letter capacity. Alias of
-`BlockwiseChannel.capacity_lim_eq_capacity_of_memoryless`. -/
+`ChannelCoding.capacity_lim_eq_capacity_of_memoryless`. -/
 @[entry_point]
 theorem capacity_lim_eq_capacity_of_memoryless
     (W : ChannelCoding.Channel α β) [IsMarkovKernel W] :
@@ -150,12 +140,11 @@ theorem capacity_lim_eq_capacity_of_memoryless
 
 end Memoryless
 
-/-! ## General hypothesis-form flavour
+/-! ## General hypothesis-form flavor
 
-For non-memoryless channels, limit existence and monotonicity are taken as
-explicit hypotheses. These versions are
-intentionally minimal pass-through wrappers around `Subadditive.tendsto_lim`
-and `Filter.Tendsto.limUnder_eq` — no new mathematical content; the goal is
+For non-memoryless channels the limiting behavior of the per-letter rate is taken
+as an explicit hypothesis. The wrapper below is a minimal pass-through around
+`Filter.Tendsto.limUnder_eq` — no new mathematical content; the goal is
 to publish a stable downstream-facing API.
 -/
 
@@ -163,9 +152,9 @@ section General
 
 variable (W : BlockwiseChannel α β)
 
-/-- Pass-through monotonicity: if the per-letter capacity rate is eventually
-equal to a constant `c`, then `capacity_lim W = c`. Allows downstream code to
-state monotonicity hypotheses and feed them through. -/
+/-- If the per-letter capacity rate of `W` is eventually equal to a constant `c`,
+then `capacity_lim W = c`. This lets downstream code state the limiting behavior of
+the per-letter sequence as a hypothesis and feed it through. -/
 @[entry_point]
 theorem capacity_lim_pass_through_of_eventually_const
     {c : ℝ}

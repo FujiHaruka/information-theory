@@ -42,8 +42,8 @@ derive the entropy power inequality.
 The Stam-to-EPI bridge (Cover–Thomas, Csiszár-style coupling) enters as
 follows:
 - The Stam inequality is received as an `IsStamInequalityHyp X Y P` argument.
-- de Bruijn integration uses `IsDeBruijnIntegrationHyp` and
-  `FisherInfo.deBruijn_identity_v2_gaussian` for the Gaussian case.
+- de Bruijn enters per-time as `FisherInfo.deBruijn_identity_v2_gaussian`, which
+  `bounded_T_ftc_gaussian` integrates over `(0, T)` in the Gaussian case.
 - The Stam-to-EPI coupling is not a field of the pipeline: consumers supply
   `IsStamToEPIBridgeHyp` separately (`epi_via_stam`). The Gaussian saturation
   case needs no bridge at all (`entropy_power_inequality_gaussian`).
@@ -407,8 +407,7 @@ noncomputable def isDeBruijnTailHyp_of_gaussian
 
 The de Bruijn integration identity holds for Gaussian `X` on `(0, T)` as a
 direct consequence of Mathlib's bounded FTC and the family lift above. Stated as a
-standalone identity (not via `IsDeBruijnIntegrationHyp`, which carries the
-`∃ fPath` shape). -/
+standalone identity, with the Gaussian density path in closed form. -/
 
 /-- The heat-flow entropy derivative (Gaussian, on an `s > 0` neighborhood).
 
@@ -529,9 +528,8 @@ the bounded interval `(0, T)` equals the path integral of `1/(2(v+t))`:
 `h(N(m, v+T)) - h(N(m, v))
     = ∫_(0, T) 1/(2(v+t)) dt`,
 
-stated as a direct equality (bypassing the `IsDeBruijnIntegrationHyp X Z P T`
-predicate). The integration uses Mathlib `intervalIntegral` and is converted to
-`Set.Ioo`-form for downstream consumption.
+stated as a direct equality in the Gaussian closed form. The integration uses Mathlib
+`intervalIntegral` and is converted to `Set.Ioo`-form for downstream consumption.
 @audit:ok -/
 @[entry_point]
 theorem bounded_T_ftc_gaussian

@@ -39,7 +39,6 @@ import InformationTheory.Shannon.SlepianWolf.FullRateRegion
 import InformationTheory.Shannon.Pi
 import InformationTheory.Shannon.Han.Basic
 import InformationTheory.Shannon.Han.D
-import InformationTheory.Shannon.Han.DAverage
 import InformationTheory.Shannon.Han.DShearer
 import InformationTheory.Shannon.LoomisWhitney
 import InformationTheory.Shannon.BrascampLieb
@@ -194,7 +193,6 @@ import InformationTheory.Shannon.Huffman.Optimality
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.Chernoff.Converse
-import InformationTheory.Shannon.Chernoff.NLetterZSum
 import InformationTheory.Shannon.Cramer.Cramer
 import InformationTheory.Shannon.Cramer.TiltedIID
 import InformationTheory.Shannon.Cramer.TiltedLLN
@@ -318,7 +316,6 @@ import InformationTheory.Shannon.EPI.Stam.Standalone
 import InformationTheory.Shannon.FisherInfo.DeBruijnHeatFlow
 import InformationTheory.Shannon.FisherInfo.DeBruijnStandalone
 import InformationTheory.Shannon.LZ78.ConverseAsymptotic
-import InformationTheory.Shannon.GeneralDMC.Extension
 import InformationTheory.Shannon.AWGN.BindConvolution
 import InformationTheory.Shannon.EPI.Stam.ConditionalCauchySchwarz
 import InformationTheory.Shannon.StamGaussianBound
@@ -347,7 +344,6 @@ import InformationTheory.Shannon.LZ78.ZivThreading
 import InformationTheory.Shannon.LZ78.ZivAchievabilityComposition
 import InformationTheory.Shannon.WynerZiv.ObjectiveConvexity
 import InformationTheory.Shannon.GaussianPDFVarianceDerivative
-import InformationTheory.Shannon.FisherDeBruijnGaussian
 import InformationTheory.Shannon.Hoeffding.MinimizerAttainment
 import InformationTheory.Shannon.Hoeffding.MinimizerExistence
 import InformationTheory.Shannon.Hoeffding.TradeoffExp
@@ -431,3 +427,4 @@ import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit.Limit
 import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit
 import InformationTheory.Shannon.EPI.Unconditional.DispatchFull
 import InformationTheory.Shannon.EPI.Stam.SupplyTwoTime
+import InformationTheory.Shannon.EPI.Stam.BridgeDischarge
