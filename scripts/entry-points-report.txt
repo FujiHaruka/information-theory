@@ -1,6 +1,6 @@
 ==== InformationTheory 証明済み主定理一覧 (@[entry_point], sorry-free) ====
-Entry points total : 736
-  proven           : 736
+Entry points total : 788
+  proven           : 788
   staged           : 0
 
 ==================== PROVEN (sorry-free) ====================
@@ -143,9 +143,9 @@ Entry points total : 736
   awgnCapacity_le_gaussian
 
 --- Shannon.AWGN.BindConvolution  [InformationTheory.Shannon.AWGN] (3) ---
-  awgn_capacity_closed_form_of_maxent_bindconv_discharged
+  awgn_capacity_closed_form_of_maxent_miDecomp
   bind_eq_conv_of_translation_kernel
-  isAwgnBindEqConv_discharged
+  isAwgnBindEqConv
 
 --- Shannon.AWGN.CapacityConverseMaxent  [InformationTheory.Shannon.AWGN] (7) ---
   awgn_capacity_closed_form_genuine
@@ -157,19 +157,19 @@ Entry points total : 736
   output_variance_le
 
 --- Shannon.AWGN.ChannelMeasurability  [InformationTheory.Shannon.AWGN] (3) ---
-  awgn_capacity_closed_form_F1_discharged
-  awgn_theorem_F1_discharged
+  awgn_capacity_closed_form_of_isAwgnChannelMeasurable
+  awgn_channel_coding_theorem_of_isAwgnChannelMeasurable
   isAwgnChannelMeasurable
 
 --- Shannon.AWGN.Converse  [InformationTheory.Shannon.AWGN] (1) ---
   awgn_converse
 
 --- Shannon.AWGN.ConverseCapacityBound  [InformationTheory.Shannon.AWGN] (7) ---
-  awgn_converse_F3_discharged
+  awgn_converse_of_perLetterMI_eq_diffEntropy_sub
+  awgn_converse_of_perLetterMI_eq_diffEntropy_sub_of_neZero
   awgn_per_letter_input_power_avg
   awgn_per_letter_mi_le_log_var
   awgn_sum_per_letter_mi_le_n_capacity
-  isAwgnConverseFeasible_discharger
   perLetterInputSecondMoment  [def]
   sum_log_one_add_le_n_log_one_add_avg
 
@@ -198,7 +198,7 @@ Entry points total : 736
   AWGNJointlyTypicalSet_zero
 
 --- Shannon.AWGN.MIBridge  [InformationTheory.Shannon.AWGN] (4) ---
-  awgn_capacity_closed_form_F2_discharged
+  awgn_capacity_closed_form_of_primitives
   awgn_cond_entropy_eq_noise_entropy_of_const
   awgn_mi_bridge_of_primitives
   awgn_mi_gaussian_closed_form_of_primitives
@@ -259,6 +259,68 @@ Entry points total : 736
   brascamp_lieb_finset
   hypercube_product_projection_bound
 
+--- Shannon.BroadcastChannel.Classes  [InformationTheory.Shannon.BroadcastChannel] (4) ---
+  IsBCDegraded.isBCLessNoisy
+  IsBCLessNoisy.isBCMoreCapable
+  IsBCSemiDeterministic.exists_prob_real_singleton_eq_zero_of_one_lt_card
+  bc_lessNoisy_infoJoint_ge
+
+--- Shannon.BroadcastChannel.DegradedFromCode  [InformationTheory.Shannon.BroadcastChannel] (1) ---
+  bc_degraded_converse_from_code
+
+--- Shannon.BroadcastChannel.Marton.Achievability  [InformationTheory.Shannon.BroadcastChannel.Marton] (1) ---
+  marton_achievability
+
+--- Shannon.BroadcastChannel.Marton.Covering  [InformationTheory.Shannon.BroadcastChannel.Marton] (2) ---
+  marton_mutual_covering
+  marton_strong_mutual_covering
+
+--- Shannon.BroadcastChannel.MartonFullSupport  [InformationTheory.Shannon.BroadcastChannel.Marton] (2) ---
+  martonRegionUnion_subset_capacity
+  marton_region_subset_capacity_of_channel_fullSupport
+
+--- Shannon.BroadcastChannel.MartonUnion  [InformationTheory.Shannon.BroadcastChannel.Marton] (2) ---
+  martonRegionUnion_subset_uv
+  martonRegion_subset_union
+
+--- Shannon.BroadcastChannel.Operational  [InformationTheory.Shannon.BroadcastChannel.Marton] (1) ---
+  marton_region_subset_capacity
+
+--- Shannon.BroadcastChannel.OuterBound  [InformationTheory.Shannon.BroadcastChannel] (1) ---
+  bc_capacity_subset_coop
+
+--- Shannon.BroadcastChannel.OuterBoundUV  [InformationTheory.Shannon.BroadcastChannel] (1) ---
+  bc_uv_converse
+
+--- Shannon.BroadcastChannel.OuterBoundUV.Assembly  [InformationTheory.Shannon.BroadcastChannel] (1) ---
+  bc_capacity_subset_uv
+
+--- Shannon.BroadcastChannel.OuterBoundUV.Bridge  [InformationTheory.Shannon.BroadcastChannel] (1) ---
+  bc_uv_converse_from_code
+
+--- Shannon.BroadcastChannel.OuterBoundUV.MartonBridge  [InformationTheory.Shannon.BroadcastChannel.Marton] (3) ---
+  martonJointDistribution_isUVChannelLaw
+  martonUVLaw_isUVChannelLaw
+  marton_region_subset_uv
+
+--- Shannon.BroadcastChannel.Superposition.Assembly  [InformationTheory.Shannon.BroadcastChannel] (2) ---
+  bc_lessNoisy_capacity_eq_uv
+  bc_lessNoisy_uv_subset_superposition
+
+--- Shannon.BroadcastChannel.Superposition.FullSupport  [InformationTheory.Shannon.BroadcastChannel] (2) ---
+  exists_fullSupport_bcInfo_ge
+  exists_fullSupport_bcInfo_ge_of_lessNoisy_of_isUVChannelLaw
+
+--- Shannon.BroadcastChannel.Superposition.MoreCapable  [InformationTheory.Shannon.BroadcastChannel] (3) ---
+  bc_degraded_capacity_eq_uv
+  bc_moreCapable_capacity_eq_uv
+  bc_moreCapable_uv_subset_superposition
+
+--- Shannon.BroadcastChannel.Superposition.Region  [InformationTheory.Shannon.BroadcastChannel] (3) ---
+  bcSuperpositionRegionNoSumRate_subset_capacity
+  bcSuperpositionRegionSumRate_subset_capacity
+  bc_lessNoisy_achievability
+
 --- Shannon.ChannelCoding.Achievability.Main  [InformationTheory.Shannon.ChannelCoding] (1) ---
   channel_coding_achievability
 
@@ -307,7 +369,7 @@ Entry points total : 736
   errorProbAt_smooth_TV
 
 --- Shannon.ChannelCoding.ShannonTheoremMaxError  [InformationTheory.Shannon.ChannelCoding] (1) ---
-  shannon_noisy_channel_coding_theorem_general_full
+  shannon_noisy_channel_coding_theorem_general
 
 --- Shannon.ChannelCoding.ShannonTheoremMaxError.SeedLemmas  [InformationTheory.Shannon.ChannelCoding] (1) ---
   exists_smooth_capacity_gt_uniform
@@ -316,7 +378,8 @@ Entry points total : 736
   channelCoding_average_success_le
   channelCoding_per_codeword_decomposition
 
---- Shannon.ChannelCoding.StrongConverseAsymptotic  [InformationTheory.Shannon.ChannelCoding] (1) ---
+--- Shannon.ChannelCoding.StrongConverseAsymptotic  [InformationTheory.Shannon.ChannelCoding] (2) ---
+  channelCoding_operational_rate_le_capacity
   channelCoding_strong_converse_asymptotic
 
 --- Shannon.Chernoff.Basic  [InformationTheory.Shannon.Chernoff] (9) ---
@@ -354,7 +417,7 @@ Entry points total : 736
 --- Shannon.ConditionalMethodOfTypes.Core  [InformationTheory.Shannon] (1) ---
   conditionalTypeClass_xMarginal
 
---- Shannon.ConditionalMethodOfTypes.Mass  [InformationTheory.Shannon] (1) ---
+--- Shannon.ConditionalMethodOfTypes.Mass.SliceMass  [InformationTheory.Shannon] (1) ---
   conditionalStronglyTypicalSlice_mass_ge
 
 --- Shannon.Cramer.Cramer  [InformationTheory.Shannon.Cramer] (4) ---
@@ -364,12 +427,12 @@ Entry points total : 736
   klDiv_tilted_eq
 
 --- Shannon.Cramer.InfinitePiTiltedChangeOfMeasure  [InformationTheory.Shannon.Cramer.TiltedLLN] (3) ---
-  cramer_lower_phaseC_residual_discharge
+  cramer_lower_infinitePi'
   pi_tilted_sum_eq_pi_tilted_fintype
   tiltedWindow_eventually_large_of_cgfDeriv_interior
 
 --- Shannon.Cramer.LC2PhaseC  [InformationTheory.Shannon.Cramer.TiltedLLN] (2) ---
-  cramer_tendsto_phaseC_partial_discharge
+  cramer_tendsto_infinitePi
   isMeasureInfinitePiTiltedEq_iff
 
 --- Shannon.Cramer.TiltedIID  [InformationTheory.Shannon.Cramer.TiltedLLN] (1) ---
@@ -453,7 +516,7 @@ Entry points total : 736
   csiszarLogRatioGap_at_one_eq_zero
   csiszarLogRatioGap_at_zero
   differentialEntropy_gaussianConvolution_of_gaussian
-  entropy_power_inequality_gaussian_full
+  entropy_power_inequality_gaussian
   gaussianConvolution_at_zero
   hasDerivAt_differentialEntropy_heat_flow_gaussian
   integrated_pipeline_roundtrip
@@ -480,14 +543,14 @@ Entry points total : 736
 
 --- Shannon.EPI.Stam.ConditionalCauchySchwarz  [InformationTheory.Shannon.StamConditionalCauchySchwarz] (16) ---
   isStamCauchySchwarz_of_condExpCSHyp
-  isStamCauchySchwarz_of_step12
+  isStamCauchySchwarz_of_scoreConvHyp_of_condExpCSHyp
   isStamCondExpCSHyp_congr
   isStamCondExpCSHyp_symm
-  isStamInequalityHyp_of_step12
+  isStamInequalityHyp_of_scoreConvHyp_of_condExpCSHyp
   isStamScoreConvHyp_intro
   isStamScoreConvHyp_of_gaussian
   stamCauchySchwarzOptimal_of_condExpCSHyp
-  stamCauchySchwarzOptimal_of_step12
+  stamCauchySchwarzOptimal_of_scoreConvHyp_of_condExpCSHyp
   stam_convex_cs
   stam_convex_cs_at_one
   stam_convex_cs_at_zero
@@ -499,12 +562,12 @@ Entry points total : 736
 --- Shannon.EPI.Stam.DeBruijnConclusion  [InformationTheory.Shannon.EPIStamDeBruijnConclusion] (6) ---
   deBruijn_deriv_nonneg
   deBruijn_gap_deriv_nonneg_gaussian
-  entropy_power_inequality_gaussian_full'
-  isEPIGapMonotoneHyp_discharge
+  entropy_power_inequality_gaussian'
+  isEPIGapMonotoneHyp
   isEPIGapMonotoneHyp_of_deBruijnV2
   isStamInequalityHyp_of_primitives
 
---- Shannon.EPI.Stam.EPIBridge  [InformationTheory.Shannon.StamEPIBridge] (8) ---
+--- Shannon.EPI.Stam.EPIBridge  [InformationTheory.Shannon.StamEPIBridge] (7) ---
   entropyPower_gaussian_sum_eq
   epi_via_stam
   epi_via_stam_four_arg
@@ -512,11 +575,10 @@ Entry points total : 736
   epi_via_stam_symm
   epi_via_stam_three_arg
   epi_via_stam_three_arg_normalized
-  isDeBruijnIntegrationHyp_holds
 
 --- Shannon.EPI.Stam.FisherCoupling  [InformationTheory.Shannon.StamFisherCoupling] (4) ---
-  epi_via_stam_step3_gaussian
-  isStamInequalityHyp_via_step3
+  entropyPower_add_ge_of_gaussian
+  isStamInequalityHyp_of_indepFun
   stam_coupling_saturates
   stam_optimal_lambda_mem_unit
 
@@ -542,7 +604,7 @@ Entry points total : 736
   entropy_power_inequality_of_ac
 
 --- Shannon.EPI.Unconditional.DispatchFull  [InformationTheory.Shannon] (1) ---
-  entropyPowerExt_add_ge_unconditional
+  entropyPowerExt_add_ge
 
 --- Shannon.Entropy  [InformationTheory.Shannon] (4) ---
   condEntropy_le_condEntropy_of_pair
@@ -745,6 +807,37 @@ Entry points total : 736
 --- Shannon.KLDivContinuous  [InformationTheory.Shannon] (1) ---
   klDivSumForm_ofVec_continuous
 
+--- Shannon.Kolmogorov.EntropyRate  [InformationTheory.Kolmogorov] (1) ---
+  kolmogorov_entropy_rate
+
+--- Shannon.Kolmogorov.Incompressible  [InformationTheory.Kolmogorov] (2) ---
+  incompressible_freq_near_half
+  incompressible_seq_freq_tendsto_half
+
+--- Shannon.Kolmogorov.Levin  [InformationTheory.Kolmogorov] (1) ---
+  prefixComplexity_le_two_mul_neg_logb_universalProb
+
+--- Shannon.Kolmogorov.Noncomputable  [InformationTheory.Kolmogorov] (2) ---
+  complexity_not_computable
+  condComplexity_not_computable
+
+--- Shannon.Kolmogorov.Omega  [InformationTheory.Kolmogorov] (2) ---
+  chaitinOmega_le_one
+  prefixComplexity_not_computable
+
+--- Shannon.Kolmogorov.OmegaNoncomputable  [InformationTheory.Kolmogorov] (1) ---
+  chaitinOmega_not_computable
+
+--- Shannon.Kolmogorov.PrefixComputability  [InformationTheory.Kolmogorov] (1) ---
+  prefixUniversalEval_dom_not_computablePred
+
+--- Shannon.Kolmogorov.SufficientStatistic  [InformationTheory.Kolmogorov] (2) ---
+  mdlComplexity_sub_prefixComplexity_le
+  prefixComplexity_le_twoPartLength
+
+--- Shannon.Kolmogorov.UniversalProbability  [InformationTheory.Kolmogorov] (1) ---
+  universalProb_ge_two_pow_neg_prefixComplexity
+
 --- Shannon.LZ78.AsymptoticOptimality.EncodingLength  [InformationTheory.Shannon] (5) ---
   IsLZ78EncodingLengthBoundPassthrough.canonical
   IsLZ78EncodingLengthBoundPassthrough.mono
@@ -855,7 +948,7 @@ Entry points total : 736
   det_rpow_le_arith_mean_eigenvalues
   minkowskiDeterminantInequality
 
---- Shannon.MultipleAccess.Achievability  [InformationTheory.Shannon.MAC] (1) ---
+--- Shannon.MultipleAccess.Achievability.RandomCoding  [InformationTheory.Shannon.MAC] (1) ---
   mac_achievability
 
 --- Shannon.MultipleAccess.AchievabilityCore  [InformationTheory.Shannon.MAC] (3) ---
@@ -884,7 +977,7 @@ Entry points total : 736
   mac_achievability_region
   mac_achievability_region_allprob
 
---- Shannon.MultipleAccess.TimeSharingConverse  [InformationTheory.Shannon.MAC] (1) ---
+--- Shannon.MultipleAccess.TimeSharingConverse.Assembly  [InformationTheory.Shannon.MAC] (1) ---
   mac_timesharing_capacity_region
 
 --- Shannon.MultivariateDiffEntropy  [InformationTheory.Shannon] (3) ---
@@ -934,6 +1027,26 @@ Entry points total : 736
   jointEntropySubset_empty
   jointEntropySubset_mono
   jointEntropySubset_submodular
+
+--- Shannon.Portfolio.Basic  [InformationTheory.Shannon.Portfolio] (4) ---
+  competitive_optimality
+  growthRate_concaveOn
+  kuhnTucker_of_logOptimal
+  logOptimal_of_kuhnTucker
+
+--- Shannon.Portfolio.OperationalSequences  [InformationTheory.Shannon.Portfolio] (2) ---
+  seqLogWealth_asymptotically_optimal
+  seqLogWealth_div_tendsto_growthRate
+
+--- Shannon.Portfolio.SideInformation  [InformationTheory.Shannon.Portfolio] (1) ---
+  sideInfo_growthRate_increment_le_mutualInfo
+
+--- Shannon.Portfolio.StationaryMarket  [InformationTheory.Shannon.Portfolio] (2) ---
+  seqLogWealth_div_tendsto_stationary
+  stationaryLogReturn_integral_le_of_kuhnTucker
+
+--- Shannon.Portfolio.Universal  [InformationTheory.Shannon.Portfolio] (1) ---
+  universal_portfolio_regret_tendsto_zero
 
 --- Shannon.RateDistortion.Achievability  [InformationTheory.Shannon] (3) ---
   LossyCode.expectedBlockDistortion_nonneg
@@ -1052,9 +1165,8 @@ Entry points total : 736
   swTrivialDecoder  [def]
   swTrivialEncoderY  [def]
 
---- Shannon.SlepianWolf.Basic  [InformationTheory.Shannon] (6) ---
+--- Shannon.SlepianWolf.Basic  [InformationTheory.Shannon] (5) ---
   entropy_ge_condEntropy
-  entropy_le_log_card
   fano_inequality_with_side_info
   slepian_wolf_converse_X
   slepian_wolf_converse_Y
@@ -1147,10 +1259,10 @@ Entry points total : 736
 
 --- Shannon.WynerZiv.ConditionalEntropyConvexity  [InformationTheory.Shannon] (3) ---
   wynerZivCondEntDiffConvex_holds
-  wynerZivRateFactorizable_convex_in_D_unconditional
+  wynerZivRateFactorizable_convex_in_D
   wzMarginalXU_smul_add
 
---- Shannon.WynerZiv.Converse  [InformationTheory.Shannon] (1) ---
+--- Shannon.WynerZiv.Converse.Headline  [InformationTheory.Shannon] (1) ---
   wyner_ziv_converse
 
 --- Shannon.WynerZiv.FactorizableRate  [InformationTheory.Shannon] (5) ---
