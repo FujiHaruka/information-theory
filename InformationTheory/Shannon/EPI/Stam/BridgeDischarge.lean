@@ -1,4 +1,3 @@
-import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EPI.Stam.EPIBridge
 import InformationTheory.Shannon.EPI.Unconditional.Dispatch
 
@@ -37,7 +36,6 @@ hypothesis here is a regularity precondition (measurability, independence, absol
 finite differential entropy) inherited verbatim from that route.
 
 @audit:ok -/
-@[entry_point]
 theorem isStamToEPIBridgeHyp_of_ac
     {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

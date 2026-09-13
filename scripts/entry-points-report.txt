@@ -1,6 +1,6 @@
 ==== InformationTheory 証明済み主定理一覧 (@[entry_point], sorry-free) ====
-Entry points total : 789
-  proven           : 789
+Entry points total : 783
+  proven           : 783
   staged           : 0
 
 ==================== PROVEN (sorry-free) ====================
@@ -541,9 +541,6 @@ Entry points total : 789
 --- Shannon.EPI.ScoreCrossTermOrth  [InformationTheory.Shannon.EPIScoreCrossTermOrth] (1) ---
   score_cross_term_eq_zero
 
---- Shannon.EPI.Stam.BridgeDischarge  [InformationTheory.Shannon.StamEPIBridge] (1) ---
-  isStamToEPIBridgeHyp_of_ac
-
 --- Shannon.EPI.Stam.ConditionalCauchySchwarz  [InformationTheory.Shannon.StamConditionalCauchySchwarz] (16) ---
   isStamCauchySchwarz_of_condExpCSHyp
   isStamCauchySchwarz_of_scoreConvHyp_of_condExpCSHyp
@@ -570,14 +567,9 @@ Entry points total : 789
   isEPIGapMonotoneHyp_of_deBruijnV2
   isStamInequalityHyp_of_primitives
 
---- Shannon.EPI.Stam.EPIBridge  [InformationTheory.Shannon.StamEPIBridge] (7) ---
+--- Shannon.EPI.Stam.EPIBridge  [InformationTheory.Shannon.StamEPIBridge] (2) ---
   entropyPower_gaussian_sum_eq
-  epi_via_stam
-  epi_via_stam_four_arg
   epi_via_stam_gaussian
-  epi_via_stam_symm
-  epi_via_stam_three_arg
-  epi_via_stam_three_arg_normalized
 
 --- Shannon.EPI.Stam.FisherCoupling  [InformationTheory.Shannon.StamFisherCoupling] (4) ---
   entropyPower_add_ge_of_gaussian

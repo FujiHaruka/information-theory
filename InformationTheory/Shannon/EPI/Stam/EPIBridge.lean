@@ -196,7 +196,6 @@ body is one modus ponens; for a general pair `X, Y` neither producer applies. Th
 inequality that needs only measurability and independence is `entropyPowerExt_add_ge`.
 
 @audit:retract-candidate(load-bearing-predicate) -/
-@[entry_point]
 theorem epi_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω}
@@ -248,7 +247,6 @@ theorem epi_via_stam_gaussian
 it does there.
 
 @audit:retract-candidate(load-bearing-predicate-empty-consumers) -/
-@[entry_point]
 theorem epi_via_stam_symm
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω}
@@ -277,7 +275,6 @@ pipeline. Both pairwise entropy power inequalities come from the bridge hypothes
 `epi_via_stam`); only the chaining happens here.
 
 @audit:retract-candidate(load-bearing-predicate) -/
-@[entry_point]
 theorem epi_via_stam_three_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -387,7 +384,6 @@ pipeline. All three pairwise entropy power inequalities come from the bridge hyp
 `epi_via_stam`); only the chaining happens here.
 
 @audit:retract-candidate(load-bearing-predicate-empty-consumers) -/
-@[entry_point]
 theorem epi_via_stam_four_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -442,7 +438,6 @@ divides the conclusion of `epi_via_stam_three_arg` by a positive constant, so th
 hypotheses still carry the inequality.
 
 @audit:retract-candidate(load-bearing-predicate-empty-consumers) -/
-@[entry_point]
 theorem epi_via_stam_three_arg_normalized
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
