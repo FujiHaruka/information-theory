@@ -427,3 +427,4 @@ import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit.Limit
 import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit
 import InformationTheory.Shannon.EPI.Unconditional.DispatchFull
 import InformationTheory.Shannon.EPI.Stam.SupplyTwoTime
+import InformationTheory.Shannon.EPI.Stam.BridgeDischarge

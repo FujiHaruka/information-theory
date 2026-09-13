@@ -1,6 +1,6 @@
 ==== InformationTheory 証明済み主定理一覧 (@[entry_point], sorry-free) ====
-Entry points total : 788
-  proven           : 788
+Entry points total : 789
+  proven           : 789
   staged           : 0
 
 ==================== PROVEN (sorry-free) ====================
@@ -540,6 +540,9 @@ Entry points total : 788
 
 --- Shannon.EPI.ScoreCrossTermOrth  [InformationTheory.Shannon.EPIScoreCrossTermOrth] (1) ---
   score_cross_term_eq_zero
+
+--- Shannon.EPI.Stam.BridgeDischarge  [InformationTheory.Shannon.StamEPIBridge] (1) ---
+  isStamToEPIBridgeHyp_of_ac
 
 --- Shannon.EPI.Stam.ConditionalCauchySchwarz  [InformationTheory.Shannon.StamConditionalCauchySchwarz] (16) ---
   isStamCauchySchwarz_of_condExpCSHyp
