@@ -112,6 +112,10 @@ $$
 形式化は本文とは別ルートをとり，条件付き相互情報量の非負性からこの定理を導いている（本文はその概念より前にこの定理を置くため，凹性から直接組み立てた）．結論の定理は同一である．
 :::
 
+::: formalized
+`condEntropy_le_condEntropy_of_pair` (`InformationTheory/Shannon/Entropy.lean`)
+:::
+
 ## 条件を一つ抱えたままのチェイン則
 
 定理 1.2.3 は，後の節で「何かを知ったうえで」使うことが多い．そのたびに導出し直さずに済むよう，条件付きの形をここで立てておく．
@@ -125,9 +129,5 @@ $$
 
 ::: proof
 $Y = y$ を固定すると，その世界での分布に定理 1.2.3 を当てて$H(X,Z\mid Y=y) = H(Z\mid Y=y) + H(X\mid Z, Y=y)$ を得る．両辺に $p(y)$ を掛けて$y$ について和をとれば，定義 1.2.2 の読み方（節の冒頭で断った，片方を固定した量の意味）によりそれぞれ $H(X,Z\mid Y)$，$H(Z\mid Y)$，$H(X\mid Z,Y)$ になる．
-:::
-
-::: formalized
-`condEntropy_le_condEntropy_of_pair` (`InformationTheory/Shannon/Entropy.lean`)
 :::
 
