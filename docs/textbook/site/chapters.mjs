@@ -202,4 +202,14 @@ export const chapters = [
       { slug: 'ch15-08', num: '15.8', title: '万能ポートフォリオ', src: 'ch15/08-universal-portfolio.md' },
     ],
   },
+  {
+    slug: 'ch16',
+    num: '第16章',
+    title: 'エントロピー不等式',
+    sections: [
+      { slug: 'ch16-01', num: '16.1', title: '部分集合のエントロピー', src: 'ch16/01-subset-entropy.md' },
+      { slug: 'ch16-02', num: '16.2', title: 'Han の不等式', src: 'ch16/02-han.md' },
+      { slug: 'ch16-03', num: '16.3', title: 'Shearer の不等式', src: 'ch16/03-shearer.md' },
+    ],
+  },
 ];
