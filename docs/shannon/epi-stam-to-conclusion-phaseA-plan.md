@@ -1,37 +1,50 @@
 # EPI Stam → conclusion Phase A: Stam + de Bruijn 合流 (Csiszár scaling) サブ計画
 
-**Status**: CLOSED ✅ — superseded by the parent's 3-noise-lift / two-time route (`EPIDensityForm.lean`); this sub-plan records the now-abandoned Csiszár-scaling route (Phase A COMPLETED 2026-05-27). Ch.17 EPI family is done (general EPI unconditional closed 2026-06-08).
+**Status**: CLOSED ✅ / 履歴記録 — 本 plan の Csiszár-scaling route は放棄され、親は 3-noise lift + two-time route に載せ替え済。当時「完了」とした成果物は現在 HEAD にない (下の ⚠ ブロック)。一般 EPI 自体は別ルートで無条件に閉じている (`entropyPowerExt_add_ge`)。
 
-> **⚠ SUPERSEDED (2026-06-09) — 本 plan の Csiszár-scaling route は親の現 Phase A route ではない**:
-> 本 sub-plan が 2026-05-27 に COMPLETED した A-1〜A-V は **difference-form / Csiszár-scaling route 固有**で、
-> 親 `epi-stam-to-conclusion-plan.md` は判断ログ #5 で **3-noise lift + two-time route** (`EPIDensityForm.lean`)
-> に載せ替え済 (sum-instance 𝒩(0,2) の uninhabitable 構造制約)。本 plan が A-1 で staged した richness predicate
-> **`IsStamScalingNoiseHyp` は削除済** (commit `4cd6b12`)、joint-indep は caller 側 5-tuple `iIndepFun` inline 自己導出に。
-> 本文が参照する **`IsDeBruijnIntegrationHyp` も削除済** — 非固定の `∃ fPath` 形だったため撤回され、
-> 積分形の恒等式は `FisherInfo.debruijnIntegrationIdentity_holds` (密度パス固定) に一本化。
-> 現 Phase A の実態 = 親 plan §Phase A (CLOSED 要約) を参照。本 plan は当時の Csiszár-scaling route の履歴記録。
+> **⚠ SUPERSEDED (2026-06-09) — 以降の本文全体は履歴記録であって、現在の進捗ではない**:
+> 本 sub-plan が 2026-05-27 に「A-1〜A-V 完了」とした内容は **difference-form / Csiszár-scaling route 固有**で、
+> 親 `epi-stam-to-conclusion-plan.md` は判断ログ #5 で **3-noise lift + two-time route** に載せ替え済
+> (sum-instance 𝒩(0,2) の uninhabitable 構造制約)。以下の Scope / Phase 詳細 / 撤退ライン / 判断ログは
+> 当時の route 設計をそのまま残したもので、✓ や行番号を現状の主張として読んではならない。
 >
-> **Parent**: [`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md) §Phase A (CLOSED 要約)
+> **当時の成果物は HEAD に残っていない。** 本文が名前を挙げる次は、いずれも現在 `rg` で 0 件:
+> `csiszarGap` / `csiszarGap1Source` とその補題群 (`_at_zero` / `_hasDerivAt` / `_continuousOn` /
+> `_differentiableOn_interior` / `_deriv_le_zero` / `_shape_for_sister` / `_eq_one_source_via_rescale` /
+> `_tendsto_zero_at_infinity_of_gaussian_pair` / `csiszarGap_at_one_eq_zero_of_gaussian_pair`)、
+> `heatFlowPath2` / `heatFlowPath2_law`、`derivAt_entropy_eq_half_fisher_v2`、
+> `IsStamScalingNoiseHyp` (commit `4cd6b12` で削除、joint-indep は caller 側 5-tuple `iIndepFun` inline 自己導出へ)、
+> `IsStamToEPIScalingHyp` / `isStamToEPIScalingHyp_of_stam_debruijn`、`IsStamToEPILimitHyp`、
+> `isStamToEPIBridgeHyp_of_scaling` / `isStamToEPIBridgeHyp_of_stam_debruijn`、`stamToEPIBridge_holds`、
+> `entropy_power_inequality` / `entropy_power_inequality_unconditional`、`IsStamInequalityResidual` / `IsStamToEPIBridge`。
+> **`IsDeBruijnIntegrationHyp` も削除済** — 非固定の `∃ fPath` 形だったため撤回され、
+> 積分形の恒等式は `FisherInfo.debruijnIntegrationIdentity_holds` (密度パス固定) に一本化。
+> 生存しているのは `IsStamInequalityHyp` / `IsDeBruijnRegularityHyp` / `IsStamToEPIBridgeHyp` /
+> `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` など一部だけで、file も `InformationTheory/Shannon/EPI/**` へ
+> 再編済。本文の `<file>.lean:<行>` は当時の座標であり、**在否と sorry の有無は都度 `rg` /
+> `#print axioms` で引き直す** (plan 散文は再導出の代わりにならない)。
+>
+> **Stam ⇒ EPI の現状 (cold session がここから始めるとき)**: `IsStamToEPIBridgeHyp X Y P` は定義上
+> `IsStamInequalityHyp → IsEntropyPowerInequalityHypothesis` で、後件は EPI の結論そのもの。HEAD の producer は
+> いずれも EPI を別ルートで出して Stam の前件を捨てており、**Stam ⇒ EPI の導出を実行している宣言は
+> in-tree に無い**。一般 EPI 自体は `entropyPowerExt_add_ge` (可測性と独立性のみ) として無条件に閉じている。
+> bridge wrapper 群は `@audit:retract-candidate(load-bearing-predicate)` へ格下げ + `@[entry_point]` 除去済で、
+> **この判断の SoT はコード側のタグと docstring** (`InformationTheory/Shannon/EPI/Stam/` を `rg`)。
+>
+> **Parent**: [`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md) §要点
 > **Created**: 2026-05-25 (Phase D 合流 commit `c0edbe1` 直後)
-> **Status**: **Phase A COMPLETED** (2026-05-27、A-1〜A-V 全 step) — ただし route superseded (上記)
->   - A-1 ✓ `IsStamScalingNoiseHyp` staged (commit `8e23d94`)
->   - A-0' ✓ (commit `c0edbe1`)
->   - A-2 ✓ `csiszarGap1Source_hasDerivAt`
->   - A-3 ✓ Stam reduction (`antitoneOn_of_deriv_nonpos`)
->   - A-4 ✓ rescale 持ち上げ skeleton + `isStamToEPIScalingHyp_of_stam_debruijn` (commit `d3ac59f`、3 genuine + 2 撤退 sorry、L-Concl-A-β/θ 発動)
->   - A-5 ✓ `isStamToEPIBridgeHyp_of_stam_debruijn` (commit `1bd3866`、`@audit:ok`)
->   - A-6 ✓ `entropy_power_inequality_unconditional` 案 a wrapper (commit `3db3a9e`)
->   - A-V ✓ post-merge cleanup (14 件 + 5 件 per-declaration migration)
+> **当時の作業 commit** (履歴は git 側): `c0edbe1` (A-0') / `8e23d94` (A-1) / `d3ac59f` (A-4) /
+> `1bd3866` (A-5) / `3db3a9e` (A-6)
 
 ## Position
 
-- 親 sub-plan: [`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md) Phase A
+- 親 sub-plan: [`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md) §要点 (親も CLOSED)
 - 上流入力 (Phase D 完了済): [`epi-stam-discharge-plan.md`](epi-stam-discharge-plan.md) / [`epi-debruijn-integration-phaseD-plan.md`](epi-debruijn-integration-phaseD-plan.md) (commit `c0edbe1`)
-- 下流: 主定理 `entropy_power_inequality` (`EntropyPowerInequality.lean:232`) の hypothesis-free 化 → 親 plan §Phase B / §V
+- 当時の下流目標: 主定理 `entropy_power_inequality` の hypothesis-free 化 → 親 plan §Phase B (その主定理は現在 HEAD にない)
 
 ## Motivation
 
-Phase 0 で `IsStamToEPIScalingHyp` (`EPIStamToBridge.lean:202-216`) を `∃ Z_X Z_Y, ... ∧ AntitoneOn gap (Set.Icc 0 1)` 形に refactor、Phase D で sister `csiszarGap` (`EPIL3Integration.lean:1160-1164`) が verbatim 同形で publish、`csiszarGap_shape_for_sister` (`:1279-1287`) `rfl` で接続。本 Phase A はこの 2 handoff を消費し **`AntitoneOn (csiszarGap ...) (Set.Icc 0 1)` を Stam + de Bruijn から genuine 構築**:
+Phase 0 で `IsStamToEPIScalingHyp` (`EPIStamToBridge.lean:202-216`) を `∃ Z_X Z_Y, ... ∧ AntitoneOn gap (Set.Icc 0 1)` 形に refactor、Phase D で sister `csiszarGap` (`EPIL3Integration.lean:1160-1164`) が verbatim 同形で publish、`csiszarGap_shape_for_sister` (`:1279-1287`) `rfl` で接続。本 Phase A の狙いは、この 2 handoff を消費して **`AntitoneOn (csiszarGap ...) (Set.Icc 0 1)` を Stam + de Bruijn から genuine 構築**することだった (以下 5 項はいずれも当時の計画で、現在それを実現している宣言は無い):
 
 1. path-derivative `d/ds (csiszarGap _) ≤ 0` (de Bruijn V2 + Stam)
 2. `antitoneOn_of_deriv_nonpos` で `AntitoneOn`
@@ -41,7 +54,7 @@ Phase 0 で `IsStamToEPIScalingHyp` (`EPIStamToBridge.lean:202-216`) を `∃ Z_
 
 verbatim 確認した前提コード位置: `DifferentialEntropy.lean:147` / `HeatFlowPath.lean:49-58` / `EPIStamToBridge.lean:210-216,672` / `EPIL3Integration.lean:1160-1164,1194-1215,1279-1287` / `EPIStamDischarge.lean:97-104,193-228,258-268,337-339` / `EntropyPowerInequality.lean:80,187-205,232-240,270-301`。`IsStamInequalityResidual` / `IsStamToEPIBridge` は `*Hyp` 系列と defeq (`fisherInfoOfMeasureV2_def` 経由)。
 
-## Scope (4 file、~225 行追記済)
+## Scope (当時の 4 file — いずれも現在の path ではない)
 
 | 対象 | 役割 |
 |---|---|
@@ -58,7 +71,7 @@ verbatim 確認した前提コード位置: `DifferentialEntropy.lean:147` / `He
   csiszarGap_at_*             IsDeBruijnIntegrationHyp        HasDerivAt.sub / Real.hasDerivAt_exp
   csiszarGap_shape_for_sister (両方 Phase D staged-honest)    entropy_power_inequality_gaussian_saturation
   gaussianConvolution / derivAt_entropy_eq_half_fisher_v2 (1-source 形)
-  isStamToEPIBridgeHyp_of_scaling (Phase 0 @audit:ok、IsStamToEPILimitHyp 不要)
+  isStamToEPIBridgeHyp_of_scaling (当時 Phase 0 で audit 済とされた、IsStamToEPILimitHyp 不要)
        └──────┬──────┘
               ▼
    A-0  sister 出力存在確認
@@ -82,9 +95,9 @@ verbatim 確認した前提コード位置: `DifferentialEntropy.lean:147` / `He
 
 ## 進捗
 
-すべて 2026-05-27 までに完了 (上の Status 参照)。A-4-1 / A-4-4 は撤退発火で `@residual(plan:epi-stam-to-conclusion-phaseA-A4-{continuity,rescale})` 残置 → L-Concl-A-θ / β。
-
-proof-log: `docs/shannon/proof-log-epi-stam-to-conclusion-phaseA.md` 既出。
+当時は A-1〜A-V を完了扱いとし、A-4-1 / A-4-4 のみ撤退発火で `@residual(plan:...-A4-continuity/-rescale)` を残置した
+(→ L-Concl-A-θ / β)。**その残置 sorry も担い手の宣言も、当時の proof-log も現在は存在しない** — 本 plan の slug を
+名乗る `@residual` がコードに残っていないことは `rg` で引ける。route ごと放棄されたため、closure 対象も無い。
 
 ## Phase 詳細
 
@@ -132,41 +145,38 @@ de Bruijn V2 `derivAt_entropy_eq_half_fisher_v2` (`FisherInfoV2DeBruijn.lean:245
 
 A-2-3 出力に 1-source Stam `1/J(X+Y+G) ≥ 1/J(X+G_X) + 1/J(Y+G_Y)` を harmonic-mean 形 (`J_sum ≤ J_X·J_Y/(J_X+J_Y)`) に algebraic transform、`Real.exp` 単調性 + `linarith` で reduce。Cover-Thomas eq.(17.43) Cauchy-Schwarz weight は 1-source 化により `linarith` 吸収可能性が高い (発火時のみ L-Concl-A-ζ、新規 `IsCsiszarScalingWeightHyp1Source` staged)。
 
-### A-4 — `AntitoneOn` 構成 + rescale 持ち上げ + `IsStamToEPIScalingHyp` 完成
+### A-4 — `AntitoneOn` 構成 + rescale 持ち上げ + `IsStamToEPIScalingHyp` 構成
 
-- A-4-1 `csiszarGap1Source_continuousOn` (`Set.Ici 0`、`t=0` 端点は A-0'-3 closed form) → **撤退発火** L-Concl-A-θ、`@residual(plan:epi-stam-to-conclusion-phaseA-A4-continuity)` 残置 (`EPIStamToBridge.lean:809`、`entropyPower ∘ P.map` の `√t → 0` continuity が Lebesgue-dominated-convergence machinery 要求、A-4 budget 超過)
-- A-4-2 `csiszarGap1Source_differentiableOn_interior` ✓ genuine
-- A-4-3 `antitoneOn_of_deriv_nonpos` 適用 ✓ genuine
-- A-4-4 rescale 持ち上げ (A-0'-2 経由、1-source `AntitoneOn (Set.Ici 0)` → 2-source `AntitoneOn (Set.Icc 0 1)`、`s=1` 端点は `csiszarGap_at_one_eq_zero_of_gaussian_pair`) → **撤退発火** L-Concl-A-β、`@residual(plan:epi-stam-to-conclusion-phaseA-A4-rescale)` 残置
-- A-4-5 existential bundle → `isStamToEPIScalingHyp_of_stam_debruijn` ✓ genuine
+- A-4-1 `csiszarGap1Source_continuousOn` (`Set.Ici 0`、`t=0` 端点は A-0'-3 closed form) → 撤退発火 L-Concl-A-θ (`entropyPower ∘ P.map` の `√t → 0` continuity が Lebesgue-dominated-convergence machinery 要求、A-4 budget 超過)
+- A-4-4 rescale 持ち上げ (A-0'-2 経由、1-source `AntitoneOn (Set.Ici 0)` → 2-source `AntitoneOn (Set.Icc 0 1)`、`s=1` 端点は `csiszarGap_at_one_eq_zero_of_gaussian_pair`) → 撤退発火 L-Concl-A-β
+- A-4-2 `csiszarGap1Source_differentiableOn_interior` / A-4-3 `antitoneOn_of_deriv_nonpos` 適用 / A-4-5 existential bundle → `isStamToEPIScalingHyp_of_stam_debruijn`: 当時はここまで組んだとされた (いずれも現在 HEAD になし)
 
 `antitoneOn_of_deriv_nonpos` 不在時は `antitone_iff_monotone_neg` 経由 detour (撤退ラインなし)。
 
 ### A-5 — `isStamToEPIBridgeHyp_of_stam_debruijn` (`_of_scaling` 直接呼出)
 
-設計エラー修正済: 当初 `isStamToEPILimitHyp_trivial` 構築は (a) `Z_X, Z_Y` witness では `(X+Y)` の EPI 結論を carry できず構築不能、(b) 既存 `_of_scaling` (`EPIStamToBridge.lean:672`、`@audit:ok`) が `IsStamToEPILimitHyp` 一切要求しない、で削除。A-5 は A-4 出力に `_of_scaling` を直接渡すだけ (~5-10 行)。
+設計エラー修正済: 当初 `isStamToEPILimitHyp_trivial` 構築は (a) `Z_X, Z_Y` witness では `(X+Y)` の EPI 結論を carry できず構築不能、(b) 当時 audit 済とされた既存 `_of_scaling` が `IsStamToEPILimitHyp` を一切要求しない、で削除。A-5 は A-4 出力に `_of_scaling` を直接渡すだけ (~5-10 行)。
 
 ### A-6 — 主定理 `entropy_power_inequality_unconditional` (案 a)
 
 **案 a (採用)**: 本体 `entropy_power_inequality` の signature 不変、A-5 出力を caller 注入する new wrapper `entropy_power_inequality_unconditional` を追加 (~30 行)、downstream は wrapper 経由。**案 b** (本体 signature 変更で 28 件 ripple) は親 plan §Phase B のスコープ。`IsStamInequalityResidual` / `IsStamToEPIBridge` ↔ `*Hyp` 系列の defeq は Phase D 完了 audit 確認済 (unfold で discharge)。
 
-`EPIStamDischarge.lean:337` `IsStamToEPIBridgeHyp` docstring 改訂 (`未着手` → `Discharged by isStamToEPIBridgeHyp_of_stam_debruijn`)。
+当時はあわせて `IsStamToEPIBridgeHyp` の docstring を「未着手」→「`isStamToEPIBridgeHyp_of_stam_debruijn` で
+discharge 済」に書き換えた。**現在の docstring はこれと逆のことを述べている** (producer は EPI を別ルートで出して
+Stam の前件を捨てる、と明記) → 冒頭 ⚠ ブロックの「Stam ⇒ EPI の現状」。
 
-### A-V — verify + post-merge cleanup ✓ DONE 2026-05-27
+### A-V — verify + post-merge cleanup (当時)
 
-- 4 file `lake env lean` silent (各 file の sorry warning は撤退発火由来のみ): `EPIStamToBridge.lean` (3 sorry) / `EPIStamDischarge.lean` / `EntropyPowerInequality.lean` (1 sorry: `stamToEPIBridge_holds`) / `EPIL3Integration.lean`
-- 当初予測 14 件 → 実際 per-declaration scope 拡大 (grep SoT):
-  - `EPIL3Integration.lean` §1-§11 の 10 件 + 3 件散文 → `@audit:retract-candidate(load-bearing-predicate)`
-  - §13 (Phase D) の 4 件 `@audit:suspect(epi-stam-to-conclusion-plan)` → **`@audit:ok`** (sister-consumption 確立)
-  - `EPIStamDeBruijnConclusion.lean` 4 件 → `retract-candidate`
-  - `EntropyPowerInequality.lean:405` 1 件 → `retract-candidate`
-  - `EPIStamToBridge.lean:236` `IsStamToEPILimitHyp` 1 件 → `retract-candidate` (`_h_limit` discard 確認)
-  - `EPIStamToBridge.lean:506` `csiszarGap1Source_hasDerivAt` → **`@audit:ok`** (A-2 完成、regularity precondition)
-  - **touch しない**: `EPIStamStep3Body.lean` 7 件 (Stam wall 別 plan) / `EPIStamToBridge.lean:143` `IsStamToEPIScalingHyp` (richness、sorry 残置中)
-- 独立 honesty audit: `IsStamScalingNoiseHyp` は commit `8e23d94` で audit PASS 済。L-Concl-A-ε/ζ/η 発火時のみ追加起動。
-- proof-log 書出 済。
+当時は 4 file を `lake env lean` silent にしたうえで、EPIL3Integration / EPIStamToBridge / EPIStamDischarge /
+EPIStamDeBruijnConclusion / EntropyPowerInequality の per-declaration `@audit:*` を一括書換し、うち数件を
+`@audit:ok` に上げた。**その分類はその後の独立 honesty 監査で再判定されている**ので、ここに書かれた
+`@audit:ok` / `retract-candidate` の内訳を現状として引かないこと — タグの現況はコード側が SoT
+(`InformationTheory/Shannon/EPI/` を `rg '@audit:'`)。
 
-## 撤退ライン (2026-05-27 L-Concl-A-θ 採番後、4 件 active + 1 件 resolved + 1 件 格下げ + 親 plan 継承 2 件)
+## 撤退ライン (当時の採番。slug は他文書が参照しうるので番号ごと残す)
+
+「状態」列は 2026-05-27 時点の評価であって現況ではない。route ごと放棄されたため、**ここに書かれた
+active / 発火確定はいずれも現在 closure 対象ではなく**、担い手の `@residual` もコードに残っていない。
 
 | slug | Phase | 内容 | hypothesis 例 | 状態 |
 |---|---|---|---|---|
@@ -181,46 +191,14 @@ A-2-3 出力に 1-source Stam `1/J(X+Y+G) ≥ 1/J(X+G_X) + 1/J(Y+G_Y)` を harmo
 
 **共通規律**: `Prop := True` 禁止 / `:= h` 循環禁止 / load-bearing name laundering (`_unconditional` / `_full` 命名で正当化) 禁止 / 退化定義悪用 (`Y:=0`, `Z_Y:=0` で trivially `AntitoneOn`、L-DBD-2-α 経路) 禁止。発動時 docstring に「NOT a discharge / load-bearing on <sister 由来 hypothesis>」明示。
 
-## 完了後の次フェーズへの brief 雛形 (orchestrator 用)
+## 当時の subagent brief 雛形 — 撤去済
 
-### Brief A: mathlib-inventory subagent (Phase A 着手前)
-
-新規 file: `docs/shannon/epi-stam-to-conclusion-phaseA-mathlib-inventory.md`。A-1 / A-2 / A-3 / A-4 の Mathlib 候補 API を CLAUDE.md `Subagent Inventory of Mathlib Lemmas` 規律 (file:line + 完全 signature [`[...]` verbatim] + 引数型 + 結論 form verbatim) で記録:
-
-1. A-0' 用: `entropyPower_const_mul` (rg)、`differentialEntropy_const_mul` (rg)、`Real.sqrt_div_self'` / `Real.sqrt_mul` (loogle) — 不在で L-Concl-A-η 規模見積もり
-2. A-1 用: `MeasureTheory.AtomlessProbability` (loogle)、InformationTheory `StandardNoise.lean` (rg)、`Measure.exists_indep_pair` (loogle)
-3. A-2 用: `Real.hasDerivAt_exp` / `HasDerivAt.{exp,comp,sub}` 各 signature verbatim、de Bruijn V2 `derivAt_entropy_eq_half_fisher_v2` (`FisherInfoV2DeBruijn.lean:245`)、`entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` 不在判定
-4. A-3 用: `linarith` 吸収可能性 → 不在時 `Real.inner_mul_le_norm` / `Real.add_sq_le_sq_mul_sq` (loogle)
-5. A-4 用: `antitoneOn_of_deriv_nonpos` の verbatim signature + file:line (Phase 0 inventory は `monotoneOn_of_deriv_nonneg` のみ、Mathlib `Analysis/Calculus/Deriv/MeanValue.lean`)、`convex_Ici` / `convex_Icc`、`AntitoneOn.{comp,congr}`
-
-撤退条件: 自作 >閾値で親 plan 撤退ライン (γ/ε/ζ/η) 発動。出力 200 行サマリ。
-
-### Brief B: lean-implementer subagent (Phase A 着手時、A-1〜A-6 順次)
-
-親 plan + inventory 参照、4 file (上 Scope 表) を順次実装、atomic (publish は A-6 完了後)。
-
-**Sub-bound 引数表** (CLAUDE.md `Brief content checklist` 必須):
-
-| Sub-bound | 要求 hypothesis 側 | 必要 bridge |
-|---|---|---|
-| `csiszarGap1Source` def (A-0'-1) | — | `entropyPower` 既存、`Real.sqrt` |
-| `csiszarGap_eq_one_source_via_rescale` (A-0'-2) | `s ∈ Ico 0 1` | `entropyPower_const_mul` (η)、`Real.sqrt_div`、`heatFlowPath2_law` |
-| `csiszarGap1Source_at_zero` / `_shape_for_sister` | — | `Real.sqrt_zero` / `rfl` |
-| `..._tendsto_zero_at_infinity_of_gaussian_pair` | Gaussian pair | statement-only (L-Concl-A-β) |
-| `isStamScalingNoiseHyp_of_*` (A-1) | richness side | inventory §2、staged のままが default (γ) |
-| `csiszarGap1Source_hasDerivAt` (A-2-3) | sister Phase D output × 6 (`IsDeBruijnRegularityHyp` / `IsDeBruijnIntegrationHyp` の `X`/`Y`/`X+Y` 各) | de Bruijn V2 (`:245`)、`entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` (ε) |
-| `csiszarGap1Source_deriv_le_zero` (A-3-2) | `IsStamInequalityHyp` 1-source 直接 | A-2-3 + Stam harmonic + linarith (ζ 候補) |
-| `isStamToEPIScalingHyp_of_stam_debruijn` (A-4-5) | A-1 + Phase D × 6 | A-4-3 + A-4-4 rescale |
-| `isStamToEPIBridgeHyp_of_stam_debruijn` (A-5-1) | A-4 出力単独 | `isStamToEPIBridgeHyp_of_scaling` (`:672` `@audit:ok`、`_limit` 不要) |
-| `entropy_power_inequality_unconditional` (A-6) | A-5 + Phase D 6 を caller | 主定理本体 (`:232`) 不変 |
-
-**1-source / 2-source shape 接続 caveat**: A-2/A-3/A-4-3 は 1-source (`Set.Ici 0`)、A-4-4 rescale 後は 2-source (`Set.Icc 0 1`、`csiszarGap`)、A-4-5 sister contract は 2-source verbatim、A-5-1 `_of_scaling` は 2-source 受取。shape 混同は LSP 第 1 戻り型 mismatch、orchestrator が vetting。
-
-**継承 `@audit:*` 語彙整合 check**: A-V-5 sed 後 `grep -n '@audit:' EPIL3Integration.lean` で empty/未参照/旧 `@audit:suspect(epi-debruijn-integration-phaseD-plan)` 混同を listing → `docs/audit/audit-tags.md` 照合 → 追加 commit。
-
-**運用ルール**: CLAUDE.md `Standard agent prompt boilerplate` verbatim (worktree .lake 共有 / branch 規律 / skeleton-driven / silent 検証 / scope 4 file / pinpoint import / 撤退ライン honest / commit 自走 push なし)。
-
-**完了報告**: 各 step 進捗 + 撤退発動有無 + 4 file silent 結果 + 新規 staged 一覧 + 行数 + 独立 honesty audit 起動要否 (A-1 staged 導入で必須)。
+route 放棄にともない、mathlib-inventory / lean-implementer 向けの brief 雛形 (Sub-bound 引数表、
+1-source / 2-source shape 接続 caveat、`@audit:*` 語彙整合 check) は本文から落とした。表が名指していた
+宣言・file はすべて上の ⚠ ブロックの「HEAD に残っていない」側にあり、そのまま発注できる内容ではない。
+本文は git が履歴を持つ。当時の在庫調査だけは
+[`epi-stam-to-conclusion-phaseA-mathlib-inventory.md`](epi-stam-to-conclusion-phaseA-mathlib-inventory.md)
+に残っている。
 
 ## 判断ログ
 
