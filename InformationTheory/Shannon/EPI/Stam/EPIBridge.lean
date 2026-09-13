@@ -27,8 +27,6 @@ inequality to predicate signatures and assembles them into a pipeline.
 * `IsDeBruijnRegularityHyp X Z P` — regularity of the heat-flow path needed for the de Bruijn
   identity, bundling `IsRegularDeBruijnHypV2` at each `t > 0` with bounded-window integrability of
   the derivative.
-* `IsDeBruijnIntegrationHyp X Z P T` — the de Bruijn integration identity
-  `h(target) - h(X) = ∫₀^T (1/2) J(X + √t Z) dt` as a predicate.
 * `IsStamToEPIBridgeHyp X Y P` — the implication from the Stam inequality to the entropy power
   inequality hypothesis.
 
@@ -150,70 +148,6 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
           * (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
               (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
         volume 0 T
-
-/-! ## §4 — de Bruijn integration predicate -/
-
-/-- The de Bruijn integration identity along the heat-flow path (Cover–Thomas):
-`h(target) - h(X) = ∫₀^T (1/2) · J(X + √t · Z) dt`, i.e. the differential entropy gap equals the
-path integral of half the Fisher information. Stated existentially over the density path `fPath`.
-
-The predicate carries the integration-identity content, so its `def` body cannot be reduced to
-`sorry`; it is load-bearing. There are no hypothesis-form consumers: the general witness
-`isDeBruijnIntegrationHyp_holds` produces it from `0 ≤ T` and a path-regularity precondition by
-delegating to `debruijnIntegrationIdentity_holds`.
-
-@audit:retract-candidate(load-bearing-predicate) -/
-def IsDeBruijnIntegrationHyp {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω) (T : ℝ) : Prop :=
-  ∃ (fPath : ℝ → ℝ → ℝ),
-    ∀ (h_X h_target : ℝ),
-      h_X = InformationTheory.Shannon.differentialEntropy (P.map X) →
-      h_target = InformationTheory.Shannon.differentialEntropy
-                  (P.map (fun ω ↦ X ω + Real.sqrt T * Z ω)) →
-      h_target - h_X
-        = ∫ t in Set.Ioo 0 T, (1/2)
-          * (InformationTheory.Shannon.FisherInfo.fisherInfoOfMeasureV2
-              (P.map (fun ω ↦ X ω + Real.sqrt t * Z ω)) (fPath t)).toReal ∂volume
-
-/-- Trivial degenerate case: when `T ≤ 0` the integration interval `(0, T)` is
-empty, so the identity is `h_target - h_X = 0`. This holds whenever
-`h_target = h_X`, which is the natural boundary case (`T = 0`). -/
-theorem isDeBruijnIntegrationHyp_at_zero
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω)
-    (h_boundary :
-      InformationTheory.Shannon.differentialEntropy (P.map X) =
-        InformationTheory.Shannon.differentialEntropy
-          (P.map (fun ω ↦ X ω + Real.sqrt 0 * Z ω))) :
-    IsDeBruijnIntegrationHyp X Z P 0 := by
-  refine ⟨fun _ _ ↦ 0, ?_⟩
-  intro h_X h_target hX_def htarget_def
-  -- Integral over the empty set `Ioo 0 0` is 0.
-  have h_empty : Set.Ioo (0 : ℝ) 0 = ∅ := by
-    ext x
-    constructor
-    · intro hx
-      have := hx.1
-      have := hx.2
-      linarith
-    · intro hx
-      exact hx.elim
-  rw [h_empty, MeasureTheory.setIntegral_empty]
-  rw [hX_def, htarget_def, ← h_boundary]
-  ring
-
-/-- `IsDeBruijnIntegrationHyp X Z P T` holds whenever `0 ≤ T` and the heat-flow path is regular
-(`IsDeBruijnPathRegular`), by delegation to `debruijnIntegrationIdentity_holds`. The integration
-identity reduces to the per-time de Bruijn identity via the fundamental theorem of calculus; the
-upstream lemma carries only a path-regularity precondition and `0 ≤ T`. -/
-@[entry_point]
-theorem isDeBruijnIntegrationHyp_holds
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
-    (T : ℝ) (hT : 0 ≤ T)
-    (h_path : InformationTheory.Shannon.FisherInfo.IsDeBruijnPathRegular X Z P T) :
-    IsDeBruijnIntegrationHyp X Z P T :=
-  InformationTheory.Shannon.FisherInfo.debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT h_path
 
 /-! ## §5 — Gaussian saturation full discharge of the upstream hypotheses
 
@@ -381,25 +315,6 @@ theorem isStamInequalityHyp_of_fisherInfo_eq
               (P.map (fun ω ↦ X ω + Y ω)) fXY).toReal := by
     rw [hJsum_def, hJsum]
   exact h J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def' hJY_def' hJsum_def'
-
-/-! ## §11 — de Bruijn regularity manipulation -/
-
-/-- de Bruijn integration `T = 0` always holds in the structurally trivial
-case where `X + √0 · Z = X` pointwise. -/
-theorem isDeBruijnIntegrationHyp_at_zero_pointwise
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω)
-    (h_pt : (fun ω ↦ X ω + Real.sqrt 0 * Z ω) = X) :
-    IsDeBruijnIntegrationHyp X Z P 0 := by
-  apply isDeBruijnIntegrationHyp_at_zero
-  rw [h_pt]
-
-/-- The `√0 = 0` specialization: at `T = 0`, the heat-flow path returns
-`X + 0 · Z = X`. Used to discharge `isDeBruijnIntegrationHyp_at_zero`. -/
-theorem heat_flow_path_at_zero {Ω : Type*} (X Z : Ω → ℝ) :
-    (fun ω ↦ X ω + Real.sqrt 0 * Z ω) = X := by
-  funext ω
-  rw [Real.sqrt_zero, zero_mul, add_zero]
 
 /-! ## §12 — Stam-to-EPI bridge: symmetry / composability -/
 

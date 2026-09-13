@@ -187,6 +187,7 @@ noncomputable def isDeBruijnPathRegular_gaussian
 form `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt` for a Gaussian `X ∼ 𝒩(m, v)`,
 obtained by
 applying `debruijnIntegrationIdentity_holds` to the Gaussian path-regularity witness.
+The time-`t` density is the explicit `gaussianPDFReal m (v + t)`.
 
 References: [CoverThomas2006].
 
@@ -198,14 +199,9 @@ theorem debruijn_identity_integrated_gaussian
     {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
     (hX_law : P.map X = gaussianReal m v) (hZ_law : P.map Z = gaussianReal 0 1)
     (T : ℝ) (hT : 0 ≤ T) :
-    ∃ (fPath : ℝ → ℝ → ℝ),
-      ∀ (h_X h_target : ℝ),
-        h_X = differentialEntropy (P.map X) →
-        h_target = differentialEntropy (P.map (gaussianConvolution X Z T)) →
-        h_target - h_X
-          = ∫ t in Set.Ioo 0 T, (1 / 2)
-            * (fisherInfoOfMeasureV2
-                (P.map (gaussianConvolution X Z t)) (fPath t)).toReal ∂volume :=
+    differentialEntropy (P.map (gaussianConvolution X Z T)) - differentialEntropy (P.map X)
+      = ∫ t in Set.Ioo 0 T, (1 / 2)
+        * fisherInfoOfDensityReal (gaussianPDFReal m (v + Real.toNNReal t)) ∂volume :=
   debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT
     (isDeBruijnPathRegular_gaussian X Z hX hZ hXZ hv hX_law hZ_law T)
 
@@ -417,7 +413,8 @@ noncomputable def isDeBruijnPathRegular_of_heat_flow
 /-- **Integrated de Bruijn identity (general a.c. Cover–Thomas).** The integrated
 form `h(X + √T·Z) − h(X) = ∫₀ᵀ (1/2)·J(X + √t·Z) dt` for a general absolutely-continuous
 `X`, obtained by applying `debruijnIntegrationIdentity_holds` to the general path-regularity
-producer `isDeBruijnPathRegular_of_heat_flow`.
+producer `isDeBruijnPathRegular_of_heat_flow`. The time-`t` density is the explicit heat-kernel
+convolution `convDensityAdd pX (heatKernel t)`.
 
 References: [CoverThomas2006].
 
@@ -433,14 +430,9 @@ theorem debruijn_identity_integrated
     (hpX_mom : Integrable (fun y ↦ y ^ 2 * pX y) volume)
     (hpX_ent : Integrable (fun x ↦ Real.negMulLog (pX x)) volume)
     (T : ℝ) (hT : 0 ≤ T) :
-    ∃ (fPath : ℝ → ℝ → ℝ),
-      ∀ (h_X h_target : ℝ),
-        h_X = differentialEntropy (P.map X) →
-        h_target = differentialEntropy (P.map (gaussianConvolution X Z T)) →
-        h_target - h_X
-          = ∫ t in Set.Ioo 0 T, (1 / 2)
-            * (fisherInfoOfMeasureV2
-                (P.map (gaussianConvolution X Z t)) (fPath t)).toReal ∂volume :=
+    differentialEntropy (P.map (gaussianConvolution X Z T)) - differentialEntropy (P.map X)
+      = ∫ t in Set.Ioo 0 T, (1 / 2)
+        * fisherInfoOfDensityReal (convDensityAdd pX (heatKernel t)) ∂volume :=
   debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT
     (isDeBruijnPathRegular_of_heat_flow X Z hX hZ hXZ hZ_law pX hpX_nn hpX_meas hpX_law
       hpX_int hpX_mass hpX_mom hpX_ent T)

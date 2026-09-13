@@ -20,10 +20,7 @@ out of scope here.
 ## Main statements
 
 * `stam_fisher_arith` — arithmetic kernel `1/(a+b) ≤ λ²/a + (1-λ)²/b`
-* `stam_fisher_arith_eq_at_opt` — equality at `λ* = a/(a+b)`
 * `stam_convex_fisher_bound_gaussian` — Gaussian convex Fisher bound (closed form)
-* `stam_convex_fisher_bound_gaussian_indep` — independent-RV form via
-  `gaussianReal_add_gaussianReal_of_indepFun`
 -/
 
 namespace InformationTheory.Shannon.FisherInfo

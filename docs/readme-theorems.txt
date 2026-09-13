@@ -142,7 +142,8 @@ shearer_inequality
 loomis_whitney
 # override: the docstring states the bound as display math, which a table cell cannot hold.
 brascamp_lieb_finset | **Brascamp–Lieb inequality** (combinatorial form): if `S : ι → Finset (Fin n)` covers each coordinate at least `k` times, then `|A|^k ≤ ∏ i, |π_{S i}(A)|` for every nonempty `A : Finset (Fin n → α)`. Loomis–Whitney is the special case `S i := univ.filter (· ≠ i)` with `k = n - 1`.
-entropy_power_inequality_of_density
+entropyPowerExt_add_ge
+entropy_power_inequality_of_ac
 minkowskiDeterminantInequality
 stam_inequality_smoothed_density
 debruijn_identity_per_time

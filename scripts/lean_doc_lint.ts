@@ -31,6 +31,7 @@
 const CODE_ROOT = "InformationTheory";
 const BASELINE_PATH = "scripts/lean_doc_lint.baseline.json";
 const CACHE_PATH = ".lake/build/lean_doc_lint.cache.json";
+const CACHE_VERSION = 2;
 const MAX_LINE = 100;
 
 const argv = Deno.args.slice();
@@ -243,6 +244,7 @@ const RULES: Rule[] = [
   { name: "fun-arrow", cls: "strict", why: "fun は ↦ を使う (lean-style.md L52)" },
   { name: "retired-decl-ref", cls: "strict", why: "散文が参照する宣言名が HEAD に無い (陳腐化して虚偽になる)" },
   { name: "dead-file-ref", cls: "strict", why: "散文が参照する file / module が存在しない" },
+  { name: "empty-module", cls: "strict", why: "宣言ゼロの module は submodule の re-export のときだけ正当" },
   {
     name: "decl-vocab",
     cls: "ratchet",
@@ -297,6 +299,10 @@ const BOLD_START_RE = /\/--\s*\*\*/g;
 const DECL_RE =
   /^\s*(?:@\[[^\]]*\]\s*)*(?:private\s+|protected\s+|noncomputable\s+|scoped\s+|local\s+)*(?:theorem|lemma|def|abbrev|structure|inductive|instance|class)\s+([A-Za-z_][\w'.]*)/gm;
 const BACKTICK_RE = /`([A-Za-z_][\w'.]{3,})`/g;
+// empty-module 用。DECL_RE より広く、属性登録 (`initialize`) や構文拡張も「中身がある」とみなす。
+const ANY_DECL_RE =
+  /^\s*(?:@\[[^\]]*\]\s*)*(?:private\s+|protected\s+|noncomputable\s+|scoped\s+|local\s+|partial\s+|unsafe\s+)*(?:theorem|lemma|def|abbrev|structure|inductive|instance|class|opaque|axiom|initialize|macro|macro_rules|syntax|elab|notation|attribute|example)\b/m;
+const IMPORT_RE = /^import\s+(\S+)/gm;
 const BACKTICK_SKIP_RE =
   /^(MeasureTheory|Mathlib|Set|Finset|Real|ENNReal|EReal|NNReal|Filter|Measure|Function|Nat|Int|List|Finsupp|Polynomial|Complex|Matrix|Fin|Prod|Sum|Option|Quot|Classical|Topology|Metric|Continuous|Differentiable|Integrable|Summable)\b/;
 
@@ -325,7 +331,9 @@ async function buildFacts(): Promise<Facts> {
   let retired: Set<string> | null = null;
   try {
     const c = JSON.parse(await Deno.readTextFile(CACHE_PATH));
-    if (c.head === head && Array.isArray(c.retired)) retired = new Set<string>(c.retired);
+    if (c.v === CACHE_VERSION && c.head === head && Array.isArray(c.retired)) {
+      retired = new Set<string>(c.retired);
+    }
   } catch { /* cache 無し / 壊れ — 作り直す */ }
   if (!retired) {
     retired = new Set<string>();
@@ -338,7 +346,10 @@ async function buildFacts(): Promise<Facts> {
     }
     try {
       await Deno.mkdir(".lake/build", { recursive: true });
-      await Deno.writeTextFile(CACHE_PATH, JSON.stringify({ head, retired: [...retired] }));
+      await Deno.writeTextFile(
+        CACHE_PATH,
+        JSON.stringify({ v: CACHE_VERSION, head, retired: [...retired] }),
+      );
     } catch { /* 書けなくても動作に影響しない */ }
   }
   for (const h of headDecls) retired.delete(h);
@@ -355,7 +366,7 @@ function successorCandidates(retired: string, headDecls: Set<string>): string[] 
   return matches.slice(0, 2);
 }
 
-function lintText(src: string, facts: Facts): Finding[] {
+function lintText(src: string, facts: Facts, path?: string): Finding[] {
   const out: Finding[] = [];
   const spans = scanSpans(src);
   const ls = lineStarts(src);
@@ -420,6 +431,17 @@ function lintText(src: string, facts: Facts): Finding[] {
     // DECL_RE は先頭の ^\s* が (docstring をマスクした) 空行を食うので、match 開始位置ではなく
     // 名前そのものの位置を報告する。
     add("decl-vocab", m.index! + m[0].lastIndexOf(m[1]), `宣言名 '${m[1]}'`);
+  }
+
+  // empty-module — 宣言を 1 つも持たない module が正当なのは、自分の名前空間下の submodule を
+  // re-export する umbrella のときだけ。それ以外は中身が消えた残骸で、module doc だけが実在
+  // しない宣言を名指したまま root から import され続ける (orphan 一括削除の取り残し)。
+  if (path && path.startsWith(`${CODE_ROOT}/`) && !ANY_DECL_RE.test(code)) {
+    const self = path.replace(/\.lean$/, "").replaceAll("/", ".");
+    const imports = [...src.matchAll(IMPORT_RE)].map((m) => m[1]);
+    if (!imports.some((i) => i.startsWith(`${self}.`))) {
+      add("empty-module", 0, "宣言が 1 つも無く、submodule の re-export でもない");
+    }
   }
 
   // retired-decl-ref — 散文が参照する宣言名の実在確認。
@@ -578,7 +600,7 @@ if (flags.baseline) {
   const totals: Record<string, number> = {};
   for (const f of await treeFiles()) {
     const src = await Deno.readTextFile(f);
-    for (const [k, v] of Object.entries(countByRule(lintText(src, facts)))) {
+    for (const [k, v] of Object.entries(countByRule(lintText(src, facts, f)))) {
       totals[k] = (totals[k] ?? 0) + v;
     }
   }
@@ -609,7 +631,7 @@ if (flags.hook) {
   } catch {
     Deno.exit(0);
   }
-  const now = lintText(src, facts);
+  const now = lintText(src, facts, f);
   const msgs: string[] = [];
   for (const x of now.filter((x) => x.cls === "strict")) {
     msgs.push(`  ${f}:${x.line} [${x.rule}] ${x.msg} — ${WHY.get(x.rule)}`);
@@ -638,7 +660,7 @@ if (flags.staged) {
     } catch {
       continue;
     }
-    const now = lintText(src, facts);
+    const now = lintText(src, facts, f);
     for (const x of now.filter((x) => x.cls === "strict")) {
       msgs.push(`  ⚠ ${f}:${x.line} [${x.rule}] ${x.msg}`);
     }
@@ -663,7 +685,7 @@ for (const f of files) {
   } catch {
     continue;
   }
-  const fs = lintText(src, facts);
+  const fs = lintText(src, facts, f);
   if (fs.length) perFile.set(f, fs);
   for (const [k, v] of Object.entries(countByRule(fs))) totals[k] = (totals[k] ?? 0) + v;
 }
