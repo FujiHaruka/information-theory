@@ -5,7 +5,7 @@
 
 ## ゴール
 
-Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理から生成される教科書として publish。成果物 3 層 = (1) Verified library (`InformationTheory/`) + (2) Typed RV API (`H(X)` / `I(X;Y)` 等の書き味) + (3) markdown / LaTeX 原稿。
+Cover & Thomas (2nd ed.) **Ch.2–17** を Lean 形式化された定理から生成される教科書として publish。成果物 3 層 = (1) Verified library (`InformationTheory/`) + (2) Typed RV API (`H(X)` / `I(X;Y)` 等の書き味) + (3) markdown / LaTeX 原稿。**層 3 は全16章 = CT2〜CT17 で達成** (章立ての SoT は子プラン)。
 
 ## scope-out
 
@@ -72,22 +72,22 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 
 ## frontier (scope 内で残る作業)
 
-**proof 層はほぼ全 closure 済**。scope 内で残るのは:
+**proof 層はほぼ全 closure 済**。**層 3 (教科書原稿) も 2026-09-14 に全16章 完成・公開となり、scope 内の主フロンティアは閉じた**。以下は各項の最終状態:
 
-- **教科書原稿 (層 3)**: genuine ✅ 章を prose 化する作業が主フロンティア (下記「次の一手」)。
+- **教科書原稿 (層 3)**: **完了** — 全16章 (CT2〜CT17) を執筆・査読 2 周・公開。残るのは子プランの「持ち越し」だけ (下記)。
 - **Ch.9 operational 容量 (Phase 1-fix DONE 2026-07-15、audit PASS、commit 7c3afc86)**: def 再設計 (L²-FT spectral-support `IsBandlimited` + `ContAwgnCode` の `encoder_memLp`/`encoder_continuous` regularity field) で 2 defect root (degenerate L¹-`𝓕` / pointwise-vs-a.e. encoder gap) を dissolve → mainline `contAwgn_eq_shannonHartley` = **2026-07-18 (leg 29) PROOF-DONE sorryAx-free + @audit:ok** (achievability leg 22 + converse legs 23-29 を `le_antisymm`)。旧 wall slug `nyquist-2w-dof` (時間帯域幅 DOF-per-second カウント、prolate/Landau-Pollak-Slepian) は C1 (leg 23) で `plan:` 再分類後、converse 全段が project-internal で壁なく着地 (Mathlib gap ゼロ)。残 open work 進捗: bridge `l2Fourier_eq_fourierIntegral` (+inv) + `bandlimited_sup_bound` = ✅ proof-done・audit PASS (commit 9d8608a8/40c2e449/30b59a15)、Phase 3 achievability leg 1 (synthSignal band-limit/energy) = ✅ proof-done・audit PASS (commit 89ede2a3/646605c7)、**Phase 3 leg 2/3 (BddAbove + assembly) = CLOSED (leg 22)**: achievability 半分 `contAwgn_ge_shannonHartley` proof-done sorryAx-free + @audit:ok。旧 WALL-GATED verdict は C1 (leg 23) の count-domination + Nyquist 2W-DOF の Fourier 級数ルート実装で解消。標本化定理は 2026-07-14 proof done。子 plan SoT → `shannon/shannon-hartley-operational-moonshot-plan.md`。
 - ~~壁ではない frontier (regularity 緩和): Ch.10 完全一般 source 版~~ **CLOSED (2026-07-13)**: `rate_distortion_achievability_operational_general` (`@[entry_point]`, sorryAx-free, `@audit:ok`)。full-support 前提 (`hP_supp`) を台 subtype 制限 + code lift で除去、新 load-bearing hyp なし。詳細 → `rate-distortion-achievability-general-source-plan.md`。
 
 legacy migration は完了済 (active な `@audit:suspect/staged/defer` タグ 0 件、`@audit:closed-by-successor` project-wide 0 件、circular `:= h` defect 0 件)。
 
-## 教科書原稿 (層 3) / 次の一手
+## 教科書原稿 (層 3) — 全 16 章 完成・公開
 
 原稿の執筆原則 (読者前提・節の構成・前方参照・形式化ポインタ・節分割) は
 `.claude/rules/textbook-writing.md` が SoT。
 
 - **子プラン (SoT)**: [`docs/textbook-manuscript-plan.md`](textbook-manuscript-plan.md) — 章立て・執筆順・章ごとの進捗。
 - **章立て**: 全 16 章。本書の章番号 ↔ CT 章番号は 1↔2 / 2↔3 / 3↔4 / 4↔5 / 5↔6 / 6↔7 / 7↔8 / 8↔9 / 9↔10 / 10↔12 / 11↔11 / 12↔13 / 13↔14 / 14↔15 / 15↔16 / 16↔17 (最大エントロピーを仮説検定の前に置く 1 点だけ CT 順と入れ替え、理由は子プラン)。
-- **執筆済**: 本書 第1〜15章 (CT2 / CT3 / CT4 / CT5 / CT6 / CT7 / CT8 / CT9 / CT10 / CT12 / CT11 / CT13 / CT14 / CT15 / CT16)。各章とも査読 2 周 + 公開まで完了 (第15章は通し読みも 2 周)。未執筆は 第16章 (CT17) の 1 章だけで、**次は第16章 (情報不等式、CT17) = 本書の最終章**。
+- **執筆済**: 本書 全16章 (CT2〜CT17)。各章とも査読 4 観点 × 2 周 + 公開まで完了 (第14〜16章は通し読みも実施、第15章・第16章は 2 周)。**次に書く章はない**。残るのは子プランの「持ち越し」(本全体の様式変更・上流章の宿題・リリースタグを切るときの点検) だけで、子プランが SoT。
 - **Ch.2 パイロットで判明した課題** (以降の章にも効く): (i) 値の型不一致 (`ℝ≥0∞` vs `ℝ`、橋渡し `.toReal`)、(ii) Markov 定義の表層差 (compProd 分解形)、(iii) n 変数 chain rule の右辺長大、(iv) 章↔file が 1:1 でない。
 
 ## 判断ログ (戦略遷移サマリ)
@@ -110,3 +110,4 @@ legacy migration は完了済 (active な `@audit:suspect/staged/defer` タグ 0
 - **2026-07 (直近)**: Ch.15 Wyner-Ziv operational main FULLY CLOSED (`wyner_ziv_achievability` + `wyner_ziv_converse` sorryAx-free、Markov-core + covering atom を joint-derandomize で closure、独立監査 PASS)。WZ main の scope-out は解除。
 - **2026-07-13**: Ch.10 operational achievability 無条件形 `rate_distortion_achievability_operational` genuine sorryAx-free (`@[entry_point]`, 独立監査 `@audit:ok`)。既存 conditional 版の pass-through 仮説 (`hqStar_pos` / `h_jts_subset_dts` / slack 群) を 3 piece で内部 discharge — B: marginal 保存 full-support 摂動 (`rdPerturb`), C: jts⊆dts 包含 (`jts_subset_dts_of_dist_slack`, gateway-atom-first で機構検証), A: 15-conjunct slack existential (`rdSlack_exists`)。全 piece が (a) 量の壁クラスで Mathlib gap なし、壁誤認ゼロ。full-support は regularity precondition (over-hyp、load-bearing でない)。詳細 → `rate-distortion-achievability-unconditional-plan.md`。**同日 follow-on**: full-support 前提そのものを落とした完全一般 source 版 `rate_distortion_achievability_operational_general` (`@[entry_point]`, sorryAx-free, 独立監査 `@audit:ok`) も CLOSED。台 subtype `{a // 0 < P_X a}` に制限して full-support 版を適用、retraction で code を全 alphabet に lift (期待歪みは非台座標が a.e.-null なので `Measure.pi_map_pi` + `integral_map` で一致)。新 load-bearing hyp ゼロ、`hP_supp` を除いただけ。→ `rate-distortion-achievability-general-source-plan.md`。**残 scope-out 機械裏取り (同日、doctrine「壁を額面で受けない」)**: (C1) **[superseded 2026-07-14 — 下記参照]** Ch.9 Nyquist 2W-DOF は loogle authoritative 列挙で `Real.sinc` 言及 20 宣言すべてが基本性質のみ (Fourier 隣接は `integral_exp_mul_I_eq_sinc` = indicator→sinc 一方向のみ)、`𝓕(sinc)=π·1_{[-1,1]}` 逆方向 + Plancherel L²-直交性 + Poisson 再構成は genuine 不在 = (c) 真の壁を machine 追認 (honest 開示のまま、overturn なし)。← この (C1) 再確認は **`Real.sinc` 隣接 20 宣言のみを探索し、既に出荷済の一般 Fourier 資産を見落としていた** (2026-07-14 に overturn、下記エントリ)。(C2) Ch.11 Hoeffding interior 述語 island 9 decl は `dep_consumers --transitive` で self-contained dead 確定 (production `hoeffding_tradeoff_exp` sorryAx-free で bypass) → `InteriorMinimizer.lean` 物理削除 (build green、headline axioms 不変)。
 - **2026-07-14**: **Ch.9 Whittaker-Shannon 標本化定理を形式化、前日 (C1) の壁再確認を PARTIAL overturn**。`InformationTheory/Shannon/WhittakerShannon.lean` に 2 headline (`@[entry_point]`、両 sorryAx-free = `[propext, Classical.choice, Quot.sound]`): `whittaker_shannon_hasSum` (無条件 L²-spectrum cardinal 級数形、`@audit:ok` 独立監査 PASS) + `whittaker_shannon_bandlimited` (実直線 band-limited 教科書形、hyps は `Continuous`/`Integrable f`/`Integrable (𝓕 f)`/support⊆[-1/2,1/2] = すべて regularity/band-limit precondition)。ルート = **Fourier 級数** (`𝓕(sinc)` を一切作らない): Plancherel 等長 `MeasureTheory.Lp.fourierTransformₗᵢ`、Poisson 和 `Real.tsum_eq_tsum_fourier` (3 形)、`AddCircle` 上 L² Fourier 級数 `hasSum_fourier_series_L2` はすべて既に Mathlib 出荷済。前日 (C1) の 0-hit は `Real.sinc` 隣接 20 宣言のみを探索し、これら一般 Fourier 資産を見落としていた (`𝓕(sinc)` 直接ルートの不在は正しいが、Fourier 級数ルートはそれを迂回する)。**overturn は PARTIAL**: operational 容量 `IsTwoWDegreesOfFreedom`(連続時間チャネルモデル + 連続時間 AEP、project 未モデル)は無影響で、この時点では honest load-bearing residual のままだった (2026-07-18 leg 29 の全段 CLOSED で superseded、宣言そのものも HEAD には無い)。→ `shannon/whittaker-shannon-plan.md` (CLOSED)。
+- **2026-09-14**: **層 3 (教科書原稿) 全16章 完成・公開** (CT2〜CT17、最大エントロピーと仮説検定の 1 点だけ CT 順と入れ替え)。各章 = 執筆 → `/textbook-review` 4 観点 × 2 周 (逐次、1 周目の指摘は 2 周目に渡さない) → 修正 → 通し読み → 公開。最終章は 第16章 エントロピー不等式 (CT17、8 節)。以後の作業は子プランの「持ち越し」(本全体の様式変更・上流章の宿題・リリースタグを切るときの点検) のみ。子プラン SoT → `textbook-manuscript-plan.md`。
