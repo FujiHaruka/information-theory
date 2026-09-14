@@ -57,7 +57,7 @@ $$
 :::
 
 ::: proof
-$S$ の各点で $f(x) > 0$ かつ $q(x) > 0$ だから，1.1 節の信頼の底から出した対数不等式 $\log t \le (t-1)\log e$ を $t = q(x)/f(x)$ に当てられて
+$S$ の各点で $f(x) > 0$ かつ $q(x) > 0$ だから，補題 1.1.7 の対数不等式 $\log t \le (t-1)\log e$ を $t = q(x)/f(x)$ に当てられて
 $$
 f(x)\log\frac{q(x)}{f(x)} \;\le\; f(x)\Big(\frac{q(x)}{f(x)} - 1\Big)\log e \;=\; \big(q(x) - f(x)\big)\log e
 $$

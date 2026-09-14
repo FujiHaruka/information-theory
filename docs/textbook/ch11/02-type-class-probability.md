@@ -52,7 +52,7 @@ $$
 :::
 
 ::: proof
-1.1 節の信頼の底から出した対数不等式 $\log t \le (t-1)\log e$ を，本章の底のもとで（$\log e = 1$ である）$t := \sqrt{n+1}$ に当てると $\tfrac12\log(n+1) \le \sqrt{n+1} - 1 \le \sqrt{n+1}$ であり，$n \ge 1$ では $\sqrt{n+1} \le \sqrt{2n}$ だから
+補題 1.1.7 の対数不等式 $\log t \le (t-1)\log e$ を，本章の底のもとで（$\log e = 1$ である）$t := \sqrt{n+1}$ に当てると $\tfrac12\log(n+1) \le \sqrt{n+1} - 1 \le \sqrt{n+1}$ であり，$n \ge 1$ では $\sqrt{n+1} \le \sqrt{2n}$ だから
 $$
 0 \;\le\; \frac{\log(n+1)}{n} \;\le\; \frac{2\sqrt{n+1}}{n} \;\le\; \frac{2\sqrt 2}{\sqrt n}
 $$

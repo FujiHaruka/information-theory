@@ -167,7 +167,7 @@ k \;\le\; \frac{3\log_2\big(\lvert\mathcal X\rvert+1\big)\,n}{\log_2 k}
 $$
 である．
 
-$k < \sqrt n$ の場合に移る．1.1 節の信頼の底から出した対数不等式 $\log t \le (t-1)\log e$ を底 $2$ のもとで $t := \sqrt n$ に当てると $\frac12\log_2 n \le (\sqrt n - 1)\log_2 e \le \sqrt n\,\log_2 e$ である．ここで $2\log_2 e = 2.885\ldots$ であり，$\lvert\mathcal X\rvert \ge 1$ より $6\log_2(\lvert\mathcal X\rvert+1) \ge 6$ だから，$\log_2 n \le 2\log_2 e\,\sqrt n \le 6\log_2(\lvert\mathcal X\rvert+1)\sqrt n$ である．両辺に $\sqrt n > 0$ を掛けて $\log_2 n > 0$ で割ると $\sqrt n \le 6\log_2(\lvert\mathcal X\rvert+1)\,n/\log_2 n$ を得る．$k < \sqrt n$ と合わせて主張が従う．
+$k < \sqrt n$ の場合に移る．補題 1.1.7 の対数不等式 $\log t \le (t-1)\log e$ を底 $2$ のもとで $t := \sqrt n$ に当てると $\frac12\log_2 n \le (\sqrt n - 1)\log_2 e \le \sqrt n\,\log_2 e$ である．ここで $2\log_2 e = 2.885\ldots$ であり，$\lvert\mathcal X\rvert \ge 1$ より $6\log_2(\lvert\mathcal X\rvert+1) \ge 6$ だから，$\log_2 n \le 2\log_2 e\,\sqrt n \le 6\log_2(\lvert\mathcal X\rvert+1)\sqrt n$ である．両辺に $\sqrt n > 0$ を掛けて $\log_2 n > 0$ で割ると $\sqrt n \le 6\log_2(\lvert\mathcal X\rvert+1)\,n/\log_2 n$ を得る．$k < \sqrt n$ と合わせて主張が従う．
 :::
 
 ::: formalization-note

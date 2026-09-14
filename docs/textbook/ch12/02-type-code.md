@@ -68,7 +68,7 @@ $$
 \sum_{x \in \mathcal X^n} P^n(\{x\})\,H\big(\hat P_x\big)
   \;=\; \sum_{a \in \mathcal X}\ \sum_{x \in \mathcal X^n} P^n(\{x\})\,\varphi\big(\hat P_x(a)\big)
 $$
-となる．文字 $a \in \mathcal X$ を固定して内側の和を評価する．$P^n$ は $\mathcal X^n$ 上の分布だから重み $P^n(\{x\})$ は非負で総和が $1$ であり，点 $\hat P_x(a)$ は $\varphi$ の定義域 $[0,\infty)$ に入る．1.1 節で認めた $\varphi$ の凹性のもと 補題 1.1.6 を当てると
+となる．文字 $a \in \mathcal X$ を固定して内側の和を評価する．$P^n$ は $\mathcal X^n$ 上の分布だから重み $P^n(\{x\})$ は非負で総和が $1$ であり，点 $\hat P_x(a)$ は $\varphi$ の定義域 $[0,\infty)$ に入る．1.1 節で認めた $\varphi$ の凹性のもと 補題 1.1.9 を当てると
 $$
 \sum_{x \in \mathcal X^n} P^n(\{x\})\,\varphi\big(\hat P_x(a)\big)
   \;\le\; \varphi\Big(\sum_{x \in \mathcal X^n} P^n(\{x\})\,\hat P_x(a)\Big)
