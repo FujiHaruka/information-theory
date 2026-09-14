@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InformationTheory 教科書（レビュー版）</title>
+<link rel="stylesheet" href="./mathjax.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Inconsolata:wght@400;600&display=swap">
+<style>
+:root {
+  color-scheme: light dark;
+  /* 和文はモリサワの UD ゴシック（BIZ UDGothic）。読みやすさのために設計された書体で、
+     Google Fonts から配信されるので端末を問わず同じ字面になる。プロポーショナル版
+     (BIZ UDPGothic) ではなく等幅かな版を採るのは、原稿の句読点が「，．」だからである
+     (執筆原則 §9)。プロポーショナルだと，．が詰まって文の切れ目が見えなくなる。
+     欧文と数字は和文書体に任せず、システムのサンセリフを先に置く。数式が AMS Euler
+     なので、地の文の欧文をサンセリフにしておくと、どこからが数式かが字面で分かる。 */
+  --latin: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial;
+  --jp: "BIZ UDGothic", "BIZ UDPGothic", "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+html { font-size: 18px; }
+body {
+  font-family: var(--latin), var(--jp);
+  font-size: 1rem;
+  line-height: 1.85; margin: 0; padding: 0;
+  background: #fbfbfa; color: #1a1a1a;
+}
+.container { max-width: 760px; margin: 0 auto; padding: 2.2rem 1.1rem 6rem; }
+h1 { font-size: 1.7rem; line-height: 1.4; border-bottom: 2px solid #ddd; padding-bottom: .5rem; }
+h2 { font-size: 1.35rem; margin-top: 2.6rem; border-bottom: 1px solid #e3e3e3; padding-bottom: .3rem; }
+h3 { font-size: 1.12rem; margin-top: 1.9rem; }
+a { color: #0b67d0; }
+blockquote { border-left: 3px solid #e3e3e3; margin: 1.1rem 0; padding: .15rem 0 .15rem 1rem; color: #8a8a8a; background: none; }
+blockquote p { margin: .4rem 0; }
+/* 宣言名 / ファイルパスの長い識別子が狭い画面で横にはみ出すため、行内 code は折り返す。
+   コードブロック (pre code) は Lean コードの整形を保つので折り返さず横スクロールさせる。 */
+code { font-family: Inconsolata, ui-monospace, "SF Mono", Menlo, monospace; font-size: .95em; background: rgba(0,0,0,.05); color: inherit; padding: .08em .3em; border-radius: 4px; overflow-wrap: anywhere; }
+pre { background: #f4f4f2; border-radius: 6px; margin: 1rem 0; }
+pre code { display: block; padding: .8rem 1rem; overflow-x: auto; background: none; color: inherit; font-size: .92em; overflow-wrap: normal; }
+hr { border: none; border-top: 1px solid #e0e0e0; margin: 2.4rem 0; }
+table { border-collapse: collapse; margin: 1rem 0; }
+th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
+/* 数式の横スクロールは displayOverflow: 'scroll' が持つ（build 側のコメント参照）。
+   ここで足すのは余白だけにして、overflow には触らない。 */
+mjx-container[display="true"] { margin: 1.1rem 0; }
+mjx-container { font-size: 1.06em; }
+/* 地の文と行内数式のあいだの四分アキ（build 側の math_gap 規則が付けるクラス）。 */
+mjx-container.jp-l { margin-left: .25em; }
+mjx-container.jp-r { margin-right: .25em; }
+mjx-utext { font-feature-settings: normal; }
+.site-note { font-size: .82rem; color: #888; margin-top: 4rem; text-align: center; }
+
+/* --- 定理環境 ---
+   原稿 (.claude/rules/textbook-writing.md §5 の決まり文句) は Markdown のままで、
+   ブロック化は build 側の decorateStatements() が行う。色は種別の区別だけを担い、
+   背景は敷かない (紙の数学書に近い見え方を保つ)。 */
+.stmt {
+  --stmt-accent: #8a8a8a;
+  margin: 1.9rem 0;
+}
+.stmt > :first-child { margin-top: 0; }
+.stmt > :last-child { margin-bottom: 0; }
+.stmt > p:first-child > strong:first-child { color: var(--stmt-accent); font-weight: 700; }
+.stmt-theorem, .stmt-proposition, .stmt-corollary { --stmt-accent: #2f5fa8; }
+.stmt-definition { --stmt-accent: #2c7a5a; }
+.stmt-lemma { --stmt-accent: #8a8a8a; }
+.stmt-example { --stmt-accent: #96702a; }
+
+/* 「証明.」の見出し。太字を三層に割る (主張の見出しは色付き / 証明の開始はグレーの
+   ラベル / 地の文の太字リードは素の太字)。同じ <strong> が三つの役割を兼ねると、
+   どこまでが一つの塊なのかが読者に見えない。 */
+.proof { margin: 1.5rem 0 2rem; color: #2f2f2f; }
+.proof::after { content: ""; display: block; clear: both; }
+.proof > :first-child { margin-top: 0; }
+.proof > p:first-child > strong:first-child {
+  font-weight: 600; letter-spacing: .05em; color: #7a7a7a;
+}
+.qed { float: right; color: #7a7a7a; }
+.env-head { margin-bottom: .55rem; }
+.qed-line { text-align: right; margin-top: -.6rem; }
+.qed-line .qed { float: none; }
+
+/* 形式化ポインタ。主張ブロック (縦罫) とは別の体裁にして取り違えを防ぐ。 */
+.formalized {
+  font-size: .93rem;
+  margin: 1.4rem 0;
+  padding: .55rem .95rem;
+  background: rgba(42,122,134,.07);
+  border-radius: 6px;
+  color: #3a3a3a;
+}
+.formalized > :first-child { margin-top: 0; }
+.formalized > :last-child { margin-bottom: 0; }
+.formalized strong:first-child { color: #22707c; font-weight: 700; }
+
+/* 読み飛ばしてよい傍注 (形式化上の注記 / 記法の先取り)。 */
+.aside {
+  font-size: .93rem;
+  border-left: 3px solid #e3e3e3;
+  margin: 1.4rem 0;
+  padding: .1rem 0 .1rem 1rem;
+  color: #8a8a8a;
+}
+.aside > :first-child { margin-top: 0; }
+.aside > :last-child { margin-bottom: 0; }
+.aside strong:first-child { color: #6f6f6f; }
+
+/* --- 相互参照リンク ---
+   本文の「定理 1.2.3」「1.6 節」はビルドがリンクに変える。数式と地の文のあいだに置かれる
+   ので、リンク色で塗ると本文が騒がしくなる。文字色は地の文のまま、下線の色だけで
+   クリックできることを示し、ホバーでリンク色に寄せる。 */
+a.xref { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(11,103,208,.42); }
+a.xref:hover, a.xref:focus { color: #0b67d0; border-bottom-color: #0b67d0; }
+
+/* 形式化ポインタの行内 code は掲載先へのリンクになる（宣言名は API ドキュメントの項目、
+   パスは GitHub のソース）。相互参照と同じで、色ではなく下線でクリックできることを示す。 */
+a.srcref { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(34,112,124,.45); }
+a.srcref:hover, a.srcref:focus { color: #22707c; border-bottom-color: #22707c; }
+a.srcref code { background: rgba(34,112,124,.09); }
+.ptr-icon {
+  width: .82em; height: .82em; margin-right: .26em; vertical-align: -.09em;
+  fill: currentColor; opacity: .62;
+}
+a.srcref:hover .ptr-icon, a.srcref:focus .ptr-icon { opacity: 1; }
+
+/* 飛んだ先が画面の最上端に貼り付くと、どこに着地したのか読み取れない。余白を空け、
+   着地点に薄く色を敷いて示す（box-shadow の spread なので行送りは動かない）。 */
+[id] { scroll-margin-top: 1.6rem; }
+.stmt:target, .proof:target, .formalized:target, .aside:target,
+h1:target, h2:target, h3:target {
+  background: rgba(11,103,208,.075);
+  box-shadow: 0 0 0 .5rem rgba(11,103,208,.075);
+  border-radius: 2px;
+}
+
+/* --- multi-page navigation --- */
+.nav-top {
+  font-size: .85rem; color: #888;
+  padding-bottom: 1rem; margin-bottom: 1.6rem; border-bottom: 1px solid #e3e3e3;
+}
+.nav-top a { text-decoration: none; }
+.nav-bottom {
+  display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  font-size: .9rem;
+  padding-top: 1.3rem; margin-top: 3.5rem; border-top: 1px solid #e3e3e3;
+}
+.nav-bottom a { text-decoration: none; }
+.nav-bottom .spacer { flex: 1; }
+.toc { list-style: none; padding: 0; margin: 2rem 0 0; }
+.toc li {
+  margin: .85rem 0; padding: .95rem 1.15rem;
+  border: 1px solid #e3e3e3; border-radius: 8px; background: #fff;
+}
+.toc a { font-weight: 600; font-size: 1.05rem; text-decoration: none; }
+.subtoc { list-style: none; padding: 0; margin: .8rem 0 0; border-top: 1px solid #ececec; }
+.subtoc li { margin: 0; padding: .3rem 0 0; border: none; border-radius: 0; }
+.subtoc a { font-weight: 400; font-size: .92rem; }
+
+@media (prefers-color-scheme: dark) {
+  body { background: #15171a; color: #e6e6e6; }
+  a { color: #6cb6ff; }
+  blockquote { border-left-color: #333a42; color: #9aa3ad; background: none; }
+  code { background: rgba(255,255,255,.08); color: inherit; }
+  pre { background: #1c1f24; }
+  pre code { background: none; color: #d7dce2; }
+  hr { border-color: #2a2e34; }
+  th, td { border-color: #2a2e34; }
+  .nav-top, .nav-bottom { border-color: #2a2e34; }
+  .toc li { border-color: #2a2e34; background: #1a1d21; }
+  .subtoc { border-top-color: #2a2e34; }
+  .stmt-theorem, .stmt-proposition, .stmt-corollary { --stmt-accent: #7ba7e8; }
+  .stmt-definition { --stmt-accent: #63b894; }
+  .stmt-lemma { --stmt-accent: #9aa3ad; }
+  .stmt-example { --stmt-accent: #c9a45e; }
+  .proof { color: #c9cdd3; }
+  .proof > p:first-child > strong:first-child { color: #98a1aa; }
+  .qed { color: #98a1aa; }
+  .formalized { background: rgba(122,200,212,.09); color: #c9cdd3; }
+  .formalized strong:first-child { color: #63b5c2; }
+  .aside { border-left-color: #333a42; color: #9aa3ad; }
+  .aside strong:first-child { color: #aeb6bf; }
+  a.xref { border-bottom-color: rgba(108,182,255,.45); }
+  a.xref:hover, a.xref:focus { color: #6cb6ff; border-bottom-color: #6cb6ff; }
+  a.srcref { border-bottom-color: rgba(99,181,194,.5); }
+  a.srcref:hover, a.srcref:focus { color: #63b5c2; border-bottom-color: #63b5c2; }
+  a.srcref code { background: rgba(99,181,194,.14); }
+  .stmt:target, .proof:target, .formalized:target, .aside:target,
+  h1:target, h2:target, h3:target {
+    background: rgba(108,182,255,.1);
+    box-shadow: 0 0 0 .5rem rgba(108,182,255,.1);
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>InformationTheory 教科書（レビュー版）</h1>
+<p>Lean 4 + Mathlib で機械検証した定理に紐づけて書いている情報理論の教科書原稿です．<!--
+-->「形式化」と添えた結果は無条件の検証済み定理に対応しています．宣言名はリンクになっていて，<!--
+-->本のアイコンはその定理の解説ページ，GitHub のマークはソースへ飛びます．<!--
+-->本文の証明は人間が読みやすい順序で書いているので，Lean がたどる証明ルートとは<!--
+-->一致しません．保証されるのは定理の正しさであって，証明手順の一致ではありません．</p>
+<ul class="toc">
+  <li>
+    <a href="./ch01-01.html">第1章　エントロピー・相互情報量・データ処理不等式</a>
+    <ol class="subtoc">
+      <li><a href="./ch01-01.html">1.1　エントロピー</a></li>
+      <li><a href="./ch01-02.html">1.2　結合エントロピー・条件付きエントロピーとチェイン則</a></li>
+      <li><a href="./ch01-03.html">1.3　相互情報量</a></li>
+      <li><a href="./ch01-04.html">1.4　条件付き相互情報量</a></li>
+      <li><a href="./ch01-05.html">1.5　エントロピー・相互情報量のチェイン則</a></li>
+      <li><a href="./ch01-06.html">1.6　情報不等式（Jensen と相対エントロピー）</a></li>
+      <li><a href="./ch01-07.html">1.7　対数和不等式</a></li>
+      <li><a href="./ch01-08.html">1.8　データ処理不等式</a></li>
+      <li><a href="./ch01-09.html">1.9　十分統計量</a></li>
+      <li><a href="./ch01-10.html">1.10　ファノの不等式</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch02-01.html">第2章　漸近等分配性とデータ圧縮</a>
+    <ol class="subtoc">
+      <li><a href="./ch02-01.html">2.1　漸近等分配性</a></li>
+      <li><a href="./ch02-02.html">2.2　典型集合</a></li>
+      <li><a href="./ch02-03.html">2.3　情報源符号化定理</a></li>
+      <li><a href="./ch02-04.html">2.4　強典型性</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch03-01.html">第3章　定常情報源のエントロピーレート</a>
+    <ol class="subtoc">
+      <li><a href="./ch03-01.html">3.1　定常情報源</a></li>
+      <li><a href="./ch03-02.html">3.2　エントロピーレート</a></li>
+      <li><a href="./ch03-03.html">3.3　マルコフ情報源のエントロピーレート</a></li>
+      <li><a href="./ch03-04.html">3.4　エルゴード性と時間平均</a></li>
+      <li><a href="./ch03-05.html">3.5　Shannon–McMillan–Breiman 定理</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch04-01.html">第4章　符号語長と最適符号</a>
+    <ol class="subtoc">
+      <li><a href="./ch04-01.html">4.1　符号と一意復号可能性</a></li>
+      <li><a href="./ch04-02.html">4.2　Kraft の不等式</a></li>
+      <li><a href="./ch04-03.html">4.3　平均符号長の下界</a></li>
+      <li><a href="./ch04-04.html">4.4　Shannon 符号</a></li>
+      <li><a href="./ch04-05.html">4.5　McMillan の不等式</a></li>
+      <li><a href="./ch04-06.html">4.6　Huffman 符号の最適性</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch05-01.html">第5章　ギャンブルと情報</a>
+    <ol class="subtoc">
+      <li><a href="./ch05-01.html">5.1　競馬と倍加率</a></li>
+      <li><a href="./ch05-02.html">5.2　比例賭けの最適性</a></li>
+      <li><a href="./ch05-03.html">5.3　倍加率とエントロピー</a></li>
+      <li><a href="./ch05-04.html">5.4　副情報の値打ち</a></li>
+      <li><a href="./ch05-05.html">5.5　資産の長時間のふるまい</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch06-01.html">第6章　通信路容量</a>
+    <ol class="subtoc">
+      <li><a href="./ch06-01.html">6.1　通信路と通信路容量</a></li>
+      <li><a href="./ch06-02.html">6.2　ブロック通信路符号と結合典型集合</a></li>
+      <li><a href="./ch06-03.html">6.3　ランダム符号化と達成可能性</a></li>
+      <li><a href="./ch06-04.html">6.4　逆定理</a></li>
+      <li><a href="./ch06-05.html">6.5　フィードバックのある通信路</a></li>
+      <li><a href="./ch06-06.html">6.6　強逆定理</a></li>
+      <li><a href="./ch06-07.html">6.7　一般の通信路の容量</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch07-01.html">第7章　微分エントロピー</a>
+    <ol class="subtoc">
+      <li><a href="./ch07-01.html">7.1　微分エントロピー</a></li>
+      <li><a href="./ch07-02.html">7.2　ガウス分布の微分エントロピー</a></li>
+      <li><a href="./ch07-03.html">7.3　アフィン変換と微分エントロピー</a></li>
+      <li><a href="./ch07-04.html">7.4　結合微分エントロピーと劣加法性</a></li>
+      <li><a href="./ch07-05.html">7.5　連続な相対エントロピーと相互情報量</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch08-01.html">第8章　ガウス通信路</a>
+    <ol class="subtoc">
+      <li><a href="./ch08-01.html">8.1　ガウス通信路</a></li>
+      <li><a href="./ch08-02.html">8.2　ガウス通信路の容量</a></li>
+      <li><a href="./ch08-03.html">8.3　逆定理</a></li>
+      <li><a href="./ch08-04.html">8.4　達成可能性</a></li>
+      <li><a href="./ch08-05.html">8.5　帯域制限ガウス通信路</a></li>
+      <li><a href="./ch08-06.html">8.6　並列ガウス通信路と注水</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch09-01.html">第9章　レート歪み理論</a>
+    <ol class="subtoc">
+      <li><a href="./ch09-01.html">9.1　歪みとレート歪み関数</a></li>
+      <li><a href="./ch09-02.html">9.2　レート歪み関数の性質</a></li>
+      <li><a href="./ch09-03.html">9.3　二値情報源</a></li>
+      <li><a href="./ch09-04.html">9.4　ガウス情報源と逆注水</a></li>
+      <li><a href="./ch09-05.html">9.5　逆定理</a></li>
+      <li><a href="./ch09-06.html">9.6　達成可能性</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch10-01.html">第10章　最大エントロピー</a>
+    <ol class="subtoc">
+      <li><a href="./ch10-01.html">10.1　最大エントロピー問題</a></li>
+      <li><a href="./ch10-02.html">10.2　モーメント制約と Gibbs 分布</a></li>
+      <li><a href="./ch10-03.html">10.3　分配関数と Legendre 双対性</a></li>
+      <li><a href="./ch10-04.html">10.4　Lagrange 乗数の存在</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch11-01.html">第11章　仮説検定と大偏差</a>
+    <ol class="subtoc">
+      <li><a href="./ch11-01.html">11.1　型と型類</a></li>
+      <li><a href="./ch11-02.html">11.2　型類の確率</a></li>
+      <li><a href="./ch11-03.html">11.3　Sanov の定理</a></li>
+      <li><a href="./ch11-04.html">11.4　仮説検定と Stein の補題</a></li>
+      <li><a href="./ch11-05.html">11.5　Bayes 誤り確率と Chernoff 情報</a></li>
+      <li><a href="./ch11-06.html">11.6　I 射影と誤りの指数のトレードオフ</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch12-01.html">第12章　万能符号</a>
+    <ol class="subtoc">
+      <li><a href="./ch12-01.html">12.1　万能符号と冗長度</a></li>
+      <li><a href="./ch12-02.html">12.2　型による万能符号</a></li>
+      <li><a href="./ch12-03.html">12.3　ミニマックス冗長度と通信路容量</a></li>
+      <li><a href="./ch12-04.html">12.4　算術符号</a></li>
+      <li><a href="./ch12-05.html">12.5　Lempel–Ziv 符号</a></li>
+      <li><a href="./ch12-06.html">12.6　Lempel–Ziv 符号の最適性</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch13-01.html">第13章　コルモゴロフ複雑性</a>
+    <ol class="subtoc">
+      <li><a href="./ch13-01.html">13.1　記述の長さと万能機械</a></li>
+      <li><a href="./ch13-02.html">13.2　圧縮できない対象と計算不可能性</a></li>
+      <li><a href="./ch13-03.html">13.3　複雑性とエントロピー</a></li>
+      <li><a href="./ch13-04.html">13.4　自己限定万能機械と万能確率</a></li>
+      <li><a href="./ch13-05.html">13.5　停止確率</a></li>
+      <li><a href="./ch13-06.html">13.6　二部記述と最小記述長</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch14-01.html">第14章　ネットワーク情報理論</a>
+    <ol class="subtoc">
+      <li><a href="./ch14-01.html">14.1　多元接続通信路</a></li>
+      <li><a href="./ch14-02.html">14.2　多元接続通信路の容量領域</a></li>
+      <li><a href="./ch14-03.html">14.3　相関のある情報源の符号化</a></li>
+      <li><a href="./ch14-04.html">14.4　副情報つきレート歪み</a></li>
+      <li><a href="./ch14-05.html">14.5　ブロードキャスト通信路と重ね合わせ符号化</a></li>
+      <li><a href="./ch14-06.html">14.6　通信路のクラスと UV 外界</a></li>
+      <li><a href="./ch14-07.html">14.7　Marton の内界</a></li>
+      <li><a href="./ch14-08.html">14.8　中継通信路</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch15-01.html">第15章　ポートフォリオ理論</a>
+    <ol class="subtoc">
+      <li><a href="./ch15-01.html">15.1　市場とポートフォリオ</a></li>
+      <li><a href="./ch15-02.html">15.2　対数最適ポートフォリオ</a></li>
+      <li><a href="./ch15-03.html">15.3　競争最適性</a></li>
+      <li><a href="./ch15-04.html">15.4　副情報の値打ち</a></li>
+      <li><a href="./ch15-05.html">15.5　i.i.d. 市場での長期のふるまい</a></li>
+      <li><a href="./ch15-06.html">15.6　定常エルゴード市場</a></li>
+      <li><a href="./ch15-07.html">15.7　記憶が伸びる戦略と $W_\infty$</a></li>
+      <li><a href="./ch15-08.html">15.8　万能ポートフォリオ</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="./ch16-01.html">第16章　エントロピー不等式</a>
+    <ol class="subtoc">
+      <li><a href="./ch16-01.html">16.1　部分集合のエントロピー</a></li>
+      <li><a href="./ch16-02.html">16.2　Han の不等式</a></li>
+      <li><a href="./ch16-03.html">16.3　Shearer の不等式</a></li>
+      <li><a href="./ch16-04.html">16.4　数え上げへの応用</a></li>
+      <li><a href="./ch16-05.html">16.5　超立方体の辺等周</a></li>
+      <li><a href="./ch16-06.html">16.6　行列式の不等式</a></li>
+      <li><a href="./ch16-07.html">16.7　エントロピーべきと Fisher 情報量</a></li>
+      <li><a href="./ch16-08.html">16.8　Stam の不等式とエントロピーべき不等式</a></li>
+    </ol>
+  </li>
+</ul>
+<p class="site-note">InformationTheory — 形式化検証つき情報理論教科書（レビュー版）．数式は MathJax + AMS Euler で事前レンダリング．</p>
+</div>
+</body>
+</html>
