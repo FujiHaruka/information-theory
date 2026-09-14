@@ -310,7 +310,7 @@ h1:target, h2:target, h3:target {
 }
 .toc a { font-weight: 600; font-size: 1.05rem; text-decoration: none; }
 .subtoc { list-style: none; padding: 0; margin: .8rem 0 0; border-top: 1px solid #ececec; }
-.subtoc li { margin: 0; padding: .3rem 0 0; }
+.subtoc li { margin: 0; padding: .3rem 0 0; border: none; border-radius: 0; }
 .subtoc a { font-weight: 400; font-size: .92rem; }
 
 @media (prefers-color-scheme: dark) {
