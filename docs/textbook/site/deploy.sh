@@ -15,7 +15,7 @@
 set -euo pipefail
 
 # 公開 URL。Netlify の Site name を変えたらここも直す。
-SITE_URL="https://information-theory-textbook.netlify.app"
+SITE_URL="https://info-theory.fuji.land"
 
 DENO="${DENO:-/opt/homebrew/bin/deno}"
 [ -x "$DENO" ] || DENO="$(command -v deno || true)"
