@@ -1,7 +1,7 @@
-# 教科書レビュー用 静的サイト (surge.sh)
+# 教科書レビュー用 静的サイト (Netlify)
 
 `docs/textbook/` の原稿を **MathJax でサーバー側レンダリング**した静的 HTML に変換し、
-surge.sh にホストする。数式はビルド時に HTML 化されるためクライアント JS 不要で、
+Netlify にホストする。数式はビルド時に HTML 化されるためクライアント JS 不要で、
 モバイルでも確実に表示される（GitHub ネイティブ math の不安定さを回避）。
 
 書体は 3 系統に分けている。**和文は BIZ UDGothic**（モリサワの UD ゴシック）、
@@ -27,7 +27,7 @@ surge.sh にホストする。数式はビルド時に HTML 化されるため�
 
 ```bash
 cd docs/textbook/site
-./deploy.sh                           # build → surge。末尾に公開 URL が出る
+./deploy.sh                           # build → site ブランチへ push。末尾に公開 URL が出る
 deno run -A build.mjs                 # ビルドだけ（→ dist/）
 deno run -A build.mjs --audit-refs    # 参照・形式化ポインタの取りこぼしを目で確かめる
 ./vocab.ts <章スラッグ>                # 語彙の点検。新しい節を書いたら回す
@@ -48,12 +48,24 @@ deno run -A build.mjs --audit-refs    # 参照・形式化ポインタの取り�
 | 各検査・自動リンクの挙動と、そうした理由 | `build.mjs` の該当節のコメント |
 | 用語の採否と、その語を採った理由 | `terminology.mjs` |
 | 数式エンジンと書体の組み立て | `build.mjs` の「数式エンジン」節のコメント |
-| デプロイの詳細（ログインの経路・ドメインの決まり方） | `deploy.sh` の冒頭コメント |
-| 公開先ドメインと認証情報 | `surge-credentials.txt` |
+| デプロイの仕組み（なぜ孤立ブランチに force-push するのか） | `deploy.sh` の冒頭コメント |
+| 公開 URL | `deploy.sh` の `SITE_URL` |
 | 章立てと進捗の管理 | [`docs/textbook-roadmap.md`](../../textbook-roadmap.md) |
+
+## 公開の仕組み
+
+`deploy.sh` はビルド結果 `dist/` の中身だけを孤立ブランチ **`site`** に force-push する。
+Netlify はそのブランチを本番ブランチとして見ており（ビルドコマンド無し・公開ディレクトリ =
+ルート）、push された中身をそのまま配信する。デプロイ専用の資格情報は無く、認証は origin へ
+push できる SSH 鍵だけである。
+
+`site` の履歴は毎回作り直す（常に 1 コミット）。1 回ぶんが 25MB あるので、積み上げると
+clone が重くなる。
+
+Netlify 側の設定は UI が持つ。ブランチ・ビルドコマンド・公開ディレクトリ・サイト名を変えたら、
+`deploy.sh` の `BRANCH` と `SITE_URL` も合わせる。
 
 ## 公開範囲の注意
 
-surge にデプロイしたサイトは **誰でも閲覧できる公開ページ**になる（URL を知っていれば
-アクセス可能）。リポジトリはプライベートだが、ここに置いた原稿は公開される点に留意する。
-認証情報 `surge-credentials.txt` は平文で git 管理している（ユーザー明示了承）。
+デプロイしたサイトは **誰でも閲覧できる公開ページ**になる。リポジトリ自体も public なので
+原稿はいずれにせよ公開されるが、サイトのほうは URL を知っていれば誰でも読める。

@@ -16,3 +16,6 @@
 
 # Plan staleness report — regenerated each run by scripts/plan_lint.ts
 /docs/plan-staleness-report.md
+
+# 教科書サイトのビルド成果物 — deploy.sh が site ブランチへ push する
+/docs/textbook/site/dist/

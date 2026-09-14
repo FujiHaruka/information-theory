@@ -192,7 +192,7 @@ rather than on every edit; the reusable brief templates live in
 After editing a manuscript under `docs/textbook/`, **always** redeploy the site without asking for confirmation (run `docs/textbook/site/deploy.sh`). It is an outward-facing publish, but per-time approval is not required (the user has stated this — they want the manuscript and the live site always in sync).
 
 - Workflow: edit source → build → commit → run `deploy.sh` automatically.
-- surge sometimes fails on the first attempt with a processing error (the `payload.error.filename` undefined family) — it's transient, so one retry gets through.
+- `deploy.sh` builds `dist/` and force-pushes its contents to the orphan branch `site`, which Netlify serves as-is (no build command, publish directory = repo root). It needs no deploy credentials — the push rides the existing `origin` SSH key — so a failure there is an ordinary git push failure, not a hosting-provider quirk.
 
 ## Handoff
 

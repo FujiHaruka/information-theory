@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
-# 教科書パイロットサイトを build → surge にデプロイする。
+# 教科書サイトを build → site ブランチへ push する。Netlify がそのブランチを配信する。
 # 使い方:  ./deploy.sh
 #
 # - Deno でビルド（数式を MathJax + AMS Euler でサーバー側レンダリング）し dist/ を生成。
-# - surge にデプロイ。ログイン済み (~/.netrc) なら非対話。未ログインなら
-#   surge-credentials.txt の email/password で自動ログイン（expect 経由）。
+# - dist/ の中身だけを載せた孤立ブランチ site に force-push する。Netlify 側は
+#   「ビルドコマンド無し・公開ディレクトリ = ルート」で、push された中身をそのまま配信する。
+#   認証は origin への push に使う既存の SSH 鍵だけで、デプロイ専用の資格情報は要らない。
+# - 履歴は毎回作り直す（site は常に 1 コミット）。1 回ぶんが 25MB あるので、積み上げると
+#   public リポジトリの clone が重くなる。
+# - push は使い捨ての一時リポジトリから行う。本体の作業ツリーにも .git/index.lock にも
+#   触れないようにするためで、git 2.42 以降なら `git worktree add --orphan` でも同じことが
+#   できる（このマシンの git は 2.39）。
 # - このマシンの /usr/local/bin/node は署名が壊れて起動不可のため Deno を使う。
 set -euo pipefail
+
+# 公開 URL。Netlify の Site name を変えたらここも直す。
+SITE_URL="https://information-theory-textbook.netlify.app"
 
 DENO="${DENO:-/opt/homebrew/bin/deno}"
 [ -x "$DENO" ] || DENO="$(command -v deno || true)"
@@ -15,46 +24,23 @@ DENO="${DENO:-/opt/homebrew/bin/deno}"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
-CRED="$DIR/surge-credentials.txt"
-[ -f "$CRED" ] || { echo "$CRED がありません" >&2; exit 1; }
-EMAIL=$(grep '^email='    "$CRED" | cut -d= -f2-)
-PW=$(   grep '^password=' "$CRED" | cut -d= -f2-)
-DOMAIN=$(grep '^domain='  "$CRED" | cut -d= -f2-)
-[ -n "$DOMAIN" ] || { echo "domain が surge-credentials.txt に無い" >&2; exit 1; }
+BRANCH="${SITE_BRANCH:-site}"
+REMOTE="$(git remote get-url origin)"
+SRC="$(git rev-parse --short HEAD)"
 
 echo "==> build (deno)"
 "$DENO" run -A build.mjs
 
-echo "==> deploy to $DOMAIN"
-EXP="$(mktemp)"
-trap 'rm -f "$EXP"' EXIT
-cat > "$EXP" <<'EXPEOF'
-set timeout 300
-set email  [lindex $argv 0]
-set pw     [lindex $argv 1]
-set domain [lindex $argv 2]
-set deno   [lindex $argv 3]
-set ok 0
-spawn $deno run -A npm:surge ./dist $domain
-# ログイン済みなら email/password プロンプトは出ず直接 Success に進む。
-# 未ログインなら email: / password: に答える。両対応。
-expect {
-  -re "email:"     { send -- "$email\r"; exp_continue }
-  -re "password:"  { send -- "$pw\r";    exp_continue }
-  -re "Success!"   { set ok 1 }
-  -re "Aborted|denied|Forbidden|not available" { set ok 0 }
-  timeout          { puts "\nTIMEOUT"; exit 2 }
-  eof              { }
-}
-catch { expect eof }
-exit [expr {$ok ? 0 : 1}]
-EXPEOF
+[ -f dist/index.html ] || { echo "dist/index.html がありません（ビルド失敗）" >&2; exit 1; }
 
-if expect "$EXP" "$EMAIL" "$PW" "$DOMAIN" "$DENO"; then
-  echo "==> done"
-  echo "https://$DOMAIN"
-else
-  rc=$?
-  echo "==> deploy failed (rc=$rc)" >&2
-  exit "$rc"
-fi
+echo "==> push to $BRANCH ($(find dist -type f | wc -l | tr -d ' ') files)"
+STAGE="$(mktemp -d)"
+trap 'rm -rf "$STAGE"' EXIT
+cp -R dist/. "$STAGE/"
+git -C "$STAGE" init -q
+git -C "$STAGE" add -A
+git -C "$STAGE" commit -q -m "textbook site build (source $SRC)"
+git -C "$STAGE" push -q --force "$REMOTE" "HEAD:refs/heads/$BRANCH"
+
+echo "==> done"
+echo "$SITE_URL"

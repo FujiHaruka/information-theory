@@ -1,6 +1,6 @@
 # 教科書サイトのホスト先を surge → Netlify に移す
 
-**状態**: 計画（未着手）
+**状態**: こちら側は完了。Netlify の UI 設定（下記「人間の手でやること」）待ち。
 **対象**: `docs/textbook/site/`（`build.mjs` / `deploy.sh` / `README.md`）と `CLAUDE.md` の「Textbook site deploy」節
 
 ## 現状
@@ -20,15 +20,15 @@
 - **認証情報が要らなくなる**。push は既存の SSH 鍵で通るので、`surge-credentials.txt` は削除できる。この移行のいちばん大きい利得はここ。
 - **一時 clone 方式を採るのは、作業ツリーを汚さないため**。`git worktree add --orphan` はこのマシンの git 2.39 には無い（2.42 以降）。使い捨てリポジトリから force-push すれば、main のインデックスにも `.git/index.lock` にも触れない。
 
-## そちら（Claude）で進めること
+## そちら（Claude）で進めること — 完了
 
-1. `.gitignore` に `/docs/textbook/site/dist/` を追加（`dist` を誤って main にコミットしないため）。
-2. `deploy.sh` を書き換え。build（現状のまま）→ 一時ディレクトリに `dist/` をコピー → `git init` → 1 コミット → `git push --force origin HEAD:site`。末尾に公開 URL を出す。
-3. 空でない `site` ブランチを初回 push しておく（**Netlify の UI はブランチが存在しないと選択肢に出ない**ので、人間の設定より先に済ませる必要がある）。
-4. `surge-credentials.txt` を削除、`deploy.sh` から expect / surge の経路を削除。
-5. `docs/textbook/site/README.md` の更新（タイトル・デプロイ節・「どこに何があるか」表の「公開先ドメインと認証情報」行）。
-6. `CLAUDE.md`「Textbook site deploy」節の更新（surge の transient error に関する 1 行を削除、公開の仕組みを Netlify に）。
-7. （人間の設定が済んだあと）実際に `deploy.sh` を走らせて、Netlify 上で全 101 ページと数式フォントが出ることを確認。
+1. ✅ `.gitignore` に `/docs/textbook/site/dist/` を追加（`dist` を誤って main にコミットしないため）。
+2. ✅ `deploy.sh` を書き換え。build（現状のまま）→ 一時ディレクトリに `dist/` をコピー → `git init` → 1 コミット → `git push --force origin HEAD:site`。末尾に公開 URL を出す。
+3. ✅ 空でない `site` ブランチを初回 push した（123 ファイル、`refs/heads/site`）。（**Netlify の UI はブランチが存在しないと選択肢に出ない**ので、人間の設定より先に済ませる必要がある）。
+4. ✅ `surge-credentials.txt` を削除、`deploy.sh` から expect / surge の経路を削除。
+5. ✅ `docs/textbook/site/README.md` の更新（タイトル・デプロイ節・「どこに何があるか」表の「公開先ドメインと認証情報」行）。
+6. ✅ `CLAUDE.md`「Textbook site deploy」節の更新（surge の transient error に関する 1 行を削除、公開の仕組みを Netlify に）。
+7. ⏳ （人間の設定が済んだあと）実際に `deploy.sh` を走らせて、Netlify 上で全 101 ページと数式フォントが出ることを確認。
 
 ## 人間の手でやること（Netlify の UI）
 
@@ -41,14 +41,14 @@
    - Build command: **空**
    - Publish directory: `.`（ルート。空欄でも同じ）
    - Base directory: 空
-4. サイト名（`https://<名前>.netlify.app` の `<名前>`）を決める。Site configuration → Site details → Change site name。決めたら教えてほしい（README に書く）。
+4. サイト名（`https://<名前>.netlify.app` の `<名前>`）を **`information-theory-textbook`** にする。Site configuration → Site details → Change site name。`deploy.sh` の `SITE_URL` にこの名前で書いてあるので、別の名前にするなら教えてほしい（`deploy.sh` を直す）。
 5. 独自ドメインを当てたいなら Domain management で設定する（任意。当てないなら `.netlify.app` のままでよい）。
 6. **surge のパスワードを変更するか、surge アカウントを捨てる。** 平文パスワードを public リポジトリにコミットしてあり、ファイルを消しても git の履歴には残る。移行後に surge を使わなくなっても、この 1 手だけは残る。
 7. （任意）surge 側のサイトを畳む。`deno run -A npm:surge teardown common2026-ch2.surge.sh` はこちらでも実行できるので、畳んでよければ言ってほしい。
 
 ## 決めてもらう必要があるもの
 
-- **サイト名**（上の 4）。これだけは Netlify の UI でしか決まらない。README への反映は名前が決まってからで、移行そのものはブロックしない。
+- **サイト名**（上の 4）。`information-theory-textbook` を既定として `deploy.sh` に書いてある。別の名前にするなら教えてほしい。
 
 ## 補足（この計画では採らなかった選択肢）
 
