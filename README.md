@@ -228,3 +228,9 @@ committed manifest.
 API documentation is built in CI by [litedoc4](https://github.com/FujiHaruka/litedoc4) and
 published to https://fujiharuka.github.io/information-theory/ on every release, so there is no
 local documentation build to run.
+
+## Textbook
+
+A Japanese textbook built on this formalization is published at https://info-theory.fuji.land.
+It reads on its own without any Lean, and each main result links to the machine-verified
+declaration behind it.
