@@ -1261,6 +1261,34 @@ md.core.ruler.push('formalized_links', (state) => {
   }
 });
 
+// 原稿の行を走査する検査では、字下げ忘れの段落が項目の続きに見えて拾えないのでトークンで見る。
+let listBreaks = 0;
+md.core.ruler.push('list_breaks', (state) => {
+  const src = state.env?.ctx?.src;
+  if (!src) return;
+  const toks = state.tokens;
+  const openOf = [];
+  toks.forEach((t, i) => {
+    if (t.type === 'ordered_list_open') {
+      openOf.push(t);
+      const start = Number(t.attrGet('start') ?? 1);
+      if (start !== 1) {
+        listBreaks += 1;
+        console.warn(`warn: 番号つきリストの切れ目 ${src}:${t.map[0] + 1}`
+          + ` 「${start}.」が別のリストになっている（前の項目の続きを 3 スペース字下げする）`);
+      }
+    } else if (t.type === 'ordered_list_close') {
+      const open = openOf.pop();
+      const next = toks[i + 1];
+      if (next?.type === 'math_block' && next.map?.[0] === open.map[1]) {
+        listBreaks += 1;
+        console.warn(`warn: 番号つきリストの切れ目 ${src}:${next.map[0] + 1}`
+          + ' 項目の中の `$$` が字下げされておらずリストを閉じている');
+      }
+    }
+  });
+});
+
 let missingProofs = 0;
 let termIssues = 0;
 let titleMismatches = 0;
@@ -1413,6 +1441,7 @@ if (titleMismatches > 0) console.warn(`warn: 節タイトルの不一致 ${title
 if (wrappedLines > 0) console.warn(`warn: 段落の途中の改行 ${wrappedLines} 件`);
 if (dashes > 0) console.warn(`warn: ダッシュ ${dashes} 件`);
 if (punct > 0) console.warn(`warn: 句読点 ${punct} 件`);
+if (listBreaks > 0) console.warn(`warn: 番号つきリストの切れ目 ${listBreaks} 件`);
 if (unresolvedRefs > 0) console.warn(`warn: 参照 ${unresolvedRefs} 件`);
 if (duplicateNums > 0) console.warn(`warn: 番号の重複 ${duplicateNums} 件`);
 if (brokenPointers > 0) console.warn(`warn: 形式化ポインタ ${brokenPointers} 件`);

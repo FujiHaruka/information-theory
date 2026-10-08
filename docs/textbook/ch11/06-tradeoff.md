@@ -105,11 +105,11 @@ $$
 2. その I 射影 $Q^\star$ は，$\mathcal K$ の上でエントロピーを最大にする分布である．
 3. $n$ が奇数ならば $\{x \in \mathcal X^n : \hat P_x \in \mathcal K\}$ は空である．
 4. $U^n(\{x \in \mathcal X^n : \hat P_x \in \mathcal K\})$ が正であるような $n$ に限って考えることにすると，どの $\varepsilon > 0$ についても，ある $n_0$ があって，$n \ge n_0$ を満たすそのような $n$ のすべてについて
-$$
-\frac1n\log U^n\big(\{\, x \in \mathcal X^n \;:\; \hat P_x \in \mathcal K \,\}\big)
-  \;\le\; -D\big(Q^\star\,\big\|\,U\big) + \varepsilon
-$$
-が成り立つ（$D$ は 1.6 節の相対エントロピー）．
+   $$
+   \frac1n\log U^n\big(\{\, x \in \mathcal X^n \;:\; \hat P_x \in \mathcal K \,\}\big)
+     \;\le\; -D\big(Q^\star\,\big\|\,U\big) + \varepsilon
+   $$
+   が成り立つ（$D$ は 1.6 節の相対エントロピー）．
 :::
 
 ::: proof
@@ -286,17 +286,17 @@ $\mathcal X = \{0,1\}$ とし，$P$ を $P(0) = 0.1$，$P(1) = 0.9$，$Q$ を $Q
 
 2. まず $\tilde P \in \mathcal K(t)$ だから $E^*(t) \le D(\tilde P\,\|\,Q)$ である．補題 11.2.5 より，$\mathcal X$ 上のどの分布 $\tilde P'$ についても $D(\tilde P'\,\|\,Q) = \log 2 - H_b\big(\tilde P'(0)\big)$ だから，これは $E^*(t) \le \log 2 - H_b(\tilde P(0))$ ということである．
 
-逆向きを示すには，$\mathcal K(t)$ のどの分布 $\tilde P'$ でも $H_b(\tilde P'(0)) \le H_b(\tilde P(0))$ であることを見ればよい．$\tilde P'(0) \le \tilde P(0)$ の場合は，$\tilde P(0) \le 1/2$ だから 補題 9.3.1 の第 $3$ の主張がそのまま与える．$\tilde P'(0) > \tilde P(0)$ の場合を見る．$\tilde P(0) = 0.1$ すなわち $\tilde P = P$ ならば $t = D(P\,\|\,P) = 0$ であり，$D(\tilde P'\,\|\,P) \le 0$ と 定理 1.6.1 から $\tilde P' = P$ となって $\tilde P'(0) > \tilde P(0)$ に反する．そこで $\tilde P(0) > 0.1$ とする．このとき
-$$
-\theta \;:=\; \frac{\tilde P(0) - 0.1}{\tilde P'(0) - 0.1} \;\in\; (0,1)
-$$
-と置くと，$(1-\theta)P + \theta\tilde P'$ の第 $0$ 成分は $0.1 + \theta\big(\tilde P'(0) - 0.1\big) = \tilde P(0)$ であり，二値だから第 $1$ 成分も一致して $(1-\theta)P + \theta\tilde P' = \tilde P$ である．$P \ne \tilde P'$（第 $0$ 成分が違う）だから，定理 11.6.2 の狭義凸性より
-$$
-D(\tilde P\,\|\,P) \;<\; (1-\theta)D(P\,\|\,P) + \theta\,D(\tilde P'\,\|\,P) \;=\; \theta\,D(\tilde P'\,\|\,P) \;\le\; D(\tilde P'\,\|\,P)
-$$
-である（最後の不等号は 定理 1.6.1 より $D(\tilde P'\,\|\,P) \ge 0$ であることによる）．左辺は $t$ だから $D(\tilde P'\,\|\,P) > t$ となり，$\tilde P' \in \mathcal K(t)$ に反する．よってこの場合は起こらない．
+   逆向きを示すには，$\mathcal K(t)$ のどの分布 $\tilde P'$ でも $H_b(\tilde P'(0)) \le H_b(\tilde P(0))$ であることを見ればよい．$\tilde P'(0) \le \tilde P(0)$ の場合は，$\tilde P(0) \le 1/2$ だから 補題 9.3.1 の第 $3$ の主張がそのまま与える．$\tilde P'(0) > \tilde P(0)$ の場合を見る．$\tilde P(0) = 0.1$ すなわち $\tilde P = P$ ならば $t = D(P\,\|\,P) = 0$ であり，$D(\tilde P'\,\|\,P) \le 0$ と 定理 1.6.1 から $\tilde P' = P$ となって $\tilde P'(0) > \tilde P(0)$ に反する．そこで $\tilde P(0) > 0.1$ とする．このとき
+   $$
+   \theta \;:=\; \frac{\tilde P(0) - 0.1}{\tilde P'(0) - 0.1} \;\in\; (0,1)
+   $$
+   と置くと，$(1-\theta)P + \theta\tilde P'$ の第 $0$ 成分は $0.1 + \theta\big(\tilde P'(0) - 0.1\big) = \tilde P(0)$ であり，二値だから第 $1$ 成分も一致して $(1-\theta)P + \theta\tilde P' = \tilde P$ である．$P \ne \tilde P'$（第 $0$ 成分が違う）だから，定理 11.6.2 の狭義凸性より
+   $$
+   D(\tilde P\,\|\,P) \;<\; (1-\theta)D(P\,\|\,P) + \theta\,D(\tilde P'\,\|\,P) \;=\; \theta\,D(\tilde P'\,\|\,P) \;\le\; D(\tilde P'\,\|\,P)
+   $$
+   である（最後の不等号は 定理 1.6.1 より $D(\tilde P'\,\|\,P) \ge 0$ であることによる）．左辺は $t$ だから $D(\tilde P'\,\|\,P) > t$ となり，$\tilde P' \in \mathcal K(t)$ に反する．よってこの場合は起こらない．
 
-以上より，$\mathcal K(t)$ のどの分布 $\tilde P'$ でも $D(\tilde P'\,\|\,Q) = \log 2 - H_b(\tilde P'(0)) \ge \log 2 - H_b(\tilde P(0))$ である．$\tilde P$ 自身が $\mathcal K(t)$ に属するから，下限はこの値であり，$E^*(t) = \log 2 - H_b(\tilde P(0))$ を得る．
+   以上より，$\mathcal K(t)$ のどの分布 $\tilde P'$ でも $D(\tilde P'\,\|\,Q) = \log 2 - H_b(\tilde P'(0)) \ge \log 2 - H_b(\tilde P(0))$ である．$\tilde P$ 自身が $\mathcal K(t)$ に属するから，下限はこの値であり，$E^*(t) = \log 2 - H_b(\tilde P(0))$ を得る．
 
 3. 例 11.5.14 の第 $2$ の主張より $P_{\lambda^*}(0) = 0.26751\ldots$ で，これは $[0.1, 0.5]$ に属する．また 命題 11.5.11 より $D(P_{\lambda^*}\,\|\,P) = C^*(P,Q)$ であり，命題 11.5.7 より $C^*(P,Q) \ge 0$ だから，$t := C^*(P,Q)$，$\tilde P := P_{\lambda^*}$ は第 $2$ の主張の条件を満たす．よって $E^*(C^*(P,Q)) = \log 2 - H_b(P_{\lambda^*}(0))$ である．いっぽう 命題 11.5.11 より $C^*(P,Q) = D(P_{\lambda^*}\,\|\,Q)$ であり，補題 11.2.5 を $P_{\lambda^*}$ に当てると，これも $\log 2 - H_b(P_{\lambda^*}(0))$ に等しい．二つは同じ数だから $E^*(C^*(P,Q)) = C^*(P,Q)$ であり，例 11.5.14 の第 $3$ の主張よりその値は $0.11237\ldots$ である．
 :::
