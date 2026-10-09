@@ -32,7 +32,12 @@ deno run -A build.mjs                 # ビルドだけ（→ dist/）
 ./check-links.ts                      # dist/ のリンク切れ検査（ネットワークに出ない）
 deno run -A build.mjs --audit-refs    # 参照・形式化ポインタの取りこぼしを目で確かめる
 ./vocab.ts <章スラッグ>                # 語彙の点検。新しい節を書いたら回す
+./feedback.ts                         # レビューコメントを原稿の行に寄せて出す（--done <id> で処理済みにする）
 ```
+
+サイトを `?review=1` を付けて開くと、その端末でだけ Hypothesis の注釈 UI が出る（`?review=0` で消える）。
+テキストを選んで付けたコメントは非公開グループ「教科書レビュー」に入り、`feedback.ts` がそれを集める。
+トークンは `~/.config/hypothesis/token` か環境変数 `HYPOTHESIS_TOKEN` に置く。
 
 ビルドは原稿の不備を `warn:` として挙げる。**warn 0 件を保つ**。何がなぜ warn なのかは、
 その検査を書いた `build.mjs` のコメントと、そこが指す執筆原則の節が持つ。

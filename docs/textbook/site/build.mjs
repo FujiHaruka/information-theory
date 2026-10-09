@@ -592,6 +592,24 @@ md.core.ruler.push('section_anchor', (state) => {
   }
 });
 
+// クエリだけで判定しないのは、前後ナビのリンクがクエリを運ばず次のページで注釈 UI が消えるため。
+const reviewLoader = `<script>
+(() => {
+  const KEY = 'textbook-review';
+  const q = new URLSearchParams(location.search).get('review');
+  try {
+    if (q === '1') localStorage.setItem(KEY, '1');
+    if (q === '0') localStorage.removeItem(KEY);
+    if (localStorage.getItem(KEY) !== '1') return;
+  } catch { if (q !== '1') return; }
+  window.hypothesisConfig = () => ({ showHighlights: 'always', openSidebar: false });
+  const s = document.createElement('script');
+  s.src = 'https://hypothes.is/embed.js';
+  s.async = true;
+  document.head.appendChild(s);
+})();
+</script>`;
+
 function page({ title, bodyHtml }) {
 
   return `<!doctype html>
@@ -602,6 +620,7 @@ function page({ title, bodyHtml }) {
 <title>${escapeHtml(title)}</title>
 ${cssCdn}
 <style>${styles}</style>
+${reviewLoader}
 </head>
 <body>
 <div class="container">
