@@ -8,7 +8,7 @@ const DONE = 'done';
 
 const root = new URL('..', import.meta.url).pathname;
 
-type Selector = { type: string; exact?: string };
+type Selector = { type: string; exact?: string; prefix?: string };
 type Annotation = {
   id: string;
   uri: string;
@@ -61,16 +61,18 @@ if (args[0] === '--done') {
 
 const srcBySlug = new Map<string, string>();
 for (const s of chapters.flatMap((c) => c.sections)) srcBySlug.set(s.slug, s.src);
+srcBySlug.set('', 'site/build.mjs');
 
 const slugOf = (uri: string) => new URL(uri).pathname.replace(/^\//, '').replace(/\.html$/, '');
 
 const quoteOf = (a: Annotation) =>
-  a.target.flatMap((t) => t.selector ?? []).find((s) => s.type === 'TextQuoteSelector')?.exact ?? '';
+  a.target.flatMap((t) => t.selector ?? []).find((s) => s.type === 'TextQuoteSelector') ?? { type: '' };
 
 // 引用全体で引かないのは、数式の隠れた MathML の文字が混ざって原稿と一致しないため。
-function lineHints(src: string, quote: string): number[] {
-  const runs = quote.match(/[　-ヿ一-鿿！-～]{4,}/g) ?? [];
-  const needle = runs.sort((x, y) => y.length - x.length)[0];
+function lineHints(src: string, { exact = '', prefix = '' }: Selector): number[] {
+  const longestRun = (t: string) =>
+    (t.match(/[　-ヿ一-鿿！-～]{4,}/g) ?? []).sort((x, y) => y.length - x.length)[0];
+  const needle = longestRun(exact) ?? longestRun(prefix + exact)?.slice(-12);
   if (!needle) return [];
   const lines = Deno.readTextFileSync(`${root}${src}`).split('\n');
   return lines.flatMap((l, i) => (l.includes(needle) ? [i + 1] : []));
@@ -88,8 +90,9 @@ for (const a of rows) {
 for (const [src, list] of byFile) {
   console.log(`## ${src}\n`);
   for (const a of list) {
-    const quote = quoteOf(a).replace(/\s+/g, ' ').trim();
-    const hints = src.startsWith('(') ? [] : lineHints(src, quote);
+    const selector = quoteOf(a);
+    const quote = (selector.exact ?? '').replace(/\s+/g, ' ').trim();
+    const hints = src.startsWith('(') ? [] : lineHints(src, selector);
     const at = hints.length ? `docs/textbook/${src}:${hints.join(',')}` : '行は特定できず';
     console.log(`- [${a.id}] ${at}${a.tags.includes(DONE) ? ' (done)' : ''}`);
     if (quote) console.log(`  > ${quote}`);
