@@ -1072,6 +1072,9 @@ const DECL_RE = new RegExp(`^(?:@\\[[^\\]]*\\]\\s*)*${MODIFIERS}`
 // private は他の修飾子より前とは限らない（`noncomputable private def`）。
 const PRIVATE_RE = new RegExp(`^(?:@\\[[^\\]]*\\]\\s*)*${MODIFIERS}private\\s`);
 
+// 行末までを見ないと、docstring の地の文（`namespace as plain …`）を名前空間の宣言と取り違える。
+const SCOPE_RE = (kw, rest) => new RegExp(`^${kw}${rest}\\s*(?:--.*)?$`);
+
 // 短い名前 → 宣言。同名は複数ありうる（`condEntropy` は 3 つ）ので、絞り込みは呼び出し側。
 function scanDecls() {
   const decls = new Map();
@@ -1088,9 +1091,16 @@ function scanDecls() {
     if (path !== file) { file = path; scope = []; files.add(path); }
 
     let g;
-    if ((g = body.match(/^namespace\s+(\S+)/))) { scope.push({ ns: true, name: g[1] }); continue; }
-    if ((g = body.match(/^section\b\s*(\S*)/))) { scope.push({ ns: false, name: g[1] }); continue; }
-    if ((g = body.match(/^end\b\s*(\S*)/))) {
+    if ((g = body.match(SCOPE_RE('namespace', '\\s+(\\S+)')))) {
+      scope.push({ ns: true, name: g[1] });
+      continue;
+    }
+    if ((g = body.match(SCOPE_RE('section', '(?:\\s+(\\S+))?')))) {
+      scope.push({ ns: false, name: g[1] ?? '' });
+      continue;
+    }
+    if ((g = body.match(SCOPE_RE('end', '(?:\\s+(\\S+))?')))) {
+      g[1] ??= '';
       // 無名の end が閉じるのは無名 section だけで、namespace は名前つきの end でしか
       // 閉じない。ここを取り違えると、以降の宣言の名前空間がまるごとずれる。
       const top = scope[scope.length - 1];

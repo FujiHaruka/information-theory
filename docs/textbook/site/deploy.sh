@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 教科書サイトを build → site ブランチへ push する。Netlify がそのブランチを配信する。
+# 教科書サイトを build → リンク検査 → site ブランチへ push する。Netlify がそのブランチを配信する。
 # 使い方:  ./deploy.sh
 #
 # - Deno でビルド（数式を MathJax + AMS Euler でサーバー側レンダリング）し dist/ を生成。
@@ -32,6 +32,9 @@ echo "==> build (deno)"
 "$DENO" run -A build.mjs
 
 [ -f dist/index.html ] || { echo "dist/index.html がありません（ビルド失敗）" >&2; exit 1; }
+
+echo "==> check links"
+"$DENO" run -A check-links.ts
 
 echo "==> push to $BRANCH ($(find dist -type f | wc -l | tr -d ' ') files)"
 STAGE="$(mktemp -d)"

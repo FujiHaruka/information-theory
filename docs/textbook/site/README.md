@@ -27,14 +27,22 @@ Netlify にホストする。数式はビルド時に HTML 化されるためク
 
 ```bash
 cd docs/textbook/site
-./deploy.sh                           # build → site ブランチへ push。末尾に公開 URL が出る
+./deploy.sh                           # build → リンク検査 → site ブランチへ push。末尾に公開 URL が出る
 deno run -A build.mjs                 # ビルドだけ（→ dist/）
+./check-links.ts                      # dist/ のリンク切れ検査（ネットワークに出ない）
 deno run -A build.mjs --audit-refs    # 参照・形式化ポインタの取りこぼしを目で確かめる
 ./vocab.ts <章スラッグ>                # 語彙の点検。新しい節を書いたら回す
 ```
 
 ビルドは原稿の不備を `warn:` として挙げる。**warn 0 件を保つ**。何がなぜ warn なのかは、
 その検査を書いた `build.mjs` のコメントと、そこが指す執筆原則の節が持つ。
+
+`check-links.ts` は組み上がった `dist/` のリンクを、GitHub に問い合わせずに確かめる。
+サイト内のリンクは行き先のファイルと id、ソースへのリンクはタグ時点の git のファイルと行数、
+API ドキュメントへのリンクは宣言の完全名とモジュールを Lean の環境（`lake env lean`、
+olean が要る）で照合する。手元で確かめられないのは 2 点で、タグがリモートにあること
+（origin/main に含まれることで代える）と、公開中の API ドキュメントが最新タグのものであること
+（`docs.yml` がタグの push ごとに作り直すことを前提にする）。
 
 ## どこに何があるか
 
