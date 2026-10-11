@@ -16,9 +16,9 @@
 ビット列の集合 $S$ が **語頭のない集合** であるとは，$S$ の元 $s$ と $t$ について，$s$ が $t$ の語頭（定義 4.1.2）ならば $s = t$ が成り立つことをいう．
 :::
 
-::: formalized
+:::: formalized
 `PrefixFree` (`InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean`)
-:::
+::::
 
 第4章 定義 4.1.2 の語頭符号は，相異なる文字に与えた符号語のあいだに語頭の関係が無いことを要求していた．定義 13.4.1 はその条件を，符号語の集合そのものについて言い換えたものである．違いは二つある．写像ではなく集合について述べていることと，集合が無限であってよいことである．無限であってよいところが本節に効く．機械が値を持つプログラムは無限にあるからである．
 
@@ -42,9 +42,9 @@ $S'$ を $S$ の有限部分集合とする．$S'$ を有限アルファベッ�
 $S$ にわたる和を有限部分和の上限として定めたことから，主張の左辺はいま抑えた有限和の全体の上限であり，どの有限和も $1$ 以下だから，上限も $1$ 以下である．
 :::
 
-::: formalized
+:::: formalized
 `PrefixFree.tsum_inv_two_pow_length_le_one` (`InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean`)
-:::
+::::
 
 補題 13.4.2 は Kraft の不等式（定理 4.2.1）を，無限の符号語の集合へ広げたものにほかならない．第4章では符号語の本数が有限だったので，長さがいちばん長い符号語をとって木の深さを固定できた．集合が無限だとその深さがとれないので，有限部分集合ごとに第4章の不等式を当て，上限をとって全体に広げる．上限をとる操作が入るぶん，等号がどこで成り立つかの話は落ちるが，$1$ 以下という上界はそのまま残る．空列を含まないという仮定は，定理 4.2.1 を経由するために要る条件であって，結論には要らない．空列を含む語頭のない集合は空列だけからなり，そのとき和は $1$ だからである．
 
@@ -58,9 +58,9 @@ $$
 と定める（$s$ はビット列の全体をわたる．そのようなビット列が一つも無いときは $+\infty$ とする）．
 :::
 
-::: formalized
+:::: formalized
 自己限定形 `selfDelimit`，機械 `prefixUniversalEval`，記述長 `prefixComplexity` (`InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean`)
-:::
+::::
 
 本節の $K_{\mathcal V}$ は，機械 $\mathcal V$ についての記述長である．$\mathcal V$ の作り方を変えたときに $K_{\mathcal V}$ の値がどれだけ動くかについて，本書は何も述べない．本章が $K$ につねに機械を添字として書くのは，このためでもある．
 
@@ -78,9 +78,9 @@ $\mathcal V(s)$ が値を持つとし，定義 13.4.3 の $m$ と $d$ をとる�
 空列を含まないことは，いま見たとおりである．語頭のない集合であることを示す．$s$ と $t$ が $\mathcal V$ で値を持ち，$s$ が $t$ の語頭だとする．前段より $s$ はあるビット列 $d$ の，$t$ はあるビット列 $e$ の自己限定形であり，$s$ の先頭から最初の $0$ までの $1$ の個数は $\lvert d\rvert$，$t$ については $\lvert e\rvert$ である．$\lvert d\rvert < \lvert e\rvert$ とすると，$1$ を $\lvert d\rvert$ 個並べた直後の位置で，$s$ のビットは $0$ であり，$t$ のビットは $1$ である（$t$ の先頭 $\lvert e\rvert$ ビットはすべて $1$ だからである）．この位置は $s$ の中にある．$\lvert s\rvert = 2\lvert d\rvert + 1$ が $\lvert d\rvert$ より大きいからである．いっぽう $s$ が $t$ の語頭なら，この位置の二つのビットは一致しなければならず，矛盾する．$\lvert d\rvert > \lvert e\rvert$ としても，$1$ を $\lvert e\rvert$ 個並べた直後の位置で同じ矛盾が出る．よって $\lvert d\rvert = \lvert e\rvert$ であり，$\lvert s\rvert = 2\lvert d\rvert + 1 = \lvert t\rvert$ である．長さの等しい語頭は列そのものだから $s = t$ である．
 :::
 
-::: formalized
+:::: formalized
 自己限定形であること `dom_imp_mem_range`，語頭のない集合であること `prefixUniversalEval_dom_prefixFree`，空列を含まないこと `prefixUniversalEval_nil_not_dom` (`InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean`)
-:::
+::::
 
 ::: proposition 13.4.5
 $x \in \mathbb N$ とすると，$\lvert s\rvert = K_{\mathcal V}(x)$ かつ $\mathcal V(s) = x$ を満たすビット列 $s$ が存在する．
@@ -90,9 +90,9 @@ $x \in \mathbb N$ とすると，$\lvert s\rvert = K_{\mathcal V}(x)$ かつ $\m
 命題 13.1.5 を $y := 0$ に当てると，$\mathcal U(d, 0) = x$ を満たすビット列 $d$ がある．$t$ を $d$ の自己限定形とすると，$t$ の先頭から最初の $0$ までの $1$ の個数は $\lvert d\rvert$，その後ろは $d$ だから，定義 13.4.3 より $\mathcal V(t) = \mathcal U(d, 0) = x$ である．よって集合 $\{\lvert s\rvert : \mathcal V(s) = x\}$ は空でない自然数の集合であり，最小元をもつ．その最小元は $K_{\mathcal V}(x)$ にほかならず，しかも $\mathcal V(s) = x$ を満たすあるビット列 $s$ の長さだから，その $s$ が求めるものである．
 :::
 
-::: formalized
+:::: formalized
 `prefixComplexity_spec` (`InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean`)
-:::
+::::
 
 ::: proposition 13.4.6
 $x \in \mathbb N$ とすると $K_{\mathcal V}(x) = 2\,K_{\mathcal U}(x) + 1$ である．
@@ -124,9 +124,9 @@ $$
 である．
 :::
 
-::: formalized
+:::: formalized
 `prefix_invariance` (`InformationTheory/Shannon/Kolmogorov/Omega.lean`)
-:::
+::::
 
 定理 13.4.7 と 定理 13.1.7 の違いは係数 $2$ だけである．定理 13.1.7 の右辺は $\lvert s\rvert$ に定数を足したものだったので，$\lvert s\rvert$ が大きくなるほど払いは相対的に軽くなった．定理 13.4.7 の右辺は $\lvert s\rvert$ の $2$ 倍なので，そうはならない．ただし，この $2$ を定数に落とした形が成り立たない，とまでは 定理 13.4.7 からは出ない．定理 13.4.7 は一つの上界を与えるだけで，これより良い上界が無いことは言っていないからである．
 
@@ -140,9 +140,9 @@ $$
 と定め（$s$ は $\mathcal V(s) = x$ を満たすビット列の全体をわたる），$x$ の **万能確率** と呼ぶ．
 :::
 
-::: formalized
+:::: formalized
 `universalProb` (`InformationTheory/Shannon/Kolmogorov/PrefixMachine.lean`)
-:::
+::::
 
 $P_{\mathcal V}$ はつねに $\mathcal V$ を添字にとり，引数を一つとる．第10章から第12章までが裸の $P$ で書いてきた分布とは別の量であり，13.3 節が $p^n$ と書いた積分布とも関係がない．$P_{\mathcal V}(x)$ が測っているのは，でたらめに投げたビット列を $\mathcal V$ に読ませたとき，$x$ が出てくる重みである．$x$ を出すプログラムが短いほど，そのプログラムの重み $2^{-\lvert s\rvert}$ は大きい．すなわち $P_{\mathcal V}$ は，短く書ける対象ほど大きな値をとる．次の 定理 13.4.10 が言うのは，この対応が定数倍の範囲で逆向きにも成り立つことである．
 
@@ -156,13 +156,13 @@ $x \in \mathbb N$ とすると $2^{-K_{\mathcal V}(x)} \le P_{\mathcal V}(x) \le
 右の不等式を示す．$\mathcal V(s) = x$ を満たすビット列の全体を $S$ と置くと，$S$ は $\mathcal V$ が値を持つビット列の全体の部分集合である．命題 13.4.4 より後者は空列を含まない語頭のない集合であり，その部分集合も同じ条件を満たすから，補題 13.4.2 を $S$ に当てて $P_{\mathcal V}(x) \le 1$ を得る．最後に，$2^{-K_{\mathcal V}(x)}$ は正だから $P_{\mathcal V}(x) > 0$ である．
 :::
 
-::: formalized
+:::: formalized
 左の不等式 `universalProb_ge_two_pow_neg_prefixComplexity`，右の不等式 `universalProb_le_one` (`InformationTheory/Shannon/Kolmogorov/UniversalProbability.lean`)
-:::
 
 ::: formalization-note
 正値性に対応する単独の宣言は無い．左の不等式に紐付けた宣言と，$2^{-K_{\mathcal V}(x)}$ が正であることを合わせれば得られる．
 :::
+::::
 
 ::: theorem 13.4.10 記述長と万能確率
 $x \in \mathbb N$ とすると
@@ -198,9 +198,9 @@ $$
 を得る．
 :::
 
-::: formalized
+:::: formalized
 左の不等式 `neg_logb_universalProb_le_prefixComplexity` (`InformationTheory/Shannon/Kolmogorov/UniversalProbability.lean`)，右の不等式 `prefixComplexity_le_two_mul_neg_logb_universalProb` (`InformationTheory/Shannon/Kolmogorov/Levin.lean`)
-:::
+::::
 
 定理 13.4.10 は，記述の短さと重みの大きさが同じことを測っているという主張である．左の不等式は，$x$ を出すプログラムが一本でも短ければ重みが大きいという当たり前の向きで，最短の一本だけを数えて出る．右の不等式が言っているのは逆向きで，重みが大きければ短いプログラムが実際にあるということである．こちらは短いプログラムが一本もない場合を排除しなければならないので，長いプログラムがいくら集まっても重みが稼げないこと，すなわち 補題 13.4.2 の数え上げが要る．挟み撃ちの幅は係数 $2$ で，$-\log_2 P_{\mathcal V}(x)$ が大きいほど広がる．
 

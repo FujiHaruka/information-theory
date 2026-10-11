@@ -22,9 +22,9 @@ $$
 
 $H_n$ はブロックが長くなるほど大きくなりうる量なので，そのままでは情報源どうしを比べられない．$n$ で割ってはじめて「1 文字あたり」になる．$H(X_n \mid X^n)$ のほうは割らなくてよい．最初から 1 文字分の量だからである．定義に二つの記号を置いたのは，収束先が同じであることがまだ分かっていないからで，定理 3.2.6 でこれが一致する．
 
-::: formalized
+:::: formalized
 ブロックエントロピー `blockEntropy`，増分 `conditionalEntropyTail`，エントロピーレート`entropyRate` (`InformationTheory/Shannon/EntropyRate.lean`)
-:::
+::::
 
 ::: example 3.2.2 i.i.d. 情報源のエントロピーレート
 i.i.d. 情報源では，補題 2.3.3 より $H_n = n\,H(X_0)$ だから $H_n/n = H(X_0)$ で，$H(\mathcal X) = H(X_0)$ である．もう一方は，$X_n$ が $X^n$ と独立なので$H(X_n \mid X^n) = H(X_n) = H(X_0)$（補題 2.3.3 の証明で確かめた等式である）．どちらも $H(X_0)$ になり，第2章のエントロピーがそのまま再現される．
@@ -48,9 +48,9 @@ $$
 第 1 項に帰納法の仮定を当てると $\sum_{i=0}^{n-1} H(X_i \mid X^i)$ になり，第 2 項はちょうど $i = n$ の項である．
 :::
 
-::: formalized
+:::: formalized
 `blockEntropy_eq_sum_conditionalEntropyTail`，証明の 1 段分にあたる`blockEntropy_succ_chain_rule` (`InformationTheory/Shannon/EntropyRate.lean`)
-:::
+::::
 
 この分解に定常性は使っていない．エントロピーのチェイン則だけで出るからである．定常性が効くのは次の補題である．
 
@@ -73,9 +73,9 @@ $$
 である．定常性（定義 3.1.1，$\ell = 1$）より $(X_1, \dots, X_{n+1})$ の同時分布は$(X_0, \dots, X_n)$ のそれに等しいから，右辺は $H(X_n \mid X^n)$ に等しい．左辺は$H(X_{n+1} \mid X^{n+1})$ である．
 :::
 
-::: formalized
+:::: formalized
 `conditionalEntropyTail_antitone`，`conditionalEntropyTail_nonneg` (`InformationTheory/Shannon/EntropyRate.lean`)
-:::
+::::
 
 証明で使ったのは二手だけである．条件を一つ減らすと不確かさは増えない（あるいは同じ），というのが一手目．減らして残ったものが，時計をずらせば元の問題そのものになる，というのが二手目である．**定常性が効くのはこの二手目だけで**，そこがなければ「$n$ が違う量どうしを比べる」ことができない．
 
@@ -113,9 +113,9 @@ $$
 補題 3.2.3 より $H_n/n = \frac1n\sum_{i=0}^{n-1} H(X_i \mid X^i)$ であり，これはいま収束を示した数列の相加平均である．補題 3.2.5 よりこれも $L$ に収束する．これが$H(\mathcal X)$ の存在と，二つの一致である．
 :::
 
-::: formalized
+:::: formalized
 極限の存在 `entropyRate_exists_of_stationary`，二つの定義の一致`entropyRate_eq_lim_condEntropy` (`InformationTheory/Shannon/EntropyRate.lean`)
-:::
+::::
 
 **二つの定義が一致することの意味.** 左辺は「長いブロックを丸ごと符号化したときの1 文字あたりの費用」で，第2章の圧縮の言葉である．右辺は「次の 1 文字がどれだけ読めないか」で，予測の言葉である．定理 3.2.6 は，圧縮の限界と予測の困難さが同じ数だと言っている．橋渡しをしているのは Cesàro 平均で，証明はそれ以上のことを何もしていない．増分が落ち着けば，その平均も同じところに落ち着く，というだけである．最初の何文字かは記憶が浅いぶん不確かさが大きいが，$1/n$ で薄まって消える．
 

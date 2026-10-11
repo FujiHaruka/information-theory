@@ -36,9 +36,9 @@ $h(X)$ が $X$ の値でなく密度だけで決まるのは，離散のとき�
 
 $n = 1$ が基本で，7.4 節に入るまで $n \ge 2$ の形で述べる主張は補題 7.2.3 だけである．$n \ge 2$ は，複数の観測をまとめて一つの確率変数と見るときに要る．
 
-::: formalized
+:::: formalized
 `differentialEntropy`，密度による書き換え `differentialEntropy_eq_integral_density` (`InformationTheory/Shannon/DifferentialEntropy.lean`)，$2$ 変数 `jointDifferentialEntropy`，$n$ 変数 `jointDifferentialEntropyPi` (`InformationTheory/Shannon/MultivariateDiffEntropy.lean`)
-:::
+::::
 
 ::: formalization-note 本章共通
 形式化は $\log$ を自然対数にとるので，微分エントロピーの単位はナットである．

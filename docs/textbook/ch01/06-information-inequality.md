@@ -37,19 +37,19 @@ $$
 
 **すでに見た不等式の再確認.** $q$ を一様分布にとると$D(p\,\|\,\text{一様}) = \log M - H(p)$ となり，$D(p\,\|\,\text{一様}) \ge 0$ がそのまま定理 1.1.5（$H \le \log M$）である．また $p \leftarrow p(x,y)$，$q \leftarrow p(x)p(y)$ とおくと$D(p\,\|\,q)$ は定義 1.3.1 の相互情報量そのものなので，命題 1.3.2 の非負性が再現される．別々に証明した不等式が一つの根に束ねられたことになる．
 
-::: formalized
+:::: formalized
 一様分布との関係 `klDiv_uniformOn_univ_toReal_eq` (`InformationTheory/Shannon/MaxEntropy/Basic.lean`)
-:::
+::::
+
+等号条件の形式化は，参照分布が全点で正である場合に限って述べてある（本文の主張はこの限定を必要としない）．
+
+:::: formalized
+非負性 `klDivPmf_nonneg` (`InformationTheory/Shannon/CsiszarProjection.lean`)，等号条件`klDivPmf_eq_zero_iff_pmf` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
 
 ::: formalization-note
 本ライブラリは確率質量関数（pmf）形に対して非負性を独立に形式化している．測度論版の$I(X;Y)\ge 0$ は 1.3 節で述べたとおり，拡張非負実数値であることからほぼ型レベルで従う別ルートで得る．
 
 この実数値の pmf 形は，参照分布が 0 をとる点でも有限値を返すので，本文の証明が最初に片づけた「値が正の無限大になる」場合を表していない．無限大を含む形は測度論版の相対エントロピーの側にある．
 :::
-
-等号条件の形式化は，参照分布が全点で正である場合に限って述べてある（本文の主張はこの限定を必要としない）．
-
-::: formalized
-非負性 `klDivPmf_nonneg` (`InformationTheory/Shannon/CsiszarProjection.lean`)，等号条件`klDivPmf_eq_zero_iff_pmf` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
-:::
+::::
 

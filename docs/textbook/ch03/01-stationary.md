@@ -21,9 +21,8 @@ $$
 
 この仮定がなければ「1 文字あたり」を語る意味がない．たとえば $X_0$ だけが一様分布で$X_1$ 以降がすべて定数，という列を考えると，$H(X_i)$ は $i = 0$ とそれ以外で違う値をとる．どの $i$ の値を「1 文字あたりの不確かさ」と呼ぶべきかは決められない．定常性は，この問いを「どれでも同じ」にすることで消してしまう仮定である．
 
-::: formalized
+:::: formalized
 `StationaryProcess`，時刻 $i$ の文字 `obs`，ブロック `blockRV` (`InformationTheory/Shannon/Stationary/Basic.lean`)
-:::
 
 ::: formalization-note
 形式化は定義 3.1.1 の等式を直接書き下さず，**測度保存力学系**として与えている．確率空間$(\Omega, \nu)$ の上に，$\nu$ を保つ写像 $T$（シフト）と，$\mathcal X$ に値をとる単一の観測 $X$ を置き，時刻 $i$ の文字を $X_i := X \circ T^i$ と定める．$T$ が $\nu$ を保つことが，そのまま定義 3.1.1 の分布のシフト不変性にあたる．この $\nu$ は $\Omega$ 上の測度で，以下でマルコフ情報源の初期分布に使う $\mu$ とは別のものである．
@@ -32,6 +31,7 @@ $$
 
 定義 3.1.1 の等式そのものは，この形から導かれる定理として `shiftedMarginal_eq_of_shift` (`InformationTheory/Probability/TwoSidedExtension/Core.lean`) にある．
 :::
+::::
 
 ::: example 3.1.2 i.i.d. 情報源
 第2章の i.i.d. 情報源は定常である．実際，独立性と同分布性より両辺とも$\prod_{i=0}^{n-1} p(x_i)$ に等しい．$\ell$ がどこであっても，掛け合わせる周辺分布は同じ $p$ だからである．

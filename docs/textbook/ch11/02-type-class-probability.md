@@ -32,9 +32,9 @@ $$
 である．下界も同じで，$\lvert\mathcal T_n(P)\rvert \ge (n+1)^{-\lvert\mathcal X\rvert}e^{\,nH(P)}$ の両辺に $\exp(-n(H(P) + D(P\,\|\,Q)))$ を掛ければ $Q^n(\mathcal T_n(P)) \ge (n+1)^{-\lvert\mathcal X\rvert}e^{-nD(P\,\|\,Q)}$ を得る．
 :::
 
-::: formalized
+:::: formalized
 上界 `typeClassByCount_Qn_le` (`InformationTheory/Shannon/Sanov/LDP.lean`)，下界 `typeClassByCount_Qn_ge` (`InformationTheory/Shannon/Sanov/MultinomialLowerBound.lean`)
-:::
+::::
 
 指数に残るのは相対エントロピーだけである．エントロピーの項は，要素数の $e^{\,nH(P)}$ と一点の確率の $e^{-nH(P)}$ で打ち消し合った．読み方は素直で，$Q$ に従う情報源から型が $P$ の系列が出る確率は，$P$ が $Q$ からどれだけ隔たっているかだけで決まり，その隔たりが確率の落ちる速さになる，ということである．上下の隔たりは $(n+1)^{\lvert\mathcal X\rvert}$ 倍あるが，これが指数の速さに効かないことは 系 11.2.3 で確かめる．
 
@@ -59,9 +59,9 @@ $$
 である．右端は $0$ に収束するから，両端に挟まれた真ん中も $0$ に収束する．
 :::
 
-::: formalized
+:::: formalized
 `log_succ_div_tendsto_zero` (`InformationTheory/Shannon/Sanov/LDP.lean`)
-:::
+::::
 
 ::: corollary 11.2.3
 $\mathcal X$ を空でない有限アルファベット，$Q$ を $\mathcal X$ 上の全点で正の分布，$Q^n$ をその $n$ 重の積分布とする．各 $n \ge 1$ について $P_n$ を長さ $n$ の型（定義 11.1.1）とし，$\mathcal X$ 上の分布 $P$ がどの文字 $a$ でも $P_n(a) \to P(a)$（$n \to \infty$）を満たすならば

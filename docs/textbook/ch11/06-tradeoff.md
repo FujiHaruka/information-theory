@@ -41,13 +41,13 @@ $$
 一意性に移る．$\mathcal K$ が凸で，相異なる $Q^\star_1$，$Q^\star_2$ がどちらも I 射影だとする．定義 11.6.1 より互いに相手以下だから，二つの値は等しい．中点 $\frac12(Q^\star_1 + Q^\star_2)$ は $\mathcal K$ に属し，狭義凸性よりそこでの値は二つの値の平均より真に小さい，すなわち共通の値より真に小さい．これは $Q^\star_1$ が最小値を与えることに反する．よって I 射影は高々一つである．
 :::
 
-::: formalized
+:::: formalized
 連続性 `continuous_klDivPmf_left`，狭義凸性 `klDivPmf_strictConvexOn_left`，存在 `csiszar_projection_exists`，一意性 `csiszar_projection_unique` (`InformationTheory/Shannon/CsiszarProjection.lean`)
-:::
 
 ::: formalization-note
 ただし連続性の宣言が述べるのは $\mathbb R^{\mathcal X}$ 全体での連続性で，本文の $\Delta$ の上の連続性より広い．狭義凸性のほうは本文どおり $\Delta$ の上で述べられている．
 :::
+::::
 
 閉であることが存在を，凸であることが一意性を担う．二つは別の条件で，証明の中でも別の場所で効いている．閉であることは最大値定理を当てるところで，凸であることは中点をとって狭義凸性を当てるところである．本節でこの存在と一意性を当てる先は 例 11.6.4 と 定理 11.6.6 で，どちらも集合が閉かつ凸であることを確かめてから使う．
 
@@ -90,9 +90,9 @@ $$
 である（第 $1$ 項と第 $2$ 項で $\tilde P(a)\log \tilde P(a)$ の和が打ち消し合う）．右辺は $\Psi'(0)$ にほかならないから，これは非負である．
 :::
 
-::: formalized
+:::: formalized
 `csiszar_pythagoras_inequality` (`InformationTheory/Shannon/CsiszarProjection.lean`)
-:::
+::::
 
 名前の由来は形にある．$Q$ から $\mathcal K$ の中の $\tilde P$ までの隔たりが，$Q$ から I 射影までの隔たりと，I 射影から $\tilde P$ までの隔たりの和以上になっている．直角三角形の斜辺と二辺の関係を，等式ではなく不等式の向きで写したものである．平面で考えると，点から凸集合へいちばん近いところをとったとき，その足を頂点として，もとの点と集合の中のどの点とがなす角は直角以上になる．この不等式はその情報量版である．$Q^\star$ と $\tilde P$ に全点で正であることを要求している理由は，二つで違う．$Q^\star$ の正値性は，右辺の $D(\tilde P\,\|\,Q^\star)$ が有限であるために要る．$\tilde P$ のほうの正値性は，$\theta$ が $1$ に届くところまで $\tilde P_\theta$ の対数をそのまま扱えるようにするための便宜である．本章の以降の証明はこの不等式を使わない．置いてあるのは，I 射影がどういう対象なのかをこの形が示しているからである．
 
@@ -148,9 +148,9 @@ $$
 
 $\mathcal K(t)$ は $P$ を中心にした「隔たり $t$ 以内」の分布の集まり（第9章 定義 9.1.5 が同じ「制約集合」の語で呼ぶのはレート歪みの条件付き分布の集合で，別の対象である）であり，$t$ を大きくすると大きくなる．下限をとる範囲が広がるのだから，$E^*(t)$ は $t$ について大きくならない．$t$ を大きくとるほど第一種の誤りに保証される速さは上がり，そのぶん第二種の誤りの落ちる速さは下がる，という引き合いがこの単調性に表れている．下限が最小値として達成されることを次に見る．
 
-::: formalized
+:::: formalized
 `hoeffdingConstraintSet`，`hoeffdingE2` (`InformationTheory/Shannon/Chernoff/Basic.lean`)
-:::
+::::
 
 ::: theorem 11.6.6
 $\mathcal X$ を空でない有限アルファベット，$P$，$Q$ を $\mathcal X$ 上の全点で正の分布，$t \ge 0$ を実数とし，$\mathcal K(t)$，$E^*(t)$ を 定義 11.6.5 のとおりとする．このとき $\mathcal K(t)$ は空でない閉凸集合であり，$E^*(t)$ は最小値として達成され，それを達成する分布はただ一つである．
@@ -166,9 +166,9 @@ $\mathcal X$ を空でない有限アルファベット，$P$，$Q$ を $\mathca
 最後に，$Q$ は全点で正で $\mathcal K(t)$ は空でない閉集合だから，定理 11.6.2 より $\mathcal K(t)$ への $Q$ の I 射影 $Q^\star$ が存在する．定義 11.6.1 より $D(Q^\star\,\|\,Q)$ は 定義 11.6.5 の下限をとる集合の最小値だから，$E^*(t) = D(Q^\star\,\|\,Q)$ である．$\mathcal K(t)$ は凸だから，ふたたび 定理 11.6.2 より I 射影は高々一つで，最小値を達成する分布はただ一つである．
 :::
 
-::: formalized
+:::: formalized
 空でないこと `hoeffdingConstraintSet_nonempty`，閉であること `hoeffdingConstraintSet_isClosed`，最小値の達成 `hoeffdingE2_attained`，達成する分布の一意性 `hoeffdingE2_unique` (`InformationTheory/Shannon/Chernoff/Basic.lean`)，凸であること `hoeffdingConstraintSet_convex` (`InformationTheory/Shannon/Hoeffding/Tradeoff.lean`)
-:::
+::::
 
 ::: proposition 11.6.7 トレードオフ関数の両端の値
 $\mathcal X$ を空でない有限アルファベット，$P$，$Q$ を $\mathcal X$ 上の全点で正の分布とし，$\mathcal K(t)$，$E^*(t)$ を 定義 11.6.5 のとおりとする．このとき $E^*(0) = D(P\,\|\,Q)$ である．また実数 $t$ が $t \ge D(Q\,\|\,P)$ を満たすならば $E^*(t) = 0$ である（$D$ は 1.6 節の相対エントロピー）．
@@ -180,13 +180,13 @@ $t = 0$ のときを見る．定理 1.6.1 より $D(\tilde P\,\|\,P) \ge 0$ で�
 $t \ge D(Q\,\|\,P)$ のときを見る．定理 1.6.1 より $D(Q\,\|\,P) \ge 0$ だから $t \ge 0$ であり，定義 11.6.5 が使える．$Q$ 自身が $D(Q\,\|\,P) \le t$ を満たすから $Q \in \mathcal K(t)$ であり，$D(Q\,\|\,Q) = 0$ だから $E^*(t) \le 0$ である．いっぽう 定理 1.6.1 より $\mathcal K(t)$ のどの分布 $\tilde P$ でも $D(\tilde P\,\|\,Q) \ge 0$ だから，下限も $0$ 以上である．よって $E^*(t) = 0$ である．
 :::
 
-::: formalized
+:::: formalized
 後半 `hoeffdingE2_eq_zero_at_alpha_ge_kl` (`InformationTheory/Shannon/Hoeffding/BoundaryMinimizer.lean`)
-:::
 
 ::: formalization-note
 前半に対応する単独の宣言は無い．制約集合が $t = 0$ で一点になることは `hoeffdingConstraintSet_eq_singleton_at_alpha_zero` (`InformationTheory/Shannon/Hoeffding/BoundaryMinimizer.lean`) にあり，前半はそれと `hoeffdingE2` (`InformationTheory/Shannon/Chernoff/Basic.lean`) の定義の合成として得られる．
 :::
+::::
 
 両端の値には見覚えがある．$E^*(0) = D(P\,\|\,Q)$ の右辺は，11.4 節が第二種の誤りの指数を下から押さえた値（系 11.4.7）と同じ数である．ただし 系 11.4.7 が測るのは水準 $\varepsilon$ のもとでの最良の第二種の誤り（定義 11.4.3）であり，本節が測るのは次に作る特定の受容域の族についての極限である．二つは別の量で，値が同じだというだけである．もう一方の端 $t \ge D(Q\,\|\,P)$ では $E^*(t) = 0$ になる．制約が緩くて $Q$ 自身が制約集合に入ってしまうと，$Q$ から見て指数で落ちる理由が無くなる，ということである．
 

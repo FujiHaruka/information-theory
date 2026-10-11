@@ -55,9 +55,9 @@ $$
 
 下限をとる集合は空ではない．例 11.4.2 の第 $1$ の主張より $\mathcal A_n = \mathcal X^n$ はどの $\varepsilon \ge 0$ でも条件を満たすからである．水準 $\varepsilon$ を大きくとるほど条件を満たす受容域は増えるので，$\beta^*_n(\varepsilon)$ は大きくならない．以下では水準を固定したまま $n$ を大きくして，この値がどれだけ速く小さくなるかを測る．
 
-::: formalized
+:::: formalized
 達成できる第二種の誤りの集合 `steinBetaSet`，その下限 `steinOptimalBeta` (`InformationTheory/Shannon/Stein/OptimalExponent.lean`)
-:::
+::::
 
 ## 達成可能性
 
@@ -118,13 +118,13 @@ $$
 である．$\beta^*_n(\varepsilon)$ は正だから対数がとれ，$\log$ は単調だから $\log\beta^*_n(\varepsilon) \le -n\big(D(P\,\|\,Q)-\delta\big)$ であり，両辺を $-n$ で割れば主張を得る．
 :::
 
-::: formalized
+:::: formalized
 正であること `steinOptimalBeta_pos` (`InformationTheory/Shannon/Stein/OptimalExponent.lean`)
-:::
 
 ::: formalization-note
 本文の証明は受容域を型の方法で作り，第一種の誤りを 第2章 定理 2.4.3 で押さえた．形式化は別の道筋をとる．対数尤度比の相加平均に大数の強法則を当て，その平均が $D(P\,\|\,Q)$ に近い系列の全体 `steinTypicalSet` (`InformationTheory/Shannon/Stein/Achievability.lean`) を受容域にとる．指数の下界を述べる宣言は `steinOptimalBeta_log_ge_of_achievability` (`InformationTheory/Shannon/Stein/OptimalExponent.lean`) であるが，これは情報源を確率変数の列として受け取る形で述べられており，その列が独立で同分布であること，各項の像が $P$ であること，列全体の像が積分布になることなど，本文の 定理 11.4.4 に無い仮定を七つ持つ．結論の式に現れるのは $\beta^*_n(\varepsilon)$ だけで，確率変数の列はどこにも現れない．そこでこの宣言は本文の主張そのものの形式化とはみなさず，ポインタには挙げないことにした．正であることの宣言のほうにはこの七つの仮定は無い．
 :::
+::::
 
 右辺に $\varepsilon$ が現れないことに注意しておく．水準を $0$ より大きい範囲でどれだけ厳しくとっても，$-\frac1n\log\beta^*_n(\varepsilon)$ は $D(P\,\|\,Q)$ にいくらでも近いところまで下から押さえられる，というのが 定理 11.4.4 である．水準 $\varepsilon$ が効くのは，この不等式が成り立ちはじめる $n$ の大きさのほうである．$\varepsilon$ が指数そのものに効かないのは，第二種の誤りを抑える段で $\varepsilon$ を一度も使っていないからである．
 
@@ -154,9 +154,9 @@ $$
 に等しい．これが $i$ に依らないので，$i$ について足すと $n\,D(P\,\|\,Q)$ になる．
 :::
 
-::: formalized
+:::: formalized
 `klDiv_pi_eq_n_smul` (`InformationTheory/Shannon/Stein/Achievability.lean`)
-:::
+::::
 
 ::: theorem 11.4.6 Stein の補題の逆
 $\mathcal X$ を空でない有限アルファベット，$P$，$Q$ を $\mathcal X$ 上の全点で正の分布，$\varepsilon \in (0,1)$，$n \ge 1$ とし，$\beta^*_n$ を 定義 11.4.3 のとおりとする．$\beta^*_n(\varepsilon)$ は正であり（定理 11.4.4），
@@ -207,9 +207,9 @@ $$
 最後に $\beta^*_n(\varepsilon)$ に移る．$\mathcal X^n$ の部分集合は有限個しかないから，定義 11.4.3 の下限は最小値であり，$\alpha_n(\mathcal A_n) \le \varepsilon$ を満たすある $\mathcal A_n$ で $\beta_n(\mathcal A_n) = \beta^*_n(\varepsilon)$ となる．その $\mathcal A_n$ に上で示したことを当てればよい．
 :::
 
-::: formalized
+:::: formalized
 `steinOptimalBeta_log_le_of_converse` (`InformationTheory/Shannon/Stein/OptimalExponent.lean`)
-:::
+::::
 
 上界には因子 $\frac1{1-\varepsilon}$ が残っている．出どころは，第一種の誤りを $\varepsilon$ まで許したために，$-\log Q^n(\mathcal A_n)$ に掛かる重み $P^n(\mathcal A_n)$ が $1$ から $1-\varepsilon$ まで下がりうることである．水準を緩めるほどこの因子は大きくなり，上界は $D(P\,\|\,Q)$ から離れる．達成可能性の側（定理 11.4.4）が $\varepsilon$ に依らなかったのと対照的である．
 

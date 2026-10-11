@@ -18,9 +18,9 @@ $$
 $$
 であり，記号ごとに見て高々 $1$ 文字の払いすぎで済んでいる．確率の小さい記号の符号語が，確率の大きい記号の符号語より短くなることもない．切り上げる前の $\log_D \frac{1}{p(x)}$ が確率について減少しており，切り上げで大小が逆転することはないからである．
 
-::: formalized
+:::: formalized
 `shannonLength` (`InformationTheory/Shannon/ShannonCode/Basic.lean`)
-:::
+::::
 
 ## 符号として成立すること
 
@@ -40,9 +40,9 @@ $$
 である．$x$ について足し合わせると，右辺の総和は $1$ になる．
 :::
 
-::: formalized
+:::: formalized
 `shannonLength_kraft_le_one` (`InformationTheory/Shannon/ShannonCode/Basic.lean`)
-:::
+::::
 
 ::: corollary 4.4.3
 $\mathcal X$ を $2$ 個以上の文字からなる有限アルファベット，$D \ge 2$ を整数とし，$p$ を $\mathcal X$ 上の分布ですべての $x \in \mathcal X$ で $p(x) > 0$ を満たすものとする．このときすべての $x \in \mathcal X$ で $\ell^{\mathrm S}(x) \ge 1$ であり，$\mathcal X$ 上の $D$ 元語頭符号で，各 $x$ の符号語長が $\ell^{\mathrm S}(x)$ に等しいものが存在する．
@@ -78,9 +78,9 @@ $$
 となる（$\mathcal X$ は分布が載っているので空でなく，項が少なくとも一つあるから狭義の不等号が保たれる）．
 :::
 
-::: formalized
+:::: formalized
 挟み撃ち `shannonCode_expected_length_bounds`，上からの評価 `expectedLength_shannon_lt_entropyD_add_one` (`InformationTheory/Shannon/ShannonCode/Basic.lean`)
-:::
+::::
 
 定理 4.4.4 と定理 4.3.2 を並べると，最小の平均符号長が幅 $1$ 文字まで決まる．下からは $H_D(X)$ で押さえられ，上からは，アルファベットが $2$ 文字以上ですべての記号の確率が正なら Shannon 符号語長をもつ語頭符号がとれて（系 4.4.3），その平均符号長が $H_D(X) + 1$ 未満に収まる（定理 4.4.4）．幅は $1$ 文字で，しかもその $1$ は切り上げから来ている．記号ごとに $1$ 文字未満の払いすぎがあり，平均をとってもそれ以上にはならない，というだけのことである．
 

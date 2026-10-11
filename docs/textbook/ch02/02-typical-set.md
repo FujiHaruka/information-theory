@@ -22,9 +22,9 @@ $$
 $$
 の範囲にあることにほかならない（両辺の $\log$ をとって $-\frac1n$ 倍すれば定義に戻る）．つまり典型集合とは「確率がこの幅に収まっている系列の集まり」であって，系列の見た目（どの文字がどこに並んでいるか）には一切触れていない．
 
-::: formalized
+:::: formalized
 `typicalSet` (`InformationTheory/Shannon/AEP/Basic/Core.lean`)
-:::
+::::
 
 ::: example 2.2.2 偏ったコインの典型集合
 例 2.1.2 の情報源（$p(1) = 0.9$，$p(0) = 0.1$，$H(X) \approx 0.469$）で，長さ $n$ のブロック $x$ に $1$ が $qn$ 個含まれるとする．すると
@@ -49,9 +49,9 @@ $$
 定義 2.2.1 より，事象 $\{X^n \in T^{(n)}_\varepsilon\}$ は$\{\,|\hat H_n - H(X)| < \varepsilon\,\}$ そのものである．定理 2.1.4 の確率収束は，その余事象の確率 $\Pr[\,|\hat H_n - H(X)| \ge \varepsilon\,]$ が 0 に収束すると述べているから，もとの事象の確率は 1 に収束する．
 :::
 
-::: formalized
+:::: formalized
 `typicalSet_prob_tendsto_one` (`InformationTheory/Shannon/AEP/Basic/Core.lean`)
-:::
+::::
 
 ## 性質2：典型系列の確率はどれもほぼ等しい
 
@@ -72,9 +72,9 @@ $$
 
 定理 2.2.4 が「漸近等分配性」という名前の由来である．典型系列はどれも確率が$2^{-nH}$ の同じ幅の中に収まっている．すなわち全確率のほぼ全部が，たがいにほぼ等確率な系列のあいだで分け合われ，系列ごとの差は指数の肩の $\varepsilon$ のぶんしか残らない．$n$ が大きいとき $2^{\pm n\varepsilon}$ という因子は決して小さくないが，$\varepsilon$ はいくらでも小さくとれるので，$\frac1n\log p(x)$ という尺度で見るかぎり典型系列は互いに区別がつかない．
 
-::: formalized
+:::: formalized
 上界 `typicalSet_prob_le`，下界 `typicalSet_prob_ge` (`InformationTheory/Shannon/AEP/Basic/Achievability.lean`)
-:::
+::::
 
 ## 性質3：典型集合の大きさは約 $2^{nH}$
 
@@ -107,13 +107,13 @@ $$
 両辺に $2^{n(H(X)-\varepsilon)}$ を掛ければ下界を得る．
 :::
 
-::: formalized
+:::: formalized
 上界 `typicalSet_card_le` (`InformationTheory/Shannon/AEP/Basic/Core.lean`)
-:::
 
 ::: formalization-note
 下界に対応する単独の宣言は形式化されていない．`typicalSet_card_ge` (`InformationTheory/Shannon/AEP/Basic/Achievability.lean`) は「$n$ が十分大きければ」を含まず，確率評価 $1-\eta \le \Pr[X^n \in T^{(n)}_\varepsilon]$ のほうを仮定として受け取る形をしている．本文の主張を作るには，その仮定を $n$ について落とす`typicalSet_prob_ge_of_rate` (`InformationTheory/Shannon/AEP/Rate.lean`) との合成が要る．本文の証明が定理 2.2.3 を経由するのと同じ 2 段である．
 :::
+::::
 
 証明の要点は一つだけである．確率の和を「個数 $\times$ 1 個あたりの確率」で挟むと，確率の側は定理 2.2.4 が押さえてくれるので，残った個数の側が決まる．上界と下界で使う向きが逆になっているのに注意したい．個数を上から抑えるには 1 個あたりの確率を下から，下から抑えるには上から評価する必要があり，定理 2.2.4 が両側評価であることが両方に効いている．
 

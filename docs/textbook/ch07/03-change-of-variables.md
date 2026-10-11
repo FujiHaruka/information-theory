@@ -42,13 +42,13 @@ $$
 であり，右辺は仮定より有限だから $h(X+b)$ は定まる．同じ置き換えで符号を付けた積分も等しいので $h(X+b) = h(X)$ である．
 :::
 
-::: formalized
+:::: formalized
 `differentialEntropy_map_add_const` (`InformationTheory/Shannon/DifferentialEntropy.lean`)
-:::
 
 ::: formalization-note
 命題 7.3.2 の形式化は，本文の「$h(X)$ が定まる」にあたる仮定をもたない．積分できない場合に形式化が $h$ の値を $0$ と定める約束のもとでは，平行移動の前後でどちらも $0$ になって等式が成り立つからである．結論は等式だけで，本文の主張のうち「$h(X+b)$ も定まる」にあたる部分は含まれていない．
 :::
+::::
 
 ::: proposition 7.3.3 定数倍
 $X$ を密度をもつ実数値確率変数，$c \ne 0$ を実数とする．$h(X)$ が定まるならば $h(cX)$ も定まり
@@ -67,13 +67,13 @@ $$
 となる．同じ置き換えで絶対値をとった積分も移せて，右辺は $\int_{\mathbb R} \lvert f\log f\rvert + \lvert\log\lvert c\rvert\rvert$ で抑えられるから有限であり，$h(cX)$ は定まる．値は，$\int f = 1$ より右辺が $h(X) + \log\lvert c\rvert$ に等しいことから従う．
 :::
 
-::: formalized
+:::: formalized
 `differentialEntropy_map_mul_const` (`InformationTheory/Shannon/DifferentialEntropy.lean`)
-:::
 
 ::: formalization-note
 命題 7.3.3 の形式化は，命題 7.3.2 のそれと違って，本文の「$h(X)$ が定まる」にあたる積分可能性を仮定にもつ．結論が等式だけであることは同じで，「$h(cX)$ も定まる」にあたる部分は含まれていない．
 :::
+::::
 
 ::: corollary 7.3.4 アフィン変換
 $X$ を密度をもつ実数値確率変数，$c \ne 0$ と $b$ を実数とする．$h(X)$ が定まるならば $h(cX + b)$ も定まり
@@ -87,13 +87,13 @@ $$
 命題 7.3.3 より $h(cX)$ は定まって $h(cX) = h(X) + \log\lvert c\rvert$ である．これに命題 7.3.2 を確率変数 $cX$ について当てると，$h(cX + b)$ が定まって $h(cX)$ に等しい．
 :::
 
-::: formalized
+:::: formalized
 `differentialEntropy_map_affine` (`InformationTheory/Shannon/DifferentialEntropy.lean`)
-:::
 
 ::: formalization-note
 系 7.3.4 の形式化は命題 7.3.3 のそれと同じ形で，積分可能性を仮定にもち，結論は等式だけである．
 :::
+::::
 
 系 7.3.4 は「微分エントロピーは目盛の取り替えを見ている」ことを言っている．$X$ をどこへ動かしても（$b$）値は変わらないが，何倍に引き伸ばすか（$c$）で $\log\lvert c\rvert$ だけ動く．長さをメートルで測っていたのをセンチメートルに変えれば $c = 100$ で，$h$ は $\log 100$ だけ増える．7.1 節の幅の読みに乗せれば，底を $2$ にとって $2^{h(cX+b)} = \lvert c\rvert\,2^{h(X)}$ であり，実効的な幅がちょうど $\lvert c\rvert$ 倍になっている．同じ確率変数が，測り方を変えただけで違う値をもつということである．$h(X)$ の数値そのものを「$X$ のもつ情報量」と読むなら，測り方を変えるだけでその情報量が変わってしまう．
 

@@ -31,9 +31,9 @@ $$
 第 1 のかっこは定理 1.3.4 そのもので $I(Z;Y)$．第 2 のかっこは条件付き相互情報量のエントロピー表現（定理 1.4.3）で $I(X;Y\mid Z)$．合わせて主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `mutualInfo_chain_rule` (`InformationTheory/Shannon/CondMutualInfo.lean`)
-:::
+::::
 
 ## $n$ 変数版
 
@@ -60,9 +60,9 @@ $$
 
 長さ $n$ のブロックを扱うとき，この分解があると「ブロック全体の情報量」という扱いにくい量を「1 文字ずつの寄与の足し算」に落とせる．第6章の通信路容量の議論は，ほぼこの一手で回っている．
 
-::: formalized
+:::: formalized
 `mutualInfo_chain_rule_fin` (`InformationTheory/Shannon/MIChainRule.lean`)．`Fin n` 添字の確率変数列に対する完全形．右辺は各 $i$ において先頭 $i$ 個で条件付けた相互情報量の有限和である．
-:::
+::::
 
 ## 独立・同分布（i.i.d.）での加法性
 
@@ -94,11 +94,11 @@ $$
 
 この等式は，1 ブロック ($n$ 文字) を通じて運べる情報量が 1 文字あたりの情報量のちょうど $n$ 倍になる，と読める．情報を「文字あたりレート」で測ってよいという，通信路符号化定理の根拠の一つである．逆に，もし相関や記憶があればこの等式は不等式に崩れ，その「ずれ」が通信路容量の議論で効いてくる．
 
+:::: formalized
+`mutualInfo_iid_eq_nsmul`，一般形 `mutualInfo_pi_eq_sum` (`InformationTheory/Shannon/MIChainRule.lean`)
+
 ::: formalization-note
 形式化は i.i.d. 構造を，独立性（積測度への分解）と同分布性のそれぞれについて複数の等式仮定として要求する．いずれも「独立同分布である」という前提条件を表すもので，結論の核心を仮定に抱えさせるものではない．
 :::
-
-::: formalized
-`mutualInfo_iid_eq_nsmul`，一般形 `mutualInfo_pi_eq_sum` (`InformationTheory/Shannon/MIChainRule.lean`)
-:::
+::::
 

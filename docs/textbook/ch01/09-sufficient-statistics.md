@@ -14,9 +14,9 @@
 統計量 $T(X)$ が $\theta$ に対し**十分**であるとは，$\theta \to T(X) \to X$ がマルコフ連鎖（定義 1.8.3）をなすことをいう．すなわち $T(X)$ を与えたとき $\theta$ と$X$ が条件付き独立になること（$\theta \perp X \mid T(X)$）である．
 :::
 
-::: formalized
+:::: formalized
 `IsSufficientStatistic` (`InformationTheory/Shannon/SufficientStatistic.lean`)
-:::
+::::
 
 語を一つ断っておく．本節が十分と呼ぶのは，確率変数 $X$ を要約する統計量 $T$ である．第13章 13.6 節はコルモゴロフ十分統計量という語を置くが，そちらが十分と呼ぶのは自然数を含む有限集合であって，確率変数でも統計量でもない．同じ「十分」を冠していても別の対象についての語なので，混ぜて読まないこと．
 
@@ -39,11 +39,11 @@ $$
 
 一般のデータ処理は情報を減らしうる（$\le$）．十分統計量はその等号がちょうど成り立つ「情報を一切落とさない要約」である．十分統計量を使えば，推定の議論を低次元の$T(X)$ 上で行ってよい，という実用上の御利益がある．
 
+:::: formalized
+`mutualInfo_eq_of_sufficient` (`InformationTheory/Shannon/SufficientStatistic.lean`)
+
 ::: formalization-note
 教科書は十分性を因子分解 $p(x\mid\theta) = g(T(x),\theta)\,h(x)$（Neyman–Fisher）で導入することが多い．測度論でこれを書くと「$T(X)$ を与えたときの$X$ の条件付き分布が $\theta$ に依存しない」という形になり，本ライブラリはそれを`IsSufficientStatisticFactorized` として持っている．定義に採ったのは定理 1.8.4 の結論に直結する**マルコフ連鎖形**のほうで，両者の**同値** `isSufficient_iff_factorized` を別に立てている．同値は Mathlib の条件付き独立性補題（標準ボレル機構）を経由する．
 :::
-
-::: formalized
-`mutualInfo_eq_of_sufficient` (`InformationTheory/Shannon/SufficientStatistic.lean`)
-:::
+::::
 

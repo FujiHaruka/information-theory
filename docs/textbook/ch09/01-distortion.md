@@ -24,13 +24,13 @@ $$
 
 **距離ではない.** 定義 9.1.1 が課しているのは非負であることだけで，対称性も三角不等式も課していない．そもそも二つのアルファベットは違ってよいので，$d(x,\hat x)$ と並べて $d(\hat x, x)$ を書けるとは限らない．白を黒と読むときの損と，黒を白と読むときの損が等しいことも，定義 9.1.1 は要求しない．
 
-::: formalized
+:::: formalized
 `DistortionFn` (`InformationTheory/Shannon/RateDistortion/Achievability.lean`)
-:::
 
 ::: formalization-note
 形式化の `DistortionFn` は歪みの値を非負の実数の型にとる．定義 9.1.1 が値域を $[0,\infty)$ と書いたのと同じことで，非負性が型から出る．
 :::
+::::
 
 情報源は $1$ 文字ずつではなく，長さ $n$ のブロックにまとめて扱う．ブロックの歪みは，成分ごとの歪みを平均して定める．
 
@@ -44,9 +44,9 @@ $$
 
 足すのではなく平均するのは，$1$ 文字あたりの歪みで測るためである．そうしておくと，ブロックの長さを変えても値の大きさがそろい，$n$ を大きくする議論に乗る．$1$ 文字の歪みとブロックの歪みに同じ記号 $d$ を使うが，引数が文字の対か列の対かで見分けられる．
 
-::: formalized
+:::: formalized
 `blockDistortion` (`InformationTheory/Shannon/RateDistortion/Achievability.lean`)
-:::
+::::
 
 ::: example 9.1.3 Hamming 歪み
 $\mathcal X$ を空でない有限集合とし，$\hat{\mathcal X} = \mathcal X$ として
@@ -100,13 +100,13 @@ $$
 
 定義 9.1.5 が動かしているのは $q$ だけである．情報源の分布 $p$ と歪み尺度 $d$ は与えられていて動かせない．$q(\hat x\mid x)$ は「情報源が $x$ を出したときに再現として $\hat x$ を出す確率」であり，$\sum_{x,\hat x}p(x)q(\hat x\mid x) = \sum_x p(x) = 1$ だから，$p(x)q(\hat x\mid x)$ は確かに $\mathcal X\times\hat{\mathcal X}$ 上の分布である．期待歪みは，その分布のもとで $d$ を平均したものにほかならない．制約集合 $\mathcal Q(D)$ は「平均して $D$ 以下の歪みしか出さない再現の作り方」の全体で，$R(D)$ はその中で情報源と再現の結びつきをいちばん弱くしたときの，結びつきの強さである．記号 $I(p;q)$ は第6章 定義 6.1.2 の $I(p;W)$ にならった．あちらが通信路を置いた位置に，こちらは再現の作り方 $q$ を置く．$q$ を決めるごとに対 $(X,\hat X)$ が定まるので，$I(p;q)$ は $q$ の関数である．
 
-::: formalized
+:::: formalized
 `rateDistortionFunctionPmf`，制約集合 `RDConstraint`，期待歪み `expectedDistortionPmf` (`InformationTheory/Shannon/RateDistortion/Achievability.lean`)
-:::
 
 ::: formalization-note
 形式化の `rateDistortionFunctionPmf` が動かすのは条件付き分布ではなく，情報源の分布を第 $1$ 周辺にもつ $\mathcal X\times\hat{\mathcal X}$ 上の同時分布である．条件付き分布に情報源の分布を掛けたものはそのような同時分布であり，逆にそのような同時分布はどれもこの形に書ける（情報源の分布が $0$ を与える文字での条件付き分布は一通りには決まらないが，その文字では同時分布のほうが $0$ になる）ので，下限をとる相手の集合は一致する．ただし下限をとる相手の量は，定義 1.3.1 の相互情報量とは別に立てた宣言 `mutualInfoPmf` (`InformationTheory/Shannon/RateDistortion/Achievability.lean`) で，エントロピーの差の形（定理 1.3.4 の第 $3$ の表現）で書かれている．両者を結ぶ宣言のうち，外から引けるものは無い（特定の環境測度についてエントロピーの差が `mutualInfoPmf` に等しいことを述べる宣言 `rdAmbient_entropy_diff_eq_mutualInfoPmf` (`InformationTheory/Shannon/RateDistortion/AchievabilityStrongTypicality/SupportingBounds.lean`) と，対の経験分布について `mutualInfoPmf` が定義 1.3.1 の相互情報量に一致することを述べる補題 `mutualInfoPmf_empirical_eq_mutualInfo` (`InformationTheory/Shannon/WynerZiv/Operational.lean`) はあるが，前者は一般の相互情報量とは結ばれておらず，後者はファイルの外から引ける宣言になっていない）．さらに形式化には，同じ $R(D)$ を測度の言葉で書いた宣言 `rateDistortionFunction` (`InformationTheory/Shannon/RateDistortion/Converse.lean`) もある．こちらは値を拡張非負実数にとり，相互情報量を相対エントロピーの形で書く．二つの宣言を結ぶ宣言も無い．
 :::
+::::
 
 定義 9.1.5 が置いた記号に，いちばん小さい情報源で値を入れてみる．
 
@@ -196,12 +196,12 @@ $$
 最後に $R(D) = I(p;q^*)$ を見る．$I(p;q^*)$ は値の集合 $\{I(p;q) : q \in \mathcal Q(D)\}$ の下界であり，かつその集合の元でもある．下限は下界のうち最大のものだから，この二つから $R(D) = I(p;q^*)$ である．
 :::
 
-::: formalized
+:::: formalized
 `rateDistortionFunctionPmf_attained` (`InformationTheory/Shannon/RateDistortion/Achievability.lean`)
-:::
 
 ::: formalization-note
 `rateDistortionFunctionPmf_attained` が与えるのは，制約集合の上で最小を与える点が存在するところまでで，$R(D)$ がその点での値に等しいという命題 9.1.8 の後半に対応する単独の宣言は無い．後半は，最小を与える点の存在（`rateDistortionFunctionPmf_attained`）と，$R(D)$ が値の集合の下限として定義されていること（`rateDistortionFunctionPmf` (`InformationTheory/Shannon/RateDistortion/Achievability.lean`)）との合成で得られる．また，あちらが動かすのは条件付き分布ではなく，情報源の分布を第 $1$ 周辺にもつ同時分布であり，最小にする量も定義 1.3.1 の相互情報量とは別に立てた宣言である．証明の筋は本文と同じで，制約集合がコンパクトであることと，最小にする量が連続であることを組み合わせている．
 :::
+::::
 
 命題 9.1.8 により，$\mathcal Q(D)$ が空でないかぎり，以降は $R(D)$ を最小値として扱ってよい．そのような $D$ ごとに，最小を与える条件付き分布 $q^*$ が一つとれる，ということでもある．どの $q^*$ がとれるかは $D$ によって違い，$D$ を動かしたときに $R(D)$ の値がどう動くかが次節の主題である．

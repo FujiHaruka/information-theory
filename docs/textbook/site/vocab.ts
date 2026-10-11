@@ -102,7 +102,7 @@ function coinedTerms(text: string): string[] {
   for (const line of text.split('\n')) {
     const heading = line.match(/^#\s+(?:\d+(?:\.\d+)*\s+)?(.+?)\s*$/);
     if (heading) { out.push(heading[1]); continue; }
-    const tag = line.match(/^:::\s+(\S+)(.*)$/);
+    const tag = line.match(/^:::+\s+(\S+)(.*)$/);
     if (tag) {
       inDefinition = tag[1] === 'definition';
       const name = tag[2].trim().replace(/^\d+(?:\.\d+)*\s*/, '');
@@ -111,7 +111,7 @@ function coinedTerms(text: string): string[] {
       }
       continue;
     }
-    if (/^:::\s*$/.test(line)) { inDefinition = false; continue; }
+    if (/^:::+\s*$/.test(line)) { inDefinition = false; continue; }
     if (!inDefinition) continue;
     for (const m of line.matchAll(/\*\*([^*\n]+)\*\*/g)) {
       const w = m[1].trim();

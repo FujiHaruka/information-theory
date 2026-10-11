@@ -59,9 +59,9 @@ $$
 になる（$W(y \mid a) = 0$ の項は $\varphi(0) = 0$ と 1.6 節の約束により，どちらの和にも寄与しない）．残る $-H(Y) + H(Y \mid X)$ は命題 6.1.3 より $-I(p; W)$ である．
 :::
 
-::: formalized
+:::: formalized
 `mutualInfo_segment_hasDerivAt` (`InformationTheory/Shannon/ChannelCoding/StrongConverseAsymptotic.lean`)
-:::
+::::
 
 右辺の形が本節を動かす．$D(W(\cdot \mid a)\|q)$ は「入力 $a$ を知っている人の見込みと，入力を知らない人の見込みとの隔たり」である．それが現在の平均 $I(p;W)$ より大きければ，$a$ に重みを移すと $I$ は増える．逆に小さければ減る．すなわち**この右微分は，入力記号 $a$が平均より得か損かを測っている**．最大化子ではどの記号も得ではありえない，というのが次の命題である．
 
@@ -81,9 +81,9 @@ $$
 が成り立つ．$t \downarrow 0$ とすると，極限も $0$ 以下である．補題 6.6.1 よりこの極限は$D(W(\cdot \mid a)\|q^*) - I(p^*;W)$ に等しく，$I(p^*;W) = C(W)$ だから主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `klDiv_channel_le_capacity` (`InformationTheory/Shannon/ChannelCoding/StrongConverseAsymptotic.lean`)
-:::
+::::
 
 ::: corollary 6.6.3
 $W$ を通信路とし，$p^*$ を $I(\cdot\,; W)$ を最大にする入力分布（定理 6.1.5），$q^*$ をその出力分布とする．$q^*$ がすべての $y \in \mathcal Y$ で $q^*(y) > 0$ を満たすなら，$p^*(a) > 0$ を満たすすべての $a \in \mathcal X$ について
@@ -222,15 +222,15 @@ $$
 で定める．すなわち，符号語 $c(m)$ に対する情報密度 $\ell_Q(c(m); y^n)$ がしきい値 $\theta$ を超える出力語の集合である．
 :::
 
-::: formalized
+:::: formalized
 `highLLRSet` (`InformationTheory/Shannon/ChannelCoding/StrongConverse.lean`)
-:::
 
 ::: formalization-note
 情報密度（定義 6.6.6）に対応する単独の宣言はない．形式化は比を対数にとらず，定義 6.6.7 の不等式の形のまま扱うので，情報密度は高情報密度集合の定義の中に現れるだけである．$\log 0$ を避けられるぶん，こちらのほうが扱いやすい．
 
 また，形式化の側は高情報密度集合を符号帳ではなく符号（符号帳と復号器の組）で添字づけている．定義に使うのは符号語だけなので，復号器はどう選んでもこの集合は変わらない．同じことが補題 6.6.8 に紐付けた宣言にも当てはまる．
 :::
+::::
 
 $\Gamma_m(\theta)$ の外側では $W^n(y^n \mid c(m)) \le 2^\theta Q(y^n)$ が成り立っている．この不等式は符号語ごとの出力の分布を，符号にまったく依存しない参照分布 $Q$ で置き換えてよい，と言っている．ただし $2^\theta$ 倍の代償を払うことになり，しかも置き換えてよいのは $\Gamma_m(\theta)$ の外側でだけである．次の補題はこれを 1 行で書き下したものである．
 
@@ -259,9 +259,9 @@ $$
 となる．最後は $Q$ が非負であることによる．第 2 項は$s \cap \Gamma_m(\theta) \subseteq \Gamma_m(\theta)$ から$W^n(\Gamma_m(\theta) \mid c(m))$ 以下である．二つを足して主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `channelCoding_per_codeword_decomposition` (`InformationTheory/Shannon/ChannelCoding/StrongConverse.lean`)
-:::
+::::
 
 ここまで復号器は一度も現れていない．定義 6.6.7 も補題 6.6.8 も符号語の並びだけで決まる話だからである．復号器が効くのは次の定理で，その復号領域が $\mathcal Y^n$ の分割をなすところである．補題 6.6.8 をその分割に当てると，符号全体の評価になる．
 
@@ -289,9 +289,9 @@ $$
 を得る．$\mathcal D_m$ は $\mathcal Y^n$ の分割をなし $Q$ は分布だから$\sum_{m} Q(\mathcal D_m) = 1$ であり，第 1 の和は $2^{\theta}/M$ に等しい．
 :::
 
-::: formalized
+:::: formalized
 `channelCoding_average_success_le` (`InformationTheory/Shannon/ChannelCoding/StrongConverse.lean`)
-:::
+::::
 
 **分割が代償を 1 回にまとめる.** 補題 6.6.8 の代償 $2^\theta Q(s)$ はメッセージ 1 個あたりにかかっているのに，定理 6.6.9 ではそれが $2^\theta/M$ まで縮んでいる．効いているのは復号領域が $\mathcal Y^n$ の分割だという 1 点である．$M$ 個の領域が参照分布を分け合うので，$Q(\mathcal D_m)$ を全部足しても 1 にしかならない．$M$ 個の代償の合計が $M$ 倍ではなく$2^\theta$ になり，平均をとる $1/M$ でさらに割られる．
 
@@ -344,13 +344,13 @@ $$
 を得る．右辺は $m$ にも符号にもよらないので，$m$ について平均しても同じ上界で押さえられ，$n \to \infty$ で 0 に収束する．
 :::
 
-::: formalized
+:::: formalized
 `channelCoding_highLLR_tendsto_zero` (`InformationTheory/Shannon/ChannelCoding/StrongConverseAsymptotic.lean`)
-:::
 
 ::: formalization-note
 一様な上界のとり方が本文と形式化で違う．本文は正の確率をもつ対にわたる最大値 $\kappa$ をとったが，形式化は全対にわたる絶対値の総和 `llrUnifBound` (`InformationTheory/Shannon/ChannelCoding/StrongConverseAsymptotic.lean`) をとる．こちらのほうが粗いが，$\log 0 = 0$ という規約のもとで確率 0 の対を除く手間なしに定義できる．どちらも $n$ にも符号にもよらない定数で，証明の筋は変わらない．分散の評価にも差があり，形式化は有界な確率変数の分散が区間の半幅の 2 乗以下だという事実を使う．
 :::
+::::
 
 $1/n$ という速さは主張には要らない．要るのは 0 に収束することだけで，そのために効いたのは分散が $n$ の 1 乗でしか増えないのに，しきい値までの距離が $n$ に比例することである．$n$ が大きくなるほど，情報密度は平均のまわりの $\sqrt{n}$ の幅に集中していくのに，しきい値は平均から $n\delta/2$ だけ離れていく．距離のほうが速く伸びるので，超える確率は消える．第2章の典型集合が「実際に出る系列はほぼすべて典型」と言ったのと同じ形の集中が，ここでは情報密度について起きている．
 
@@ -382,9 +382,9 @@ $$
 したがって $1 - \bar P^{(n)}_e$ の上極限は 0 以下である．誤り確率は 1 以下だから$1 - \bar P^{(n)}_e \ge 0$ でもあり，はさみうちにより $1 - \bar P^{(n)}_e \to 0$，すなわち$\bar P^{(n)}_e \to 1$ である．
 :::
 
-::: formalized
+:::: formalized
 `channelCoding_strong_converse_asymptotic` (`InformationTheory/Shannon/ChannelCoding/StrongConverseAsymptotic.lean`)
-:::
+::::
 
 ::: corollary 6.6.12
 $W$ を通信路，$p^*$ を $I(\cdot\,; W)$ を最大にする入力分布（定理 6.1.5），$q^*$ をその出力分布とし，$q^*$ はすべての $y \in \mathcal Y$ で $q^*(y) > 0$ を満たすとする．実数 $R$ が次の条件を満たすとする．どんな $\varepsilon > 0$ に対しても，ある $N$ があって，$n \ge N$ ならばメッセージ数 $M \ge 2^{nR}$ の長さ $n$ のブロック通信路符号で，平均誤り確率が$\bar P_e < \varepsilon$ を満たすものが存在する，という条件である．このとき $R \le C(W)$ である．
@@ -400,9 +400,9 @@ $$
 だから，十分大きいすべての $n$ でレートの条件が満たされている．よって$\bar P^{(n)}_e \to 1$ である．ところが $n \ge N$ ではつねに $\bar P^{(n)}_e < 1/2$ なので，極限は $1/2$ 以下でなければならない．これは矛盾である．
 :::
 
-::: formalized
+:::: formalized
 `channelCoding_operational_rate_le_capacity` (`InformationTheory/Shannon/ChannelCoding/StrongConverseAsymptotic.lean`)
-:::
+::::
 
 **同じ結論を 2 度出す理由.** 系 6.6.12 の結論（達成できるレートは $C(W)$ 以下）は系 6.4.8 の結論と同じである．違うのは前提のほうで，二つは強弱で並ぶのではなく，要求の置き場所が違う．系 6.4.8 は符号の族に，最大誤り確率が 0 に向かうことと，レートの列が上に有界であることを求めていた．系 6.6.12 が符号に求めるのは平均誤り確率を $\varepsilon$ 未満にできることだけで，最大誤り確率にもレートの有界性にも触れない．そのかわり系 6.6.12 は通信路のほうに，最大化子の出力分布が全点で正だという条件を負っている．これは系 6.4.8 が負っていない条件である．符号への要求は緩く，通信路への要求は厳しい．
 

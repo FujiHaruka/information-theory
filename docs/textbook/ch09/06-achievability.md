@@ -34,13 +34,13 @@ $\mathcal X$ と $\hat{\mathcal X}$ を空でない有限集合，$p$ を $\math
 
 見当のとおり，一本の符号語が当たる確率はおよそ $2^{-nI(p;q^{*})} = 2^{-nR(D)}$ で，$M$ 本のうち一本も当たらない確率はおよそ $(1 - 2^{-nR(D)})^{M}$ である．$M$ が $2^{nR}$ ほどあって $R > R(D)$ なら，これは $n$ とともに $0$ に向かう（$0 \le x \le 1$ のとき $(1-x)^{M} \le e^{-xM}$ であり，$x = 2^{-nR(D)}$，$M = 2^{nR}$ とおくと肩の $xM = 2^{n(R-R(D))}$ が発散するからである）．当たったときのブロックの歪みは，歪み典型の定め方から期待歪みの近く，すなわち $D$ の近くにある．当たらなかったときの歪みは，アルファベットが有限なので $\max_{x,\hat x} d(x,\hat x)$ で抑えられ，その場合の確率が $0$ に向かうので，期待歪みへの寄与も $0$ に向かう．二つを合わせると，$n$ を十分大きくとれば期待歪みは $D + \varepsilon$ 以下に収まる．最後に，引いた符号帳について平均した期待歪みがこの評価を満たすので，少なくとも一つの符号帳が同じ評価を満たす．第6章 6.3 節も最後に同じ形の議論を通った．
 
-::: formalized
+:::: formalized
 `rate_distortion_achievability_operational_general` (`InformationTheory/Shannon/RateDistortion/AchievabilityGeneralSource.lean`)
-:::
 
 ::: formalization-note
 形式化の宣言の仮定は，借りた主張と一つずつ対応している．情報源の分布が確率分布であること，制約集合が空でないこと（本文の「$\mathcal Q(D)$ が空でない」にあたる），レートが $R(D)$ より真に大きいこと，$\varepsilon$ が正であることの四つで，これがすべてである．結論も同じ形で，ある番号から先のすべての長さについて，符号語数が上の不等式を満たすレート歪み符号があり，その期待歪みが $D+\varepsilon$ 以下である，という形をしている．ただし宣言は符号語数について，$2^{nR}$ を切り上げた整数以上であるという下からの評価も与える．本文が使うのは符号語数が正であることだけで，それは定義 9.5.1 から出るので，借りる形からはこの評価を落としてある．筋書きに書いた歪み典型は，あちらでは `distortionTypicalSet` (`InformationTheory/Shannon/RateDistortion/AchievabilityJointTypicalEncoder.lean`) として，結合典型集合と，ブロックの歪みについての条件との共通部分に定めてある．ただし探索の規則は本文の筋書きと違う．形式化の符号化器 `jointStronglyTypicalLossyEncoder` (`InformationTheory/Shannon/RateDistortion/AchievabilityJointStrongTypicality.lean`) が探すのは，強典型性（定義 2.4.1）の意味で結合典型な符号語である．ブロックの歪みが期待歪みの近くにあることは，探索の規則からではなく，そこから `distortionTypicalSet` への包含 `jts_subset_dts_of_dist_slack` (`InformationTheory/Shannon/RateDistortion/AchievabilityUnconditional.lean`) を経て出る．
 :::
+::::
 
 ## レート歪み定理
 

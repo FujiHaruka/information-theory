@@ -14,9 +14,9 @@
 $\mathcal X$ を空でない有限アルファベット，$x$ を $\mathcal X$ の文字を並べた有限列とする．**辞書** を空の並び，**区切り候補** を空列として始め，$x$ の文字を先頭から $1$ つずつ読む．読んだ文字を区切り候補の末尾に足した列を $w$ とし，$w$ が辞書にあれば区切り候補を $w$ に置き換え，$w$ が辞書になければ $w$ を **フレーズ** として出力したうえで辞書の末尾に加え，区切り候補を空列に戻す．$x$ を読み終えた時点で区切り候補に残っているものは出力しない．出力されたフレーズを出力順に並べた列を $\mathcal S(x) = (s_1, \dots, s_k)$ と書き，その項数 $k$ を $\lvert\mathcal S(x)\rvert$ と書く．$\mathcal S(x)$ を $x$ の **最長一致の貪欲な分解** と呼ぶ．
 :::
 
-::: formalized
+:::: formalized
 `lz78PhraseStrings` (`InformationTheory/Shannon/LZ78/GreedyLongestPrefix.lean`)
-:::
+::::
 
 定義 12.5.1 の分岐をそのまま読むと，区切り候補は辞書にある列である限り伸び続け，辞書から外れた瞬間に区切られる．すなわち区切り候補は，つねに空列であるか辞書にある列であるかのどちらかで，出力されるフレーズは「辞書にある列（または空列）に $1$ 文字足したもの」である．最長一致という名前は，区切る前に候補をできるところまで伸ばす，というこの動きから来ている．読み終えたところで候補に残った切れ端を出力しないので，フレーズを全部つないでも $x$ に届かないことがある．そのぶんが 命題 12.5.4 の「以下」である．ただし，この切れ端も空列であるか辞書にある列であるかのどちらかだから，フレーズの並びに加えて，切れ端が辞書の何番目かを最後にもう一つ書き添えれば，$x$ 全体が読み取れる．書き添えないと $x$ は決まらない．たとえば $x = 10$ と $x = 101$ は，どちらも分解が $(1, 0)$ で，違いは切れ端が空列か $1$ かというところにしかないからである．
 
@@ -50,9 +50,9 @@ $\mathcal X$ を空でない有限アルファベット，$x$ を $\mathcal X$ �
 フレーズが出力されるのは $w$ が辞書に無いときだけで，そのとき辞書はそれまでに出力したフレーズの全体だから，出力されるフレーズはそれ以前のどのフレーズとも異なる．出力の順に見れば，どの二つのフレーズも相異なる．
 :::
 
-::: formalized
+:::: formalized
 `lz78PhraseStrings_nodup` (`InformationTheory/Shannon/LZ78/GreedyLongestPrefix.lean`)
-:::
+::::
 
 ::: proposition 12.5.4
 $\mathcal X$ を空でない有限アルファベット，$x$ を $\mathcal X$ の文字を並べた有限列とする．$\mathcal S(x)$（定義 12.5.1）のフレーズはどれも空列でなく，それらを出力順に連結した列は $x$ の語頭（定義 4.1.2）であり，フレーズの長さの総和は $x$ の長さ以下である．
@@ -66,9 +66,9 @@ $\mathcal X$ を空でない有限アルファベット，$x$ を $\mathcal X$ �
 $x$ を読み終えた時点で不変量を読むと，フレーズを連結した列に最後の区切り候補をつないだものが $x$ に等しい．よって連結した列は $x$ の語頭であり，その長さ，すなわちフレーズの長さの総和は $x$ の長さ以下である．
 :::
 
-::: formalized
+:::: formalized
 `lz78PhraseStrings_forall_ne_nil`，`lz78PhraseStrings_flatten_prefix`，`lz78PhraseStrings_total_length_le` (`InformationTheory/Shannon/LZ78/GreedyLongestPrefix.lean`)
-:::
+::::
 
 ::: corollary 12.5.5
 $\mathcal X$ を空でない有限アルファベット，$x$ を $\mathcal X$ の文字を並べた長さ $n$ の有限列とすると $\lvert\mathcal S(x)\rvert \le n$ であり，さらに $n \ge 1$ ならば $\lvert\mathcal S(x)\rvert \ge 1$ である（$\mathcal S(x)$ は 定義 12.5.1 の貪欲な分解）．
@@ -187,9 +187,9 @@ $$
 で定める．
 :::
 
-::: formalized
+:::: formalized
 $1$ フレーズあたりのビット数 `LZ78Phrase.bitLength` (`InformationTheory/Shannon/LZ78/GreedyParsing.lean`)，符号長 `lz78GreedyEncodingLength` (`InformationTheory/Shannon/LZ78/AsymptoticOptimality/EncodingLength.lean`)
-:::
+::::
 
 括弧の中は，フレーズ $1$ 本を書くのに割り当てるビット数である．内訳はこうである．定義 12.5.1 の分岐から読んだとおり，各フレーズは辞書にある列（または空列）に $1$ 文字足したものだった．そこで各フレーズを，足す前の列が辞書の何番目かという番号と，足した $1$ 文字との対で書く．番号のほうは，空列の場合を合わせて $k+1$ 通りを区別すればよいので $\lfloor\log_2(k+1)\rfloor + 1$ ビット，文字のほうは $\lvert\mathcal X\rvert$ 通りだから $\lfloor\log_2\lvert\mathcal X\rvert\rfloor + 1$ ビットである．二つを足したものが括弧の中で，どのフレーズにも同じだけ割り当てる（辞書が小さいうちは番号がもっと短く書けるが，本数を掛けたときの見積もりを簡単にするため，最後の大きさにそろえておく）．対の並びを先頭から読めば，番号の指す列に文字を足してフレーズが一本ずつ決まり，辞書もそのつど組み直せるから，フレーズの列はここから復元できる．定義 12.5.1 の直後に見たとおり，$x$ に戻るにはさらに，読み残した切れ端が辞書の何番目かを書き足す必要がある．そのぶんは番号だけで足りるので，フレーズ $1$ 本に割り当てるビット数より少ないが，定義 12.5.9 はこの $1$ 本を数えていない．本節のはじめに断ったとおり，本書はこれらを主張として述べず，証明もしない．以下の評価は，定義 12.5.9 の右辺について述べたものである．
 
@@ -210,9 +210,9 @@ $$
 $k := \lvert\mathcal S(x)\rvert$ と置くと 系 12.5.5 より $k \le n$ である．$\log_2$ は狭義単調増加で，床関数は $s \le t$ ならば $\lfloor s\rfloor \le \lfloor t\rfloor$ を満たすから $\lfloor\log_2(k+1)\rfloor \le \lfloor\log_2(n+1)\rfloor$ であり，括弧の中は $k$ を $n$ に取り替えても減らない．括弧の中は正だから，$k \le n$ と合わせて，二つの因子をそれぞれ大きくして主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `lz78_encoding_length_le_n_log_n_plus_const` (`InformationTheory/Shannon/LZ78/AsymptoticOptimality/EncodingLength.lean`)
-:::
+::::
 
 ::: corollary 12.5.11
 $\mathcal X$ を空でない有限アルファベット，$n \ge 1$，$x \in \mathcal X^n$ とすると
@@ -227,9 +227,9 @@ $$
 定理 12.5.10 の両辺を $n > 0$ で割ればよい．
 :::
 
-::: formalized
+:::: formalized
 `lz78_encoding_length_per_symbol_le` (`InformationTheory/Shannon/LZ78/AsymptoticOptimality/EncodingLength.lean`)
-:::
+::::
 
 系 12.5.11 の右辺は $n$ とともに増えるので，これだけでは $1$ 文字あたりの符号長が定数で抑えられたことにならない．$k \le n$ で済ませたのが，定数で抑えるという目的には粗すぎたのである（もっとも，短い系列では 系 12.5.11 の右辺のほうが小さい．$\lvert\mathcal X\rvert = 2$ なら，次の 系 12.5.12 の右辺を下回るのは $n \le 62$ の範囲で，例 12.5.13 の $n = 13$ では $6$ 対 $8.754\ldots$ である）．定理 12.5.10 と 系 12.5.11 をここに置いたのは，フレーズ数の抑えを使わずに 系 12.5.5 だけでどこまで言えるかを先に出しておくためで，次はその一段だけを取り替える．定理 12.5.7 のフレーズ数の抑えを 定義 12.5.9 に入れ直せば，増える項が消える．
 

@@ -26,9 +26,9 @@ $$
 と定める．$Z(\lambda)$ を **分配関数**，$p^*_\lambda$ を **Gibbs 分布** と呼ぶ．
 :::
 
-::: formalized
+:::: formalized
 分配関数 `gibbsZ`，Gibbs 分布 `gibbsPmf` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
-:::
+::::
 
 Gibbs 分布は，特徴関数の値の一次結合を $\exp$ に通したものを重みにして，総和が 1 になるように割ったものである．$\lambda_i$ が正なら $f_i$ の値が大きい記号ほど重みが大きく，負なら逆になる．$\lambda$ が零ベクトルなら重みはすべて 1 で，$p^*_0$ は一様分布である．分配関数はいまのところ割り算の分母でしかない．ただし $\lambda$ の関数として見ると分布の性質を抱え込んでいて，10.3 節でそれが表に出る．
 
@@ -50,9 +50,9 @@ $$
 である．
 :::
 
-::: formalized
+:::: formalized
 全点で正であること `gibbsPmf_pos`，分布であること `gibbsPmf_mem_stdSimplex` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
-:::
+::::
 
 全点で正であることは，このあと繰り返し効く．1.6 節で見たとおり，基準の分布が 0 をとる点で比べる分布が正の値をとると相対エントロピーは $+\infty$ になる．$p^*_\lambda$ を基準にとるかぎりそれは起きず，$D(Q \,\|\, p^*_\lambda)$ はどんな $Q$ に対しても有限である．
 
@@ -91,9 +91,9 @@ $$
 となり，$\sum_x Q(x) f_i(x) = \mathbb E_Q[f_i]$ と $\sum_x Q(x) = 1$ より，これは$\langle \lambda, \mathbb E_Q[f]\rangle - \log Z(\lambda)$ に等しい．差をとれば主張の式を得る．
 :::
 
-::: formalized
+:::: formalized
 `klDivPmf_gibbsPmf_eq` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
-:::
+::::
 
 **3 つの項を見分ける.** 右辺の 3 項のうち，$\log Z(\lambda)$ は $Q$ に依らない．$\langle \lambda, \mathbb E_Q[f]\rangle$ は $Q$ に依るが，その依り方が制約の値だけを通っている．というのも，$Q$ が実行可能なら $\mathbb E_Q[f_i] = c_i$ となり，この項は$\langle \lambda, c\rangle$ という定数になるからである．$Q$ に本当に依るのは $-H(Q)$ ただ一つである．つまり実行可能な $Q$ の上では
 $$
@@ -140,9 +140,9 @@ $$
 系 10.2.4 より $H(p^*_\lambda) - H(P) = D(P \,\|\, p^*_\lambda)$ であり，定理 1.6.1 より右辺は 0 以上である．
 :::
 
-::: formalized
+:::: formalized
 `entropy_le_gibbs_of_constraints` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
-:::
+::::
 
 ::: theorem 10.2.6
 $\mathcal X$ を空でない有限アルファベットとし，特徴関数 $f_1, \dots, f_k$ と制約の値$c_1, \dots, c_k$，および $\lambda \in \mathbb R^k$ をとる．Gibbs 分布 $p^*_\lambda$ がモーメント制約を満たすとする．このとき，モーメント制約を満たす任意の分布 $P$ について，$H(P) = H\big(p^*_\lambda\big)$ であることと $P = p^*_\lambda$ であることは同値である．
@@ -152,9 +152,9 @@ $\mathcal X$ を空でない有限アルファベットとし，特徴関数 $f_
 系 10.2.4 より $H(p^*_\lambda) - H(P) = D(P \,\|\, p^*_\lambda)$ だから，$H(P) = H(p^*_\lambda)$ であることは $D(P \,\|\, p^*_\lambda) = 0$ であることと同じである．定理 1.6.1 の等号条件により，それが起きるのは $P = p^*_\lambda$ のとき，かつそのときに限る．
 :::
 
-::: formalized
+:::: formalized
 `entropy_eq_gibbs_iff_of_constraints` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
-:::
+::::
 
 **定理 1.6.1 だけで閉じている.** 二つの定理が使ったのは，定理 1.6.1（相対エントロピーの非負性とその等号条件）ただ一つである．凸性も，Lagrange の乗数法も，微分も出てこない．補題 10.2.3 が代数だけで隔たりとエントロピーを結んでしまい，あとは 1.6 節の不等式を当てるだけだからである．制約の個数 $k$ にも，特徴関数の形にも，条件は要らない．
 
@@ -172,9 +172,9 @@ $k = 0$ なら $\langle \lambda, f(x)\rangle$ は空の和で 0 である（特�
 最後の主張も同じ 1 行から出る．$\lambda$ が零ベクトルなら，$k$ が何であっても各項$\lambda_i f_i(x)$ が 0 で $\langle \lambda, f(x)\rangle = 0$ となり，あとは上とまったく同じである．
 :::
 
-::: formalized
+:::: formalized
 一様分布になること `gibbsPmf_zero_eq_uniform`，そのエントロピー`entropy_gibbsPmf_zero_eq_log_card` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
-:::
+::::
 
 例 10.2.7 が返してきたのは定理 1.1.5 そのものである．制約がないときの最大エントロピー分布は一様分布で，値は $\log|\mathcal X|$ である．第1章が $\varphi$ の狭義凹性から帰納法で示したことが，本節の一般論の $k = 0$ の場合として落ちてくる．
 
@@ -202,13 +202,13 @@ $$
 であり，$\mathbb E_{p^*_\lambda}[f_1] = \mu$ が成り立つ．
 :::
 
-::: formalized
+:::: formalized
 制約を満たす $\lambda$ のもとで $p^*_\lambda(1) = \mu$ となること`gibbsPmf_bool_true_eq_of_mean`，$p^*_\lambda(0) = 1 - \mu$ となること`gibbsPmf_bool_false_eq_of_mean`，エントロピーが二値エントロピーに等しいこと`entropy_gibbsPmf_bool_eq_binEntropy`，その特徴関数 `boolFeature` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
-:::
 
 ::: formalization-note
 形式化されているのは例 10.2.8 の前半，すなわち制約を満たす $\lambda$ が与えられたときのエントロピーの値までである．$\lambda = \log\frac{\mu}{1-\mu}$ がその制約を満たすという後半に対応する宣言はない．
 :::
+::::
 
 二値の場合，平均の制約は分布そのものを決めてしまう（$P(1) = \mu$ で$P(0) = 1-\mu$）．実行可能集合が 1 点なので，最大化としては何も言っていないに等しい．それでもこの例を見ておく価値は二つある．Gibbs 分布の形が「制約から決まる分布」をきちんと再現していること，そして $\lambda$ を制約から解く作業がどんなものかが，いちばん小さい場合に見えることである．$\mu = 0.9$ なら $\lambda = \log 9 \approx 2.197$で，そのときのエントロピーは $H_b(0.9) \approx 0.325$ ナット（$\approx 0.469$ ビット），公平なコインの $\log 2 \approx 0.693$ ナット（1 ビット）よりずっと小さい．
 

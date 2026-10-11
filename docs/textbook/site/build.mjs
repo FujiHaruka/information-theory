@@ -248,9 +248,17 @@ mjx-utext { font-feature-settings: normal; }
 }
 .formalized > :first-child { margin-top: 0; }
 .formalized > :last-child { margin-bottom: 0; }
-.formalized strong:first-child { color: #22707c; font-weight: 700; }
+.formalized > p:first-child > strong:first-child { color: #22707c; font-weight: 700; }
 
-/* 読み飛ばしてよい傍注 (形式化上の注記 / 記法の先取り)。 */
+/* 形式化上の注記はポインタの中の折りたたみにする（読み飛ばしてよいので既定で閉じる）。 */
+.fnote { margin-top: .55rem; }
+.formalized > .fnote:first-child { margin-top: 0; }
+.fnote > summary { cursor: pointer; color: #4f7c83; font-size: .88rem; font-weight: 600; }
+.fnote[open] > summary { margin-bottom: .5rem; }
+.fnote > :not(summary) { color: #5a5a5a; }
+.fnote > :last-child { margin-bottom: 0; }
+
+/* 読み飛ばしてよい傍注 (記法の先取り)。 */
 .aside {
   font-size: .93rem;
   border-left: 3px solid #e3e3e3;
@@ -333,7 +341,9 @@ h1:target, h2:target, h3:target {
   .proof > p:first-child > strong:first-child { color: #98a1aa; }
   .qed { color: #98a1aa; }
   .formalized { background: rgba(122,200,212,.09); color: #c9cdd3; }
-  .formalized strong:first-child { color: #63b5c2; }
+  .formalized > p:first-child > strong:first-child { color: #63b5c2; }
+  .fnote > summary { color: #7fb3bb; }
+  .fnote > :not(summary) { color: #aab1b9; }
   .aside { border-left-color: #333a42; color: #9aa3ad; }
   .aside strong:first-child { color: #aeb6bf; }
   a.xref { border-bottom-color: rgba(108,182,255,.45); }
@@ -406,7 +416,7 @@ const ENVS = new Map([
   ['example',            { label: '例',             cls: 'stmt stmt-example',       numbered: true }],
   ['proof',              { label: '証明',           cls: 'proof' }],
   ['formalized',         { label: '形式化',         cls: 'formalized', sep: ':' }],
-  ['formalization-note', { label: '形式化上の注記', cls: 'aside aside-formalization' }],
+  ['formalization-note', { label: '形式化上の注記', cls: 'fnote' }],
   ['notation-preview',   { label: '記法の先取り',   cls: 'aside aside-notation' }],
 ]);
 
@@ -446,9 +456,13 @@ md.use(mdContainer, 'env', {
     const t = tokens[idx];
     if (t.nesting === 1) {
       const { kind, env, num } = parseEnv(t.info);
+      if (kind === 'formalization-note') {
+        return `${t.meta?.nested ? '' : '<div class="formalized">\n'}<details class="${env.cls}">\n`;
+      }
       const id = num ? ` id="${ANCHOR.get(kind)}-${num}"` : '';
       return `<div class="${env.cls}"${id}>\n`;
     }
+    if (t.meta?.note) return `</details>\n${t.meta.nested ? '' : '</div>\n'}`;
     return '</div>\n';
   },
 });
@@ -468,11 +482,36 @@ md.core.ruler.after('block', 'env_heading', (state) => {
     toks.splice(at, 0, open, inline, close);
   };
 
+  const openers = [];
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i];
+    if (t.type === 'container_env_close') {
+      const opener = openers.pop();
+      if (opener.meta?.note) t.meta = opener.meta;
+      continue;
+    }
     if (t.type !== 'container_env_open') continue;
     const spec = parseEnv(t.info);
     if (spec.env.cls.startsWith('stmt')) lastStmt = spec.kind;
+    openers.push(t);
+
+    // 注記は形式化ポインタの中の折りたたみとして組み、見出しはその開閉の見出しにする。
+    if (spec.kind === 'formalization-note') {
+      t.meta = { note: true, nested: openers.length > 1 };
+      const ctx = state.env?.ctx;
+      const name = spec.name && ctx ? linkStatementRefs(spec.name, ctx) : spec.name;
+      const summary = (html) => {
+        const tok = new state.Token('html_block', '', 0);
+        tok.content = html;
+        return tok;
+      };
+      const inline = new state.Token('inline', '', 0);
+      inline.content = `${t.meta.nested ? '注記' : spec.env.label}${name ? `（${name}）` : ''}`;
+      inline.children = [];
+      toks.splice(i + 1, 0, summary('<summary>'), inline, summary('</summary>\n'));
+      i += 3;
+      continue;
+    }
 
     // 1. 見出し。最初の段落があればその頭に流し込み、無ければ独立した段落にする。
     const head = headingMarkdown(spec, state.env?.ctx);
@@ -699,7 +738,7 @@ const BETWEEN_KINDS = new Set(['formalized', 'formalization-note', 'notation-pre
 function lintProofs(markdown, src) {
   const blocks = [];
   markdown.split('\n').forEach((line, i) => {
-    const m = line.match(/^::: +(\S+)(.*)$/);
+    const m = line.match(/^:::+ +(\S+)(.*)$/);
     if (m && ENVS.has(m[1])) blocks.push({ line: i + 1, kind: m[1], info: (m[1] + m[2]).trim() });
   });
 
@@ -893,7 +932,7 @@ function collectAnchors(pg) {
         pg.src, i + 1);
       return;
     }
-    const m = line.match(/^::: +(\S+)(.*)$/);
+    const m = line.match(/^:::+ +(\S+)(.*)$/);
     if (!m) return;
     const spec = parseEnv((m[1] + m[2]).trim());
     if (!spec?.num) return;
@@ -1281,11 +1320,18 @@ md.core.ruler.push('formalized_links', (state) => {
     if (toks[i].type !== 'container_env_open') continue;
     const kind = parseEnv(toks[i].info)?.kind;
     if (kind !== 'formalized' && kind !== 'formalization-note') continue;
+    const line = (toks[i].map?.[0] ?? 0) + 1;
+    const own = [];
     let j = i + 1;
-    while (j < toks.length && toks[j].type !== 'container_env_close') j++;
-    const line = (toks[i].map?.[0] ?? toks.slice(i, j).find((t) => t.map)?.map?.[0] ?? 0) + 1;
-    if (kind === 'formalized') linkFormalized(state, toks.slice(i, j), ctx, line);
-    else checkNoteRefs(toks.slice(i, j), ctx, line);
+    while (j < toks.length && toks[j].type !== 'container_env_close') {
+      if (toks[j].type !== 'container_env_open') { own.push(toks[j++]); continue; }
+      let k = j + 1;
+      while (k < toks.length && toks[k].type !== 'container_env_close') k++;
+      checkNoteRefs(toks.slice(j, k), ctx, (toks[j].map?.[0] ?? 0) + 1);
+      j = k + 1;
+    }
+    if (kind === 'formalized') linkFormalized(state, own, ctx, line);
+    else checkNoteRefs(own, ctx, line);
     i = j;
   }
 });

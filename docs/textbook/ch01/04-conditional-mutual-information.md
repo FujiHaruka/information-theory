@@ -33,13 +33,13 @@ $$
 1.6 節の相対エントロピー $D(\cdot\,\|\,\cdot)$ を使えば，各 $z$ の項は$D\big(p(x,y \mid z)\,\big\|\,p(x\mid z)p(y\mid z)\big)$ と書ける．本節はこの記法を使わない．
 :::
 
+:::: formalized
+`condMutualInfo` (`InformationTheory/Shannon/CondMutualInfo.lean`)
+
 ::: formalization-note
 本ライブラリは条件付き分布カーネルの合成積の形に対する相対エントロピーとして定義する（Mathlib の `klDiv` に $Z$ の像測度と核の合成積を渡す）．値は拡張非負実数である．この定義は条件付き分布カーネルを取り扱うために $X, Y$ に標準ボレル空間（`StandardBorelSpace`）を要求する．以降の条件付き量にはこの前提が一貫して付くが，これは核を作るための正則性（regularity）条件であって，定理の核心ではない．
 :::
-
-::: formalized
-`condMutualInfo` (`InformationTheory/Shannon/CondMutualInfo.lean`)
-:::
+::::
 
 ## 基本性質
 
@@ -57,13 +57,13 @@ $$
 等号条件も各 $z$ に還元する．非負の項を正の重み $p(z)$ で平均した和が 0 になるのは，$p(z) > 0$ の各 $z$ で $I(X;Y\mid Z=z) = 0$ となるとき，かつそのときに限る．そして命題 1.3.2 の等号条件により，それは条件付き分布 $p(\cdot,\cdot\mid z)$ のもとで $X$ と$Y$ が独立であること，すなわち上の積の形にほかならない．
 :::
 
+:::: formalized
+非負性 `condMutualInfo_nonneg`，対称性 `condMutualInfo_comm` (`InformationTheory/Shannon/CondMutualInfo.lean`)
+
 ::: formalization-note
 非負性は，無条件の相互情報量と同じく拡張非負実数値であることからほぼ型レベルで従う．等号条件（条件付き独立との同値）については，マルコフ性から $I = 0$ を出す片方向だけが形式化されており，逆向きを含む同値の形は無い．
 :::
-
-::: formalized
-非負性 `condMutualInfo_nonneg`，対称性 `condMutualInfo_comm` (`InformationTheory/Shannon/CondMutualInfo.lean`)
-:::
+::::
 
 ## エントロピー表現
 
@@ -93,11 +93,11 @@ $$
 第 1 項は定義 1.2.2 によりちょうど $-H(X\mid Y,Z)$．第 2 項は $z$ について先に和をとると$\sum_z p(x,y,z) = p(x,y)$ なので $-\sum_{x,y} p(x,y)\log p(x\mid y) = -H(X\mid Y)$，符号を込めて $+H(X\mid Y)$．合わせて $I(X;Z\mid Y) = H(X\mid Y) - H(X\mid Y,Z)$．
 :::
 
+:::: formalized
+`condMutualInfo_eq_condEntropy_sub_condEntropy` (`InformationTheory/Shannon/Entropy.lean`)
+
 ::: formalization-note
 形式化では左辺に `.toReal` を付けた等式として述べる（条件付き相互情報量が拡張非負実数値，条件付きエントロピーが実数値のため）．
 :::
-
-::: formalized
-`condMutualInfo_eq_condEntropy_sub_condEntropy` (`InformationTheory/Shannon/Entropy.lean`)
-:::
+::::
 

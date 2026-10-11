@@ -27,9 +27,9 @@ $$
 
 ランダム符号帳のほうが本節の要点である．符号語をでたらめに選ぶのは，良い符号の作り方としては乱暴に見える．しかし $n$ が大きければ，独立に引いた $2^{nR}$ 本の符号語は$\mathcal X^n$ の中でたがいに遠く散らばり，辻褄がぶつかることがめったにない．定理 6.2.7 が測っていたのは，まさにそのぶつかりの確率だった．
 
-::: formalized
+:::: formalized
 符号帳 `Codebook`，結合典型復号器 `jointTypicalDecoder`，両者を符号に束ねる`codebookToCode` (`InformationTheory/Shannon/ChannelCoding/Achievability/Core.lean`)
-:::
+::::
 
 ## 1 歩目：平均誤り確率の小さい符号を作る
 
@@ -45,9 +45,9 @@ $$
 $y^n$ を受け取ったときに誤りが起きる，すなわち $d(y^n) \ne m$ だとする．もし$(c(m), y^n) \in A^{(n)}_\varepsilon$ であって，かつ $m' \ne m$ のどれについても$(c(m'), y^n) \notin A^{(n)}_\varepsilon$ ならば，定義 6.3.1 の条件を満たす添字は $m$ ただ一つなので $d(y^n) = m$ となり，誤りは起きない．したがって誤りが起きる $y^n$ は，$(c(m), y^n) \notin A^{(n)}_\varepsilon$ であるか，または$(c(m'), y^n) \in A^{(n)}_\varepsilon$ となる $m' \ne m$ が存在するかのいずれかを満たす．前者の集合と，後者の $m'$ ごとの集合との合併に誤りの事象が含まれるので，確率の劣加法性から主張の右辺で押さえられる．
 :::
 
-::: formalized
+:::: formalized
 `errorProbAt_le_E1_plus_E2` (`InformationTheory/Shannon/ChannelCoding/Achievability/Core.lean`)
-:::
+::::
 
 不等式の二つの項は，それぞれ定理 6.2.6 と定理 6.2.7 が待ち構えている形をしている．第 1 項は「送ったものと受け取ったものの辻褄が合わない」確率，第 2 項は「無関係な符号語が偶然辻褄を合わせてしまう」確率である．符号帳を固定したままではどちらも評価できない．$c(m)$ が具体的にどの系列かに依るからである．そこで符号帳について平均する．
 
@@ -70,13 +70,13 @@ $$
 第 2 項に移る．$m' \ne m$ とする．符号語は互いに独立に引かれているから，$c(m')$ は$c(m)$ とも，したがって $Y^n$ とも独立である．しかも $c(m')$ の分布は $X^n$ の分布に等しい．よって対 $\big(c(m'), Y^n\big)$ は定理 6.2.7 の $(\tilde X^n, Y^n)$ そのものであり，この項の平均は $2^{-n(I(p;W) - 3\varepsilon)}$ 以下である．$m' \ne m$ の個数は$M - 1$ 個だから，和は $(M-1)\,2^{-n(I(p;W)-3\varepsilon)}$ 以下である．
 :::
 
-::: formalized
+:::: formalized
 `random_codebook_average_le` (`InformationTheory/Shannon/ChannelCoding/Achievability/RandomCodebook.lean`)
-:::
 
 ::: formalization-note
 「符号帳について平均する」一行は，形式化では符号帳の空間の上の積測度に対する和の入れ替えになる．本文が $m$ と符号帳の二重の平均を一度に入れ替えているところが，あちらでは二つの補題に分かれている．
 :::
+::::
 
 ::: lemma 6.3.4
 $B$ を実数とする．ランダム符号帳の平均が $\mathbb E_{c}[\bar P_e(c)] \le B$ を満たすなら，$\bar P_e(c) \le B$ を満たす符号帳 $c$ が少なくとも一つ存在する．
@@ -91,9 +91,9 @@ $$
 となって仮定に反する．
 :::
 
-::: formalized
+:::: formalized
 `exists_codebook_le_avg` (`InformationTheory/Shannon/ChannelCoding/Achievability/Main.lean`)
-:::
+::::
 
 補題 6.3.4 が確率的手法の全体である．平均を計算しただけで，名指しできない符号の存在が出てくる．実際に良い符号を手に入れたわけではない．というのも，どの符号帳が当たりかは，この議論からは何も分からないからである．
 
@@ -118,9 +118,9 @@ $$
 であり，$\varepsilon$ の取り方から$I(p;W) - 3\varepsilon - R = \big(I(p;W) - R\big)/2 > 0$ だから，これも 0 に収束する．よって $n$ を十分大きくとれば二項の和は $\zeta$ 未満にできる．
 :::
 
-::: formalized
+:::: formalized
 `channel_coding_achievability` (`InformationTheory/Shannon/ChannelCoding/Achievability/Main.lean`)
-:::
+::::
 
 ## 2 歩目：平均から最大へ
 
@@ -141,13 +141,13 @@ $$
 そこから $\lceil M'/2 \rceil$ 個のメッセージを選び，その符号語だけを残して番号を$1, \dots, \lceil M'/2 \rceil$ に付け替える．復号器は元のものをそのまま使い，捨てたメッセージを指したときは $1$ を返すことにする．新しい番号 $j$（元の番号 $m_j$）に対する誤りの事象は，$j \ne 1$ なら元の誤りの事象と同じ集合であり，$j = 1$ ならその部分集合である．符号語も通信路も変えていないので出力の分布は元のままで，したがって新しい符号の誤り確率は元の $P_e(m_j)$ 以下であり，選び方から $2\zeta$ 未満である．
 :::
 
-::: formalized
+:::: formalized
 捨てるメッセージの個数を数える段 `errorProbAt_filter_card_bound`，部分符号の構成`Code.subcode` と，その誤り確率が元を超えないこと `Code.subcode_errorProbAt_le` (`InformationTheory/Shannon/ChannelCoding/ShannonTheorem.lean`)
-:::
 
 ::: formalization-note
 補題 6.3.6 の全体に対応する単独の宣言はない．形式化はレートの帳尻合わせまで一緒にした`exists_subcode_maxError_lt_two_mul` の形で持っていて，メッセージ数の下界と二つのレートの比較を仮定に置き，結論のメッセージ数も本文の $\lceil M'/2 \rceil$ ではなく目標レートの側で書いている．本文の補題 6.3.6 は，`errorProbAt_filter_card_bound` と`Code.subcode_errorProbAt_le` の合成で得られる．
 :::
+::::
 
 証明の要点は一つだけである．平均が小さいなら，平均の何倍もある項は少ない．これはMarkov の不等式そのもので，第3章 3.5 節でも同じ形が使われている．ここでは確率変数のかわりにメッセージごとの誤り確率を，確率のかわりに個数を数えているだけである．半分捨てるのでメッセージ数は半減するが，$\log$ をとって $n$ で割ればレートの目減りは$1/n$ ビットにすぎず，$n \to \infty$ で消える．捨てる操作の代償がこれだけで済む，というのがこの 2 歩目の勘所である．
 
@@ -174,13 +174,13 @@ $$
 **「全点で正」の仮定を外す段は本書では証明しない.** 一般の $W$ に対しては，$\xi \in (0,1)$をとって通信路を$W_\xi(y \mid x) := (1-\xi) W(y \mid x) + \xi / |\mathcal Y|$ と摂動して全点で正にしてから上の議論を当て，$W$ と $W_\xi$ の誤り確率の差を評価して戻す，という道筋をとる．差の評価は長さ $n$ のブロックで $n\xi$ の程度になるので，$\xi$ を $n$ とともに小さくしなければならず，そのためには補題 6.3.5 の $N$ が $\xi$ に依らずにとれることを確かめる必要がある．本節の評価を $\xi$ について一様に取り直す作業になるので，本書ではここまでとする．
 :::
 
-::: formalized
+:::: formalized
 `shannon_noisy_channel_coding_theorem_general` (`InformationTheory/Shannon/ChannelCoding/ShannonTheoremMaxError.lean`)
-:::
 
 ::: formalization-note
 本文の証明と形式化の到達点は，最後の段だけ食い違う．形式化の`shannon_noisy_channel_coding_theorem_general` は通信路への仮定を持たない無条件の主張で，本文が証明を付けなかった摂動の段まで含んでいる．「全点で正」の仮定を残した中間段は`shannon_noisy_channel_coding_theorem` (`InformationTheory/Shannon/ChannelCoding/ShannonTheorem.lean`) にあり，本文の証明が到達したのはこちらである．
 :::
+::::
 
 **証明が使ったのは前節の三つだけである.** 定理 6.2.6 が第 1 項を，定理 6.2.7 が第 2 項を消し，定理 6.2.5 は定理 6.2.7 の中で個数を数えていた．それ以外に効いたのは，平均から存在を取り出す補題 6.3.4 と，平均から最大へ渡す補題 6.3.6 という二つの初等的な議論だけである．$R < C(W)$ という条件が入ったのは 1 か所，補題 6.3.5 の第 2 項が 0 に収束するところで，そこでレートと相互情報量の差が指数の肩に現れた．
 

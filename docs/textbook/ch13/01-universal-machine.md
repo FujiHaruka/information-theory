@@ -68,9 +68,9 @@ $$
 と定め（$s$ はビット列の全体をわたる），$y$ を知ったうえでの $x$ の **コルモゴロフ複雑性** と呼ぶ．また，第 $2$ 引数に何も渡さないことの代用として $0$ を置き，$K_{\mathcal U}(x) := K_{\mathcal U}(x \mid 0)$ と書く．
 :::
 
-::: formalized
+:::: formalized
 万能機械 `universalEval`，コルモゴロフ複雑性 `condComplexity` と `complexity` (`InformationTheory/Shannon/Kolmogorov/UniversalMachine.lean`)
-:::
+::::
 
 $\mathcal U$ は 定義 13.1.3 の意味の機械ではない．機械はビット列を，それが表す自然数を通してしか見ないのに対し，$\mathcal U$ はビット列そのものを読み，先頭のビットで場合を分けるからである．では，なぜ機械のほうをはじめからビット列の上で定めなかったのか．借りた番号づけが自然数の部分関数に番号を与えるものだからである．番号 $i$ の相手 $\mathcal M_i$ が自然数を読む以上，定義 13.1.3 の機械もそれに合わせるほかない．$\mathcal U$ が機械でないことで困ることは無い．以下で $\mathcal U$ について使うのは記述長の式と，$\mathcal U$ が計算の手続きで定まるという一事だけで，どちらも 定義 13.1.3 の枠に入っていることを要求しないからである．
 
@@ -90,9 +90,9 @@ $x, y \in \mathbb N$ とすると，$\lvert s\rvert = K_{\mathcal U}(x \mid y)$ 
 $t$ を，$0$ の後ろに $x$ の二進表示をつないだビット列とする．$t$ の先頭のビットは $0$ で，その後ろは $x$ の二進表示だから，定義 13.1.4 より $\mathcal U(t, y)$ は $x$ の二進表示が表す自然数，すなわち $x$ である．よって集合 $\{\lvert s\rvert : \mathcal U(s, y) = x\}$ は空でない自然数の集合であり，最小元をもつ．その最小元は $K_{\mathcal U}(x \mid y)$ にほかならず，しかも $\mathcal U(s, y) = x$ を満たすあるビット列 $s$ の長さだから，その $s$ が求めるものである．
 :::
 
-::: formalized
+:::: formalized
 `condComplexity_spec` (`InformationTheory/Shannon/Kolmogorov/UniversalMachine.lean`)
-:::
+::::
 
 ::: proposition 13.1.6
 $x, y \in \mathbb N$ とすると $K_{\mathcal U}(x \mid y) \le \lvert x\rvert + 1$ である．
@@ -102,9 +102,9 @@ $x, y \in \mathbb N$ とすると $K_{\mathcal U}(x \mid y) \le \lvert x\rvert +
 $t$ を，$0$ の後ろに $x$ の二進表示をつないだビット列とすると，定義 13.1.4 より $\mathcal U(t, y) = x$ である．$t$ の長さは $x$ の二進表示のビット数より $1$ 大きいから $\lvert t\rvert = \lvert x\rvert + 1$ であり，定義 13.1.4 の最小はこの値以下である．
 :::
 
-::: formalized
+:::: formalized
 `condComplexity_le_natLen_add_one` (`InformationTheory/Shannon/Kolmogorov/UniversalMachine.lean`)
-:::
+::::
 
 命題 13.1.6 は，どの自然数も，その二進表示の前に $1$ ビットを添えるだけで書き出せることを言っているにすぎない．どんなに複雑な対象でも，複雑性はそれを書き下す長さに $1$ を足した値を超えない，という当たり前の上界である．おもしろいのはここから先で，機械を工夫すればこの上界をどれだけ下回れるか，そして工夫の余地がどこで尽きるかである．
 
@@ -120,9 +120,9 @@ $\mathcal M$ を機械とすると，定数 $b \in \mathbb N$ があって，す
 $x, y \in \mathbb N$ とビット列 $s$ が $\mathcal M(s, y) = x$ を満たすとする．$t$ を，$1$ を $i + 1$ 個並べ，次に $0$ を置き，最後に $s$ をつないだビット列とする．$t$ の先頭のビットは $1$ で，$2$ 番目のビットから最初の $0$ が現れるまでの $1$ の個数は $i$，その $0$ より後ろは $s$ だから，定義 13.1.4 の先頭が $1$ の場合に当たって $\mathcal U(t, y) = \mathcal M_i(s, y) = x$ である．$t$ の長さは $(i + 1) + 1 + \lvert s\rvert = \lvert s\rvert + b$ だから，定義 13.1.4 の最小はこの値以下である．
 :::
 
-::: formalized
+:::: formalized
 `invariance` (`InformationTheory/Shannon/Kolmogorov/Invariance.lean`)
-:::
+::::
 
 ::: corollary 13.1.8
 $\mathcal M$ を機械とすると，定数 $b \in \mathbb N$ があって，すべての $x, y \in \mathbb N$ について $K_{\mathcal U}(x \mid y) \le K_{\mathcal M}(x \mid y) + b$ である．

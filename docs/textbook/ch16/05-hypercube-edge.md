@@ -8,13 +8,13 @@ $n \ge 0$ とし，$A \subseteq \{0,1\}^n$ とする．$x \in \{0,1\}^n$ と $i 
 
 $\partial_{\mathrm e}$ は辺境界を表す記号であって，第10章 10.4 節 の偏微分とは別である（偏微分はつねに分数の形で関数に当たり，こちらはつねに添字 $\mathrm e$ を伴って集合に当たる）．対 $(x,i)$ と，端点の一方だけが $A$ に入る辺とは一対一に対応する．そのような辺について，$A$ に入っているほうの端点を $x$，二つの端点が食い違う座標の番号を $i$ とすればよい．だから $\lvert\partial_{\mathrm e}A\rvert$ は「$A$ から外へ出ていく辺の本数」である．
 
-::: formalized
+:::: formalized
 `edgeBoundaryCount` (`InformationTheory/Shannon/HypercubeEdge/Boundary.lean`)
-:::
 
 ::: formalization-note
 形式化は辺境界を集合としてではなく，その要素数として直に定めている（本文が $\lvert\partial_{\mathrm e}A\rvert$ と書く数がそれである）．座標の反転にも `flipCoord` (`InformationTheory/Shannon/HypercubeEdge/Boundary.lean`) という名前が与えられている．
 :::
+::::
 
 ::: proposition 16.5.2
 $n \ge 0$ とし，$A \subseteq \{0,1\}^n$ とする．$x \in A$ と $i \in \{1,\dots,n\}$ の対 $(x,i)$ のうち $x^{(i)} \in A$ を満たすものの個数と $\lvert\partial_{\mathrm e}A\rvert$ との和は $n\lvert A\rvert$ に等しい．
@@ -24,13 +24,13 @@ $n \ge 0$ とし，$A \subseteq \{0,1\}^n$ とする．$x \in A$ と $i \in \{1,
 $x \in A$ と $i \in \{1,\dots,n\}$ の対は，$x$ の選び方が $\lvert A\rvert$ 通り，$i$ の選び方が $n$ 通りで，全部で $n\lvert A\rvert$ 個ある．その各々について $x^{(i)}$ は $A$ に入るか入らないかのどちらか一方だから，全体は $x^{(i)} \in A$ を満たす対と $x^{(i)} \notin A$ を満たす対とに分かれる．後者の個数は 定義 16.5.1 より $\lvert\partial_{\mathrm e}A\rvert$ である．
 :::
 
-::: formalized
+:::: formalized
 `edge_total_count` (`InformationTheory/Shannon/HypercubeEdge/Boundary.lean`)
-:::
 
 ::: formalization-note
 形式化は $x^{(i)} \in A$ を満たす対の個数にも `internalEdgePairCount` (`InformationTheory/Shannon/HypercubeEdge/Boundary.lean`) という名前を与えていて，宣言はその数と辺境界の要素数との和が $n\lvert A\rvert$ に等しい，という形で述べられている．
 :::
+::::
 
 以下，本節の主張ブロックでは $\log$ の底を $2$ にとる．立方体の次元 $n$ と $\log_2\lvert A\rvert$ を同じ物差しで比べるためである．
 
@@ -69,9 +69,9 @@ $$
 を得る．$\lvert A\rvert > 0$ を両辺に掛けて整理すれば主張である．
 :::
 
-::: formalized
+:::: formalized
 `edgeBoundary_entropy_sharp` (`InformationTheory/Shannon/HypercubeEdge/BoundarySharp.lean`)
-:::
+::::
 
 ::: example 16.5.4 部分立方体
 $n \ge 0$，$0 \le k \le n$ とする．$F \subseteq \{1,\dots,n\}$ を要素数 $n-k$ の座標の集合，$c$ を $F$ から $\{0,1\}$ への関数とし，
@@ -125,9 +125,9 @@ $$
 である．$i$ について足すと，左辺の第 $1$ 項の和は $\lvert\partial_{\mathrm e}A\rvert$，第 $2$ 項の和は $n\lvert A\rvert$ だから主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `edgeBoundary_count_eq` (`InformationTheory/Shannon/HypercubeEdge/Boundary.lean`)
-:::
+::::
 
 命題 16.5.6 は，辺境界を射影の要素数の言葉に書き換える．そこに 定理 16.4.2 を当てれば，もう一つの下界が出る．正の整数 $m$ に対し $u \mapsto u^{1/m}$ が $[0,\infty)$ の上で単調非減少であること（$u \mapsto u^m$ の逆写像である）と，正の実数のべき乗の規則，すなわち正の実数 $u$，$v$ と実数 $\kappa$，$\tau$ について $(uv)^{\kappa} = u^{\kappa}v^{\kappa}$，$u^{\kappa+\tau} = u^{\kappa}u^{\tau}$，$(u^{\kappa})^{\tau} = u^{\kappa\tau}$ が成り立つことを既知とする．単調性を使うのは 定理 16.5.7 の証明と 例 16.6.2 の二箇所で，べき乗の規則を使うのは，本節と次節が $1/m$ 乗を積や積のべきに通すところである．
 
@@ -147,13 +147,13 @@ $$
 である．$\mathcal X = \{0,1\}$ として 定理 16.4.2 を当てると $\prod_{i=1}^{n}\lvert\pi_{-i}(A)\rvert \ge \lvert A\rvert^{\,n-1}$ であり，$1/n$ 乗が単調非減少だから右辺は $n\lvert A\rvert^{(n-1)/n}$ 以上である．命題 16.5.6 と合わせると $\lvert\partial_{\mathrm e}A\rvert + n\lvert A\rvert \ge 2n\lvert A\rvert^{(n-1)/n}$ であり，移項すれば主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `edgeBoundary_ge_AMGM` (`InformationTheory/Shannon/HypercubeEdge/Boundary.lean`)
-:::
 
 ::: formalization-note
 宣言は移項する前の形（$2n\lvert A\rvert^{(n-1)/n} \le \lvert\partial_{\mathrm e}A\rvert + n\lvert A\rvert$）で述べられている．指数は 定理 16.4.2 の宣言と同じく自然数の引き算で書かれていて $n = 0$ でも両辺が定まる．本文が $n \ge 1$ を仮定するのは，$(n-1)/n$ を分数として読むためである．
 :::
+::::
 
 下界が二つ出たので，どちらが強いかを決めておく．
 

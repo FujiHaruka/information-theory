@@ -16,9 +16,9 @@ $$
 
 確率 $0$ のブロックが実現する事象は，各 $n$ で高々有限個の確率 $0$ の事象の和だから確率 $0$ である．したがって実現したブロックの確率は確率 1 で正で，$\hat H_n$ は確率 1 で定まる有限の値をとる．
 
-::: formalized
+:::: formalized
 経験エントロピーにあたる定義 `blockLogAvg` (`InformationTheory/Shannon/SMB/McMillanBreiman.lean`)
-:::
+::::
 
 ::: theorem 3.5.2 Shannon–McMillan–Breiman
 $\{X_i\}$ をエルゴード的な定常情報源とする．確率 1 で
@@ -47,13 +47,13 @@ $$
 
 以上はどれも本書では証明しないが，3.4 節の Birkhoff の定理と同じく，無条件の機械検証済みの定理として形式化されている．
 
-::: formalized
+:::: formalized
 両側への拡張 `μZ`，非負の時刻での一致 `μZ_nat_proj_eq`，シフトの測度保存性`measurePreserving_shiftZ`，エルゴード性 `ergodic_shiftZ` (`InformationTheory/Probability/TwoSidedExtension/Core.lean`)，Lévy の収束`condProbPast_tendsto_condProbInfty` とその極限 `condProbInfty` (`InformationTheory/Probability/TwoSidedExtension/Backward.lean`)，無限の過去で条件付けた負対数の期待値 `integral_pmfLogCondInfty_eq_entropyRate` (`InformationTheory/Probability/TwoSidedExtension/LogCondIntegral.lean`)
-:::
 
 ::: formalization-note
 期待値の等式は，形式化では右辺を条件付きエントロピーの極限ではなくエントロピーレートそのものとして述べている．本文が補題 3.5.8 の冒頭で定常性と定理 3.2.6 を経由して書き換える 2 段が，あちらでは 1 本の宣言に畳み込まれている．
 :::
+::::
 
 ## 比は指数の尺度では見えない
 
@@ -133,9 +133,9 @@ $$
 になる．$f_k \ge 0$ であり，その期待値は定義 1.2.2 より $H(X_k \mid X^k)$ で，これは定理 1.2.4 と定理 1.1.5 より $\log|\mathcal X|$ 以下である．期待値が有限だから $f_k$ は確率 1 で有限な値をとり（確率 $0$ の並びの上で $+\infty$ になりうるが，そこは期待値に効かない），3.4 節で借りた定理が要求する形を満たす．Birkhoff の定理より第 2 因子は確率 1 で $H(X_k \mid X^k)$ に収束し，$\frac{n-k}{n} \to 1$ と合わせて主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `negLogQk_div_tendsto_condEntropyTail` (`InformationTheory/Shannon/SMB/AlgoetCover/KMarkovApproximation.lean`)
-:::
+::::
 
 ## 上界
 
@@ -165,9 +165,9 @@ $$
 これが各 $k$ について確率 1 で成り立つ．可算個の確率 1 の事象の共通部分もまた確率 1 だから，確率 1 ですべての $k$ について同時に成り立つ．そこで $k \to \infty$ とすれば，定理 3.2.6より右辺は $H(\mathcal X)$ に収束する．
 :::
 
-::: formalized
+:::: formalized
 `algoet_cover_limsup_bound` (`InformationTheory/Shannon/SMB/AlgoetCover/Limsup.lean`)
-:::
+::::
 
 ## 下界
 
@@ -213,9 +213,9 @@ $$
 最後に，主張は $X^n$ だけで決まる量についてのものであり，両側に延ばした列の非負時刻の部分の分布は元の情報源と一致するから，元の情報源についても成り立つ．
 :::
 
-::: formalized
+:::: formalized
 `algoet_cover_liminf_bound` (`InformationTheory/Shannon/SMB/AlgoetCover/Liminf.lean`)
-:::
+::::
 
 ::: proof 定理 3.5.2
 補題 3.5.7 と補題 3.5.8 より，確率 1 で
@@ -225,9 +225,9 @@ $$
 である．したがって極限が存在し，その値は $H(\mathcal X)$ である．
 :::
 
-::: formalized
+:::: formalized
 `shannon_mcmillan_breiman` (`InformationTheory/Shannon/SMB/AlgoetCover/Liminf.lean`)
-:::
+::::
 
 **二つの近似で挟む.** 上からは記憶を $k$ 文字で打ち切った $q_k$ を，下からは無限の過去まで使った $q_\infty$ を当てた．$q_k$ は真の情報源より予測が下手で（記憶が浅い），$q_\infty$ は上手である（$X^n$ の外にある情報まで使う）．上からの評価は $H(X_k \mid X^k)$ で止まり，$k \to \infty$ で $H(\mathcal X)$ まで下りてくる．下からの評価のほうは，Lévy の収束のおかげで最初から $H(\mathcal X)$ ちょうどに着く．
 
@@ -245,9 +245,9 @@ $$
 定義 1.1.1 より$H_n = H(X^n) = -\sum_{x^n} p(x^n)\log p(x^n) = \mathbb E\big[-\log p(X^n)\big]$である．両辺を $n$ で割れば，右辺は定義 3.5.1 の $\hat H_n$ の期待値である．
 :::
 
-::: formalized
+:::: formalized
 `expected_blockLogAvg_eq` (`InformationTheory/Shannon/SMB/McMillanBreiman.lean`)
-:::
+::::
 
 命題 3.5.9 は定義を書き直しただけである．それでも役に立つのは，定理 3.2.6 と合わせると $\mathbb E[\hat H_n] \to H(\mathcal X)$ が直ちに出るからである．つまり「平均すれば $H(\mathcal X)$ に近づく」ところまでは，本節の道具を一つも使わずに言える．定理 3.5.2 が言い足しているのは「1 本 1 本の実現でもそうなる」という一点であり，Birkhoff の定理も両側への拡張も，その一点のためだけに要る．
 

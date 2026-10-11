@@ -22,13 +22,13 @@ $$
 
 手続きの読み方は素直で，確率のいちばん小さい二つの文字を一つにまとめる操作を，文字が二つになるまで繰り返している．まとめられるたびに，そのまとまりに入っている文字の符号語が一つずつ伸びる．最後に残った二つに長さ $1$ を与える操作も，二つを一つにまとめる操作を一度行ったと数えれば，符号語長の勘定は一つの規則にまとまる．すなわち各文字の符号語長は，その文字を含むまとまりが併合に加わった回数に等しい．確率の小さい文字ほど早い段階でまとめられる．4.2 節の言葉でいえば，これは短い符号語から場所を詰めていくのとは逆向きで，いちばん狭い幅を確率の小さい二つに先に与え，その二つが占める場所をまとめて一つの幅として扱い直していく作り方である．
 
-::: formalized
+:::: formalized
 `huffmanLength` (`InformationTheory/Shannon/Huffman/Length.lean`)
-:::
 
 ::: formalization-note
 形式化はこの手続きを，文字の集まりと重みの組を並べた多重集合の上の再帰として書いている．確率が等しいときの選び方を一つに決めるため，アルファベットに全順序を入れて優先順位を添えてあり，形式化が与える長さの組は，本文が許す組の一つにあたる．本節の形式化ポインタはどれもその一つについての主張で，選び方すべてを覆ってはいない．
 :::
+::::
 
 ::: example 4.6.2 五つの記号
 $D = 2$，$\mathcal X = \{1, 2, 3, 4, 5\}$ とし，$p(1) = p(2) = 0.25$，$p(3) = 0.2$，$p(4) = p(5) = 0.15$ とする．どの Huffman 符号語長も $\ell^{\mathrm H}(1) = \ell^{\mathrm H}(2) = \ell^{\mathrm H}(3) = 2$，$\ell^{\mathrm H}(4) = \ell^{\mathrm H}(5) = 3$ であり，平均符号長は $2.3$ である．同じ分布に対する Shannon 符号語長は $\ell^{\mathrm S}(1) = \ell^{\mathrm S}(2) = 2$，$\ell^{\mathrm S}(3) = \ell^{\mathrm S}(4) = \ell^{\mathrm S}(5) = 3$ で，平均符号長は $2.5$ である．また $H_2(X) = 2.2854\ldots$ である．
@@ -82,9 +82,9 @@ $$
 最後の主張は，得られた $\ell^{\mathrm H}$ に定理 4.2.2 を当てれば従う．
 :::
 
-::: formalized
+:::: formalized
 $\ell^{\mathrm H}(x) \ge 1$ にあたる `huffmanLength_pos` (`InformationTheory/Shannon/Huffman/Length.lean`)，$\sum_x 2^{-\ell^{\mathrm H}(x)} = 1$ にあたる `huffmanLength_kraft_eq_one`，語頭符号の存在 `exists_huffman_prefix_code` (`InformationTheory/Shannon/Huffman/KraftSum.lean`)
-:::
+::::
 
 ::: definition 4.6.5 Huffman 符号
 $\mathcal X$ を $2$ 個以上の文字からなる有限アルファベット，$p$ を $\mathcal X$ 上の分布ですべての $x \in \mathcal X$ で $p(x) > 0$ を満たすものとする．Huffman 符号語長（定義 4.6.1）を符号語長にもつ二元語頭符号を **Huffman 符号** と呼ぶ．命題 4.6.4 より，そのような符号は存在する．
@@ -215,9 +215,9 @@ $$
 であり，補題 4.6.8 よりこれは $L^{*}$ に等しい．$L^{*}$ は候補にわたる最小値だから，どの候補 $\ell$ に対しても $\sum_x p(x)\ell^{\mathrm H}(x) = L^{*} \le \sum_x p(x)\ell(x)$ である．
 :::
 
-::: formalized
+:::: formalized
 `huffmanLength_optimal` (`InformationTheory/Shannon/Huffman/StrongForm.lean`)
-:::
+::::
 
 ::: corollary 4.6.10
 $\mathcal X$ を $2$ 個以上の文字からなる有限アルファベット，$X$ を $\mathcal X$ 上に分布 $p$ をもつ確率変数で，すべての $x \in \mathcal X$ で $p(x) > 0$ を満たすものとする．このとき定義 4.6.1 のどの Huffman 符号語長 $\ell^{\mathrm H}$ についても

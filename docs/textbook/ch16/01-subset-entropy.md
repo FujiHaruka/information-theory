@@ -12,13 +12,13 @@ $n \ge 1$ とし，$\mathcal X$ を有限アルファベット，$X_1,\dots,X_n$
 
 組を組のままにせず関数として言い直したのは，$S$ が空のときにも値の全体が定まり，$S$ をどう動かしても値の入れ物が同じ作り方で決まるからである．16.4 節 では組から座標の一部だけを残す操作を扱うので，そこでもこの言い直しがそのまま効く．$\lvert S\rvert = 1$ のときは 定義 1.1.1 そのもの，$\lvert S\rvert = 2$ のときは 定義 1.2.1 の結合エントロピーであり，$S$ が全体のときの $H(X_{\{1,\dots,n\}})$ が，$n$ 個をまとめて見たときの不確かさにあたる．$X_\emptyset$ のとりうる値は一つしかないから，定義 1.1.1 の和は $-1\log 1$ の一項だけになり，$H(X_\emptyset) = 0$ である．
 
-::: formalized
+:::: formalized
 部分集合のエントロピー `jointEntropySubset` (`InformationTheory/Shannon/Han/D.lean`)，族の全体についてのエントロピー `jointEntropy` (`InformationTheory/Shannon/Han/Basic.lean`)
-:::
 
 ::: formalization-note
 形式化は，族の変数がどれも同じ有限アルファベットに値をとるものとして扱う（本文も同じである）．空集合についての値が $0$ であることは `jointEntropySubset_empty` (`InformationTheory/Shannon/Polymatroid.lean`) が，$S$ が全体のときに族の全体についてのエントロピーと一致することは `jointEntropySubset_univ` (`InformationTheory/Shannon/Han/D.lean`) が，それぞれ別の宣言として検証している．
 :::
+::::
 
 組のまとめ方について一つ断っておく．定義 1.1.1 のエントロピーは値の分布だけで決まるので，組の成分を並べ替えても，成分の一部をまとめて対とみても，値は変わらない．以下の証明はこの読み替えを繰り返し使うので，先に補題として置く．
 
@@ -77,13 +77,13 @@ $$
 である．$i \in R$ ならば $i < j$ だから $j \notin \{1,\dots,i-1\}$ であり，$R \cap \{1,\dots,i-1\} = S \cap \{1,\dots,i-1\}$ である．よってこの和は示すべき和の $i \ne j$ の項の和に等しく，$i = j$ の項と合わせて主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `jointEntropySubset_chain_rule` (`InformationTheory/Shannon/Han/D.lean`)
-:::
 
 ::: formalization-note
 $S$ が全体の場合を部分集合を経由せずに述べる宣言 `jointEntropy_chain_rule` (`InformationTheory/Shannon/Han/Basic.lean`) もあり，形式化ではそちらが上の宣言の土台になっている．
 :::
+::::
 
 **順に足していくと読む.** 定理 1.2.3 は二つの変数について「まず一方，次にもう一方」と数えた．定理 16.1.4 はそれを $S$ の番号の小さい順に繰り返しただけである．$i$ の項は，$S$ の中で $i$ より小さい番号をすでに知ったうえで $X_i$ に残る不確かさで，足していくと $H(X_S)$ になる．番号の小さい順に足したのは書き方の都合で，左辺は $S$ だけで決まる．
 
@@ -99,9 +99,9 @@ $$
 である．定義 1.2.2 の中辺は，$X_S = y$ ごとの残りの不確かさを重み $p(y) \ge 0$ で平均したものであり，その各項は 命題 1.1.4 より非負だから，第 $2$ 項は非負である．
 :::
 
-::: formalized
+:::: formalized
 `jointEntropySubset_mono` (`InformationTheory/Shannon/Polymatroid.lean`)
-:::
+::::
 
 ::: theorem 16.1.6 劣モジュラ性
 定義 16.1.1 の設定で，どの $S, T \subseteq \{1,\dots,n\}$ についても
@@ -132,9 +132,9 @@ $$
 であり，$U = S \cap T$ だから主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `jointEntropySubset_submodular` (`InformationTheory/Shannon/Polymatroid.lean`)
-:::
+::::
 
 **同じものを足したときの増分で読む.** 定理 16.1.6 は移項すると $H(X_{S\cup T}) - H(X_T) \le H(X_S) - H(X_{S\cap T})$ と書ける．左辺は $T$ に $S \setminus T$ を足したときの増分，右辺は $S \cap T$ に同じ $S \setminus T$ を足したときの増分である．$S \cap T$ は $T$ に含まれるから，「すでに知っていることが多いほど，同じものを足したときの増分は小さい」と読める．証明で不等号が入ったのは 定理 1.2.4 を当てた一箇所だけで，劣モジュラ性は条件付けの単調性の言い換えにほかならない．
 

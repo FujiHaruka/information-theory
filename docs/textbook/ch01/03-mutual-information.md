@@ -22,13 +22,13 @@ $$
 この右辺は，1.6 節で導入する相対エントロピー（KL ダイバージェンス）$D(\cdot\,\|\,\cdot)$ を使えば $I(X;Y) = D\big(p(x,y)\,\big\|\,p(x)p(y)\big)$ と一行で書ける．本節はこの記法を使わずに進むので，いまは読み飛ばしてよい．
 :::
 
+:::: formalized
+`mutualInfo` (`InformationTheory/Shannon/MutualInfo.lean`)
+
 ::: formalization-note
 本ライブラリは相互情報量を，いま先取りした「同時分布と周辺積との相対エントロピー」の形でそのまま定義する（Mathlib の `klDiv` を用いる）．この量は$\mathbb R_{\ge 0}^{\infty}$（拡張非負実数）値なので，相互情報量も同じ型をとる．エントロピー表現（定理 1.3.4）との橋渡しでは `.toReal` で実数に落とす一手間が入るが，これは型をまたぐ技術処理で，数学的内容は変わらない．
 :::
-
-::: formalized
-`mutualInfo` (`InformationTheory/Shannon/MutualInfo.lean`)
-:::
+::::
 
 ## 基本性質
 
@@ -55,13 +55,13 @@ $$
 
 非負性は「観測は平均的には損にならない」ということである．個々の観測は誤解を招きうる（さきほど見たとおり寄与が負の $(x,y)$ はある）が，平均すれば必ず得になる．等号条件はそれを裏から言ったもので，「まったく得にならない」のは「本当に無関係だった」場合に限る．つまり $I(X;Y)$ は独立性の**定量的な指標**である：0 なら独立，大きいほど強く結びついている．
 
+:::: formalized
+非負性 `mutualInfo_nonneg`，独立との同値 `mutualInfo_eq_zero_iff_indep` (`InformationTheory/Shannon/MutualInfo.lean`)
+
 ::: formalization-note
 本文と形式化で難所が入れ替わる例である．形式化では相互情報量が拡張非負実数値なので**非負性は型から従い**，本文が手をかけた凹性の議論は現れない．代わりに実質的な内容が**等号条件の側**（$I(X;Y)=0 \iff$ 独立）に集まる．`mutualInfo_eq_zero_iff_indep` は，相対エントロピーの等号条件（`klDiv_eq_zero_iff`）と独立の特徴づけ（`indepFun_iff_map_prod_eq_prod_map_map`）を貼り合わせるだけになる．非自明さは Mathlib 側のこの二つが担っているからである．
 :::
-
-::: formalized
-非負性 `mutualInfo_nonneg`，独立との同値 `mutualInfo_eq_zero_iff_indep` (`InformationTheory/Shannon/MutualInfo.lean`)
-:::
+::::
 
 ::: proposition 1.3.3 対称性
 $I(X; Y) = I(Y; X)$．
@@ -71,13 +71,13 @@ $I(X; Y) = I(Y; X)$．
 定義式の $\dfrac{p(x,y)}{p(x)p(y)}$ は $x, y$ の入れ替えで不変だから．
 :::
 
+:::: formalized
+`mutualInfo_comm` (`InformationTheory/Shannon/MutualInfo.lean`)
+
 ::: formalization-note
 見れば自明な対称性が，形式化では測度同型`MeasurableEquiv.prodComm` に沿った像測度の移送になり，「相対エントロピーは測度同型で値を保つ」という自作補題 `klDiv_map_measurableEquiv` を要する．
 :::
-
-::: formalized
-`mutualInfo_comm` (`InformationTheory/Shannon/MutualInfo.lean`)
-:::
+::::
 
 ## エントロピーとの関係
 
@@ -106,13 +106,13 @@ $$
 
 いま見た $I(X;X) = H(X)$ という特別な場合から，相互情報量はしばしば「自己情報量」としてのエントロピーを含む一般化とみなされる．エントロピーは「自分自身と共有している情報の量」だ，というわけである．
 
+:::: formalized
+`mutualInfo_eq_entropy_sub_condEntropy` (`InformationTheory/Shannon/Bridge.lean`)，対称形`mutualInfo_eq_entropy_add_entropy_sub_jointEntropy` (`InformationTheory/Shannon/MIChainRule.lean`)
+
 ::: formalization-note
 形式化では $I(X;Y)$ が拡張非負実数値，$H, H(\cdot\mid\cdot)$ が実数値なので，橋渡し定理は左辺に `.toReal` を付けた等式として述べる．数学的内容は定理 1.3.4 と同一．本文の「$y$ について和をとって $H(X)$」は，共通注記のとおり$Y$ の像測度の上の積分補題に対応する．
 :::
-
-::: formalized
-`mutualInfo_eq_entropy_sub_condEntropy` (`InformationTheory/Shannon/Bridge.lean`)，対称形`mutualInfo_eq_entropy_add_entropy_sub_jointEntropy` (`InformationTheory/Shannon/MIChainRule.lean`)
-:::
+::::
 
 ## 有限性
 
@@ -126,11 +126,11 @@ $$
 
 拡張実数値をとりうる量を扱うとき，有限性はいちいち確かめる必要がある．以降ではこの命題により，相互情報量を実数として足し引きしてよい．
 
+:::: formalized
+`mutualInfo_ne_top` (`InformationTheory/Shannon/MutualInfo.lean`)
+
 ::: formalization-note
 本文一行の有限性が，形式化では結合分布の周辺積への絶対連続性と対数尤度比の可積分性を経て Mathlib の `klDiv_ne_top` に帰着する測度論の補題になる．
 :::
-
-::: formalized
-`mutualInfo_ne_top` (`InformationTheory/Shannon/MutualInfo.lean`)
-:::
+::::
 

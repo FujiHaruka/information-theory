@@ -18,9 +18,9 @@ $$
 
 第10章は内積を，二つの引数をとる $\langle\,\cdot\,,\,\cdot\,\rangle$ と書いたが，本章の $\langle\cdot\rangle$ はつねに引数を一つとり，有限の対象を自然数に写す符号化を表す．$\langle x\rangle$ は，$x$ の第 $i$ 文字の番号を第 $i$ 桁とする $\lvert\mathcal X\rvert$ 進の数にほかならない．たとえば $\mathcal X = \{0, 1\}$ に $c(0) = 0$，$c(1) = 1$ と番号を与えれば，$\langle x\rangle$ は $x$ を下の桁から読んだ二進の数である．番号づけを一つ固定したのは，$\langle x\rangle$ の値が $\mathcal X$ の文字の並べ方に依るからで，以下では固定した $c$ についての値をいう．
 
-::: formalized
+:::: formalized
 `encodeBlock` (`InformationTheory/Shannon/Kolmogorov/EntropyRate.lean`)
-:::
+::::
 
 ::: proposition 13.3.2
 $\mathcal X$ を空でない有限アルファベット，$n \ge 1$ とし，$\langle\cdot\rangle$ を 定義 13.3.1 のとおりとする．このとき $x \mapsto \langle x\rangle$ は $\mathcal X^n$ の上で単射であり，どの $x \in \mathcal X^n$ についても $\langle x\rangle < \lvert\mathcal X\rvert^{\,n}$ である．
@@ -36,9 +36,9 @@ $$
 単射性に移る．$\langle x\rangle$ は $x$ の $\lvert\mathcal X\rvert$ 進表示にほかならないから，下の桁から一つずつ剥がせばもとの $x$ に戻る．これを $n$ についての帰納法で書く．$n = 1$ のときは $\langle x\rangle = c(x_0)$ で，$c$ が単射だから $\langle x\rangle$ から $x_0$ が定まる．$n \ge 2$ のときは，定義 13.3.1 の和から第 $0$ 項を外して $\lvert\mathcal X\rvert$ でくくると $\langle x\rangle = c(x_0) + \lvert\mathcal X\rvert\,\langle x^-\rangle$（$x^- := (x_1, \dots, x_{n-1}) \in \mathcal X^{n-1}$）であり，$c(x_0)$ は $\lvert\mathcal X\rvert$ 未満だから，$c(x_0)$ は $\langle x\rangle$ を $\lvert\mathcal X\rvert$ で割った余り，$\langle x^-\rangle$ はその商として $\langle x\rangle$ から定まる．$c$ が単射だから $x_0$ が定まり，帰納法の仮定から $x^-$ が定まる．
 :::
 
-::: formalized
+:::: formalized
 単射性 `encodeBlock_injective`，上界 `encodeBlock_lt` (`InformationTheory/Shannon/Kolmogorov/EntropyRate.lean`)
-:::
+::::
 
 命題 13.3.2 の上界は，番号づけが場所を無駄にしていないことを言っている．長さ $n$ のブロックは $\lvert\mathcal X\rvert^{\,n}$ 個あり，それがちょうど $0$ 以上 $\lvert\mathcal X\rvert^{\,n}$ 未満の自然数に重なりなく収まっている．したがって $\langle x\rangle$ の二進表示の長さは $n\log_2\lvert\mathcal X\rvert$ あまりで，ブロックをそのまま書き写すのに要る長さと変わらない．番号づけそのものは何も圧縮していないということで，圧縮は次の 命題 13.3.3 から始まる．
 
@@ -186,9 +186,9 @@ $$
 以上である．いま $m$ のとり方と直前の段から，右端の括弧に $H(p)$ を掛けたものは $\varepsilon/3$ 以下である．また $k_n$ のとり方の右側の不等式より $k_n/n > H(p) - \varepsilon_1 - (1+m)/n$ だから，$n$ を $(1+m)/n \le \varepsilon/3$ となるまで大きくとれば，全体は $H(p) - \varepsilon_1 - \varepsilon/3 - \varepsilon/3 = H(p) - \varepsilon$ 以上である．
 :::
 
-::: formalized
+:::: formalized
 `kolmogorov_entropy_rate_lower` (`InformationTheory/Shannon/Kolmogorov/EntropyRate.lean`)
-:::
+::::
 
 ::: theorem 13.3.6 複雑性とエントロピー
 $\mathcal X$ を空でない有限アルファベット，$p$ を $\mathcal X$ 上の全点で正の分布とし，第2章 2.1 節と同じ設定で $X_0, X_1, \dots$ を分布 $p$ の i.i.d. 情報源，$X^n := (X_0, \dots, X_{n-1})$ とする．$\langle\cdot\rangle$ を 定義 13.3.1 とすると
@@ -207,13 +207,13 @@ $\varepsilon > 0$ とする．補題 13.3.5 より，$n$ が十分大きけれ�
 二つの「十分大きい」の大きいほうをとれば，それ以上の $n$ について左辺と $H(p)$ の差は $\varepsilon$ より大きくならない．
 :::
 
-::: formalized
+:::: formalized
 `kolmogorov_entropy_rate` (`InformationTheory/Shannon/Kolmogorov/EntropyRate.lean`)
-:::
 
 ::: formalization-note
 形式化の上半は，強典型集合（定義 2.4.1）の上と外に平均を分け，それぞれを別の上界で抑えて組み立てており，本文が引く 定理 12.2.4 は使っていない．下半は本文と同じく，記述の短い対象の数え上げと典型集合（定義 2.2.1）による．保証しているのは定理の正しさであって，紙の証明手順の一致ではない．
 :::
+::::
 
 定理 13.3.6 が，本節のはじめに述べた二つの量を結んでいる．左辺は，情報源が実際に出した一本のブロックを，分布を知らない機械に書き出させる長さの平均である．右辺は，分布だけから決まる量である．第2章の情報源符号化定理も同じ値を両側から挟んだが，あちらの符号は分布 $p$ を知って作られていた．こちらの $K_{\mathcal U}$ は分布を一度も見ていない．それでも $1$ 文字あたりの長さは同じところへ行く．
 
@@ -245,9 +245,9 @@ $$
 $n \ge 1$ を固定する．定理 13.2.1 を $y := n$，$k := n$ に当てると，$K_{\mathcal U}(z \mid n) < n$ を満たす自然数 $z$ は $2^n$ 個より少ない．いっぽう $\{0,1\}^n$ の要素数は $2^n$ であり，命題 13.3.2 より $x \mapsto \langle x\rangle$ はその上で単射だから，$\{\langle x\rangle : x \in \{0,1\}^n\}$ は $2^n$ 個の相異なる自然数からなる．したがってそのすべてが $K_{\mathcal U}(\langle x\rangle \mid n) < n$ を満たすことはなく，圧縮できない $x \in \{0,1\}^n$ が少なくとも一つある．各 $n \ge 1$ についてそのようなものを一つ選んで $x^{(n)}$ とすればよい．
 :::
 
-::: formalized
+:::: formalized
 `exists_incompressible_bool_seq` (`InformationTheory/Shannon/Kolmogorov/Incompressible.lean`)
-:::
+::::
 
 圧縮できないブロックがあることは分かった．では，そのようなブロックはどんな見た目をしているだろうか．手がかりは 命題 13.3.3 にある．型による記述の長さは型類の要素数で決まり，型類は $0$ と $1$ の個数が偏るほど小さくなる．したがって個数の偏ったブロックには短い記述があり，圧縮できないブロックにはその短さが無いのだから，個数は偏っていないことになる．次の定理はこの筋を不等式にしたものである．
 
@@ -290,9 +290,9 @@ $$
 である．右辺は，本章の底で読んだ 補題 11.2.2 より $n \to \infty$ で $0$ に収束するから，$n$ を十分大きくとれば $1 - H_b(1/2-\delta)$ 以下になる．そのような $n$ については上の不等式が成り立ちようがないので，圧縮できないどの $x$ も $\lvert r - 1/2\rvert < \delta$ を満たす．
 :::
 
-::: formalized
+:::: formalized
 `incompressible_freq_near_half` (`InformationTheory/Shannon/Kolmogorov/Incompressible.lean`)
-:::
+::::
 
 ::: corollary 13.3.10
 各 $n \ge 1$ に $x^{(n)} \in \{0,1\}^n$ を一つずつ与え，$n$ が十分大きいところでは $x^{(n)}$ が 定義 13.3.7 の意味で圧縮できないとする．このとき
@@ -306,9 +306,9 @@ $$
 $\varepsilon > 0$ とする．定理 13.3.9 を $\delta := \varepsilon$ に当てると，$n$ が十分大きければ，圧縮できないどの $x \in \{0,1\}^n$ についても $\lvert N(1\mid x)/n - 1/2\rvert < \varepsilon$ である．仮定より $n$ が十分大きいところで $x^{(n)}$ は圧縮できないから，二つの「十分大きい」の大きいほうをとれば，それ以上の $n$ について $\lvert N(1\mid x^{(n)})/n - 1/2\rvert < \varepsilon$ である．
 :::
 
-::: formalized
+:::: formalized
 `incompressible_seq_freq_tendsto_half` (`InformationTheory/Shannon/Kolmogorov/Incompressible.lean`)
-:::
+::::
 
 定理 13.3.9 の証明が $n$ に要求しているのは，$\big(2\log_2(n+1) + 2 + \xi\big)/n$ が $1 - H_b(1/2-\delta)$ 以下になることだけである．この量は $n$ とともに $0$ へ向かうが，向かい方は $\log_2 n$ を $n$ で割った速さでしかないので，$\delta$ を小さくとると要求が満たされる $n$ はすぐに大きくなる．数で見ておく．
 

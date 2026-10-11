@@ -40,9 +40,9 @@ $$
 この「条件付き量＝核 `condDistrib` 上の積分」という実現は本章を通じて一貫する．したがって，本文が条件付き量の証明で行う「片方の変数について**先に和をとる**」操作は，形式化では被積分関数の**可積分性**（有界・可測）の確認を伴う積分計算に対応する．チェイン則（定理 1.2.3）と相互情報量のエントロピー表現（定理 1.3.4）の形式化は，いずれもこの「和 ↔ 積分」の対応の上に乗っており，本文では一行で済む和の入れ替えが，形式化では測度の分解（disintegration，`compProd_map_condDistrib`）と可積分性補題に置き換わる．
 :::
 
-::: formalized
+:::: formalized
 `condEntropy` (`InformationTheory/Fano/Measure.lean`)
-:::
+::::
 
 ## チェイン則
 
@@ -67,13 +67,13 @@ $$
 
 両式を見比べると $H(X) - H(X\mid Y) = H(Y) - H(Y\mid X)$，すなわち「$Y$ を知って減る $X$ の不確かさ」と「$X$ を知って減る $Y$ の不確かさ」は等しい．この共通の量が次節の相互情報量 $I(X;Y)$ である．
 
+:::: formalized
+`entropy_pair_eq_entropy_add_condEntropy` (`InformationTheory/Shannon/Entropy.lean`)
+
 ::: formalization-note
 形式化では結合エントロピーをペア確率変数$\omega \mapsto (X(\omega), Y(\omega))$ のエントロピーとして表し，定理 1.2.3 をその分解として証明している．本文の「$y$ について先に和をとって $p(x)$ にする」一行が，形式化では本章共通の注記のとおり結合測度を像測度と核 `condDistrib` へ分解し，内側スライスの可積分性を確認する段になる．証明の難所が本文と形式化で入れ替わる例である．
 :::
-
-::: formalized
-`entropy_pair_eq_entropy_add_condEntropy` (`InformationTheory/Shannon/Entropy.lean`)
-:::
+::::
 
 ## 条件付けは不確かさを増やさない
 
@@ -108,13 +108,13 @@ $$
 
 この証明の要点は一つだけである．$Z$ を知る前の分布 $p(x\mid y)$ は，$Z$ を知ったあとの分布 $p(x\mid y,z)$ たちの**混合**にほかならない．そして凹関数は混ぜると値が上がる．エントロピーは $\varphi$ の和なので，混ぜたもの（＝ $Z$ を知らない状態）のほうが不確かさは大きい．
 
+:::: formalized
+`condEntropy_le_condEntropy_of_pair` (`InformationTheory/Shannon/Entropy.lean`)
+
 ::: formalization-note 証明ルートの相違
 形式化は本文とは別ルートをとり，条件付き相互情報量の非負性からこの定理を導いている（本文はその概念より前にこの定理を置くため，凹性から直接組み立てた）．結論の定理は同一である．
 :::
-
-::: formalized
-`condEntropy_le_condEntropy_of_pair` (`InformationTheory/Shannon/Entropy.lean`)
-:::
+::::
 
 ## 条件を一つ抱えたままのチェイン則
 

@@ -16,9 +16,9 @@ $$
 
 右辺の各項は，その系列が出たときに払う誤りの確率である（添字の $e$ は誤りを表す固定の文字で，本節の後半で置く中間分布 $P_\lambda$（定義 11.5.9）のように実数のパラメータを添えたものではない）．$P$ と $Q$ が離れているほど，どの系列でも二つの確率の一方が他方より格段に小さくなり，小さいほうだけを足した和は小さくなる．逆に $P = Q$ なら各項は $P^n(\{x\})$ そのもので，その総和は $1$ だから $P_e^{(n)} = 1/2$ である．すなわち，二つの仮説がまったく同じで見分けようがないときの誤り確率が，当てずっぽうと同じ $1/2$ になる．この決定がほかのどの決定よりも誤り確率が小さいことは本書では示さない．示すには決定の全体をわたって最小をとる形に問題を立て直す必要があり，本節が測るのは上の決定の誤り確率である．形式化にもその形の宣言は無い．
 
-::: formalized
+:::: formalized
 `bayesErrorMinPmf` (`InformationTheory/Shannon/Chernoff/Basic.lean`)
-:::
+::::
 
 ## 実数の指数をもつべき乗
 
@@ -52,9 +52,9 @@ $$
 
 $\mathcal Z(\lambda)$ は，各文字で $P$ と $Q$ の値を重み $1-\lambda$ と $\lambda$ で幾何的に混ぜ，足し合わせたものである．$\lambda$ を $0$ から $1$ へ動かすと重みは $P$ の側から $Q$ の側へ移り，$\lambda$ を止めるごとに，混ぜた値を $\mathcal Z(\lambda)$ で割って総和を $1$ にした分布が一つ定まる（花文字の $\mathcal Z$ は，第10章 定義 10.2.1 の分配関数 $Z$ とは別の記号である．分母という役割は同じで，違いは重みを付ける基準が一様分布ではなく $P$ であることである）．その分布が 定義 11.5.9 の中間分布であり，本節の後半で主役になる．本節の $\lambda$ は，こうして $P$ と $Q$ を混ぜる度合いを表す実数である（第10章 10.4 節が Lagrange 乗数に使う $\lambda$ とも，補題 1.1.9 や 第9章 補題 9.3.1 が凸結合の重みに使う $\lambda$ とも別である．本章では凸結合の重みには $\theta$ を当てる）．定義 11.5.3 の下限が実際に最小値として達成されること，したがって $C^*(P,Q)$ が実数として定まることは 命題 11.5.7 で示す（星が付く $C^*$ は，第6章 定義 6.1.4 の通信路容量 $C(W)$ や第8章 定義 8.2.1 のガウス通信路の容量とは別の量である）．
 
-::: formalized
+:::: formalized
 `chernoffZSum`，`chernoffInfo` (`InformationTheory/Shannon/Chernoff/Basic.lean`)
-:::
+::::
 
 ## 二つの道具
 
@@ -110,9 +110,9 @@ $$
 を得る．
 :::
 
-::: formalized
+:::: formalized
 `sum_prod_rpow_eq_Z_pow` (`InformationTheory/Shannon/Chernoff/Basic.lean`)
-:::
+::::
 
 ## Chernoff 限界
 
@@ -132,9 +132,9 @@ $$
 である．$x \in \mathcal X^n$ について足し，補題 11.5.5 を当てると右辺の和は $\mathcal Z(\lambda)^n$ になる．両辺に $1/2$ を掛ければ主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `bayesErrorMinPmf_le_half_Z_pow` (`InformationTheory/Shannon/Chernoff/Basic.lean`)
-:::
+::::
 
 この不等式はどの $\lambda \in [0,1]$ でも成り立つから，いちばんよい $\lambda$ を選んでよい．$\mathcal Z(\lambda)^n = e^{\,n\log\mathcal Z(\lambda)}$ だから，選ぶべきは $\log\mathcal Z(\lambda)$ を最小にする $\lambda$ であり，そのときの上界の指数が 定義 11.5.3 の $C^*(P,Q)$ である．その最小値が実際に達成されることを次に確かめる．そこで最大値定理を借りる．
 
@@ -203,9 +203,9 @@ $$
 である．どの $n \ge 1$ でもこれが成り立つから，下極限も $C^*(P,Q)$ 以上である．
 :::
 
-::: formalized
+:::: formalized
 `chernoff_lemma_achievability` (`InformationTheory/Shannon/Chernoff/Basic.lean`)
-:::
+::::
 
 指数が $C^*(P,Q)$ に届くことは，これで分かった．残るのはそれを超えないことである．超えないことを示すには誤り確率を下から抑えなければならず，そのために $\mathcal Z(\lambda)$ を分母にして作る分布を導入する．
 
@@ -220,9 +220,9 @@ $$
 で定まる $\mathcal X$ 上の関数を **Chernoff の中間分布** と呼ぶ．分子は正で，$a$ について足したものが分母 $\mathcal Z(\lambda)$ だから，$P_\lambda$ は $\mathcal X$ 上の全点で正の分布である．
 :::
 
-::: formalized
+:::: formalized
 `chernoffMediator`，`chernoffMediator_pos`，`chernoffMediator_sum_eq_one` (`InformationTheory/Shannon/Chernoff/Basic.lean`)
-:::
+::::
 
 両端の値を見ておく．$\lambda$ を $0$ から $1$ へ動かすと $P_\lambda$ が $P$ から $Q$ へ移る，というのが次の命題である．
 
@@ -234,9 +234,9 @@ $\mathcal X$ を空でない有限アルファベット，$P$，$Q$ を $\mathca
 命題 11.5.7 より $\mathcal Z(0) = \mathcal Z(1) = 1$ である．定義 11.5.2 より，どの文字でも $P(a)^{1-0}Q(a)^{0} = P(a)$ だから，定義 11.5.9 より $P_0(a) = P(a)/\mathcal Z(0) = P(a)$ である．同じく $P(a)^{1-1}Q(a)^{1} = Q(a)$ だから $P_1(a) = Q(a)/\mathcal Z(1) = Q(a)$ である．
 :::
 
-::: formalized
+:::: formalized
 `chernoffMediator_lam_zero`，`chernoffMediator_lam_one` (`InformationTheory/Shannon/Chernoff/Basic.lean`)
-:::
+::::
 
 移り方は各点での値を幾何的に混ぜるもので，二つの分布を線分で結ぶ混ぜ方とは別である．定義 11.5.2 と指数法則から $P(a)^{1-\lambda}Q(a)^{\lambda} = P(a)\exp\big(\lambda\log\frac{Q(a)}{P(a)}\big)$ である．すなわち $P_\lambda$ は，$P$ の各点の値に指数の重みを掛けて総和が $1$ になるように割ったものであり，この作り方は大偏差論で指数傾斜と呼ばれる．
 
@@ -331,9 +331,9 @@ $$
 $\tilde P_n$ は長さ $n$ の型で各文字で $\tilde P$ に収束するから，系 11.2.3 を，参照する分布として $P$ をとって当てると $\frac1n\log P^n(\mathcal T_n(\tilde P_n)) \to -D(\tilde P\,\|\,P)$ であり，$Q$ をとって当てると $\frac1n\log Q^n(\mathcal T_n(\tilde P_n)) \to -D(\tilde P\,\|\,Q)$ である．二つの極限はどちらも $C^*(P,Q)$ に等しい．よってどの $\varepsilon > 0$ についても，十分大きい $n$ では右辺の最大値の中の二つがともに $C^*(P,Q) + \varepsilon$ 未満であり，$\frac{\log 2}{n}$ も $\varepsilon$ 未満である．したがって上極限は $C^*(P,Q) + 2\varepsilon$ 以下であり，$\varepsilon > 0$ は任意だから $C^*(P,Q)$ 以下である．
 :::
 
-::: formalized
+:::: formalized
 `chernoff_converse` (`InformationTheory/Shannon/Chernoff/Converse.lean`)
-:::
+::::
 
 系 11.5.8 と 定理 11.5.13 を合わせると，最小値を与える $\lambda^*$ が内点にとれるときには $-\frac1n\log P_e^{(n)}$ が $C^*(P,Q)$ に収束する．命題 11.5.12 より，$P \ne Q$ でありさえすればこの条件は満たされる．次の例では，具体的な分布について最小値を与える $\lambda$ がただ一つであることまで確かめ，収束先の値を数で求める．
 

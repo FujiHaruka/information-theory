@@ -20,9 +20,9 @@ $$
 を考え，$\lambda$ が $\mathbb R^k$ 全体を動くときに得られるこれらの関数の全体を，特徴関数 $f_1, \dots, f_k$ の定める **指数型分布族** と呼ぶ．
 :::
 
-::: formalized
+:::: formalized
 対数分配関数 `logPartitionψ`，指数型分布族の各要素 `expFamilyDist` (`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`)
-:::
+::::
 
 指数型分布族の書き方では，$\psi$ が指数の中に引き算として入っている．定義 10.2.1 のGibbs 分布は同じものを割り算で書いていた．二つは同じ分布である．
 
@@ -44,9 +44,9 @@ $$
 となり，右端は定義 10.2.1 の $p^*_\lambda(x)$ そのものである．後半は，$\lambda$ の動く範囲が両側とも $\mathbb R^k$ 全体だから，前半の等式から直ちに従う．
 :::
 
-::: formalized
+:::: formalized
 `expFamilyDist_eq_gibbsPmf` (`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`)
-:::
+::::
 
 **二つの書き方を使い分ける.** 同じ分布に二つの書き方を用意する理由は，それぞれが別のことを見やすくするところにある．割り算の形は，分子が各点の重み・分母がその総和だから，これが分布であること，すなわち非負で総和が 1 であることが目で見える．命題 10.2.2 の証明が1 行で済んだのはこの形のおかげである．引き算の形は $\psi$ を式の表に出す．両辺の対数をとると
 $$
@@ -71,13 +71,13 @@ $$
 が成り立つ．定義 10.3.1 より $\log Z(\lambda) = \psi(\lambda)$ だから，移項すれば主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `entropy_expFamilyDist_eq_legendre` (`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`)
-:::
 
 ::: formalization-note
 形式化では，$\lambda$ とそれが制約を満たすという証拠を 1 つの対にまとめた`KKTSolution` (`InformationTheory/Shannon/MaxEntropy/ConstrainedKKT.lean`) を仮定に置いている．本文の「Gibbs 分布 $p^*_\lambda$ がモーメント制約を満たすとする」と同じ内容である．
 :::
+::::
 
 **最大値が計算できる形になった.** 定理 10.2.5 は最大値が $H(p^*_\lambda)$ だと言ったが，その数を知るには $p^*_\lambda$ を各点で書き出して $-\sum_x p\log p$ を足し上げる必要があった．定理 10.3.3 はその手間を消す．$\psi(\lambda)$ を 1 回計算して$\langle \lambda, c\rangle$ を引けばよい．$\mathcal X$ 上の和は $\psi$ の中に 1 度だけ現れる．制約の値 $c$ が結果にどう効くかも，この式なら $-\langle \lambda, c\rangle$ という 1 次の項として見える．
 
@@ -138,13 +138,13 @@ $$
 $k = 1$ だから $\langle \lambda, f(x)\rangle = \lambda x$ であり，指数法則により$\exp(\lambda x) = (e^{\lambda})^{x} = r^{\,x}$ である．これを定義 10.2.1 の分子と分母に入れると $Z(\lambda) = \sum_{y=0}^{N} r^{\,y}$ となって，最初の式を得る．比については，命題 10.2.2 より $p^*_\lambda(x)$ は正だから商がとれて，$p^*_\lambda(x+1) / p^*_\lambda(x) = r^{\,x+1} / r^{\,x} = r$ である．
 :::
 
-::: formalized
+:::: formalized
 `gibbsPmf_linearFeature_eq_geometric`，その特徴関数 `linearFeature` (`InformationTheory/Shannon/MaxEntropy/Constrained.lean`)
-:::
 
 ::: formalization-note
 形式化されているのは等比の形までで，隣り合う 2 点の確率の比についての後半に対応する宣言はない．本節の計算がその保証のすべてである．
 :::
+::::
 
 **サイコロに戻る.** 例 10.1.4 のサイコロは目を $\{1, \dots, 6\}$ と書いた．例 10.3.5 と同じ計算をこのアルファベットの上で繰り返せば，同じ等比の形が出る．10.2 節で数値を求めた$\lambda = 0.3710\ldots$ に対して比は $r = e^{\lambda} \approx 1.449$ であり，目 $1$ から目 $6$ まで確率は一定の比で増えていく．$\lambda$ が正なら比は 1 より大きく，大きい目ほど確率が大きい．$\lambda = 0$ なら比は 1 で一様分布，$\lambda$ が負なら比は 1 より小さい．最大値のほうも定理 10.3.3 で検算できる．$\psi(0.3710) - 0.3710 \times 4.5 \approx 1.614$ナットとなり，10.2 節で各点の確率から足し上げた値と一致する．
 

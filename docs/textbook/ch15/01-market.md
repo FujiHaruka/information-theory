@@ -24,9 +24,9 @@ $$
 で定める．
 :::
 
-::: formalized
+:::: formalized
 `wealthRelative` (`InformationTheory/Shannon/Portfolio/Basic.lean`)
-:::
+::::
 
 違いの源はこの一点で，ここから二つのことが変わる．計算の形と，正値性の置き場所である．
 
@@ -62,9 +62,9 @@ $$
 で定める．
 :::
 
-::: formalized
+:::: formalized
 `growthRate` (`InformationTheory/Shannon/Portfolio/Basic.lean`)
-:::
+::::
 
 ::: formalization-note 本章共通
 形式化は倍加率を自然対数で定めているので，そちらの値の単位はナットである．本章は底を $2$ にとっているから値は正の定数倍だけ違うが，以降の不等式・等式はどれも両辺が同じ倍率で変わるので，底を取り替えてもそのままの形で対応する（第5章 5.1 節と同じ断りである）．
@@ -92,13 +92,13 @@ $$
 定義 15.1.1 より各 $x(j)$ は正だから，$x$ の成分の最小値も正である．定義 15.1.2 より $b(j) \ge 0$ かつ $\sum_{j=1}^{m} b(j) = 1$ だから，どの $j$ でも $b(j)\,x(j)$ はその最小値の $b(j)$ 倍以上であり，$j$ について足すと $\sum_{j=1}^{m} b(j)\,x(j)$ は最小値以上になる．とくに正である．
 :::
 
-::: formalized
+:::: formalized
 `wealthFactor_pos` (`InformationTheory/Shannon/Portfolio/Universal.lean`)
-:::
 
 ::: formalization-note
 宣言は一つの株価比ではなく株価比の列について書かれており，正値性もその列のすべての期について課したうえで，指定した期の資産倍率が正であることを述べる．本文の 補題 15.1.5 は，その列として同じ株価比を並べた定数列をとった場合にあたる．
 :::
+::::
 
 ::: example 15.1.6 現金と一つの株
 $m = 2$ とする．銘柄 $1$ は株価比がつねに $1$ で（現金），銘柄 $2$ は $2$ 倍と $1/2$ 倍が確率 $1/2$ ずつであるとする．すなわち，上向きの株価比を $x_\uparrow$，下向きのそれを $x_\downarrow$ と書いて，$x_\uparrow(1) = 1$，$x_\uparrow(2) = 2$，$x_\downarrow(1) = 1$，$x_\downarrow(2) = 1/2$ とおき，$\mathcal X = \{x_\uparrow, x_\downarrow\}$，$p(x_\uparrow) = p(x_\downarrow) = 1/2$ とする．全額を現金にとったポートフォリオ（$b(1) = 1$，$b(2) = 0$）と，全額を株にとったポートフォリオ（$b(1) = 0$，$b(2) = 1$）の倍加率（定義 15.1.4）はどちらも $0$ であり，半々にとったポートフォリオ（$b(1) = b(2) = 1/2$）の倍加率は $\frac12\log\frac98 = 0.0849\ldots$ である．

@@ -42,11 +42,11 @@ $$
 等号は補題 1.1.9 の等号条件（$\psi$ は狭義凸）より，正の重みをもつ $t_i = a_i/b_i$ がすべて等しいときに限る．
 :::
 
+:::: formalized
+不等式 `log_sum_inequality` (`InformationTheory/Shannon/LZ78/ZivEntropyBridge.lean`)，絶対連続条件を許す形`log_sum_inequality_negMulLog` (`InformationTheory/Fano/DPI.lean`)
+
 ::: formalization-note
 形式化されているのは不等式だけで，等号条件（すべての比が等しいこと）に対応する単独の宣言は無い．$b_i = 0 \Rightarrow a_i = 0$ という絶対連続条件まで許す形も別に用意してある．
 :::
-
-::: formalized
-不等式 `log_sum_inequality` (`InformationTheory/Shannon/LZ78/ZivEntropyBridge.lean`)，絶対連続条件を許す形`log_sum_inequality_negMulLog` (`InformationTheory/Fano/DPI.lean`)
-:::
+::::
 

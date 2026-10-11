@@ -14,9 +14,9 @@ $$
 
 $\log_D t = \log t / \log D$ だから $H_D(X) = H(X) / \log D$ であり，新しい量が増えたわけではない．エントロピーを「$D$ 文字を単位として測り直した」だけである．$D = 2$ なら $\log D = 1$ なので $H_2(X) = H(X)$ である．
 
-::: formalized
+:::: formalized
 `entropyD` (`InformationTheory/Shannon/ShannonCode/Basic.lean`)
-:::
+::::
 
 ## 下界
 

@@ -12,9 +12,9 @@ $$
 
 この $\pi$ はつねに添字 $S$ と引数 $A$ の両方をとる写像であり，円周率とは形が違う．$\pi_S(A)$ は $S$ から $\mathcal X$ への関数の全体の部分集合で，$\lvert S\rvert = 1$ のときの $\pi_{\{i\}}(A)$ は，$A$ の元の第 $i$ 座標として現れる値の全体にあたる．以下，$\mathcal X^n$ の元は $n$ 個の値の組として書く．
 
-::: formalized
+:::: formalized
 `projectionSubset` (`InformationTheory/Shannon/BrascampLieb.lean`)，$1$ 座標を落とす場合 `projectionExcept` (`InformationTheory/Shannon/LoomisWhitney.lean`)
-:::
+::::
 
 不等式を数え上げに移す道具は二つある．一つは 定義 16.1.1 の族の作り方で，$A$ の上の一様分布に従う確率変数 $X$ をとり，その第 $i$ 座標を $X_i$ と置く．もう一つは，対数で書かれた不等式の両辺から $\log$ をはずす操作である．そのために，$\log$ が正の実数の全体から実数の全体への狭義単調な全単射であることと，正の数 $u$，$v$ と実数 $m$ について $\log(uv) = \log u + \log v$ および $\log u^m = m\log u$ が成り立つことを既知とする．
 
@@ -42,13 +42,13 @@ $$
 である．$A$ は空でなく，どの $\pi_{-i}(A)$ も空でないから，両辺を対数の中にまとめると左辺は $\log\lvert A\rvert^{\,n-1}$，右辺は $\log\prod_{i=1}^{n}\lvert\pi_{-i}(A)\rvert$ である．$\log$ が狭義単調だから主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `loomis_whitney` (`InformationTheory/Shannon/LoomisWhitney.lean`)
-:::
 
 ::: formalization-note
 宣言の指数は自然数の引き算で書かれていて，$n = 0$ では $n-1$ が $0$ に切り捨てられる．そのとき左辺は $1$，右辺は空の積で $1$ だから，宣言は $n = 0$ も込みで成り立っている．本文は $n \ge 1$ を仮定するので，この差は 定理 16.4.2 の範囲には出てこない．
 :::
+::::
 
 ::: example 16.4.3
 $n = 3$，$\mathcal X = \{0,1\}$ とする．
@@ -81,13 +81,13 @@ $$
 を得る．$A$ もどの $\pi_{S_j}(A)$ も空でないから，両辺を対数の中にまとめると左辺は $\log\lvert A\rvert^{\,k}$，右辺は $\log\prod_{j=1}^{r}\lvert\pi_{S_j}(A)\rvert$ であり，$\log$ が狭義単調だから主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `brascamp_lieb_finset` (`InformationTheory/Shannon/BrascampLieb.lean`)
-:::
 
 ::: formalization-note
 宣言は族の添字を任意の有限型でとる．本文が族を $S_1,\dots,S_r$ と番号で並べているのは，その添字を $\{1,\dots,r\}$ にとった場合にあたる．
 :::
+::::
 
 定理 16.4.2 は，定理 16.4.4 で族を「番号 $i$ を抜いた $n$ 個の集合」，$k = n-1$ ととった場合である．族をいちばん小さい集合でとると，別の形が出る．
 
@@ -103,13 +103,13 @@ $$
 族を $n$ 個の $1$ 点集合 $\{1\},\dots,\{n\}$ ととると，どの番号もちょうど一つの集合に含まれる．$k = 1$ として 定理 16.4.4 を当てると，左辺は $\lvert A\rvert^1 = \lvert A\rvert$ である．
 :::
 
-::: formalized
+:::: formalized
 `hypercube_product_projection_bound` (`InformationTheory/Shannon/BrascampLieb.lean`)
-:::
 
 ::: formalization-note
 宣言の名前は超立方体を名乗るが，述べているのは 系 16.4.5 と同じく一般の有限アルファベットについての不等式である．
 :::
+::::
 
 系 16.4.5 は，$A$ のどの元も第 $i$ 座標に $\pi_{\{i\}}(A)$ の値をとるから，$A$ が $1$ 点集合への射影の直積に含まれることからも見える．一般の定理から導いたのは，定理 16.4.4 の族をいちばん小さくとるとこの評価に戻る，という確認のためである．
 

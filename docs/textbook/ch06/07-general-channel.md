@@ -25,9 +25,9 @@ $$
 と定めたブロック通信路を，$W$ の **積による延長** と呼ぶ．
 :::
 
-::: formalized
+:::: formalized
 ブロック通信路 `BlockwiseChannel`，積による延長 `Channel.toBlock` と`BlockwiseChannel.ofMemoryless` (`InformationTheory/Shannon/BlockwiseChannel/Definition.lean`)
-:::
+::::
 
 定義 6.7.1 が定義 6.1.1 から落としたものは，ただ一つ，積の形である．各 $n$ ごとに$\mathcal X^n$ から $\mathcal Y^n$ への条件付き分布が与えられるだけで，それらが 1 文字分の通信路から組み上がっているとは仮定しない．だから時刻をまたいで雑音が相関していてよいし，ブロック長ごとにまったく別の振る舞いをしていてもよい．記憶のない通信路は，積による延長という特別な場合として，この枠の中に入る．
 
@@ -45,9 +45,9 @@ $$
 と書く．
 :::
 
-::: formalized
+:::: formalized
 ブロック容量 `BlockwiseChannel.capacityN` (`InformationTheory/Shannon/BlockwiseChannel/Definition.lean`)，容量レート `capacityRate` と極限 `capacity_lim` (`InformationTheory/Shannon/GeneralDMC/Basic.lean`)
-:::
+::::
 
 $n$ で割るのは，$C_n$ が「$n$ 回の使用で運べる量」だからである．定義 6.2.1 のレートが$\frac1n\log M$ だったのと同じ割り算で，比べたいものを 1 回の使用あたりにそろえている．極限をとるのは，記憶のある通信路では短いブロックが不利になりうるからである．過去に依存する分だけ，ブロックの先頭では使える情報が少ない．$n$ を大きくすればその端の効果は薄まるので，長いブロックほど 1 文字あたりの取り分は良くなる見込みがある．どこまで良くなるかを聞いているのが極限である．
 
@@ -83,13 +83,13 @@ $$
 二つを合わせて $C_n(\mathbb W) = n\,C(W)$ であり，$n$ で割れば主張を得る．定数列は自身の値に収束する．
 :::
 
-::: formalized
+:::: formalized
 ブロック容量の各 $n$ の値 `capacityN_ofMemoryless_eq` (`InformationTheory/Shannon/BlockwiseChannel/MemorylessCapacity.lean`)
-:::
 
 ::: formalization-note
 形式化は容量レートの側でも定数性を述べているが，そちらは「十分大きい $n$ で定数」という形の `capacityRate_ofMemoryless_eventually_const` (`InformationTheory/Shannon/GeneralDMC/Basic.lean`) で，閾値を主張に含めない．命題 6.7.3 の「すべての $n \ge 1$ について」にそのまま対応するのは，ブロック容量の側の宣言である．
 :::
+::::
 
 ::: theorem 6.7.4
 $W$ を通信路（定義 6.1.1），$\mathbb W$ をその積による延長（定義 6.7.1）とする．このとき$C_\infty(\mathbb W)$ は定まり，
@@ -103,9 +103,9 @@ $$
 命題 6.7.3 より容量レートの列は定数 $C(W)$ で，$C(W)$ に収束する．よって定義 6.7.2 の極限は存在し，その値は $C(W)$ である．
 :::
 
-::: formalized
+:::: formalized
 `capacity_lim_eq_capacity_of_memoryless`，容量レートの列が $C(W)$ に収束すること`capacity_lim_tendsto_of_memoryless` (`InformationTheory/Shannon/GeneralDMC/Basic.lean`)
-:::
+::::
 
 **一般化したら，もとの場所で値を確かめる.** 定理 6.7.4 は驚きのない主張である．それでも確かめなければならない．定義を広げたとき，新しい定義がもとの場合にもとの値を返すことは保証されていないからである．もし $C_\infty$ が記憶のない通信路で $C(W)$ と違う値を出したら，どちらかの定義が悪いということになり，6.1 節から 6.6 節までに積み上げた $C(W)$ の操作的な意味（定理 6.3.7 と系 6.6.12 が両側から挟んだ意味）は新しい定義には引き継がれない．定理 6.7.4 は，その引き継ぎが起きていることの確認である．一般化の作法として，この確認は省けない．
 

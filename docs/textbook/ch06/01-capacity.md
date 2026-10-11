@@ -24,9 +24,9 @@ $$
 
 $W(y \mid x)$ は「$x$ を送ったときに $y$ が受け取られる確率」である．通信路が定めるのはこの条件付き分布だけで，何を送るかは通信路の側では決まっていない．入力分布 $p$ を与えてはじめて入力と出力が対になり，結合分布と出力分布が定まる．積の形の条件が言っているのは，各時刻の雑音がそれ以前の入出力に一切依存しない，ということである．これが「記憶のない」の内容で，第3章の記憶のある情報源とちょうど逆向きの仮定になっている．あちらは情報源に記憶があってよかったが，こちらは通信路に記憶がない．
 
-::: formalized
+:::: formalized
 `Channel`，結合分布 `jointDistribution`，出力分布 `outputDistribution` (`InformationTheory/Shannon/ChannelCoding/Basic.lean`)
-:::
+::::
 
 **いちばん小さい通信路で確かめる.** $\mathcal X = \mathcal Y = \{0, 1\}$ とし，送ったビットが確率 $0.1$ で裏返る通信路を考える．遷移確率は
 $$
@@ -45,9 +45,9 @@ $$
 
 対数の中身 $W(y \mid x) / q(y)$ は，「$x$ が送られたと知ることで，$y$ が受け取られるという見込みが何倍になったか」である．何を送っても出力の分布が変わらない通信路（雑音が入力を完全に潰してしまう通信路）では，この比が全点で 1 になって $I(p;W) = 0$ になる．逆に $x$ ごとに出力の分布がはっきり違えば比は 1 から離れ，$I(p;W)$ は大きくなる．1.3 節の言葉でいえば，$I(p;W)$ は入力と出力が独立からどれだけ隔たっているかを一つの数にまとめた量である．
 
-::: formalized
+:::: formalized
 `mutualInfoOfChannel` (`InformationTheory/Shannon/ChannelCoding/Basic.lean`)
-:::
+::::
 
 定義 6.1.2 は通信路の側から書いた式で，第1章の相互情報量とは見た目が違う．両者が同じものであることを先に確かめておく．
 
@@ -68,13 +68,13 @@ $$
 になる．したがって定義 6.1.2 の右辺は定義 1.3.1 の右辺そのもので，$I(p;W) = I(X;Y)$ である．残る三つの等式は，この対 $(X, Y)$ に定理 1.3.4 を当てたものである．
 :::
 
-::: formalized
+:::: formalized
 結合分布の相互情報量との一致 `mutualInfoOfChannel_eq_mutualInfo_prod`，三つのエントロピーの差の形 `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` (`InformationTheory/Shannon/ChannelCoding/Basic.lean`)，出力の不確かさから雑音の分を引いた形 `mutualInfoOfChannel_toReal_eq_outputEntropy_sub` (`InformationTheory/Shannon/ChannelCoding/StrongConverseAsymptotic.lean`)
-:::
 
 ::: formalization-note
 最後の等式 $H(X) - H(X \mid Y)$ に対応する単独の宣言はない．定理 1.3.4 の形式化との合成で得られる．
 :::
+::::
 
 **雑音の分だけ減る，と読む.** 以下でいちばん使うのは $I(p;W) = H(Y) - H(Y \mid X)$ の形である．$H(Y)$ は受け取った側から見た出力の不確かさ，$H(Y \mid X)$ は何を送ったかを知ってもなお残る不確かさ，すなわち雑音そのものの不確かさである．運べた情報とは，出力の不確かさから雑音の分を差し引いた残りだ，と読める．送る側に選べるのは $p$ だけで，$p$ を動かせば $H(Y)$ も $H(Y \mid X)$ も動く．その中で差を最大にする $p$ を探す，というのが次の定義である．
 
@@ -88,9 +88,9 @@ $$
 で定める．$p$ は $\mathcal X$ 上の分布全体，すなわち $p(x) \ge 0$ かつ$\sum_{x} p(x) = 1$ を満たす関数の全体を動く．
 :::
 
-::: formalized
+:::: formalized
 `capacity` (`InformationTheory/Shannon/ChannelCoding/ShannonTheorem.lean`)
-:::
+::::
 
 $C(W)$ は通信路だけで決まる数で，入力分布にも符号にも依存しない．定義の時点では「1 回の使用あたりどれだけ運べるか」という操作的な意味はまだ持っておらず，単に相互情報量の最大化問題の値でしかない．それが誤りなく送れるレートの限界と一致する，というのが 6.3 節以降の内容である．
 
@@ -121,13 +121,13 @@ $$
 最後に $C(W) = I(p^*;W)$ を見る．$I(p^*;W)$ は値の集合 $\{I(p;W) : p \in \Delta\}$ の上界であり，かつその集合の元でもある．上限は上界のうち最小のものだから，この二つから$C(W) = I(p^*; W)$ である．
 :::
 
-::: formalized
+:::: formalized
 連続性 `continuous_mutualInfoOfChannel_left`，最大化する入力分布の存在`exists_capacity_achiever` (`InformationTheory/Shannon/ChannelCoding/ShannonTheorem.lean`)
-:::
 
 ::: formalization-note
 等号 $C(W) = I(p^*; W)$ に対応する単独の宣言はない．容量が上限として定義されていること`capacity` と，その値の集合が上に有界であること `capacity_bddAbove` (`InformationTheory/Shannon/ChannelCoding/ShannonTheorem.lean`) との合成で得られる．
 :::
+::::
 
 ::: proposition 6.1.6
 任意の通信路 $W$ に対し $C(W) \ge 0$．
@@ -137,9 +137,9 @@ $$
 定理 6.1.5 の $p^*$ をとると $C(W) = I(p^*;W)$ であり，命題 6.1.3 よりこれは対$(X, Y)$ の相互情報量 $I(X;Y)$ に等しい．命題 1.3.2 よりそれは非負である．
 :::
 
-::: formalized
+:::: formalized
 `capacity_nonneg` (`InformationTheory/Shannon/ChannelCoding/ShannonTheorem.lean`)
-:::
+::::
 
 ::: proposition 6.1.7
 任意の通信路 $W$ に対し$C(W) \le \log \min\big(|\mathcal X|, |\mathcal Y|\big)$．

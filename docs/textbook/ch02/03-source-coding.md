@@ -60,9 +60,9 @@ $$
 
 **数で見る.** 例 2.2.2 の偏ったコイン（$H(X) \approx 0.469$ ビット）を $n = 100$ 文字ずつ区切って送るとする．素朴に 1 文字 1 ビットで書けば 100 ビットだが，$R = 0.5$ をとれば $M_{100} = \lceil 2^{50} \rceil$ 通りの番号で足り，50 ビットで済む．半分である．このとき捨てているのは典型集合の外の系列で，その確率は $n$ とともに 0 に向かう．例 2.2.2 で見た「$1$ ばかりの系列はいちばん確率が高いのに典型ではない」という系列も，ここでは捨てられる側にいる．それでも全体としてはほぼ確実に復号できる．
 
-::: formalized
+:::: formalized
 `source_coding_achievability` (`InformationTheory/Shannon/AEP/Basic/Achievability.lean`)
-:::
+::::
 
 ## 逆定理
 
@@ -85,9 +85,9 @@ $$
 
 補題 2.3.3 の証明で独立性が効いているのは 1 か所，$X_n$ が**先行するブロック全体**と独立だという点である．$X_n$ が各 $X_i$ と個別に独立であるだけでは足りない．
 
-::: formalized
+:::: formalized
 `entropy_jointRV_eq_n_smul` (`InformationTheory/Shannon/AEP/Basic/Converse.lean`)
-:::
+::::
 
 ::: theorem 2.3.4 弱逆定理
 ブロック情報源符号の族 $(M_n, c_n, d_n)_{n\ge1}$ が $P^{(n)}_e \to 0$ を満たし，かつレートの列 $(R_n)$ が上に有界なら
@@ -130,9 +130,9 @@ $$
 
 **$\liminf$ である理由.** 結論が $\lim$ ではなく $\liminf$ なのは，レートが収束するとは仮定していないからである．$R_n$ は振動してよく，主張しているのは「どんな部分列をとっても $H(X)$ を下回る値に張り付くことはない」ということである．
 
-::: formalized
+:::: formalized
 弱逆定理 `source_coding_converse`，三つの評価を合わせた 1 ブロックごとの不等式`source_coding_per_n_bound` (`InformationTheory/Shannon/AEP/Basic/Converse.lean`)
-:::
+::::
 
 ## 両側を合わせる
 
@@ -160,9 +160,8 @@ $$
 
 なお，$\inf$ が達成されるかどうかは本定理の主張に含まれない．$R = H(X)$ ちょうどのレートで誤り確率が 0 に収束する符号族があるかは，ここでは問わない．
 
-::: formalized
+:::: formalized
 達成可能な符号 `IsAchievableCode`，達成レートの集合 `achievableRates`，情報源符号化定理`source_coding_theorem` (`InformationTheory/Shannon/AEP/Basic/Achievability.lean`)
-:::
 
 ::: formalization-note
 形式化の達成レートの定義 `IsAchievableCode` も，誤り確率の消失とレートの一様上界の2 条件を課している．本文が定義 2.3.1 に置いた $M_n \ge 1$ も，番号の型を空にしないために同じ構造体に取り込まれている．
@@ -171,3 +170,5 @@ $$
 
 弱逆定理の証明ルートは本文と一つずれる．本文は観測を $\hat X^n$（復号結果）にとり，復号器を恒等写像としてファノの不等式を当てた．形式化は観測を符号語 $Y_n = c_n(X^n)$ にとり，復号器 $d_n$ とともに $(X^n, Y_n)$ へ当てる．符号語数の項も $H(\hat X^n)$ を経由せず，$Y_n$ の値域の大きさから最大エントロピー上界で直接出す．到達する不等式は本文と同じである．誤り確率は測度論的に$P_e = \mu\{\omega : X^n(\omega) \neq d_n(c_n(X^n(\omega)))\}$ として定義され（`errorProb`），ファノの不等式は第1章と同じ測度論版を用いる．
 :::
+::::
+

@@ -71,9 +71,9 @@ $$
 補題 11.2.2 より $\frac{\log(n+1)}{n} \to 0$ であり，$\lvert\mathcal X\rvert$ は $n$ に依らない有限の数だから，$\frac{\lvert\mathcal X\rvert\log(n+1)}{n} \to 0$ である．
 :::
 
-::: formalized
+:::: formalized
 `sanov_ldp_upper_bound` (`InformationTheory/Shannon/Sanov/LDP.lean`)
-:::
+::::
 
 $\gamma$ としてどれだけ大きい値がとれるかで，系 11.3.3 の強さが決まる．とれるのは，すべての $n$ の $\mathcal E_n$ を通して $D(\cdot\,\|\,Q)$ を下から抑える値までである．$\mathcal E$ の上で $D(\cdot\,\|\,Q)$ を最小にする分布があれば，その値は条件を満たす $\gamma$ の一つになる．同じ値が下からの評価でも現れることを，次に見る．
 

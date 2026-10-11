@@ -26,13 +26,13 @@ $$
 
 エントロピーは $X$ の値そのものではなく分布 $p$ のみに依存する量であることに注意したい．$X$ の値を別の名前に読み替えても（たとえば目の数 $1,\dots,6$ を色の名前に置き換えても）$H(X)$ は変わらない．記号 $H(X)$ は慣用だが，より正確には $H(p)$ と書くべき汎関数である．
 
+:::: formalized
+`entropy` (`InformationTheory/Shannon/Bridge.lean`)
+
 ::: formalization-note
 $-t\log t$ は Mathlib の関数 `negMulLog` を用いる．$0 \log 0 = 0$ は Mathlib が $\log 0 = 0$ と定めていることから自動的に従い，場合分けは要らない．確率変数は測度空間上の可測写像として表現し，分布 $p$ は像測度を通じて与えられる．
 :::
-
-::: formalized
-`entropy` (`InformationTheory/Shannon/Bridge.lean`)
-:::
+::::
 
 ## 例
 
@@ -70,13 +70,13 @@ $$
 
 命題 1.1.4 は「不確かさが負になることはなく，不確かさ 0 とは結果が確定していること」という当然の事実を述べている．当然に見えるが，これは「驚きは負にならない」（$0 \le p(x) \le 1$ なので $-\log p(x) \ge 0$）ことの言い換えであり，平均をとる前の各項がすでに非負である，という構造から来ている．逆に $H(X) = 0$ なら「どの値が出ても驚かない」＝「出る値が決まっている」ということになる．
 
+:::: formalized
+非負性 `entropy_nonneg` (`InformationTheory/Shannon/Bridge.lean`)
+
 ::: formalization-note
 形式化されているのは非負性だけで，等号条件（$H(X) = 0$ と一点集中の同値）に対応する単独の宣言は無い．
 :::
-
-::: formalized
-非負性 `entropy_nonneg` (`InformationTheory/Shannon/Bridge.lean`)
-:::
+::::
 
 ## 性質2：一様分布が最大化する（$H(X) \le \log|\mathcal X|$）
 
@@ -200,11 +200,11 @@ $$
 両辺を $M$ 倍すれば $H(X) \le \log M$．等号は $\varphi$ が**狭義**凹なので，補題の等号条件により，正の重み（ここではすべての $x$ で $w_x = 1/M > 0$）をもつ点 $p(x)$ が$x$ によらず一定のとき，すなわち $\sum_x p(x)=1$ と合わせて $p(x) = 1/M$，つまり$X$ が一様分布のときに限る．
 :::
 
+:::: formalized
+主定理 `entropy_le_log_card`，等号条件 `entropy_eq_log_card_iff` (`InformationTheory/Shannon/MaxEntropy/Basic.lean`)
+
 ::: formalization-note 証明ルートの相違
 本文は有限 Jensen を**点の個数に関する帰納法**で組み立てた．これに対し Lean の形式化 `entropy_le_log_card` は，Mathlib の凹関数ライブラリ（ハイポグラフの凸性と凸結合の所属に基づく `ConcaveOn.le_map_sum`，凹性は `Real.concaveOn_negMulLog`，等号条件では狭義版の`Real.strictConcaveOn_negMulLog` と `StrictConcaveOn.map_sum_eq_iff`）をそのまま呼び出す**別ルート**で同じ定理を証明している．最後に「全記号の質量が $1/M$」から像測度の一致への橋渡しに `Measure.ext_of_singleton` を用いる．証明手順は本文と Lean で異なるが，**結論である定理は同一**であり，形式化はその正しさを無条件に保証する．底にある解析的事実が $\varphi$ の狭義凹性である点は両者で共通する．なお$D(p\,\|\,\text{一様}) = \log M - H(X)$ という相対エントロピー経由の別証明も形式化されているが，本文の帰納法も Lean の主定理もそれには依存しない．
 :::
-
-::: formalized
-主定理 `entropy_le_log_card`，等号条件 `entropy_eq_log_card_iff` (`InformationTheory/Shannon/MaxEntropy/Basic.lean`)
-:::
+::::
 

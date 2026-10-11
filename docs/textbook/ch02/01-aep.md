@@ -90,10 +90,10 @@ $Y_i$ が期待値をもつことを確かめる．$X_i$ が値 $a$ をとる確
 形式化は本章を通じて $\log$ を自然対数にとり，指数評価を `exp`，レートをナットで述べている．本文が底を 2 に固定しているのと表層が違うだけで，底をそろえれば同じ主張である．i.i.d. 仮定は Mathlib に `IsIID` 述語が無いため，独立性（どの 2 つをとっても独立，という意味での **対独立**）と同分布性 `IdentDistrib` の 2 本に分けて受ける．
 :::
 
+:::: formalized
+1 文字あたりの対数尤度 `logLikelihood`，その期待値`integral_logLikelihood_zero`（補題 2.1.3 の後半），概収束 `aep_ae`，確率収束 `aep_inProbability` (`InformationTheory/Shannon/AEP/Basic/Core.lean`)
+
 ::: formalization-note
 本文は経験エントロピーをブロックの確率 $-\frac1n\log p(X^n)$ で定義し，補題 2.1.3 で1 文字ずつの和にほどいた．形式化はこの順序を逆にとり，1 文字ごとの `logLikelihood` の相加平均を定義に据えている．証明が使うのは相加平均の形だけなので，独立性の仮定を後段の必要な定理にだけ課せるという利点がある（次節の要素数上界がその恩恵を受ける）．裏返すと，形式化の定義を本文のブロック確率の形に戻すには補題 2.1.3 が要り，そこには相互独立が効いている．その積分解は形式化では次節の点ごとの確率評価の証明に埋め込まれていて，単独の宣言にはなっていない．概収束は Mathlib の大数の強法則`strong_law_ae_real`，確率収束はそこから `tendstoInMeasure_of_tendsto_ae` で導く．
 :::
-
-::: formalized
-1 文字あたりの対数尤度 `logLikelihood`，その期待値`integral_logLikelihood_zero`（補題 2.1.3 の後半），概収束 `aep_ae`，確率収束 `aep_inProbability` (`InformationTheory/Shannon/AEP/Basic/Core.lean`)
-:::
+::::

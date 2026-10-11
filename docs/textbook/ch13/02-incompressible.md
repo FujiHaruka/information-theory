@@ -22,9 +22,9 @@ $$
 本である．$S$ の元はこの $2^k - 1$ 本の中の相異なるビット列に写るから，$S$ は有限で，その要素数は $2^k - 1$ 以下，とくに $2^k$ より小さい．
 :::
 
-::: formalized
+:::: formalized
 有限性 `condComplexity_lt_finite`，要素数の評価 `condIncompressible_count` (`InformationTheory/Shannon/Kolmogorov/Counting.lean`)
-:::
+::::
 
 数え方の要点は一つだけである．指示は対象を決めるが，対象は指示を決めない．それでも各 $x$ に最短の指示を一つ選んでしまえば，選んだ先は相異なるので，対象の個数を指示の本数で抑えられる．そして指示はビット列だから，長さで区切れば本数が数えられる．長さが $k$ 未満のビット列は $2^k - 1$ 本しかないので，複雑性が $k$ 未満の対象も $2^k - 1$ 個までである．
 
@@ -36,9 +36,9 @@ $y, k \in \mathbb N$ とすると，$K_{\mathcal U}(x \mid y) \ge k$ を満た�
 そのような $x$ が無いとすると，すべての $x \in \mathbb N$ が $K_{\mathcal U}(x \mid y) < k$ を満たすので，定理 13.2.1 の集合は $\mathbb N$ の全体になる．ところが 定理 13.2.1 よりその集合は有限であり，$\mathbb N$ は無限だから矛盾する．
 :::
 
-::: formalized
+:::: formalized
 `exists_condIncompressible` (`InformationTheory/Shannon/Kolmogorov/Noncomputable.lean`)
-:::
+::::
 
 系 13.2.2 は，どれだけ大きな $k$ をとっても，$k$ ビット未満では書き出せない自然数があると言っている．この意味で圧縮できない対象はいくらでもある．ただし証明は，そのような $x$ を一つも指していない．有限個しか無いはずの集合が全体になってしまう，という数え方の矛盾から存在を出しているだけである．指す手立てのほうは，次の 定理 13.2.3 の証明が扱う．そこでは，$K_{\mathcal U}$ の値を返す手続きがあると仮定し，それを使って $K_{\mathcal U}(x \mid y) \ge k$ を満たす $x$ を探す手続きを組み立てて，矛盾を出す．
 
@@ -66,9 +66,9 @@ $$
 である．矛盾した．
 :::
 
-::: formalized
+:::: formalized
 `condComplexity_not_computable` (`InformationTheory/Shannon/Kolmogorov/Noncomputable.lean`)
-:::
+::::
 
 この証明は Berry のパラドックスと呼ばれる古い言い回しを，そのまま定理にしたものである．「三十文字未満の日本語で言い表せない最小の自然数」という言い回しは，二十三文字でその数を言い表しており，自分自身に反している．証明の $f(k)$ がこの言い回しにあたり，$k$ を二進表示で書き下す $\lvert k\rvert$ ビットが「三十文字」にあたる．言い回しのほうは「言い表せる」という言葉が曖昧なためにパラドックスにとどまるが，$K_{\mathcal U}$ の側ではその言葉が 定義 13.1.4 で確定しているので，パラドックスは $K_{\mathcal U}$ が計算可能だという仮定への反証になる．
 

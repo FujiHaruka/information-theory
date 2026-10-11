@@ -95,9 +95,9 @@ $$
 であり，移項すれば主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `slepian_wolf_converse_X` (`InformationTheory/Shannon/SlepianWolf/Basic.lean`)
-:::
+::::
 
 ::: theorem 14.3.4 分散符号の逆定理・$Y$ 側
 $\mathcal X$ と $\mathcal Y$ を空でない有限アルファベットとし，$\lvert\mathcal Y\rvert \ge 2$ とする．$(X,Y)$ を $\mathcal X\times\mathcal Y$ に値をとる確率変数の対，$(M_X, M_Y, f_X, f_Y, d)$ を 定義 14.3.1 の分散符号，$P_{e,Y}$ をその $Y$ 側の誤り確率とすると
@@ -111,9 +111,9 @@ $$
 定理 14.3.3 の証明で，$X$ と $Y$，$\mathcal X$ と $\mathcal Y$，$f_X$ と $f_Y$，$M_X$ と $M_Y$ の役をそれぞれ入れ替え，復号の結果の第 $1$ 成分をとるところを第 $2$ 成分に替えればよい．すなわち $h : \mathcal X \times \{1,\dots,M_Y\} \to \mathcal Y$ を $h(x, m) := \big(d(f_X(x), m)\big)_2$ で定めると $h\big(X, f_Y(Y)\big) = \hat Y$ であり，その誤り確率は 定義 14.3.1 の $P_{e,Y}$ である．以下の運びは 定理 14.3.3 の証明と同じで，ファノの不等式を当てるときに条件に置く対が $(X, f_Y(Y))$ に，最大エントロピー上界を当てる相手が $f_Y(Y)$ に替わるだけである．
 :::
 
-::: formalized
+:::: formalized
 `slepian_wolf_converse_Y` (`InformationTheory/Shannon/SlepianWolf/Basic.lean`)
-:::
+::::
 
 ::: theorem 14.3.5 分散符号の逆定理・和レート
 $\mathcal X$ と $\mathcal Y$ を空でない有限アルファベットとし，$\lvert\mathcal X \times \mathcal Y\rvert \ge 2$ とする．$(X,Y)$ を $\mathcal X\times\mathcal Y$ に値をとる確率変数の対，$(M_X, M_Y, f_X, f_Y, d)$ を 定義 14.3.1 の分散符号，$P_e$ をその全体の誤り確率とすると
@@ -145,9 +145,9 @@ $$
 二つを合わせると $H(X,Y) \le \log M_X + \log M_Y + H_b(P_e) + P_e\log(\lvert\mathcal X\times\mathcal Y\rvert - 1)$ であり，移項すれば主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `slepian_wolf_converse_sum` (`InformationTheory/Shannon/SlepianWolf/Basic.lean`)
-:::
+::::
 
 三つの下界は別のことを言っている．定理 14.3.3 の右辺にある $H(X\mid Y)$ は，$Y$ をまるごと渡されている受け手にとってさえ $X$ に残る不確かさである．$X$ の側のレートはそこより下げられない，ただし誤りを許すぶんだけの余裕が右辺の補正項として付く，と読める．相手の情報源を知っている人を相手にするのだからいちばん甘い要求で，それでも $0$ にはならない．定理 14.3.5 の $H(X,Y)$ は逆に，二人が示し合わせて一人のように潰したとしても番号の総数はこれだけ要る，という要求である．14.1 節の五角形が，片方の利用者だけについての枠と二人を合わせた枠の二種類を持っていたのと，読み方の構造がそのまま対応している．違うのは向きで，あちらは上界，こちらは下界である．
 
@@ -235,12 +235,12 @@ $$
 
 本書はこの主張を証明しない．三種の紛れ込みのうち両方が紛れる場合は，紛れ込みうる組の本数が結合典型な組の全体で抑えられるので，定理 6.2.5 にあたる評価で足りる．ところが $X$ の側だけが紛れる場合に数えるのは，$y^n$ を一つ固定したときにそれと結合典型になる $x^n$ の本数であり，これは結合典型集合の全体ではなくその切り口である．本書はこの切り口の個数を抑える評価を持っていない．
 
-::: formalized
+:::: formalized
 `slepian_wolf_full_rate_region_achievability` (`InformationTheory/Shannon/SlepianWolf/FullRateRegion/PairBound.lean`)
-:::
 
 ::: formalization-note
 形式化の宣言は，借りた主張の仮定を細かく分けて受け取る．対の列が互いに独立で同分布であることに加えて，成分の列 $(X_i)$ と $(Y_i)$ のそれぞれについても独立と同分布を別の仮定に置き，対の分布が全点で正であることに加えて，$X_0$ の分布と $Y_0$ の分布が全点で正であることも別の仮定に置く．成分の列は対の列を成分ごとに写したものであり，$\mathcal X$ も $\mathcal Y$ も空でないので，足されたこの四つはどれも対の側の二つから従う．宣言が覆う範囲は借りた形と同じである．そのほかに各 $X_i$，$Y_i$ が可測であることを求める．三つの不等式は借りた形と同じである．結論の誤り確率は，全体の誤り確率を長さ $n$ のブロックについて書いた `swErrorProb` (`InformationTheory/Shannon/SlepianWolf/Achievability.lean`) で測っている．
 :::
+::::
 
 借りた **Slepian–Wolf の達成可能性** が覆うのは三つの不等式が **真に** 成り立つ側，系 14.3.6 が禁じるのは同じ三つが逆向きに破れる側で，境界，すなわちどれかが等号で成り立つレートの対については，どちらも何も言っていない．二つはさらに「達成できる」を別の形で言っていて，借りた側が作るのはレートが目標の対に収束する符号の族，系 14.3.6 が受け取るのは誤り確率が $0$ に向かう符号の族で，返すのはそのレートの下極限についての不等式である．そのため本書は，達成できるレートの対の集合が三つの不等式の定める領域に一致する，という形の主張は述べず，保証できるのは三つの不等式のそれぞれについての片側ずつまでである．

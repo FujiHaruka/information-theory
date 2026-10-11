@@ -26,9 +26,9 @@ $\hat P_x$ は，系列 $x$ を一度ばらばらにして，どの文字が何�
 
 型類 $\mathcal T_n(P)$ は，型がちょうど $P$ である長さ $n$ の系列の全体である．どの $x$ もただ一つの型をもつので，長さ $n$ の型すべての型類は $\mathcal X^n$ を重なりなく覆う．また $\hat P_x = P$ は「各文字 $a$ について $N(a\mid x) = nP(a)$」と同じことだから，型類は文字ごとの個数を指定して切り出した集合でもある．とくに $P$ が長さ $n$ の型なら $nP(a)$ はどの文字でも非負整数である．
 
-::: formalized
+:::: formalized
 文字の個数 `typeCount` (`InformationTheory/Shannon/Sanov/Basic.lean`)，型類 `typeClassByCount` (`InformationTheory/Shannon/Sanov/LDP.lean`)
-:::
+::::
 
 ::: example 11.1.2 長さ $3$ の二値系列
 $\mathcal X = \{0,1\}$，$n = 3$ とし，$\hat P_x$ と $\mathcal T_3(\cdot)$ を 定義 11.1.1 のとおりとする．分布を $\big(P(0), P(1)\big)$ の形で書くと，長さ $3$ の型はちょうど
@@ -63,9 +63,9 @@ $\mathcal X$ を空でない有限アルファベット，$n \ge 1$ とする．
 $P$ を長さ $n$ の型とすると，$\hat P_x = P$ となる $x \in \mathcal X^n$ があり，各文字 $a$ について $P(a) = N(a\mid x)/n$ である．したがって $P$ は，個数の組 $\big(N(a\mid x)\big)_{a \in \mathcal X}$ を $n$ で割ったものとして書ける．個数 $N(a\mid x)$ は $0$ 以上 $n$ 以下の整数だから，文字ごとに $n+1$ 通りの値しかとれず，組は全部で $(n+1)^{\lvert\mathcal X\rvert}$ 通り以下である．異なる型は異なる組を与えるので，型の個数もこれ以下である．
 :::
 
-::: formalized
+:::: formalized
 `numTypes_le` (`InformationTheory/Shannon/Sanov/MultinomialLowerBound.lean`)
-:::
+::::
 
 この数え方は粗い．個数の組の総和が $n$ でなければならないという条件を使っておらず，型にならない組まで数えている．それでも以降の評価に入るのは $n$ の多項式なので，$\frac1n\log$ をとる水準では消える．系列のほうは $\mathcal X^n$ の要素数 $\lvert\mathcal X\rvert^n$ だけあり，$n$ とともに指数で増える．本節の残りは，一つの型類がどれだけ大きいかを数える．
 

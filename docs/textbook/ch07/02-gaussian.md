@@ -38,9 +38,9 @@ $$
 となる．右辺は $\frac12\log(2\pi\sigma^2) + \frac12\log e = \frac12\log(2\pi e\sigma^2)$ である．
 :::
 
-::: formalized
+:::: formalized
 `differentialEntropy_gaussianReal`，標準ガウス分布の場合 `differentialEntropy_gaussianReal_std`，「定まる」にあたる積分可能性 `integrable_density_log_density_of_gaussian` (`InformationTheory/Shannon/DifferentialEntropy.lean`)
-:::
+::::
 
 値が平均 $\mu$ によらないのが目につく．ガウス分布の形は $\mu$ で左右に動くだけで幅が変わらないから，散らばりの広さを測る量は動かない．平行移動で微分エントロピーが変わらないことは，ガウス分布に限らず成り立つ（命題 7.3.2）．一方 $\sigma^2$ には依存していて，$\sigma$ を $2$ 倍すると $h$ は $\log 2$ だけ増える．例 7.1.3 の一様分布で幅を $2$ 倍したときと同じ増え方である．$\sigma^2 = 1/(2\pi e)$，すなわち $\sigma^2 \approx 0.05855$ のとき $h(X) = 0$ になり，それより分散が小さければ $h(X) < 0$ である．底を $2$ にとると $\mathcal N(0,1)$ の微分エントロピーは $\frac12\log_2(2\pi e) \approx 2.0471$ ビットである．7.1 節の幅の読みに乗せれば $2^{h(X)} = \sqrt{2\pi e}\,\sigma$ で，標準偏差のおよそ $4.13$ 倍がこの分布の実効的な幅にあたる．一様分布の幅，指数分布の平均の $e$ 倍と，同じ物差しの上に並ぶ．
 
@@ -101,13 +101,13 @@ $$
 を得る．$\mathbb E[(X-\mu)^2]$ は $X$ の分散で，仮定より $\sigma^2$ 以下だから，右辺は $\frac12\log(2\pi\sigma^2) + \frac12\log e = \frac12\log(2\pi e\sigma^2)$ 以下である．
 :::
 
-::: formalized
+:::: formalized
 `differentialEntropy_le_gaussian_of_variance_le` (`InformationTheory/Shannon/DifferentialEntropy.lean`)
-:::
 
 ::: formalization-note
 形式化の仮定は四つある．分布が Lebesgue 測度について絶対連続であることが本文の「密度をもつ」に，密度に $-t\log t$ を合成したものが積分できることが「$h(X)$ が定まる」に，ある中心からの $2$ 乗が積分できてその積分が $\sigma^2$ 以下であることが「分散が定まって $\sigma^2$ 以下である」にあたり，四つめはその中心が $X$ の平均に等しいことで，これが「$X$ が平均をもち」にあたる．本文が借りたガウス分布の基本性質のうち，分散が $\sigma^2$ であることは `gaussianReal_variance_eq` (`InformationTheory/Shannon/DifferentialEntropy.lean`) として形式化されている．
 :::
+::::
 
 ::: corollary 7.2.5
 $\mu$ を実数，$\sigma^2 > 0$ とし，$X$ が $\mathcal N(\mu,\sigma^2)$ に従うとする．このとき $X$ は定理 7.2.4 の仮定を満たし，その不等式は等号で成り立つ．

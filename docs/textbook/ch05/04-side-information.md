@@ -14,13 +14,13 @@ $$
 
 $p(x,y) > 0$ だから $p(y) > 0$ であり，条件付き分布 $p(\cdot \mid y)$ はすべての $x$ で正である．条件付き倍加率は，$Y = y$ を見てからその場に応じた配分で賭けたときの倍加率を，$y$ の出方で平均したものであり，定義 1.2.2 の条件付きエントロピーとまったく同じ作り方をしている．
 
-::: formalized
+:::: formalized
 `condDoublingRate` (`InformationTheory/Shannon/Gambling/SideInformation.lean`)
-:::
 
 ::: formalization-note
 形式化は同時分布を，$Y$ の分布と条件付き分布の対として与える．本文の $p(x,y)$ からは $p(y)$ と $p(x\mid y)$ を取り出せばよく，逆にその対からは積で同時分布が戻るので，どちらから出発しても同じものを指している．$X$ の周辺分布も，形式化では条件付き分布を $p(y)$ で平均する形で別に定めてある（`sideMarginalX`）．
 :::
+::::
 
 ## 条件付きの比例賭け
 
@@ -40,9 +40,9 @@ $$
 を得る．両辺に $p(y) > 0$ を掛けて $y$ について足せば，定義 5.4.1 より主張の不等式になる．
 :::
 
-::: formalized
+:::: formalized
 `condDoublingRate_le_proportional` (`InformationTheory/Shannon/Gambling/SideInformation.lean`)
-:::
+::::
 
 定理 5.4.2 は定理 5.2.1 を $y$ ごとに当てただけである．副情報を見たあとの賭け手は，そのとき $X$ が従うと信じている分布，すなわち条件付き分布 $p(\cdot \mid y)$ をそのまま配分にすればよい．副情報のあるなしで賭け方の原則は変わらず，変わるのは「自分が信じている分布」のほうである．
 
@@ -86,13 +86,13 @@ $$
 副情報を使わないほうは定理 5.3.1 そのもので，$W^{*}(X) = \sum_x p(x)\log o(x) - H(X)$ である．差をとるとオッズの項が消えて $H(X) - H(X \mid Y)$ が残り，定理 1.3.4 よりこれは $I(X;Y)$ に等しい．
 :::
 
-::: formalized
+:::: formalized
 `sideInfo_doublingRate_increment_eq_mutualInfo` (`InformationTheory/Shannon/Gambling/SideInformation.lean`)
-:::
 
 ::: formalization-note
 形式化が右辺に置く相互情報量は，アルファベット上の関数としての周辺分布と同時分布から $H(X) + H(Y) - H(X, Y)$ の形で組んだ実数値の量（`sideInfoMutualInfo`，`InformationTheory/Shannon/Gambling/SideInformation.lean`）である．第1章が定義 1.3.1 で紐付けた `mutualInfo` (`InformationTheory/Shannon/MutualInfo.lean`) は確率変数の像測度についての拡張非負実数値の量で，値はどちらも $I(X;Y)$ で一致するが，単独の宣言としては別のものである．二つを結ぶ宣言はなく，定理 1.3.4 の形式化もこの二つのあいだのものではない．
 :::
+::::
 
 定理 5.4.4 は，第1章で「共有されている量」として定義した $I(X;Y)$ に，値段をつけたものと読める．相互情報量が $1$ ビットなら，副情報を使えるようになったことで倍加率もちょうど $1$ だけ増える．しかも増分の式にオッズは現れない．定理 5.4.4 の証明でオッズの項が引き算で消えるところがそれで，胴元がどんなオッズをつけていても，副情報の値打ちは同時分布だけで決まる．また命題 1.3.2 より $I(X;Y) \ge 0$ だから，副情報を得て損をすることはなく，等号すなわち値打ちが $0$ になるのは $X$ と $Y$ が独立なときに限る．関係のない情報に金を払う価値はない，ということである．
 

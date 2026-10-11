@@ -20,13 +20,13 @@ $R(D_2)$ は値の集合 $\{I(p;q) : q \in \mathcal Q(D_2)\}$ の下界である
 
 読み方は素直である．歪みを多く許すほど，選べる再現の作り方は増える．増えたぶんだけ小さい値が選べるかもしれず，少なくとも大きくはならない．効いているのは制約集合の包含だけで，相互情報量の性質は一つも使っていない．
 
-::: formalized
+:::: formalized
 `rateDistortionFunction_antitone` (`InformationTheory/Shannon/RateDistortion/ConverseMonotone.lean`)
-:::
 
 ::: formalization-note
 `rateDistortionFunction_antitone` が述べているのは，$R(D)$ を測度の言葉で書いた宣言 `rateDistortionFunction` (`InformationTheory/Shannon/RateDistortion/Converse.lean`) についての非増加性である．定義 9.1.5 に紐付けた `rateDistortionFunctionPmf` (`InformationTheory/Shannon/RateDistortion/Achievability.lean`) とは別の宣言で，二つを結ぶ宣言は無い．あちらは値を拡張非負実数にとり，制約を満たす同時分布が一つも無いときの下限を $\infty$ と定めるので，命題 9.2.1 が置いた「$\mathcal Q(D_1)$ が空でない」という仮定を置かずに述べられている．包含 $\mathcal Q(D_1) \subseteq \mathcal Q(D_2)$ を述べる宣言は無く，あちらが与えるのは不等式だけである．
 :::
+::::
 
 ## 凸である
 
@@ -101,13 +101,13 @@ $$
 
 なぜ弦より下になると期待できるのかは，時間で分けてみると見当がつく．符号を定義するのは 9.5 節なので符号の話としてはまだ言えないが，長さ $n$ のブロックのうち $\lambda$ の割合を歪み $D_1$ 用の符号で，残りを歪み $D_2$ 用の符号で処理したとする．歪みは成分についての平均だから全体で $\lambda D_1 + (1-\lambda)D_2$ になり，$1$ 文字あたりのレートも同じ重みの平均 $\lambda R(D_1) + (1-\lambda)R(D_2)$ になる．中間の歪みをこれだけのレートで実現する手立てが一つある以上，中間の点で弦より上には行きようがない，というわけである．
 
-::: formalized
+:::: formalized
 `rateDistortionFunction_convexOn` (`InformationTheory/Shannon/RateDistortion/Convexity.lean`)
-:::
 
 ::: formalization-note
 `rateDistortionFunction_convexOn` が述べているのも，$R(D)$ を測度の言葉で書いた宣言 `rateDistortionFunction` (`InformationTheory/Shannon/RateDistortion/Converse.lean`) についての凸性で，定義 9.1.5 に紐付けた宣言とは別のものである．二つを結ぶ宣言は無い．あちらが与えるのも不等式だけで，混ぜた歪みの制約集合が空でないという命題 9.2.3 の結論の前半にあたる部分は含まれていない．値を拡張非負実数にとるので，制約を満たす同時分布が一つも無いときにも不等式のほうは成り立つからである．またこの宣言は，情報源の分布を第 $1$ 周辺にもつどの同時分布についても歪みが可積分である，という前提を受け取る．命題 9.2.3 が置いた有限のアルファベットのもとでは，$d$ が有限個の値しかとらないのでこの前提は満たされるが，アルファベットを有限に固定した形の宣言は形式化には無い．
 :::
+::::
 
 ## 両端
 

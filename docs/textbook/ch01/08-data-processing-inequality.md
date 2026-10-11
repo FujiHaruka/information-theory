@@ -34,9 +34,9 @@ $$
 
 **符号長で読む.** $q$ だと思い込んで符号化する人の損（1.6 節）は，観測を粗くするほど小さくなる．細かく見ていれば「$q$ ではありえない値が出た」と気づけたのに，まとめてしまうと気づけない．だから損も減る．これがデータ処理不等式すべての土台になる．
 
-::: formalized
+:::: formalized
 `klDiv_map_le` (`InformationTheory/Shannon/DPI.lean`)
-:::
+::::
 
 ## 後処理は相互情報量を増やさない
 
@@ -65,9 +65,9 @@ $$
 
 証明でやったのは「相互情報量は同時分布と周辺積のあいだの相対エントロピーである」（定義 1.3.1 の読み）ことに気づき，その二つの分布を同じ写像 $g = (\mathrm{id}, f)$で送って定理 1.8.1 を当てただけである．$X$ 側には何もせず $Y$ 側だけを粗くしたので，「$Y$ の解像度を落とすと，そこから読み取れる $X$ の情報も落ちる」という当然の主張になっている．等号が成り立つのは $f$ が $X$ についての情報を一切捨てないときで，その状況をきちんと特徴づけたのが 1.9 節の十分統計量である．
 
-::: formalized
+:::: formalized
 `mutualInfo_le_of_postprocess` (`InformationTheory/Shannon/DPI.lean`)
-:::
+::::
 
 ## マルコフ連鎖版
 
@@ -81,9 +81,9 @@ $$
 が成り立つことをいう．このとき $X \to Z \to Y$ と書く．
 :::
 
-::: formalized
+:::: formalized
 `IsMarkovChain` (`InformationTheory/Shannon/CondMutualInfo.lean`)
-:::
+::::
 
 条件が言っているのは「$z$ を知ってしまえば，$X$ の値をさらに教わっても $Y$ の見え方は変わらない」ということである．$X$ から $Y$ への影響がすべて $Z$ を通ってしか届かない，と読める．典型例は $Z$ にノイズを乗せて $Y$ を作る状況で，$Y$ の分布が $Z$ だけで決まり$X$ には直接よらないなら，この条件が成り立つ．定理 1.8.2 の決定論的な後処理$Y \mapsto f(Y)$ はその特別な場合（ノイズのない加工）にあたる（定理 1.8.2 を後で定理 1.8.4 から復元するときは，次に述べる対称性を使って連鎖を $f(Y) \to Y \to X$ の向きに読む）．1.4 節で条件付き相互情報量が「減る例」として挙げた，$X$ も $Y$ も $Z$ もすべて同じコインの値である状況も，$X \to Z \to Y$ の最も単純な例である．
 
@@ -113,13 +113,13 @@ $$
 条件付き相互情報量の非負性（命題 1.4.2）より $I(Z;Y\mid X) \ge 0$ だから，$I(Z;Y) \ge I(X;Y)$，すなわち $I(X;Y) \le I(Z;Y)$．
 :::
 
+:::: formalized
+`mutualInfo_le_of_markov` (`InformationTheory/Shannon/CondMutualInfo.lean`)
+
 ::: formalization-note
 形式化はマルコフ連鎖を，$Z$ を与えたときの $X$ と $Y$ の条件付き独立を結合分布の分解として述べる `IsMarkovChain` で定義する．教科書の矢印記法 $X\to Z\to Y$ とは表層が異なるが，内容は定義 1.8.3 と同じである．まずマルコフ下で $I(X;Y\mid Z)=0$ を示し，そこから本定理を導く．なお本ライブラリの結論は $I(X;Y) \le I(Z;Y)$ の形（中継 $Z$ を $Y$ 側と組む配置）で，教科書でよく見る $I(X;Y) \le I(X;Z)$ とは引数配置が異なるが，どちらもデータ処理不等式の正しい一形態である．
 :::
-
-::: formalized
-`mutualInfo_le_of_markov` (`InformationTheory/Shannon/CondMutualInfo.lean`)
-:::
+::::
 
 ## 応用：記憶のない通信路を 1 文字ごとに分解する
 
@@ -149,11 +149,11 @@ $$
 
 証明で不等号が入ったのは第 1 項，出力どうしの相関を捨てたところだけである．定理 1.5.3（i.i.d. 加法性）では等号だったのに，ここが不等号なのは，入力 $X_0,\dots,X_{n-1}$ に相関を許しているからで，入力が相関すれば出力も相関し，$H(Y^n) < \sum_i H(Y_i)$ になりうる．裏返せば「入力を相関させても得はしない」という主張でもある．
 
+:::: formalized
+`mutualInfo_le_sum_per_letter_of_memoryless_strong` (`InformationTheory/Shannon/CondEntropyMemoryless.lean`)
+
 ::: formalization-note
 形式化では記憶のなさを二つの `IsMarkovChain` 仮定（各文字の出力が他文字の入力を経由しないこと，出力どうしが条件付き独立であること）として与える．本文の定理 1.8.5 が括弧で述べた二条件がそのままこの形になっている．どちらも通信路の構造そのものを表す前提条件で，結論の核心を仮定に抱えさせるものではない．
 :::
-
-::: formalized
-`mutualInfo_le_sum_per_letter_of_memoryless_strong` (`InformationTheory/Shannon/CondEntropyMemoryless.lean`)
-:::
+::::
 

@@ -18,17 +18,17 @@ $$
 
 合計容量の各項は，$P_i > 0$ であれば，定理 8.2.4 により第 $i$ 通信路を電力 $P_i$ で使ったときの容量である．$P_i = 0$ の本は定理 8.2.4 の対象から外れる．8.2 節で見たとおり，電力 $0$ の制約を満たす入力は密度をもたないので，そこでは容量が定まらないからである．ただし項の値そのものは $\frac12\log 1 = 0$ で，電力を配らない本では何も運べない，という読みと食い違わない．運べる量について言えるのは，$1$ 本ずつの話までである．$P_i > 0$ の各本については，系 8.4.2 により，その $1$ 本だけを使ったときの達成レートの上限が第 $i$ 項 $\frac12\log(1 + P_i/N_i)$ に等しい．$n$ 本を別々の符号で使ったときにレートの合計がそのまま達成できるか，また $n$ 本をまとめて符号化すればそれを超えられるかは，どちらも本書では示さない．本節が解くのは合計容量という一つの式を電力配分について最大にする問題であって，それ以上でも以下でもない．
 
+:::: formalized
+`parallelGaussianChannel` (`InformationTheory/Shannon/ParallelGaussian/Basic.lean`)
+
 ::: formalization-note
 並列ガウス通信路全体の容量，すなわち $n$ 本の入力をまとめて一つの確率変数として選んでよいとしたときの相互情報量の上限が，定義 8.6.1 の合計容量の最大値に等しいことを，本書は示さない．形式化の側にも，そのままの形の単独の宣言はない．`parallel_gaussian_capacity_formula_minimal` (`InformationTheory/Shannon/ParallelGaussian/PerCoordRegularity.lean`) が与えるのは，測度論の言葉で定義した容量 `parallelGaussianCapacity` (`InformationTheory/Shannon/ParallelGaussian/Basic.lean`) が注水配分の合計容量に等しいところまでで，それが最大値でもあることは，定理 8.6.5 にあたる `isWaterFillingOptimal_of_kkt` (`InformationTheory/Shannon/ParallelGaussian/KKT.lean`) との合成で出る．仮定は，総電力が正であること，各雑音の分散が $0$ でないこと，二つの可測性（どちらも正則性の条件である），および水位が定理 8.6.3 の等式を満たすことである．
-:::
-
-::: formalized
-`parallelGaussianChannel` (`InformationTheory/Shannon/ParallelGaussian/Basic.lean`)
 :::
 
 ::: formalization-note
 形式化の `parallelGaussianChannel` は，入力の組 $x$ に対して，成分ごとに平均 $x_i$ 分散 $N_i$ のガウス分布をとった積測度を返す核で，定義 8.6.1 の並列ガウス通信路にあたる．核が可測であるという正則性の前提が二つ付くが，これは通信路の形を決める条件ではない．定義 8.6.1 の電力配分と合計容量には，対応する単独の宣言がない．合計容量の式は，注水配分の最適性を述べる `IsWaterFillingOptimal` (`InformationTheory/Shannon/ParallelGaussian/Basic.lean`) の中に書き下されている．電力の側の制約も，実数の組ではなく入力の分布に対する条件 `parallelGaussianPowerConstraintSet` (`InformationTheory/Shannon/ParallelGaussian/Basic.lean`) として書かれていて，定義 8.6.1 とは対象が違う．
 :::
+::::
 
 ::: definition 8.6.2 注水配分
 $n \ge 1$ とし，$N_1, \dots, N_n$ を正の実数，$\nu$ を実数とする．
@@ -38,9 +38,9 @@ $$
 で定まる組を，**水位** $\nu$ の **注水配分** と呼ぶ．
 :::
 
-::: formalized
+:::: formalized
 `waterFillingPower` (`InformationTheory/Shannon/ParallelGaussian/Basic.lean`)
-:::
+::::
 
 名前の由来は絵にある．底が段になった一続きの容器を思い浮かべる．横幅を $n$ 等分し，第 $i$ の区画の底の高さを $N_i$ にとる．そこに水を注ぐと，区画のあいだで水は行き来できるので，水面はどの区画でも同じ高さ $\nu$ でそろう．第 $i$ の区画に入る水の深さは，底が水面より低ければ $\nu - N_i$，底が水面より高ければ（$N_i \ge \nu$）$0$ である．どの区画も横幅が同じなので，入った水の量は深さに比例し，全体の量は $\sum_i \max(0, \nu - N_i)$ に比例する．これが総電力 $P$ に等しくなるように水位を決める，というのが以下の筋である．
 
@@ -102,13 +102,13 @@ $\nu > N$ のときは $p^{*} = \nu - N$ だから $N + p^{*} = \nu$ であり�
 $\nu \le N$ のときは $p^{*} = 0$ だから $N + p^{*} = N$ であり，$t - p^{*} = t \ge 0$ である．$0 < \nu \le N$ と $\log e > 0$ から $\frac{t\log e}{2N} \le \frac{t\log e}{2\nu}$ であり，これが示すべき不等式である．
 :::
 
-::: formalized
+:::: formalized
 `waterFillingCost_tangent_le` (`InformationTheory/Shannon/ParallelGaussian/KKT.lean`)
-:::
 
 ::: formalization-note
 形式化の `waterFillingCost_tangent_le` の仮定は，補題 8.6.4 と一つずつ対応している．雑音の分散が $0$ でないこと，水位が正であること，引数が $0$ 以上であることの三つで，これがすべてである．形式化では分散を非負の量として扱っているので，一つめは本文の $N > 0$ と同じことである．形式化は $\log$ を自然対数にとるので $\log e = 1$ であり，本文の $\frac{\log e}{2\nu}$ にあたる係数が $\frac{1}{2\nu}$ と書かれている．
 :::
+::::
 
 ## 注水の最適性
 
@@ -141,13 +141,13 @@ $$
 となる．仮定より $\sum_i P_i^{*}(\nu) = P$ であり，$\sum_i P'_i \le P$ だから括弧の中は $0$ 以下である．$\nu > 0$ と $\log e > 0$ より係数は正だから，最後の項は $0$ 以下であり，落として主張を得る．
 :::
 
-::: formalized
+:::: formalized
 `isWaterFillingOptimal_of_kkt` (`InformationTheory/Shannon/ParallelGaussian/KKT.lean`)
-:::
 
 ::: formalization-note
 形式化のルートも本文と同じで，注水配分の点で対数に接線を引く段（補題 8.6.4）を各成分に当ててから和をとる．
 :::
+::::
 
 証明で効いたのは二つだけである．接線の傾きが $\frac{\log e}{2\nu}$ という，$i$ によらない一つの値で抑えられること（補題 8.6.4）と，注水配分が総電力を使い切っていること（$\sum_i P_i^{*}(\nu) = P$）である．前者があるので，$n$ 本ぶんの接線の項が $\sum_i P'_i$ という一つの和にまとまる．後者があるので，その和が電力制約と直接くらべられる．雑音が強すぎて水位に届かない通信路（$N_i \ge \nu$）で接線の傾きがそのままでは足りないところを，補題 8.6.4 の第 $2$ の場合が $\frac{\log e}{2N_i} \le \frac{\log e}{2\nu}$ で吸収している．
 

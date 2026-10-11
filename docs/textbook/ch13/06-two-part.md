@@ -10,13 +10,13 @@
 自然数の有限列に自然数を対応させる符号化を一つ固定する．有限列から自然数を求める手続きと，自然数から有限列を復元する手続きがどちらも書き下せるようなものをとる（たとえば，各項の二進表示の自己限定形（定義 13.4.3）をこの順につなぎ，先頭にもう一つ $1$ を置いたビット列が表す自然数でよい）．$S \subseteq \mathbb N$ を空でない有限集合とし，$S$ の要素を小さい順に並べた有限列に，固定した符号化が与える自然数を $\langle S\rangle$ と書く（定義 13.3.1 と同じ役どころの，別の符号化である．本節の $\langle\cdot\rangle$ はつねに有限集合を引数にとり，定義 13.3.1 のそれはつねに系列を引数にとる）．$K_{\mathcal V}(\langle S\rangle)$ を $S$ の **モデルの記述長** と呼ぶ．
 :::
 
-::: formalized
+:::: formalized
 符号 `modelCode`，モデルの記述長 `modelComplexity` (`InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean`)
-:::
 
 ::: formalization-note
 形式化が固定した符号化は，括弧の中に挙げたものではなく，Mathlib がもつ自然数の有限列の標準の符号化である．定義 13.6.1 が符号化に課しているのはどちらの向きの手続きも書き下せることだけで，本節の主張の証明もそれしか使わないから，どちらをとっても主張は成り立つ．符号化に依るのは，主張に現れる定数の値だけである．
 :::
+::::
 
 括弧の中に挙げた符号化が実際に読み解けることは，定義 13.4.3 で見たとおりである．自己限定形はどこで終わるかを自分で告げるので，つないだ列を先頭から順に区切っていける．先頭にもう一つ $1$ を置いたのは，全体を一つの自然数の二進表示として読むためで，そうしないと先頭の $0$ の並びが読み落とされる．$S$ の要素を小さい順に並べたのは，同じ集合に二つの列が対応しないようにするためである．
 
@@ -30,9 +30,9 @@ $$
 と定め，$S$ による **二部記述の長さ** と呼ぶ（$\lceil\cdot\rceil$ は 4.4 節の天井関数である）．
 :::
 
-::: formalized
+:::: formalized
 `twoPartLength` (`InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean`)
-:::
+::::
 
 $\ell^{2\mathrm P}$ は有限集合を引数にとる．第12章 定義 12.2.1 の $\ell^{\mathrm T}_n$ は系列を引数にとり添字 $n$ を持つので，二つは別の量である．第 $1$ 項がモデルの記述長（定義 13.6.1）で，第 $2$ 項が位置を書く長さにあたるが，そこに現れるのは桁数そのものではなく，その $4$ 倍である．本書の $\mathcal V$ に記述を渡す単位では，位置の桁に倍率が二度かかるからである．一度目は，位置とモデルの記述の切れ目が読む側に分かるように位置を自己限定形（定義 13.4.3）にするところ，二度目は，組み立てた記述を $\mathcal V$ に渡すところで，どちらも長さを $2$ 倍にする．次の定理の証明がその二段である．
 
@@ -63,9 +63,9 @@ $$
 である．$\lvert i\rvert \le A$ と 定義 13.6.2 より右辺は $\ell^{2\mathrm P}(S) + \chi$ 以下である．
 :::
 
-::: formalized
+:::: formalized
 `prefixComplexity_le_twoPartLength` (`InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean`)
-:::
+::::
 
 定理 13.6.3 は，どんな $S$ をとっても，定数のぶんを除けばその二部記述の長さで $x$ を書けると言っている．裏を返せば，$S$ をうまく選んでも，二部記述の長さが定数のぶんを超えて $K_{\mathcal V}(x)$ を下回ることはない．
 
@@ -86,9 +86,9 @@ $$
 である．
 :::
 
-::: formalized
+:::: formalized
 `modelComplexity_singleton_le` (`InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean`)
-:::
+::::
 
 ## 最小記述長
 
@@ -100,9 +100,9 @@ $$
 と定め，$x$ の **最小記述長** と呼ぶ．
 :::
 
-::: formalized
+:::: formalized
 `mdlComplexity` (`InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean`)
-:::
+::::
 
 ::: proposition 13.6.6
 $x \in \mathbb N$ とすると，$x \in S$ かつ $\ell^{2\mathrm P}(S) = \ell^{2\mathrm P*}(x)$ を満たす有限集合 $S \subseteq \mathbb N$ が存在する．
@@ -112,9 +112,9 @@ $x \in \mathbb N$ とすると，$x \in S$ かつ $\ell^{2\mathrm P}(S) = \ell^{
 一点集合 $\{x\}$ は $x$ を含む有限集合だから，定義 13.6.5 の最小をとる集合は空でない自然数の集合であり，最小元をもつ．その最小元は $\ell^{2\mathrm P*}(x)$ にほかならず，しかも $x$ を含むある有限集合 $S$ についての $\ell^{2\mathrm P}(S)$ だから，その $S$ が求めるものである．
 :::
 
-::: formalized
+:::: formalized
 `mdlComplexity_spec` (`InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean`)
-:::
+::::
 
 ::: theorem 13.6.7
 定数 $\chi \in \mathbb N$ があって，すべての $x \in \mathbb N$ について
@@ -134,9 +134,9 @@ $$
 第 $2$ の不等式を示す．命題 13.6.6 より $x \in S$ かつ $\ell^{2\mathrm P}(S) = \ell^{2\mathrm P*}(x)$ を満たす有限集合 $S$ がある．定理 13.6.3 をこの $x$ と $S$ に当てて $K_{\mathcal V}(x) \le \ell^{2\mathrm P}(S) + \chi_2 = \ell^{2\mathrm P*}(x) + \chi_2 \le \ell^{2\mathrm P*}(x) + \chi$ である．
 :::
 
-::: formalized
+:::: formalized
 `mdlComplexity_sub_prefixComplexity_le` (`InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean`)
-:::
+::::
 
 定理 13.6.7 は，記述を二つに分けても損も得もしないと言っている．どんな分け方をしても，定数のぶんを除いて $K_{\mathcal V}(x)$ より短くはならず，いちばんよい分け方をとれば定数の差まで届く．したがって，二部記述に意味があるとすれば長さそのものではなく，どの $S$ がその長さを実現するかのほうである．$S$ は $x$ について言えることを集めた対象であり，位置のほうは $S$ を知ってもなお残るばらつきである．
 
@@ -150,9 +150,9 @@ $$
 $\chi, x \in \mathbb N$ とする．有限集合 $S \subseteq \mathbb N$ が $x$ の **ゆるみ $\chi$ のコルモゴロフ十分統計量** であるとは，$x \in S$ かつ $\ell^{2\mathrm P}(S) \le K_{\mathcal V}(x) + \chi$ が成り立つことをいう．
 :::
 
-::: formalized
+:::: formalized
 `IsSufficientStatistic` (`InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean`)
-:::
+::::
 
 語を一つ断っておく．第1章 1.9 節が十分と呼んだのは，確率変数 $X$ を要約する統計量 $T$ であった．本節が十分と呼ぶのは自然数を含む有限集合であって，確率変数でも統計量でもない．同じ「十分」を冠していても別の対象についての語なので，混ぜて読まないこと．読み方のほうは通じている．第1章では $T(X)$ を知れば $\theta$ について $X$ 以上のことは分からない，というのが十分の内容だった．本節では，$S$ を知ったあとに残るのは $S$ の中での位置だけで，その位置を書くのに要る長さは $S$ の記述と合わせてもゆるみ $\chi$ の範囲で最短に収まっている，というのが内容である．どちらも「これ以上絞れるものは残っていない」という条件である．
 
@@ -164,9 +164,9 @@ $\chi, x \in \mathbb N$ とする．有限集合 $S \subseteq \mathbb N$ が $x$
 命題 13.6.4 の定数を $\chi$ とし，$x \in \mathbb N$ とする．$x \in \{x\}$ である．また $\lvert\{x\}\rvert = 1$ で $\log_2 1 = 0$ だから $\lceil\log_2\lvert\{x\}\rvert\rceil = 0$ であり，定義 13.6.2 より $\ell^{2\mathrm P}(\{x\}) = K_{\mathcal V}(\langle\{x\}\rangle)$ である．命題 13.6.4 より右辺は $K_{\mathcal V}(x) + \chi$ 以下だから，定義 13.6.8 の二つの条件が満たされる．
 :::
 
-::: formalized
+:::: formalized
 `exists_isSufficientStatistic_singleton` (`InformationTheory/Shannon/Kolmogorov/SufficientStatistic.lean`)
-:::
+::::
 
 命題 13.6.9 は，定義 13.6.8 の退化した場合である．一点集合は $x$ そのものを書き下しているだけなのに，ある定数のゆるみをとればつねに十分統計量になる．定義 13.6.8 は単独では何も絞らない，ということである．
 

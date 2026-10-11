@@ -62,13 +62,13 @@ $$
 である．最後の等号は，$i$ ごとに二つの項を足すと $1$ になり，それを $n$ 個足して $n$ で割ることによる．両辺に正の数 $\big(\prod_{i=1}^{n}(1+\lambda_i)\big)^{1/n}$ を掛けると，左辺の第 $1$ 項は $1$ に，第 $2$ 項は $\big(\prod_{i=1}^{n}\lambda_i\big)^{1/n}$ になるから，示すべき不等式を得る．
 :::
 
-::: formalized
+:::: formalized
 `minkowskiDeterminantInequality` (`InformationTheory/Shannon/MinkowskiDet.lean`)
-:::
 
 ::: formalization-note
 宣言は行と列の添字を任意の有限型でとる．本文が $n$ 次と書いているのは，その型の要素数が $n$ である場合にあたる．形式化も $\Sigma_1$ の平方根を両側から掛けて $\det(\Sigma_1+\Sigma_2)$ を $\det\Sigma_1$ と $\det(I+\Sigma_0)$ の積に分けるが，その平方根の作り方が本文と違う．本文は借りたスペクトル分解で対角化してから対角の固有値を平方根に取り替えるのに対し，形式化は行列に関数を当てる一般の仕組み（連続汎関数計算）で平方根を直に取る．スペクトル分解が形式化の側で効くのは，行列式を固有値の積で書く段，すなわち $\det\Sigma_0$ と $\det(I+\Sigma_0)$ を $\lambda_i$ の積に直すところである．締めは固有値についてのスカラーの不等式 `geom_mean_superadditive` (`InformationTheory/Shannon/MinkowskiDet.lean`) で，これは本文が 補題 16.5.5 を二度当てて足すのと同じ計算を，重みつきの相加相乗平均から直に行うものである．一般に等号がいつ成り立つかを述べる宣言はなく，本文も 定理 16.6.1 については述べない．
 :::
+::::
 
 ::: example 16.6.2
 $n = 2$ とし，$\Sigma_1$ を単位行列，$\Sigma_2$ を対角成分が $a > 0$，$b > 0$ の対角行列とすると，定理 16.6.1 は

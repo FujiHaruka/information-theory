@@ -42,13 +42,13 @@ H(X\mid Y) \;=\; H(E\mid Y) + H(X\mid E,Y)
 $$
 :::
 
+:::: formalized
+測度論版 `fano_inequality_measure_theoretic` (`InformationTheory/Fano/Measure.lean`)，pmf 形の核 `fano_core` / `fano_inequality` (`InformationTheory/Fano/Core.lean`)，復号器を明示した pmf 形 `fano_inequality_decode` (`InformationTheory/Fano/DPI.lean`)
+
 ::: formalization-note 実現が二つある
 本ライブラリはこの不等式を，有限結合 pmf に対する形と，測度空間上の確率変数に対する形の二通りで実現している．前者は推定値そのもので条件付けた核（`fano_core` / `fano_inequality`）で，復号器を経る形はそこからデータ処理不等式で復元する（`fano_inequality_decode`）．後者は本文の定理 1.10.1 と同じく復号器 $g$ を引数にとる．数学的内容はどれも同じである．
 :::
-
-::: formalized
-測度論版 `fano_inequality_measure_theoretic` (`InformationTheory/Fano/Measure.lean`)，pmf 形の核 `fano_core` / `fano_inequality` (`InformationTheory/Fano/Core.lean`)，復号器を明示した pmf 形 `fano_inequality_decode` (`InformationTheory/Fano/DPI.lean`)
-:::
+::::
 
 ## 裏返して使う
 
@@ -69,7 +69,7 @@ $$
 
 右辺が増加する範囲に留まっているかぎり，$H(X\mid Y)$ の下界を持っていれば $P_e$ の下界が出る．第6章では，レートが容量を超えるという仮定から $H(X\mid Y)$ が大きいことを導き，ここを通して「誤り確率は 0 に収束しない」を結論する．効いているのは**復号器 $g$ を任意にとれる**ことである．定理 1.10.1 が $g$ について何も仮定していないので，系 1.10.2 もどんな復号器に対しても成り立つ．これが「どんな復号器を設計しても」という逆定理の普遍性の出どころである．$P_e$ 自身に置いた $P_e \le 1 - 1/|\mathcal X|$ という制約は，右辺の増加域に留まるための条件で，逆定理が扱う「誤り確率が小さい」領域では自動的に満たされる．
 
-::: formalized
+:::: formalized
 復号器を明示した形 `error_lower_bound_decode` (`InformationTheory/Fano/DPI.lean`)，その核 `error_lower_bound` (`InformationTheory/Fano/Core.lean`)
-:::
+::::
 

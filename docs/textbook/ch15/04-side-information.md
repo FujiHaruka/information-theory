@@ -10,9 +10,9 @@ $$
 で定める（$W$ は 定義 15.1.4 の倍加率である）．$\mathcal Y$ 上の分布と条件付き分布は記号に書かないが，どちらも固定されているものとする．
 :::
 
-::: formalized
+:::: formalized
 `condGrowthRate` (`InformationTheory/Shannon/Portfolio/SideInformation.lean`)
-:::
+::::
 
 $Y$ は第5章 5.4 節 の副情報と同じ役で，その期の株価比 $X$ を見る前に観測できるものである．条件付き倍加率は，$Y = y$ を観測してからその場に応じたポートフォリオで運用したときの倍加率を，$y$ の出方で平均したものであり，第5章 定義 5.4.1 とまったく同じ作り方をしている．違いは二つある．一つは倍加率が 定義 15.1.4 の市場のそれになったことで，もう一つは仮定である．第5章 定義 5.4.1 は同時分布がすべての点で正であることを課したが，本節は課さない．第5章がそれを課したのは，条件付き分布が一点で $0$ をとると条件付きの比例賭けが 定義 5.1.1 の正値性を満たさなくなるからで，本章は正値性をポートフォリオではなく株価比の側に置いた（定義 15.1.1）ので，同じ心配が起きない．いちばん極端な副情報，すなわち株価比を完全に言い当てるものも本節の枠に入る．例 15.4.6 がそれである．
 
@@ -36,9 +36,9 @@ $$
 である（第 $2$ の等号は各 $p(\cdot \mid y)$ が $\mathcal X$ 上の分布であること，第 $3$ の等号は $p(y)$ が $\mathcal Y$ 上の分布であることによる）．
 :::
 
-::: formalized
+:::: formalized
 `sideMarginalX_mem_stdSimplex` (`InformationTheory/Shannon/Gambling/SideInformation.lean`)
-:::
+::::
 
 ::: definition 15.4.3 周辺分布と最適倍加率
 定義 15.4.1 と同じ記法で，$m \ge 1$，$\mathcal X$ を株価比（定義 15.1.1）からなる空でない有限集合，$\mathcal Y$ を空でない有限集合，$p(y)$ を $\mathcal Y$ 上の分布，各 $y$ について $p(\cdot \mid y)$ を $\mathcal X$ 上の分布とする．$X$ の周辺分布を
@@ -54,13 +54,13 @@ $$
 と定める．ここに現れる $\max$ はすべてポートフォリオ（定義 15.1.2）全体にわたるもので，命題 15.2.2 よりどれも達成される（$W$ は 定義 15.1.4 の倍加率である）．この二つを第5章 定義 5.4.3 と同じく **最適倍加率** と呼ぶ．
 :::
 
-::: formalized
+:::: formalized
 $X$ の周辺分布 `sideMarginalX` (`InformationTheory/Shannon/Gambling/SideInformation.lean`)
-:::
 
 ::: formalization-note
 二つの最適倍加率にあたる宣言はない．$W^{*}(X \mid Y)$ については，各 $y$ で最大を与えるポートフォリオを選んで `condGrowthRate` (`InformationTheory/Shannon/Portfolio/SideInformation.lean`) に渡したものがそれであり，$W^{*}(X)$ については同じく最大を与えるポートフォリオを `growthRate` (`InformationTheory/Shannon/Portfolio/Basic.lean`) に渡したものがそれである．どちらも最大を与えるポートフォリオを外から渡す形で，最大そのものを定めた宣言ではない．
 :::
+::::
 
 $W^{*}(X)$ は副情報を使わないポートフォリオの中での最大値，$W^{*}(X \mid Y)$ は $y$ ごとに選べるポートフォリオの中での最大値である．二つの最大値の差が，副情報を手に入れたことの値打ちである．
 
@@ -118,13 +118,13 @@ $$
 いっぽう $\sum_{A} p(x,y) = 1$ だから $A$ は空ではなく，$A$ 上の各項 $p(x,y)\,t(x,y)$ は正だから，この和は正である．したがって和は $0$ より大きく $1$ 以下であり，対数の単調性（補題 8.2.5）よりその対数は $\log 1 = 0$ 以下である．以上を合わせて $W(b \mid Y) - W(b^\circ, p) - I(X;Y) \le 0$ を得る．
 :::
 
-::: formalized
+:::: formalized
 `sideInfo_growthRate_increment_le_mutualInfo` (`InformationTheory/Shannon/Portfolio/SideInformation.lean`)
-:::
 
 ::: formalization-note
 宣言が $b^\circ$ に課すのは，対数最適性ではなく 15.2 節 の Kuhn–Tucker 条件の $m$ 本の不等式である．本文の対数最適性からその $m$ 本が出ることは 定理 15.2.5 が与え，そちらも無条件の機械検証済みである．宣言が右辺に置く相互情報量は，アルファベット上の関数としての周辺分布と同時分布から組んだ実数値の量 `sideInfoMutualInfo` (`InformationTheory/Shannon/Gambling/SideInformation.lean`) である．第1章 定義 1.3.1 が紐付けた `mutualInfo` (`InformationTheory/Shannon/MutualInfo.lean`) は確率変数の像測度についての拡張非負実数値の量で，値はどちらも $I(X;Y)$ で一致するが，単独の宣言としては別のものである．
 :::
+::::
 
 **証明のどこが変わったか.** 第5章 定理 5.4.4 の証明は，条件付き倍加率も副情報を使わない倍加率も，どちらも比例賭けの値として閉じた式（定理 5.3.1）に書き換えられることに乗っていた．二つの閉じた式を引き算するとオッズの項が消え，残ったエントロピーの差が 定理 1.3.4 によってちょうど $I(X;Y)$ になる．市場には比例賭けにあたる閉じた式がない（15.2 節）．上の証明が代わりに使ったのは，相互情報量を引いた残りを一つの和にまとめ，有限 Jensen の不等式で上から抑える段である．不等式は一方向にしか効かないので，得られるのも一方向の評価だけになる．どの市場で等号が成り立つかを本書は述べない．
 
