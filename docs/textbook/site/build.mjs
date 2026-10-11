@@ -258,7 +258,7 @@ mjx-utext { font-feature-settings: normal; }
 .fnote > :not(summary) { color: #5a5a5a; }
 .fnote > :last-child { margin-bottom: 0; }
 
-/* 読み飛ばしてよい傍注 (記法の先取り)。 */
+/* 読み飛ばしてよい傍注 (記法の先取り)。折りたたみで組む。 */
 .aside {
   font-size: .93rem;
   border-left: 3px solid #e3e3e3;
@@ -269,6 +269,8 @@ mjx-utext { font-feature-settings: normal; }
 .aside > :first-child { margin-top: 0; }
 .aside > :last-child { margin-bottom: 0; }
 .aside strong:first-child { color: #6f6f6f; }
+.aside > summary { cursor: pointer; color: #6f6f6f; font-size: .88rem; font-weight: 600; }
+.aside[open] > summary { margin-bottom: .5rem; }
 
 /* --- 相互参照リンク ---
    本文の「定理 1.2.3」「1.6 節」はビルドがリンクに変える。数式と地の文のあいだに置かれる
@@ -416,8 +418,8 @@ const ENVS = new Map([
   ['example',            { label: '例',             cls: 'stmt stmt-example',       numbered: true }],
   ['proof',              { label: '証明',           cls: 'proof' }],
   ['formalized',         { label: '形式化',         cls: 'formalized', sep: ':' }],
-  ['formalization-note', { label: '形式化上の注記', cls: 'fnote' }],
-  ['notation-preview',   { label: '記法の先取り',   cls: 'aside aside-notation' }],
+  ['formalization-note', { label: '形式化上の注記', cls: 'fnote', folded: true }],
+  ['notation-preview',   { label: '記法の先取り',   cls: 'aside aside-notation', folded: true }],
 ]);
 
 // 番号つき主張の URL 断片。種別を含めるので、リンク先が何かは URL だけで分かる。
@@ -459,10 +461,12 @@ md.use(mdContainer, 'env', {
       if (kind === 'formalization-note') {
         return `${t.meta?.nested ? '' : '<div class="formalized">\n'}<details class="${env.cls}">\n`;
       }
+      if (env.folded) return `<details class="${env.cls}">\n`;
       const id = num ? ` id="${ANCHOR.get(kind)}-${num}"` : '';
       return `<div class="${env.cls}"${id}>\n`;
     }
     if (t.meta?.note) return `</details>\n${t.meta.nested ? '' : '</div>\n'}`;
+    if (t.meta?.folded) return '</details>\n';
     return '</div>\n';
   },
 });
@@ -487,7 +491,7 @@ md.core.ruler.after('block', 'env_heading', (state) => {
     const t = toks[i];
     if (t.type === 'container_env_close') {
       const opener = openers.pop();
-      if (opener.meta?.note) t.meta = opener.meta;
+      if (opener.meta?.folded) t.meta = opener.meta;
       continue;
     }
     if (t.type !== 'container_env_open') continue;
@@ -495,9 +499,10 @@ md.core.ruler.after('block', 'env_heading', (state) => {
     if (spec.env.cls.startsWith('stmt')) lastStmt = spec.kind;
     openers.push(t);
 
-    // 注記は形式化ポインタの中の折りたたみとして組み、見出しはその開閉の見出しにする。
-    if (spec.kind === 'formalization-note') {
-      t.meta = { note: true, nested: openers.length > 1 };
+    // 傍注は折りたたみとして組み、見出しはその開閉の見出しにする。形式化上の注記は
+    // 形式化ポインタの枠の中に入れる。
+    if (spec.env.folded) {
+      t.meta = { folded: true, note: spec.kind === 'formalization-note', nested: openers.length > 1 };
       const ctx = state.env?.ctx;
       const name = spec.name && ctx ? linkStatementRefs(spec.name, ctx) : spec.name;
       const summary = (html) => {
