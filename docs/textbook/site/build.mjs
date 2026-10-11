@@ -738,8 +738,13 @@ const BETWEEN_KINDS = new Set(['formalized', 'formalization-note', 'notation-pre
 function lintProofs(markdown, src) {
   const blocks = [];
   markdown.split('\n').forEach((line, i) => {
-    const m = line.match(/^:::+ +(\S+)(.*)$/);
-    if (m && ENVS.has(m[1])) blocks.push({ line: i + 1, kind: m[1], info: (m[1] + m[2]).trim() });
+    const m = line.match(/^(:::+) +(\S+)(.*)$/);
+    if (!m || !ENVS.has(m[2])) return;
+    blocks.push({ line: i + 1, kind: m[2], info: (m[2] + m[3]).trim() });
+    if (m[2] === 'formalized' && m[1] !== '::::') {
+      fenceIssues += 1;
+      console.warn(`warn: 形式化ポインタの囲み ${src}:${i + 1} は \`::::\` で開いて閉じる`);
+    }
   });
 
   // `::: proof 定理 1.1.5` のように、どの主張の証明かを名乗るもの（補題を挟むので
@@ -1289,7 +1294,7 @@ function linkFormalized(state, tokens, ctx, lineNo) {
 }
 
 // 傍注が名指しした宣言名 / パスの実在確認。リンクには変えない。というのもポインタは
-// `::: formalized` の仕事で（執筆原則 §7）、注記まで行き先だらけにすると本筋との差が
+// `:::: formalized` の仕事で（執筆原則 §7）、注記まで行き先だらけにすると本筋との差が
 // 消えるからである。ただし名前が腐るのはポインタと同じなので、検査だけは同じものを掛ける。
 // パスは一意に決まるので warn、宣言名は Mathlib の名前と区別できないので監査モードの
 // 一覧に回す（`--audit-refs` の考え方）。
@@ -1365,6 +1370,7 @@ md.core.ruler.push('list_breaks', (state) => {
 });
 
 let missingProofs = 0;
+let fenceIssues = 0;
 let termIssues = 0;
 let titleMismatches = 0;
 let wrappedLines = 0;
@@ -1511,6 +1517,7 @@ console.log(`fonts: ${copied} files -> dist/${FONT_DIR}/`);
 if (absent > 0) console.warn(`warn: 取得できなかったフォント ${absent} 件`);
 if (mathErrors > 0) console.warn(`warn: 数式 ${mathErrors} 件`);
 if (missingProofs > 0) console.warn(`warn: 証明のない主張 ${missingProofs} 件`);
+if (fenceIssues > 0) console.warn(`warn: 形式化ポインタの囲み ${fenceIssues} 件`);
 if (termIssues > 0) console.warn(`warn: 表記ゆれ ${termIssues} 件`);
 if (titleMismatches > 0) console.warn(`warn: 節タイトルの不一致 ${titleMismatches} 件`);
 if (wrappedLines > 0) console.warn(`warn: 段落の途中の改行 ${wrappedLines} 件`);
