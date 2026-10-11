@@ -28,7 +28,7 @@ $\frac1n \log S_n(b)$ はこの列の相加平均だから，大数の強法則�
 `seqLogWealth_div_tendsto_doublingRate` (`InformationTheory/Shannon/Gambling/OperationalSequences.lean`)
 
 ::: formalization-note
-形式化は定理 5.5.1 の主張を，資産そのものではなくその対数 `seqLogWealth` (`InformationTheory/Shannon/Gambling/OperationalSequences.lean`) について述べる．積を先に定義してから対数をとる本文と，和として定義する形式化とを橋渡ししているのは，定理 5.5.1 の証明の第 1 段である．また形式化は勝ち馬の列に，相互独立ではなく対ごとの独立と同分布性だけを求めている．結論の右辺に現れる分布は，勝ち馬の像測度から作った `lawPmf` (`InformationTheory/Shannon/Gambling/OperationalSequences.lean`) である．本章はここまで分布をアルファベット上の関数として扱い，第1章以来の像測度としての分布とは別のものだと繰り返し断ってきたが，その二つがここで噛み合っている．
+形式化は定理 5.5.1 の主張を，資産そのものではなくその対数 `seqLogWealth` (`InformationTheory/Shannon/Gambling/OperationalSequences.lean`) について述べる．積を先に定義してから対数をとる本文と，和として定義する形式化とを橋渡ししているのは，定理 5.5.1 の証明の第 1 段である．また形式化は勝ち馬の列に，相互独立ではなく対ごとの独立と同分布性だけを求めている．結論の右辺に現れる分布は，勝ち馬の像測度から作った `lawPmf` (`InformationTheory/Shannon/Gambling/OperationalSequences.lean`) である．本章はここまで分布をアルファベット上の関数として扱い，第1章以来の像測度としての分布とは別のものだと繰り返し注意してきたが，その二つがここで噛み合っている．
 :::
 ::::
 

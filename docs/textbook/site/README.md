@@ -32,7 +32,7 @@ deno run -A build.mjs                 # ビルドだけ（→ dist/）
 ./check-links.ts                      # dist/ のリンク切れ検査（ネットワークに出ない）
 deno run -A build.mjs --audit-refs    # 参照・形式化ポインタの取りこぼしを目で確かめる
 ./vocab.ts <章スラッグ>                # 語彙の点検。新しい節を書いたら回す
-./feedback.ts                         # レビューコメントを原稿の行に寄せて出す（--done <id> で処理済みにする）
+./feedback.ts                         # レビューコメントを原稿の行に寄せて出す（--done <id> で処理済みにする、--delete <id> で消す）
 ```
 
 サイトを `?review=1` を付けて開くと、その端末でだけ Hypothesis の注釈 UI が出る（`?review=0` で消える）。

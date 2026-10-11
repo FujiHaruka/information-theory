@@ -110,7 +110,7 @@ $$
 `lz78_asymptotic_optimality_with_greedy`，上からの評価 `lz78Greedy_achievability_ae` (`InformationTheory/Shannon/LZ78/AsymptoticOptimality/ParentBridgeAchievability.lean`)，下からの評価 `lz78Greedy_converse_ae` (`InformationTheory/Shannon/LZ78/AsymptoticOptimality/ParentBridgeConverse.lean`)
 
 ::: formalization-note
-収束先の書き方だけ断っておく．本文の $H(\mathcal X)$ はビットで測ったエントロピーレートで，紐付け先の宣言もビット単位の `entropyRate₂` (`InformationTheory/Shannon/EntropyRate.lean`) に収束すると述べている．第3章 3.2 節が紐付けている `entropyRate` は自然対数で測ったもので，`entropyRate₂` はその定義自体が `entropyRate` を $\log 2$ で割ったものである．すなわち二つは同じ量を別の単位で測った別の宣言であり，本節が引くのは `entropyRate₂` のほうである．
+本文の $H(\mathcal X)$ はビットで測ったエントロピーレートで，紐付け先の宣言もビット単位の `entropyRate₂` (`InformationTheory/Shannon/EntropyRate.lean`) に収束すると述べている．第3章 3.2 節が紐付けている `entropyRate` は自然対数で測ったもので，`entropyRate₂` はその定義自体が `entropyRate` を $\log 2$ で割ったものである．すなわち二つは同じ量を別の単位で測った別の宣言であり，本節が引くのは `entropyRate₂` のほうである．
 :::
 ::::
 

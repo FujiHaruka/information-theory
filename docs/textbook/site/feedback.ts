@@ -59,6 +59,14 @@ if (args[0] === '--done') {
   Deno.exit(0);
 }
 
+if (args[0] === '--delete') {
+  for (const id of args.slice(1)) {
+    await api(`/annotations/${id}`, { method: 'DELETE' });
+    console.log(`deleted: ${id}`);
+  }
+  Deno.exit(0);
+}
+
 const srcBySlug = new Map<string, string>();
 for (const s of chapters.flatMap((c) => c.sections)) srcBySlug.set(s.slug, s.src);
 srcBySlug.set('', 'site/build.mjs');

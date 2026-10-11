@@ -149,7 +149,7 @@ $$
 定理 12.4.6 に対応する単独の宣言は無い．$\ell_n$ が長さ $n$ の符号長の組であるという前半は，`sfeLength_kraft_le_one` (`InformationTheory/Shannon/ArithmeticCoding.lean`) をアルファベット $\mathcal X^n$ と分布 $q_n$ に当てたものである．後半の冗長度の評価に対応する宣言は無い．`expectedLength_shannon_lt_entropyD_add_one` は符号長を作る分布と平均をとる分布が同じ場合の上界であり，`entropyD_le_expectedLength_of_kraft` (`InformationTheory/Shannon/ShannonCode/Basic.lean`) は任意の長さの組についての下界で，どちらも結論に相対エントロピーを含まないからである．
 :::
 
-定理 12.4.6 は 補題 12.3.2 の裏返しである．補題 12.3.2 は符号長の組から分布を作り，冗長度を下から $\frac1n D(P^n_\theta\,\|\,q_n)$ で抑えた．定理 12.4.6 は分布から符号長の組を作り，冗長度を上から $\frac1n D(P^n_\theta\,\|\,q_n) + \frac2n$ で抑える．行き来する向きが逆で，上乗せの $\frac2n$ は，切り上げの $1$ ビットと 定義 12.4.1 で足した $1$ ビットを $n$ で割ったものである．
+定理 12.4.6 は 補題 12.3.2 と逆向きの主張である．補題 12.3.2 は符号長の組から分布を作り，冗長度を下から $\frac1n D(P^n_\theta\,\|\,q_n)$ で抑えた．定理 12.4.6 は分布から符号長の組を作り，冗長度を上から $\frac1n D(P^n_\theta\,\|\,q_n) + \frac2n$ で抑える．行き来する向きが逆で，上乗せの $\frac2n$ は，切り上げの $1$ ビットと 定義 12.4.1 で足した $1$ ビットを $n$ で割ったものである．
 
 ::: corollary 12.4.7
 定義 12.1.1 の設定で $n \ge 1$ とすると
