@@ -106,7 +106,8 @@ md.renderer.rules.math_block = (tokens, idx) => renderMath(tokens[idx].content, 
 md.renderer.rules.math_inline_block = md.renderer.rules.math_block;
 md.renderer.rules.math_inline_bare_block = md.renderer.rules.math_block;
 
-const siteTitle = 'InformationTheory 教科書（レビュー版）';
+const siteTitle = '情報理論入門';
+const siteSubtitle = 'Lean による形式証明つき';
 
 // --- chapters to build ---
 // 章と節の一覧は chapters.mjs が持つ（vocab.ts も同じ配列を読む）。
@@ -205,6 +206,7 @@ mjx-container { font-size: 1.06em; }
 mjx-container.jp-l { margin-left: .25em; }
 mjx-container.jp-r { margin-right: .25em; }
 mjx-utext { font-feature-settings: normal; }
+h1 .subtitle { display: block; font-size: 1rem; font-weight: normal; color: #888; }
 .site-note { font-size: .82rem; color: #888; margin-top: 4rem; text-align: center; }
 
 /* --- 定理環境 ---
@@ -669,7 +671,7 @@ ${reviewLoader}
 <body>
 <div class="container">
 ${bodyHtml}
-<p class="site-note">InformationTheory — 形式化検証つき情報理論教科書（レビュー版）．数式は MathJax + AMS Euler で事前レンダリング．</p>
+<p class="site-note">${escapeHtml(siteTitle)}（${escapeHtml(siteSubtitle)}）レビュー版．数式は MathJax + AMS Euler で事前レンダリング．</p>
 </div>
 </body>
 </html>`;
@@ -1434,7 +1436,7 @@ const tocItems = chapters
   })
   .join('\n');
 
-const indexBody = `<h1>${escapeHtml(siteTitle)}</h1>
+const indexBody = `<h1>${escapeHtml(siteTitle)}<span class="subtitle">${escapeHtml(siteSubtitle)}</span></h1>
 <p>Lean 4 + Mathlib で機械検証した定理に紐づけて書いている情報理論の教科書原稿です．<!--
 -->「形式化」と添えた結果は無条件の検証済み定理に対応しています．宣言名はリンクになっていて，<!--
 -->本のアイコンはその定理の解説ページ，GitHub のマークはソースへ飛びます．<!--
@@ -1444,7 +1446,7 @@ const indexBody = `<h1>${escapeHtml(siteTitle)}</h1>
 ${tocItems}
 </ul>`;
 
-writeFileSync(resolve(distDir, 'index.html'), page({ title: siteTitle, bodyHtml: indexBody }), 'utf8');
+writeFileSync(resolve(distDir, 'index.html'), page({ title: `${siteTitle} ${siteSubtitle}`, bodyHtml: indexBody }), 'utf8');
 console.log(`built index -> dist/index.html (${pages.length} pages)`);
 
 // --- 数式の CSS とフォント ---
