@@ -28,9 +28,9 @@ $$
 D(\tilde P\,\|\,Q) \;=\; \sum_{a}\tilde P(a)\log \tilde P(a) \;-\; \sum_{a}\tilde P(a)\log Q(a)
   \;=\; -\sum_{a}\varphi\big(\tilde P(a)\big) \;-\; \sum_{a}\tilde P(a)\log Q(a)
 $$
-と書ける（$\varphi$ は 1.1 節の記号で，非負の実数 $u$ に対し $\varphi(u) = -u\log u$ である．$\tilde P(a) = 0$ の項がどの形でも $0$ になることは $Q(a) > 0$ と $0\log 0 = 0$ の約束による）．$Q$ は全点で正だから $\log Q(a)$ は有限な数である．1.1 節で認めた $\varphi$ の $[0,\infty)$ 上の連続性と，一次結合・合成・有限和が連続性を保つという微積分の計算規則から，$\tilde P \mapsto D(\tilde P\,\|\,Q)$ は $\Delta$ の上で連続である．
+と書ける（$\varphi$ は 1.1 節の記号で，非負の実数 $u$ に対し $\varphi(u) = -u\log u$ である．$\tilde P(a) = 0$ の項がどの形でも $0$ になることは $Q(a) > 0$ と $0\log 0 = 0$ の約束による）．$Q$ は全点で正だから $\log Q(a)$ は有限な数である．補題 1.1.8 が示した $\varphi$ の $[0,\infty)$ 上の連続性と，一次結合・合成・有限和が連続性を保つという微積分の計算規則から，$\tilde P \mapsto D(\tilde P\,\|\,Q)$ は $\Delta$ の上で連続である．
 
-狭義凸性に移る．$\tilde P_1$，$\tilde P_2$ を $\Delta$ の相異なる分布，$\theta \in (0,1)$ とし，$\tilde P_\theta := (1-\theta)\tilde P_1 + \theta\tilde P_2$ と置く（これも $\Delta$ に属する）．上の式の第 $2$ 項は $\tilde P$ の一次式だから，$\tilde P_\theta$ での値は両端での値の重み付き平均に等しい．第 $1$ 項を見る．$\tilde P_1 \ne \tilde P_2$ だから，二つの値が食い違う文字が少なくとも一つある．その文字では 1.1 節で認めた $\varphi$ の $[0,\infty)$ 上の狭義凹性から
+狭義凸性に移る．$\tilde P_1$，$\tilde P_2$ を $\Delta$ の相異なる分布，$\theta \in (0,1)$ とし，$\tilde P_\theta := (1-\theta)\tilde P_1 + \theta\tilde P_2$ と置く（これも $\Delta$ に属する）．上の式の第 $2$ 項は $\tilde P$ の一次式だから，$\tilde P_\theta$ での値は両端での値の重み付き平均に等しい．第 $1$ 項を見る．$\tilde P_1 \ne \tilde P_2$ だから，二つの値が食い違う文字が少なくとも一つある．その文字では 補題 1.1.8 が示した $\varphi$ の $[0,\infty)$ 上の狭義凹性から
 $$
 \varphi\big(\tilde P_\theta(a)\big) \;>\; (1-\theta)\varphi\big(\tilde P_1(a)\big) + \theta\,\varphi\big(\tilde P_2(a)\big)
 $$

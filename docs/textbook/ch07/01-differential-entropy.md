@@ -142,7 +142,7 @@ $$
 仮定は，密度が有界閉区間 $[a,b]$ の外で $0$ になることを求めている．例 7.1.4 の指数分布も，7.2 節で扱うガウス分布もこれを満たさないので，定理 7.1.6 はそのままでは当たらない．この仮定を外したときに同じ極限が成り立つかどうかは，本書では扱わない．
 
 ::: proof
-はじめに $h(X)$ が定まることを見る．第1章の記号にならって $\varphi(t) := -t\log t$ と書く．第1章が認めたとおり $\varphi$ は $[0,\infty)$ の上で連続だから $\varphi \circ f$ は $[a,b]$ の上で連続で，有界閉区間の上の連続関数はその絶対値も積分できる．$f$ は $[a,b]$ の外で $0$ で，そこでは $\varphi(f(x)) = \varphi(0) = 0$ だから，$\int_{\mathbb R} \lvert f\log f\rvert = \int_a^b \lvert \varphi(f(x))\rvert\,dx < \infty$ であり，$h(X) = \int_a^b \varphi(f(x))\,dx$ である．
+はじめに $h(X)$ が定まることを見る．第1章の記号にならって $\varphi(t) := -t\log t$ と書く．補題 1.1.8 のとおり $\varphi$ は $[0,\infty)$ の上で連続だから $\varphi \circ f$ は $[a,b]$ の上で連続で，有界閉区間の上の連続関数はその絶対値も積分できる．$f$ は $[a,b]$ の外で $0$ で，そこでは $\varphi(f(x)) = \varphi(0) = 0$ だから，$\int_{\mathbb R} \lvert f\log f\rvert = \int_a^b \lvert \varphi(f(x))\rvert\,dx < \infty$ であり，$h(X) = \int_a^b \varphi(f(x))\,dx$ である．
 
 $\widetilde X_J$ の分布を求める．定義 7.1.1 を $[a,b]$ に当てると $\Pr[X \in [a,b]] = \int_a^b f = 1$ だから，$X \notin [a,b]$ は確率 $0$ でしか起きず，$\widetilde X_J = i$ の確率は $p_i := \Pr[X \in I_i]$ に等しい（$i = 1$ については確率 $0$ の場合が足されるだけである）．次に $p_i$ を，密度の $1$ 点での値で書き直す．$1$ 点からなる閉区間に定義 7.1.1 を当てると，$X$ がその $1$ 点をとる確率は $0$ である．したがって $p_i$ は，$I_i$ に右端を加えた閉区間 $\overline{I_i}$ に $X$ が入る確率に等しく，定義 7.1.1 よりそれは $\overline{I_i}$ の上での $f$ の積分である．$f$ は $\overline{I_i}$ の上で連続だから，積分の平均値の定理により，ある $t_i \in \overline{I_i}$ について $p_i = f(t_i)\,\delta_J$ が成り立つ．
 
