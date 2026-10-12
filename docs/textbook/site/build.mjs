@@ -156,10 +156,12 @@ const chapRefs = new Map(); // '2'      -> { slug, title }
 let unresolvedRefs = 0;
 let duplicateNums = 0;
 
-// 数式の CSS は MathJax がビルド中に組み立て、全ページ分をまとめて dist/mathjax.css に出す
-// （中身は使われた字だけなので、章が増えても線形にしか伸びない）。
+// 数式の CSS は MathJax がビルド中に組み立て、全ページを組み終えてから各ページの <head> に
+// 埋め込む（中身は使われた字だけなので、章が増えても線形にしか伸びない）。外部ファイルに
+// しないのは、描画を止める往復が 1 回増え、数式フォントの要求がその分だけ遅れるため。
 // 和文は BIZ UDGothic、等幅は Inconsolata（どちらも Google Fonts）。
-const cssCdn = `<link rel="stylesheet" href="./mathjax.css">
+const MATH_HEAD = '<!--math-head-->';
+const cssCdn = `${MATH_HEAD}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Inconsolata:wght@400;600&display=swap">`;
@@ -1399,6 +1401,7 @@ for (const pg of pages) {
 }
 
 // --- content pages ---
+const pendingPages = [];
 pages.forEach((pg, i) => {
   const markdown = pg.markdown;
   missingProofs += lintProofs(markdown, pg.src);
@@ -1415,8 +1418,7 @@ pages.forEach((pg, i) => {
   const outPath = resolve(distDir, `${pg.slug}.html`);
   const html = page({ title, bodyHtml });
   collectFontClasses(html);
-  writeFileSync(outPath, html, 'utf8');
-  console.log(`built ${pg.src} -> dist/${pg.slug}.html (${html.length} bytes)`);
+  pendingPages.push({ outPath, html, label: `${pg.src} -> dist/${pg.slug}.html` });
 });
 
 // --- index (table of contents) ---
@@ -1456,8 +1458,11 @@ const indexBody = `<h1>${escapeHtml(siteTitle)}<span class="subtitle">${escapeHt
 ${tocItems}
 </ul>`;
 
-writeFileSync(resolve(distDir, 'index.html'), page({ title: `${siteTitle} ${siteSubtitle}`, bodyHtml: indexBody }), 'utf8');
-console.log(`built index -> dist/index.html (${pages.length} pages)`);
+pendingPages.push({
+  outPath: resolve(distDir, 'index.html'),
+  html: page({ title: `${siteTitle} ${siteSubtitle}`, bodyHtml: indexBody }),
+  label: `index -> dist/index.html (${pages.length} pages)`,
+});
 
 // --- 数式の CSS とフォント ---
 // MathJax は変換のあいだ「実際に出た字」を溜めているので、全ページを組み終えてから
@@ -1494,8 +1499,35 @@ let mathCss = mjAdaptor.textContent(mjOutput.styleSheet(mjDoc));
   mathCss = body + faces.filter(([f]) => wantedFamilies.has(f)).map(([, css]) => css).join('');
 }
 
-writeFileSync(resolve(distDir, 'mathjax.css'), mathCss, 'utf8');
-console.log(`built mathjax.css (${mathCss.length} bytes)`);
+console.log(`math css: ${mathCss.length} bytes, inlined into each page`);
+
+const fontUrlByFamily = new Map(
+  [...mathCss.matchAll(/@font-face[^{]*\{\s*font-family:\s*([A-Za-z0-9-]+);\s*src:\s*url\("([^"]+)"\)/g)]
+    .map((m) => [m[1], m[2]])
+);
+const familiesByClass = new Map(
+  [...mathCss.matchAll(/^\.([A-Z][A-Za-z0-9-]*)\s*\{\s*font-family:\s*([^;}]+)/gm)]
+    .map((m) => [m[1], m[2].split(',').map((f) => f.trim())])
+);
+function mathHead(html) {
+  if (!html.includes('<mjx-container')) return '';
+  const families = new Set();
+  for (const attr of html.matchAll(/class="([^"]*)"/g)) {
+    for (const cls of attr[1].split(/\s+/)) familiesByClass.get(cls)?.forEach((f) => families.add(f));
+  }
+  if (/<mjx-break|<mjx-linestack[^>]*breakable/.test(html)) families.add('MJX-BRK');
+  const preloads = [...families]
+    .map((f) => fontUrlByFamily.get(f))
+    .filter(Boolean)
+    .map((url) => `<link rel="preload" href="./${url}" as="font" type="font/woff2" crossorigin>`);
+  return `${preloads.join('\n')}\n<style>${mathCss}</style>`;
+}
+
+for (const { outPath, html, label } of pendingPages) {
+  const out = html.replace(MATH_HEAD, () => mathHead(html));
+  writeFileSync(outPath, out, 'utf8');
+  console.log(`built ${label} (${out.length} bytes)`);
+}
 
 const FONT_PKGS = {
   newcm: '@mathjax/mathjax-newcm-font@4.1.3',
