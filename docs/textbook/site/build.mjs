@@ -235,7 +235,6 @@ body {
   font-size: 1rem;
   line-height: 1.85; margin: 0; padding: 0;
   line-break: strict;
-  text-wrap: pretty;
   background: #fbfbfa; color: #1a1a1a;
 }
 .container { max-width: 760px; margin: 0 auto; padding: 2.2rem 1.1rem 6rem; }
@@ -262,6 +261,7 @@ mjx-container.jp-l { margin-left: .25em; }
 mjx-container.jp-r { margin-right: .25em; }
 mjx-utext { font-feature-settings: normal; }
 .kin { white-space: nowrap; }
+.kin mjx-container { white-space: normal; }
 .code-tail { overflow-wrap: normal; }
 h1 .subtitle { display: block; font-size: 1rem; font-weight: normal; color: #888; }
 .site-note { font-size: .82rem; color: #888; margin-top: 4rem; text-align: center; }
