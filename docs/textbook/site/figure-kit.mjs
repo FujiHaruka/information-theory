@@ -74,4 +74,68 @@ function plot(f, [a, b], sx, sy, samples = 400) {
   return line().curve(curveLinear)(pts.map(([u, v]) => [num(u), num(v)]));
 }
 
-export const kit = { adaptor: null, tex, text, path, svg, plot, scaleLinear, line };
+function circle(cx, cy, r, cls) {
+  return `<circle cx="${num(cx)}" cy="${num(cy)}" r="${num(r)}" class="${cls}"/>`;
+}
+
+function rect(x, y, w, h, cls, rx = 0) {
+  return `<rect x="${num(x)}" y="${num(y)}" width="${num(w)}" height="${num(h)}" rx="${rx}" class="${cls}"/>`;
+}
+
+function dot(x, y, r = 3.6) {
+  return circle(x, y, r, 'f-dot');
+}
+
+function arrowHead(x, y, angle, size, cls) {
+  const p = (da) => [x - size * Math.cos(angle + da), y - size * Math.sin(angle + da)];
+  const [a, b] = [p(0.42), p(-0.42)];
+  return `<path d="M${num(x)},${num(y)}L${num(a[0])},${num(a[1])}L${num(b[0])},${num(b[1])}Z" class="${cls}-head"/>`;
+}
+
+function arrow(x1, y1, x2, y2, { bend = 0, cls = 'f-arrow', head = 8, trim = 0 } = {}) {
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  const cx = mx - (bend * (y2 - y1)) / len;
+  const cy = my + (bend * (x2 - x1)) / len;
+  const along = (x, y, tx, ty, d) => {
+    const l = Math.hypot(tx - x, ty - y);
+    return [x + ((tx - x) * d) / l, y + ((ty - y) * d) / l];
+  };
+  const [sx, sy] = trim ? along(x1, y1, cx, cy, trim) : [x1, y1];
+  const [ex, ey] = trim ? along(x2, y2, cx, cy, trim) : [x2, y2];
+  const d = bend
+    ? `M${num(sx)},${num(sy)}Q${num(cx)},${num(cy)} ${num(ex)},${num(ey)}`
+    : `M${num(sx)},${num(sy)}L${num(ex)},${num(ey)}`;
+  const angle = Math.atan2(ey - (bend ? cy : sy), ex - (bend ? cx : sx));
+  return path(d, cls) + arrowHead(ex, ey, angle, head, cls);
+}
+
+function selfLoop(cx, cy, r, { side = 'left', size = 34, cls = 'f-arrow', head = 8 } = {}) {
+  const dir = side === 'left' ? -1 : 1;
+  const at = (deg) => [cx + dir * r * Math.cos((deg * Math.PI) / 180), cy - r * Math.sin((deg * Math.PI) / 180)];
+  const [sx, sy] = at(35);
+  const [ex, ey] = at(-35);
+  const c1 = [cx + dir * (r + size * 1.6), cy - size * 1.4];
+  const c2 = [cx + dir * (r + size * 1.6), cy + size * 1.4];
+  const d = `M${num(sx)},${num(sy)}C${num(c1[0])},${num(c1[1])} ${num(c2[0])},${num(c2[1])} ${num(ex)},${num(ey)}`;
+  return path(d, cls) + arrowHead(ex, ey, Math.atan2(ey - c2[1], ex - c2[0]), head, cls);
+}
+
+function axes({ sx, sy, xLabel, yLabel, xTicks = [], yTicks = [], emSize = 15 }) {
+  const [x0, x1] = sx.range();
+  const [y0, y1] = sy.range();
+  return [
+    path(`M${x0},${y0}H${x1 + 8}`, 'f-axis'),
+    path(`M${x0},${y0}V${y1 - 10}`, 'f-axis'),
+    ...xTicks.map(([v, l]) => path(`M${num(sx(v))},${y0}v4`, 'f-axis') + tex(l, { x: sx(v), y: y0 + 18, emSize })),
+    ...yTicks.map(([v, l]) => path(`M${x0},${num(sy(v))}h-4`, 'f-axis')
+      + tex(l, { x: x0 - 9, y: sy(v), anchor: 'end', emSize })),
+    xLabel ? tex(xLabel, { x: x1 + 14, y: y0, anchor: 'start', emSize }) : '',
+    yLabel ? tex(yLabel, { x: x0, y: y1 - 22, emSize }) : '',
+  ];
+}
+
+export const kit = {
+  adaptor: null, tex, text, path, svg, plot, circle, rect, dot, arrow, selfLoop, axes, scaleLinear, line,
+};

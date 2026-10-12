@@ -299,6 +299,20 @@ h1 .subtitle { display: block; font-size: 1rem; font-weight: normal; color: #888
 .fig-art .f-dot { fill: var(--fig-accent); }
 .fig-art .f-region-a { fill: var(--fig-fill-a); stroke: var(--fig-accent); stroke-width: 1.4; }
 .fig-art .f-region-b { fill: var(--fig-fill-b); stroke: #96702a; stroke-width: 1.4; }
+.fig-art .f-curve-b { fill: none; stroke: #96702a; stroke-width: 2.2; stroke-linejoin: round; }
+.fig-art .f-area { fill: var(--fig-fill-a); stroke: none; }
+.fig-art .f-area-b { fill: var(--fig-fill-b); stroke: none; }
+.fig-art .f-box { fill: none; stroke: currentColor; stroke-width: 1.2; }
+.fig-art .f-node { fill: var(--fig-fill-a); stroke: var(--fig-accent); stroke-width: 1.4; }
+.fig-art .f-node-b { fill: var(--fig-fill-b); stroke: #96702a; stroke-width: 1.4; }
+.fig-art .f-hollow { fill: none; stroke: var(--fig-muted); stroke-width: 1.2; }
+.fig-art .f-arrow { fill: none; stroke: currentColor; stroke-width: 1.2; }
+.fig-art .f-arrow-head { fill: currentColor; }
+.fig-art .f-arrow-muted { fill: none; stroke: var(--fig-muted); stroke-width: 1.1; }
+.fig-art .f-arrow-muted-head { fill: var(--fig-muted); }
+.fig-art .f-edge { fill: none; stroke: var(--fig-muted); stroke-width: 1.2; }
+.fig-art .f-edge-hot { fill: none; stroke: var(--fig-accent); stroke-width: 2.4; }
+.fig-art .f-label { font-size: 12px; }
 .fig figcaption { font-size: .9rem; color: #555; margin-top: .7rem; }
 .fig figcaption > p { margin: 0; }
 .fig figcaption > p:first-child > strong:first-child { color: #555; }
@@ -386,7 +400,8 @@ h1:target, h2:target, h3:target {
   a.srcref code { background: rgba(99,181,194,.14); }
   .fig { --fig-accent: #7ba7e8; --fig-muted: #6b737c;
     --fig-fill-a: rgba(123,167,232,.16); --fig-fill-b: rgba(201,164,94,.16); }
-  .fig-art .f-region-b { stroke: #c9a45e; }
+  .fig-art .f-region-b, .fig-art .f-node-b { stroke: #c9a45e; }
+  .fig-art .f-curve-b { stroke: #c9a45e; }
   .fig figcaption, .fig figcaption > p:first-child > strong:first-child { color: #aab1b9; }
   .stmt:target, .proof:target, .formalized:target, .aside:target, .fig:target,
   h1:target, h2:target, h3:target {
