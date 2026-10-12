@@ -235,6 +235,7 @@ body {
   font-size: 1rem;
   line-height: 1.85; margin: 0; padding: 0;
   line-break: strict;
+  /* text-wrap: pretty は使わない。Safari が和文の段落の全行を早めに折り、右に余白が残る。 */
   background: #fbfbfa; color: #1a1a1a;
 }
 .container { max-width: 760px; margin: 0 auto; padding: 2.2rem 1.1rem 6rem; }
