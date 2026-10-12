@@ -210,6 +210,7 @@ mjx-container.jp-r { margin-right: .25em; }
 mjx-utext { font-feature-settings: normal; }
 h1 .subtitle { display: block; font-size: 1rem; font-weight: normal; color: #888; }
 .site-note { font-size: .82rem; color: #888; margin-top: 4rem; text-align: center; }
+.site-note a { color: inherit; }
 
 /* --- 定理環境 ---
    原稿 (.claude/rules/textbook-writing.md §5 の決まり文句) は Markdown のままで、
@@ -640,21 +641,22 @@ md.core.ruler.push('section_anchor', (state) => {
   }
 });
 
-// クエリだけで判定しないのは、前後ナビのリンクがクエリを運ばず次のページで注釈 UI が消えるため。
 const reviewLoader = `<script>
 (() => {
-  const KEY = 'textbook-review';
-  const q = new URLSearchParams(location.search).get('review');
-  try {
-    if (q === '1') localStorage.setItem(KEY, '1');
-    if (q === '0') localStorage.removeItem(KEY);
-    if (localStorage.getItem(KEY) !== '1') return;
-  } catch { if (q !== '1') return; }
+  if (new URLSearchParams(location.search).get('review') !== '1') return;
   window.hypothesisConfig = () => ({ showHighlights: 'always', openSidebar: false });
   const s = document.createElement('script');
   s.src = 'https://hypothes.is/embed.js';
   s.async = true;
   document.head.appendChild(s);
+  document.addEventListener('DOMContentLoaded', () => {
+    for (const a of document.querySelectorAll('a[href]')) {
+      const u = new URL(a.href, location.href);
+      if (u.origin !== location.origin) continue;
+      u.searchParams.set('review', '1');
+      a.href = u.href;
+    }
+  });
 })();
 </script>`;
 
@@ -673,7 +675,7 @@ ${reviewLoader}
 <body>
 <div class="container">
 ${bodyHtml}
-<p class="site-note">${escapeHtml(siteTitle)}（${escapeHtml(siteSubtitle)}）</p>
+<p class="site-note">${escapeHtml(siteTitle)}（${escapeHtml(siteSubtitle)}）・<a href="${REPO_URL}">GitHub</a></p>
 </div>
 </body>
 </html>`;
@@ -1450,7 +1452,8 @@ const indexBody = `<h1>${escapeHtml(siteTitle)}<span class="subtitle">${escapeHt
 <p>定理を先に形式化してから本文を書いているので，主要な結果には「形式化」の枠を添えてある．<!--
 -->枠に挙げた Lean の宣言は，未証明の仮定を残さずに機械検証された定理であり，枠の付いた結果の<!--
 -->正しさは機械が保証している．宣言名はリンクになっていて，本のアイコンはその定理の解説ページへ，<!--
--->GitHub のマークはソースへ飛ぶ．</p>
+-->GitHub のマークはソースへ飛ぶ．形式化と本文のソースはすべて<!--
+--><a href="${REPO_URL}">GitHub のリポジトリ</a>で公開している．</p>
 <p>本文の証明は，前提知識が少なくて済むことと読みやすさを優先して組み立てたので，Lean が<!--
 -->たどる証明の道筋とは必ずしも一致しない．機械検証が保証するのは定理の正しさであり，<!--
 -->本文の証明の手順はその対象ではない．</p>
