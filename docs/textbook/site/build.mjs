@@ -181,8 +181,8 @@ const darkRules = `
   pre code { background: none; color: #d7dce2; }
   hr { border-color: #2a2e34; }
   th, td { border-color: #2a2e34; }
-  .theme-toggle { border-color: #2a2e34; background: #1a1d21; color: #aab1b9; }
-  .theme-toggle:hover { color: #e6e6e6; }
+  .theme-toggle { color: #8a929b; }
+  .theme-toggle:hover { color: #e6e6e6; background: rgba(255,255,255,.07); }
   .nav-top, .nav-bottom { border-color: #2a2e34; }
   .toc li { border-color: #2a2e34; background: #1a1d21; }
   .subtoc { border-top-color: #2a2e34; }
@@ -415,12 +415,12 @@ h1:target, h2:target, h3:target {
 .subtoc a { font-weight: 400; font-size: .92rem; }
 
 .theme-toggle {
-  position: fixed; top: .7rem; right: .7rem; z-index: 10;
-  width: 2.2rem; height: 2.2rem; padding: 0; border-radius: 50%;
-  border: 1px solid #e3e3e3; background: #fff; color: #555;
-  font-size: 1.05rem; line-height: 1; cursor: pointer;
+  position: absolute; top: .9rem; right: .9rem;
+  display: grid; place-items: center; width: 2rem; height: 2rem; padding: 0;
+  border: none; border-radius: 6px; background: none; color: #888; cursor: pointer;
 }
-.theme-toggle:hover { color: #1a1a1a; }
+.theme-toggle:hover { color: #1a1a1a; background: rgba(0,0,0,.05); }
+.theme-toggle svg { width: 1.1rem; height: 1.1rem; }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
 
@@ -725,8 +725,11 @@ const themeToggle = `<button type="button" class="theme-toggle" aria-label="ラ�
 (() => {
   const btn = document.currentScript.previousElementSibling;
   const root = document.documentElement;
+  const icon = (body) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+  const sun = icon('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>');
+  const moon = icon('<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>');
   const dark = () => (root.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
-  const paint = () => { btn.textContent = dark() ? '☀' : '☾'; };
+  const paint = () => { btn.innerHTML = dark() ? sun : moon; };
   paint();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', paint);
   btn.addEventListener('click', () => {
