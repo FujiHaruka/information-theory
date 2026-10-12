@@ -671,7 +671,7 @@ ${reviewLoader}
 <body>
 <div class="container">
 ${bodyHtml}
-<p class="site-note">${escapeHtml(siteTitle)}（${escapeHtml(siteSubtitle)}）レビュー版．数式は MathJax + AMS Euler で事前レンダリング．</p>
+<p class="site-note">${escapeHtml(siteTitle)}（${escapeHtml(siteSubtitle)}）</p>
 </div>
 </body>
 </html>`;
