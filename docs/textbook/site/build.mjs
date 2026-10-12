@@ -233,6 +233,8 @@ body {
   font-family: var(--latin), var(--jp);
   font-size: 1rem;
   line-height: 1.85; margin: 0; padding: 0;
+  line-break: strict;
+  text-wrap: pretty;
   background: #fbfbfa; color: #1a1a1a;
 }
 .container { max-width: 760px; margin: 0 auto; padding: 2.2rem 1.1rem 6rem; }
@@ -258,6 +260,8 @@ mjx-container { font-size: 1.06em; }
 mjx-container.jp-l { margin-left: .25em; }
 mjx-container.jp-r { margin-right: .25em; }
 mjx-utext { font-feature-settings: normal; }
+.kin { white-space: nowrap; }
+.code-tail { overflow-wrap: normal; }
 h1 .subtitle { display: block; font-size: 1rem; font-weight: normal; color: #888; }
 .site-note { font-size: .82rem; color: #888; margin-top: 4rem; text-align: center; }
 .site-note a { color: inherit; }
@@ -703,6 +707,21 @@ md.core.ruler.after('inline', 'math_gap', (state) => {
     }
   }
 });
+
+// 数式の箱の境界では U+2060 WORD JOINER も禁則も効かないので、括弧・約物ごと nowrap で包む。
+const OPEN_PUNCT = '[（「『【]';
+const CLOSE_PUNCT = '[，．、。）」』】・：；？！]';
+const INLINE_MATH = '<mjx-container(?![^>]*display="true")(?:(?!</mjx-container>)[\\s\\S])*</mjx-container>';
+const MATH_RUN = new RegExp(`(${OPEN_PUNCT}?)(${INLINE_MATH})(${CLOSE_PUNCT}?)`, 'g');
+// code の overflow-wrap: anywhere は末尾と「，」のあいだも折り目にするので、末尾の 1 字だけ外す。
+const CODE_BEFORE_CLOSE = new RegExp(`([^<])</code>((?:</a>)?${CLOSE_PUNCT})`, 'g');
+
+function glueKinsoku(html) {
+  return html
+    .replace(MATH_RUN, (run, open, box, close) =>
+      open || close ? `<span class="kin">${open}${box}${close}</span>` : run)
+    .replace(CODE_BEFORE_CLOSE, '<span class="code-tail">$1</span></code>$2');
+}
 
 // 節見出し (`# 1.6 …` / `## 4.2 …`) に id を振る。第1章は 1 節 1 ページ、第2〜5章は
 // 1 章 1 ページなので、節への参照はページ移動になったり同一ページ内の移動になったりする。
@@ -1556,7 +1575,7 @@ pages.forEach((pg, i) => {
   wrappedLines += lintLineBreaks(markdown, pg.src);
   dashes += lintDashes(markdown, pg.src);
   punct += lintPunctuation(markdown, pg.src);
-  let bodyHtml = navTop(pg) + md.render(linkifyRefs(normalizeMath(markdown), pg), { ctx: pg });
+  let bodyHtml = navTop(pg) + glueKinsoku(md.render(linkifyRefs(normalizeMath(markdown), pg), { ctx: pg }));
   // 節が 1 つも残らなかった章トビラには空の節目次を出さない（上の欠け節の間引きの結果）。
   if (pg.isChapterTop && pg.chapter.sections?.length) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
