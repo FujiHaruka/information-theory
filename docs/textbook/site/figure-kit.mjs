@@ -82,6 +82,11 @@ function rect(x, y, w, h, cls, rx = 0) {
   return `<rect x="${num(x)}" y="${num(y)}" width="${num(w)}" height="${num(h)}" rx="${rx}" class="${cls}"/>`;
 }
 
+function block(cx, cy, label, { w = 92, h = 40, math = false, size = 13 } = {}) {
+  const body = math ? tex(label, { x: cx, y: cy }) : text(label, { x: cx, y: cy, size });
+  return rect(cx - w / 2, cy - h / 2, w, h, 'f-box', 4) + body;
+}
+
 function dot(x, y, r = 3.6) {
   return circle(x, y, r, 'f-dot');
 }
@@ -137,5 +142,5 @@ function axes({ sx, sy, xLabel, yLabel, xTicks = [], yTicks = [], emSize = 15 })
 }
 
 export const kit = {
-  adaptor: null, tex, text, path, svg, plot, circle, rect, dot, arrow, selfLoop, axes, scaleLinear, line,
+  adaptor: null, tex, text, path, svg, plot, circle, rect, block, dot, arrow, selfLoop, axes, scaleLinear, line,
 };

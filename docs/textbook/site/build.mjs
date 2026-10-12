@@ -313,6 +313,8 @@ h1 .subtitle { display: block; font-size: 1rem; font-weight: normal; color: #888
 .fig-art .f-edge { fill: none; stroke: var(--fig-muted); stroke-width: 1.2; }
 .fig-art .f-edge-hot { fill: none; stroke: var(--fig-accent); stroke-width: 2.4; }
 .fig-art .f-label { font-size: 12px; }
+.fig-art .f-stem { fill: none; stroke: var(--fig-accent); stroke-width: 2.4; }
+.fig-art .f-stem-b { fill: none; stroke: #96702a; stroke-width: 2.4; }
 .fig figcaption { font-size: .9rem; color: #555; margin-top: .7rem; }
 .fig figcaption > p { margin: 0; }
 .fig figcaption > p:first-child > strong:first-child { color: #555; }
@@ -401,7 +403,7 @@ h1:target, h2:target, h3:target {
   .fig { --fig-accent: #7ba7e8; --fig-muted: #6b737c;
     --fig-fill-a: rgba(123,167,232,.16); --fig-fill-b: rgba(201,164,94,.16); }
   .fig-art .f-region-b, .fig-art .f-node-b { stroke: #c9a45e; }
-  .fig-art .f-curve-b { stroke: #c9a45e; }
+  .fig-art .f-curve-b, .fig-art .f-stem-b { stroke: #c9a45e; }
   .fig figcaption, .fig figcaption > p:first-child > strong:first-child { color: #aab1b9; }
   .stmt:target, .proof:target, .formalized:target, .aside:target, .fig:target,
   h1:target, h2:target, h3:target {
