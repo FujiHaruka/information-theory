@@ -40,7 +40,7 @@ const ALLOW = new Set([
   'Loomis', 'Whitney', 'Brascamp', 'Lieb', 'Minkowski', 'Bruijn', 'Stam',
   // 環境タグ（:::）
   'definition', 'theorem', 'proposition', 'lemma', 'corollary', 'example',
-  'proof', 'formalized', 'formalization-note', 'notation-preview',
+  'proof', 'formalized', 'formalization-note', 'notation-preview', 'figure',
   // ツール・言語
   'Lean', 'Mathlib', 'MathJax',
   // 訳語のない術語・標準的な略語
@@ -73,6 +73,7 @@ for (const c of targets) {
   for (const f of c.files) {
     const lines = stripCodeAndMath(Deno.readTextFileSync(root + f)).split('\n');
     lines.forEach((line, i) => {
+      if (/^:::+\s+figure\b/.test(line)) return; // タグ行の残りは図のソース名で、地の文ではない
       for (const m of line.matchAll(/[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-\.']{2,}/g)) {
         const w = m[0];
         if (ALLOW.has(w) || knownAvoid.has(w)) continue; // 既知の禁止語は build.mjs が報告済み

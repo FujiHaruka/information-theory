@@ -24,6 +24,7 @@ import { MathJaxNewcmFont } from 'npm:@mathjax/mathjax-newcm-font@4/js/chtml.js'
 import { MathJaxEulerFontExtension } from 'npm:@mathjax/mathjax-euler-font-extension@4/js/chtml.js';
 import { TERMS } from './terminology.mjs';
 import { chapters as allChapters } from './chapters.mjs';
+import { initFigureKit, loadEulerSvgDynamic, kit as figureKit } from './figure-kit.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..'); // docs/textbook
@@ -45,12 +46,12 @@ MathJaxEulerFontExtension.fontURL = `${FONT_DIR}/euler`;
 MathJaxNewcmFont.addExtension(MathJaxEulerFontExtension);
 // 動的レンジ（ギリシャ文字・フラクトゥール・カリグラフィ）は実行時に import される。
 // npm: 指定子へ寄せてから Deno の動的 import に渡す。
-MathJax.asyncLoad = (name) =>
-  import(
-    name.startsWith('[mathjax-euler-extension]/')
-      ? name.replace('[mathjax-euler-extension]/', 'npm:@mathjax/mathjax-euler-font-extension@4/js/')
-      : name.replace(/^@mathjax\/([^/]+)\/js\//, 'npm:@mathjax/$1@4/js/')
-  );
+MathJax.asyncLoad = async (name) => {
+  const spec = name.startsWith('[mathjax-euler-extension]/')
+    ? name.replace('[mathjax-euler-extension]/', 'npm:@mathjax/mathjax-euler-font-extension@4/js/')
+    : name.replace(/^@mathjax\/([^/]+)\/js\//, 'npm:@mathjax/$1@4/js/');
+  return (await loadEulerSvgDynamic(spec)) ?? import(spec);
+};
 
 const mjAdaptor = liteAdaptor();
 RegisterHTMLHandler(mjAdaptor);
@@ -152,6 +153,11 @@ const chapters = allChapters.flatMap((c) => {
 const stmtRefs = new Map(); // '1.2.3'  -> { slug, id, label, name }
 const secRefs = new Map();  // '1.6'    -> { slug, id, title }
 const chapRefs = new Map(); // '2'      -> { slug, title }
+// 図は主張と別に通し番号を振る（図を 1 枚足しただけで定理の番号が動かないように）ので、
+// 番号の空間も別にする。
+const figRefs = new Map();  // '1.1.1'  -> { slug, id, label, name, src, line }
+const referencedFigs = new Set();
+const figureSvgs = new Map(); // 図のソース名 -> SVG
 
 let unresolvedRefs = 0;
 let duplicateNums = 0;
@@ -277,6 +283,26 @@ h1 .subtitle { display: block; font-size: 1rem; font-weight: normal; color: #888
 .aside > summary { cursor: pointer; color: #6f6f6f; font-size: .88rem; font-weight: 600; }
 .aside[open] > summary { margin-bottom: .5rem; }
 
+/* --- 図（執筆原則 §12） ---
+   図のソースは色を持たず、線と面のクラスだけを付ける。色はここでテーマごとに決める。 */
+.fig {
+  --fig-accent: #2f5fa8; --fig-muted: #a0a0a0;
+  --fig-fill-a: rgba(47,95,168,.13); --fig-fill-b: rgba(150,112,42,.15);
+  margin: 2rem 0;
+}
+.fig-art svg { display: block; width: 100%; max-width: 480px; height: auto; margin: 0 auto; overflow: visible; }
+.fig-art text { font-family: var(--latin), var(--jp); fill: currentColor; }
+.fig-art .f-axis { fill: none; stroke: currentColor; stroke-width: 1; }
+.fig-art .f-guide { fill: none; stroke: var(--fig-muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.fig-art .f-leader { fill: none; stroke: var(--fig-muted); stroke-width: 1; }
+.fig-art .f-curve { fill: none; stroke: var(--fig-accent); stroke-width: 2.2; stroke-linejoin: round; }
+.fig-art .f-dot { fill: var(--fig-accent); }
+.fig-art .f-region-a { fill: var(--fig-fill-a); stroke: var(--fig-accent); stroke-width: 1.4; }
+.fig-art .f-region-b { fill: var(--fig-fill-b); stroke: #96702a; stroke-width: 1.4; }
+.fig figcaption { font-size: .9rem; color: #555; margin-top: .7rem; }
+.fig figcaption > p { margin: 0; }
+.fig figcaption > p:first-child > strong:first-child { color: #555; }
+
 /* --- 相互参照リンク ---
    本文の「定理 1.2.3」「1.6 節」はビルドがリンクに変える。数式と地の文のあいだに置かれる
    ので、リンク色で塗ると本文が騒がしくなる。文字色は地の文のまま、下線の色だけで
@@ -298,7 +324,7 @@ a.srcref:hover .ptr-icon, a.srcref:focus .ptr-icon { opacity: 1; }
 /* 飛んだ先が画面の最上端に貼り付くと、どこに着地したのか読み取れない。余白を空け、
    着地点に薄く色を敷いて示す（box-shadow の spread なので行送りは動かない）。 */
 [id] { scroll-margin-top: 1.6rem; }
-.stmt:target, .proof:target, .formalized:target, .aside:target,
+.stmt:target, .proof:target, .formalized:target, .aside:target, .fig:target,
 h1:target, h2:target, h3:target {
   background: rgba(11,103,208,.075);
   box-shadow: 0 0 0 .5rem rgba(11,103,208,.075);
@@ -358,7 +384,11 @@ h1:target, h2:target, h3:target {
   a.srcref { border-bottom-color: rgba(99,181,194,.5); }
   a.srcref:hover, a.srcref:focus { color: #63b5c2; border-bottom-color: #63b5c2; }
   a.srcref code { background: rgba(99,181,194,.14); }
-  .stmt:target, .proof:target, .formalized:target, .aside:target,
+  .fig { --fig-accent: #7ba7e8; --fig-muted: #6b737c;
+    --fig-fill-a: rgba(123,167,232,.16); --fig-fill-b: rgba(201,164,94,.16); }
+  .fig-art .f-region-b { stroke: #c9a45e; }
+  .fig figcaption, .fig figcaption > p:first-child > strong:first-child { color: #aab1b9; }
+  .stmt:target, .proof:target, .formalized:target, .aside:target, .fig:target,
   h1:target, h2:target, h3:target {
     background: rgba(108,182,255,.1);
     box-shadow: 0 0 0 .5rem rgba(108,182,255,.1);
@@ -425,12 +455,13 @@ const ENVS = new Map([
   ['formalized',         { label: '形式化',         cls: 'formalized', sep: ':' }],
   ['formalization-note', { label: '形式化上の注記', cls: 'fnote', folded: true }],
   ['notation-preview',   { label: '記法の先取り',   cls: 'aside aside-notation', folded: true }],
+  ['figure',             { label: '図',             cls: 'fig',                     numbered: true, figure: true }],
 ]);
 
 // 番号つき主張の URL 断片。種別を含めるので、リンク先が何かは URL だけで分かる。
 const ANCHOR = new Map([
   ['theorem', 'thm'], ['proposition', 'prop'], ['lemma', 'lem'],
-  ['corollary', 'cor'], ['definition', 'def'], ['example', 'ex'],
+  ['corollary', 'cor'], ['definition', 'def'], ['example', 'ex'], ['figure', 'fig'],
 ]);
 
 // `theorem 1.6.1 情報不等式 / Gibbs` を {kind, num, name} に割る。
@@ -451,6 +482,7 @@ function parseEnv(info) {
 // `::: proof 定理 1.1.5` の名乗りは、補題を挟んで主張から離れた位置に置かれる決まりなので
 // （textbook-writing.md §4）、見出しの中の番号もリンクにして主張へ戻れるようにする。
 function headingMarkdown({ env, num, name }, ctx) {
+  if (env.figure) return `**${env.label} ${num}.**`;
   const shown = ctx ? linkStatementRefs(name, ctx) : name;
   const paren = shown ? `（${shown}）` : '';
   if (env.sep) return `**${env.label}**${env.sep}`;
@@ -462,7 +494,12 @@ md.use(mdContainer, 'env', {
   render(tokens, idx) {
     const t = tokens[idx];
     if (t.nesting === 1) {
-      const { kind, env, num } = parseEnv(t.info);
+      const { kind, env, num, name } = parseEnv(t.info);
+      if (env.figure) {
+        const id = `fig-${num}`;
+        return `<figure class="${env.cls}" id="${id}">\n<div class="fig-art" aria-labelledby="${id}-cap">`
+          + `${figureSvgs.get(name) ?? ''}</div>\n<figcaption id="${id}-cap">\n`;
+      }
       if (kind === 'formalization-note') {
         return `${t.meta?.nested ? '' : '<div class="formalized">\n'}<details class="${env.cls}">\n`;
       }
@@ -470,6 +507,7 @@ md.use(mdContainer, 'env', {
       const id = num ? ` id="${ANCHOR.get(kind)}-${num}"` : '';
       return `<div class="${env.cls}"${id}>\n`;
     }
+    if (t.meta?.figure) return '</figcaption>\n</figure>\n';
     if (t.meta?.note) return `</details>\n${t.meta.nested ? '' : '</div>\n'}`;
     if (t.meta?.folded) return '</details>\n';
     return '</div>\n';
@@ -496,13 +534,14 @@ md.core.ruler.after('block', 'env_heading', (state) => {
     const t = toks[i];
     if (t.type === 'container_env_close') {
       const opener = openers.pop();
-      if (opener.meta?.folded) t.meta = opener.meta;
+      if (opener.meta?.folded || opener.meta?.figure) t.meta = opener.meta;
       continue;
     }
     if (t.type !== 'container_env_open') continue;
     const spec = parseEnv(t.info);
     if (spec.env.cls.startsWith('stmt')) lastStmt = spec.kind;
     openers.push(t);
+    if (spec.env.figure) t.meta = { figure: true };
 
     // 傍注は折りたたみとして組み、見出しはその開閉の見出しにする。形式化上の注記は
     // 形式化ポインタの枠の中に入れる。
@@ -742,9 +781,9 @@ function sectionToc(c) {
 // --- 主張と証明の対応チェック ---
 // 証明の付いていない主張を列挙する（.claude/rules/textbook-writing.md §4）。読者は証明の
 // ない主張を「意図して証明を略した主張」と読むので、地の文に根拠を書いて proof 環境を
-// 省いた箇所はここで拾う。主張と証明のあいだに形式化ポインタ・傍注が挟まるのは許す。
+// 省いた箇所はここで拾う。主張と証明のあいだに形式化ポインタ・傍注・図が挟まるのは許す。
 const CLAIM_KINDS = new Set(['theorem', 'proposition', 'lemma', 'corollary']);
-const BETWEEN_KINDS = new Set(['formalized', 'formalization-note', 'notation-preview']);
+const BETWEEN_KINDS = new Set(['formalized', 'formalization-note', 'notation-preview', 'figure']);
 
 function lintProofs(markdown, src) {
   const blocks = [];
@@ -917,7 +956,7 @@ function lintSectionTitle(pg) {
 // 割れないが、強調が壊れるために折ったままの行がわずかに残る。読者に改行位置は見えないのだ
 // から、そこでリンクが切れる理由はない。区切りに改行を含めて拾う。
 const GAP = '[ 　\n]*';
-const KIND = '(定理|命題|補題|系|定義|例)';
+const KIND = '(定理|命題|補題|系|定義|例|図)';
 const REF_RE = new RegExp(
   `${KIND}${GAP}(\\d+\\.\\d+\\.\\d+)|(\\d+\\.\\d+)${GAP}節|第${GAP}(\\d+)${GAP}章`, 'g');
 const STMT_RE = new RegExp(`${KIND}${GAP}(\\d+\\.\\d+\\.\\d+)`, 'g');
@@ -952,6 +991,12 @@ function collectAnchors(pg) {
     if (!m) return;
     const spec = parseEnv((m[1] + m[2]).trim());
     if (!spec?.num) return;
+    if (spec.env.figure) {
+      register(figRefs, spec.num,
+        { slug: pg.slug, id: `fig-${spec.num}`, label: spec.env.label, name: '', src: pg.src, line: i + 1 },
+        pg.src, i + 1);
+      return;
+    }
     register(stmtRefs, spec.num,
       { slug: pg.slug, id: `${ANCHOR.get(spec.kind)}-${spec.num}`, label: spec.env.label, name: spec.name },
       pg.src, i + 1);
@@ -977,8 +1022,14 @@ function xref(text, target, ctx, title) {
   return `<a class="xref" href="${href(target, ctx)}"${attr}>${text}</a>`;
 }
 
+function lookupStmt(kind, num) {
+  if (kind !== '図') return stmtRefs.get(num);
+  if (figRefs.has(num)) referencedFigs.add(num);
+  return figRefs.get(num);
+}
+
 function linkStmt(text, kind, num, ctx, lineNo) {
-  const t = stmtRefs.get(num);
+  const t = lookupStmt(kind, num);
   if (!t) {
     unresolvedRefs += 1;
     console.warn(`warn: 未解決の参照 ${ctx.src}:${lineNo} 「${text}」`);
@@ -1016,8 +1067,8 @@ function linkChap(text, num, ctx) {
 // 断片の中の主張参照だけをリンクにする（証明の名乗り `::: proof 定理 1.1.5` 用）。
 function linkStatementRefs(text, ctx) {
   if (!text) return text;
-  return text.replace(STMT_RE, (m, _kind, num) => {
-    const t = stmtRefs.get(num);
+  return text.replace(STMT_RE, (m, kind, num) => {
+    const t = lookupStmt(kind, num);
     return t ? xref(m, t, ctx, stmtTitle(num, t)) : m;
   });
 }
@@ -1402,6 +1453,28 @@ for (const pg of pages) {
   collectAnchors(pg);
 }
 
+// --- 図（執筆原則 §12） ---
+// 図のソースは docs/textbook/figures/<名前>.mjs で、本文を組む前に全部 SVG にしておく
+// （markdown-it のレンダラは同期なので、その中で図のモジュールを読めない）。
+let figureIssues = 0;
+await initFigureKit(mjAdaptor);
+for (const pg of pages) {
+  for (const [i, line] of pg.markdown.split('\n').entries()) {
+    const m = line.match(/^:::+ +figure\b(.*)$/);
+    if (!m) continue;
+    const { num, name } = parseEnv(`figure${m[1]}`);
+    const file = resolve(root, 'figures', `${name}.mjs`);
+    if (!num || !name || !existsSync(file)) {
+      figureIssues += 1;
+      console.warn(`warn: 図のソース ${pg.src}:${i + 1} 「${line.trim()}」（番号と figures/ のソース名を書く）`);
+      continue;
+    }
+    if (figureSvgs.has(name)) continue;
+    const { default: draw } = await import(`file://${file}`);
+    figureSvgs.set(name, draw(figureKit));
+  }
+}
+
 // --- content pages ---
 const pendingPages = [];
 pages.forEach((pg, i) => {
@@ -1578,6 +1651,12 @@ if (punct > 0) console.warn(`warn: 句読点 ${punct} 件`);
 if (listBreaks > 0) console.warn(`warn: 番号つきリストの切れ目 ${listBreaks} 件`);
 if (unresolvedRefs > 0) console.warn(`warn: 参照 ${unresolvedRefs} 件`);
 if (duplicateNums > 0) console.warn(`warn: 番号の重複 ${duplicateNums} 件`);
+for (const [num, f] of figRefs) {
+  if (referencedFigs.has(num)) continue;
+  figureIssues += 1;
+  console.warn(`warn: 参照されていない図 ${f.src}:${f.line} 「図 ${num}」`);
+}
+if (figureIssues > 0) console.warn(`warn: 図 ${figureIssues} 件`);
 if (brokenPointers > 0) console.warn(`warn: 形式化ポインタ ${brokenPointers} 件`);
 if (AUDIT) {
   console.log(`\n--- 参照にならなかった数字 ${auditHits.length} 件（判定なし・目で読む） ---`);

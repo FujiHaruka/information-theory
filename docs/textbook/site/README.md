@@ -61,6 +61,7 @@ olean が要る）で照合する。手元で確かめられないのは 2 点�
 | 各検査・自動リンクの挙動と、そうした理由 | `build.mjs` の該当節のコメント |
 | 用語の採否と、その語を採った理由 | `terminology.mjs` |
 | 数式エンジンと書体の組み立て | `build.mjs` の「数式エンジン」節のコメント |
+| 図の置き方と図のソースの書き方 | 執筆原則 §12、部品は `figure-kit.mjs`、ソースは `docs/textbook/figures/` |
 | デプロイの仕組み（なぜ孤立ブランチに force-push するのか） | `deploy.sh` の冒頭コメント |
 | 公開 URL | `deploy.sh` の `SITE_URL` |
 | 章立てと進捗の管理 | [`docs/textbook-roadmap.md`](../../textbook-roadmap.md) |
