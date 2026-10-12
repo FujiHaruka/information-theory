@@ -1458,10 +1458,19 @@ for (const pg of pages) {
 // （markdown-it のレンダラは同期なので、その中で図のモジュールを読めない）。
 let figureIssues = 0;
 await initFigureKit(mjAdaptor);
+// キャプションの頭には組版が「図 1.1.1.」を置くので、図であることを言う語は要らない。
+const CAPTION_FILLER = /絵|グラフ|描い|模式|表していない/g;
 for (const pg of pages) {
-  for (const [i, line] of pg.markdown.split('\n').entries()) {
+  const lines = pg.markdown.split('\n');
+  for (const [i, line] of lines.entries()) {
     const m = line.match(/^:::+ +figure\b(.*)$/);
     if (!m) continue;
+    for (let j = i + 1; j < lines.length && !/^:::+\s*$/.test(lines[j]); j++) {
+      for (const f of stripCodeAndMath(lines[j]).matchAll(CAPTION_FILLER)) {
+        figureIssues += 1;
+        console.warn(`warn: キャプションの決まり文句 ${pg.src}:${j + 1} 「${f[0]}」`);
+      }
+    }
     const { num, name } = parseEnv(`figure${m[1]}`);
     const file = resolve(root, 'figures', `${name}.mjs`);
     if (!num || !name || !existsSync(file)) {
