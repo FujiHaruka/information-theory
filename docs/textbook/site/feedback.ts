@@ -1,9 +1,9 @@
 #!/usr/bin/env -S deno run -A
 import { chapters } from './chapters.mjs';
+import { SITE_URL as SITE } from './site.mjs';
 
 const API = 'https://api.hypothes.is/api';
 const GROUP = 'Y5Ezjaq5';
-const SITE = 'https://info-theory.fuji.land';
 const DONE = 'done';
 
 const root = new URL('..', import.meta.url).pathname;

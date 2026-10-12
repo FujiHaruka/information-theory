@@ -24,6 +24,7 @@ import { MathJaxNewcmFont } from 'npm:@mathjax/mathjax-newcm-font@4/js/chtml.js'
 import { MathJaxEulerFontExtension } from 'npm:@mathjax/mathjax-euler-font-extension@4/js/chtml.js';
 import { TERMS } from './terminology.mjs';
 import { chapters as allChapters } from './chapters.mjs';
+import { SITE_URL } from './site.mjs';
 import { initFigureKit, loadEulerSvgDynamic, kit as figureKit } from './figure-kit.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -778,7 +779,60 @@ const reviewLoader = `<script>
 })();
 </script>`;
 
-function page({ title, bodyHtml }) {
+// 検索エンジンと SNS のカードに出す <head> の項目。URL は拡張子なしの独自ドメインの形に
+// そろえる（Pages は .html 付きを 308 で転送し、配信サービス既定のホストでも同じ中身を返すので、
+// どれが正規かをページの側で名乗る）。
+function seoHead({ title, path, description, ogType, jsonLd }) {
+  const url = `${SITE_URL}/${path}`;
+  const meta = [
+    `<link rel="canonical" href="${url}">`,
+    description && `<meta name="description" content="${escapeHtml(description)}">`,
+    `<meta property="og:title" content="${escapeHtml(title)}">`,
+    description && `<meta property="og:description" content="${escapeHtml(description)}">`,
+    `<meta property="og:url" content="${url}">`,
+    `<meta property="og:type" content="${ogType}">`,
+    `<meta property="og:site_name" content="${escapeHtml(siteTitle)}">`,
+    '<meta property="og:locale" content="ja_JP">',
+    '<meta name="twitter:card" content="summary">',
+    jsonLd && `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>`,
+  ];
+  return meta.filter(Boolean).join('\n');
+}
+
+// 節の説明文は原稿の地の文の書き出しから取る。組み上がった HTML から取ると数式が字の
+// 羅列になるので、記号 1 つ程度の数式だけを素の字に直し、それより重い数式を含む文に
+// 当たったところで止める（飛ばして先を拾うと文がつながらない）。段落の書き出しが短すぎる
+// ときは次の段落を見る。見るのは最初の見出しか主張ブロックまでの書き出しだけで、そこに
+// 拾えた文が短ければ呼び出し側が節と章の題を前に足す。
+const PLAIN_TEX = [[/\\mid/g, '|'], [/\\neq/g, '≠'], [/\\le(q)?\b/g, '≤'], [/\\ge(q)?\b/g, '≥'], [/\\Pr\b/g, 'Pr']];
+function plainMath(tex) {
+  const t = PLAIN_TEX.reduce((acc, [re, to]) => acc.replace(re, to), tex).replace(/\s+/g, ' ').trim();
+  return /[\\^_{}]/.test(t) ? null : t;
+}
+function describe(markdown) {
+  const opening = markdown.split(/^(?=:::|## )/m)[0];
+  const paras = opening.split(/\n\s*\n/).map((p) => p.trim())
+    .filter((p) => p && !/^(#|:::|\||[-*] |\d+\. |\$\$|<)/.test(p));
+  let best = '';
+  for (const p of paras) {
+    let out = '';
+    for (const sent of p.replace(/\s+/g, ' ').split(/(?<=．)/)) {
+      let ok = true;
+      const plain = sent
+        .replace(/\$([^$]+)\$/g, (_, tex) => plainMath(tex) ?? (ok = false, ''))
+        .replace(/\*\*|`/g, '')
+        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+        .trim();
+      if (!ok || (out + plain).length > 120) break;
+      out += plain;
+    }
+    if (out.length >= 50) return out;
+    if (out.length > best.length) best = out;
+  }
+  return best;
+}
+
+function page({ title, bodyHtml, seo }) {
 
   return `<!doctype html>
 <html lang="ja">
@@ -786,6 +840,7 @@ function page({ title, bodyHtml }) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
+${seo ? seoHead({ title, ...seo }) : '<meta name="robots" content="noindex">'}
 ${cssCdn}
 <style>${styles}</style>
 ${themeInit}
@@ -824,10 +879,10 @@ for (const c of chapters) {
 }
 
 function navTop(pg) {
-  const crumbs = [`<a href="./index.html">${escapeHtml(siteTitle)}</a>`];
+  const crumbs = [`<a href="./">${escapeHtml(siteTitle)}</a>`];
   if (pg.section) {
     crumbs.push(hasChapterPage(pg.chapter)
-      ? `<a href="./${pg.chapter.slug}.html">${escapeHtml(pg.chapter.num)}</a>`
+      ? `<a href="./${pg.chapter.slug}">${escapeHtml(pg.chapter.num)}</a>`
       : escapeHtml(pg.chapter.num));
     crumbs.push(escapeHtml(pg.section.num ?? pg.section.title));
   } else {
@@ -840,10 +895,10 @@ function navBottom(i) {
   const prev = pages[i - 1];
   const next = pages[i + 1];
   const left = prev
-    ? `<a href="./${prev.slug}.html">← ${escapeHtml(prev.label)}</a>`
+    ? `<a href="./${prev.slug}">← ${escapeHtml(prev.label)}</a>`
     : '<span class="spacer"></span>';
   const right = next
-    ? `<a href="./${next.slug}.html">${escapeHtml(next.label)} →</a>`
+    ? `<a href="./${next.slug}">${escapeHtml(next.label)} →</a>`
     : '<span class="spacer"></span>';
   return `<nav class="nav-bottom">${left}${right}</nav>`;
 }
@@ -853,7 +908,7 @@ function sectionToc(c) {
   const items = c.sections
     .map((sec) => {
       const label = sec.num ? `${sec.num}　${sec.title}` : sec.title;
-      return `  <li><a href="./${sec.slug}.html">${escapeHtml(label)}</a></li>`;
+      return `  <li><a href="./${sec.slug}">${escapeHtml(label)}</a></li>`;
     })
     .join('\n');
   return `<ul class="toc">\n${items}\n</ul>`;
@@ -1087,8 +1142,8 @@ function collectAnchors(pg) {
 // 同じページの中なら断片だけ、別ページなら相対パスを付ける。
 function href(target, ctx) {
   const frag = target.id ? `#${target.id}` : '';
-  if (target.slug === ctx.slug) return frag || `./${target.slug}.html`;
-  return `./${target.slug}.html${frag}`;
+  if (target.slug === ctx.slug) return frag || `./${target.slug}`;
+  return `./${target.slug}${frag}`;
 }
 
 // ホバーで飛び先が分かるよう title を添える（JS を使わない範囲での予告）。名前の中の
@@ -1579,9 +1634,22 @@ pages.forEach((pg, i) => {
   // 節が 1 つも残らなかった章トビラには空の節目次を出さない（上の欠け節の間引きの結果）。
   if (pg.isChapterTop && pg.chapter.sections?.length) bodyHtml += sectionToc(pg.chapter);
   bodyHtml += navBottom(i);
-  const title = pg.section ? `${pg.label} — ${pg.chapter.num}` : pg.label;
+  const title = `${pg.section ? `${pg.label} — ${pg.chapter.num}` : pg.label}｜${siteTitle}`;
   const outPath = resolve(distDir, `${pg.slug}.html`);
-  const html = page({ title, bodyHtml });
+  const crumbs = [[siteTitle, ''], [`${pg.chapter.num} ${pg.chapter.title}`, chapterHome(pg.chapter)]];
+  if (pg.section && chapterHome(pg.chapter) !== pg.slug) crumbs.push([pg.label, pg.slug]);
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map(([name, path], k) => ({
+      '@type': 'ListItem', position: k + 1, name, item: `${SITE_URL}/${path}`,
+    })),
+  };
+  const opening = describe(markdown);
+  const where = `${pg.label}（${pg.chapter.num} ${pg.chapter.title}）`;
+  const description = opening.length >= 50 ? opening : opening ? `${where}．${opening}` : where;
+  const seo = { path: pg.slug, description, ogType: 'article', jsonLd };
+  const html = page({ title, bodyHtml, seo });
   collectFontClasses(html);
   pendingPages.push({ outPath, html, label: `${pg.src} -> dist/${pg.slug}.html` });
 });
@@ -1593,19 +1661,21 @@ const tocItems = chapters
       ? `\n    <ol class="subtoc">\n${c.sections
           .map((sec) => {
             const label = sec.num ? `${sec.num}　${sec.title}` : sec.title;
-            return `      <li><a href="./${sec.slug}.html">${escapeHtml(label)}</a></li>`;
+            return `      <li><a href="./${sec.slug}">${escapeHtml(label)}</a></li>`;
           })
           .join('\n')}\n    </ol>`
       : '';
     return `  <li>
-    <a href="./${chapterHome(c)}.html">${escapeHtml(c.num)}　${escapeHtml(c.title)}</a>${sub}
+    <a href="./${chapterHome(c)}">${escapeHtml(c.num)}　${escapeHtml(c.title)}</a>${sub}
   </li>`;
   })
   .join('\n');
 
+const indexDescription = '本書は情報理論の入門書である．情報量の基本的な性質から始めて，データ圧縮と通信の限界を'
+  + '定める符号化定理を示し，統計学・計算理論・ポートフォリオ理論などとの接点までを扱う．';
+
 const indexBody = `<h1>${escapeHtml(siteTitle)}<span class="subtitle">${escapeHtml(siteSubtitle)}</span></h1>
-<p>本書は情報理論の入門書である．情報量の基本的な性質から始めて，データ圧縮と通信の限界を<!--
--->定める符号化定理を示し，統計学・計算理論・ポートフォリオ理論などとの接点までを扱う．<!--
+<p>${indexDescription}<!--
 -->読むのに要るのは学部で学ぶ確率・解析・線形代数までで，Lean の知識は要らない．</p>
 <p>内容は Cover &amp; Thomas の『Elements of Information Theory』第2版を下敷きにしている．本書は<!--
 -->原著に代わるものではないので，情報系の学部生には原著かその翻訳を読むことを勧める．</p>
@@ -1626,9 +1696,53 @@ ${tocItems}
 
 pendingPages.push({
   outPath: resolve(distDir, 'index.html'),
-  html: page({ title: `${siteTitle} ${siteSubtitle}`, bodyHtml: indexBody }),
+  html: page({
+    title: `${siteTitle}｜${siteSubtitle}`,
+    bodyHtml: indexBody,
+    seo: {
+      path: '',
+      description: indexDescription,
+      ogType: 'book',
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Book',
+        name: siteTitle,
+        alternativeHeadline: siteSubtitle,
+        description: indexDescription,
+        inLanguage: 'ja',
+        url: `${SITE_URL}/`,
+        hasPart: chapters.map((c) => ({
+          '@type': 'Chapter', name: `${c.num} ${c.title}`, url: `${SITE_URL}/${chapterHome(c)}`,
+        })),
+      },
+    },
+  }),
   label: `index -> dist/index.html (${pages.length} pages)`,
 });
+
+// 存在しない URL に 404 を返させる。Pages はルートに 404.html が無いと、どの URL にも
+// トップページを 200 で返す（検索エンジンからは同じ中身のページが無数にあるように見える）。
+pendingPages.push({
+  outPath: resolve(distDir, '404.html'),
+  html: page({
+    title: `ページが見つからない｜${siteTitle}`,
+    bodyHtml: `<h1>ページが見つからない</h1>
+<p>この URL のページは無い．<a href="/">目次</a>から探してほしい．</p>`,
+  }),
+  label: 'not found -> dist/404.html',
+});
+
+{
+  const urls = ['', ...pages.map((pg) => pg.slug)]
+    .map((path) => `  <url><loc>${SITE_URL}/${path}</loc></url>`).join('\n');
+  writeFileSync(resolve(distDir, 'sitemap.xml'),
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
+  writeFileSync(resolve(distDir, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
+  // 配信サービス既定のホスト（とデプロイごとのプレビュー用ホスト）は独自ドメインと同じ中身を
+  // 返すので、検索エンジンに載せない。ホスト名での転送は Pages の設定ファイルでは書けない。
+  writeFileSync(resolve(distDir, '_headers'),
+    'https://:project.pages.dev/*\n  X-Robots-Tag: noindex\n\nhttps://:version.:project.pages.dev/*\n  X-Robots-Tag: noindex\n');
+}
 
 // --- 数式の CSS とフォント ---
 // MathJax は変換のあいだ「実際に出た字」を溜めているので、全ページを組み終えてから

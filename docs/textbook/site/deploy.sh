@@ -16,9 +16,6 @@
 # - このマシンの /usr/local/bin/node は署名が壊れて起動不可のため Deno を使う。
 set -euo pipefail
 
-# 公開 URL。Pages の独自ドメイン（Route 53 の CNAME → info-theory-6cf.pages.dev）を変えたらここも直す。
-SITE_URL="https://info-theory.fuji.land"
-
 DENO="${DENO:-/opt/homebrew/bin/deno}"
 [ -x "$DENO" ] || DENO="$(command -v deno || true)"
 [ -n "$DENO" ] && [ -x "$DENO" ] || { echo "deno が見つかりません" >&2; exit 127; }
@@ -48,4 +45,4 @@ git -C "$STAGE" commit -q -m "textbook site build (source $SRC)"
 git -C "$STAGE" push -q --force "$REMOTE" "HEAD:refs/heads/$BRANCH"
 
 echo "==> done"
-echo "$SITE_URL"
+"$DENO" eval "import { SITE_URL } from './site.mjs'; console.log(SITE_URL)"

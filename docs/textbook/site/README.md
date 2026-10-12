@@ -63,7 +63,7 @@ olean が要る）で照合する。手元で確かめられないのは 2 点�
 | 数式エンジンと書体の組み立て | `build.mjs` の「数式エンジン」節のコメント |
 | 図の置き方と図のソースの書き方 | 執筆原則 §12、部品は `figure-kit.mjs`、ソースは `docs/textbook/figures/` |
 | デプロイの仕組み（なぜ孤立ブランチに force-push するのか） | `deploy.sh` の冒頭コメント |
-| 公開 URL | `deploy.sh` の `SITE_URL` |
+| 公開 URL | `site.mjs` の `SITE_URL` |
 | 章立てと進捗の管理 | [`docs/textbook-roadmap.md`](../../textbook-roadmap.md) |
 
 ## 公開の仕組み
@@ -74,14 +74,19 @@ Cloudflare Pages（プロジェクト `info-theory`）はそのブランチを�
 プレビュービルドは切ってある。独自ドメインは Route 53 の CNAME で `info-theory-6cf.pages.dev` に向けている。デプロイ専用の資格情報は無く、認証は origin へ
 push できる SSH 鍵だけである。
 
-Pages は `/ch01-01.html` を `/ch01-01` へ 308 で転送する（設定では切れない）。サイト内のリンクは `.html` 付きのまま
-転送を挟んで通り、Hypothesis の注釈は拡張子なしの URL に付く（`feedback.ts` はどちらの形も同じ節に寄せる）。
+Pages は `/ch01-01.html` を `/ch01-01` へ 308 で転送する（設定では切れない）。サイト内のリンクは転送を挟まないよう
+拡張子なしで書く。そのため `dist/` をファイルとして直接開くとページ間を移れない。Hypothesis の注釈は拡張子なしの
+URL に付く（`feedback.ts` は `.html` 付きの形も同じ節に寄せる）。
+
+検索エンジン向けには、各ページが正規の URL（独自ドメイン・拡張子なし）と説明文（節の書き出しの地の文から作る）を
+名乗り、`sitemap.xml`・`robots.txt`・`404.html` をビルドが書き出す。`404.html` が無いと Pages はどの URL にも
+トップページを 200 で返す。配信サービス既定のホスト（`*.pages.dev`）は `_headers` で検索エンジンに載せない。
 
 `site` の履歴は毎回作り直す（常に 1 コミット）。1 回ぶんが 25MB あるので、積み上げると
 clone が重くなる。
 
 Pages 側の設定は Cloudflare のダッシュボードが持つ。ブランチ・ビルドコマンド・出力ディレクトリ・独自ドメインを変えたら、
-`deploy.sh` の `BRANCH` と `SITE_URL` も合わせる。
+`deploy.sh` の `BRANCH` と `site.mjs` の `SITE_URL` も合わせる。
 
 ## 公開範囲の注意
 

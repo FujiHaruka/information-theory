@@ -86,7 +86,8 @@ for (const { page, href } of links) {
   } else {
     counts.internal++;
     const [file, frag] = href.split('#');
-    const target = file === '' ? page : file.replace(/^\.\//, '');
+    const path = file.replace(/^\.?\//, '');
+    const target = file === '' ? page : path === '' ? 'index.html' : /\.[a-z0-9]+$/i.test(path) ? path : `${path}.html`;
     if (!existsSync(join(dist, target))) { fail(page, href, 'ファイルが dist/ に無い'); continue; }
     if (frag && target.endsWith('.html') && !ids.get(target)?.has(decodeURIComponent(frag))) {
       fail(page, href, `${target} に id「${frag}」が無い`);
