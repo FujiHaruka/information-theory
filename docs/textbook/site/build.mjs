@@ -1474,7 +1474,7 @@ for (const pg of pages) {
 let figureIssues = 0;
 await initFigureKit(mjAdaptor);
 // キャプションの頭には組版が「図 1.1.1.」を置くので、図であることを言う語は要らない。
-const CAPTION_FILLER = /絵|グラフ|描い|模式|表していない/g;
+const CAPTION_FILLER = /絵|グラフ|描|模式|表していない/g;
 for (const pg of pages) {
   const lines = pg.markdown.split('\n');
   for (const [i, line] of lines.entries()) {
