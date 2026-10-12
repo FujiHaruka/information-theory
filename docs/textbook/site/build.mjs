@@ -172,6 +172,50 @@ const cssCdn = `${MATH_HEAD}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Inconsolata:wght@400;600&display=swap">`;
 
+const darkRules = `
+  body { background: #15171a; color: #e6e6e6; }
+  a { color: #6cb6ff; }
+  blockquote { border-left-color: #333a42; color: #9aa3ad; background: none; }
+  code { background: rgba(255,255,255,.08); color: inherit; }
+  pre { background: #1c1f24; }
+  pre code { background: none; color: #d7dce2; }
+  hr { border-color: #2a2e34; }
+  th, td { border-color: #2a2e34; }
+  .theme-toggle { border-color: #2a2e34; background: #1a1d21; color: #aab1b9; }
+  .theme-toggle:hover { color: #e6e6e6; }
+  .nav-top, .nav-bottom { border-color: #2a2e34; }
+  .toc li { border-color: #2a2e34; background: #1a1d21; }
+  .subtoc { border-top-color: #2a2e34; }
+  .stmt-theorem, .stmt-proposition, .stmt-corollary { --stmt-accent: #7ba7e8; }
+  .stmt-definition { --stmt-accent: #63b894; }
+  .stmt-lemma { --stmt-accent: #9aa3ad; }
+  .stmt-example { --stmt-accent: #c9a45e; }
+  .proof { color: #c9cdd3; }
+  .proof > p:first-child > strong:first-child { color: #98a1aa; }
+  .qed { color: #98a1aa; }
+  .formalized { background: rgba(122,200,212,.09); color: #c9cdd3; }
+  .formalized > p:first-child > strong:first-child { color: #63b5c2; }
+  .fnote > summary { color: #7fb3bb; }
+  .fnote > :not(summary) { color: #aab1b9; }
+  .aside { border-left-color: #333a42; color: #9aa3ad; }
+  .aside strong:first-child { color: #aeb6bf; }
+  a.xref { border-bottom-color: rgba(108,182,255,.45); }
+  a.xref:hover, a.xref:focus { color: #6cb6ff; border-bottom-color: #6cb6ff; }
+  a.srcref { border-bottom-color: rgba(99,181,194,.5); }
+  a.srcref:hover, a.srcref:focus { color: #63b5c2; border-bottom-color: #63b5c2; }
+  a.srcref code { background: rgba(99,181,194,.14); }
+  .fig { --fig-accent: #7ba7e8; --fig-muted: #6b737c;
+    --fig-fill-a: rgba(123,167,232,.16); --fig-fill-b: rgba(201,164,94,.16); }
+  .fig-art .f-region-b, .fig-art .f-node-b { stroke: #c9a45e; }
+  .fig-art .f-curve-b, .fig-art .f-stem-b { stroke: #c9a45e; }
+  .fig figcaption, .fig figcaption > p:first-child > strong:first-child { color: #aab1b9; }
+  .stmt:target, .proof:target, .formalized:target, .aside:target, .fig:target,
+  h1:target, h2:target, h3:target {
+    background: rgba(108,182,255,.1);
+    box-shadow: 0 0 0 .5rem rgba(108,182,255,.1);
+  }
+`;
+
 const styles = `
 :root {
   color-scheme: light dark;
@@ -370,47 +414,22 @@ h1:target, h2:target, h3:target {
 .subtoc li { margin: 0; padding: .3rem 0 0; border: none; border-radius: 0; }
 .subtoc a { font-weight: 400; font-size: .92rem; }
 
-@media (prefers-color-scheme: dark) {
-  body { background: #15171a; color: #e6e6e6; }
-  a { color: #6cb6ff; }
-  blockquote { border-left-color: #333a42; color: #9aa3ad; background: none; }
-  code { background: rgba(255,255,255,.08); color: inherit; }
-  pre { background: #1c1f24; }
-  pre code { background: none; color: #d7dce2; }
-  hr { border-color: #2a2e34; }
-  th, td { border-color: #2a2e34; }
-  .nav-top, .nav-bottom { border-color: #2a2e34; }
-  .toc li { border-color: #2a2e34; background: #1a1d21; }
-  .subtoc { border-top-color: #2a2e34; }
-  .stmt-theorem, .stmt-proposition, .stmt-corollary { --stmt-accent: #7ba7e8; }
-  .stmt-definition { --stmt-accent: #63b894; }
-  .stmt-lemma { --stmt-accent: #9aa3ad; }
-  .stmt-example { --stmt-accent: #c9a45e; }
-  .proof { color: #c9cdd3; }
-  .proof > p:first-child > strong:first-child { color: #98a1aa; }
-  .qed { color: #98a1aa; }
-  .formalized { background: rgba(122,200,212,.09); color: #c9cdd3; }
-  .formalized > p:first-child > strong:first-child { color: #63b5c2; }
-  .fnote > summary { color: #7fb3bb; }
-  .fnote > :not(summary) { color: #aab1b9; }
-  .aside { border-left-color: #333a42; color: #9aa3ad; }
-  .aside strong:first-child { color: #aeb6bf; }
-  a.xref { border-bottom-color: rgba(108,182,255,.45); }
-  a.xref:hover, a.xref:focus { color: #6cb6ff; border-bottom-color: #6cb6ff; }
-  a.srcref { border-bottom-color: rgba(99,181,194,.5); }
-  a.srcref:hover, a.srcref:focus { color: #63b5c2; border-bottom-color: #63b5c2; }
-  a.srcref code { background: rgba(99,181,194,.14); }
-  .fig { --fig-accent: #7ba7e8; --fig-muted: #6b737c;
-    --fig-fill-a: rgba(123,167,232,.16); --fig-fill-b: rgba(201,164,94,.16); }
-  .fig-art .f-region-b, .fig-art .f-node-b { stroke: #c9a45e; }
-  .fig-art .f-curve-b, .fig-art .f-stem-b { stroke: #c9a45e; }
-  .fig figcaption, .fig figcaption > p:first-child > strong:first-child { color: #aab1b9; }
-  .stmt:target, .proof:target, .formalized:target, .aside:target, .fig:target,
-  h1:target, h2:target, h3:target {
-    background: rgba(108,182,255,.1);
-    box-shadow: 0 0 0 .5rem rgba(108,182,255,.1);
-  }
+.theme-toggle {
+  position: fixed; top: .7rem; right: .7rem; z-index: 10;
+  width: 2.2rem; height: 2.2rem; padding: 0; border-radius: 50%;
+  border: 1px solid #e3e3e3; background: #fff; color: #555;
+  font-size: 1.05rem; line-height: 1; cursor: pointer;
 }
+.theme-toggle:hover { color: #1a1a1a; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+${darkRules}  }
+}
+:root[data-theme="dark"] {
+${darkRules}}
 `;
 
 function escapeHtml(s) {
@@ -697,6 +716,27 @@ md.core.ruler.push('section_anchor', (state) => {
   }
 });
 
+const themeInit = `<script>
+try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+</script>`;
+
+const themeToggle = `<button type="button" class="theme-toggle" aria-label="ライトモードとダークモードを切り替える"></button>
+<script>
+(() => {
+  const btn = document.currentScript.previousElementSibling;
+  const root = document.documentElement;
+  const dark = () => (root.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
+  const paint = () => { btn.textContent = dark() ? '☀' : '☾'; };
+  paint();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', paint);
+  btn.addEventListener('click', () => {
+    root.dataset.theme = dark() ? 'light' : 'dark';
+    try { localStorage.setItem('theme', root.dataset.theme); } catch {}
+    paint();
+  });
+})();
+</script>`;
+
 const reviewLoader = `<script>
 (() => {
   if (new URLSearchParams(location.search).get('review') !== '1') return;
@@ -726,9 +766,11 @@ function page({ title, bodyHtml }) {
 <title>${escapeHtml(title)}</title>
 ${cssCdn}
 <style>${styles}</style>
+${themeInit}
 ${reviewLoader}
 </head>
 <body>
+${themeToggle}
 <div class="container">
 ${bodyHtml}
 <p class="site-note">${escapeHtml(siteTitle)}（${escapeHtml(siteSubtitle)}）・<a href="${REPO_URL}">GitHub</a></p>
