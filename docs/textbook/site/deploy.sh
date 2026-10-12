@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# 教科書サイトを build → リンク検査 → site ブランチへ push する。Netlify がそのブランチを配信する。
+# 教科書サイトを build → リンク検査 → site ブランチへ push する。Cloudflare Pages がそのブランチを配信する。
 # 使い方:  ./deploy.sh
 #
 # - Deno でビルド（数式を MathJax + AMS Euler でサーバー側レンダリング）し dist/ を生成。
-# - dist/ の中身だけを載せた孤立ブランチ site に force-push する。Netlify 側は
-#   「ビルドコマンド無し・公開ディレクトリ = ルート」で、push された中身をそのまま配信する。
+# - dist/ の中身だけを載せた孤立ブランチ site に force-push する。Cloudflare Pages 側は
+#   「本番ブランチ = site・ビルドコマンド無し・出力ディレクトリ = ルート」で、push された中身を
+#   そのまま配信する。他ブランチのプレビュービルドは切ってある（main の push ごとに Lean の
+#   リポジトリ全体を clone するビルドが走るのを避けるため）。
 #   認証は origin への push に使う既存の SSH 鍵だけで、デプロイ専用の資格情報は要らない。
 # - 履歴は毎回作り直す（site は常に 1 コミット）。1 回ぶんが 25MB あるので、積み上げると
 #   public リポジトリの clone が重くなる。
@@ -14,7 +16,7 @@
 # - このマシンの /usr/local/bin/node は署名が壊れて起動不可のため Deno を使う。
 set -euo pipefail
 
-# 公開 URL。Netlify の Site name を変えたらここも直す。
+# 公開 URL。Pages の独自ドメイン（Route 53 の CNAME → info-theory-6cf.pages.dev）を変えたらここも直す。
 SITE_URL="https://info-theory.fuji.land"
 
 DENO="${DENO:-/opt/homebrew/bin/deno}"
