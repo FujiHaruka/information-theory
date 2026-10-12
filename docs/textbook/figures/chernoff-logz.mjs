@@ -5,7 +5,8 @@ export default function draw({ svg, tex, path, plot, dot, scaleLinear }) {
   const logZ = (l) => -l * Math.log(2) + Math.log(0.1 ** (1 - l) + 0.9 ** (1 - l));
   const sx = scaleLinear([0, 1], [m.left, W - m.right]);
   const sy = scaleLinear([-0.13, 0.015], [H - m.bottom, m.top]);
-  const lStar = 1 - Math.log(0.73248 / 0.26751) / Math.log(9);
+  const pStar = (Math.log(9) - Math.log(5)) / Math.log(9);
+  const lStar = 1 - Math.log((1 - pStar) / pStar) / Math.log(9);
   const minVal = logZ(lStar);
   const y0 = sy(0);
   return svg({ width: W, height: H },
