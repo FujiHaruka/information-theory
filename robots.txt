@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://info-theory.fuji.land/sitemap.xml
