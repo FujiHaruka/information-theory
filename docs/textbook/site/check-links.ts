@@ -8,7 +8,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const dist = resolve(here, 'dist');
 const repo = resolve(here, '../../..');
 const SOURCE_RE = /^https:\/\/github\.com\/FujiHaruka\/information-theory\/blob\/([^/]+)\/([^#]+)(?:#L(\d+))?$/;
-const APIDOC_RE = /^https:\/\/fujiharuka\.github\.io\/information-theory\/([^#]+)\.html#(.+)$/;
+const APIDOC_URL = 'https://fujiharuka.github.io/information-theory';
+const APIDOC_RE = /^https:\/\/fujiharuka\.github\.io\/information-theory\/([^/#]+)\/([^#]+)\.html#(.+)$/;
 
 if (!existsSync(dist)) {
   console.error('dist/ がありません。先に build.mjs を回してください');
@@ -37,7 +38,6 @@ for (const f of pages) {
 const failures: string[] = [];
 const fail = (page: string, href: string, why: string) => failures.push(`${page}: ${href}\n    ${why}`);
 
-const latestTag = git('describe', '--tags', '--abbrev=0').out.trim();
 const lineCounts = new Map<string, number | null>();
 function linesAt(ref: string, path: string) {
   const key = `${ref}:${path}`;
@@ -58,8 +58,8 @@ function checkRef(ref: string) {
   return refOk.get(ref);
 }
 
-const apidoc = new Map<string, { module: string; path: string; uses: string[] }>();
-const sourceRefs = new Set<string>();
+const apidoc = new Map<string, { ref: string; module: string; path: string; uses: string[] }>();
+const apidocRefs = new Set<string>();
 const counts = { internal: 0, source: 0, apidoc: 0, unchecked: 0 };
 
 for (const { page, href } of links) {
@@ -67,7 +67,6 @@ for (const { page, href } of links) {
   if ((m = href.match(SOURCE_RE))) {
     counts.source++;
     const [, ref, path, line] = m;
-    sourceRefs.add(ref);
     const bad = checkRef(ref);
     if (bad) { fail(page, href, bad); continue; }
     const n = linesAt(ref, path);
@@ -75,10 +74,11 @@ for (const { page, href } of links) {
     else if (line && Number(line) > n) fail(page, href, `${ref} の ${path} は ${n} 行しかない`);
   } else if ((m = href.match(APIDOC_RE))) {
     counts.apidoc++;
-    const [, modPath, fqn] = m;
+    const [, ref, modPath, fqn] = m;
+    apidocRefs.add(ref);
     const path = `${modPath}.lean`;
-    if (linesAt(latestTag, path) === null) { fail(page, href, `${latestTag} に ${path} が無い`); continue; }
-    const e = apidoc.get(fqn) ?? { module: modPath.replaceAll('/', '.'), path, uses: [] };
+    if (linesAt(ref, path) === null) { fail(page, href, `${ref} に ${path} が無い`); continue; }
+    const e = apidoc.get(fqn) ?? { ref, module: modPath.replaceAll('/', '.'), path, uses: [] };
     e.uses.push(page);
     apidoc.set(fqn, e);
   } else if (/^[a-z]+:/i.test(href)) {
@@ -95,10 +95,10 @@ for (const { page, href } of links) {
   }
 }
 
-for (const ref of sourceRefs) {
-  if (ref !== latestTag) {
-    failures.push(`ソースのリンクは ${ref} に固定されているが、API ドキュメントは最新タグ ${latestTag} のもの`);
-  }
+for (const ref of apidocRefs) {
+  const r = await fetch(`${APIDOC_URL}/${ref}/index.html`, { method: 'HEAD' }).catch((e) => e);
+  if (!(r instanceof Response)) failures.push(`API ドキュメントの ${ref} 版を確かめられない: ${r}`);
+  else if (!r.ok) failures.push(`API ドキュメントに ${ref} 版が無い（HTTP ${r.status}）。docs ワークフローがまだ公開していない恐れ`);
 }
 
 // API ドキュメントの完全名は build.mjs がテキスト走査で組むので、走査と独立に Lean の環境で確かめる。
@@ -134,11 +134,11 @@ ${entries}
     const e = apidoc.get(fqn)!;
     const short = fqn.split('.').at(-1)!;
     const declRe = `(theorem|lemma|def|abbrev|structure|class|inductive|instance|opaque)[[:space:]]+${short.replace(/[.'?!]/g, '.')}([[:space:]]|$)`;
-    const atTag = git('grep', '-qE', declRe, latestTag, '--', e.path).ok;
+    const atTag = git('grep', '-qE', declRe, e.ref, '--', e.path).ok;
     const atHead = git('grep', '-qE', declRe, 'HEAD', '--', e.path).ok;
     const where = `（使用: ${[...new Set(e.uses)].join(', ')}）`;
     if (atTag && !atHead) {
-      console.log(`note: ${fqn} は ${latestTag} 以降に ${e.path} から消えた。${latestTag} の API ドキュメントでは有効${where}`);
+      console.log(`note: ${fqn} は ${e.ref} 以降に ${e.path} から消えた。${e.ref} の API ドキュメントでは有効${where}`);
     } else if (kind === 'MODULE') {
       failures.push(`${fqn}: リンク先は ${e.module} だが、宣言は ${actual} にある${where}`);
     } else {

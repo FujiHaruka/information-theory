@@ -35,22 +35,26 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # Every release is one version of the site, under `<tag>/`, so the textbook can link a
+      # declaration at the same tag its source links name. Listing the tags needs them fetched.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-      # Build here rather than inside litedoc4. lean-action keys its `.lake` cache on the
-      # commit, so this job reuses what the CI and release jobs built for the same commit;
-      # a cold `lake build` of the library costs ~17 min, a hit costs seconds.
-      - uses: leanprover/lean-action@v1
+      - id: versions
+        run: echo "list=$(git tag -l 'v*' --sort=version:refname | paste -sd, -)" >> "$GITHUB_OUTPUT"
 
       # Documents InformationTheory.* only; every Mathlib reference links to that pinned
-      # revision's source. `lib` is required because the package is a lakefile.lean one, and
-      # the step above is the build `lake-build: false` relies on — it has to be this job,
-      # because from another job the page cache is cold and the extractor is 5-12x slower.
+      # revision's source. `lib` is required because the package is a lakefile.lean one. With
+      # `versions`, litedoc4 checks each tag out, fetches its Mathlib cache and builds it
+      # there, so the working tree is never built; the store of built versions is cached, and
+      # a release run builds only the new tag.
       - uses: FujiHaruka/litedoc4@v2.0.0
         id: docs
         with:
           lib: InformationTheory
           lake-build: false
+          versions: ${{ steps.versions.outputs.list }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

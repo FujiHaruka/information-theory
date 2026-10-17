@@ -1301,8 +1301,7 @@ function linkifyRefs(src, ctx) {
 // 基準はリリースタグである（TEXTBOOK_REF で上書きできる）。タグ時点のソースから宣言表を
 // 作るので、まだリリースに入っていない宣言も、移動して消えたパスも、リンクにならず warn に
 // 出る。いったん張ったリンクはタグに固定されているから、あとのリネームでは腐らない。
-// API ドキュメントだけは 1 版しか置けず常に最新リリースを指すが、同じブロックにタグ固定の
-// ソースリンクが並ぶので、宣言名を変えても行き先は残る。
+// API ドキュメントもリリースごとに `<タグ>/` の下に版を置くので、同じタグの版へ送る。
 const REPO_URL = 'https://github.com/FujiHaruka/information-theory';
 const APIDOC_URL = 'https://fujiharuka.github.io/information-theory';
 
@@ -1390,7 +1389,7 @@ function resolveLeanPath(spec) {
 }
 
 const sourceUrl = ({ path, line }) => `${REPO_URL}/blob/${REF}/${path}${line ? `#L${line}` : ''}`;
-const apidocUrl = (d) => `${APIDOC_URL}/${d.path.replace(/\.lean$/, '.html')}#${d.fqn}`;
+const apidocUrl = (d) => `${APIDOC_URL}/${REF}/${d.path.replace(/\.lean$/, '.html')}#${d.fqn}`;
 
 // 行き先が 2 種類あることは、アイコンで見分けさせる。解説ページには本、GitHub の
 // ソースには GitHub のマーク（どちらも octicons, MIT）。アイコンの意味は目次ページで 1 度
