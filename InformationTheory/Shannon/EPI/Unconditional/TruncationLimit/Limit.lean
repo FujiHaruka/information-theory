@@ -52,7 +52,7 @@ theorem truncW_map_density_tendsto_ae
         (𝓝 (((P.map W).rnDeriv volume x).toReal)) := by
   classical
   haveI hWmap_prob : IsProbabilityMeasure (P.map W) :=
-    Measure.isProbabilityMeasure_map hW.aemeasurable
+    inferInstance
   -- truncation set in the W-marginal and its mass.
   set Sn : ℕ → Set ℝ := fun n ↦ {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
   have hSn_meas : ∀ n, MeasurableSet (Sn n) := fun n ↦
@@ -207,7 +207,7 @@ theorem truncW_map_negPart_lintegral_le
               ∂volume) := by
   classical
   haveI hWmap_prob : IsProbabilityMeasure (P.map W) :=
-    Measure.isProbabilityMeasure_map hW.aemeasurable
+    inferInstance
   set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
   have hSn_meas : MeasurableSet Sn := measurableSet_le measurable_norm measurable_const
   set fW : ℝ → ℝ := fun x ↦ ((P.map W).rnDeriv volume x).toReal with hfW_def
@@ -320,7 +320,7 @@ theorem differentialEntropyExt_truncW_tendsto_top
       (𝓝 (⊤ : EReal)) := by
   classical
   haveI hWmap_prob : IsProbabilityMeasure (P.map W) :=
-    Measure.isProbabilityMeasure_map hW.aemeasurable
+    inferInstance
   -- Abbreviations for the positive / negative parts of `Q_n.map W := (truncW P W n).map W`.
   set μW : Measure ℝ := P.map W with hμW_def
   set A : ℕ → ℝ≥0∞ := fun n ↦
@@ -467,9 +467,9 @@ private theorem negPart_lintegral_map_truncW_add_ne_top
   haveI hQ_prob : IsProbabilityMeasure Q := by
     rw [hQ_def, truncW]; exact ProbabilityTheory.cond_isProbabilityMeasure hn
   haveI hQW_prob : IsProbabilityMeasure (Q.map W) :=
-    Measure.isProbabilityMeasure_map hW.aemeasurable
+    inferInstance
   haveI hQV_prob : IsProbabilityMeasure (Q.map V) :=
-    Measure.isProbabilityMeasure_map hV.aemeasurable
+    inferInstance
   -- W stays a.c. under conditioning.
   have hW_ac_Q : (Q.map W) ≪ volume := by
     refine (Measure.AbsolutelyContinuous.trans ?_ hW_ac)
@@ -570,7 +570,7 @@ private theorem differentialEntropyExt_truncW_add_le_two_mul_Aν
     rw [truncW]; exact ProbabilityTheory.cond_isProbabilityMeasure hn
   haveI hνn_prob : IsProbabilityMeasure νn := by
     rw [hνn_def]
-    exact Measure.isProbabilityMeasure_map (hW.add hV).aemeasurable
+    exact inferInstance
   -- `B(ν_n) ≠ ⊤`.
   have hBνn : (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((νn.rnDeriv volume x).toReal)))
       ∂volume) ≠ ⊤ := by
@@ -639,11 +639,11 @@ theorem differentialEntropyExt_top_of_indep_add
   -- ν := P.map(W+V),  ν_n := (truncW P W n).map(W+V),  c_n := P{|W| ≤ n}.
   set ν : Measure ℝ := P.map (fun ω ↦ W ω + V ω) with hν_def
   haveI hμW_prob : IsProbabilityMeasure (P.map W) :=
-    Measure.isProbabilityMeasure_map hW.aemeasurable
+    inferInstance
   haveI hμV_prob : IsProbabilityMeasure (P.map V) :=
-    Measure.isProbabilityMeasure_map hV.aemeasurable
+    inferInstance
   haveI hν_prob : IsProbabilityMeasure ν :=
-    Measure.isProbabilityMeasure_map (hW.add hV).aemeasurable
+    inferInstance
   -- Step 0 — regularity.
   -- ν = (P.map W) ∗ (P.map V) (independence).
   have hconv : ν = (P.map W) ∗ (P.map V) := by

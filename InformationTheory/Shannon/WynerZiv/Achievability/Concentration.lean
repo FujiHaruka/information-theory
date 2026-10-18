@@ -82,10 +82,10 @@ private lemma wz_covering_uMarginal_map_eq
   haveI : IsProbabilityMeasure (ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')) :=
     ChannelCoding.pmfToMeasure_isProbabilityMeasure hq_wsm
   haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure qStar).map Prod.snd) :=
-    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure
       ((ChannelCoding.pmfToMeasure (wzSideInfoMarginal P_XY κ')).map Prod.fst) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   apply Measure.ext_of_singleton
   intro u
   -- The two `U`-marginal singletons agree as reals, both `= ∑ₓ κ'(x, u)·P_X(x)`.
@@ -198,7 +198,7 @@ private lemma wz_covering_src_yProj_eq_pi
     ChannelCoding.pmfToMeasure_isProbabilityMeasure (wz_QXY_mem_stdSimplex P_XY)
   haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
       (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map
-        Prod.snd) := Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+        Prod.snd) := inferInstance
   exact Measure.pi_map_pi (hμ := fun _ ↦ inferInstance) (fun _ ↦ measurable_snd.aemeasurable)
 
 open ChannelCoding in
@@ -254,13 +254,13 @@ lemma wz_covering_yBand_aep
       (Subtype.val : {y : β // 0 < ∑ x, P_XY.real {(x, y)}} → β) := measurable_subtype_coe
   haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
       (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map
-      Prod.snd) := Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+      Prod.snd) := inferInstance
   haveI : IsProbabilityMeasure ((rdAmbient (wzSideInfoMarginal P_XY κ')).map
       (ChannelCoding.iidYs (α := Fin k) 0)) :=
-    Measure.isProbabilityMeasure_map (ChannelCoding.measurable_iidYs 0).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (((rdAmbient (wzSideInfoMarginal P_XY κ')).map
       (ChannelCoding.iidYs (α := Fin k) 0)).map Subtype.val) :=
-    Measure.isProbabilityMeasure_map hval_meas.aemeasurable
+    inferInstance
   -- `pmfLog` / `entropy` invariance of the `Y`-marginal under the `β'`↪`β` coercion.
   have hpmfYeq : ∀ y' : {y : β // 0 < ∑ x, P_XY.real {(x, y)}},
       pmfLog (rdAmbient (wzSideInfoMarginal P_XY κ'))
@@ -309,10 +309,10 @@ lemma wz_covering_yBand_aep
     exact wz_source_snd_eq_ambient_snd_map P_XY κ' hκ'_pos hκ'_sum
   have hYproj_meas : Measurable (fun p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
       fun i ↦ (p i).2) :=
-    measurable_pi_lambda _ (fun i ↦ measurable_snd.comp (measurable_pi_apply i))
+    Measurable.of_eval (fun i ↦ measurable_snd.comp (measurable_pi_apply i))
   have hΦ_meas : Measurable (fun z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦
       fun i ↦ ((z i : β))) :=
-    measurable_pi_lambda _ (fun i ↦ hval_meas.comp (measurable_pi_apply i))
+    Measurable.of_eval (fun i ↦ hval_meas.comp (measurable_pi_apply i))
   have hjrv_meas : Measurable (jointRV (ChannelCoding.iidYs (α := Fin k)
       (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) n) :=
     measurable_jointRV _ (fun i ↦ ChannelCoding.measurable_iidYs i) n

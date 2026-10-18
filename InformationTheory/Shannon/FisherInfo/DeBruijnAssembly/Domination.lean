@@ -46,9 +46,9 @@ private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
   have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel s v|
       ≤ (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹ := by
     intro v
-    rw [heatFlow_density_heat_equation_kernel_eq hspos v,
-      abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)]
-    exact gaussianPDFReal_le_prefactor' ⟨s, hspos.le⟩ v
+    rw [heatFlow_density_heat_equation_kernel_eq hspos v]
+    exact (abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)).trans_le
+      (gaussianPDFReal_le_prefactor' ⟨s, hspos.le⟩ v)
   have hF1_int : ∀ ξ : ℝ,
       Integrable (fun y ↦ pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := by
     intro ξ

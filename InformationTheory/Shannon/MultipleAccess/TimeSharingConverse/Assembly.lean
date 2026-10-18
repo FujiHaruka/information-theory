@@ -164,9 +164,9 @@ lemma mac_converse_rate_mul_one_sub_errorProb_mem_of_ceil_exp_le
   set p₂ : Fin n → Measure α₂ :=
     fun i ↦ (macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i) with hp₂def
   have hp₁prob : ∀ i, IsProbabilityMeasure (p₁ i) := fun i ↦
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   have hp₂prob : ∀ i, IsProbabilityMeasure (p₂ i) := fun i ↦
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   -- abbreviate the average error and the three symbolic per-letter information sums
   set Pe := (c.averageErrorProb W).toReal with hPeDef
   set Pe₁ := MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₁
@@ -490,9 +490,9 @@ lemma mac_converse_rate₁_mul_one_sub_errorProb_mem_of_ceil_exp_le [NeZero M₂
   set p₂ : Fin n → Measure α₂ :=
     fun i ↦ (macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i) with hp₂def
   have hp₁prob : ∀ i, IsProbabilityMeasure (p₁ i) := fun i ↦
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   have hp₂prob : ∀ i, IsProbabilityMeasure (p₂ i) := fun i ↦
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   -- abbreviate the average error, the user-1 marginal error, and the user-1 information sum
   set Pe := (c.averageErrorProb W).toReal with hPeDef
   set Pe₁ := MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₁
@@ -599,9 +599,9 @@ lemma mac_converse_rate₂_mul_one_sub_errorProb_mem_of_ceil_exp_le [NeZero M₁
   set p₂ : Fin n → Measure α₂ :=
     fun i ↦ (macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i) with hp₂def
   have hp₁prob : ∀ i, IsProbabilityMeasure (p₁ i) := fun i ↦
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   have hp₂prob : ∀ i, IsProbabilityMeasure (p₂ i) := fun i ↦
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   set Pe := (c.averageErrorProb W).toReal with hPeDef
   set Pe₂ := MeasureFano.errorProb (macConverseAmbient c W) macConverseMsg₂
     (fun ω ↦ (macConverseMsg₁ ω, fun i ↦ macConverseYs i ω)) (fun p ↦ (c.decoder p.2).2) with hPe₂def

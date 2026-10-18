@@ -216,12 +216,12 @@ theorem integral_condDistrib_marginal_eq
     ∫ z, (∫ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z) = ∫ x, g x ∂(μ.map X) := by
   -- The joint law `(μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (Z, X)`.
   have hjoint : (μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (fun ω ↦ (Z ω, X ω)) :=
-    compProd_map_condDistrib hX.aemeasurable
+    compProd_map_condDistrib (by fun_prop) hX.aemeasurable
   -- The second marginal of the joint is `μ.map X`.
   have hsnd : (μ.map (fun ω ↦ (Z ω, X ω))).map Prod.snd = μ.map X := by
     rw [Measure.map_map measurable_snd (hZ.prodMk hX)]; rfl
   -- `snd` is quasi-measure-preserving from the joint to `μ.map X`.
-  have hqmp : Measure.QuasiMeasurePreserving Prod.snd
+  have hqmp : QuasiMeasurePreserving Prod.snd
       (μ.map (fun ω ↦ (Z ω, X ω))) (μ.map X) :=
     ⟨measurable_snd, hsnd.le.absolutelyContinuous⟩
   -- `g ∘ snd` is a.e.-strongly measurable against the joint.
@@ -303,7 +303,7 @@ theorem lintegral_condDistrib_marginal_eq
     ∫⁻ z, (∫⁻ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z) = ∫⁻ x, g x ∂(μ.map X) := by
   -- The joint law `(μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (Z, X)`.
   have hjoint : (μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (fun ω ↦ (Z ω, X ω)) :=
-    compProd_map_condDistrib hX.aemeasurable
+    compProd_map_condDistrib (by fun_prop) hX.aemeasurable
   -- The second marginal of the joint is `μ.map X`.
   have hsnd : (μ.map (fun ω ↦ (Z ω, X ω))).map Prod.snd = μ.map X := by
     rw [Measure.map_map measurable_snd (hZ.prodMk hX)]; rfl
@@ -345,8 +345,8 @@ theorem lintegral_condDistrib_cross_eq
             * Real.log (((μ.map X).rnDeriv volume x).toReal))) ∂volume) ∂(μ.map Z)
       = ∫⁻ x, ENNReal.ofReal (sign (((μ.map X).rnDeriv volume x).toReal
             * Real.log (((μ.map X).rnDeriv volume x).toReal))) ∂volume := by
-  haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
-  haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map X) := inferInstance
+  haveI : IsProbabilityMeasure (μ.map Z) := inferInstance
   -- The `z`-free `ℝ≥0∞` factor `g x := ofReal (sign (log qX_x))`.
   set g : ℝ → ℝ≥0∞ :=
     fun x ↦ ENNReal.ofReal (sign (Real.log (((μ.map X).rnDeriv volume x).toReal))) with hg

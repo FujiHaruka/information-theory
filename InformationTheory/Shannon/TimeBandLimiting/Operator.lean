@@ -200,7 +200,8 @@ theorem zeroOnLp_starProjection_apply_ae {S : Set ℝ} (hS : MeasurableSet S) (g
     ((zeroOnLp S).starProjection g : ℝ → ℂ) =ᵐ[volume]
       Sᶜ.indicator (fun _ ↦ (1 : ℂ)) * (g : ℝ → ℂ) := by
   -- Candidate projection `P = 𝟙_{Sᶜ} · g` as an `Lp` element.
-  have hmem : MemLp (Sᶜ.indicator (g : ℝ → ℂ)) 2 volume := (Lp.memLp g).indicator hS.compl
+  have hmem : MemLp (Sᶜ.indicator (g : ℝ → ℂ)) 2 volume :=
+      (Lp.memLp g).indicator hS.compl.nullMeasurableSet
   set P : E := hmem.toLp _ with hP
   have hP_ae : (P : ℝ → ℂ) =ᵐ[volume] Sᶜ.indicator (g : ℝ → ℂ) := hmem.coeFn_toLp
   have hind : Sᶜ.indicator (fun _ ↦ (1 : ℂ)) * (g : ℝ → ℂ) = Sᶜ.indicator (g : ℝ → ℂ) := by
@@ -389,14 +390,14 @@ theorem bandLimitSpec_eq_indicator (W : ℝ) (f : E) :
 
 theorem bandLimitSpec_memLp_two (W : ℝ) (f : E) : MemLp (bandLimitSpec W f) 2 volume := by
   rw [bandLimitSpec_eq_indicator]
-  exact (Lp.memLp _).indicator measurableSet_Icc
+  exact (Lp.memLp _).indicator measurableSet_Icc.nullMeasurableSet
 
 theorem bandLimitSpec_memLp_one (W : ℝ) (f : E) : MemLp (bandLimitSpec W f) 1 volume := by
   rw [memLp_one_iff_integrable, bandLimitSpec]
   have hvol : volume (Set.Icc (-W) W) ≠ ∞ := by
     rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top
   exact MemLp.integrable_mul
-    (memLp_indicator_const 2 measurableSet_Icc (1 : ℂ) (Or.inr hvol)) (Lp.memLp _)
+    (memLp_indicator_const 2 measurableSet_Icc.nullMeasurableSet (1 : ℂ) (Or.inr hvol)) (Lp.memLp _)
 
 theorem bandLimitProj_coeFn_ae_eq_fourierInv (W : ℝ) (f : E) :
     ((bandLimitSubspace W).starProjection f : ℝ → ℂ) =ᵐ[volume] 𝓕⁻ (bandLimitSpec W f) := by
@@ -684,7 +685,7 @@ theorem sincConvKernel_memLp (T W : ℝ) :
       simp only [hg_def, Complex.norm_real, Real.norm_eq_abs, sq_abs]
   -- The finite inner `L²` mass `C = ∫⁻ ‖g s‖ₑ² ds`.
   have hC_lt : (∫⁻ s, ‖g s‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume) < ∞ :=
-    lintegral_rpow_enorm_lt_top_of_eLpNorm_lt_top (by norm_num) (by norm_num) hg_memLp.2
+    lintegral_rpow_enorm_lt_top_of_eLpNorm_lt_top (by norm_num) (by norm_num) hg_memLp
   set C : ℝ≥0∞ := ∫⁻ s, ‖g s‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume with hC_def
   -- The product kernel is a.e.-strongly-measurable.
   have hk_meas : AEStronglyMeasurable (fun p : ℝ × ℝ ↦ sincConvKernel T W p.1 p.2)
@@ -696,8 +697,7 @@ theorem sincConvKernel_memLp (T W : ℝ) :
     · exact (Complex.continuous_ofReal.comp (by fun_prop :
         Continuous (fun p : ℝ × ℝ ↦
           2 * W * NormalizedSinc.sincN (2 * W * (p.1 - p.2))))).aestronglyMeasurable
-  refine ⟨hk_meas, ?_⟩
-  rw [eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num)]
+  refine (eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num) hk_meas).mpr ?_
   -- Per-`t` inner integral: `∫⁻ s, ‖k t s‖ₑ² ds = 𝟙_[0,T](t) · C`.
   have hinner : ∀ t : ℝ,
       (∫⁻ s, ‖sincConvKernel T W t s‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume)
@@ -754,19 +754,20 @@ noncomputable def l2KernelApply (κ : L2Kernel) (f : E) : ℝ → ℂ :=
 
 theorem l2Kernel_slice_memLp (κ : L2Kernel) :
     ∀ᵐ t ∂(volume : Measure ℝ), MemLp (fun s ↦ (κ : ℝ × ℝ → ℂ) (t, s)) 2 volume := by
-  have hsm : AEStronglyMeasurable (κ : ℝ × ℝ → ℂ) (volume.prod volume) := (Lp.memLp κ).1
+  have hsm : AEStronglyMeasurable (κ : ℝ × ℝ → ℂ) (volume.prod volume) :=
+      (Lp.memLp κ).aestronglyMeasurable
   have hae := hsm.prodMk_left (ν := (volume : Measure ℝ))
   have hmeas : AEMeasurable (fun p : ℝ × ℝ ↦ ‖(κ : ℝ × ℝ → ℂ) p‖ₑ ^ (2 : ℝ≥0∞).toReal)
       (volume.prod volume) := hsm.enorm.pow_const _
   have htop : (∫⁻ p, ‖(κ : ℝ × ℝ → ℂ) p‖ₑ ^ (2 : ℝ≥0∞).toReal ∂(volume.prod volume)) < ∞ :=
-    (eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num)).mp
+    (eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num) hsm).mp
       (Lp.eLpNorm_lt_top κ)
   rw [lintegral_prod _ hmeas] at htop
   have hfin : ∀ᵐ t ∂(volume : Measure ℝ),
       (∫⁻ s, ‖(κ : ℝ × ℝ → ℂ) (t, s)‖ₑ ^ (2 : ℝ≥0∞).toReal ∂volume) < ∞ :=
     ae_lt_top' hmeas.lintegral_prod_right' htop.ne
   filter_upwards [hae, hfin] with t ht htfin
-  exact ⟨ht, (eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num)).mpr htfin⟩
+  exact (eLpNorm_lt_top_iff_lintegral_rpow_enorm_lt_top (by norm_num) (by norm_num) ht).mpr htfin
 
 theorem l2Kernel_integrable (κ : L2Kernel) (f : E) :
     ∀ᵐ t ∂(volume : Measure ℝ),
@@ -778,8 +779,8 @@ theorem l2KernelApply_aestronglyMeasurable (κ : L2Kernel) (f : E) :
     AEStronglyMeasurable (l2KernelApply κ f) volume := by
   have h : AEStronglyMeasurable (fun p : ℝ × ℝ ↦ (κ : ℝ × ℝ → ℂ) p * (f : ℝ → ℂ) p.2)
       (volume.prod volume) :=
-    (Lp.memLp κ).1.mul
-      ((Lp.memLp f).1.comp_quasiMeasurePreserving Measure.quasiMeasurePreserving_snd)
+    (Lp.memLp κ).aestronglyMeasurable.mul
+      ((Lp.aestronglyMeasurable f).comp_quasiMeasurePreserving Measure.quasiMeasurePreserving_snd)
   exact h.integral_prod_right'
 
 theorem l2KernelApply_eLpNorm_le (κ : L2Kernel) (f : E) :
@@ -787,13 +788,15 @@ theorem l2KernelApply_eLpNorm_le (κ : L2Kernel) (f : E) :
       ≤ eLpNorm (κ : ℝ × ℝ → ℂ) 2 (volume.prod volume) * eLpNorm (f : ℝ → ℂ) 2 volume := by
   set D : ℝ≥0∞ := ∫⁻ s, ‖(f : ℝ → ℂ) s‖ₑ ^ (2 : ℝ) ∂volume with hD
   set A : ℝ → ℝ≥0∞ := fun t ↦ ∫⁻ s, ‖(κ : ℝ × ℝ → ℂ) (t, s)‖ₑ ^ (2 : ℝ) ∂volume with hA
-  have hfm : AEMeasurable (fun s ↦ ‖(f : ℝ → ℂ) s‖ₑ) volume := (Lp.memLp f).1.enorm
+  have hfm : AEMeasurable (fun s ↦ ‖(f : ℝ → ℂ) s‖ₑ) volume :=
+      (Lp.memLp f).aestronglyMeasurable.enorm
   have hκm : AEMeasurable (fun p : ℝ × ℝ ↦ ‖(κ : ℝ × ℝ → ℂ) p‖ₑ ^ (2 : ℝ))
-      (volume.prod volume) := (Lp.memLp κ).1.enorm.pow_const _
+      (volume.prod volume) := (Lp.memLp κ).aestronglyMeasurable.enorm.pow_const _
   -- Cauchy–Schwarz on each slice: `‖∫ k(t,s) f(s) ds‖ ≤ ‖k(t,·)‖₂ · ‖f‖₂`.
   have hpt : ∀ᵐ t ∂(volume : Measure ℝ),
       ‖l2KernelApply κ f t‖ₑ ^ (2 : ℝ) ≤ A t * D := by
-    filter_upwards [(Lp.memLp κ).1.prodMk_left (ν := (volume : Measure ℝ))] with t ht
+    filter_upwards [(Lp.memLp κ).aestronglyMeasurable.prodMk_left (ν :=
+        (volume : Measure ℝ))] with t ht
     have hcs : ‖l2KernelApply κ f t‖ₑ ≤ A t ^ (1 / 2 : ℝ) * D ^ (1 / 2 : ℝ) := by
       calc ‖l2KernelApply κ f t‖ₑ
           ≤ ∫⁻ s, ‖(κ : ℝ × ℝ → ℂ) (t, s) * (f : ℝ → ℂ) s‖ₑ ∂volume :=
@@ -814,21 +817,23 @@ theorem l2KernelApply_eLpNorm_le (κ : L2Kernel) (f : E) :
       = ∫⁻ p, ‖(κ : ℝ × ℝ → ℂ) p‖ₑ ^ (2 : ℝ) ∂(volume.prod volume) := (lintegral_prod _ hκm).symm
   have hLHS : eLpNorm (l2KernelApply κ f) 2 volume
       = (∫⁻ t, ‖l2KernelApply κ f t‖ₑ ^ (2 : ℝ) ∂volume) ^ (1 / 2 : ℝ) := by
-    rw [eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num)]; norm_num
+    rw [eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num)
+      (l2KernelApply_aestronglyMeasurable κ f)]; norm_num
   have hK : eLpNorm (κ : ℝ × ℝ → ℂ) 2 (volume.prod volume)
       = (∫⁻ p, ‖(κ : ℝ × ℝ → ℂ) p‖ₑ ^ (2 : ℝ) ∂(volume.prod volume)) ^ (1 / 2 : ℝ) := by
-    rw [eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num)]; norm_num
+    rw [eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num)
+      (Lp.memLp κ).aestronglyMeasurable]; norm_num
   have hF : eLpNorm (f : ℝ → ℂ) 2 volume = D ^ (1 / 2 : ℝ) := by
-    rw [hD, eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num)]; norm_num
+    rw [hD, eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num)
+      (Lp.memLp f).aestronglyMeasurable]; norm_num
   rw [hLHS, hK, hF, ← ENNReal.mul_rpow_of_nonneg _ _ (by norm_num : (0:ℝ) ≤ 1/2), ← hswap,
     ← lintegral_mul_const'' _ (by
       exact (hκm.lintegral_prod_right' : AEMeasurable A volume))]
   exact ENNReal.rpow_le_rpow (lintegral_mono_ae hpt) (by norm_num)
 
 theorem l2KernelApply_memLp (κ : L2Kernel) (f : E) : MemLp (l2KernelApply κ f) 2 volume :=
-  ⟨l2KernelApply_aestronglyMeasurable κ f,
-    lt_of_le_of_lt (l2KernelApply_eLpNorm_le κ f)
-      (ENNReal.mul_lt_top (Lp.eLpNorm_lt_top κ) (Lp.eLpNorm_lt_top f))⟩
+  lt_of_le_of_lt (l2KernelApply_eLpNorm_le κ f)
+    (ENNReal.mul_lt_top (Lp.eLpNorm_lt_top κ) (Lp.eLpNorm_lt_top f))
 
 /-- The integral operator of a kernel, as a linear map on `L²(ℝ;ℂ)`. -/
 noncomputable def l2KernelLin (κ : L2Kernel) : E →ₗ[ℂ] E where

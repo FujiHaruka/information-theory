@@ -746,7 +746,7 @@ private lemma random_codebook_E1_swap
   -- Step 3: μ.map (fun ω i ↦ (Xs i ω, Ys i ω)) = Q via block_joint_law_eq_pi.
   set ζ : Ω → (Fin n → α × β) := fun ω i ↦ (Xs i ω, Ys i ω) with hζ_def
   have h_ζ_meas : Measurable ζ := by
-    refine measurable_pi_lambda _ (fun i ↦ ?_)
+    refine Measurable.of_eval (fun i ↦ ?_)
     exact (hXs i).prodMk (hYs i)
   have h_block_law : μ.map ζ = Q := by
     rw [hζ_def, hQ_def]
@@ -756,9 +756,9 @@ private lemma random_codebook_E1_swap
     fun z ↦ (fun i ↦ (z i).1, fun i ↦ (z i).2)
   have h_ψ_meas : Measurable ψ := by
     refine Measurable.prodMk ?_ ?_
-    · refine measurable_pi_lambda _ (fun i ↦ ?_)
+    · refine Measurable.of_eval (fun i ↦ ?_)
       exact (measurable_pi_apply i).fst
-    · refine measurable_pi_lambda _ (fun i ↦ ?_)
+    · refine Measurable.of_eval (fun i ↦ ?_)
       exact (measurable_pi_apply i).snd
   -- (jointRV Xs n, jointRV Ys n) ω = ψ (ζ ω).
   have h_jointRV_eq :
@@ -941,14 +941,12 @@ private lemma random_codebook_E2_swap
   set μY : Measure (Fin n → β) := μ.map (InformationTheory.Shannon.jointRV Ys n) with hμY_def
   haveI : IsProbabilityMeasure μY := by
     rw [hμY_def]
-    exact Measure.isProbabilityMeasure_map
-      (InformationTheory.Shannon.measurable_jointRV Ys hYs n).aemeasurable
+    exact inferInstance
   -- μX = Pi p = μ.map (jointRV Xs n).
   set μX : Measure (Fin n → α) := μ.map (InformationTheory.Shannon.jointRV Xs n) with hμX_def
   haveI : IsProbabilityMeasure μX := by
     rw [hμX_def]
-    exact Measure.isProbabilityMeasure_map
-      (InformationTheory.Shannon.measurable_jointRV Xs hXs n).aemeasurable
+    exact inferInstance
   have hμX_eq : μX = P := by
     rw [hμX_def, hP_def]
     exact block_law_X_eq_pi_p μ Xs hXs hindepX hidentX p h_match_X n

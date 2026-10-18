@@ -83,7 +83,7 @@ theorem macJTS_indep_prob_le_X1
   set ê : (Fin n → α₂) × (Fin n → β) → (Fin n → α₂ × β) :=
     fun q i ↦ (q.1 i, q.2 i) with hê_def
   have hê_meas : Measurable ê :=
-    measurable_pi_lambda _ fun i ↦
+    Measurable.of_eval fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).prodMk
         ((measurable_pi_apply i).comp measurable_snd)
   -- The single-user independent-pair bound on the regrouped jointly typical set.
@@ -91,9 +91,9 @@ theorem macJTS_indep_prob_le_X1
     hindepX1 hidentX1 hindepX2Y hidentX2Y hposX1 hposX2Y hposZ n hε
   -- Probability-measure instances (for product σ-finiteness / finiteness).
   haveI hμX1prob : IsProbabilityMeasure μX1 :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV X1s hX1s n).aemeasurable
+    inferInstance
   haveI hνA2prob : IsProbabilityMeasure νA2 :=
-    Measure.isProbabilityMeasure_map hg_meas.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μX1.prod νA2) := by infer_instance
   -- Inclusion `macJTS ⊆ (Prod.map id ê) ⁻¹' (single-user JTS)`.
   have h_incl : macJointlyTypicalSet μ X1s X2s Ys n ε ⊆
@@ -232,11 +232,9 @@ theorem macJTS_indep_prob_le_both
     (fun i ↦ measurable_jointSequence X1s X2s hX1s hX2s i) hYs
     hindepX1X2 hidentX1X2 hindepY hidentY hposX1X2 hposY hposZ n hε
   haveI : IsProbabilityMeasure (μ.map (jointRV (jointSequence X1s X2s) n)) :=
-    Measure.isProbabilityMeasure_map
-      (measurable_jointRV (jointSequence X1s X2s)
-        (fun i ↦ measurable_jointSequence X1s X2s hX1s hX2s i) n).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μ.map (jointRV Ys n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV Ys hYs n).aemeasurable
+    inferInstance
   -- Inclusion of the reshaped macJTS into the single-user jointly typical set.
   have h_incl : (fun q : (Fin n → α₁ × α₂) × (Fin n → β) ↦
         (((fun i ↦ (q.1 i).1) : Fin n → α₁),
@@ -317,11 +315,9 @@ theorem macJTS_indep_prob_le_X2
     hX2s (fun i ↦ measurable_jointSequence X1s Ys hX1s hYs i)
     hindepX2 hidentX2 hindepX1Y hidentX1Y hposX2 hposX1Y hposZ n hε
   haveI : IsProbabilityMeasure (μ.map (jointRV X2s n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV X2s hX2s n).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μ.map (jointRV (jointSequence X1s Ys) n)) :=
-    Measure.isProbabilityMeasure_map
-      (measurable_jointRV (jointSequence X1s Ys)
-        (fun i ↦ measurable_jointSequence X1s Ys hX1s hYs i) n).aemeasurable
+    inferInstance
   have h_incl : (fun q : (Fin n → α₂) × (Fin n → α₁ × β) ↦
         (((fun i ↦ (q.2 i).1) : Fin n → α₁),
           (q.1, ((fun i ↦ (q.2 i).2) : Fin n → β)))) ⁻¹'

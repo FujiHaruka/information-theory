@@ -142,14 +142,11 @@ lemma wz_covering_failure_prob_le {α' : Type*}
   -- The map of the probability measure `μ` is a finite (sub-probability) measure,
   -- irrespective of whether `Us 0` is measurable.
   haveI hfin : IsFiniteMeasure (μ.map (Us 0)) := Measure.isFiniteMeasure_map μ (Us 0)
-  have hfac : (μ.map (Us 0)) Set.univ ≤ 1 := by
-    by_cases hae : AEMeasurable (Us 0) μ
-    · rw [Measure.map_apply_of_aemeasurable hae MeasurableSet.univ]; simp
-    · rw [Measure.map_of_not_aemeasurable hae]; simp
+  have hfac : (μ.map (Us 0)) Set.univ ≤ 1 := prob_le_one
   -- Hence the product measure `ν` is a sub-probability measure.
   have hν_univ : ν Set.univ ≤ 1 := by
     rw [hν, Measure.pi_univ]
-    exact Finset.prod_le_one' (fun _ _ ↦ hfac)
+    exact Finset.prod_le_one (fun _ _ ↦ hfac)
   -- The per-source covering mass lies in `[0, 1]`.
   have h1 : ∀ x : Fin n → α',
       ν.real {u | (x, u) ∈ ChannelCoding.jointlyTypicalSet μ Xs Us n ε} ≤ 1 := by
@@ -798,10 +795,9 @@ lemma wz_covering_codeword_sideInfo_mass_le
   intro u
   have hYmeas : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
   haveI hMYprob : IsProbabilityMeasure (μ.map (jointRV Ys n)) :=
-    Measure.isProbabilityMeasure_map hYmeas.aemeasurable
+    inferInstance
   haveI hMZprob : IsProbabilityMeasure (μ.map (ChannelCoding.jointSequence Us Ys 0)) :=
-    Measure.isProbabilityMeasure_map
-      (ChannelCoding.measurable_jointSequence Us Ys hUs hYs 0).aemeasurable
+    inferInstance
   -- Reframe the ω-event as the Y-law mass of the fixed-`u` fiber slice.
   have hpre : {ω | (u, jointRV Ys n ω)
         ∈ ChannelCoding.jointlyTypicalSet μ Us Ys n ε}

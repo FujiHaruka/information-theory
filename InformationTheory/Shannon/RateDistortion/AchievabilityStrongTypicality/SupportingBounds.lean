@@ -122,7 +122,7 @@ theorem encoder_strong_failure_prob_le
   -- Abbreviate.
   set p : Measure (Fin n → β) := Measure.pi (fun _ : Fin n ↦ μ.map (Ys 0)) with hp_def
   haveI : IsProbabilityMeasure (μ.map (Ys 0)) :=
-    MeasureTheory.Measure.isProbabilityMeasure_map (hYs 0).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure p := by rw [hp_def]; infer_instance
   -- Define the "no strong match" event.
   set Smiss : Set (Fin M → (Fin n → β)) :=

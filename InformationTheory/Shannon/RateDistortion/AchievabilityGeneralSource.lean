@@ -340,7 +340,7 @@ lemma expectedBlockDistortion_lift_le (P_X : α → ℝ) (hP_pmf : P_X ∈ stdSi
     pmfToMeasure_isProbabilityMeasure hP_pmf
   have hr_meas : Measurable (rdRetract P_X a₀) := measurable_of_finite _
   haveI hμ'_map_prob : IsProbabilityMeasure ((pmfToMeasure P_X).map (rdRetract P_X a₀)) :=
-    Measure.isProbabilityMeasure_map hr_meas.aemeasurable
+    inferInstance
   have hmap : (pmfToMeasure P_X).map (rdRetract P_X a₀) = pmfToMeasure (rdSupportPmf P_X) :=
     pmfToMeasure_map_retract P_X hP_pmf a₀
   have hnull : pmfToMeasure P_X {a : α | ¬ 0 < P_X a} = 0 :=

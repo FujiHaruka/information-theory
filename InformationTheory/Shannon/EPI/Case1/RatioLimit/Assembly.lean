@@ -132,7 +132,8 @@ theorem csiszarLogRatioGap_tendsto_zero_atTop
     exact hv_X (le_antisymm (h ▸ le_self_add) bot_le)
   -- Gaussian additivity for the noise sum.
   have hZXZY_law : P.map (fun ω ↦ Z_X ω + Z_Y ω) = gaussianReal 0 (v_X + v_Y) := by
-    have h := gaussianReal_add_gaussianReal_of_indepFun hZXZY_indep hZX_law hZY_law
+    have h := gaussianReal_add_gaussianReal_of_indepFun hZXZY_indep
+      { map_eq := hZX_law } { map_eq := hZY_law }
     have h_eq : (Z_X + Z_Y) = fun ω ↦ Z_X ω + Z_Y ω := by funext ω; rfl
     rw [h_eq] at h; simpa using h
   -- Limits of the three rescaled paths (§3).
@@ -556,7 +557,8 @@ theorem entropyPower_add_ge_case1_of_methodX
     intro h
     exact hv_X (le_antisymm (h ▸ le_self_add) bot_le)
   have hZXZY_law : P.map (fun ω ↦ Z_X ω + Z_Y ω) = gaussianReal 0 (v_X + v_Y) := by
-    have h := gaussianReal_add_gaussianReal_of_indepFun hZXZY_indep hZX_law hZY_law
+    have h := gaussianReal_add_gaussianReal_of_indepFun hZXZY_indep
+      { map_eq := hZX_law } { map_eq := hZY_law }
     have h_eq : (Z_X + Z_Y) = fun ω ↦ Z_X ω + Z_Y ω := by funext ω; rfl
     rw [h_eq] at h; simpa using h
   -- ===== C-5: variance bounds (hold with equality, `varA := Var[A;P]`). =====

@@ -46,11 +46,11 @@ theorem entropy_pair_eq_entropy_add_condEntropy
     entropy μ (fun ω ↦ (Xs ω, Yo ω))
       = entropy μ Xs + InformationTheory.MeasureFano.condEntropy μ Yo Xs := by
   haveI : IsProbabilityMeasure (μ.map Xs) :=
-    Measure.isProbabilityMeasure_map _hXs.aemeasurable
+    inferInstance
   -- Disintegrate the joint: μ.map (Xs, Yo) = (μ.map Xs) ⊗ₘ condDistrib Yo Xs μ.
   have h_joint : μ.map (fun ω ↦ (Xs ω, Yo ω))
       = (μ.map Xs) ⊗ₘ (condDistrib Yo Xs μ) :=
-    (compProd_map_condDistrib hYo.aemeasurable).symm
+    (compProd_map_condDistrib (by fun_prop) hYo.aemeasurable).symm
   -- Joint singleton mass = marginal × conditional (real form).
   have h_pair_real : ∀ (x : X) (y : Y),
       (μ.map (fun ω ↦ (Xs ω, Yo ω))).real {(x, y)}
@@ -154,7 +154,7 @@ theorem condEntropy_tower
             ((condDistrib Xs (fun ω ↦ (Yo ω, Zo ω)) μ (y, z)).real {x})
             ∂(condDistrib Zo Yo μ y) ∂(μ.map Yo) := by
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (Yo ω, Zo ω))) :=
-    Measure.isProbabilityMeasure_map (_hYo.prodMk hZo).aemeasurable
+    inferInstance
   -- Integrand: f p = ∑ x, negMulLog ((cond Xs (Yo, Zo) μ p).real {x}). Bounded in [0, |X|].
   set f : Y × Z → ℝ := fun p ↦
     ∑ x : X, Real.negMulLog
@@ -189,7 +189,7 @@ theorem condEntropy_tower
   unfold InformationTheory.MeasureFano.condEntropy
   have h_yz : μ.map (fun ω ↦ (Yo ω, Zo ω))
       = (μ.map Yo) ⊗ₘ (condDistrib Zo Yo μ) :=
-    (compProd_map_condDistrib hZo.aemeasurable).symm
+    (compProd_map_condDistrib (by fun_prop) hZo.aemeasurable).symm
   rw [show (fun y ↦ ∑ x : X, Real.negMulLog
             ((condDistrib Xs (fun ω ↦ (Yo ω, Zo ω)) μ y).real {x})) = f from rfl,
     h_yz, Measure.integral_compProd (h_yz ▸ h_integrable)]

@@ -146,8 +146,8 @@ theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
     differentialEntropy (μ.map X) - condDifferentialEntropy X Z μ
       = (klDiv ((μ.map Z) ⊗ₘ condDistrib X Z μ)
           ((μ.map Z) ⊗ₘ Kernel.const α (μ.map X))).toReal := by
-  haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
-  haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map X) := inferInstance
+  haveI : IsProbabilityMeasure (μ.map Z) := inferInstance
   set μZ := μ.map Z with hμZ
   set κ := condDistrib X Z μ with hκ
   set ν := μ.map X with hν
@@ -276,7 +276,7 @@ instance affineShiftKernel.instIsMarkov (νX : Measure ℝ) [IsProbabilityMeasur
   refine ⟨fun z ↦ ?_⟩
   rw [affineShiftKernel_apply]
   have : Measurable fun x : ℝ ↦ x + c * z := by fun_prop
-  exact Measure.isProbabilityMeasure_map this.aemeasurable
+  exact inferInstance
 
 /-- Plumbing core (buildable, not a Mathlib wall): the pushforward of the product
 measure `νZ ⊗ νX` through the affine map `g (z, x) = (z, x + c·z)` equals the composition
@@ -331,8 +331,8 @@ theorem condDifferentialEntropy_indep_add_eq
   set W : Ω → ℝ := fun ω ↦ X ω + c * Z ω with hW_def
   have hW : Measurable W := hX.add ((measurable_const).mul hZ)
   -- Output and conditioning laws are probability measures.
-  haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
-  haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map X) := inferInstance
+  haveI : IsProbabilityMeasure (μ.map Z) := inferInstance
   have hsf : SigmaFinite (μ.map X) := inferInstance
   -- Step 1: joint `(Z, X)` is the product law (independence).
   have hZX : IndepFun Z X μ := hXZ.symm
@@ -349,7 +349,7 @@ theorem condDifferentialEntropy_indep_add_eq
       prod_map_affine_eq_compProd]
   -- Step 2: uniqueness of the regular conditional distribution.
   have hae : condDistrib W Z μ =ᵐ[μ.map Z] affineShiftKernel (μ.map X) c :=
-    condDistrib_ae_eq_of_measure_eq_compProd Z hW.aemeasurable hjoint_ZW
+    condDistrib_ae_eq_of_measure_eq_compProd (X := Z) (by fun_prop) hW.aemeasurable hjoint_ZW
   -- Step 3: rewrite the fiber integral, then apply translation invariance fiberwise.
   unfold condDifferentialEntropy
   rw [integral_congr_ae (g := fun _ ↦ differentialEntropy (μ.map X)) ?_]
@@ -491,10 +491,11 @@ theorem negMulLog_convDensity_entropy_ge
     rw [hpX_law]; exact withDensity_absolutelyContinuous _ _
   -- Law of the heat-flow path and its absolute continuity.
   set W : Ω → ℝ := fun ω ↦ X ω + Real.sqrt s * Z ω with hW
-  have hW_law : μ.map W = (μ.map X) ∗ gaussianReal 0 ⟨s * (v_Z : ℝ), by positivity⟩ :=
+  set vW : ℝ≥0 := ⟨s * (v_Z : ℝ), by positivity⟩ with hvW
+  have hW_law : μ.map W = (μ.map X) ∗ gaussianReal 0 vW :=
     InformationTheory.Shannon.FisherInfo.gaussianConvolution_law_conv
       X Z hX hZ hXZ v_Z hZ_law hs.le
-  have hsv_ne : (⟨s * (v_Z : ℝ), by positivity⟩ : ℝ≥0) ≠ 0 := by
+  have hsv_ne : vW ≠ 0 := by
     intro h
     exact (mul_pos hs hv_Z_pos').ne' (congrArg NNReal.toReal h)
   have hW_ac : (μ.map W) ≪ volume := by
@@ -522,7 +523,7 @@ theorem negMulLog_convDensity_entropy_ge
     refine integral_congr_ae ?_
     filter_upwards [hrn] with x hx
     rw [hx, ENNReal.toReal_ofReal]
-    · rw [hwit]
+    · exact congrArg (fun v ↦ (convDensityAdd pX (gaussianPDFReal 0 v) x).negMulLog) hwit
     · unfold convDensityAdd
       exact integral_nonneg fun y ↦
         mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)

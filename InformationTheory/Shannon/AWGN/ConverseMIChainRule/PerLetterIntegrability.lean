@@ -103,7 +103,7 @@ private lemma perLetterLaw_eq_mixture
   have hf_meas : Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ ω.2 i) :=
     (measurable_pi_apply i).comp measurable_snd
   unfold converseJointInline
-  rw [Measure.map_smul, Measure.map_finset_sum hf_meas.aemeasurable]
+  rw [Measure.map_smul _ (by fun_prop), Measure.map_finset_sum hf_meas.aemeasurable]
   simp only [Fintype.card_fin]
   congr 1
   refine Finset.sum_congr rfl (fun m _ ↦ ?_)
@@ -335,8 +335,7 @@ theorem awgnPerLetterIntegrability_holds
     -- `ν` is a probability measure (pushforward of the probability mixture)
     haveI hν_prob : IsProbabilityMeasure ν := by
       rw [hν_def]
-      exact Measure.isProbabilityMeasure_map
-        ((measurable_pi_apply i).comp measurable_snd).aemeasurable
+      exact inferInstance
     -- main case: `ν = volume.withDensity f`, `f := perLetterMixtureDensity N c i`.
     set f : ℝ → ℝ≥0∞ := perLetterMixtureDensity N c i with hf_def
     have hf_meas : Measurable f := perLetterMixtureDensity_measurable N c i

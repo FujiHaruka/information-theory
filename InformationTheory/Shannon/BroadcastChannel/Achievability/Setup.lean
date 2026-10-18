@@ -50,7 +50,7 @@ instance bcJointDistribution.instIsProbabilityMeasure
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     IsProbabilityMeasure (bcJointDistribution pU K W) := by
   unfold bcJointDistribution
-  exact Measure.isProbabilityMeasure_map MeasurableEquiv.prodAssoc.measurable.aemeasurable
+  exact inferInstance
 
 /-! ### I.i.d. ambient measure on `ℕ → U × α × β₁ × β₂` -/
 

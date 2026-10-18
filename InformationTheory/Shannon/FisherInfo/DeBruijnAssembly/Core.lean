@@ -94,8 +94,9 @@ private theorem convDensityAdd_le_prefactor
     · exact ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable
     · refine Filter.Eventually.of_forall (fun y ↦ ?_)
-      rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
-      exact gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y)
+      rw [Real.norm_eq_abs]
+      exact (abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))).trans_le
+        (gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y))
   have hmaj_int : Integrable (fun y ↦ pX y * pref) volume := hpX_int.mul_const _
   -- `∫ F ≤ ∫ (pX · pref) = pref · ∫ pX = pref`.
   have hle : (∫ y, pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y) ∂volume)
@@ -169,8 +170,9 @@ private theorem convDensityAdd_lower_bound_gaussian_uniformR
     · exact ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable
     · refine Filter.Eventually.of_forall (fun y ↦ ?_)
-      rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
-      exact gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y)
+      rw [Real.norm_eq_abs]
+      exact (abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))).trans_le
+        (gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y))
   -- STEP 2: drop the integral to the box `Icc (-R) R`.
   have hbox_le : (∫ y in Set.Icc (-R) R, F y ∂volume) ≤ ∫ y, F y ∂volume :=
     setIntegral_le_integral hF_int (Filter.Eventually.of_forall hF_nn)
@@ -265,11 +267,12 @@ theorem convDensityAdd_logFactor_poly_majorant
   have hlog_nat : Real.log ((1/2) * g (|x| + R))
       = Real.log (1/2) + (Real.log ((Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹)
         + -(|x| + R - 0) ^ 2 / (2 * s)) := by
-    rw [hg_def]
-    simp only [gaussianPDFReal]
+    change Real.log ((1 / 2) * ((Real.sqrt (2 * Real.pi * s))⁻¹
+        * Real.exp (-(|x| + R - 0) ^ 2 / (2 * s))))
+      = Real.log (1 / 2) + (Real.log ((Real.sqrt (2 * Real.pi * s))⁻¹)
+        + -(|x| + R - 0) ^ 2 / (2 * s))
     rw [Real.log_mul (by norm_num) (ne_of_gt (by positivity)),
       Real.log_mul (ne_of_gt (by positivity)) (Real.exp_ne_zero _), Real.log_exp]
-    rfl
   have hlog_half : Real.log ((1/2) * g (|x| + R))
       = Real.log (1/2) + Real.log (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹
         - (|x| + R) ^ 2 / (2 * s) := by
@@ -565,8 +568,7 @@ theorem gaussianHess_le_gaussHessMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
   have ht2s : t < 2 * s := by have := hs.1; linarith
   have hs2t : s ≤ 2 * t := hs.2.le
   -- unfold the Gaussian: `(√(2πs))⁻¹ · exp(-u²/(2s))`.
-  rw [gaussianPDFReal]
-  simp only [sub_zero]
+  simp only [gaussianPDFReal, sub_zero]
   -- prefactor bound: `(√(2πs))⁻¹ ≤ (√(πt))⁻¹`.
   have hpref : (Real.sqrt (2 * Real.pi * s))⁻¹ ≤ (Real.sqrt (Real.pi * t))⁻¹ := by
     apply inv_anti₀ (by positivity)

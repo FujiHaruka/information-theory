@@ -329,9 +329,9 @@ private theorem differentialEntropy_le_of_conv_finite
       (fun x ↦ Real.negMulLog ((ν.rnDeriv volume x).toReal)) volume) :
     differentialEntropy (Q.map W) ≤ differentialEntropy ν := by
   haveI hWmap_prob : IsProbabilityMeasure (Q.map W) :=
-    Measure.isProbabilityMeasure_map hW.aemeasurable
+    inferInstance
   haveI hVmap_prob : IsProbabilityMeasure (Q.map V) :=
-    Measure.isProbabilityMeasure_map hV.aemeasurable
+    inferInstance
   -- Per-fibre translate Gibbs.  Set `μWz z := (Q.map W).map (·+z)` (the per-fibre conditional
   -- law of `W+V` given `V=z`, by independence).  Each `μWz z ≪ ν` (a.e. z), so per-fibre Gibbs
   -- gives
@@ -359,8 +359,7 @@ private theorem differentialEntropy_le_of_conv_finite
   haveI hμWz_prob : ∀ z, IsProbabilityMeasure (μWz z) := by
     intro z
     show IsProbabilityMeasure ((Q.map W).map (fun x ↦ x + z))
-    exact Measure.isProbabilityMeasure_map
-      (by fun_prop : Measurable fun x : ℝ ↦ x + z).aemeasurable
+    exact inferInstance
   -- (c) per-fibre finite entropy.
   have hμWz_ent : ∀ z, Integrable
       (fun x ↦ Real.negMulLog ((μWz z).rnDeriv volume x).toReal) volume := by
@@ -474,9 +473,9 @@ theorem differentialEntropyExt_mono_add_of_integrable
   have hindep : IndepFun W V Q := hWV
   -- Probability-measure instances on the relevant marginals.
   haveI hWmap_prob : IsProbabilityMeasure (Q.map W) :=
-    Measure.isProbabilityMeasure_map hW.aemeasurable
+    inferInstance
   haveI hVmap_prob : IsProbabilityMeasure (Q.map V) :=
-    Measure.isProbabilityMeasure_map hV.aemeasurable
+    inferInstance
   -- The sum law equals the convolution of the W- and V-marginals (independence).
   have hsum_conv : Q.map (fun ω ↦ W ω + V ω) = (Q.map W) ∗ (Q.map V) := by
     have := hindep.map_add_eq_map_conv_map hW hV
@@ -520,7 +519,7 @@ theorem differentialEntropyExt_mono_add_of_integrable
     refine EReal.coe_le_coe_iff.mpr ?_
     -- per-fibre translate Gibbs, factored into the standalone helper.
     haveI hν_prob : IsProbabilityMeasure ν := by
-      rw [hν_def]; exact Measure.isProbabilityMeasure_map (hW.add hV).aemeasurable
+      rw [hν_def]; exact inferInstance
     exact differentialEntropy_le_of_conv_finite W V Q hW hV hW_ac_Q hW_ent_Q ν hν_ac hν_conv
       rfun hrfun_def hent_sum'
   · -- Case A, the infinite branch: `¬ hent_sum` and `B(ν) < ⊤` ⟹ `A(ν) = ⊤` ⟹
@@ -688,7 +687,7 @@ theorem differentialEntropyExt_mono_add_truncW
     rw [hLHS, hRHS]
   -- positive mass of `Sn` under `P.map W`.
   have hWmap_prob' : IsProbabilityMeasure (P.map W) :=
-    Measure.isProbabilityMeasure_map hW.aemeasurable
+    inferInstance
   have hSn_pos : (P.map W) Sn ≠ 0 := by
     rw [Measure.map_apply hW hSn_meas]
     have : W ⁻¹' Sn = E := by ext ω; simp [hE_def, hSn_def]

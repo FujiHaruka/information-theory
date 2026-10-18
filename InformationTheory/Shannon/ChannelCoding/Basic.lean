@@ -578,9 +578,9 @@ theorem jointlyTypicalSet_indep_prob_le
   have hYmeas : Measurable (InformationTheory.Shannon.jointRV Ys n) :=
     InformationTheory.Shannon.measurable_jointRV Ys hYs n
   haveI : IsProbabilityMeasure μX :=
-    Measure.isProbabilityMeasure_map hXmeas.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure μY :=
-    Measure.isProbabilityMeasure_map hYmeas.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μX.prod μY) := by
     have : IsFiniteMeasure μX := inferInstance
     have : IsFiniteMeasure μY := inferInstance

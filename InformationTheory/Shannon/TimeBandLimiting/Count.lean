@@ -790,7 +790,7 @@ theorem exists_pointwise_repr_of_mem_timeLimit_star_fixed (T : ℝ) {u : E}
     filter_upwards [hz] with t ht using by simpa using ht
   refine ⟨(Set.Icc (0 : ℝ) T).indicator (fun s ↦ ((u : ℝ → ℂ) s).re), ?_, ?_, ?_⟩
   · -- `MemLp`: the real part is `L²` (norm-1 Lipschitz image of `u`), and indicators preserve it.
-    exact MemLp.indicator measurableSet_Icc (Lp.memLp u).re
+    exact MemLp.indicator measurableSet_Icc.nullMeasurableSet (Lp.memLp u).re
   · -- Pointwise support: an indicator vanishes off its set.
     intro x hx
     by_contra hxS

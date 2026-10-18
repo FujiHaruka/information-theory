@@ -235,7 +235,7 @@ lemma condEntropy_eq_pushforward
   set ν : Measure (β × γ) := μ.map (fun ω ↦ (Xs ω, Yo ω)) with hν_def
   have h_pair_meas : Measurable (fun ω ↦ (Xs ω, Yo ω)) := hXs.prodMk hYo
   haveI : IsProbabilityMeasure ν :=
-    Measure.isProbabilityMeasure_map h_pair_meas.aemeasurable
+    inferInstance
   -- `ν.map Prod.snd = μ.map Yo` (outer measure of both integrals agrees).
   have h_snd_map : ν.map (Prod.snd : β × γ → γ) = μ.map Yo := by
     rw [hν_def, Measure.map_map measurable_snd h_pair_meas]
@@ -404,7 +404,7 @@ theorem blockEntropy_zero
   -- `(μ.map (blockRV 0)).real {default} = 1`, and the entropy sum has one term `negMulLog 1 = 0`.
   unfold blockEntropy entropy
   have _ : IsProbabilityMeasure (μ.map (p.blockRV 0)) :=
-    Measure.isProbabilityMeasure_map (p.measurable_blockRV 0).aemeasurable
+    inferInstance
   have h_card : Fintype.card (Fin 0 → α) = 1 := by
     rw [Fintype.card_pi]; simp
   -- All terms collapse: there's a unique element, it has measure 1, negMulLog 1 = 0.

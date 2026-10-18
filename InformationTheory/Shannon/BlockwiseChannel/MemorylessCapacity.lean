@@ -434,7 +434,7 @@ private lemma mutualInfo_per_letter_eq_marginal
   set μ : Measure ((Fin n → α) × (Fin n → β)) := q ⊗ₘ Channel.toBlock W n with hμ_def
   set q_i : Measure α := q.map (fun x : Fin n → α ↦ x i) with hq_i_def
   haveI : IsProbabilityMeasure q_i := by
-    rw [hq_i_def]; exact Measure.isProbabilityMeasure_map (measurable_pi_apply i).aemeasurable
+    rw [hq_i_def]; exact inferInstance
   -- Step 1: μ.map (z => (z.1 i, z.2 i)) = q_i ⊗ₘ W.
   have h_joint_eq :
       μ.map (fun z : (Fin n → α) × (Fin n → β) ↦ (z.1 i, z.2 i))
@@ -559,7 +559,7 @@ private lemma isMarkovChain_per_letter_input
   have hYo_meas : Measurable (fun z : (Fin n → α) × (Fin n → β) ↦ z.2 i) :=
     (measurable_pi_apply i).comp measurable_snd
   haveI : IsProbabilityMeasure (μ.map (fun z : (Fin n → α) × (Fin n → β) ↦ z.1 i)) :=
-    Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
+    inferInstance
   unfold InformationTheory.Shannon.IsMarkovChain
   -- Kernel abbreviations.
   set K_X : Kernel α (Fin n → α) :=
@@ -579,7 +579,7 @@ private lemma isMarkovChain_per_letter_input
   have hK_Y_eq : K_Y =ᵐ[μ.map (fun z : (Fin n → α) × (Fin n → β) ↦ z.1 i)]
       (W : Kernel α β) := by
     refine condDistrib_ae_eq_of_measure_eq_compProd
-      (fun z : (Fin n → α) × (Fin n → β) ↦ z.1 i) hYo_meas.aemeasurable ?_
+      (X := fun z : (Fin n → α) × (Fin n → β) ↦ z.1 i) (by fun_prop) hYo_meas.aemeasurable ?_
     have h := per_letter_marginal_eq_compProd W n q i
     rw [h_map_X_i, ← h]
   -- Step 2: Substitute K_Y → W on RHS via `compProd_congr`.
@@ -671,7 +671,7 @@ private lemma isMarkovChain_per_letter_input
       compProd_map_condDistrib (μ := μ)
         (X := fun z : (Fin n → α) × (Fin n → β) ↦ z.1 i)
         (Y := fun z : (Fin n → α) × (Fin n → β) ↦ z.1)
-        (mβ := inferInstance) hXs_meas.aemeasurable
+        (mβ := inferInstance) (by fun_prop) hXs_meas.aemeasurable
     rw [← h_map_X_i]
     rw [h]
     -- μ.map (fun z => (z.1 i, z.1)) = q.map (fun x => (x i, x))
@@ -845,8 +845,7 @@ private lemma isMarkovChain_outputs_cond_indep
   haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
   haveI : IsProbabilityMeasure q := inferInstance
   haveI : IsProbabilityMeasure (μ.map (fun z : (Fin n → α) × (Fin n → β) ↦ z.1)) := by
-    refine Measure.isProbabilityMeasure_map ?_
-    exact measurable_fst.aemeasurable
+    exact inferInstance
   -- Measurabilities.
   have hXs_meas : Measurable (fun z : (Fin n → α) × (Fin n → β) ↦ z.1) :=
     measurable_fst
@@ -881,7 +880,7 @@ private lemma isMarkovChain_outputs_cond_indep
   -- Step 1: identify K_Yi =ᵐ W_i.
   have hK_Yi_eq : K_Yi =ᵐ[μ.map (fun z : (Fin n → α) × (Fin n → β) ↦ z.1)] W_i := by
     refine condDistrib_ae_eq_of_measure_eq_compProd
-      (fun z : (Fin n → α) × (Fin n → β) ↦ z.1) hYi_meas.aemeasurable ?_
+      (X := fun z : (Fin n → α) × (Fin n → β) ↦ z.1) (by fun_prop) hYi_meas.aemeasurable ?_
     rw [h_map_X]
     rw [hW_i_def]
     -- μ.map (z.1, z.2 i) = q ⊗ₘ W.comap (eval i)
@@ -890,7 +889,7 @@ private lemma isMarkovChain_outputs_cond_indep
   -- Step 2: identify K_YnoI =ᵐ W_noI.
   have hK_YnoI_eq : K_YnoI =ᵐ[μ.map (fun z : (Fin n → α) × (Fin n → β) ↦ z.1)] W_noI := by
     refine condDistrib_ae_eq_of_measure_eq_compProd
-      (fun z : (Fin n → α) × (Fin n → β) ↦ z.1) hYnoI_meas.aemeasurable ?_
+      (X := fun z : (Fin n → α) × (Fin n → β) ↦ z.1) (by fun_prop) hYnoI_meas.aemeasurable ?_
     rw [h_map_X, hW_noI_def, hμ_def]
     exact map_xn_yNoI_eq_compProd_pi W n q i
   -- Step 3: substitute K_YnoI → W_noI and K_Yi → W_i on RHS.
@@ -984,7 +983,7 @@ private theorem capacityN_ofMemoryless_le
     have h_eq := mutualInfo_per_letter_eq_marginal W n q i
     -- h_eq : mutualInfo μ (Xs i) (Ys i) = mutualInfoOfChannel (q.map (eval i)) W.
     haveI : IsProbabilityMeasure (q.map (fun x : Fin n → α ↦ x i)) := by
-      exact Measure.isProbabilityMeasure_map (measurable_pi_apply i).aemeasurable
+      exact inferInstance
     rw [show (fun z : (Fin n → α) × (Fin n → β) ↦ z.1 i) = Xs i from rfl,
         show (fun z : (Fin n → α) × (Fin n → β) ↦ z.2 i) = Ys i from rfl] at h_eq
     rw [h_eq]

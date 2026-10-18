@@ -57,7 +57,6 @@ noncomputable def gaussianPDFRealVar (m v x : ℝ) : ℝ :=
 @[entry_point]
 theorem gaussianPDFRealVar_eq_gaussianPDFReal (m : ℝ) {v : ℝ} (hv : 0 < v) (x : ℝ) :
     gaussianPDFRealVar m v x = gaussianPDFReal m ⟨v, hv.le⟩ x := by
-  rw [gaussianPDFReal]
   rfl
 
 /-! ## Variance-derivative lemma (the Mathlib gap closure) -/

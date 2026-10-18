@@ -548,7 +548,7 @@ theorem typicalSet_prob_le
   -- Evaluate on the singleton `{x}`.
   -- `IsProbabilityMeasure (μ.map (Xs 0))` ⇒ `SigmaFinite`.
   have hMprob : IsProbabilityMeasure (μ.map (Xs 0)) :=
-    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+    inferInstance
   -- Now compute `Measure.pi {x}` via `pi_singleton`.
   have hpi_singleton :
       Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0)) ({x} : Set (Fin n → α))
@@ -660,7 +660,7 @@ theorem typicalSet_prob_ge
   have hjoint_eq : (μ.map (jointRV Xs n) : Measure (Fin n → α))
       = Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0)) := hpi_eq'
   have hMprob : IsProbabilityMeasure (μ.map (Xs 0)) :=
-    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+    inferInstance
   have hpi_singleton :
       Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0)) ({x} : Set (Fin n → α))
         = ∏ i, (μ.map (Xs 0)) {x i} :=
@@ -734,7 +734,7 @@ theorem typicalSet_card_ge
   have h_coe : (T : Set (Fin n → α)) = typicalSet μ Xs n ε :=
     (typicalSet μ Xs n ε).toFinite.coe_toFinset
   have hMprob_joint : IsProbabilityMeasure (μ.map (jointRV Xs n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV Xs hXs n).aemeasurable
+    inferInstance
   have h_sum_T :
       (μ.map (jointRV Xs n)).real (typicalSet μ Xs n ε) = ∑ x ∈ T, p x := by
     rw [← h_coe]

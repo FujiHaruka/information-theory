@@ -55,7 +55,7 @@ theorem mixtureMeasure_map_fst
         + ENNReal.ofReal (1 - lam) • ν₂.map Prod.fst := by
   unfold mixtureMeasure
   rw [Measure.map_add _ _ measurable_fst,
-      Measure.map_smul, Measure.map_smul]
+      Measure.map_smul _ (by fun_prop), Measure.map_smul _ (by fun_prop)]
 
 /-- `Prod.snd` pushforward of a convex combination is the convex combination of pushforwards. -/
 @[entry_point]
@@ -66,7 +66,7 @@ theorem mixtureMeasure_map_snd
         + ENNReal.ofReal (1 - lam) • ν₂.map Prod.snd := by
   unfold mixtureMeasure
   rw [Measure.map_add _ _ measurable_snd,
-      Measure.map_smul, Measure.map_smul]
+      Measure.map_smul _ (by fun_prop), Measure.map_smul _ (by fun_prop)]
 
 /-- If two joint distributions share the same `Prod.fst` marginal `P`, then so does
 their convex combination (with `λ ∈ [0, 1]`). -/
@@ -308,11 +308,13 @@ theorem klDiv_joint_convex
   have _ : IsFiniteMeasure N := by rw [hN]; infer_instance
   -- M.map snd = numerator,  N.map snd = denominator
   have hMsnd : M.map Prod.snd = (a : ℝ≥0∞) • μ₁ + (b : ℝ≥0∞) • μ₂ := by
-    rw [hM, Measure.map_add _ _ measurable_snd, Measure.map_smul, Measure.map_smul]
+    rw [hM, Measure.map_add _ _ measurable_snd, Measure.map_smul _ (by fun_prop),
+        Measure.map_smul _ (by fun_prop)]
     congr 1 <;> congr 1 <;>
       exact (Measure.snd_prod (μ := Measure.dirac _) (ν := _))
   have hNsnd : N.map Prod.snd = (a : ℝ≥0∞) • σ₁ + (b : ℝ≥0∞) • σ₂ := by
-    rw [hN, Measure.map_add _ _ measurable_snd, Measure.map_smul, Measure.map_smul]
+    rw [hN, Measure.map_add _ _ measurable_snd, Measure.map_smul _ (by fun_prop),
+        Measure.map_smul _ (by fun_prop)]
     congr 1 <;> congr 1 <;>
       exact (Measure.snd_prod (μ := Measure.dirac _) (ν := _))
   -- DPI: klDiv (M.map snd)(N.map snd) ≤ klDiv M N

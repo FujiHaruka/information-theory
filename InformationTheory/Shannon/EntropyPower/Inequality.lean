@@ -128,7 +128,7 @@ theorem entropyPower_gaussian_additivity
       = entropyPower (P.map X) + entropyPower (P.map Y) := by
   -- Step 1: `(X+Y).law = gaussianReal (m₁+m₂) (v₁+v₂)` from Mathlib.
   have h_sum_law : P.map (fun ω ↦ X ω + Y ω) = gaussianReal (m₁ + m₂) (v₁ + v₂) := by
-    have h := gaussianReal_add_gaussianReal_of_indepFun hXY hLawX hLawY
+    have h := gaussianReal_add_gaussianReal_of_indepFun hXY { map_eq := hLawX } { map_eq := hLawY }
     -- `X + Y` in Mathlib lemma is `Pi.instAdd`-form which is defeq to `fun ω => X ω + Y ω`.
     -- Convert via `Pi.add_apply` / `funext`.
     have h_eq : (X + Y) = fun ω ↦ X ω + Y ω := by

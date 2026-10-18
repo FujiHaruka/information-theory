@@ -53,7 +53,7 @@ theorem jointEntropySubset_empty
     measurable_pi_iff.mpr (fun i ↦ (Finset.notMem_empty i.val i.property).elim)
   haveI : IsProbabilityMeasure
       (μ.map (fun ω (i : (∅ : Finset (Fin n))) ↦ Xs i.val ω)) :=
-    Measure.isProbabilityMeasure_map hmeas.aemeasurable
+    inferInstance
   haveI : IsEmpty (↥(∅ : Finset (Fin n))) :=
     ⟨fun i ↦ (Finset.notMem_empty i.val i.property)⟩
   haveI : Unique (↥(∅ : Finset (Fin n)) → α) := Pi.uniqueOfIsEmpty _

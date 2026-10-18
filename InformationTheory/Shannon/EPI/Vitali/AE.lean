@@ -91,7 +91,7 @@ theorem negMulLog_convDensity_tendsto_ae_subseq
   have hpX_aesm : AEStronglyMeasurable pX volume := hpX_meas.aestronglyMeasurable
   -- L¹ convergence ⟹ convergence in measure.
   have hmeas : TendstoInMeasure volume f atTop pX :=
-    tendstoInMeasure_of_tendsto_eLpNorm (by norm_num) hf_meas hpX_aesm hL1
+    tendstoInMeasure_of_tendsto_eLpNorm (by norm_num) hL1
   -- Convergence in measure ⟹ a.e. convergence along a subsequence.
   obtain ⟨ns, hns_mono, hns_ae⟩ := hmeas.exists_seq_tendsto_ae
   refine ⟨ns, hns_mono, ?_⟩

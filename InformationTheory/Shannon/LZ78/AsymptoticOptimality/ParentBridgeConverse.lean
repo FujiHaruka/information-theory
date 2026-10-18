@@ -734,7 +734,7 @@ theorem lz78_converse_bad_set_measure_le
   set Pn : Measure (Fin n → α) := μ.map (q.blockRV n) with hPn
   have hB_meas : Measurable (q.blockRV n) := q.measurable_blockRV n
   have hPn_prob : IsProbabilityMeasure Pn :=
-    Measure.isProbabilityMeasure_map hB_meas.aemeasurable
+    inferInstance
   -- The bad set on the discrete block alphabet.
   set rateX : (Fin n → α) → ℝ :=
     fun x ↦ (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ) with hrateX
@@ -1049,8 +1049,8 @@ theorem lz78Greedy_converse_ae
   -- Assemble via `liminf_le_liminf`, with `liminf Low = entropyRate₂`.
   have h_liminf_le : Filter.liminf Low Filter.atTop
       ≤ Filter.liminf (rate ω) Filter.atTop :=
-    Filter.liminf_le_liminf h_le (hu := h_Low_tend.isBoundedUnder_ge)
-      (hv := h_rate_bdd.isCoboundedUnder_ge)
+    Filter.liminf_le_liminf h_le (hv := h_Low_tend.isBoundedUnder_ge)
+      (hu := h_rate_bdd.isCoboundedUnder_ge)
   rw [h_Low_tend.liminf_eq] at h_liminf_le
   exact h_liminf_le
 

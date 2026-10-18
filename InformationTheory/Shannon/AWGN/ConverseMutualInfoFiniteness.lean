@@ -165,7 +165,7 @@ private lemma awgnConverseJoint_map_fst
       = (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ • Measure.count := by
   unfold awgnConverseJoint
   -- map distributes over smul and over the Finset sum.
-  rw [Measure.map_smul]
+  rw [Measure.map_smul _ (by fun_prop)]
   have h_map_fst_meas :
       Measurable (Prod.fst : Fin M × (Fin n → ℝ) → Fin M) := measurable_fst
   rw [Measure.map_finset_sum (s := Finset.univ)
@@ -304,7 +304,7 @@ private lemma blockYLaw_eq_mixture
   unfold blockYLaw awgnConverseJoint
   have h_meas_snd :
       Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) := measurable_snd
-  rw [Measure.map_smul,
+  rw [Measure.map_smul _ (by fun_prop),
     Measure.map_finset_sum (s := Finset.univ)
       (m := fun m ↦ (Measure.dirac m).prod
         (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
@@ -405,7 +405,7 @@ private instance blockYLaw_isProbabilityMeasure
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     IsProbabilityMeasure (blockYLaw h_meas c) := by
   unfold blockYLaw
-  exact Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  exact inferInstance
 
 /-- Positivity of `blockRealDensity` (sum of positive products). -/
 private lemma blockRealDensity_pos
@@ -467,7 +467,7 @@ private lemma blockRealDensity_le_sup
   have h_prod_le : ∀ m : Fin M,
       (∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)) ≤ ∏ _i : Fin n, Bpeak := by
     intro m
-    refine Finset.prod_le_prod (fun i _ ↦ gaussianPDFReal_nonneg _ _ _) (fun i _ ↦ ?_)
+    refine Finset.prod_le_prod₀ (fun i _ ↦ gaussianPDFReal_nonneg _ _ _) (fun i _ ↦ ?_)
     exact h_comp_le (c.encoder m i) (y i)
   -- mixture average of `M` terms each `≤ ∏ᵢ Bpeak`
   calc (1 / (M : ℝ)) * ∑ m : Fin M, ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)

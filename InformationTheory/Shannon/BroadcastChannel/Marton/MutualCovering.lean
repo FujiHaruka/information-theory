@@ -441,9 +441,9 @@ lemma integral_pairIndicator_mul_sharedFst_le [IsProbabilityMeasure μ]
     (i : Fin M₁) {j j' : Fin M₂} (hj : j ≠ j') :
     μ[pairIndicator X Y S (i, j) * pairIndicator X Y S (i, j')] ≤ qbar * pairProb μX μY S := by
   have hμX : IsProbabilityMeasure μX := by
-    rw [← hXlaw i]; exact Measure.isProbabilityMeasure_map (hX i).aemeasurable
+    rw [← hXlaw i]; exact inferInstance
   have hμY : IsProbabilityMeasure μY := by
-    rw [← hYlaw j]; exact Measure.isProbabilityMeasure_map (hY j).aemeasurable
+    rw [← hYlaw j]; exact inferInstance
   have hq0 : 0 ≤ qbar := le_trans ENNReal.toReal_nonneg (hsliceY (Classical.arbitrary α))
   have hTmeas : Measurable fun ω ↦ (X i ω, Y j ω, Y j' ω) := (hX i).prodMk ((hY j).prodMk (hY j'))
   have hG : MeasurableSet (sharedFstSet S) := measurableSet_sharedFstSet hS
@@ -467,9 +467,9 @@ lemma integral_pairIndicator_mul_sharedSnd_le [IsProbabilityMeasure μ]
     {i i' : Fin M₁} (hi : i ≠ i') (j : Fin M₂) :
     μ[pairIndicator X Y S (i, j) * pairIndicator X Y S (i', j)] ≤ qbar * pairProb μX μY S := by
   have hμX : IsProbabilityMeasure μX := by
-    rw [← hXlaw i]; exact Measure.isProbabilityMeasure_map (hX i).aemeasurable
+    rw [← hXlaw i]; exact inferInstance
   have hμY : IsProbabilityMeasure μY := by
-    rw [← hYlaw j]; exact Measure.isProbabilityMeasure_map (hY j).aemeasurable
+    rw [← hYlaw j]; exact inferInstance
   have hq0 : 0 ≤ qbar := le_trans ENNReal.toReal_nonneg (hsliceX (Classical.arbitrary β))
   have hTmeas : Measurable fun ω ↦ (Y j ω, X i ω, X i' ω) := (hY j).prodMk ((hX i).prodMk (hX i'))
   have hG : MeasurableSet (sharedSndSet S) := measurableSet_sharedSndSet hS

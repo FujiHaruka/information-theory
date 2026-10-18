@@ -315,10 +315,10 @@ theorem joint_pastBlock_coord0_eq (k : ℕ) :
   -- Both are probability measures (in particular, finite).
   haveI : IsProbabilityMeasure
       ((μZ μ p).map (fun x : (∀ _ : ℤ, α) ↦ (coord0 x, pastBlock k x))) :=
-    Measure.isProbabilityMeasure_map hpair_meas_Z.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure
       (μ.map (fun ω : Ω ↦ (p.obs k ω, p.blockRV k ω))) :=
-    Measure.isProbabilityMeasure_map hpair_meas_Ω.aemeasurable
+    inferInstance
   -- It suffices to show equality on singletons (finite types).
   refine Measure.ext_of_singleton ?_
   rintro ⟨a, s⟩

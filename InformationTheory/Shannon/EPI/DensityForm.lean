@@ -66,7 +66,7 @@ noncomputable def isHeatFlowEndpointRegular_of_canonical_rnDeriv
   have hp_mass : (∫ y, p y ∂volume) = 1 := by
     have hmass := MeasureTheory.Measure.integral_toReal_rnDeriv (μ := P.map W) (ν := volume) hac
     have : IsProbabilityMeasure (P.map W) :=
-      MeasureTheory.Measure.isProbabilityMeasure_map hW.aemeasurable
+      inferInstance
     rw [hp_def, hmass, Measure.real, measure_univ, ENNReal.toReal_one]
   have hp_mom : Integrable (fun y ↦ y ^ 2 * p y) volume := by
     have hsq_law : Integrable (fun y ↦ y ^ 2) (P.map W) := by
@@ -213,7 +213,7 @@ lemma liftMeasure3_map_fst_eq
   · rw [show (fun p : Ω × ℝ × ℝ × ℝ ↦ Y p.1) = Y ∘ Prod.fst from rfl,
       ← Measure.map_map hY measurable_fst, measurePreserving_fst.map_eq]
   · rw [show (fun p : Ω × ℝ × ℝ × ℝ ↦ X p.1 + Y p.1) = (fun ω ↦ X ω + Y ω) ∘ Prod.fst from rfl,
-      ← Measure.map_map (hX.add hY) measurable_fst, measurePreserving_fst.map_eq]
+      ← Measure.map_map (hX.fun_add hY) measurable_fst, measurePreserving_fst.map_eq]
 
 lemma liftMeasure3_noise_laws
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P] :
@@ -286,7 +286,7 @@ lemma iIndepFun_liftMeasure3_of_indep
   symm
   refine Measure.pi_eq (fun s hs ↦ ?_)
   have hjoint_meas : Measurable (fun ω i ↦ ![X', Y', ZX, ZY, Z] i ω) := by
-    refine measurable_pi_lambda _ (fun i ↦ ?_)
+    refine Measurable.of_eval (fun i ↦ ?_)
     fin_cases i
     · exact hX'_meas
     · exact hY'_meas

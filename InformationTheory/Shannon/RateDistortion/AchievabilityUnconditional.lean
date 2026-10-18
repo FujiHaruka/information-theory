@@ -75,7 +75,7 @@ private lemma expectedJointDistortion_eq_sum
           (μ.map (jointSequence Xs Ys 0)).real {p} * ((d p.1 p.2 : NNReal) : ℝ) := by
   have hZ0 : Measurable (jointSequence Xs Ys 0) := measurable_jointSequence Xs Ys hXs hYs 0
   have hmap : IsProbabilityMeasure (μ.map (jointSequence Xs Ys 0)) :=
-    Measure.isProbabilityMeasure_map hZ0.aemeasurable
+    inferInstance
   have h1 : expectedJointDistortion μ (Xs 0) (Ys 0) d
       = ∫ p, ((d p.1 p.2 : NNReal) : ℝ) ∂(μ.map (jointSequence Xs Ys 0)) := by
     rw [show expectedJointDistortion μ (Xs 0) (Ys 0) d

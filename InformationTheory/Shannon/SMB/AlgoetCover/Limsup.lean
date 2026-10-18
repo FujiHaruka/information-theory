@@ -105,7 +105,7 @@ theorem limsup_blockLogAvg_le_condEntropyTail
         (Filter.Eventually.of_forall (fun n ↦ ?_))).isCoboundedUnder_le
       -- Reuse the same nonneg proof from blockLogAvg_bddBelow_ae body.
       have hPn : IsProbabilityMeasure (μ.map (p.toStationaryProcess.blockRV n)) :=
-        Measure.isProbabilityMeasure_map (p.measurable_blockRV n).aemeasurable
+        inferInstance
       have h_le_one : (μ.map (p.toStationaryProcess.blockRV n)).real
           {p.toStationaryProcess.blockRV n ω} ≤ 1 := measureReal_le_one
       have h_nn : 0 ≤ (μ.map (p.toStationaryProcess.blockRV n)).real

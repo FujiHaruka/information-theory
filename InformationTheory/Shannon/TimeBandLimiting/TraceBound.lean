@@ -477,12 +477,13 @@ theorem prolateRestrict_norm_le (T W : ℝ) {c : ℝ} (hc : 0 < c) :
     (timeBandLimitingOp_isCompact T W).restrict'
       (prolateEigenspaceSup_orthogonal_invariant T W c)
   -- For a compact operator every nonzero spectral point is an eigenvalue, hence `≤ c`.
-  have hspec : ∀ z ∈ spectrum ℂ (prolateRestrict T W c), ‖z‖ ≤ c := by
+  have hspec : ∀ z ∈ quasispectrum ℂ (prolateRestrict T W c), ‖z‖ ≤ c := by
     intro z hz
     rcases eq_or_ne z 0 with rfl | hz0
     · simpa using hc.le
-    · exact prolateRestrict_hasEigenvalue_le T W
-        ((hcpt.hasEigenvalue_iff_mem_spectrum hz0).mpr hz)
+    · rw [quasispectrum_eq_spectrum_union_zero] at hz
+      exact prolateRestrict_hasEigenvalue_le T W
+        ((hcpt.hasEigenvalue_iff_mem_spectrum hz0).mpr (hz.resolve_right hz0))
   -- Self-adjointness turns the spectral radius into the norm.
   have hrad := (prolateRestrict T W c).spectralRadius_eq_nnnorm hsa
   have hle : (‖prolateRestrict T W c‖₊ : ℝ≥0∞) ≤ ENNReal.ofReal c := by

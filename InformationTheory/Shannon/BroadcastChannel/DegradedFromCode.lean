@@ -58,7 +58,7 @@ lemma bcConverse_block_append
   have hy₁ : Measurable (fun (y : Fin n → β₁ × β₂) (j : Fin n) ↦ (y j).1) := by fun_prop
   have hprob : ∀ (m : Fin M₁ × Fin M₂) (j : Fin n),
       IsProbabilityMeasure ((W (c.encoder m j)).map Prod.fst) :=
-    fun _ _ ↦ Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    fun _ _ ↦ inferInstance
   have hproj : ∀ m : Fin M₁ × Fin M₂,
       (Measure.pi fun j ↦ W (c.encoder m j)).map (fun y j ↦ (y j).1)
         = Measure.pi fun j ↦ (W (c.encoder m j)).map Prod.fst := by

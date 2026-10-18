@@ -61,7 +61,7 @@ theorem density_int_mass {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
     (hp_law : P.map W = volume.withDensity (fun x ↦ ENNReal.ofReal (p x))) :
     Integrable p volume ∧ (∫ x, p x ∂volume) = 1 := by
   have hprob : IsProbabilityMeasure (P.map W) :=
-    MeasureTheory.Measure.isProbabilityMeasure_map hW.aemeasurable
+    inferInstance
   have hlint : (∫⁻ x, ENNReal.ofReal (p x) ∂volume) = 1 := by
     have := hprob.measure_univ
     rw [hp_law, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at this
@@ -693,7 +693,7 @@ private lemma reg_density_t_sum_eq_convDensityAdd
       (∫⁻ x, ENNReal.ofReal (p x) ∂volume) = 1 := by
     intro W p hW _ hp_law
     have hprob : IsProbabilityMeasure (P.map W) :=
-      MeasureTheory.Measure.isProbabilityMeasure_map hW.aemeasurable
+      inferInstance
     have := hprob.measure_univ
     rw [hp_law, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at this
     exact this

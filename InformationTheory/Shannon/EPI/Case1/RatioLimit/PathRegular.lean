@@ -79,7 +79,7 @@ theorem entropyPower_path_scaling
   have hmul_meas : Measurable (fun x : ℝ ↦ x * Real.sqrt t) :=
     measurable_id.mul_const _
   haveI : IsProbabilityMeasure (P.map W) :=
-    Measure.isProbabilityMeasure_map hW_meas.aemeasurable
+    inferInstance
   -- `A + √t·B = (A/√t + B) * √t = (· * √t) ∘ W` pointwise.
   have h_path_eq : (fun ω ↦ A ω + Real.sqrt t * B ω)
       = (fun x ↦ x * Real.sqrt t) ∘ W := by
@@ -257,7 +257,7 @@ theorem entropyPower_rescaled_path_tendsto
     have hW_meas : Measurable (fun ω ↦ A ω / Real.sqrt t + B ω) :=
       (hA.div_const _).add hB
     haveI : IsProbabilityMeasure μ :=
-      Measure.isProbabilityMeasure_map hW_meas.aemeasurable
+      inferInstance
     -- The variance-bound value as a positive `ℝ≥0`.
     set vt : ℝ≥0 := (varA / t + (v_B : ℝ)).toNNReal with hvt_def
     have hvt_coe : (vt : ℝ) = varA / t + (v_B : ℝ) := by
@@ -364,7 +364,7 @@ theorem rescaledInput_density_witness
   have hZt_ac : (P.map Zt) ≪ volume :=
     map_div_sqrt_absolutelyContinuous A P hA hA_ac ht
   haveI : IsProbabilityMeasure (P.map Zt) :=
-    Measure.isProbabilityMeasure_map hZt_meas.aemeasurable
+    inferInstance
   set pX : ℝ → ℝ := fun x ↦ ((P.map Zt).rnDeriv volume x).toReal with hpX
   have hpX_nn : ∀ x, 0 ≤ pX x := fun x ↦ ENNReal.toReal_nonneg
   have hpX_meas : Measurable pX :=
@@ -589,7 +589,7 @@ theorem condDistrib_indep_gaussian_add_ae_affineShift
     condDistrib (fun ω ↦ B ω + A ω / Real.sqrt t) (fun ω ↦ A ω / Real.sqrt t) P
       =ᵐ[P.map (fun ω ↦ A ω / Real.sqrt t)] affineShiftKernel (P.map B) 1 := by
   haveI : IsProbabilityMeasure (P.map B) :=
-    Measure.isProbabilityMeasure_map hB.aemeasurable
+    inferInstance
   set Zt : Ω → ℝ := fun ω ↦ A ω / Real.sqrt t with hZt
   have hZt_meas : Measurable Zt := hA.div_const _
   have h_indep : IndepFun B Zt P := indepFun_const_div_sqrt A B P hAB
@@ -608,7 +608,7 @@ theorem condDistrib_indep_gaussian_add_ae_affineShift
       funext ω; simp [hW_def, one_mul, add_comm]
     rw [hcomp, ← Measure.map_map hg (hZt_meas.prodMk hB), hjoint_ZB,
       prod_map_affine_eq_compProd]
-  exact condDistrib_ae_eq_of_measure_eq_compProd Zt hW.aemeasurable hjoint_ZW
+  exact condDistrib_ae_eq_of_measure_eq_compProd (X := Zt) (by fun_prop) hW.aemeasurable hjoint_ZW
 
 theorem affineShiftKernel_map_gaussian_one_eq
     (B : Ω → ℝ) (P : Measure Ω) [SFinite (P.map B)]

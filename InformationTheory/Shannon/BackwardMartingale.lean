@@ -27,7 +27,7 @@ as `n → ∞` to a `⨅ n, ℋ (toDual n)`-measurable limit.
   backward martingale means `f n = 𝔼[f (toDual 0) | ℋ n]`
   (since `n ≤ toDual 0` in `ℕᵒᵈ`), then `eLpNorm_one_condExp_le_eLpNorm`.
 * Main theorem `BackwardMartingale.ae_tendsto`, chaining off the upcrossing
-  finiteness, the L¹ bound, and `tendsto_of_uncrossing_lt_top`, with the
+  finiteness, the L¹ bound, and `tendsto_of_upcrossings_lt_top`, with the
   tail-σ-algebra measurability handled via `Filter.limsup_nat_add` tail
   invariance over `⨅ n, ℋ (toDual n)`.
 
@@ -756,7 +756,7 @@ This is the reverse-time analogue of
 (`Probability/Martingale/Convergence.lean:209`).
 
 Proof: combines the L¹ bound + a.e. upcrossing finiteness +
-`tendsto_of_uncrossing_lt_top` to obtain pointwise convergence a.e., then
+`tendsto_of_upcrossings_lt_top` to obtain pointwise convergence a.e., then
 constructs the `⨅ n, ℋ (toDual n)`-measurable limit via the standard
 `aemeasurable_of_tendsto_metrizable_ae'` pattern with a tail-σ-algebra
 argument. The tail measurability step (which `Submartingale.ae_tendsto_limitProcess`
@@ -784,7 +784,7 @@ theorem BackwardMartingale.ae_tendsto
     (hf.stronglyMeasurable (OrderDual.toDual n)).measurable.mono (ℋ.le _) le_rfl
   -- Bounded liminf-of-norm a.s. from L¹ bound.
   have h_liminf : ∀ᵐ ω ∂μ, Filter.liminf (fun n ↦ (‖g_back n ω‖ₑ : ℝ≥0∞)) atTop < ∞ :=
-    ae_bdd_liminf_atTop_of_eLpNorm_bdd one_ne_zero h_meas_g hbdd
+    ae_bdd_liminf_atTop_of_eLpNorm_bdd one_ne_zero hbdd
   -- All rational upcrossings finite a.s.
   have h_upcr : ∀ᵐ ω ∂μ, ∀ a b : ℚ, a < b →
       MeasureTheory.upcrossings (a : ℝ) (b : ℝ) g_back ω < ∞ := by
@@ -797,10 +797,10 @@ theorem BackwardMartingale.ae_tendsto
       exact hω
     · filter_upwards with ω hcontra
       exact absurd hcontra hab
-  -- Pointwise convergence a.e. from `tendsto_of_uncrossing_lt_top`.
+  -- Pointwise convergence a.e. from `tendsto_of_upcrossings_lt_top`.
   have h_ae_tends : ∀ᵐ ω ∂μ, ∃ c, Tendsto (fun n ↦ g_back n ω) atTop (𝓝 c) := by
     filter_upwards [h_liminf, h_upcr] with ω h₁ h₂
-    exact MeasureTheory.tendsto_of_uncrossing_lt_top h₁ h₂
+    exact MeasureTheory.tendsto_of_upcrossings_lt_top h₁ h₂
   -- Define `g` as the pointwise `limsup`. When the sequence converges, this equals
   -- the limit; otherwise it's some unspecified real value (irrelevant on the null set).
   -- The key point: `limsup` is tail-invariant, so for every `k`, we may rewrite

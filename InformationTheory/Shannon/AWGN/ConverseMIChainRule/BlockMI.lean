@@ -93,7 +93,7 @@ lemma blockYLawInline_eq_mixture
   unfold blockYLawInline converseJointInline
   have h_meas_snd :
       Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) := measurable_snd
-  rw [Measure.map_smul,
+  rw [Measure.map_smul _ (by fun_prop),
     Measure.map_finset_sum (s := Finset.univ)
       (m := fun m ↦ (Measure.dirac m).prod
         (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
@@ -217,7 +217,7 @@ instance blockYLawInline_isProb
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     IsProbabilityMeasure (blockYLawInline h_meas c) := by
   rw [blockYLawInline]
-  exact Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  exact inferInstance
 
 /-- The block component `pi (gaussianReal (encoder m i) N) ≪ blockYLawInline`
 (`νₘ ≪ vol ≪ blockYLaw`). -/
@@ -266,7 +266,7 @@ private lemma blockRealDensityInline_le_sup
   have h_prod_le : ∀ m : Fin M,
       (∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)) ≤ ∏ _i : Fin n, Bpeak := by
     intro m
-    refine Finset.prod_le_prod (fun i _ ↦ gaussianPDFReal_nonneg _ _ _) (fun i _ ↦ ?_)
+    refine Finset.prod_le_prod₀ (fun i _ ↦ gaussianPDFReal_nonneg _ _ _) (fun i _ ↦ ?_)
     exact h_comp_le (c.encoder m i) (y i)
   calc (1 / (M : ℝ)) * ∑ m : Fin M, ∏ i : Fin n, gaussianPDFReal (c.encoder m i) N (y i)
       ≤ (1 / (M : ℝ)) * ∑ _m : Fin M, ∏ _i : Fin n, Bpeak := by
@@ -751,7 +751,7 @@ private lemma converseJointInline_map_fst_eq_msgLaw
       = msgLawInline M := by
   classical
   unfold converseJointInline msgLawInline
-  rw [Measure.map_smul, Measure.map_finset_sum (s := Finset.univ)
+  rw [Measure.map_smul _ (by fun_prop), Measure.map_finset_sum (s := Finset.univ)
       (m := fun m ↦ (Measure.dirac m).prod
         (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
       measurable_fst.aemeasurable]

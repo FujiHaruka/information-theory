@@ -1105,9 +1105,9 @@ lemma conditional_KL_concentration_ge
   -- Inherit probability measures on the pushforwards (instances for `sum_…_eq_one`).
   have hZ_meas : Measurable (jointSequence Xs Ys 0) := measurable_jointSequence Xs Ys hXs hYs 0
   have hZ_prob : IsProbabilityMeasure (μ.map (jointSequence Xs Ys 0)) :=
-    Measure.isProbabilityMeasure_map hZ_meas.aemeasurable
+    inferInstance
   have hX_prob : IsProbabilityMeasure (μ.map (Xs 0)) :=
-    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+    inferInstance
   -- qZ positivity.
   have hqZ_pos : ∀ p, 0 < qZ p := hposZ
   have hqZ_nn : ∀ p, 0 ≤ qZ p := fun p ↦ (hqZ_pos p).le

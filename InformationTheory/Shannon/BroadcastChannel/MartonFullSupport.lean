@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Probability.Mixture
 import InformationTheory.Shannon.BroadcastChannel.MartonUnion
-import Mathlib.Probability.Distributions.Uniform
+import Mathlib.Probability.UniformOn
 
 /-!
 # Broadcast channel — Marton's inner bound without the auxiliary support hypotheses
@@ -153,12 +153,11 @@ variable {V₁ V₂ α β₁ β₂ : Type*}
   [Fintype β₁] [Nonempty β₁] [MeasurableSpace β₁] [MeasurableSingletonClass β₁]
   [Fintype β₂] [Nonempty β₂] [MeasurableSpace β₂] [MeasurableSingletonClass β₂]
 
-private lemma uniformOfFintype_real_singleton_pos {X : Type*} [Fintype X] [Nonempty X]
+private lemma uniformOn_univ_real_singleton_pos {X : Type*} [Fintype X] [Nonempty X]
     [MeasurableSpace X] [MeasurableSingletonClass X] (x : X) :
-    0 < ((PMF.uniformOfFintype X).toMeasure).real {x} := by
-  rw [measureReal_def, PMF.toMeasure_apply_singleton _ _ (measurableSet_singleton x),
-    PMF.uniformOfFintype_apply, ENNReal.toReal_inv, ENNReal.toReal_natCast]
-  exact inv_pos.mpr (by exact_mod_cast Fintype.card_pos)
+    0 < (uniformOn (Set.univ : Set X)).real {x} := by
+  rw [measureReal_def, uniformOn_univ, Measure.count_singleton]
+  exact ENNReal.toReal_pos (by simp) (by simp)
 
 /-- Marton's inner bound sits inside the operational capacity region under a support hypothesis
 on the channel alone.  Smoothing the auxiliary law and the input kernel toward the uniform ones
@@ -174,14 +173,14 @@ theorem marton_region_subset_capacity_of_channel_fullSupport
     (hW : ∀ (a : α) (b : β₁ × β₂), 0 < (W a).real {b}) :
     martonRegion pV K W ⊆ bcCapacityRegion W := by
   classical
-  set μ₀ : Measure (V₁ × V₂) := (PMF.uniformOfFintype (V₁ × V₂)).toMeasure with hμ₀
-  set κ₀ : Measure α := (PMF.uniformOfFintype α).toMeasure with hκ₀
+  set μ₀ : Measure (V₁ × V₂) := uniformOn (Set.univ : Set (V₁ × V₂)) with hμ₀
+  set κ₀ : Measure α := uniformOn (Set.univ : Set α) with hκ₀
   haveI : IsProbabilityMeasure μ₀ := by rw [hμ₀]; infer_instance
   haveI : IsProbabilityMeasure κ₀ := by rw [hκ₀]; infer_instance
   have hμ₀pos : ∀ v : V₁ × V₂, 0 < μ₀.real {v} := by
-    rw [hμ₀]; exact fun v ↦ uniformOfFintype_real_singleton_pos v
+    rw [hμ₀]; exact fun v ↦ uniformOn_univ_real_singleton_pos v
   have hκ₀pos : ∀ a : α, 0 < κ₀.real {a} := by
-    rw [hκ₀]; exact fun a ↦ uniformOfFintype_real_singleton_pos a
+    rw [hκ₀]; exact fun a ↦ uniformOn_univ_real_singleton_pos a
   intro p hM
   refine bc_mem_closure_of_strictly_below W p fun ε hε ↦ ?_
   have htend₁ : Tendsto (fun t : ℝ ↦ martonInfo₁ (mixLaw pV μ₀ t) (martonMixKernel K κ₀ t) W)

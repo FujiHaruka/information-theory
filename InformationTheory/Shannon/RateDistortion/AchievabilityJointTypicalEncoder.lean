@@ -288,9 +288,9 @@ theorem jointlyTypicalSet_indep_prob_ge
   have hXmeas : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
   have hYmeas : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
   haveI : IsProbabilityMeasure μX :=
-    Measure.isProbabilityMeasure_map hXmeas.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure μY :=
-    Measure.isProbabilityMeasure_map hYmeas.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μX.prod μY) := by
     have : IsFiniteMeasure μX := inferInstance
     have : IsFiniteMeasure μY := inferInstance

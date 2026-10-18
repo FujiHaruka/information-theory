@@ -81,10 +81,10 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     obtain ⟨M, hM⟩ := h_bdd; exact ⟨M, fun ω ↦ hM 0 ω⟩
   -- Marginal `ν := μ.map (X 0)`; both joint laws factor through `infinitePi ν`.
   set ν : Measure ℝ := μ.map (X 0) with hν
-  haveI : IsProbabilityMeasure ν := Measure.isProbabilityMeasure_map (h_meas 0).aemeasurable
+  haveI : IsProbabilityMeasure ν := inferInstance
   -- (a) Root B side: joint map `g ω := fun i ↦ X i ω`.
   set g : Ω → (ℕ → ℝ) := fun ω i ↦ X i ω with hg
-  have hg_meas : Measurable g := measurable_pi_lambda _ (fun i ↦ h_meas i)
+  have hg_meas : Measurable g := Measurable.of_eval (fun i ↦ h_meas i)
   have hjointB : μ.map g = Measure.infinitePi (fun _ : ℕ ↦ ν) := by
     have h1 : μ.map g = Measure.infinitePi (fun i ↦ μ.map (X i)) :=
       (iIndepFun_iff_map_fun_eq_infinitePi_map h_meas).1 h_indep
@@ -100,7 +100,7 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   have hX0_indep : iIndepFun X0 P :=
     Cramer.TiltedLLN.iIndepFun_eval_under_infinitePi (h_meas 0)
   set g₀ : (ℕ → Ω) → (ℕ → ℝ) := fun ω i ↦ X 0 (ω i) with hg₀
-  have hg₀_meas : Measurable g₀ := measurable_pi_lambda _ (fun i ↦ hX0_meas i)
+  have hg₀_meas : Measurable g₀ := Measurable.of_eval (fun i ↦ hX0_meas i)
   have hjoint0 : P.map g₀ = Measure.infinitePi (fun _ : ℕ ↦ ν) := by
     have h1 : P.map g₀ = Measure.infinitePi (fun i ↦ P.map (X0 i)) :=
       (iIndepFun_iff_map_fun_eq_infinitePi_map hX0_meas).1 hX0_indep

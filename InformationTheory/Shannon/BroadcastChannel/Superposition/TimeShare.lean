@@ -90,13 +90,11 @@ noncomputable def uvTagFalse (σ : Measure (U × V × α × β₁ × β₂)) :
 
 instance uvTagTrue_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
     [IsProbabilityMeasure ν] : IsProbabilityMeasure (uvTagTrue ν) :=
-  Measure.isProbabilityMeasure_map
-    (measurable_uvRelabel (measurable_prodMk_left) measurable_id).aemeasurable
+  by unfold uvTagTrue; infer_instance
 
 instance uvTagFalse_isProbabilityMeasure (σ : Measure (U × V × α × β₁ × β₂))
     [IsProbabilityMeasure σ] : IsProbabilityMeasure (uvTagFalse σ) :=
-  Measure.isProbabilityMeasure_map
-    (measurable_uvRelabel (measurable_prodMk_left) measurable_id).aemeasurable
+  by unfold uvTagFalse; infer_instance
 
 /-- The kernel that selects one of two tagged laws from the tag. -/
 noncomputable def uvMixKernel (ν σ : Measure (U × V × α × β₁ × β₂)) :
@@ -121,7 +119,7 @@ noncomputable def uvMixLaw (ν σ : Measure (U × V × α × β₁ × β₂)) (l
 instance uvMixLaw_isProbabilityMeasure (ν σ : Measure (U × V × α × β₁ × β₂))
     [IsProbabilityMeasure ν] [IsProbabilityMeasure σ] (lam : ℝ≥0∞) :
     IsProbabilityMeasure (uvMixLaw ν σ lam) :=
-  Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  by unfold uvMixLaw; infer_instance
 
 lemma uvMixLaw_eq (ν σ : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
     [IsProbabilityMeasure σ] (lam : ℝ≥0∞) :
@@ -175,8 +173,10 @@ lemma uvMixLaw_map_forget (ν σ : Measure (U × V × α × β₁ × β₂)) [Is
     [IsProbabilityMeasure σ] (lam : ℝ≥0∞) :
     (uvMixLaw ν σ lam).map (uvRelabel (Prod.snd : Bool × U → U) (id : V → V))
       = (lam ⊓ 1) • ν + (1 - lam) • σ := by
-  rw [uvMixLaw_eq, Measure.map_add _ _ (measurable_uvRelabel measurable_snd measurable_id),
-    Measure.map_smul, Measure.map_smul, uvTagTrue_map_forget, uvTagFalse_map_forget]
+  have hm := measurable_uvRelabel (α := α) (β₁ := β₁) (β₂ := β₂)
+    (measurable_snd : Measurable (Prod.snd : Bool × U → U)) (measurable_id (α := V))
+  rw [uvMixLaw_eq, Measure.map_add _ _ hm, Measure.map_smul _ hm.aemeasurable,
+    Measure.map_smul _ hm.aemeasurable, uvTagTrue_map_forget, uvTagFalse_map_forget]
 
 lemma uvMixLaw_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     {ν σ : Measure (U × V × α × β₁ × β₂)} [IsProbabilityMeasure ν] [IsProbabilityMeasure σ]
@@ -217,8 +217,7 @@ noncomputable def uvCollapse (ν : Measure (U × V × α × β₁ × β₂)) (u�
 
 instance uvCollapse_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
     [IsProbabilityMeasure ν] (u₀ : U) : IsProbabilityMeasure (uvCollapse ν u₀) :=
-  Measure.isProbabilityMeasure_map
-    (measurable_uvRelabel measurable_const measurable_id).aemeasurable
+  by unfold uvCollapse; infer_instance
 
 /-- The branch that collapses the auxiliary to the constant `(false, u₀)`. -/
 noncomputable def uvTagConst (ν : Measure (U × V × α × β₁ × β₂)) (u₀ : U) :
@@ -414,7 +413,7 @@ noncomputable def uvSatelliteKernel [StandardBorelSpace α] [Nonempty α]
 
 instance uvCloudLaw_isProbabilityMeasure (ν : Measure (U × V × α × β₁ × β₂))
     [IsProbabilityMeasure ν] : IsProbabilityMeasure (uvCloudLaw ν) :=
-  Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+  by unfold uvCloudLaw; infer_instance
 
 section SatelliteKernel
 
@@ -430,7 +429,7 @@ theorem bcJointDistribution_uvCloudLaw (W : BCChannel α β₁ β₂) [IsMarkovK
     bcJointDistribution (uvCloudLaw ν) (uvSatelliteKernel ν) W
       = ν.map (fun q ↦ (q.1, q.2.2.1, q.2.2.2.1, q.2.2.2.2)) := by
   rw [h.map_auxiliary_input_output, bcJointDistribution, uvCloudLaw, uvSatelliteKernel,
-    compProd_map_condDistrib (X := fun q : U × V × α × β₁ × β₂ ↦ q.1) (by fun_prop)]
+    compProd_map_condDistrib (X := fun q : U × V × α × β₁ × β₂ ↦ q.1) (by fun_prop) (by fun_prop)]
 
 end SatelliteKernel
 
@@ -525,7 +524,8 @@ lemma uvInfoJoint_smul_add_smul (ν σ : Measure (U × V × α × β₁ × β₂
     uvInfoJoint (a • ν + b • σ) = uvInfoJoint ν := by
   have hXY : Measurable (fun q : U × V × α × β₁ × β₂ ↦ (q.2.2.1, q.2.2.2.1)) := by fun_prop
   refine mutualInfo_congr_pair _ _ (by fun_prop) (by fun_prop) (by fun_prop) (by fun_prop) ?_
-  rw [Measure.map_add _ _ hXY, Measure.map_smul, Measure.map_smul, hσ, ← add_smul, hab, one_smul]
+  rw [Measure.map_add _ _ hXY, Measure.map_smul _ (by fun_prop), Measure.map_smul _ (by fun_prop),
+      hσ, ← add_smul, hab, one_smul]
 
 lemma uvInfoJoint_uvTimeShareLaw (ν : Measure (U × V × α × β₁ × β₂)) [IsProbabilityMeasure ν]
     (u₀ : U) (lam : ℝ≥0∞) :
@@ -577,7 +577,7 @@ lemma exists_bcInfo_ge_sumRate_of_tagged (W : BCChannel α β₁ β₂) [IsMarko
   set ν' := ν.map (uvRelabel (boolProdAuxEquiv.{u} m) (id : V → V)) with hν'
   have hlaw : IsUVChannelLaw W ν' := h.map_auxiliaries he measurable_id
   haveI : IsProbabilityMeasure ν' :=
-    Measure.isProbabilityMeasure_map (measurable_uvRelabel he measurable_id).aemeasurable
+    inferInstance
   have hcmi : condMutualInfo ν' (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1)
       = condMutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) (fun q ↦ q.1) :=
     condMutualInfo_map_uvRelabel ν he hd (boolProdAuxEquiv.{u} m).symm_apply_apply

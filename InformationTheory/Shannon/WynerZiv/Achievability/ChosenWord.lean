@@ -69,7 +69,7 @@ private lemma wz_coveringSuccessStrong_compl_measureReal_le
               ChannelCoding.iidXs ChannelCoding.iidYs n ε } with hS
   have hXproj_meas : Measurable
       (fun p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ fun j ↦ (p j).1) :=
-    measurable_pi_lambda _ (fun j ↦ (measurable_pi_apply j).fst)
+    Measurable.of_eval (fun j ↦ (measurable_pi_apply j).fst)
   calc (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
           (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
             P_XY.real {(p.1.1, p.2)}))).real

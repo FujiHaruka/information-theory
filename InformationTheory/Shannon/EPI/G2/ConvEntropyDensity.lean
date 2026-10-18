@@ -3,6 +3,7 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.Measure.Prod
+import Mathlib.MeasureTheory.Order.Group.Lattice
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPI.Conv.Density
@@ -613,7 +614,7 @@ theorem condDistrib_fibre_rnDeriv_eq_translate {mZ : Measure ℝ} {ν : Measure 
     MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) d
   have h_rn := hf.rnDeriv_map ν (volume : Measure ℝ)
   rw [hvol] at h_rn
-  have hshift_qmp : Measure.QuasiMeasurePreserving (fun x : ℝ ↦ x - d) volume volume := by
+  have hshift_qmp : QuasiMeasurePreserving (fun x : ℝ ↦ x - d) volume volume := by
     refine ⟨by fun_prop, ?_⟩
     have : (volume : Measure ℝ).map (fun x : ℝ ↦ x - d) = volume := by
       simpa [sub_eq_add_neg] using
@@ -704,7 +705,7 @@ private lemma condDistrib_ae_eq_affineShiftKernel
     (hXZ : IndepFun X Z μ) (hW_meas : Measurable W)
     (hW_def : W = fun ω ↦ X ω + Real.sqrt s * Z ω) :
     condDistrib W Z μ =ᵐ[μ.map Z] affineShiftKernel (μ.map X) (Real.sqrt s) := by
-  haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map X) := inferInstance
   have hZX : IndepFun Z X μ := hXZ.symm
   have hjoint_ZX : μ.map (fun ω ↦ (Z ω, X ω)) = (μ.map Z).prod (μ.map X) :=
     (indepFun_iff_map_prod_eq_prod_map_map hZ.aemeasurable hX.aemeasurable).mp hZX
@@ -716,7 +717,8 @@ private lemma condDistrib_ae_eq_affineShiftKernel
       funext ω; simp [hW_def]
     rw [hcomp, ← Measure.map_map hg (hZ.prodMk hX), hjoint_ZX,
       prod_map_affine_eq_compProd]
-  exact condDistrib_ae_eq_of_measure_eq_compProd Z hW_meas.aemeasurable hjoint_ZW
+  exact condDistrib_ae_eq_of_measure_eq_compProd (X := Z)
+      (by fun_prop) hW_meas.aemeasurable hjoint_ZW
 
 private lemma convCrossEntropy_perFibre_wiring
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsFiniteMeasure μ]
@@ -844,7 +846,7 @@ theorem negMulLog_convDensity_entropy_ge_density
   -- where `affineShiftKernel ν c z = ν.map (· + c·z)`.  Mirrors the assembly inside
   -- `condDifferentialEntropy_indep_add_eq`.
   have hW_meas : Measurable W := hX.add ((measurable_const).mul hZ)
-  haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map X) := inferInstance
   have hae : condDistrib W Z μ
       =ᵐ[μ.map Z] affineShiftKernel (μ.map X) (Real.sqrt s) :=
     condDistrib_ae_eq_affineShiftKernel μ X Z W s hX hZ hXZ hW_meas hW_def
@@ -876,10 +878,11 @@ theorem negMulLog_convDensity_entropy_ge_density
     exact measurable_convDensityAdd_gaussianPDFReal pX hpX_meas ⟨u n, (hu_pos n).le⟩
   -- Marginal `μ.map W = withDensity (ofReal p_t)` and `volume ≪ μ.map W` (full support).
   have hW_ac : (μ.map W) ≪ volume := by
-    have hW_law : μ.map W = (μ.map X) ∗ gaussianReal 0 ⟨s * (v_Z : ℝ), by positivity⟩ :=
+    set vW : ℝ≥0 := ⟨s * (v_Z : ℝ), by positivity⟩ with hvW
+    have hW_law : μ.map W = (μ.map X) ∗ gaussianReal 0 vW :=
       InformationTheory.Shannon.FisherInfo.gaussianConvolution_law_conv
         X Z hX hZ hXZ v_Z hZ_law hs.le
-    have hsv_ne : (⟨s * (v_Z : ℝ), by positivity⟩ : ℝ≥0) ≠ 0 := by
+    have hsv_ne : vW ≠ 0 := by
       intro h; exact (mul_pos hs hv_Z_pos').ne' (congrArg NNReal.toReal h)
     rw [hW_law]
     exact Measure.conv_absolutelyContinuous
@@ -943,7 +946,7 @@ theorem negMulLog_convDensity_entropy_ge_density
       u hu_pos n hfib_eq hqW hp_t_nn
   -- (6) outer fiber-entropy integrability: each fiber entropy equals the constant
   -- `h(μ.map X)` (translation invariance), so the function is a.e. constant.
-  haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map Z) := inferInstance
   have h_fibreEnt_int : Integrable
       (fun z ↦ differentialEntropy (condDistrib W Z μ z)) (μ.map Z) :=
     condDistrib_fibre_entropy_integrable hX_ac hae
@@ -971,7 +974,7 @@ theorem negMulLog_convDensity_entropy_ge_density
     simp only [Pi.neg_apply, Real.negMulLog, neg_neg, neg_mul]
   -- (2) joint llr integrability (= KL finiteness `D(joint ‖ product) < ∞`),
   -- closed by the standalone `convJointLlr_integrable` (fiber `q := pX`, target `g := p_t`).
-  haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map Z) := inferInstance
   have hsq_int : Integrable (fun z ↦ z ^ 2) (μ.map Z) := by
     rw [hZ_law]; exact integrable_sq_gaussianReal
   -- `∫ pX·|log pX| < ∞` (the fiber-entropy in absolute value).

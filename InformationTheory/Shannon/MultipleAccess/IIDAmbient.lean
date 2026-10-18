@@ -56,7 +56,7 @@ instance macJointDistribution.instIsProbabilityMeasure
     (W : MACChannel α₁ α₂ β) [IsMarkovKernel W] :
     IsProbabilityMeasure (macJointDistribution p₁ p₂ W) := by
   unfold macJointDistribution
-  exact Measure.isProbabilityMeasure_map (MeasurableEquiv.prodAssoc.measurable.aemeasurable)
+  exact inferInstance
 
 /-! ### Ambient measure on `ℕ → α₁ × α₂ × β` -/
 

@@ -46,7 +46,7 @@ theorem measurePi_gaussianReal_map_orthogonal {k : ℕ} (N : ℝ≥0) (v : Fin k
     fun_prop
   haveI : IsProbabilityMeasure
       ((Measure.pi (fun i ↦ gaussianReal (v i) N)).map (fun y ↦ O.mulVec y)) :=
-    Measure.isProbabilityMeasure_map hmeas.aemeasurable
+    inferInstance
   -- adjoint identity for `mulVec`/`dotProduct`
   have hadj : ∀ (M : Matrix (Fin k) (Fin k) ℝ) (a b : Fin k → ℝ),
       (M *ᵥ a) ⬝ᵥ b = a ⬝ᵥ (Mᵀ *ᵥ b) := by

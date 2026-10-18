@@ -3,7 +3,7 @@ import InformationTheory.Probability.Mixture
 import InformationTheory.Shannon.MultipleAccess.Achievability
 import InformationTheory.Shannon.MultipleAccess.Reconciliation
 import Mathlib.Analysis.Convex.Topology
-import Mathlib.Probability.Distributions.Uniform
+import Mathlib.Probability.UniformOn
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.Logic.Equiv.Fin.Basic
 import Mathlib.Data.Fin.Tuple.Basic
@@ -1038,18 +1038,16 @@ theorem mac_pentagon_subset_capacityRegion_allprob
   intro R hR
   obtain ⟨hR1nn, hR2nn, hR1le, hR2le, hRsumle⟩ := hR
   -- Uniform full-support anchors.
-  have hμ₀₁pos : ∀ a : α₁, 0 < ((PMF.uniformOfFintype α₁).toMeasure).real {a} := by
+  have hμ₀₁pos : ∀ a : α₁, 0 < (uniformOn (Set.univ : Set α₁)).real {a} := by
     intro a
-    rw [measureReal_def, PMF.toMeasure_apply_singleton _ _ (measurableSet_singleton a),
-      PMF.uniformOfFintype_apply, ENNReal.toReal_inv, ENNReal.toReal_natCast]
-    exact inv_pos.mpr (by exact_mod_cast Fintype.card_pos)
-  have hμ₀₂pos : ∀ a : α₂, 0 < ((PMF.uniformOfFintype α₂).toMeasure).real {a} := by
+    rw [measureReal_def, uniformOn_univ, Measure.count_singleton]
+    exact ENNReal.toReal_pos (by simp) (by simp)
+  have hμ₀₂pos : ∀ a : α₂, 0 < (uniformOn (Set.univ : Set α₂)).real {a} := by
     intro a
-    rw [measureReal_def, PMF.toMeasure_apply_singleton _ _ (measurableSet_singleton a),
-      PMF.uniformOfFintype_apply, ENNReal.toReal_inv, ENNReal.toReal_natCast]
-    exact inv_pos.mpr (by exact_mod_cast Fintype.card_pos)
-  set μ₀₁ : Measure α₁ := (PMF.uniformOfFintype α₁).toMeasure with hμ₀₁
-  set μ₀₂ : Measure α₂ := (PMF.uniformOfFintype α₂).toMeasure with hμ₀₂
+    rw [measureReal_def, uniformOn_univ, Measure.count_singleton]
+    exact ENNReal.toReal_pos (by simp) (by simp)
+  set μ₀₁ : Measure α₁ := uniformOn (Set.univ : Set α₁) with hμ₀₁
+  set μ₀₂ : Measure α₂ := uniformOn (Set.univ : Set α₂) with hμ₀₂
   haveI : IsProbabilityMeasure μ₀₁ := by rw [hμ₀₁]; infer_instance
   haveI : IsProbabilityMeasure μ₀₂ := by rw [hμ₀₂]; infer_instance
   -- Smoothing sequence `εₖ = 1/(k+1) ∈ (0, 1]` tending to `0`.

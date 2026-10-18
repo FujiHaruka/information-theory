@@ -113,7 +113,7 @@ private lemma jointRV_jointSequence_proj_measureReal_eq
         (proj_Y' ⁻¹' ({y'} : Set (Fin n' → β')))
       = (μ'.map (jointRV Ys' n')).real ({y'} : Set (Fin n' → β')) := by
   intro proj_Y'
-  have hproj_meas : Measurable proj_Y' := measurable_pi_lambda _ fun i ↦
+  have hproj_meas : Measurable proj_Y' := Measurable.of_eval fun i ↦
     (measurable_pi_apply i).snd
   have h_meas_y : MeasurableSet ({y'} : Set (Fin n' → β')) := measurableSet_singleton y'
   have h_meas_pre : MeasurableSet (proj_Y' ⁻¹' ({y'} : Set (Fin n' → β'))) :=
@@ -202,9 +202,9 @@ theorem conditionalTypicalSlice_card_le
             Finset.sum_le_sum hpoint_ge
     -- Step 3: rewrite the sum as the measure of `embed '' F`.
     have hMprobZ : IsProbabilityMeasure (μ.map (jointRV Zs n)) :=
-      Measure.isProbabilityMeasure_map (measurable_jointRV Zs hZs n).aemeasurable
+      inferInstance
     have hMprobY : IsProbabilityMeasure (μ.map (jointRV Ys n)) :=
-      Measure.isProbabilityMeasure_map (measurable_jointRV Ys hYs n).aemeasurable
+      inferInstance
     set FimgZ : Finset (Fin n → α × β) := F.image embed with hFimgZ_def
     have hFimg_card : FimgZ.card = F.card :=
       Finset.card_image_of_injective _ hembed_inj

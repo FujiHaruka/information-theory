@@ -273,7 +273,7 @@ instance bcUVTimeShare_isProbabilityMeasure (c : BroadcastCode M₁ M₂ n α β
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] [NeZero M₁] [NeZero M₂] [NeZero n] :
     IsProbabilityMeasure (bcUVTimeShare c W) := by
   unfold bcUVTimeShare
-  exact Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  exact inferInstance
 
 omit [Fintype α] [MeasurableSingletonClass α] [StandardBorelSpace α] [Nonempty α] [Fintype β₁]
   [MeasurableSingletonClass β₁] [StandardBorelSpace β₁] [Fintype β₂]
@@ -455,7 +455,7 @@ lemma bc_uv_mem_of_mul_le_slot_sums
   have hd₁ : ∀ u, Function.invFun e₁ (e₁ u) = u := Function.leftInverse_invFun hinj₁
   have hd₂ : ∀ v, Function.invFun e₂ (e₂ v) = v := Function.leftInverse_invFun hinj₂
   haveI : IsProbabilityMeasure ((bcUVTimeShare c W).map (uvRelabel e₁ e₂)) :=
-    Measure.isProbabilityMeasure_map (measurable_uvRelabel hme₁ hme₂).aemeasurable
+    inferInstance
   have hchan : IsUVChannelLaw W ((bcUVTimeShare c W).map (uvRelabel e₁ e₂)) :=
     (bcUVTimeShare_isUVChannelLaw c W).map_auxiliaries hme₁ hme₂
   -- the four slots are unchanged by the re-encoding

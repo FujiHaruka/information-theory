@@ -492,7 +492,7 @@ private lemma E_r_union_rate_isBoundedUnder_below
     rw [Measure.pi_singleton, ENNReal.toReal_prod]
     calc m ^ n = ∏ _i : Fin n, m := by rw [Finset.prod_const]; simp
       _ ≤ ∏ i : Fin n, μ₂.real {x i} :=
-        Finset.prod_le_prod (fun i _ ↦ hm_pos.le)
+        Finset.prod_le_prod₀ (fun i _ ↦ hm_pos.le)
           (fun i _ ↦ ha₀ (x i) (Finset.mem_univ _))
   have h_sing_le : ((Measure.pi (fun _ : Fin n ↦ μ₂)) {x}).toReal
       ≤ ((Measure.pi (fun _ : Fin n ↦ μ₂))

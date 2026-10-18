@@ -314,7 +314,7 @@ theorem timeBox_mem_timeLimitSubspace (T : ℝ) : timeBox T ∈ timeLimitSubspac
 
 theorem indicatorIcc_memLp_one (T : ℝ) :
     MemLp ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) 1 volume :=
-  memLp_indicator_const 1 measurableSet_Icc (1 : ℂ)
+  memLp_indicator_const 1 measurableSet_Icc.nullMeasurableSet (1 : ℂ)
     (Or.inr (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top))
 
 theorem fourierIntegral_indicatorIcc_continuous (T : ℝ) :
@@ -333,7 +333,7 @@ theorem fourier_timeBox_ae_eq (T : ℝ) :
     ((Lp.fourierTransformₗᵢ ℝ ℂ (timeBox T) : E) : ℝ → ℂ)
       =ᵐ[volume] 𝓕 ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) := by
   have hmem2 : MemLp ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) 2 volume :=
-    memLp_indicator_const 2 measurableSet_Icc (1 : ℂ)
+    memLp_indicator_const 2 measurableSet_Icc.nullMeasurableSet (1 : ℂ)
       (Or.inr (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top))
   have hbridge := ShannonHartley.l2Fourier_eq_fourierIntegral
     ((Set.Icc (0 : ℝ) T).indicator (fun _ ↦ (1 : ℂ))) (indicatorIcc_memLp_one T) hmem2

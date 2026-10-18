@@ -353,13 +353,13 @@ lemma wz_source_codeword_sideInfo_mass_le
   -- Measure reconciliation: the source `n`-fold `Y`-law is the `β`-image of the ambient's.
   haveI : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
       (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)})).map
-      Prod.snd) := Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+      Prod.snd) := inferInstance
   haveI : IsProbabilityMeasure ((rdAmbient (wzSideInfoMarginal P_XY κ')).map
       (ChannelCoding.iidYs (α := Fin k) 0)) :=
-    Measure.isProbabilityMeasure_map (ChannelCoding.measurable_iidYs 0).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (((rdAmbient (wzSideInfoMarginal P_XY κ')).map
       (ChannelCoding.iidYs (α := Fin k) 0)).map Subtype.val) :=
-    Measure.isProbabilityMeasure_map hval_meas.aemeasurable
+    inferInstance
   have hmeaseq : (Measure.pi (fun _ : Fin n ↦ ChannelCoding.pmfToMeasure
         (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦ P_XY.real {(p.1.1, p.2)}))).map
         (fun p (i : Fin n) ↦ (p i).2)
@@ -374,10 +374,10 @@ lemma wz_source_codeword_sideInfo_mass_le
   -- Assemble the mass-transport chain.
   have hYproj_meas : Measurable (fun p : Fin n → {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
       fun i ↦ (p i).2) :=
-    measurable_pi_lambda _ (fun i ↦ measurable_snd.comp (measurable_pi_apply i))
+    Measurable.of_eval (fun i ↦ measurable_snd.comp (measurable_pi_apply i))
   have hΦ_meas : Measurable (fun z : Fin n → {y : β // 0 < ∑ x, P_XY.real {(x, y)}} ↦
       fun i ↦ ((z i : β))) :=
-    measurable_pi_lambda _ (fun i ↦ hval_meas.comp (measurable_pi_apply i))
+    Measurable.of_eval (fun i ↦ hval_meas.comp (measurable_pi_apply i))
   have hjrv_meas : Measurable (jointRV (ChannelCoding.iidYs (α := Fin k)
       (β := {y : β // 0 < ∑ x, P_XY.real {(x, y)}})) n) :=
     measurable_jointRV _ (fun i ↦ ChannelCoding.measurable_iidYs i) n

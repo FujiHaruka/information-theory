@@ -71,7 +71,7 @@ private lemma perLetterXLaw_eq_mixture
   have h_meas_eval :
       Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ c.encoder ω.1 i) :=
     (measurable_of_countable (fun a : Fin M ↦ c.encoder a i)).comp measurable_fst
-  rw [Measure.map_smul]
+  rw [Measure.map_smul _ (by fun_prop)]
   rw [Measure.map_finset_sum (s := Finset.univ)
       (m := fun m ↦ (Measure.dirac m).prod
         (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
@@ -93,8 +93,7 @@ private instance perLetterXLaw_isProbabilityMeasure
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
     IsProbabilityMeasure (perLetterXLaw h_meas c i) := by
   unfold perLetterXLaw
-  exact Measure.isProbabilityMeasure_map
-    ((measurable_of_countable (fun a : Fin M ↦ c.encoder a i)).comp measurable_fst).aemeasurable
+  exact inferInstance
 
 /-- The per-letter pair law factors as `perLetterXLaw ⊗ₘ awgnChannel`. -/
 private lemma awgnConverseJoint_map_pair_eq_compProd
@@ -134,7 +133,7 @@ private lemma awgnConverseJoint_map_pair_eq_compProd
         Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ (c.encoder ω.1 i, ω.2 i)) :=
       ((measurable_of_countable (fun a : Fin M ↦ c.encoder a i)).comp measurable_fst).prodMk
         ((measurable_pi_apply i).comp measurable_snd)
-    rw [Measure.map_smul,
+    rw [Measure.map_smul _ (by fun_prop),
       Measure.map_finset_sum (s := Finset.univ)
         (m := fun m ↦ (Measure.dirac m).prod
           (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
@@ -230,7 +229,7 @@ private lemma perLetterYLaw_eq_mixture_local
   unfold perLetterYLaw awgnConverseJoint
   have h_meas_eval : Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ ω.2 i) :=
     (measurable_pi_apply i).comp measurable_snd
-  rw [Measure.map_smul,
+  rw [Measure.map_smul _ (by fun_prop),
     Measure.map_finset_sum (s := Finset.univ)
       (m := fun m ↦ (Measure.dirac m).prod
         (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
@@ -367,8 +366,7 @@ private lemma integrable_log_rnDeriv_perLetterYLaw
   set q := perLetterYLaw h_meas c i with hq_def
   haveI hq_prob : IsProbabilityMeasure q := by
     rw [hq_def]; unfold perLetterYLaw
-    exact Measure.isProbabilityMeasure_map
-      ((measurable_pi_apply i).comp measurable_snd).aemeasurable
+    exact inferInstance
   set D : ℝ → ℝ := perLetterRealDensity N c i with hD_def
   have hM_pos : 0 < M := Nat.pos_of_ne_zero (NeZero.ne M)
   have hM_real_pos : (0 : ℝ) < (M : ℝ) := by exact_mod_cast hM_pos

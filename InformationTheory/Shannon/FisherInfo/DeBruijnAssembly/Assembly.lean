@@ -365,9 +365,9 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
   have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel s v|
       ≤ (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹ := by
     intro v
-    rw [heatFlow_density_heat_equation_kernel_eq hspos v,
-      abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)]
-    exact gaussianPDFReal_le_prefactor' ⟨s, hspos.le⟩ v
+    rw [heatFlow_density_heat_equation_kernel_eq hspos v]
+    exact (abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)).trans_le
+      (gaussianPDFReal_le_prefactor' ⟨s, hspos.le⟩ v)
   -- spatial 1st/2nd-derivative global-bound constants.
   set Mξ1 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((1 + 2 * s * Real.exp (-1)) / (2 * s)) with hMξ1
   set Mξ2 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((2 * Real.exp (-1) + 1) / s) with hMξ2

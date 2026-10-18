@@ -199,7 +199,7 @@ theorem matchedSum_law_eq
     have h_sum := gaussianReal_add_gaussianReal_of_indepFun (P := P)
       (X := fun ω ↦ Real.sqrt s_t * Z_X ω) (Y := fun ω ↦ Real.sqrt r_t * Z_Y ω)
       (m₁ := 0) (m₂ := 0) (v₁ := ⟨s_t, hst0⟩) (v₂ := ⟨r_t, hrt0⟩)
-      hSZX_RZY_indep hSZX_law hRZY_law
+      hSZX_RZY_indep { map_eq := hSZX_law } { map_eq := hRZY_law }
     have h_funext : (fun ω ↦ Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω)
         = (fun ω ↦ Real.sqrt s_t * Z_X ω) + (fun ω ↦ Real.sqrt r_t * Z_Y ω) := by
       funext ω; rfl

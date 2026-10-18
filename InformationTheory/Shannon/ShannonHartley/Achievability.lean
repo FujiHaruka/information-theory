@@ -1,6 +1,7 @@
 import Mathlib.Analysis.Fourier.FourierTransform
 import Mathlib.Analysis.Fourier.LpSpace
 import Mathlib.MeasureTheory.Integral.Bochner.Set
+import Mathlib.MeasureTheory.Order.Group.Lattice
 import InformationTheory.Shannon.ShannonHartley.Operational
 import InformationTheory.Shannon.NormalizedSinc
 import InformationTheory.Shannon.WhittakerShannon
@@ -154,7 +155,8 @@ theorem specBoxcar_memLp (c Δ : ℝ) (hΔ : 0 < Δ) (p : ℝ≥0∞) :
     hcont.aestronglyMeasurable.indicator measurableSet_Icc
   have hvol : volume (Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))) ≠ ∞ := by
     rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top
-  refine MemLp.mono' (memLp_indicator_const p measurableSet_Icc (Δ : ℝ) (Or.inr hvol)) haesm ?_
+  refine MemLp.mono' (memLp_indicator_const p measurableSet_Icc.nullMeasurableSet (Δ : ℝ)
+      (Or.inr hvol)) haesm ?_
   refine ae_of_all _ (fun ξ ↦ ?_)
   rw [specBoxcar]
   by_cases hξ : ξ ∈ Set.Icc (-(1 / (2 * Δ))) (1 / (2 * Δ))

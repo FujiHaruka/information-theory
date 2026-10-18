@@ -385,9 +385,7 @@ lemma mac_block_law_X2Y_singleton
   haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
   haveI : IsProbabilityMeasure νXY := by
     rw [hνXY_def]
-    exact Measure.isProbabilityMeasure_map
-      ((measurable_fst.comp measurable_snd).prodMk
-        (measurable_snd.comp measurable_snd)).aemeasurable
+    exact inferInstance
   set g₀ : (ℕ → α₁ × α₂ × β) → (Fin n → α₂) × (Fin n → β) :=
     fun ω ↦ (jointRV macX2s n ω, jointRV macYs n ω) with hg₀_def
   set ê : (Fin n → α₂) × (Fin n → β) → (Fin n → α₂ × β) :=
@@ -396,7 +394,7 @@ lemma mac_block_law_X2Y_singleton
     (measurable_jointRV macX2s measurable_macX2s n).prodMk
       (measurable_jointRV macYs measurable_macYs n)
   have hê_meas : Measurable ê :=
-    measurable_pi_lambda _ fun i ↦
+    Measurable.of_eval fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).prodMk
         ((measurable_pi_apply i).comp measurable_snd)
   -- The reshaped block law is the pi power of the per-coordinate (X₂,Y) marginal.
@@ -513,9 +511,7 @@ lemma mac_chan_fold_set
     with hνA2_def
   haveI : IsProbabilityMeasure νA2 := by
     rw [hνA2_def]
-    exact Measure.isProbabilityMeasure_map
-      ((measurable_jointRV macX2s measurable_macX2s n).prodMk
-        (measurable_jointRV macYs measurable_macYs n)).aemeasurable
+    exact inferInstance
   classical
   -- Enumerate the LHS as an indicator double sum.
   have h_enum : νA2.real T
@@ -622,7 +618,7 @@ lemma mac_block_law_triple_singleton
       ((measurable_jointRV macX2s measurable_macX2s n).prodMk
         (measurable_jointRV macYs measurable_macYs n))
   have hê_meas : Measurable ê :=
-    measurable_pi_lambda _ fun i ↦
+    Measurable.of_eval fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).prodMk
         (((measurable_pi_apply i).comp (measurable_fst.comp measurable_snd)).prodMk
           ((measurable_pi_apply i).comp (measurable_snd.comp measurable_snd)))
@@ -682,10 +678,7 @@ lemma mac_chan_fold_triple_set
       (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω, jointRV macYs n ω)) with hνt_def
   haveI : IsProbabilityMeasure νt := by
     rw [hνt_def]
-    exact Measure.isProbabilityMeasure_map
-      ((measurable_jointRV macX1s measurable_macX1s n).prodMk
-        ((measurable_jointRV macX2s measurable_macX2s n).prodMk
-          (measurable_jointRV macYs measurable_macYs n))).aemeasurable
+    exact inferInstance
   -- Per-coordinate factorization of the full-triple singleton mass.
   have h_single : ∀ (x₁ : Fin n → α₁) (x₂ : Fin n → α₂) (y : Fin n → β),
       νt.real {(x₁, x₂, y)}
@@ -798,7 +791,7 @@ lemma mac_block_law_X1X2_singleton
     (measurable_jointRV macX1s measurable_macX1s n).prodMk
       (measurable_jointRV macX2s measurable_macX2s n)
   have hê_meas : Measurable ê :=
-    measurable_pi_lambda _ fun i ↦
+    Measurable.of_eval fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).prodMk
         ((measurable_pi_apply i).comp measurable_snd)
   have hmap12 : (macJointDistribution p₁ p₂ W).map (fun q : α₁ × α₂ × β ↦ (q.1, q.2.1))
@@ -881,7 +874,7 @@ lemma macJTS_indep_prob_le_X2_split
   set ê : (Fin n → α₁) × (Fin n → β) → (Fin n → α₁ × β) :=
     fun q i ↦ (q.1 i, q.2 i) with hê_def
   have hê_meas : Measurable ê :=
-    measurable_pi_lambda _ fun i ↦
+    Measurable.of_eval fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).prodMk
         ((measurable_pi_apply i).comp measurable_snd)
   set μX2 : Measure (Fin n → α₂) := (macAmbientMeasure p₁ p₂ W).map (jointRV macX2s n)
@@ -890,10 +883,9 @@ lemma macJTS_indep_prob_le_X2_split
     (macAmbientMeasure p₁ p₂ W).map (fun ω ↦ (jointRV macX1s n ω, jointRV macYs n ω))
     with hνsplit_def
   haveI : IsProbabilityMeasure μX2 :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV macX2s measurable_macX2s n).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure νsplit :=
-    Measure.isProbabilityMeasure_map ((measurable_jointRV macX1s measurable_macX1s n).prodMk
-      (measurable_jointRV macYs measurable_macYs n)).aemeasurable
+    inferInstance
   -- The independent-pair bound (reshaped form).
   have h_gw := macJTS_indep_prob_le_X2 (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs
     measurable_macX1s measurable_macX2s measurable_macYs
@@ -975,7 +967,7 @@ lemma macJTS_indep_prob_le_both_split
   set ê : (Fin n → α₁) × (Fin n → α₂) → (Fin n → α₁ × α₂) :=
     fun q i ↦ (q.1 i, q.2 i) with hê_def
   have hê_meas : Measurable ê :=
-    measurable_pi_lambda _ fun i ↦
+    Measurable.of_eval fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).prodMk
         ((measurable_pi_apply i).comp measurable_snd)
   set νsplit12 : Measure ((Fin n → α₁) × (Fin n → α₂)) :=
@@ -984,10 +976,9 @@ lemma macJTS_indep_prob_le_both_split
   set μY : Measure (Fin n → β) := (macAmbientMeasure p₁ p₂ W).map (jointRV macYs n)
     with hμY_def
   haveI : IsProbabilityMeasure νsplit12 :=
-    Measure.isProbabilityMeasure_map ((measurable_jointRV macX1s measurable_macX1s n).prodMk
-      (measurable_jointRV macX2s measurable_macX2s n)).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure μY :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV macYs measurable_macYs n).aemeasurable
+    inferInstance
   -- The independent-pair bound (reshaped form).
   have h_gw := macJTS_indep_prob_le_both (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs
     measurable_macX1s measurable_macX2s measurable_macYs

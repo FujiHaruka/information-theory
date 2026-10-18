@@ -68,8 +68,7 @@ lemma toBaseDLen_take (D : ℕ) [NeZero D] {L₁ L₂ : ℕ} (h : L₁ ≤ L₂)
     rw [List.length_take, toBaseDLen_length, min_eq_left h] at hi₁
     rw [List.getElem_take]
     -- i-th digit of toBaseDLen D L₂ n is ⟨(n / D^(L₂−1−i)) % D, _⟩
-    unfold toBaseDLen
-    rw [List.getElem_ofFn, List.getElem_ofFn]
+    simp only [toBaseDLen, List.getElem_ofFn]
     -- (n / D^(L₂ - 1 - i)) % D = ((n / D^(L₂ - L₁)) / D^(L₁ - 1 - i)) % D
     apply Fin.ext
     simp only

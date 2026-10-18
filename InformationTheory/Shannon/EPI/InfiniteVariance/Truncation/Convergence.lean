@@ -117,7 +117,7 @@ theorem differentialEntropy_map_condTrunc_tendsto (P : Measure Ω) [IsProbabilit
   classical
   have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
   haveI : IsProbabilityMeasure (P.map Z) :=
-    MeasureTheory.Measure.isProbabilityMeasure_map hZmeas.aemeasurable
+    inferInstance
   -- abbreviations: `Sn n = {|r| ≤ n}`, `m_n = (P.map Z) (Sn n)`,
   --   `p x = ((P.map Z).rnDeriv vol x).toReal`.
   set Sn : ℕ → Set ℝ := fun n ↦ {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
@@ -403,7 +403,7 @@ theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityM
   set ν := P.map (fun ω ↦ X ω + Y ω) with hν_def
   have hsum_meas : Measurable (fun ω ↦ X ω + Y ω) := hX.add hY
   haveI : IsProbabilityMeasure ν :=
-    Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+    inferInstance
   have hν_ac : ν ≪ volume := by
     rw [hν_def]
     have hconv : P.map (fun ω ↦ X ω + Y ω) = (P.map X) ∗ (P.map Y) := by

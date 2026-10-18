@@ -76,7 +76,7 @@ lemma integral_comp_law (μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → 
     (hX : Measurable X) (g : α → ℝ) :
     ∫ ω, g (X ω) ∂μ = ∑ x, (μ.map X).real {x} * g x := by
   have hM : IsProbabilityMeasure (μ.map X) :=
-    Measure.isProbabilityMeasure_map hX.aemeasurable
+    inferInstance
   -- Step 1: push forward through `X`.
   have h_push : ∫ ω, g (X ω) ∂μ = ∫ x, g x ∂(μ.map X) :=
     (integral_map hX.aemeasurable (measurable_of_finite g).aestronglyMeasurable).symm
@@ -88,7 +88,7 @@ lemma integrable_betLogReturn_zero (μ : Measure Ω) [IsProbabilityMeasure μ]
     (b o : α → ℝ) (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :
     Integrable (fun ω ↦ betLogReturn b o (Xs 0 ω)) μ := by
   have : IsProbabilityMeasure (μ.map (Xs 0)) :=
-    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+    inferInstance
   have h_int : Integrable (betLogReturn b o) (μ.map (Xs 0)) := Integrable.of_finite
   exact h_int.comp_measurable (hXs 0)
 
@@ -108,7 +108,7 @@ lemma indepFun_betLogReturn (μ : Measure Ω) (b o : α → ℝ) (Xs : ℕ → �
 lemma lawPmf_mem_stdSimplex (μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α)
     (hX : Measurable X) : lawPmf μ X ∈ stdSimplex ℝ α := by
   have hM : IsProbabilityMeasure (μ.map X) :=
-    Measure.isProbabilityMeasure_map hX.aemeasurable
+    inferInstance
   refine ⟨fun x ↦ ?_, ?_⟩
   · exact measureReal_nonneg
   · change (∑ x : α, (μ.map X).real {x}) = 1

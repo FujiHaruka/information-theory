@@ -655,13 +655,13 @@ lemma uvUnpadMap_uvPadMap [Nonempty β₁] [Nonempty β₂] (i : Fin n)
 lemma measurable_uvPadMap [Nonempty β₁] [Nonempty β₂] (i : Fin n) :
     Measurable (uvPadMap (ξ := ξ) (β₁ := β₁) (β₂ := β₂) i) := by
   refine measurable_const.prodMk (measurable_fst.prodMk (Measurable.prodMk ?_ ?_))
-  · refine measurable_pi_lambda _ fun j ↦ ?_
+  · refine Measurable.of_eval fun j ↦ ?_
     by_cases h : j.val < i.val
     · simp only [dif_pos h]
       exact (measurable_pi_apply _).comp (measurable_fst.comp measurable_snd)
     · simp only [dif_neg h]
       exact measurable_const
-  · refine measurable_pi_lambda _ fun j ↦ ?_
+  · refine Measurable.of_eval fun j ↦ ?_
     by_cases h : i.val < j.val
     · simp only [dif_pos h]
       exact (measurable_pi_apply _).comp (measurable_snd.comp measurable_snd)
@@ -677,8 +677,8 @@ lemma measurable_uvUnpadMap (i : Fin n) :
       (fun q : Fin n × ξ × (Fin n → β₁) × (Fin n → β₂) ↦ q.2.2.2) :=
     measurable_snd.comp (measurable_snd.comp measurable_snd)
   exact (measurable_fst.comp measurable_snd).prodMk
-    ((measurable_pi_lambda _ fun j ↦ (measurable_pi_apply _).comp h₁).prodMk
-      (measurable_pi_lambda _ fun j ↦ (measurable_pi_apply _).comp h₂))
+    ((Measurable.of_eval fun j ↦ (measurable_pi_apply _).comp h₁).prodMk
+      (Measurable.of_eval fun j ↦ (measurable_pi_apply _).comp h₂))
 
 lemma measurable_uvAuxPad [Nonempty β₁] [Nonempty β₂]
     (W : Ω → ξ) (Y₁s : Fin n → Ω → β₁) (Y₂s : Fin n → Ω → β₂)
@@ -842,7 +842,7 @@ instance bcUVJointDistribution_isProbabilityMeasure
     [NeZero M₁] [NeZero M₂] (i : Fin n) :
     IsProbabilityMeasure (bcUVJointDistribution c W i) := by
   unfold bcUVJointDistribution
-  exact Measure.isProbabilityMeasure_map (measurable_bcUVTuple c i).aemeasurable
+  exact inferInstance
 
 omit [StandardBorelSpace α] [Nonempty α] [Fintype β₁] [MeasurableSingletonClass β₁]
   [StandardBorelSpace β₁] [Fintype β₂] [MeasurableSingletonClass β₂] [StandardBorelSpace β₂] in

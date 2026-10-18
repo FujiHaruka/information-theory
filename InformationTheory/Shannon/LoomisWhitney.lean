@@ -118,7 +118,7 @@ theorem entropy_le_log_image_card
     isProbabilityMeasure_uniformOn A.finite_toSet hA
   haveI hprob_map : IsProbabilityMeasure
       ((uniformOn (A : Set β)).map f) :=
-    Measure.isProbabilityMeasure_map hf.aemeasurable
+    inferInstance
   set N : ℕ := (A.image f).card with hN_def
   have hN_pos : 0 < N := by
     have : (A.image f).Nonempty := hA.image f

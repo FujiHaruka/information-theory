@@ -143,7 +143,7 @@ measure under a measurable map). -/
 instance instIsProbabilityMeasure_shiftedMarginal (J : Finset ℤ) :
     IsProbabilityMeasure (shiftedMarginal μ p J) := by
   unfold shiftedMarginal
-  exact Measure.isProbabilityMeasure_map (measurable_obsZ μ p _ J).aemeasurable
+  exact inferInstance
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
@@ -491,7 +491,7 @@ theorem μZ_nat_proj_eq :
   -- Both LHS, RHS are probability measures; in particular finite.
   have hLHS_prob : IsProbabilityMeasure
       (Measure.map natProj (μZ μ p)) :=
-    Measure.isProbabilityMeasure_map hmeas_natProj.aemeasurable
+    inferInstance
   -- Apply `ext_of_generate_finite` on `measurableCylinders (fun _ : ℕ => α)`.
   refine MeasureTheory.ext_of_generate_finite (measurableCylinders (fun _ : ℕ ↦ α))
     generateFrom_measurableCylinders.symm isPiSystem_measurableCylinders
@@ -1048,13 +1048,12 @@ theorem ergodic_shiftZ :
   set q : StationaryProcess μ α := p.toStationaryProcess with hq_def
   set ν : Measure (∀ _ : ℕ, α) := μ.map (forwardEmbed (μ := μ) q) with hν_def
   have hν_prob : IsProbabilityMeasure ν :=
-    Measure.isProbabilityMeasure_map (measurable_forwardEmbed (μ := μ) q).aemeasurable
+    inferInstance
   -- Ergodicity of shiftN on ν.
   have hN : Ergodic (shiftN : (∀ _ : ℕ, α) → _) ν := ergodic_shiftN μ p
-  refine ⟨measurePreserving_shiftZ μ q, ?_⟩
-  refine ⟨fun A hA hA_inv ↦ ?_⟩
-  -- Step 1: reduce `EventuallyConst A` to `μZ A = 0 ∨ μZ (A^c) = 0`.
-  rw [eventuallyConst_set']
+  refine Ergodic.of_preimage_eq (measurePreserving_shiftZ μ q) fun A hA hA_inv ↦ ?_
+  -- Step 1: reduce `EventuallyEmptyOrUniv A` to `μZ A = 0 ∨ μZ (A^c) = 0`.
+  rw [eventuallyEmptyOrUniv_iff']
   -- Step 2: cylinder approximation + Borel-Cantelli yields an a.e. posSigma representative.
   -- Step 3: transfer ergodicity from shiftN.
   obtain ⟨A', hA'_pos, hAA'⟩ := exists_posSigma_ae_eq_of_shiftZ_invariant μ q A hA hA_inv

@@ -61,7 +61,7 @@ theorem lintegral_pi_prod {n : ℕ} {E : Fin n → Type*}
       rw [← hmp.lintegral_comp_emb (MeasurableEquiv.measurableEmbedding _)]
       simp_rw [MeasurableEquiv.piFinSuccAbove_symm_apply, Fin.insertNthEquiv,
         Equiv.coe_fn_mk, Fin.prod_univ_succ, Fin.insertNth_zero, Fin.cons_succ,
-        Fin.zero_succAbove, cast_eq, Fin.cons_zero]
+        Fin.zero_succAbove, Fin.cons_zero]
       have hpm := lintegral_prod_mul (μ := μ 0) (ν := Measure.pi fun j ↦ μ j.succ)
           (f := g 0)
           (g := fun b : (j : Fin n) → E j.succ ↦ ∏ x, g x.succ (b x))

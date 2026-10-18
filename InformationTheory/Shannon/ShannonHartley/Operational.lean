@@ -266,7 +266,7 @@ theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
       simpa using hx
   have hG1 : MemLp (⇑G) 1 volume := by
     have hind_L1 : MemLp (S.indicator (⇑G)) 1 volume :=
-      ((Lp.memLp G).indicator hS_meas).mono_exponent_of_measure_support_ne_top
+      ((Lp.memLp G).indicator hS_meas.nullMeasurableSet).mono_exponent_of_measure_support_ne_top
         (s := S) (fun x hx ↦ Set.indicator_of_notMem hx _)
         (by rw [hvolS]; exact ENNReal.ofReal_ne_top) (by norm_num)
     exact (memLp_congr_ae hind_eq).mpr hind_L1
@@ -292,20 +292,21 @@ theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
     simp_rw [Circle.norm_smul]
   -- (f)+(g) `∫ ‖⇑G‖ ≤ √(2W)·‖f‖₂` by Hölder on `S` and Plancherel.
   have h_int_eq : ∫ ξ, ‖(⇑G) ξ‖ ∂volume = (eLpNorm (⇑G) 1 volume).toReal := by
-    rw [eLpNorm_one_eq_lintegral_enorm, ← ofReal_integral_norm_eq_lintegral_enorm hG1_int,
+    rw [eLpNorm_one_eq_lintegral_enorm hG1_int.aestronglyMeasurable,
+      ← ofReal_integral_norm_eq_lintegral_enorm hG1_int,
       ENNReal.toReal_ofReal (integral_nonneg fun _ ↦ norm_nonneg _)]
   have hnorm : (eLpNorm (⇑G) 2 volume).toReal = (eLpNorm f 2 volume).toReal := by
     rw [← Lp.norm_def G, hG, Lp.norm_fourier_eq, Lp.norm_def]
     congr 1
     rw [eLpNorm_congr_ae hfc2.coeFn_toLp]
-    exact eLpNorm_congr_norm_ae
+    exact eLpNorm_congr_norm_ae hfc2.aestronglyMeasurable hf.aestronglyMeasurable
       (Filter.Eventually.of_forall fun x ↦ by simp only [hfcdef, Complex.norm_real])
   have h_holder :
       eLpNorm (⇑G) 1 volume ≤ eLpNorm (⇑G) 2 volume * ENNReal.ofReal (Real.sqrt (2 * W)) := by
     have e1 : eLpNorm (⇑G) 1 volume = eLpNorm (⇑G) 1 (volume.restrict S) := by
-      rw [eLpNorm_congr_ae hind_eq, eLpNorm_indicator_eq_eLpNorm_restrict hS_meas]
+      rw [eLpNorm_congr_ae hind_eq, eLpNorm_indicator_eq_eLpNorm_restrict hS_meas.nullMeasurableSet]
     have e2 : eLpNorm (⇑G) 2 volume = eLpNorm (⇑G) 2 (volume.restrict S) := by
-      rw [eLpNorm_congr_ae hind_eq, eLpNorm_indicator_eq_eLpNorm_restrict hS_meas]
+      rw [eLpNorm_congr_ae hind_eq, eLpNorm_indicator_eq_eLpNorm_restrict hS_meas.nullMeasurableSet]
     rw [e1, e2]
     have hae : AEStronglyMeasurable (⇑G) (volume.restrict S) :=
       (Lp.memLp G).aestronglyMeasurable.restrict
@@ -321,7 +322,7 @@ theorem bandlimited_sup_bound (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
       = (eLpNorm (⇑G) 1 volume).toReal := h_int_eq
     _ ≤ (eLpNorm (⇑G) 2 volume * ENNReal.ofReal (Real.sqrt (2 * W))).toReal :=
         ENNReal.toReal_mono
-          (ENNReal.mul_ne_top (Lp.memLp G).2.ne ENNReal.ofReal_ne_top) h_holder
+          (ENNReal.mul_ne_top (Lp.memLp G).ne ENNReal.ofReal_ne_top) h_holder
     _ = (eLpNorm (⇑G) 2 volume).toReal * Real.sqrt (2 * W) := by
         rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (Real.sqrt_nonneg _)]
     _ = Real.sqrt (2 * W) * (eLpNorm f 2 volume).toReal := by rw [hnorm, mul_comm]

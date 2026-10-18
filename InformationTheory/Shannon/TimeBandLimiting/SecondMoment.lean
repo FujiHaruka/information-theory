@@ -40,7 +40,8 @@ theorem bandKernelSq_neg (W u : ℝ) : bandKernelSq W (-u) = bandKernelSq W u :=
     show 2 * W * -u = -(2 * W * u) by ring, NormalizedSinc.sincN_neg]
 
 theorem bandKernelSq_integrable (W : ℝ) : Integrable (bandKernelSq W) volume :=
-  (memLp_two_iff_integrable_sq_norm (bandKernel_memLp W 0).1).mp (bandKernel_memLp W 0)
+  (memLp_two_iff_integrable_sq_norm (bandKernel_memLp W 0).aestronglyMeasurable).mp
+      (bandKernel_memLp W 0)
 
 theorem bandKernelSq_integral (W : ℝ) (hW : 0 < W) : ∫ u, bandKernelSq W u = 2 * W := by
   set k : E := bandKernelLp W 0 with hkdef
@@ -90,7 +91,7 @@ theorem bandKernelTail_antitone (W : ℝ) : Antitone (bandKernelTail W) := by
   intro a b hab
   exact setIntegral_mono_set (bandKernelSq_integrable W).integrableOn
     (ae_of_all _ (bandKernelSq_nonneg W))
-    (HasSubset.Subset.eventuallyLE (Set.Ioi_subset_Ioi hab))
+    (Filter.Eventually.of_forall (Set.Ioi_subset_Ioi hab))
 
 theorem bandKernelTail_zero (W : ℝ) (hW : 0 < W) : bandKernelTail W 0 = W := by
   have hsplit : (∫ u in Set.Iic (0 : ℝ), bandKernelSq W u)

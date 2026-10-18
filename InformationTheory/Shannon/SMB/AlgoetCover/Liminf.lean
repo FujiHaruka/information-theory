@@ -378,8 +378,8 @@ theorem liminf_blockLogAvgZ_ge_entropyRate
       (fun n : ℕ ↦ negLogQInftyZ μ p.toStationaryProcess n x / (n : ℝ)
         - 2 * Real.log (n : ℝ) / (n : ℝ)) Filter.atTop
       ≤ Filter.liminf (fun n ↦ blockLogAvgZ μ p.toStationaryProcess n x) Filter.atTop :=
-    Filter.liminf_le_liminf h_bound (hu := h_lhs.isBoundedUnder_ge)
-      (hv := h_bdd_above.isCoboundedUnder_ge)
+    Filter.liminf_le_liminf h_bound (hv := h_lhs.isBoundedUnder_ge)
+      (hu := h_bdd_above.isCoboundedUnder_ge)
   rw [h_lhs.liminf_eq] at h_liminf_le
   exact h_liminf_le
 

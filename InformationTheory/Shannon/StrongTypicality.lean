@@ -516,7 +516,7 @@ theorem stronglyTypicalSet_card_ge_eventually
     exact typicalSet_prob_le μ Xs hXs hindep_full hident hpos n x hxT
   -- Step 4: μ.real(A^*_ε) = ∑ x ∈ T, p x ≤ |T| · exp(-n(H-ε')).
   have hMprob_joint : IsProbabilityMeasure (μ.map (jointRV Xs n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV Xs hXs n).aemeasurable
+    inferInstance
   have h_sum_T :
       (μ.map (jointRV Xs n)).real (stronglyTypicalSet μ Xs n ε) = ∑ x ∈ T, p x := by
     rw [← h_coe]

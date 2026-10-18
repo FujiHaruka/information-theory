@@ -186,7 +186,7 @@ theorem primrec_list_filter {α β : Type*} [Primcodable α] [Primcodable β]
   generalize f a = L
   induction L with
   | nil => rfl
-  | cons b l ih => cases hb : p a b <;> simp [hb, ih]
+  | cons b l ih => simp only [cond_eq_ite] at ih; cases hb : p a b <;> simp [hb, ih]
 
 theorem primrec_two_pow : Primrec fun n : ℕ ↦ 2 ^ n := by
   have key : ∀ n : ℕ, (fun m : ℕ ↦ 2 * m)^[n] 1 = 2 ^ n := by

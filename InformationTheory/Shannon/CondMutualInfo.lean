@@ -153,11 +153,11 @@ private lemma product_map_perm_eq_compProd
   set K_X : Kernel Z X := condDistrib Xs Zc μ with hK_X
   have hZX : Measurable (fun ω ↦ (Zc ω, Xs ω)) := hZc.prodMk hXs
   have hμZX : μ.map (fun ω ↦ (Zc ω, Xs ω)) = (μ.map Zc) ⊗ₘ K_X :=
-    (compProd_map_condDistrib hXs.aemeasurable).symm
-  have hPZ : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc.aemeasurable
-  have hPY : IsProbabilityMeasure (μ.map Yo) := Measure.isProbabilityMeasure_map hYo.aemeasurable
+    (compProd_map_condDistrib hZc.aemeasurable hXs.aemeasurable).symm
+  have hPZ : IsProbabilityMeasure (μ.map Zc) := inferInstance
+  have hPY : IsProbabilityMeasure (μ.map Yo) := inferInstance
   have hPZX : IsProbabilityMeasure (μ.map (fun ω ↦ (Zc ω, Xs ω))) :=
-    Measure.isProbabilityMeasure_map hZX.aemeasurable
+    inferInstance
   refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   have hg : Measurable (fun p : (Z × X) × Y ↦ f ((permZXY_ZYX Z X Y) p)) :=
     hf.comp (permZXY_ZYX Z X Y).measurable
@@ -191,8 +191,8 @@ private lemma factored_map_perm_eq_compProd_prod
   set K_X : Kernel Z X := condDistrib Xs Zc μ
   set K_Y : Kernel Z Y := condDistrib Yo Zc μ
   have hμZY : μ.map (fun ω ↦ (Zc ω, Yo ω)) = (μ.map Zc) ⊗ₘ K_Y :=
-    (compProd_map_condDistrib hYo.aemeasurable).symm
-  have : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc.aemeasurable
+    (compProd_map_condDistrib hZc.aemeasurable hYo.aemeasurable).symm
+  have : IsProbabilityMeasure (μ.map Zc) := inferInstance
   refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   have hg : Measurable (fun p : (Z × Y) × X ↦ f ((permZYX_Z_XY Z X Y) p)) :=
     hf.comp (permZYX_Z_XY Z X Y).measurable
@@ -245,7 +245,7 @@ theorem mutualInfo_chain_rule
   have h_joint_compProd :
       μ.map (fun ω ↦ ((Zc ω, Yo ω), Xs ω))
         = (μ.map (fun ω ↦ (Zc ω, Yo ω))) ⊗ₘ K_pair :=
-    (compProd_map_condDistrib hXs.aemeasurable).symm
+    (compProd_map_condDistrib (hZc.prodMk hYo).aemeasurable hXs.aemeasurable).symm
   have h_LHS_klDiv :
       mutualInfo μ (fun ω ↦ (Zc ω, Xs ω)) Yo
         = klDiv ((μ.map (fun ω ↦ (Zc ω, Yo ω))) ⊗ₘ K_pair)
@@ -254,10 +254,10 @@ theorem mutualInfo_chain_rule
     rw [← klDiv_map_measurableEquiv (permZXY_ZYX Z X Y), h_joint_map, h_joint_compProd,
         product_map_perm_eq_compProd μ Xs Yo Zc hXs hYo hZc]
   -- Step 2: apply chain rule (Markov kernel instances needed)
-  have hPZ : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc.aemeasurable
-  have hPY : IsProbabilityMeasure (μ.map Yo) := Measure.isProbabilityMeasure_map hYo.aemeasurable
+  have hPZ : IsProbabilityMeasure (μ.map Zc) := inferInstance
+  have hPY : IsProbabilityMeasure (μ.map Yo) := inferInstance
   have hPZY : IsProbabilityMeasure (μ.map (fun ω ↦ (Zc ω, Yo ω))) :=
-    Measure.isProbabilityMeasure_map hZY.aemeasurable
+    inferInstance
   -- Markov kernel instances (needed for klDiv_compProd_eq_add)
   haveI : IsMarkovKernel K_pair := by rw [hK_pair]; infer_instance
   haveI : IsMarkovKernel (Kernel.prodMkRight Y K_X) := by rw [hK_X]; infer_instance
@@ -286,7 +286,7 @@ theorem mutualInfo_chain_rule
     have : (permZYX_Z_XY Z X Y) ∘ (fun ω ↦ ((Zc ω, Yo ω), Xs ω))
         = fun ω ↦ (Zc ω, (Xs ω, Yo ω)) := by ext ω <;> rfl
     rw [this]
-    exact (compProd_map_condDistrib (hXs.prodMk hYo).aemeasurable).symm
+    exact (compProd_map_condDistrib hZc.aemeasurable (hXs.prodMk hYo).aemeasurable).symm
   rw [h_first, factored_map_perm_eq_compProd_prod μ Xs Yo Zc hXs hYo hZc]
   rfl
 
@@ -300,7 +300,7 @@ theorem condMutualInfo_comm
     (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) :
     condMutualInfo μ Xs Yo Zc = condMutualInfo μ Yo Xs Zc := by
   haveI : IsProbabilityMeasure (μ.map Zc) :=
-    Measure.isProbabilityMeasure_map hZc.aemeasurable
+    inferInstance
   unfold condMutualInfo
   have hXY : Measurable (fun ω ↦ (Xs ω, Yo ω)) := hXs.prodMk hYo
   have hYX : Measurable (fun ω ↦ (Yo ω, Xs ω)) := hYo.prodMk hXs
@@ -310,11 +310,11 @@ theorem condMutualInfo_comm
   have h_joint :
       ((μ.map Zc) ⊗ₘ condDistrib (fun ω ↦ (Yo ω, Xs ω)) Zc μ).map e
         = (μ.map Zc) ⊗ₘ condDistrib (fun ω ↦ (Xs ω, Yo ω)) Zc μ := by
-    rw [compProd_map_condDistrib hYX.aemeasurable,
+    rw [compProd_map_condDistrib hZc.aemeasurable hYX.aemeasurable,
         Measure.map_map e.measurable (hZc.prodMk hYX),
         show (e ∘ (fun ω ↦ (Zc ω, Yo ω, Xs ω)))
             = (fun ω ↦ (Zc ω, Xs ω, Yo ω)) from rfl,
-        compProd_map_condDistrib hXY.aemeasurable]
+        compProd_map_condDistrib hZc.aemeasurable hXY.aemeasurable]
   -- factored pushforward via Measure.compProd_map + Kernel.prodComm_prod
   have h_factored :
       ((μ.map Zc) ⊗ₘ ((condDistrib Yo Zc μ) ×ₖ (condDistrib Xs Zc μ))).map e
@@ -351,13 +351,14 @@ theorem condMutualInfo_eq_zero_of_markov
     [StandardBorelSpace X] [Nonempty X]
     [StandardBorelSpace Y] [Nonempty Y]
     (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y)
-    (hXs : Measurable Xs) (_hZc : Measurable Zc) (hYo : Measurable Yo)
+    (hXs : Measurable Xs) (hZc : Measurable Zc) (hYo : Measurable Yo)
     (hmarkov : IsMarkovChain μ Xs Zc Yo) :
     condMutualInfo μ Xs Yo Zc = 0 := by
   unfold condMutualInfo
   have h_pair : Measurable (fun ω ↦ (Xs ω, Yo ω)) := hXs.prodMk hYo
   have h_num_eq : (μ.map Zc) ⊗ₘ condDistrib (fun ω ↦ (Xs ω, Yo ω)) Zc μ
-      = μ.map (fun ω ↦ (Zc ω, Xs ω, Yo ω)) := compProd_map_condDistrib h_pair.aemeasurable
+      = μ.map (fun ω ↦ (Zc ω, Xs ω, Yo ω)) :=
+          compProd_map_condDistrib hZc.aemeasurable h_pair.aemeasurable
   rw [h_num_eq, hmarkov]
   exact klDiv_self _
 
@@ -434,7 +435,7 @@ theorem condMutualInfo_map_left_measurableEquiv
     (e : X ≃ᵐ X') :
     condMutualInfo μ (fun ω ↦ e (Xs ω)) Yo Zc = condMutualInfo μ Xs Yo Zc := by
   haveI : IsProbabilityMeasure (μ.map Zc) :=
-    Measure.isProbabilityMeasure_map hZc.aemeasurable
+    inferInstance
   unfold condMutualInfo
   -- The reshape on Z × (X × Y): apply `id × (e × id)`.
   let eProd : Z × X × Y ≃ᵐ Z × X' × Y :=
@@ -445,8 +446,8 @@ theorem condMutualInfo_map_left_measurableEquiv
   have h_joint :
       ((μ.map Zc) ⊗ₘ condDistrib (fun ω ↦ (e (Xs ω), Yo ω)) Zc μ)
         = ((μ.map Zc) ⊗ₘ condDistrib (fun ω ↦ (Xs ω, Yo ω)) Zc μ).map eProd := by
-    rw [compProd_map_condDistrib heXY.aemeasurable,
-        compProd_map_condDistrib hXY.aemeasurable,
+    rw [compProd_map_condDistrib hZc.aemeasurable heXY.aemeasurable,
+        compProd_map_condDistrib hZc.aemeasurable hXY.aemeasurable,
         Measure.map_map eProd.measurable (hZc.prodMk hXY)]
     rfl
   -- Step 2: factored side via condDistrib_comp + Kernel.map_prod_eq.
@@ -454,7 +455,7 @@ theorem condMutualInfo_map_left_measurableEquiv
   have h_cd_comp :
       condDistrib (fun ω ↦ e (Xs ω)) Zc μ
         =ᵐ[μ.map Zc] (condDistrib Xs Zc μ).map e :=
-    condDistrib_comp Zc hXs.aemeasurable e.measurable
+    condDistrib_comp hZc.aemeasurable hXs.aemeasurable e.measurable
   -- Replace LHS factored kernel with map-rewritten version, then pushforward.
   have h_factored_compProd_eq :
       (μ.map Zc) ⊗ₘ
@@ -542,10 +543,10 @@ theorem condMutualInfo_map_cond_measurableEquiv
     (e : Z ≃ᵐ Z') :
     condMutualInfo μ Xs Yo (fun ω ↦ e (Zc ω)) = condMutualInfo μ Xs Yo Zc := by
   haveI : IsProbabilityMeasure (μ.map Zc) :=
-    Measure.isProbabilityMeasure_map hZc.aemeasurable
+    inferInstance
   have heZc : Measurable (fun ω ↦ e (Zc ω)) := e.measurable.comp hZc
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ e (Zc ω))) :=
-    Measure.isProbabilityMeasure_map heZc.aemeasurable
+    inferInstance
   have hmap_e : μ.map (fun ω ↦ e (Zc ω)) = (μ.map Zc).map e :=
     (Measure.map_map e.measurable hZc).symm
   unfold condMutualInfo
@@ -558,23 +559,23 @@ theorem condMutualInfo_map_cond_measurableEquiv
   have h_joint :
       (μ.map (fun ω ↦ e (Zc ω))) ⊗ₘ condDistrib (fun ω ↦ (Xs ω, Yo ω)) (fun ω ↦ e (Zc ω)) μ
         = ((μ.map Zc) ⊗ₘ condDistrib (fun ω ↦ (Xs ω, Yo ω)) Zc μ).map eZ := by
-    rw [compProd_map_condDistrib hXY.aemeasurable,
-        compProd_map_condDistrib hXY.aemeasurable,
+    rw [compProd_map_condDistrib heZc.aemeasurable hXY.aemeasurable,
+        compProd_map_condDistrib hZc.aemeasurable hXY.aemeasurable,
         Measure.map_map eZ.measurable (hZc.prodMk hXY)]
     rfl
   -- Per-marginal: reparametrizing the conditioning variable by `e` is `comap e.symm`.
   have hX_eq : condDistrib Xs (fun ω ↦ e (Zc ω)) μ
       =ᵐ[μ.map (fun ω ↦ e (Zc ω))] K_X.comap e.symm e.symm.measurable := by
-    refine condDistrib_ae_eq_of_measure_eq_compProd (fun ω ↦ e (Zc ω)) hXs.aemeasurable ?_
+    refine condDistrib_ae_eq_of_measure_eq_compProd heZc.aemeasurable hXs.aemeasurable ?_
     rw [hmap_e, hK_X, ← compProd_map_left_prodMap (μ.map Zc) (condDistrib Xs Zc μ) e,
-        compProd_map_condDistrib hXs.aemeasurable,
+        compProd_map_condDistrib hZc.aemeasurable hXs.aemeasurable,
         Measure.map_map (e.measurable.prodMap measurable_id) (hZc.prodMk hXs)]
     rfl
   have hY_eq : condDistrib Yo (fun ω ↦ e (Zc ω)) μ
       =ᵐ[μ.map (fun ω ↦ e (Zc ω))] K_Y.comap e.symm e.symm.measurable := by
-    refine condDistrib_ae_eq_of_measure_eq_compProd (fun ω ↦ e (Zc ω)) hYo.aemeasurable ?_
+    refine condDistrib_ae_eq_of_measure_eq_compProd heZc.aemeasurable hYo.aemeasurable ?_
     rw [hmap_e, hK_Y, ← compProd_map_left_prodMap (μ.map Zc) (condDistrib Yo Zc μ) e,
-        compProd_map_condDistrib hYo.aemeasurable,
+        compProd_map_condDistrib hZc.aemeasurable hYo.aemeasurable,
         Measure.map_map (e.measurable.prodMap measurable_id) (hZc.prodMk hYo)]
     rfl
   -- Factored side.
@@ -607,7 +608,7 @@ theorem isMarkovChain_map_left
     (hmarkov : IsMarkovChain μ Xs Zc Yo) :
     IsMarkovChain μ (fun ω ↦ f (Xs ω)) Zc Yo := by
   haveI : IsProbabilityMeasure (μ.map Zc) :=
-    Measure.isProbabilityMeasure_map hZc.aemeasurable
+    inferInstance
   unfold IsMarkovChain
   have hZXY : Measurable (fun ω ↦ (Zc ω, Xs ω, Yo ω)) := hZc.prodMk (hXs.prodMk hYo)
   -- LHS: μ.map (Z, f∘X, Y) = (μ.map (Z, X, Y)).map (id × (f × id)).
@@ -625,7 +626,7 @@ theorem isMarkovChain_map_left
   refine (Measure.compProd_congr ?_).symm
   have h_cd : condDistrib (fun ω ↦ f (Xs ω)) Zc μ
       =ᵐ[μ.map Zc] (condDistrib Xs Zc μ).map f :=
-    condDistrib_comp Zc hXs.aemeasurable hf
+    condDistrib_comp hZc.aemeasurable hXs.aemeasurable hf
   filter_upwards [h_cd] with z hz
   ext s hs
   rw [Kernel.prod_apply, Kernel.prod_apply, hz]

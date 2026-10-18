@@ -116,10 +116,10 @@ private lemma lintegral_mul_eq_lintegral_mul_condLExp
         = fun x ↦ ∑ c ∈ (sn n).range,
           (c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x) * μ⁻[f|m] x from
             funext (fun x ↦ h_decomp x _)]
-    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦
-      ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul hf)]
-    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦
-      ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul
+    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦ by
+      exact ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul hf)]
+    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦ by
+      exact ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul
         h_cL_meas_m₀)]
     refine Finset.sum_congr rfl (fun c hc ↦ ?_)
     rw [h_per_c_LHS c f (h_preim_lt_top c hc),

@@ -53,9 +53,9 @@ lemma map_firstBlockZ_eq_map_blockRV
   -- Both sides are probability measures on `Fin n → α` (finite codomain).
   haveI hLHS_prob : IsProbabilityMeasure
       ((μZ μ p).map (firstBlockZ (α := α) n)) :=
-    Measure.isProbabilityMeasure_map (measurable_firstBlockZ n).aemeasurable
+    inferInstance
   haveI hRHS_prob : IsProbabilityMeasure (μ.map (p.blockRV n)) :=
-    Measure.isProbabilityMeasure_map (p.measurable_blockRV n).aemeasurable
+    inferInstance
   -- Suffices to show equality on singletons (finite type).
   refine Measure.ext_of_singleton ?_
   intro s
@@ -510,10 +510,10 @@ lemma lintegral_mul_eq_lintegral_mul_condLExp
         = fun x ↦ ∑ c ∈ (sn n).range,
           (c * ((sn n) ⁻¹' {c}).indicator (fun _ ↦ (1 : ℝ≥0∞)) x) * μ⁻[f|m] x from
             funext (fun x ↦ h_decomp x _)]
-    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦
-      ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul hf)]
-    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦
-      ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul
+    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦ by
+      exact ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul hf)]
+    rw [MeasureTheory.lintegral_finsetSum _ (fun c _ ↦ by
+      exact ((Measurable.indicator measurable_const (hm _ (h_preim_meas c))).const_mul c).mul
         h_cL_meas_m₀)]
     refine Finset.sum_congr rfl (fun c hc ↦ ?_)
     rw [h_per_c_LHS c f (h_preim_lt_top c hc),
@@ -1086,8 +1086,8 @@ lemma measurable_perA_integrand_shiftedPastSigma
         * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
         * ENNReal.ofReal (Real.exp
             (-Real.log (condProbInfty μ p a (shiftZ^[n] x))))) := by
-  refine Measurable.mul ?_ ?_
-  · refine Measurable.mul ?_ ?_
+  refine Measurable.fun_mul ?_ ?_
+  · refine Measurable.fun_mul ?_ ?_
     · exact measurable_MRatioLowerZ_shiftedPastSigma μ p n
     · -- ofReal(blockCondRatio n (firstBlockZ n x) a): m-measurable.
       refine ENNReal.measurable_ofReal.comp ?_

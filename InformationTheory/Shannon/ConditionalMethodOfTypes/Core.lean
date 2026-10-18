@@ -55,8 +55,6 @@ lemma mem_conditionalTypeClass_iff_joint {n : ℕ} (x : Fin n → α) (c : α ×
     have h_eq : (Finset.univ.filter (fun i : Fin n ↦ (x i, y i) = (a, b))).card
         = (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card := by
       congr 1
-      ext i
-      simp [Prod.mk.injEq]
     show typeCount (fun i ↦ (x i, y i)) (a, b) = c (a, b)
     unfold typeCount
     rw [h_eq]
@@ -67,8 +65,6 @@ lemma mem_conditionalTypeClass_iff_joint {n : ℕ} (x : Fin n → α) (c : α ×
     have h_eq : (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card
         = (Finset.univ.filter (fun i : Fin n ↦ (x i, y i) = (a, b))).card := by
       congr 1
-      ext i
-      simp [Prod.mk.injEq]
     rw [h_eq]
     unfold typeCount at h_p
     exact h_p
@@ -794,7 +790,7 @@ lemma conditionalTypeClass_card_ge
           ((Ta a : ℝ) ^ Ta a / ∏ b : β, ((crow a b : ℝ) ^ (crow a b))))
         ≤ ∏ a : α,
             ((typeClassByCount (α := β) (n := Ta a) (crow a)).toFinite.toFinset.card : ℝ) := by
-    refine Finset.prod_le_prod (fun a _ ↦ ?_) (fun a _ ↦ h_per_row a)
+    refine Finset.prod_le_prod₀ (fun a _ ↦ ?_) (fun a _ ↦ h_per_row a)
     refine mul_nonneg (inv_nonneg.mpr ?_) ?_
     · positivity
     · refine div_nonneg ?_ ?_

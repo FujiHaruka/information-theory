@@ -122,7 +122,7 @@ theorem expected_blockLogAvg_eq
   classical
   have hB : Measurable (p.blockRV n) := p.measurable_blockRV n
   have hPn : IsProbabilityMeasure (μ.map (p.blockRV n)) :=
-    Measure.isProbabilityMeasure_map hB.aemeasurable
+    inferInstance
   -- Step 1: push forward via `blockRV n`.
   set f : (Fin n → α) → ℝ :=
     fun x ↦ -(1 / (n : ℝ)) * Real.log ((μ.map (p.blockRV n)).real {x}) with hf_def

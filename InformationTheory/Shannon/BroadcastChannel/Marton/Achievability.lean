@@ -285,9 +285,9 @@ private lemma marton_ensemble_E0₁_le
       ≤ tol + η := by
   classical
   haveI : IsProbabilityMeasure (pV.map (Prod.fst : V₁ × V₂ → V₁)) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (pV.map (Prod.snd : V₁ × V₂ → V₂)) :=
-    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+    inferInstance
   haveI : MeasurableSingletonClass (Fin M₁' → (Fin n → V₁)) := Pi.instMeasurableSingletonClass
   haveI : MeasurableSingletonClass (Fin M₂' → (Fin n → V₂)) := Pi.instMeasurableSingletonClass
   set Bad : Set ((Fin M₁' → (Fin n → V₁)) × (Fin M₂' → (Fin n → V₂))) :=
@@ -428,9 +428,9 @@ private lemma marton_ensemble_E0₂_le
       ≤ tol + η := by
   classical
   haveI : IsProbabilityMeasure (pV.map (Prod.fst : V₁ × V₂ → V₁)) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (pV.map (Prod.snd : V₁ × V₂ → V₂)) :=
-    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+    inferInstance
   haveI : MeasurableSingletonClass (Fin M₁' → (Fin n → V₁)) := Pi.instMeasurableSingletonClass
   haveI : MeasurableSingletonClass (Fin M₂' → (Fin n → V₂)) := Pi.instMeasurableSingletonClass
   set Bad : Set ((Fin M₁' → (Fin n → V₁)) × (Fin M₂' → (Fin n → V₂))) :=
@@ -713,9 +713,9 @@ private lemma marton_exists_codebook_le_avg
         + ((martonCodebookToCode pV K W hM₁ hM₂ ε c₁ c₂ cX).averageErrorProb₂ W).toReal ≤ B := by
   classical
   haveI : IsProbabilityMeasure (pV.map (Prod.fst : V₁ × V₂ → V₁)) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (pV.map (Prod.snd : V₁ × V₂ → V₂)) :=
-    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+    inferInstance
   haveI : MeasurableSingletonClass (MartonSubcodebook M₁ M₁' n V₁) :=
     Pi.instMeasurableSingletonClass
   haveI : MeasurableSingletonClass (MartonSubcodebook M₂ M₂' n V₂) :=

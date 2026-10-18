@@ -366,7 +366,7 @@ lemma measureReal_map_jointRV_proj_fst_eq
   have hZs : ∀ i, Measurable (jointSequence Xs Ys i) := fun i ↦
     measurable_jointSequence Xs Ys hXs hYs i
   have hproj_meas : Measurable (fun z : Fin n → α × β ↦ fun i ↦ (z i).1) := by
-    apply measurable_pi_lambda
+    apply Measurable.of_eval
     intro i
     exact (measurable_pi_apply i).fst
   have h_meas_x : MeasurableSet ({x} : Set (Fin n → α)) := measurableSet_singleton x
@@ -454,9 +454,9 @@ private theorem conditionalTypicalSliceY_card_le
         _ ≤ ∑ y ∈ F, (μ.map (jointRV Zs n)).real {embed y} :=
             Finset.sum_le_sum hpoint_ge
     have hMprobZ : IsProbabilityMeasure (μ.map (jointRV Zs n)) :=
-      Measure.isProbabilityMeasure_map (measurable_jointRV Zs hZs n).aemeasurable
+      inferInstance
     have hMprobX : IsProbabilityMeasure (μ.map (jointRV Xs n)) :=
-      Measure.isProbabilityMeasure_map (measurable_jointRV Xs hXs n).aemeasurable
+      inferInstance
     set FimgZ : Finset (Fin n → α × β) := F.image embed with hFimgZ_def
     have hFimg_card : FimgZ.card = F.card :=
       Finset.card_image_of_injective _ hembed_inj

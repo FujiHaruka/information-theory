@@ -218,7 +218,7 @@ theorem convDensity_tendsto_ae_subseq
       hpX_meas (measurable_gaussianPDFReal _ _)).aestronglyMeasurable
   have hpX_aesm : AEStronglyMeasurable pX volume := hpX_meas.aestronglyMeasurable
   have hmeas : TendstoInMeasure volume f atTop pX :=
-    tendstoInMeasure_of_tendsto_eLpNorm (by norm_num) hf_meas hpX_aesm hL1
+    tendstoInMeasure_of_tendsto_eLpNorm (by norm_num) hL1
   obtain ⟨ns, hns_mono, hns_ae⟩ := hmeas.exists_seq_tendsto_ae
   exact ⟨ns, hns_mono, hns_ae⟩
 
@@ -774,9 +774,12 @@ theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
       (integrable_gaussianPDFReal _ _) (measurable_gaussianPDFReal _ _)
   have hgn_ne : ∀ n, (⟨u n, (hu_pos n).le⟩ : ℝ≥0) ≠ 0 := fun n ↦ by
     intro h; exact (hu_pos n).ne' (congrArg NNReal.toReal h)
-  have hf_mass : ∀ n, (∫ x, f n x ∂volume) = 1 := fun n ↦ by
-    rw [hf_def, convDensityAdd_pXpY_integral_eq pX _ hpX_int (integrable_gaussianPDFReal _ _),
-      integral_gaussianPDFReal_eq_one 0 (hgn_ne n), hpX_mass, mul_one]
+  have hf_mass : ∀ n, (∫ x, f n x ∂volume) = 1 := by
+    have key : ∀ v : ℝ≥0, v ≠ 0 → ∫ x, convDensityAdd pX (gaussianPDFReal 0 v) x = 1 :=
+      fun v hv ↦ by
+        rw [convDensityAdd_pXpY_integral_eq pX _ hpX_int (integrable_gaussianPDFReal _ _),
+          integral_gaussianPDFReal_eq_one 0 hv, hpX_mass, mul_one]
+    exact fun n ↦ key _ (hgn_ne n)
   -- Probability-measure instances.
   have hμn_prob : ∀ n, IsProbabilityMeasure (μn n) := fun n ↦ by
     constructor

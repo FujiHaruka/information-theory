@@ -152,7 +152,7 @@ noncomputable def isHeatFlowEndpointRegular_of_map_eq_rnDeriv
   have hp_mass : (∫ y, p y ∂volume) = 1 := by
     have hmass := MeasureTheory.Measure.integral_toReal_rnDeriv (μ := P.map W) (ν := volume) hac
     have : IsProbabilityMeasure (P.map W) :=
-      MeasureTheory.Measure.isProbabilityMeasure_map hW.aemeasurable
+      inferInstance
     rw [hp_def, hmass, Measure.real, measure_univ, ENNReal.toReal_one]
   have hp_mom : Integrable (fun y ↦ y ^ 2 * p y) volume := by
     have hsq_law : Integrable (fun y ↦ y ^ 2) (P.map W) := by
@@ -536,7 +536,7 @@ lemma canonical_base_density_regularity
         (fun x ↦ ENNReal.ofReal (((P.map V).rnDeriv volume x).toReal)) ∧
       Integrable (fun y ↦ y ^ 2 * ((P.map V).rnDeriv volume y).toReal) volume := by
   haveI hPV_prob : IsProbabilityMeasure (P.map V) :=
-    Measure.isProbabilityMeasure_map hV.aemeasurable
+    inferInstance
   set p : ℝ → ℝ := fun x ↦ ((P.map V).rnDeriv volume x).toReal with hp_def
   have hp_nn : ∀ x, 0 ≤ p x := fun x ↦ ENNReal.toReal_nonneg
   have hp_meas : Measurable p := ((P.map V).measurable_rnDeriv volume).ennreal_toReal
@@ -590,8 +590,9 @@ lemma smoothing_density_regularity
       (measurable_gaussianPDFReal _ _)
   · exact InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integrable _ _ hp_int
       hp_meas (integrable_gaussianPDFReal _ _) (measurable_gaussianPDFReal _ _)
-  · rw [InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integral_eq _ _
-      hp_int (integrable_gaussianPDFReal _ _), hp_mass, hτ_norm, one_mul]
+  · exact (InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integral_eq _ _
+      hp_int (integrable_gaussianPDFReal _ _)).trans
+      ((congrArg₂ (· * ·) hp_mass hτ_norm).trans (one_mul 1))
   · exact fun v hv ↦ isBlachmanConvReady_convGaussian_gaussian p_base hτ hp_nn hp_meas hp_int
       hp_mass_pos hp_mass hv
   · exact InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
@@ -669,7 +670,7 @@ theorem entropyPower_smoothed_epi_perT
   -- law of W: sum of independent standard normals = N(0,2)
   have hW_law : P.map W = gaussianReal 0 2 := by
     have := ProbabilityTheory.gaussianReal_add_gaussianReal_of_indepFun
-      (P := P) hZX_ZY hZX_law hZY_law
+      (P := P) hZX_ZY { map_eq := hZX_law } { map_eq := hZY_law }
     rw [hW_def, show (fun ω ↦ Z_X ω + Z_Y ω) = Z_X + Z_Y from rfl]
     rw [this]; norm_num
   -- S ⊥ W (from (X,Y)⊥(Z_X,Z_Y))
@@ -711,11 +712,11 @@ theorem entropyPower_smoothed_epi_perT
     simpa using hsum.integrable_sq
   -- ===== base canonical densities =====
   haveI hPX_prob : IsProbabilityMeasure (P.map X) :=
-    Measure.isProbabilityMeasure_map hX.aemeasurable
+    inferInstance
   haveI hPY_prob : IsProbabilityMeasure (P.map Y) :=
-    Measure.isProbabilityMeasure_map hY.aemeasurable
+    inferInstance
   haveI hPS_prob : IsProbabilityMeasure (P.map S) :=
-    Measure.isProbabilityMeasure_map hS_meas.aemeasurable
+    inferInstance
   -- S ≪ volume
   have hS_ac : (P.map S) ≪ volume := by
     have := map_add_absolutelyContinuous X Y P hX hY
@@ -838,7 +839,7 @@ lemma iIndepFun_liftMeasure4_of_indep
   symm
   refine Measure.pi_eq (fun s hs ↦ ?_)
   have hjoint_meas : Measurable (fun ω i ↦ ![X', Y', ZX, ZY] i ω) := by
-    refine measurable_pi_lambda _ (fun i ↦ ?_)
+    refine Measurable.of_eval (fun i ↦ ?_)
     fin_cases i
     · exact hX'_meas
     · exact hY'_meas
@@ -972,7 +973,7 @@ theorem entropy_power_add_ge_of_finite_variance
   have hWsum_meas : Measurable Wsum := hZX_meas.add hZY_meas
   have hWsum_law : lift.map Wsum = gaussianReal 0 2 := by
     have := ProbabilityTheory.gaussianReal_add_gaussianReal_of_indepFun
-      (P := lift) hZX_ZY hZX_law hZY_law
+      (P := lift) hZX_ZY { map_eq := hZX_law } { map_eq := hZY_law }
     rw [hWsum, show (fun p ↦ ZX p + ZY p) = ZX + ZY from rfl, this]; norm_num
   have hXYsum_W : IndepFun (fun p ↦ X' p + Y' p) Wsum lift := by
     have hpair : IndepFun (fun a ↦ (X' a, Y' a)) (fun a ↦ (ZX a, ZY a)) lift := by

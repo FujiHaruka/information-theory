@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.BroadcastChannel.Superposition.TimeShare
-import Mathlib.Probability.Distributions.Uniform
+import Mathlib.Probability.UniformOn
 
 /-!
 # Broadcast channel — perturbing an achievability pair to full support
@@ -71,7 +71,7 @@ lemma uvSatelliteKernel_real_singleton_pos (μ : Measure (U × V × α × β₁ 
     exact hq.1
   have hne : μ.map (fun q ↦ q.1) {u} ≠ 0 := ne_of_gt (lt_of_lt_of_le (hpos u a) hmono)
   have hkey := condDistrib_apply_of_ne_zero (μ := μ)
-    (X := fun q : U × V × α × β₁ × β₂ ↦ q.1) (Y := fun q ↦ q.2.2.1) hX u hne {a}
+    (X := fun q : U × V × α × β₁ × β₂ ↦ q.1) (Y := fun q ↦ q.2.2.1) measurable_fst hX u hne {a}
   rw [Set.singleton_prod_singleton] at hkey
   have hval : uvSatelliteKernel μ u {a} = (μ.map (fun q ↦ q.1) {u})⁻¹
       * μ.map (fun q ↦ (q.1, q.2.2.1)) {(u, a)} := hkey
@@ -110,8 +110,8 @@ variable {V : Type*} [MeasurableSpace V]
 the second auxiliary being frozen at `v₀`. -/
 noncomputable def uvUniformLaw (W : BCChannel α β₁ β₂) (v₀ : V) :
     Measure (U × V × α × β₁ × β₂) :=
-  uvLawOfInput W (((PMF.uniformOfFintype U).toMeasure).prod
-    ((Measure.dirac v₀).prod ((PMF.uniformOfFintype α).toMeasure)))
+  uvLawOfInput W ((uniformOn (Set.univ : Set U)).prod
+    ((Measure.dirac v₀).prod (uniformOn (Set.univ : Set α))))
 
 instance uvUniformLaw_isProbabilityMeasure (W : BCChannel α β₁ β₂) [IsMarkovKernel W] (v₀ : V) :
     IsProbabilityMeasure (uvUniformLaw (U := U) W v₀) := by
@@ -161,12 +161,12 @@ lemma uvUniformLaw_map_aux_input_pos (W : BCChannel α β₁ β₂) [IsMarkovKer
     ext r
     simp [Prod.ext_iff, and_comm]
   rw [Measure.map_apply (by fun_prop) (by simp), hset, Measure.prod_prod, Measure.prod_prod]
-  have h₁ : 0 < (PMF.uniformOfFintype U).toMeasure {u} := by
-    rw [PMF.toMeasure_apply_singleton _ _ (measurableSet_singleton u), PMF.uniformOfFintype_apply]
-    simp [ENNReal.inv_pos]
-  have h₂ : 0 < (PMF.uniformOfFintype α).toMeasure {a} := by
-    rw [PMF.toMeasure_apply_singleton _ _ (measurableSet_singleton a), PMF.uniformOfFintype_apply]
-    simp [ENNReal.inv_pos]
+  have h₁ : 0 < uniformOn (Set.univ : Set U) {u} := by
+    rw [uniformOn_univ, Measure.count_singleton]
+    exact ENNReal.div_pos one_ne_zero (ENNReal.natCast_ne_top _)
+  have h₂ : 0 < uniformOn (Set.univ : Set α) {a} := by
+    rw [uniformOn_univ, Measure.count_singleton]
+    exact ENNReal.div_pos one_ne_zero (ENNReal.natCast_ne_top _)
   have h₃ : (Measure.dirac v₀) Set.univ = 1 := by simp
   rw [h₃, one_mul]
   exact ENNReal.mul_pos h₁.ne' h₂.ne'
@@ -176,7 +176,8 @@ lemma uvPerturbLaw_map_aux_input_pos (W : BCChannel α β₁ β₂) [IsMarkovKer
     (hlam : lam < 1) (u : U) (a : α) :
     0 < (uvPerturbLaw W ν v₀ lam).map (fun q ↦ (q.1, q.2.2.1)) {(u, a)} := by
   have hpair : Measurable (fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.2.1)) := by fun_prop
-  rw [uvPerturbLaw, Measure.map_add _ _ hpair, Measure.map_smul, Measure.map_smul,
+  rw [uvPerturbLaw, Measure.map_add _ _ hpair, Measure.map_smul _ (by fun_prop),
+      Measure.map_smul _ (by fun_prop),
     Measure.coe_add, Pi.add_apply, Measure.smul_apply, Measure.smul_apply, smul_eq_mul,
     smul_eq_mul]
   have hpos := uvUniformLaw_map_aux_input_pos (U := U) W v₀ u a
@@ -411,7 +412,7 @@ instance uvLawOfPair_isProbabilityMeasure (W : BCChannel α β₁ β₂) [IsMark
     (pU : Measure U) [IsProbabilityMeasure pU] (K : Kernel U α) [IsMarkovKernel K] :
     IsProbabilityMeasure (uvLawOfPair W pU K) := by
   haveI : IsProbabilityMeasure ((pU ⊗ₘ K).map (fun p : U × α ↦ (p.1, p.1, p.2))) :=
-    Measure.isProbabilityMeasure_map (by fun_prop : Measurable _).aemeasurable
+    inferInstance
   unfold uvLawOfPair
   infer_instance
 
@@ -426,7 +427,7 @@ theorem exists_fullSupport_bcInfo_ge (W : BCChannel α β₁ β₂) [IsMarkovKer
       R₁ - δ ≤ bcInfo₁ pU' K' W ∧ R₂ - δ ≤ bcInfo₂ pU' K' W := by
   classical
   haveI : IsProbabilityMeasure ((pU ⊗ₘ K).map (fun p : U × α ↦ (p.1, p.1, p.2))) :=
-    Measure.isProbabilityMeasure_map (by fun_prop : Measurable _).aemeasurable
+    inferInstance
   have hlaw : IsUVChannelLaw W (uvLawOfPair W pU K) := uvLawOfInput_isUVChannelLaw W _
   -- the `(U, X)` marginal of the built law is the pair itself
   have hmarg : (uvLawOfPair W pU K).map (fun q ↦ (q.1, q.2.2.1)) = pU ⊗ₘ K := by

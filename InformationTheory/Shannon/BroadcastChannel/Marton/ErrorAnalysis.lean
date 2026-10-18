@@ -216,7 +216,7 @@ theorem marton_alias₁_slice_avg_le
       ≤ Real.exp (-(n : ℝ) * (martonInfo₁ pV K W - 3 * ε)) := by
   classical
   haveI : IsProbabilityMeasure (pV.map (Prod.fst : V₁ × V₂ → V₁)) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   exact sum_measureReal_slice_le (Measure.pi fun _ : Fin n ↦ pV.map Prod.fst) ν
     { q : (Fin n → V₁) × (Fin n → β₁ × β₂) |
         (q.1, fun i ↦ (q.2 i).1) ∈
@@ -339,7 +339,7 @@ theorem marton_alias₂_slice_avg_le
       ≤ Real.exp (-(n : ℝ) * (martonInfo₂ pV K W - 3 * ε)) := by
   classical
   haveI : IsProbabilityMeasure (pV.map (Prod.snd : V₁ × V₂ → V₂)) :=
-    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+    inferInstance
   exact sum_measureReal_slice_le (Measure.pi fun _ : Fin n ↦ pV.map Prod.snd) ν
     { q : (Fin n → V₂) × (Fin n → β₁ × β₂) |
         (q.1, fun i ↦ (q.2 i).2) ∈
@@ -664,9 +664,9 @@ theorem marton_random_codebook_alias₁_le
       ≤ Real.exp (-(n : ℝ) * (martonInfo₁ pV K W - 3 * ε)) := by
   classical
   haveI : IsProbabilityMeasure (pV.map (Prod.fst : V₁ × V₂ → V₁)) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (pV.map (Prod.snd : V₁ × V₂ → V₂)) :=
-    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+    inferInstance
   -- The transmitted input law, as a function of the two transmitted subcodebook rows.
   set L : (Fin M₁' → (Fin n → V₁)) → (Fin M₂' → (Fin n → V₂)) → Measure (Fin n → α) :=
     fun r s ↦ Measure.pi fun l : Fin n ↦
@@ -912,9 +912,9 @@ theorem marton_random_codebook_alias₂_le
       ≤ Real.exp (-(n : ℝ) * (martonInfo₂ pV K W - 3 * ε)) := by
   classical
   haveI : IsProbabilityMeasure (pV.map (Prod.fst : V₁ × V₂ → V₁)) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (pV.map (Prod.snd : V₁ × V₂ → V₂)) :=
-    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+    inferInstance
   -- The transmitted input law, as a function of the two transmitted subcodebook rows.
   set L : (Fin M₁' → (Fin n → V₁)) → (Fin M₂' → (Fin n → V₂)) → Measure (Fin n → α) :=
     fun r s ↦ Measure.pi fun l : Fin n ↦

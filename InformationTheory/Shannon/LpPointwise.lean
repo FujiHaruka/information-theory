@@ -47,7 +47,7 @@ theorem support_ptRepr_subset (s : Set ℝ) (f : Lp ℝ 2 (volume : Measure ℝ)
 /-- `ptRepr s f` still lies in `L²`. -/
 theorem memLp_ptRepr {s : Set ℝ} (hs : MeasurableSet s) (f : Lp ℝ 2 (volume : Measure ℝ)) :
     MemLp (ptRepr s f) 2 volume :=
-  (Lp.memLp f).indicator hs
+  (Lp.memLp f).indicator hs.nullMeasurableSet
 
 /-- If `⇑f` vanishes a.e. off `s`, then `ptRepr s f` agrees with `⇑f` a.e. -/
 theorem ptRepr_ae_eq {s : Set ℝ} (hs : MeasurableSet s) (f : Lp ℝ 2 (volume : Measure ℝ))

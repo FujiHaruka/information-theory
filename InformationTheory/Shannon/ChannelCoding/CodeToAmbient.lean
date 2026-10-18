@@ -121,9 +121,9 @@ lemma isMarkovChain_of_compProd_encoder
     rw [hκ]
   -- Identify `condDistrib Yo Zc μ =ᵐ Wcode`.
   haveI : IsProbabilityMeasure (μ.map Zc) :=
-    Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
+    inferInstance
   have hK_Y_eq : condDistrib Yo Zc μ =ᵐ[μ.map Zc] Wcode :=
-    condDistrib_ae_eq_of_measure_eq_compProd Zc hYo_meas.aemeasurable h_pair_eq
+    condDistrib_ae_eq_of_measure_eq_compProd (X := Zc) (by fun_prop) hYo_meas.aemeasurable h_pair_eq
   unfold IsMarkovChain
   set K_X : Kernel Z M := condDistrib Xs Zc μ with hK_X_def
   have h_compProd_eq :
@@ -137,7 +137,7 @@ lemma isMarkovChain_of_compProd_encoder
   have h_LHS_meas : Measurable (fun ω ↦ (Zc ω, Xs ω, Yo ω)) :=
     hZc_meas.prodMk (hXs_meas.prodMk hYo_meas)
   have hKX_fold : (μ.map Zc) ⊗ₘ K_X = μ.map (fun ω ↦ (Zc ω, Xs ω)) :=
-    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := Xs) hXs_meas.aemeasurable
+    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := Xs) (by fun_prop) hXs_meas.aemeasurable
   refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   rw [lintegral_map hf h_LHS_meas, Measure.lintegral_compProd hf]
   have h_inner_split : ∀ z : Z,
@@ -215,7 +215,7 @@ lemma pi_map_comp_of_injective {γ : Type*} [MeasurableSpace γ] {k m : ℕ}
     (Measure.pi ν).map (fun y j ↦ y (e j)) = Measure.pi fun j ↦ ν (e j) := by
   classical
   have hmap : Measurable (fun (y : Fin m → γ) (j : Fin k) ↦ y (e j)) :=
-    measurable_pi_lambda _ fun j ↦ measurable_pi_apply (e j)
+    Measurable.of_eval fun j ↦ measurable_pi_apply (e j)
   refine (Measure.pi_eq fun s hs ↦ ?_).symm
   set t : Fin m → Set γ := Function.extend e s fun _ ↦ Set.univ with ht_def
   have ht_mem : ∀ j : Fin k, t (e j) = s j := fun j ↦ he.extend_apply s _ j
@@ -307,9 +307,9 @@ lemma isMarkovChain_of_compProd_pi
       (hf.comp (measurable_const.prodMk measurable_id))
   -- Step 2: identify `condDistrib Yo Zc μ =ᵐ W` and substitute.
   haveI : IsProbabilityMeasure (μ.map Zc) :=
-    Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
+    inferInstance
   have hK_Y_eq : condDistrib Yo Zc μ =ᵐ[μ.map Zc] W :=
-    condDistrib_ae_eq_of_measure_eq_compProd Zc hYo_meas.aemeasurable h_pair_eq
+    condDistrib_ae_eq_of_measure_eq_compProd (X := Zc) (by fun_prop) hYo_meas.aemeasurable h_pair_eq
   unfold IsMarkovChain
   set K_F := condDistrib F Zc μ with hK_F_def
   have h_compProd_eq :
@@ -323,7 +323,7 @@ lemma isMarkovChain_of_compProd_pi
   have h_LHS_meas : Measurable (fun ω ↦ (Zc ω, F ω, Yo ω)) :=
     hZc_meas.prodMk (hF.prodMk hYo_meas)
   have hKX_fold : (μ.map Zc) ⊗ₘ K_F = μ.map (fun ω ↦ (Zc ω, F ω)) :=
-    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := F) hF.aemeasurable
+    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := F) (by fun_prop) hF.aemeasurable
   refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   rw [lintegral_map hf h_LHS_meas, Measure.lintegral_compProd hf]
   have h_inner_split : ∀ z : A,
@@ -598,11 +598,11 @@ lemma condDistrib_map_comp
     (f : Ω' → A) (hf : Measurable f) (h : Ω' → C) (hh : Measurable h) :
     condDistrib f h (μ.map T)
       =ᵐ[(μ.map T).map h] condDistrib (fun ω ↦ f (T ω)) (fun ω ↦ h (T ω)) μ := by
-  haveI : IsProbabilityMeasure (μ.map T) := Measure.isProbabilityMeasure_map hT.aemeasurable
-  refine condDistrib_ae_eq_of_measure_eq_compProd h hf.aemeasurable ?_
+  haveI : IsProbabilityMeasure (μ.map T) := inferInstance
+  refine condDistrib_ae_eq_of_measure_eq_compProd hh.aemeasurable hf.aemeasurable ?_
   rw [Measure.map_map (hh.prodMk hf) hT, Measure.map_map hh hT]
   exact (compProd_map_condDistrib (X := fun ω ↦ h (T ω)) (Y := fun ω ↦ f (T ω))
-    (hf.comp hT).aemeasurable).symm
+    (hh.comp hT).aemeasurable (hf.comp hT).aemeasurable).symm
 
 /-- Conditional mutual information is invariant under a shared pushforward of all three random
 variables: `I(f; g | h) = I(f ∘ T; g ∘ T | h ∘ T)`. -/
@@ -617,7 +617,7 @@ lemma condMutualInfo_map_comp
     (h : Ω' → C) (hh : Measurable h) :
     condMutualInfo (μ.map T) f g h
       = condMutualInfo μ (fun ω ↦ f (T ω)) (fun ω ↦ g (T ω)) (fun ω ↦ h (T ω)) := by
-  haveI : IsProbabilityMeasure (μ.map T) := Measure.isProbabilityMeasure_map hT.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map T) := inferInstance
   have hbase : (μ.map T).map h = μ.map (fun ω ↦ h (T ω)) := Measure.map_map hh hT
   have hpair := condDistrib_map_comp μ T hT (fun q ↦ (f q, g q)) (hf.prodMk hg) h hh
   have hf' := condDistrib_map_comp μ T hT f hf h hh
@@ -650,7 +650,7 @@ lemma isMarkovChain_map_comp
     (hchain : IsMarkovChain μ (fun ω ↦ f (T ω)) (fun ω ↦ g (T ω)) (fun ω ↦ h (T ω))) :
     IsMarkovChain ρ f g h := by
   subst hρ
-  haveI : IsProbabilityMeasure (μ.map T) := Measure.isProbabilityMeasure_map hT.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map T) := inferInstance
   have hbase : (μ.map T).map g = μ.map (fun ω ↦ g (T ω)) := Measure.map_map hg hT
   have hjoint : (μ.map T).map (fun r ↦ (g r, f r, h r))
       = μ.map (fun ω ↦ (g (T ω), f (T ω), h (T ω))) :=

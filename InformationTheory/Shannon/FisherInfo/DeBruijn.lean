@@ -138,7 +138,7 @@ theorem gaussianConvolution_law_of_gaussian
   have h_sum := gaussianReal_add_gaussianReal_of_indepFun (P := P)
     (X := X) (Y := fun ω ↦ Real.sqrt t * Z ω)
     (m₁ := m) (m₂ := 0) (v₁ := v) (v₂ := ⟨t, ht⟩)
-    h_indep_X_sqrtZ hX_law h_sqrtZ_map
+    h_indep_X_sqrtZ { map_eq := hX_law } { map_eq := h_sqrtZ_map }
   -- Step 4: `X + (√t · Z) = gaussianConvolution X Z t` pointwise.
   unfold gaussianConvolution
   have h_funext : (fun ω ↦ X ω + Real.sqrt t * Z ω) = X + (fun ω ↦ Real.sqrt t * Z ω) := by
@@ -270,7 +270,6 @@ theorem differentialEntropy_gaussianReal_heat_path
   have hvs_nn : v + ⟨s, hs⟩ ≠ 0 := by
     intro h
     have h_coe : ((v + ⟨s, hs⟩ : ℝ≥0) : ℝ) = 0 := by rw [h]; simp
-    rw [NNReal.coe_add] at h_coe
     show False
     have : (v : ℝ) + s = 0 := by
       exact h_coe
@@ -332,7 +331,6 @@ theorem deBruijn_identity_v2_gaussian
   have hvs_nn : v + ⟨t, ht.le⟩ ≠ 0 := by
     intro h
     have h_coe : ((v + ⟨t, ht.le⟩ : ℝ≥0) : ℝ) = 0 := by rw [h]; simp
-    rw [NNReal.coe_add] at h_coe
     have : (v : ℝ) + t = 0 := by exact h_coe
     linarith [v.coe_nonneg]
   have h_fisher : fisherInfoOfMeasureV2Real (P.map (gaussianConvolution X Z t))

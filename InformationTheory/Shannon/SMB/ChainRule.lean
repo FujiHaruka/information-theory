@@ -145,7 +145,7 @@ theorem block_measure_succ_singleton_eq
   -- Factor the joint via condDistrib.
   have h_joint : μ.map (fun ω' ↦ (p.blockRV n ω', p.obs n ω'))
       = (μ.map (p.blockRV n)) ⊗ₘ (condDistrib (p.obs n) (p.blockRV n) μ) :=
-    (compProd_map_condDistrib h_obs_meas.aemeasurable).symm
+    (compProd_map_condDistrib (by fun_prop) h_obs_meas.aemeasurable).symm
   rw [h_joint]
   -- Compute singleton via compProd_apply_prod + lintegral_singleton.
   have h_sb : ({(p.blockRV n ω, p.obs n ω)} : Set ((Fin n → α) × α))
@@ -282,11 +282,11 @@ theorem integral_pmfLogCond_eq_conditionalEntropyTail
   -- Step 2: factor joint via compProd_map_condDistrib.
   have h_joint : μ.map (fun ω ↦ (p.blockRV l ω, p.obs l ω))
       = (μ.map (p.blockRV l)) ⊗ₘ (condDistrib (p.obs l) (p.blockRV l) μ) :=
-    (compProd_map_condDistrib h_obs_meas.aemeasurable).symm
+    (compProd_map_condDistrib (by fun_prop) h_obs_meas.aemeasurable).symm
   rw [h_joint]
   -- Step 3: Fubini via integral_compProd.
   haveI : IsProbabilityMeasure (μ.map (p.blockRV l)) :=
-    Measure.isProbabilityMeasure_map h_block_meas.aemeasurable
+    inferInstance
   have hF_int :
       Integrable F ((μ.map (p.blockRV l)) ⊗ₘ (condDistrib (p.obs l) (p.blockRV l) μ)) := by
     rw [← h_joint]
@@ -331,7 +331,7 @@ lemma integrable_pmfLogCond
   rw [h_eq]
   -- Integrable iff bounded ∫⁻ ‖F ∘ pair‖. Push to μ.map pair and use Fintype.
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (p.blockRV l ω, p.obs l ω))) :=
-    Measure.isProbabilityMeasure_map h_pair_meas.aemeasurable
+    inferInstance
   have h_int_pair : Integrable F (μ.map (fun ω ↦ (p.blockRV l ω, p.obs l ω))) :=
     Integrable.of_finite
   exact (MeasureTheory.integrable_map_measure hF_meas.aestronglyMeasurable

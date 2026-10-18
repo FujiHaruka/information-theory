@@ -388,7 +388,7 @@ lemma map_add_prod_pi_gaussianReal_eq_pi_gaussianReal
     rw [he_def, ← hmp.map_eq]
   have hsum_meas : Measurable
       (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ fun i ↦ p.1 i + p.2 i) :=
-    measurable_pi_lambda _ (fun i ↦
+    Measurable.of_eval (fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).add
         ((measurable_pi_apply i).comp measurable_snd))
   have hcoord_meas : Measurable (fun p : ℝ × ℝ ↦ p.1 + p.2) :=
@@ -444,7 +444,7 @@ lemma lintegral_measurePi_awgnChannel_eq_pi_gaussianReal
       = Measure.pi (fun _ : Fin n ↦ gaussianReal 0 (v + N)) B := by
   -- per-vector channel collapse `chan x = (pi gauss).map (x + ·)`.
   have hshift : ∀ x : Fin n → ℝ, Measurable (fun z : Fin n → ℝ ↦ fun i ↦ x i + z i) := by
-    intro x; exact measurable_pi_lambda _ (fun i ↦ measurable_const.add (measurable_pi_apply i))
+    intro x; exact Measurable.of_eval (fun i ↦ measurable_const.add (measurable_pi_apply i))
   have hchanB : ∀ x : Fin n → ℝ,
       (Measure.pi (fun i ↦ awgnChannel N h_meas (x i))) B
         = (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N))
@@ -456,7 +456,7 @@ lemma lintegral_measurePi_awgnChannel_eq_pi_gaussianReal
   rw [lintegral_congr hchanB]
   have hsum_meas : Measurable
       (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ fun i ↦ p.1 i + p.2 i) :=
-    measurable_pi_lambda _ (fun i ↦
+    Measurable.of_eval (fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).add
         ((measurable_pi_apply i).comp measurable_snd))
   have hsec_eq : ∀ x : Fin n → ℝ,
@@ -542,7 +542,7 @@ theorem awgn_unionBound_trueCodeword_term_le
   have hΦ_meas : Measurable Φ := by
     rw [hΦ_def]
     refine Measurable.prodMk measurable_fst ?_
-    refine measurable_pi_lambda _ (fun i ↦ ?_)
+    refine Measurable.of_eval (fun i ↦ ?_)
     exact ((measurable_pi_apply i).comp measurable_fst).add
       ((measurable_pi_apply i).comp measurable_snd)
   -- The section set `{y | (x, y) ∉ A} = Prod.mk x ⁻¹' Aᶜ`.
@@ -565,7 +565,7 @@ theorem awgn_unionBound_trueCodeword_term_le
       = μZ (Prod.mk x ⁻¹' (Φ ⁻¹' Aᶜ))
     rw [hsec x, hchan x]
     have hshift : Measurable (fun z : Fin n → ℝ ↦ fun i ↦ x i + z i) := by
-      refine measurable_pi_lambda _ (fun i ↦ ?_)
+      refine Measurable.of_eval (fun i ↦ ?_)
       exact (measurable_const).add ((measurable_pi_apply i))
     rw [Measure.map_apply hshift (hA_meas.compl.preimage measurable_prodMk_left)]
     -- Section sets coincide.
@@ -580,7 +580,7 @@ theorem awgn_unionBound_trueCodeword_term_le
     -- `J` is a probability measure (pushforward of a product of prob measures).
     haveI hJ_prob : IsProbabilityMeasure J := by
       rw [hJ_def]
-      exact Measure.isProbabilityMeasure_map hΦ_meas.aemeasurable
+      exact inferInstance
     calc J Aᶜ = 1 - J A := prob_compl_eq_one_sub hA_meas
       _ ≤ 1 - ENNReal.ofReal (1 - ε) := tsub_le_tsub_left hA_mass 1
       _ ≤ ENNReal.ofReal ε := by

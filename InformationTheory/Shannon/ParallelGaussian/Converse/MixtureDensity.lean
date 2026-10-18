@@ -6,6 +6,7 @@ import InformationTheory.Shannon.MultivariateDiffEntropy
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.AWGN.CapacityConverseMaxent
 import Mathlib.MeasureTheory.Constructions.Pi
+import Mathlib.MeasureTheory.Order.Group.Lattice
 import InformationTheory.Shannon.ParallelGaussian.Converse.Core
 import InformationTheory.Shannon.ParallelGaussian.Converse.Regularity
 
@@ -136,7 +137,7 @@ theorem parallelOutputMixtureDensity_le_sup (z : Fin n → ℝ) :
   calc ∫⁻ x, ∏ i, gaussianPDF (x i) (N i) (z i) ∂p
       ≤ ∫⁻ _x, ∏ i, ENNReal.ofReal (Real.sqrt (2 * Real.pi * N i))⁻¹ ∂p := by
         refine lintegral_mono (fun x ↦ ?_)
-        refine Finset.prod_le_prod' (fun i _ ↦ ?_)
+        refine Finset.prod_le_prod (fun i _ ↦ ?_)
         rw [gaussianPDF]
         exact ENNReal.ofReal_le_ofReal (AWGN.gaussianPDFReal_le_sup (x i) (N i) (z i))
     _ = ∏ i, ENNReal.ofReal (Real.sqrt (2 * Real.pi * N i))⁻¹ := by
@@ -265,7 +266,7 @@ theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
       ENNReal.ofReal (∏ i, Kr i (z i)) ≤ ∏ i, gaussianPDF (x i) (N i) (z i) := by
     intro z x hx
     rw [ENNReal.ofReal_prod_of_nonneg (fun i _ ↦ (hKr_pos i (z i)).le)]
-    refine Finset.prod_le_prod' (fun i _ ↦ ?_)
+    refine Finset.prod_le_prod (fun i _ ↦ ?_)
     rw [gaussianPDF]
     refine ENNReal.ofReal_le_ofReal ?_
     rw [gaussianPDFReal, hKr_def]
@@ -434,7 +435,7 @@ theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
       have h_mem : p.map (fun z ↦ z i) ∈ AWGN.awgnPowerConstraintSet P :=
         parallelMarginal_mem_awgnPowerConstraintSet p P hp i
       haveI : IsProbabilityMeasure (p.map (fun z ↦ z i)) :=
-        Measure.isProbabilityMeasure_map hmeas_i.aemeasurable
+        inferInstance
       obtain ⟨hp_int, _⟩ := AWGN.awgnPowerConstraintSet_mem_iff_integrable P hP _ h_mem
       have h_pi_sq : Integrable (fun y : ℝ ↦ y ^ 2) (p.map (fun z ↦ z i)) := hp_int
       have h_sq0 := InformationTheory.Shannon.AWGN.output_sq_sub_integrable
@@ -505,7 +506,7 @@ theorem parallelOutput_centered_secondMoment_eq (P : ℝ) (hP : 0 ≤ P) (i : Fi
   set pi := p.map (fun z ↦ z i) with hpi
   haveI hp_prob : IsProbabilityMeasure p := hp.1
   haveI hpi_prob : IsProbabilityMeasure pi :=
-    Measure.isProbabilityMeasure_map hmeas_i.aemeasurable
+    inferInstance
   -- `(x i)²` integrable from membership
   obtain ⟨hp_int, _⟩ := parallelGaussianPowerConstraintSet_mem_iff_integrable P hP p hp
   have h_xi_sq : Integrable (fun x : Fin n → ℝ ↦ (x i) ^ 2) p := hp_int i
@@ -566,7 +567,7 @@ theorem parallelOutputMean_eq (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
   set pi := p.map (fun z ↦ z i) with hpi
   haveI hp_prob : IsProbabilityMeasure p := hp.1
   haveI hpi_prob : IsProbabilityMeasure pi :=
-    Measure.isProbabilityMeasure_map hmeas_i.aemeasurable
+    inferInstance
   obtain ⟨hp_int, _⟩ := parallelGaussianPowerConstraintSet_mem_iff_integrable P hP p hp
   have h_xi_sq : Integrable (fun x : Fin n → ℝ ↦ (x i) ^ 2) p := hp_int i
   have h_pi_sq : Integrable (fun y : ℝ ↦ y ^ 2) pi := by
@@ -683,7 +684,7 @@ theorem parallelOutput_variance_integrable (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
   set pi := p.map (fun z ↦ z i) with hpi
   haveI hp_prob : IsProbabilityMeasure p := hp.1
   haveI hpi_prob : IsProbabilityMeasure pi :=
-    Measure.isProbabilityMeasure_map hmeas_i.aemeasurable
+    inferInstance
   obtain ⟨hp_int, _⟩ := parallelGaussianPowerConstraintSet_mem_iff_integrable P hP p hp
   have h_pi_sq : Integrable (fun y : ℝ ↦ y ^ 2) pi := by
     rw [hpi, integrable_map_measure (by fun_prop) hmeas_i.aemeasurable]; exact hp_int i
@@ -710,7 +711,7 @@ theorem parallelOutput_marginal_entropy_integrable (P : ℝ) (hP : 0 ≤ P) (i :
     parallelMarginal_mem_awgnPowerConstraintSet p P hp i
   rw [parallelOutput_marginal_eq_awgn_output N h_meas h_parallel_meas p i]
   haveI : IsProbabilityMeasure (p.map (fun z ↦ z i)) :=
-    Measure.isProbabilityMeasure_map (measurable_pi_apply i).aemeasurable
+    inferInstance
   exact InformationTheory.Shannon.AWGN.outputDistribution_logDensity_integrable
     hP hN_NN (AWGN.isAwgnChannelMeasurable (N i)) (p.map (fun z ↦ z i)) h_mem
 

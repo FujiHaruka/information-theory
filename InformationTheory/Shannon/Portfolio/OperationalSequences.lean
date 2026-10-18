@@ -78,7 +78,7 @@ lemma integrable_portfolioLogReturn_zero (μ : Measure Ω) [IsProbabilityMeasure
     (X : α → Fin m → ℝ) (b : Fin m → ℝ) (As : ℕ → Ω → α) (hAs : ∀ i, Measurable (As i)) :
     Integrable (fun ω ↦ portfolioLogReturn X b (As 0 ω)) μ := by
   have : IsProbabilityMeasure (μ.map (As 0)) :=
-    Measure.isProbabilityMeasure_map (hAs 0).aemeasurable
+    inferInstance
   have h_int : Integrable (portfolioLogReturn X b) (μ.map (As 0)) := Integrable.of_finite
   exact h_int.comp_measurable (hAs 0)
 

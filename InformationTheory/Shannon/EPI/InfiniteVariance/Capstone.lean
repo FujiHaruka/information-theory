@@ -187,8 +187,8 @@ theorem integrable_negPart_negMulLog_map_sum (P : Measure Ω) [IsProbabilityMeas
     rw [hν_def, hx, ENNReal.toReal_ofReal]
     exact integral_nonneg (fun t ↦ mul_nonneg (hpX_nn t) (hpY_nn _))
   -- `pX · vol = P.map X` is a probability measure (since `∫ pX = 1`).
-  haveI hpXP : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
-  haveI hpYP : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
+  haveI hpXP : IsProbabilityMeasure (P.map X) := inferInstance
+  haveI hpYP : IsProbabilityMeasure (P.map Y) := inferInstance
   have hpX_law : P.map X = volume.withDensity (fun x ↦ ENNReal.ofReal (pX x)) := by
     have hcongr : (fun x ↦ ENNReal.ofReal (pX x)) =ᵐ[volume] (P.map X).rnDeriv volume := by
       filter_upwards [(P.map X).rnDeriv_lt_top volume] with x hx

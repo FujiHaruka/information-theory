@@ -70,9 +70,9 @@ theorem unifIntegrable_of_superlinear_lintegral
   -- Reduce to the indicator-tail estimate via `unifIntegrable_of` (no `[IsFiniteMeasure]`).
   refine unifIntegrable_of (le_refl 1) (by norm_num) hf ?_
   intro ε hε
-  set εE : ℝ≥0∞ := ENNReal.ofReal ε with hεE
-  have hεE_pos : εE ≠ 0 := by rw [hεE]; simpa using hε
-  have hεE_top : εE ≠ ∞ := by simp [hεE]
+  set εE : ℝ≥0∞ := min ε 1 with hεE
+  have hεE_pos : εE ≠ 0 := by simp [hεE, hε.ne']
+  have hεE_top : εE ≠ ∞ := ((min_le_right _ _).trans_lt ENNReal.one_lt_top).ne
   -- Slope `K := C' / εE` and multiplier `θ := εE / C' = K⁻¹`.
   set K : ℝ≥0∞ := C' / εE with hKdef
   set θ : ℝ≥0∞ := εE / C' with hθdef
@@ -83,7 +83,8 @@ theorem unifIntegrable_of_superlinear_lintegral
   refine ⟨M, fun i ↦ ?_⟩
   -- Pointwise: on the tail `{M ≤ ‖f i x‖ₑ}`, `‖f i x‖ₑ ≤ θ * G ‖f i x‖ₑ`.
   -- Bound the indicator `eLpNorm` by `∫⁻ (θ * G ‖f i‖ₑ)` and conclude `≤ εE`.
-  rw [eLpNorm_one_eq_lintegral_enorm]
+  rw [eLpNorm_one_eq_lintegral_enorm ((hf i).indicator₀
+    (nullMeasurableSet_le aemeasurable_const (hf i).nnnorm.aemeasurable))]
   calc
     ∫⁻ x, ‖({ x | M ≤ ‖f i x‖₊ }.indicator (f i)) x‖ₑ ∂μ
         ≤ ∫⁻ x, θ * G (‖f i x‖ₑ) ∂μ := by
@@ -110,6 +111,7 @@ theorem unifIntegrable_of_superlinear_lintegral
     _ ≤ θ * C' := by gcongr; exact hbound' i
     _ = εE := by
           rw [hθdef, ENNReal.div_mul_cancel hC'_pos hC'_top]
+    _ ≤ ε := min_le_left _ _
 
 
 end InformationTheory.Shannon

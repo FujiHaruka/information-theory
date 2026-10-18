@@ -43,8 +43,7 @@ instance perLetterInputLaw_isProb
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
     IsProbabilityMeasure (perLetterInputLaw h_meas c i) := by
   rw [perLetterInputLaw]
-  exact Measure.isProbabilityMeasure_map
-    (((measurable_of_countable (fun m : Fin M ↦ c.encoder m i)).comp measurable_fst).aemeasurable)
+  exact inferInstance
 
 /-- `perLetterInputLaw_i = (1/M) • ∑ₘ δ_{encoder m i}` (mixture-of-diracs form). -/
 private lemma perLetterInputLaw_eq_mixture
@@ -56,7 +55,7 @@ private lemma perLetterInputLaw_eq_mixture
   unfold perLetterInputLaw converseJointInline
   have henc_i : Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ c.encoder ω.1 i) :=
     (measurable_of_countable (fun m : Fin M ↦ c.encoder m i)).comp measurable_fst
-  rw [Measure.map_smul, Measure.map_finset_sum (s := Finset.univ)
+  rw [Measure.map_smul _ (by fun_prop), Measure.map_finset_sum (s := Finset.univ)
       (m := fun m ↦ (Measure.dirac m).prod
         (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
       henc_i.aemeasurable]
@@ -86,7 +85,7 @@ private lemma perLetter_map_eq_compProd
   have hmap_fn : Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ (c.encoder ω.1 i, ω.2 i)) :=
     ((measurable_of_countable (fun m : Fin M ↦ c.encoder m i)).comp measurable_fst).prodMk
       ((measurable_pi_apply i).comp measurable_snd)
-  rw [Measure.map_smul, Measure.map_finset_sum (s := Finset.univ)
+  rw [Measure.map_smul _ (by fun_prop), Measure.map_finset_sum (s := Finset.univ)
       (m := fun m ↦ (Measure.dirac m).prod
         (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
       hmap_fn.aemeasurable]
@@ -331,8 +330,7 @@ private lemma perLetterMI_decomp
     set ν : Measure ℝ := (converseJointInline h_meas c).map (fun ω ↦ ω.2 i) with hν
     haveI hν_prob : IsProbabilityMeasure ν := by
       rw [hν]
-      exact Measure.isProbabilityMeasure_map
-        (((measurable_pi_apply i).comp measurable_snd).aemeasurable)
+      exact inferInstance
     set f : ℝ → ℝ≥0∞ := perLetterMixtureDensity N c i with hf_def
     have hf_meas : Measurable f := perLetterMixtureDensity_measurable N c i
     have hν_wd : ν = volume.withDensity f := by
@@ -470,8 +468,7 @@ private lemma jointDifferentialEntropyPi_blockYLawInline_le_sum
     fun i ↦ blockYLawInline_map_eval h_meas c i
   haveI : ∀ i, IsProbabilityMeasure (q.map (fun z ↦ z i)) := by
     intro i; rw [h_marg_eq i]
-    exact Measure.isProbabilityMeasure_map
-      (((measurable_pi_apply i).comp measurable_snd).aemeasurable)
+    exact inferInstance
   have h_marg_ac : ∀ i, (q.map (fun z ↦ z i)) ≪ (volume : Measure ℝ) := by
     intro i; rw [h_marg_eq i]; exact perLetterLaw_ac_volume hN h_meas c i
   have hμ_ac : q ≪ (volume : Measure (Fin n → ℝ)) := by

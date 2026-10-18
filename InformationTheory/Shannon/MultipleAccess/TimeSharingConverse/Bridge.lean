@@ -778,10 +778,10 @@ lemma mac_condMI_eq_macInfo₁_at
           ((macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) W := by
   haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
       (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)) :=
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
       (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) :=
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   rw [macInfo₁_eq_condMutualInfo_toReal]
   congr 1
   exact (condMutualInfo_map_comp' (macConverseAmbient c W)
@@ -804,10 +804,10 @@ lemma mac_condMI_eq_macInfo₂_at
           ((macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) W := by
   haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
       (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)) :=
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
       (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) :=
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   rw [macInfo₂_eq_condMutualInfo_toReal]
   congr 1
   exact (condMutualInfo_map_comp' (macConverseAmbient c W)
@@ -830,10 +830,10 @@ lemma mac_mutualInfo_eq_macInfoBoth_at
           ((macConverseAmbient c W).map (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) W := by
   haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
       (fun ω ↦ c.encoder₁ (macConverseMsg₁ ω) i)) :=
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure ((macConverseAmbient c W).map
       (fun ω ↦ c.encoder₂ (macConverseMsg₂ ω) i)) :=
-    Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+    inferInstance
   rw [macInfoBoth_eq_mutualInfo_toReal]
   congr 1
   rw [← macConverse_map_triple_eq c W i,

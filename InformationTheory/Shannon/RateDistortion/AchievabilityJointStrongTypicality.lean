@@ -109,8 +109,6 @@ lemma typeCount_joint_sum_snd
         = (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card := by
     intro b
     congr 1
-    ext i
-    simp [Prod.mk.injEq]
   simp_rw [h_eq]
   -- ∑ b, card (filter (x i = a ∧ y i = b)) = card (filter (x i = a))
   -- via fiberwise: filter (x i = a) = ⋃_b filter (x i = a ∧ y i = b)
@@ -140,8 +138,6 @@ lemma typeCount_joint_sum_fst
         = (Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)).card := by
     intro a
     congr 1
-    ext i
-    simp [Prod.mk.injEq]
   simp_rw [h_eq]
   rw [← Finset.card_biUnion (s := Finset.univ)
     (t := fun a : α ↦ Finset.univ.filter (fun i : Fin n ↦ x i = a ∧ y i = b)) (by
@@ -537,9 +533,9 @@ theorem jointStronglyTypicalSet_indep_prob_ge
   set μXn : Measure (Fin n → α) := μ.map (jointRV Xs n) with hμXn_def
   set μYn : Measure (Fin n → β) := μ.map (jointRV Ys n) with hμYn_def
   haveI hμX_isProb : IsProbabilityMeasure μXn :=
-    Measure.isProbabilityMeasure_map h_meas_X.aemeasurable
+    inferInstance
   haveI hμY_isProb : IsProbabilityMeasure μYn :=
-    Measure.isProbabilityMeasure_map h_meas_Y.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μXn.prod μYn) := by infer_instance
   set εX : ℝ := (Fintype.card β : ℝ) * ε with hεX_def
   set εY : ℝ := (Fintype.card α : ℝ) * ε with hεY_def

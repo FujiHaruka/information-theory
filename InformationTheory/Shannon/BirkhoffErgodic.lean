@@ -973,14 +973,14 @@ lemma birkhoff_eventually_gt_integral_sub
   filter_upwards [h_upper] with ω hω
   filter_upwards [hω] with n hn
   -- A_n(-f, ω) = -A_n(f, ω); ∫(-f) = -∫f.
-  have h_neg_avg : birkhoffAverageReal T (fun ω ↦ -f ω) n ω = -birkhoffAverageReal T f n ω := by
+  have h_neg_avg : birkhoffAverageReal T (-f) n ω = -birkhoffAverageReal T f n ω := by
     unfold birkhoffAverageReal
-    rw [show (fun ω' : Ω ↦ -f ω') = (fun ω' : Ω ↦ -(f ω')) from rfl]
+    simp only [Pi.neg_apply]
     have h_sum_neg : (∑ i ∈ Finset.range (n + 1), -f (T^[i] ω))
         = -(∑ i ∈ Finset.range (n + 1), f (T^[i] ω)) := by
       rw [← Finset.sum_neg_distrib]
     rw [h_sum_neg, neg_div]
-  have h_int_neg : ∫ x, (-f x) ∂μ = -∫ x, f x ∂μ := integral_neg _
+  have h_int_neg : ∫ x, (-f) x ∂μ = -∫ x, f x ∂μ := integral_neg _
   rw [h_neg_avg, h_int_neg] at hn
   linarith
 

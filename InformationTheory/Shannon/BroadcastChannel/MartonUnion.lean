@@ -421,7 +421,7 @@ theorem martonRegion_subset_union (pV : Measure (V₁ × V₂)) [IsProbabilityMe
   haveI : IsProbabilityMeasure (pV.map
       ((bcAuxMeasurableEquiv V₁ : V₁ ≃ᵐ bcAuxAlphabet.{u} (Fintype.card V₁ - 1)).prodCongr
         (bcAuxMeasurableEquiv V₂ : V₂ ≃ᵐ bcAuxAlphabet.{u} (Fintype.card V₂ - 1)))) :=
-    Measure.isProbabilityMeasure_map (MeasurableEquiv.measurable _).aemeasurable
+    inferInstance
   rw [← h]
   exact martonRegion_subset_union_of_bcAux _ _ _ _ W
 

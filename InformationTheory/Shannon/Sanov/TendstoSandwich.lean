@@ -95,7 +95,7 @@ theorem log_le_inv_mul_log_iUnion_of_forall_le
     rw [h_singleton_eq]
     calc m ^ n = ∏ _i : Fin n, m := by rw [Finset.prod_const]; simp
       _ ≤ ∏ i : Fin n, Q.real {x i} :=
-        Finset.prod_le_prod (fun i _ ↦ hm_pos.le) (fun i _ ↦ hm_le (x i))
+        Finset.prod_le_prod₀ (fun i _ ↦ hm_pos.le) (fun i _ ↦ hm_le (x i))
   have h_union_ge_m_pow : ((Measure.pi (fun _ : Fin n ↦ Q))
       (⋃ c ∈ E n, typeClassByCount (α := α) (fun a ↦ (c a : ℕ)))).toReal ≥ m ^ n := by
     have h1 : ((Measure.pi (fun _ : Fin n ↦ Q)) {x}).toReal

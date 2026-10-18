@@ -104,7 +104,7 @@ theorem translation_eLpNorm_bound
   -- `τ_y pX = pX ∘ (· - y)`: translation is measure-preserving, so `eLpNorm` is invariant.
   have hmeasy : AEStronglyMeasurable (fun x ↦ pX (x - y)) volume :=
     hmeas.comp_measurePreserving (measurePreserving_subRightCM y)
-  have htri := eLpNorm_sub_le (μ := volume) (p := 1) hmeasy hmeas le_rfl
+  have htri := eLpNorm_sub_le (μ := volume) (f := fun x ↦ pX (x - y)) (g := pX) (p := 1) le_rfl
   have hinv : eLpNorm (fun x ↦ pX (x - y)) 1 volume = eLpNorm pX 1 volume :=
     eLpNorm_comp_measurePreserving (p := 1) hmeas (measurePreserving_subRightCM y)
   have hsub : (fun x ↦ pX (x - y) - pX x) = (fun x ↦ pX (x - y)) - pX := by
@@ -145,14 +145,15 @@ theorem eLpNorm_integral_le_lintegral
     (hF : AEMeasurable (Function.uncurry F) (volume.prod ν)) :
     eLpNorm (fun z ↦ ∫ y, F z y ∂ν) 1 volume
       ≤ ∫⁻ y, eLpNorm (fun z ↦ F z y) 1 volume ∂ν := by
-  rw [eLpNorm_one_eq_lintegral_enorm]
+  rw [eLpNorm_one_eq_lintegral_enorm (f := fun z ↦ ∫ y, F z y ∂ν)
+    hF.aestronglyMeasurable.integral_prod_right']
   calc ∫⁻ z, ‖∫ y, F z y ∂ν‖ₑ ∂volume
       ≤ ∫⁻ z, ∫⁻ y, ‖F z y‖ₑ ∂ν ∂volume := by
         refine lintegral_mono fun z ↦ enorm_integral_le_lintegral_enorm _
     _ = ∫⁻ y, ∫⁻ z, ‖F z y‖ₑ ∂volume ∂ν := by
         rw [lintegral_lintegral_swap]; exact hF.enorm
-    _ = ∫⁻ y, eLpNorm (fun z ↦ F z y) 1 volume ∂ν := by
-        congr 1; funext y; rw [eLpNorm_one_eq_lintegral_enorm]
+    _ ≤ ∫⁻ y, eLpNorm (fun z ↦ F z y) 1 volume ∂ν :=
+        lintegral_mono fun _ ↦ lintegral_enorm_le_eLpNorm_one
 
 /-- L¹ norm of the translation difference `φ y := ‖τ_y pX − pX‖₁` as a `ℝ≥0∞`-valued function. -/
 private noncomputable def translL1 (pX : ℝ → ℝ) (y : ℝ) : ℝ≥0∞ :=
@@ -236,29 +237,31 @@ Local duplicate of `FisherConvBound.integral_sq_mul_gaussianPDFReal` to avoid he
 @audit:ok -/
 private theorem integral_sq_mul_gaussianPDFReal_local {s : ℝ} (hs : 0 < s) :
     ∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ∂volume = s := by
-  have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
+  set v : ℝ≥0 := ⟨s, hs.le⟩ with hv_def
+  have hv_ne : v ≠ 0 := by
     intro h; exact hs.ne' (congrArg NNReal.toReal h)
-  have hvar : Var[fun x ↦ x; gaussianReal 0 ⟨s, hs.le⟩] = ((⟨s, hs.le⟩ : ℝ≥0) : ℝ) :=
-    variance_fun_id_gaussianReal (μ := 0) (v := ⟨s, hs.le⟩)
+  have hvar : Var[fun x ↦ x; gaussianReal 0 v] = (v : ℝ) :=
+    variance_fun_id_gaussianReal (μ := 0) (v := v)
   rw [variance_eq_integral measurable_id'.aemeasurable, integral_id_gaussianReal] at hvar
-  calc ∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ∂volume
-      = ∫ u, gaussianPDFReal 0 ⟨s, hs.le⟩ u • u ^ 2 ∂volume := by
+  calc ∫ u, u ^ 2 * gaussianPDFReal 0 v u ∂volume
+      = ∫ u, gaussianPDFReal 0 v u • u ^ 2 ∂volume := by
         refine integral_congr_ae (Filter.Eventually.of_forall fun u ↦ ?_)
         simp [smul_eq_mul, mul_comm]
-    _ = ∫ u, u ^ 2 ∂(gaussianReal 0 ⟨s, hs.le⟩) :=
+    _ = ∫ u, u ^ 2 ∂(gaussianReal 0 v) :=
         (integral_gaussianReal_eq_integral_smul (μ := 0) (f := fun u ↦ u ^ 2) hv_ne).symm
-    _ = ∫ u, (u - 0) ^ 2 ∂(gaussianReal 0 ⟨s, hs.le⟩) := by simp
-    _ = s := by rw [hvar]
+    _ = ∫ u, (u - 0) ^ 2 ∂(gaussianReal 0 v) := by simp
+    _ = s := by rw [hvar, hv_def]; rfl
 
 /-- Integrability of the Gaussian second-moment integrand `u ↦ u ^ 2 * gaussianPDFReal 0 ⟨s, _⟩ u`.
 @audit:ok -/
 private theorem integrable_sq_mul_gaussianPDFReal_local {s : ℝ} (hs : 0 < s) :
     Integrable (fun u ↦ u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u) volume := by
-  have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
+  set v : ℝ≥0 := ⟨s, hs.le⟩ with hv_def
+  have hv_ne : v ≠ 0 := by
     intro h; exact hs.ne' (congrArg NNReal.toReal h)
-  have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 ⟨s, hs.le⟩) := memLp_id_gaussianReal 2
-  have hsq_int : Integrable (fun u ↦ u ^ 2) (gaussianReal 0 ⟨s, hs.le⟩) := by
-    have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 ⟨s, hs.le⟩)
+  have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 v) := memLp_id_gaussianReal 2
+  have hsq_int : Integrable (fun u ↦ u ^ 2) (gaussianReal 0 v) := by
+    have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 v)
       (f := (id : ℝ → ℝ)) measurable_id.aestronglyMeasurable).mp hmem
     simpa using this
   rw [gaussianReal_of_var_ne_zero _ hv_ne] at hsq_int

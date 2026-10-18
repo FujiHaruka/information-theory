@@ -194,7 +194,7 @@ lemma rdAmbient_iidXs_isProbabilityMeasure
   rw [rdAmbient_map_iidXs qStar hq]
   haveI : IsProbabilityMeasure (pmfToMeasure (α := α × β) qStar) :=
     pmfToMeasure_isProbabilityMeasure hq
-  exact MeasureTheory.Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+  exact inferInstance
 
 lemma rdAmbient_iidYs_isProbabilityMeasure
     (qStar : α × β → ℝ) (hq : qStar ∈ stdSimplex ℝ (α × β)) :
@@ -202,7 +202,7 @@ lemma rdAmbient_iidYs_isProbabilityMeasure
   rw [rdAmbient_map_iidYs qStar hq]
   haveI : IsProbabilityMeasure (pmfToMeasure (α := α × β) qStar) :=
     pmfToMeasure_isProbabilityMeasure hq
-  exact MeasureTheory.Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  exact inferInstance
 
 /-! ## Expected distortion bridge
 

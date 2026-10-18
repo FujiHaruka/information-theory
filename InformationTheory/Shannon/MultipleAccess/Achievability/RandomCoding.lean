@@ -112,11 +112,10 @@ lemma mac_random_codebook_E1_swap
       ≤ Real.exp ((n : ℝ) * (-(macInfo₁ p₁ p₂ W) + 3 * ε)) := by
   classical
   haveI hμX1prob : IsProbabilityMeasure ((macAmbientMeasure p₁ p₂ W).map (jointRV macX1s n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV macX1s measurable_macX1s n).aemeasurable
+    inferInstance
   haveI hνA2prob : IsProbabilityMeasure ((macAmbientMeasure p₁ p₂ W).map
       (fun ω ↦ (jointRV macX2s n ω, jointRV macYs n ω))) :=
-    Measure.isProbabilityMeasure_map ((measurable_jointRV macX2s measurable_macX2s n).prodMk
-      (measurable_jointRV macYs measurable_macYs n)).aemeasurable
+    inferInstance
   set J : Set ((Fin n → α₁) × (Fin n → α₂) × (Fin n → β)) :=
     macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε with hJ_def
   -- Step 1: marginalize c₂ (row m₂) then c₁ (rows m₁, m₁') to the fully distributed form `D`.
@@ -244,11 +243,10 @@ lemma mac_random_codebook_E2_swap
       ≤ Real.exp ((n : ℝ) * (-(macInfo₂ p₁ p₂ W) + 3 * ε)) := by
   classical
   haveI hμX2prob : IsProbabilityMeasure ((macAmbientMeasure p₁ p₂ W).map (jointRV macX2s n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV macX2s measurable_macX2s n).aemeasurable
+    inferInstance
   haveI hνA1prob : IsProbabilityMeasure ((macAmbientMeasure p₁ p₂ W).map
       (fun ω ↦ (jointRV macX1s n ω, jointRV macYs n ω))) :=
-    Measure.isProbabilityMeasure_map ((measurable_jointRV macX1s measurable_macX1s n).prodMk
-      (measurable_jointRV macYs measurable_macYs n)).aemeasurable
+    inferInstance
   set J : Set ((Fin n → α₁) × (Fin n → α₂) × (Fin n → β)) :=
     macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε with hJ_def
   -- Step 1: marginalize c₁ (row m₁) then c₂ (rows m₂, m₂') to the distributed form `D`.
@@ -371,10 +369,9 @@ lemma mac_random_codebook_E3_swap
   classical
   haveI hνsplit12prob : IsProbabilityMeasure ((macAmbientMeasure p₁ p₂ W).map
       (fun ω ↦ (jointRV macX1s n ω, jointRV macX2s n ω))) :=
-    Measure.isProbabilityMeasure_map ((measurable_jointRV macX1s measurable_macX1s n).prodMk
-      (measurable_jointRV macX2s measurable_macX2s n)).aemeasurable
+    inferInstance
   haveI hμYprob : IsProbabilityMeasure ((macAmbientMeasure p₁ p₂ W).map (jointRV macYs n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV macYs measurable_macYs n).aemeasurable
+    inferInstance
   set J : Set ((Fin n → α₁) × (Fin n → α₂) × (Fin n → β)) :=
     macJointlyTypicalSet (macAmbientMeasure p₁ p₂ W) macX1s macX2s macYs n ε with hJ_def
   -- Step 1: marginalize both codebooks (two rows each) to the distributed form `D`.

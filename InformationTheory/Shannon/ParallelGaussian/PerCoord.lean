@@ -339,7 +339,7 @@ theorem lintegral_fin_nat_prod_eq_prod {n : ℕ} {E : Fin n → Type*}
                 (MeasurableEquiv.measurableEmbedding _)]
               simp_rw [MeasurableEquiv.piFinSuccAbove_symm_apply, Fin.insertNthEquiv,
                 Fin.prod_univ_succ, Fin.insertNth_zero, Equiv.coe_fn_mk, Fin.cons_succ,
-                Fin.zero_succAbove, cast_eq, Fin.cons_zero]
+                Fin.zero_succAbove, Fin.cons_zero]
               rfl
         _ = (∫⁻ x, f 0 x ∂μ 0)
             * ∫⁻ y, (∏ i : Fin n, f (Fin.succ i) (y i)) ∂(Measure.pi (fun i ↦ μ i.succ)) :=
@@ -370,6 +370,7 @@ theorem gaussianProductInput_compProd_parallelGaussianChannel_eq_pi {n : ℕ}
   set e := MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n) with he
   set W := parallelGaussianChannel N h_meas h_parallel_meas with hW
   set joints := fun i ↦ (gaussianReal 0 (Q i)) ⊗ₘ (awgnChannel (N i) (h_meas i)) with hjoints
+  haveI : ∀ i, SigmaFinite (joints i) := fun i ↦ by simp only [hjoints]; infer_instance
   -- It suffices to show `(compProd).map e.symm = Measure.pi joints`, transported by `e`.
   have hkey : ((gaussianProductInput Q) ⊗ₘ W).map e.symm = Measure.pi joints := by
     -- Characterize `Measure.pi joints` by its values on product boxes via `pi_eq`.
@@ -658,7 +659,7 @@ theorem awgn_perCoord_mi_closed_form (Q N : ℝ≥0) (hN : N ≠ 0)
           Measure.map_apply measurable_prodMk_left hs]
       rw [h_compProd,
         show (Prod.mk (0 : ℝ)) = (fun y : ℝ ↦ ((fun _ : ℝ ↦ (0 : ℝ)) y, id y)) from rfl,
-        Measure.snd_map_prodMk (measurable_const), Measure.map_id]
+        Measure.snd_map_prodMk measurable_const measurable_id, Measure.map_id]
     rw [mutualInfoOfChannel_def, h_joint_eq, InformationTheory.klDiv_self,
       ENNReal.toReal_zero]
   · -- Q ≠ 0: the hypothesis-free closed form with P := (Q : ℝ) > 0.

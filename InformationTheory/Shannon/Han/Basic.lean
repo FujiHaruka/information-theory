@@ -67,7 +67,7 @@ theorem jointEntropy_chain_rule
     have hmeas : Measurable (fun ω (i : Fin 0) ↦ Xs i ω) :=
       measurable_pi_iff.mpr (fun i ↦ Fin.elim0 i)
     haveI : IsProbabilityMeasure (μ.map (fun ω (i : Fin 0) ↦ Xs i ω)) :=
-      Measure.isProbabilityMeasure_map hmeas.aemeasurable
+      inferInstance
     haveI : Unique (Fin 0 → α) := Pi.uniqueOfIsEmpty _
     rw [Fintype.sum_unique]
     have hsingle : ((μ.map (fun ω (i : Fin 0) ↦ Xs i ω)).real {default} : ℝ) = 1 := by

@@ -221,7 +221,7 @@ theorem differentialEntropy_map_mul_const
       r⁻¹ • (μ.map (· * c)).rnDeriv volume :=
     Measure.rnDeriv_smul_right_of_ne_top (μ.map (· * c)) volume hr_pos hr_ne_top
   -- Combine h_rn1 and h_rn2 via quasi-measure-preserving composition.
-  have h_qmp : Measure.QuasiMeasurePreserving (fun x : ℝ ↦ x * c) volume volume := by
+  have h_qmp : QuasiMeasurePreserving (fun x : ℝ ↦ x * c) volume volume := by
     refine ⟨measurable_mul_const c, ?_⟩
     rw [h_map_vol]
     exact Measure.smul_absolutelyContinuous
@@ -330,7 +330,7 @@ theorem differentialEntropy_map_affine
   have h_meas_add : Measurable (fun y : ℝ ↦ y + b) := measurable_add_const b
   rw [h_decomp, ← Measure.map_map h_meas_add h_meas_mul]
   have h_mul_ac : μ.map (· * a) ≪ volume := by
-    have h_qmp : Measure.QuasiMeasurePreserving (fun x : ℝ ↦ x * a) volume volume := by
+    have h_qmp : QuasiMeasurePreserving (fun x : ℝ ↦ x * a) volume volume := by
       refine ⟨measurable_mul_const a, ?_⟩
       rw [Real.map_volume_mul_right ha]
       exact Measure.smul_absolutelyContinuous
@@ -338,7 +338,7 @@ theorem differentialEntropy_map_affine
     rw [Real.map_volume_mul_right ha] at h1
     exact h1.trans Measure.smul_absolutelyContinuous
   haveI : IsProbabilityMeasure (μ.map (fun x : ℝ ↦ x * a)) :=
-    Measure.isProbabilityMeasure_map (measurable_mul_const a).aemeasurable
+    inferInstance
   haveI : SigmaFinite (μ.map (fun x : ℝ ↦ x * a)) := inferInstance
   rw [differentialEntropy_map_add_const h_mul_ac b]
   rw [differentialEntropy_map_mul_const hμ ha h_ent_int]

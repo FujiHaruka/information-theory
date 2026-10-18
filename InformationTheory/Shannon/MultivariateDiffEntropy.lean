@@ -144,8 +144,8 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_of_llr_split
   classical
   set μX := μ.map Prod.fst with hμX
   set μY := μ.map Prod.snd with hμY
-  haveI : IsProbabilityMeasure μX := Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
-  haveI : IsProbabilityMeasure μY := Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  haveI : IsProbabilityMeasure μX := inferInstance
+  haveI : IsProbabilityMeasure μY := inferInstance
   -- abbreviations for the three log-density observables
   set Lfst : ℝ × ℝ → ℝ := fun z ↦ Real.log ((μX.rnDeriv volume z.1).toReal) with hLfst
   set Lsnd : ℝ × ℝ → ℝ := fun z ↦ Real.log ((μY.rnDeriv volume z.2).toReal) with hLsnd
@@ -548,9 +548,9 @@ theorem prod_marginals_eq_volume_withDensity
           (fun z ↦ (μ.map Prod.fst).rnDeriv volume z.1
                       * (μ.map Prod.snd).rnDeriv volume z.2) := by
   haveI : IsProbabilityMeasure (μ.map Prod.fst) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μ.map Prod.snd) :=
-    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+    inferInstance
   -- rewrite each marginal as `volume.withDensity (rnDeriv ·)`
   conv_lhs =>
     rw [← Measure.withDensity_rnDeriv_eq _ _ h_fst_ac,
@@ -580,9 +580,9 @@ theorem llr_split_from_density_factorize
   set μX := μ.map Prod.fst with hμX
   set μY := μ.map Prod.snd with hμY
   haveI : IsProbabilityMeasure μX :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure μY :=
-    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+    inferInstance
   set ρ := μX.prod μY with hρ
   -- factorize ρ as `volume.withDensity g`
   set g : ℝ × ℝ → ℝ≥0∞ :=

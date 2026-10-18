@@ -72,7 +72,7 @@ private lemma prod_factorial_pow_swap_le (c k : α → ℕ) :
     (∏ a, Nat.factorial (c a)) * (∏ a, c a ^ k a)
       ≤ (∏ a, Nat.factorial (k a)) * (∏ a, c a ^ c a) := by
   rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
-  exact Finset.prod_le_prod (fun _ _ ↦ Nat.zero_le _)
+  exact Finset.prod_le_prod₀ (fun _ _ ↦ Nat.zero_le _)
     (fun a _ ↦ factorial_pow_swap_le (c a) (k a))
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in

@@ -36,7 +36,7 @@ omit [MeasurableSpace Ω] [Fintype α] [DecidableEq α] [Nonempty α] [Measurabl
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma measurable_jointRV (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (n : ℕ) :
     Measurable (jointRV Xs n) :=
-  measurable_pi_lambda _ fun i ↦ hXs i
+  Measurable.of_eval fun i ↦ hXs i
 
 /-! ### Probability AEP
 
@@ -81,7 +81,7 @@ lemma integrable_logLikelihood
     Integrable (logLikelihood μ Xs i) μ := by
   -- `μ.map (Xs i)` is a probability measure, hence finite.
   have : IsProbabilityMeasure (μ.map (Xs i)) :=
-    Measure.isProbabilityMeasure_map (hXs i).aemeasurable
+    inferInstance
   -- Any function on a finite discrete space is integrable for any finite measure.
   have h_int : Integrable (pmfLog μ Xs) (μ.map (Xs i)) := Integrable.of_finite
   -- Pull back through `Xs i`.
@@ -94,7 +94,7 @@ lemma integral_logLikelihood_zero
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :
     ∫ ω, logLikelihood μ Xs 0 ω ∂μ = entropy μ (Xs 0) := by
   have hM0 : IsProbabilityMeasure (μ.map (Xs 0)) :=
-    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+    inferInstance
   -- Step 1: push forward via `Xs 0`.
   have h_push : ∫ ω, logLikelihood μ Xs 0 ω ∂μ
       = ∫ x, pmfLog μ Xs x ∂(μ.map (Xs 0)) := by
@@ -263,7 +263,7 @@ theorem typicalSet_card_le
     rw [this, Real.exp_log (hP_pos x)]
   -- Key fact 2: `∑ x, P x = 1` (since `μ.map (Xs 0)` is a probability measure).
   have hMprob : IsProbabilityMeasure (μ.map (Xs 0)) :=
-    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+    inferInstance
   have hsum_P : (∑ x : α, P x) = 1 := by
     have h1 : (∑ x : α, P x) = (μ.map (Xs 0)).real (Finset.univ : Finset α) := by
       simp [hP_def, sum_measureReal_singleton]

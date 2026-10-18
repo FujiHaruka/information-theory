@@ -49,13 +49,13 @@ private lemma isMarkovChain_bundle_left_with_conditioner
     (hmarkov : Shannon.IsMarkovChain μ As Zc Yo) :
     Shannon.IsMarkovChain μ (fun ω ↦ (As ω, Zc ω)) Zc Yo := by
   haveI : IsProbabilityMeasure (μ.map Zc) :=
-    Measure.isProbabilityMeasure_map hZc.aemeasurable
+    inferInstance
   unfold Shannon.IsMarkovChain
   set K_A : Kernel Z X := condDistrib As Zc μ with hK_A_def
   set K_Y : Kernel Z Y := condDistrib Yo Zc μ with hK_Y_def
   set K_AZ : Kernel Z (X × Z) := condDistrib (fun ω ↦ (As ω, Zc ω)) Zc μ with hK_AZ_def
   have h_K_AZ_eq : K_AZ =ᵐ[μ.map Zc] K_A ×ₖ (Kernel.id : Kernel Z Z) := by
-    refine condDistrib_ae_eq_of_measure_eq_compProd Zc
+    refine condDistrib_ae_eq_of_measure_eq_compProd (X := Zc) (by fun_prop)
       ((hAs.prodMk hZc).aemeasurable) ?_
     have h_LHS_eq :
         μ.map (fun ω ↦ (Zc ω, As ω, Zc ω))
@@ -64,7 +64,7 @@ private lemma isMarkovChain_bundle_left_with_conditioner
       · rfl
       · exact measurable_fst.prodMk (measurable_snd.prodMk measurable_fst)
     have h_marginal : μ.map (fun ω ↦ (Zc ω, As ω)) = (μ.map Zc) ⊗ₘ K_A :=
-      (compProd_map_condDistrib hAs.aemeasurable).symm
+      (compProd_map_condDistrib (by fun_prop) hAs.aemeasurable).symm
     rw [h_LHS_eq, h_marginal]
     refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
     have h_map_meas : Measurable (fun p : Z × X ↦ (p.1, p.2, p.1)) :=
@@ -145,16 +145,16 @@ private lemma condDistrib_prodMk_right_ae_eq_comap
         ((condDistrib Yo Zc μ).comap (fun za : Z × X ↦ za.1) measurable_fst
           : Kernel (Z × X) Y) := by
   haveI : IsProbabilityMeasure (μ.map Zc) :=
-    Measure.isProbabilityMeasure_map hZc.aemeasurable
+    inferInstance
   have hZA : Measurable (fun ω ↦ (Zc ω, As ω)) := hZc.prodMk hAs
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (Zc ω, As ω))) :=
-    Measure.isProbabilityMeasure_map hZA.aemeasurable
+    inferInstance
   set K_A : Kernel Z X := condDistrib As Zc μ with hK_A_def
   set K_Y : Kernel Z Y := condDistrib Yo Zc μ with hK_Y_def
   have h_ZA_marginal : μ.map (fun ω ↦ (Zc ω, As ω)) = (μ.map Zc) ⊗ₘ K_A :=
-    (compProd_map_condDistrib hAs.aemeasurable).symm
+    (compProd_map_condDistrib (by fun_prop) hAs.aemeasurable).symm
   refine condDistrib_ae_eq_of_measure_eq_compProd
-    (fun ω ↦ (Zc ω, As ω)) hYo.aemeasurable ?_
+    (X := fun ω ↦ (Zc ω, As ω)) (by fun_prop) hYo.aemeasurable ?_
   -- Need: μ.map ((Z, A), Y) = (μ.map (Z, A)) ⊗ₘ (K_Y.comap fst).
   -- LHS = (μ.map (Z, A, Y)).map (fun (z, a, y) => ((z, a), y)).
   have h_perm_meas : Measurable
@@ -212,10 +212,10 @@ private lemma isMarkovChain_weakUnion_left_to_conditioner
     (hmarkov : Shannon.IsMarkovChain μ (fun ω ↦ (As ω, Bs ω)) Zc Yo) :
     Shannon.IsMarkovChain μ Bs (fun ω ↦ (Zc ω, As ω)) Yo := by
   haveI : IsProbabilityMeasure (μ.map Zc) :=
-    Measure.isProbabilityMeasure_map hZc.aemeasurable
+    inferInstance
   have hZA : Measurable (fun ω ↦ (Zc ω, As ω)) := hZc.prodMk hAs
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (Zc ω, As ω))) :=
-    Measure.isProbabilityMeasure_map hZA.aemeasurable
+    inferInstance
   -- Kernel abbreviations.
   set K_A : Kernel Z A := condDistrib As Zc μ with hK_A_def
   set K_Y : Kernel Z Y := condDistrib Yo Zc μ with hK_Y_def
@@ -227,7 +227,7 @@ private lemma isMarkovChain_weakUnion_left_to_conditioner
     condDistrib Yo (fun ω ↦ (Zc ω, As ω)) μ with hK_Y'_def
   -- Marginal: μ.map (Z, A) = (μ.map Z) ⊗ₘ K_A.
   have h_ZA_marginal : μ.map (fun ω ↦ (Zc ω, As ω)) = (μ.map Zc) ⊗ₘ K_A :=
-    (compProd_map_condDistrib hAs.aemeasurable).symm
+    (compProd_map_condDistrib (by fun_prop) hAs.aemeasurable).symm
   -- Step (i): Drop B from the original Markov via isMarkovChain_map_left.
   -- Yields Markov μ As Zc Yo, i.e. μ.map (Zc, As, Yo) = (μ.map Zc) ⊗ₘ (K_A ×ₖ K_Y).
   have h_AZY : Shannon.IsMarkovChain μ As Zc Yo := by
@@ -298,7 +298,7 @@ private lemma isMarkovChain_weakUnion_left_to_conditioner
   -- We need: μ.map (Zc, (As, Bs)) = (μ.map Zc) ⊗ₘ (K_A ⊗ₖ K_B').
   have h_K_AB_eq :
       K_AB =ᵐ[μ.map Zc] K_A ⊗ₖ K_B' := by
-    refine condDistrib_ae_eq_of_measure_eq_compProd Zc
+    refine condDistrib_ae_eq_of_measure_eq_compProd (X := Zc) (by fun_prop)
       ((hAs.prodMk hBs).aemeasurable) ?_
     -- Goal: μ.map (Zc, (As, Bs)) = (μ.map Zc) ⊗ₘ (K_A ⊗ₖ K_B').
     -- Build chain: μ.map (Zc, (As, Bs)) = (μ.map ((Zc, As), Bs)).map prodAssoc
@@ -310,7 +310,8 @@ private lemma isMarkovChain_weakUnion_left_to_conditioner
           = (μ.map (fun ω ↦ ((Zc ω, As ω), Bs ω))).map MeasurableEquiv.prodAssoc := by
       rw [Measure.map_map MeasurableEquiv.prodAssoc.measurable (hZA.prodMk hBs)]
       rfl
-    rw [h_reshape, ← compProd_map_condDistrib (hBs.aemeasurable) (X := fun ω ↦ (Zc ω, As ω)),
+    rw [h_reshape, ← compProd_map_condDistrib (X := fun ω ↦ (Zc ω, As ω)) (by fun_prop)
+        hBs.aemeasurable,
         h_ZA_marginal, Measure.compProd_assoc']
   -- Now use the kernel equality to rewrite the LHS inner under μ.map Zc.
   -- The current goal is at a specific z. We use lintegral_congr (under μ.map Zc) to drop into a.e.
@@ -363,17 +364,17 @@ private lemma cond_reshape_kernel_lemma {X' Z Z' : Type*}
       =ᵐ[μ.map (fun ω ↦ e (Zc' ω))]
         (condDistrib Xs Zc' μ).comap (e.symm : Z → Z') e.symm.measurable := by
   haveI : IsProbabilityMeasure (μ.map Zc') :=
-    Measure.isProbabilityMeasure_map hZc'.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ e (Zc' ω))) :=
-    Measure.isProbabilityMeasure_map (e.measurable.comp hZc').aemeasurable
+    inferInstance
   set K_X' : Kernel Z' X' := condDistrib Xs Zc' μ
   refine condDistrib_ae_eq_of_measure_eq_compProd
-    (fun ω ↦ e (Zc' ω)) hXs.aemeasurable ?_
+    (X := fun ω ↦ e (Zc' ω)) (by fun_prop) hXs.aemeasurable ?_
   have h₁ : μ.map (fun ω ↦ (e (Zc' ω), Xs ω))
       = (μ.map (fun ω ↦ (Zc' ω, Xs ω))).map (Prod.map (e : Z' → Z) (id : X' → X')) := by
     rw [Measure.map_map (e.measurable.prodMap measurable_id) (hZc'.prodMk hXs)]; rfl
   have h₂ : μ.map (fun ω ↦ (Zc' ω, Xs ω)) = (μ.map Zc') ⊗ₘ K_X' :=
-    (compProd_map_condDistrib hXs.aemeasurable).symm
+    (compProd_map_condDistrib (by fun_prop) hXs.aemeasurable).symm
   rw [h₁, h₂]
   refine Measure.ext_of_lintegral _ fun h hh ↦ ?_
   rw [lintegral_map hh (e.measurable.prodMap measurable_id)]
@@ -407,9 +408,9 @@ lemma isMarkovChain_map_conditioner_measurableEquiv
     (hmarkov : Shannon.IsMarkovChain μ Xs (fun ω ↦ e (Zc' ω)) Yo) :
     Shannon.IsMarkovChain μ Xs Zc' Yo := by
   haveI : IsProbabilityMeasure (μ.map Zc') :=
-    Measure.isProbabilityMeasure_map hZc'.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ e (Zc' ω))) :=
-    Measure.isProbabilityMeasure_map (e.measurable.comp hZc').aemeasurable
+    inferInstance
   unfold Shannon.IsMarkovChain at hmarkov ⊢
   set K_X' : Kernel Z' X := condDistrib Xs Zc' μ
   set K_Y' : Kernel Z' Y := condDistrib Yo Zc' μ

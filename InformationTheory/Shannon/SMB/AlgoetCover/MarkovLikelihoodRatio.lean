@@ -604,7 +604,7 @@ lemma MRatioUp_eq_ofReal_exp
     intro h; rw [h] at h_P_real_pos; simp at h_P_real_pos
   have h_P_ne_top : P ≠ ∞ := by
     have h_prob : IsProbabilityMeasure (μ.map (p.blockRV n)) :=
-      Measure.isProbabilityMeasure_map (p.measurable_blockRV n).aemeasurable
+      inferInstance
     have : P ≤ 1 := by rw [hP_def]; exact prob_le_one
     exact ne_top_of_le_ne_top ENNReal.one_ne_top this
   have h_P_eq : P = ENNReal.ofReal P.toReal := (ENNReal.ofReal_toReal h_P_ne_top).symm

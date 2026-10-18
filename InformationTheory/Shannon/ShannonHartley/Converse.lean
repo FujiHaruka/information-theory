@@ -119,8 +119,7 @@ instance contAwgnSignalLaw.instIsProbabilityMeasure {T W P : ℝ} {M : ℕ} [NeZ
     (c : ContAwgnCode T W P M) (N₀ : ℝ) :
     IsProbabilityMeasure (contAwgnSignalLaw c N₀) := by
   unfold contAwgnSignalLaw
-  exact Measure.isProbabilityMeasure_map
-    ((measurable_of_countable (fun a : Fin M ↦ c.observation a)).comp measurable_fst).aemeasurable
+  exact inferInstance
 
 /-! ## §L1 — Single-shot converse wiring -/
 
@@ -142,7 +141,7 @@ lemma contAwgnConverseJoint_map_fst {T W P : ℝ} {M : ℕ} [NeZero M]
     (contAwgnConverseJoint c N₀).map (Prod.fst : Fin M × (Fin c.k → ℝ) → Fin M)
       = (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ • Measure.count := by
   unfold contAwgnConverseJoint
-  rw [Measure.map_smul]
+  rw [Measure.map_smul _ (by fun_prop)]
   have h_map_fst_meas : Measurable (Prod.fst : Fin M × (Fin c.k → ℝ) → Fin M) := measurable_fst
   rw [Measure.map_finset_sum (s := Finset.univ)
       (m := fun m ↦ (Measure.dirac m).prod
@@ -211,7 +210,7 @@ lemma contAwgnSignalLaw_eq_mixture {T W P : ℝ} {M : ℕ} [NeZero M]
   have h_meas_eval :
       Measurable (fun ω : Fin M × (Fin c.k → ℝ) ↦ c.observation ω.1) :=
     (measurable_of_countable (fun a : Fin M ↦ c.observation a)).comp measurable_fst
-  rw [Measure.map_smul,
+  rw [Measure.map_smul _ (by fun_prop),
     Measure.map_finset_sum (s := Finset.univ)
       (m := fun m ↦ (Measure.dirac m).prod
         (Measure.pi (fun i : Fin c.k ↦ gaussianReal (c.observation m i) (N₀ / 2).toNNReal)))
@@ -260,7 +259,7 @@ lemma contAwgnConverseJoint_map_pair_eq_compProd {T W P : ℝ} {M : ℕ} [NeZero
         Measurable (fun ω : Fin M × (Fin c.k → ℝ) ↦ (c.observation ω.1, ω.2)) :=
       ((measurable_of_countable (fun a : Fin M ↦ c.observation a)).comp measurable_fst).prodMk
         measurable_snd
-    rw [Measure.map_smul,
+    rw [Measure.map_smul _ (by fun_prop),
       Measure.map_finset_sum (s := Finset.univ)
         (m := fun m ↦ (Measure.dirac m).prod
           (Measure.pi (fun i : Fin c.k ↦ gaussianReal (c.observation m i) Nv)))
@@ -387,9 +386,9 @@ lemma contAwgnConverseMarkov_holds {T W P : ℝ} {M : ℕ} [NeZero M]
     rw [hμ_def, hZc_def, hYo_def, hWch_def]
     exact contAwgnConverseJoint_map_pair_eq_compProd c N₀
   -- `condDistrib Yo Zc μ =ᵐ[μ.map Zc] Wch`.
-  haveI : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map Zc) := inferInstance
   have hK_Y_eq : condDistrib Yo Zc μ =ᵐ[μ.map Zc] Wch :=
-    condDistrib_ae_eq_of_measure_eq_compProd Zc hYo_meas.aemeasurable h_pair_eq
+    condDistrib_ae_eq_of_measure_eq_compProd (X := Zc) (by fun_prop) hYo_meas.aemeasurable h_pair_eq
   unfold IsMarkovChain
   set K_X : Kernel (Fin c.k → ℝ) (Fin M) := condDistrib Xs Zc μ with hK_X_def
   have h_compProd_eq :
@@ -402,7 +401,7 @@ lemma contAwgnConverseMarkov_holds {T W P : ℝ} {M : ℕ} [NeZero M]
   have h_LHS_meas : Measurable (fun ω ↦ (Zc ω, Xs ω, Yo ω)) :=
     hZc_meas.prodMk (hXs_meas.prodMk hYo_meas)
   have hKX_fold : (μ.map Zc) ⊗ₘ K_X = μ.map (fun ω ↦ (Zc ω, Xs ω)) :=
-    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := Xs) hXs_meas.aemeasurable
+    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := Xs) (by fun_prop) hXs_meas.aemeasurable
   refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   rw [lintegral_map hf h_LHS_meas]
   rw [Measure.lintegral_compProd hf]

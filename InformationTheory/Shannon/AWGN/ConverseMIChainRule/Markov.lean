@@ -71,7 +71,7 @@ private theorem converseMarkov_pairLaw
       = ((converseJointInline h_meas c).map Zc) ⊗ₘ W := by
   haveI : IsMarkovKernel W := by rw [hW_def]; infer_instance
   haveI : IsProbabilityMeasure ((converseJointInline h_meas c).map Zc) :=
-    Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
+    inferInstance
   refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   rw [Measure.lintegral_compProd hf, h_map_Zc, lintegral_smul_measure,
     lintegral_finsetSum_measure]
@@ -143,7 +143,7 @@ theorem awgnConverseMarkov_holds
   have h_map_Xs : μ.map Xs
       = ((Fintype.card (Fin M) : ℝ≥0∞)⁻¹) • ∑ m : Fin M, (Measure.dirac m) := by
     rw [hμ_def, hXs_def, converseJointInline]
-    rw [Measure.map_smul]
+    rw [Measure.map_smul _ (by fun_prop)]
     congr 1
     rw [Measure.map_finset_sum (measurable_fst.aemeasurable)]
     refine Finset.sum_congr rfl fun m _ ↦ ?_
@@ -157,7 +157,7 @@ theorem awgnConverseMarkov_holds
       = ((Fintype.card (Fin M) : ℝ≥0∞)⁻¹) • ∑ m : Fin M, (Measure.dirac (c.encoder m)) := by
     have hZc_comp : Zc = c.encoder ∘ Xs := rfl
     rw [hZc_comp, ← Measure.map_map Measurable.of_discrete hXs_meas, h_map_Xs,
-      Measure.map_smul]
+      Measure.map_smul _ (by fun_prop)]
     congr 1
     rw [Measure.map_finset_sum' Measurable.of_discrete.aemeasurable]
     refine Finset.sum_congr rfl fun m _ ↦ ?_
@@ -168,9 +168,9 @@ theorem awgnConverseMarkov_holds
     exact converseMarkov_pairLaw Zc hZc_def hZc_meas Yo hYo_def hYo_meas W hW_def
       (by rw [← hμ_def]; exact h_map_Zc)
   -- Identify `condDistrib Yo Zc μ =ᵐ[μ.map Zc] W`.
-  haveI : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map Zc) := inferInstance
   have hK_Y_eq : condDistrib Yo Zc μ =ᵐ[μ.map Zc] W :=
-    condDistrib_ae_eq_of_measure_eq_compProd Zc hYo_meas.aemeasurable h_pair_eq
+    condDistrib_ae_eq_of_measure_eq_compProd (X := Zc) (by fun_prop) hYo_meas.aemeasurable h_pair_eq
   -- Unfold IsMarkovChain and substitute condDistrib Yo Zc → W on the RHS.
   unfold IsMarkovChain
   set K_X : Kernel (Fin n → ℝ) (Fin M) := condDistrib Xs Zc μ with hK_X_def
@@ -186,7 +186,7 @@ theorem awgnConverseMarkov_holds
     hZc_meas.prodMk (hXs_meas.prodMk hYo_meas)
   -- `compProd_map_condDistrib`: fold K_X back into `μ.map (Zc, Xs)`.
   have hKX_fold : (μ.map Zc) ⊗ₘ K_X = μ.map (fun ω ↦ (Zc ω, Xs ω)) :=
-    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := Xs) hXs_meas.aemeasurable
+    compProd_map_condDistrib (μ := μ) (X := Zc) (Y := Xs) (by fun_prop) hXs_meas.aemeasurable
   refine Measure.ext_of_lintegral _ fun f hf ↦ ?_
   -- LHS: ∫⁻ ω, f (Zc ω, Xs ω, Yo ω) ∂μ.
   rw [lintegral_map hf h_LHS_meas]

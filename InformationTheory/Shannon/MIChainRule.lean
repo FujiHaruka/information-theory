@@ -332,11 +332,11 @@ theorem mutualInfo_pi_eq_sum
   have h_joint_meas : Measurable (fun ω (i : Fin n) ↦ (Xs i ω, Ys i ω)) :=
     measurable_pi_iff.mpr fun i ↦ (hXs i).prodMk (hYs i)
   haveI : ∀ i, IsProbabilityMeasure (μ.map (fun ω ↦ (Xs i ω, Ys i ω))) :=
-    fun i ↦ Measure.isProbabilityMeasure_map ((hXs i).prodMk (hYs i)).aemeasurable
+    fun i ↦ inferInstance
   haveI : ∀ i, IsProbabilityMeasure (μ.map (Xs i)) :=
-    fun i ↦ Measure.isProbabilityMeasure_map (hXs i).aemeasurable
+    fun i ↦ inferInstance
   haveI : ∀ i, IsProbabilityMeasure (μ.map (Ys i)) :=
-    fun i ↦ Measure.isProbabilityMeasure_map (hYs i).aemeasurable
+    fun i ↦ inferInstance
   -- Lift joint via e: joint over Fin n → α × β reshapes to joint over (Fin n → α) × (Fin n → β)
   have h_joint_eq :
       μ.map (fun ω ↦ ((fun i ↦ Xs i ω), (fun i ↦ Ys i ω)))

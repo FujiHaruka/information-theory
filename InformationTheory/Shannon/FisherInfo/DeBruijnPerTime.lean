@@ -134,8 +134,9 @@ private theorem pPath_eq_convDensityAdd_lconvolution_bridge
     · exact ((measurable_gaussianPDFReal 0 ⟨s, hs⟩).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable
     · refine Filter.Eventually.of_forall (fun y ↦ ?_)
-      rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (z - y))]
-      exact gaussianPDFReal_le_prefactor 0 ⟨s, hs⟩ (z - y)
+      rw [Real.norm_eq_abs]
+      exact (abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (z - y))).trans_le
+        (gaussianPDFReal_le_prefactor 0 ⟨s, hs⟩ (z - y))
   have hnn : 0 ≤ᵐ[volume] fun y ↦ pX y * gaussianPDFReal 0 ⟨s, hs⟩ (z - y) :=
     Filter.Eventually.of_forall fun y ↦
       mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (z - y))
@@ -211,8 +212,7 @@ noncomputable def heatFlow_density_heat_equation_kernel (σ u : ℝ) : ℝ :=
 theorem heatFlow_density_heat_equation_kernel_eq
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
     heatFlow_density_heat_equation_kernel σ u = gaussianPDFReal 0 ⟨σ, hσ.le⟩ u := by
-  unfold heatFlow_density_heat_equation_kernel
-  rw [gaussianPDFReal]
+  unfold heatFlow_density_heat_equation_kernel gaussianPDFReal
   simp only [sub_zero]
   rfl
 

@@ -882,13 +882,13 @@ private lemma chernoff_rate_le_aux_upper
       calc p_min ^ n = ∏ _i : Fin n, p_min := by
               rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
         _ ≤ ∏ i : Fin n, P₁ (x i) := by
-            refine Finset.prod_le_prod (fun i _ ↦ hpmin_pos.le) (fun i _ ↦ ?_)
+            refine Finset.prod_le_prod₀ (fun i _ ↦ hpmin_pos.le) (fun i _ ↦ ?_)
             have := ha₀ (x i) (Finset.mem_univ _)
             exact le_trans this (min_le_left _ _)
     · calc p_min ^ n = ∏ _i : Fin n, p_min := by
               rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
         _ ≤ ∏ i : Fin n, P₂ (x i) := by
-            refine Finset.prod_le_prod (fun i _ ↦ hpmin_pos.le) (fun i _ ↦ ?_)
+            refine Finset.prod_le_prod₀ (fun i _ ↦ hpmin_pos.le) (fun i _ ↦ ?_)
             have := ha₀ (x i) (Finset.mem_univ _)
             exact le_trans this (min_le_right _ _)
   -- Sum lower bound: ∑ x, min(...) ≥ #(Fin n → α) · p_min^n ≥ 1 · p_min^n (taking just one term).

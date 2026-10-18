@@ -84,7 +84,7 @@ lemma bc_chan_fold_UXY₁_set
         ((t.1, t.2.1, fun i ↦ (t.2.2 i).1) : (Fin n → U) × (Fin n → α) × (Fin n → β₁))) :=
     measurable_fst.prodMk
       ((measurable_fst.comp measurable_snd).prodMk
-        (measurable_pi_lambda _ fun i ↦
+        (Measurable.of_eval fun i ↦
           ((measurable_pi_apply i).comp (measurable_snd.comp measurable_snd)).fst))
   have hmap : (bcAmbientMeasure pU K W).map
         (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcY₁s n ω))

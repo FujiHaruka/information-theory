@@ -133,9 +133,9 @@ private lemma wz_covering_source_measure_map_val_eq
     rdAmbient_iidXs_isProbabilityMeasure qStar hqStar_mem
   haveI : IsProbabilityMeasure
       (((rdAmbient qStar).map (ChannelCoding.iidXs 0)).map Subtype.val) :=
-    Measure.isProbabilityMeasure_map measurable_subtype_coe.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (P_XY.map Prod.fst) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   -- Two finite measures on the finite alphabet `α` agree iff they agree on singletons.
   refine MeasureTheory.Measure.ext_of_singleton (fun a ↦ ?_)
   have h := wz_covering_source_marginal_real_singleton P_XY κ' qStar hκ'sum hqStar_eq hqStar_mem a
@@ -533,7 +533,7 @@ lemma wz_lift_expectedBlockDistortion_eq
       exact dif_pos (q i).1.2
     rw [hdite]
     rfl
-  · exact (measurable_pi_lambda _ (fun i ↦ hφ_meas.comp (measurable_pi_apply i))).aemeasurable
+  · exact (Measurable.of_eval (fun i ↦ hφ_meas.comp (measurable_pi_apply i))).aemeasurable
   · exact (measurable_of_finite _).aestronglyMeasurable
 
 /-- Marginalize a single coordinate of a product-pmf sum whose integrand depends on that

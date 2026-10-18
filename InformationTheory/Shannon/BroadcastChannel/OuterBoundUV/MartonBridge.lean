@@ -121,9 +121,7 @@ instance martonAuxSwapLaw.instIsProbabilityMeasure
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     IsProbabilityMeasure (martonAuxSwapLaw pV K W) :=
-  Measure.isProbabilityMeasure_map
-    (by fun_prop : Measurable
-      (fun q : V₁ × V₂ × α × β₁ × β₂ ↦ (q.2.1, q.1, q.2.2))).aemeasurable
+  by unfold martonAuxSwapLaw; infer_instance
 
 lemma martonAuxSwapLaw_isUVChannelLaw
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]
@@ -167,9 +165,7 @@ instance martonUVLaw.instIsProbabilityMeasure
     (K : Kernel (V₁ × V₂) α) [IsMarkovKernel K]
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     IsProbabilityMeasure (martonUVLaw pV K W) :=
-  Measure.isProbabilityMeasure_map
-    (measurable_uvRelabel (measurable_of_countable (natIndex V₂))
-      (measurable_of_countable (natIndex V₁))).aemeasurable
+  by unfold martonUVLaw; infer_instance
 
 /-- The exchanged and re-encoded Marton joint law is a channel law of `W`, hence one of the laws
 the union defining `bcOuterRegionUV` ranges over. -/

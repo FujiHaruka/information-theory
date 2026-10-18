@@ -160,7 +160,8 @@ lemma IsUVChannelLaw.smul {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
     {ν : Measure (U × V × α × β₁ × β₂)}
     [SFinite ν] (h : IsUVChannelLaw W ν) (a : ℝ≥0∞) : IsUVChannelLaw W (a • ν) := by
   unfold IsUVChannelLaw at h ⊢
-  rw [Measure.map_smul, Measure.map_smul, h, Measure.compProd_smul_left]
+  rw [Measure.map_smul _ (by fun_prop), Measure.map_smul _ (by fun_prop), h,
+      Measure.compProd_smul_left]
 
 /-- @audit:ok -/
 lemma IsUVChannelLaw.add {W : BCChannel α β₁ β₂} [IsMarkovKernel W]
@@ -296,7 +297,7 @@ lemma IsUVChannelLaw.isMarkovChain_UV_X_Y {W : BCChannel α β₁ β₂} [IsMark
       (fun q ↦ (q.2.2.2.1, q.2.2.2.2)) := by
   have hg : Measurable (fun r : U × V × α ↦ r.2.2) := measurable_snd.comp measurable_snd
   haveI : IsProbabilityMeasure (ν.map fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1)) :=
-    Measure.isProbabilityMeasure_map measurable_uvFirstThree.aemeasurable
+    inferInstance
   have hZc : Measurable (fun ω : (U × V × α) × (β₁ × β₂) ↦ ω.1.2.2) := hg.comp measurable_fst
   have h₀ := isMarkovChain_of_compProd_encoder
     (ν.map fun q : U × V × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2.1))
@@ -364,7 +365,7 @@ instance uvLawOfInput_isProbabilityMeasure (W : BCChannel α β₁ β₂) [IsMar
     (ρ : Measure (U × V × α)) [IsProbabilityMeasure ρ] :
     IsProbabilityMeasure (uvLawOfInput W ρ) := by
   unfold uvLawOfInput
-  exact Measure.isProbabilityMeasure_map measurable_uvUnsplit.aemeasurable
+  exact inferInstance
 
 lemma uvLawOfInput_isUVChannelLaw (W : BCChannel α β₁ β₂) [IsMarkovKernel W]
     (ρ : Measure (U × V × α)) [SFinite ρ] : IsUVChannelLaw W (uvLawOfInput W ρ) := by
@@ -510,7 +511,7 @@ noncomputable def uvOutputCopiesInputLaw : Measure (Bool × Bool × Bool × Bool
 instance uvOutputCopiesInputLaw_isProbabilityMeasure :
     IsProbabilityMeasure uvOutputCopiesInputLaw := by
   unfold uvOutputCopiesInputLaw
-  exact Measure.isProbabilityMeasure_map (measurable_of_countable _).aemeasurable
+  exact inferInstance
 
 theorem not_isUVChannelLaw_uvOutputCopiesInputLaw :
     ¬ IsUVChannelLaw uvBlindChannel uvOutputCopiesInputLaw := by
@@ -578,13 +579,15 @@ theorem uvAuxCopiesOutputLaw_map_input_output :
   have hmk : Measurable (Prod.mk (α := Unit) (β := Bool × Bool) ()) :=
     measurable_const.prodMk measurable_id
   have hmarg : (uvAuxCopiesOutputLaw.map fun q ↦ q.2.2.1) = Measure.dirac () := by
-    rw [uvAuxCopiesOutputLaw, Measure.map_add _ _ hX, Measure.map_smul, Measure.map_smul,
+    rw [uvAuxCopiesOutputLaw, Measure.map_add _ _ hX, Measure.map_smul _ (by fun_prop),
+        Measure.map_smul _ (by fun_prop),
       Measure.map_dirac' hX, Measure.map_dirac' hX, ← add_smul, ENNReal.inv_two_add_inv_two,
       one_smul]
   rw [hmarg, uvFairBitChannel, Measure.compProd_const, Measure.dirac_prod, uvAuxCopiesOutputLaw,
-    uvFairBitPair, Measure.map_add _ _ hXY, Measure.map_smul, Measure.map_smul,
+    uvFairBitPair, Measure.map_add _ _ hXY, Measure.map_smul _ (by fun_prop), Measure.map_smul _
+        (by fun_prop),
     Measure.map_dirac' hXY, Measure.map_dirac' hXY,
-    Measure.map_add _ _ hmk, Measure.map_smul, Measure.map_smul,
+    Measure.map_add _ _ hmk, Measure.map_smul _ (by fun_prop), Measure.map_smul _ (by fun_prop),
     Measure.map_dirac' hmk, Measure.map_dirac' hmk]
 
 theorem not_isUVChannelLaw_uvAuxCopiesOutputLaw :
@@ -600,7 +603,8 @@ theorem not_isUVChannelLaw_uvAuxCopiesOutputLaw :
   have hmargπ : (uvAuxCopiesOutputLaw.map fun q ↦ (q.1, q.2.1, q.2.2.1))
       = (2 : ℝ≥0∞)⁻¹ • Measure.dirac ((0 : ℕ), (0 : ℕ), ()) +
         (2 : ℝ≥0∞)⁻¹ • Measure.dirac ((1 : ℕ), (0 : ℕ), ()) := by
-    rw [uvAuxCopiesOutputLaw, Measure.map_add _ _ hπ, Measure.map_smul, Measure.map_smul,
+    rw [uvAuxCopiesOutputLaw, Measure.map_add _ _ hπ, Measure.map_smul _ (by fun_prop),
+        Measure.map_smul _ (by fun_prop),
       Measure.map_dirac' hπ, Measure.map_dirac' hπ]
   have hval := (Measure.ext_iff.mp h) S hS
   rw [Measure.map_apply hsplit hS, Measure.compProd_apply hS, hmargπ,

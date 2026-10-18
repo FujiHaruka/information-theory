@@ -167,14 +167,15 @@ private theorem bcJointDistribution_id_eq_map_compProd (p : Measure α) [IsProba
     (W : BCChannel α β₁ β₂) [IsMarkovKernel W] :
     bcJointDistribution p Kernel.id W
       = (p ⊗ₘ W).map (fun z : α × β₁ × β₂ ↦ (z.1, z.1, z.2)) := by
-  have hd : Measurable (fun x : α ↦ (x, x)) := measurable_id.prodMk measurable_id
-  have hcomap : (W.comap (Prod.snd : α × α → α) measurable_snd).comap (fun x : α ↦ (x, x)) hd
+  have hd : Measurable (Function.diag : α → α × α) := measurable_id.prodMk measurable_id
+  have hcomap : (W.comap (Prod.snd : α × α → α) measurable_snd).comap Function.diag hd
       = W := rfl
   have hstep :
-      (p.map (fun x : α ↦ (x, x))) ⊗ₘ (W.comap (Prod.snd : α × α → α) measurable_snd)
+      (p.map Function.diag) ⊗ₘ (W.comap (Prod.snd : α × α → α) measurable_snd)
         = (p ⊗ₘ W).map (fun z : α × β₁ × β₂ ↦ ((z.1, z.1), z.2)) := by
     rw [← compProd_comap_map_prodMap p (W.comap (Prod.snd : α × α → α) measurable_snd) hd,
       hcomap]
+    rfl
   unfold bcJointDistribution
   rw [Measure.compProd_id, hstep,
     Measure.map_map (MeasurableEquiv.prodAssoc (α := α) (β := α) (γ := β₁ × β₂)).measurable

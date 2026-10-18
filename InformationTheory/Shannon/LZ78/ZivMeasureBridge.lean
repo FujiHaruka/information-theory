@@ -81,7 +81,7 @@ theorem sum_marginal_real_le_one
     (∑ Z ∈ S, (μ.map (p.blockRV ℓ)).real {Z}) ≤ 1 := by
   -- The pushforward marginal is a probability measure.
   have hprob : IsProbabilityMeasure (μ.map (p.blockRV ℓ)) :=
-    Measure.isProbabilityMeasure_map (p.measurable_blockRV ℓ).aemeasurable
+    inferInstance
   -- The sum of singleton masses equals the measure of the finset.
   rw [sum_measureReal_singleton]
   -- bounded by the total mass `1` of a probability measure.

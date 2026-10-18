@@ -206,9 +206,9 @@ theorem stein_converse_sum_form
   have hPn_map_ac : Pn.map (steinTestFn n s) ≪ Qn.map (steinTestFn n s) := hPnQn.map hf
   -- Probability measure instances on Pi-pushforward.
   have h_Pn_map_prob : IsProbabilityMeasure (Pn.map (steinTestFn n s)) :=
-    Measure.isProbabilityMeasure_map hf.aemeasurable
+    inferInstance
   have h_Qn_map_prob : IsProbabilityMeasure (Qn.map (steinTestFn n s)) :=
-    Measure.isProbabilityMeasure_map hf.aemeasurable
+    inferInstance
   -- Translation lemmas: pushforward Bool masses = original measures of `s` / `sᶜ`.
   have h_P_true : (Pn.map (steinTestFn n s)).real {true} = Pn.real s := by
     show ((Pn.map (steinTestFn n s)) {true}).toReal = (Pn s).toReal

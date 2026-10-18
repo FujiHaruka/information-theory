@@ -67,7 +67,7 @@ theorem gaussianReal_Ici_eq_half {v : ℝ≥0} (hv : v ≠ 0) :
   have hinter : Set.Ici (0 : ℝ) ∩ Set.Iic (0 : ℝ) = {(0 : ℝ)} := by
     rw [Set.Ici_inter_Iic, Set.Icc_self]
   have hsingleton : μ ({(0 : ℝ)} : Set ℝ) = 0 := by
-    haveI : NoAtoms μ := noAtoms_gaussianReal hv
+    haveI : NullSingletonClass μ := nullSingletonClass_gaussianReal hv
     exact measure_singleton 0
   -- Step 3: `measure_union_add_inter` ⇒ `2 * μ(Ici 0) = 1`, ENNReal arithmetic.
   have htwo : 2 * μ (Set.Ici (0 : ℝ)) = 1 := by
@@ -146,8 +146,8 @@ theorem tilted_halfline_tendsto_gaussian
   have htend := hclt.tendsto
   -- Portmanteau half-line: frontier (Ici 0) is null under the Gaussian.
   have hbdry : (gaussianReal 0 v.toNNReal) (frontier (Set.Ici (0 : ℝ))) = 0 := by
-    haveI : NoAtoms (gaussianReal 0 v.toNNReal) :=
-      noAtoms_gaussianReal (by
+    haveI : NullSingletonClass (gaussianReal 0 v.toNNReal) :=
+      nullSingletonClass_gaussianReal (by
         rw [hvdef] at hVar ⊢
         exact (Real.toNNReal_pos).2 hVar |>.ne')
     rw [frontier_Ici, measure_singleton]

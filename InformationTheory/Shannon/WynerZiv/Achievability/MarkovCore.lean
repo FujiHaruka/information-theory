@@ -516,7 +516,7 @@ lemma wz_covering_SRC_map_Xproj_eq
   haveI hmapfst_prob : IsProbabilityMeasure ((ChannelCoding.pmfToMeasure
       (fun p : {x : α // 0 < ∑ y, P_XY.real {(x, y)}} × β ↦
         P_XY.real {(p.1.1, p.2)})).map Prod.fst) :=
-    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    inferInstance
   haveI hmux_prob : IsProbabilityMeasure ((rdAmbient qStar).map (ChannelCoding.iidXs 0)) :=
     rdAmbient_iidXs_isProbabilityMeasure qStar hqStar_mem
   -- Single-coordinate marginal identity.

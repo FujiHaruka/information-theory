@@ -95,7 +95,7 @@ private lemma sum_real_prod_singleton_snd
     (∑ a : A, ν.real {(a, b)}) = νY.real {b} := by
   classical
   haveI : IsProbabilityMeasure (ν.map Prod.swap) :=
-    Measure.isProbabilityMeasure_map measurable_swap.aemeasurable
+    inferInstance
   have hfst : (ν.map Prod.swap).map Prod.fst = νY := by
     rw [Measure.map_map measurable_fst measurable_swap]; exact hmarg
   have hkey := sum_real_prod_singleton_of_map_fst_eq (ν.map Prod.swap) νY hfst b
@@ -165,7 +165,7 @@ private lemma mutualInfoPmf_empirical_eq_mutualInfo
   classical
   have hpair : Measurable (fun ω ↦ (Xs ω, Uo ω)) := hXs.prodMk hUo
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (Xs ω, Uo ω))) :=
-    Measure.isProbabilityMeasure_map hpair.aemeasurable
+    inferInstance
   have hmap_fst : (μ.map (fun ω ↦ (Xs ω, Uo ω))).map Prod.fst = μ.map Xs := by
     rw [Measure.map_map measurable_fst hpair]; rfl
   have hmap_snd : (μ.map (fun ω ↦ (Xs ω, Uo ω))).map Prod.snd = μ.map Uo := by
@@ -206,7 +206,7 @@ lemma wzMutualInfoXU_eq_mutualInfo
   classical
   have hpair3 : Measurable (fun ω ↦ (X ω, Y ω, Uc ω)) := hX.prodMk (hY.prodMk hU)
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (X ω, Y ω, Uc ω))) :=
-    Measure.isProbabilityMeasure_map hpair3.aemeasurable
+    inferInstance
   have hg : Measurable (fun p : α × β × U ↦ (p.1, p.2.2)) :=
     measurable_fst.prodMk (measurable_snd.comp measurable_snd)
   have hmid : (μ.map (fun ω ↦ (X ω, Y ω, Uc ω))).map (fun p : α × β × U ↦ (p.1, p.2.2))
@@ -238,7 +238,7 @@ lemma wzMutualInfoYU_eq_mutualInfo
   classical
   have hpair3 : Measurable (fun ω ↦ (X ω, Y ω, Uc ω)) := hX.prodMk (hY.prodMk hU)
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (X ω, Y ω, Uc ω))) :=
-    Measure.isProbabilityMeasure_map hpair3.aemeasurable
+    inferInstance
   have hsnd : (μ.map (fun ω ↦ (X ω, Y ω, Uc ω))).map Prod.snd
       = μ.map (fun ω ↦ (Y ω, Uc ω)) := by
     rw [Measure.map_map measurable_snd hpair3]; rfl

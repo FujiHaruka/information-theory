@@ -112,7 +112,7 @@ private lemma klDiv_map_uniformOn_univ_ne_top
     klDiv (μ.map X) (uniformOn (Set.univ : Set α)) ≠ ∞ := by
   classical
   have _hP : IsProbabilityMeasure (μ.map X) :=
-    Measure.isProbabilityMeasure_map hX.aemeasurable
+    inferInstance
   have hac := map_absolutelyContinuous_uniformOn_univ μ X
   -- llr is integrable on a Fintype (finite measure, log is bounded by log |α|)
   have h_int : Integrable (llr (μ.map X) (uniformOn (Set.univ : Set α))) (μ.map X) := by
@@ -139,7 +139,7 @@ theorem klDiv_uniformOn_univ_toReal_eq
   have hN_ne_R : (N : ℝ) ≠ 0 := hN_pos_R.ne'
   set P : Measure α := μ.map X with hP_def
   set U : Measure α := uniformOn (Set.univ : Set α) with hU_def
-  haveI hP : IsProbabilityMeasure P := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI hP : IsProbabilityMeasure P := inferInstance
   haveI hU : IsProbabilityMeasure U := by rw [hU_def]; infer_instance
   have hPU : P ≪ U := map_absolutelyContinuous_uniformOn_univ μ X
   -- toReal_klDiv_of_measure_eq
@@ -240,7 +240,7 @@ theorem entropy_le_log_card
   have hN_pos_R : (0 : ℝ) < N := by exact_mod_cast hN_pos
   have hN_ne_R : (N : ℝ) ≠ 0 := hN_pos_R.ne'
   set P : Measure α := μ.map X with hP_def
-  haveI hP : IsProbabilityMeasure P := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI hP : IsProbabilityMeasure P := inferInstance
   have hent : entropy μ X = ∑ x : α, Real.negMulLog (P.real {x}) := rfl
   have h_sum_one : ∑ x : α, P.real {x} = 1 := sum_measureReal_singleton_univ_eq_one P
   -- finite-sum Jensen: uniform weights 1/N, each point P.real {x} ∈ Ici 0
@@ -277,7 +277,7 @@ theorem entropy_eq_log_card_iff
   have hN_pos_R : (0 : ℝ) < N := by exact_mod_cast hN_pos
   have hN_ne_R : (N : ℝ) ≠ 0 := hN_pos_R.ne'
   set P : Measure α := μ.map X with hP_def
-  haveI hP : IsProbabilityMeasure P := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI hP : IsProbabilityMeasure P := inferInstance
   have hent : entropy μ X = ∑ x : α, Real.negMulLog (P.real {x}) := rfl
   have h_sum_one : ∑ x : α, P.real {x} = 1 := sum_measureReal_singleton_univ_eq_one P
   have hw0 : ∀ i ∈ (Finset.univ : Finset α), (0 : ℝ) < 1 / N := fun _ _ ↦ by positivity

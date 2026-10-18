@@ -90,7 +90,7 @@ lemma integrable_logLikelihoodRatio
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (i : ℕ) :
     Integrable (logLikelihoodRatio P Q Xs i) μ := by
   have : IsProbabilityMeasure (μ.map (Xs i)) :=
-    Measure.isProbabilityMeasure_map (hXs i).aemeasurable
+    inferInstance
   -- Any function on a finite discrete space is integrable for any finite measure.
   have h_int : Integrable (llrPmf P Q) (μ.map (Xs i)) := Integrable.of_finite
   exact h_int.comp_measurable (hXs i)

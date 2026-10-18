@@ -40,7 +40,7 @@ private lemma condDistrib_compProd_fst_ae_eq {C : Type*} [MeasurableSpace C]
     condDistrib (fun p : T × S ↦ h p.2) Prod.fst (μ ⊗ₘ κ) =ᵐ[μ] κ.map h := by
   haveI : IsMarkovKernel (κ.map h) := Kernel.IsMarkovKernel.map _ hh
   have hbase : (μ ⊗ₘ κ).map Prod.fst = μ := Measure.fst_compProd μ κ
-  have hkey := condDistrib_ae_eq_of_measure_eq_compProd (μ := μ ⊗ₘ κ) Prod.fst
+  have hkey := condDistrib_ae_eq_of_measure_eq_compProd (μ := μ ⊗ₘ κ) (X := Prod.fst) (by fun_prop)
     (hh.comp measurable_snd).aemeasurable (κ := κ.map h)
     (by rw [hbase, Measure.compProd_map hh]; rfl)
   rwa [hbase] at hkey

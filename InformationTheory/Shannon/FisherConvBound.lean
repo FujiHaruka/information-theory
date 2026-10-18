@@ -41,32 +41,34 @@ open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 @audit:ok -/
 theorem integral_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
     ∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ∂volume = s := by
-  have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
+  set v : ℝ≥0 := ⟨s, hs.le⟩ with hv_def
+  have hv_ne : v ≠ 0 := by
     intro h; exact hs.ne' (congrArg NNReal.toReal h)
   -- Var[id; 𝒩(0,s)] = ∫ (ω - 0)² ∂𝒩(0,s) = ∫ ω² ∂𝒩(0,s) = (s : ℝ).
-  have hvar : Var[fun x ↦ x; gaussianReal 0 ⟨s, hs.le⟩] = ((⟨s, hs.le⟩ : ℝ≥0) : ℝ) :=
-    variance_fun_id_gaussianReal (μ := 0) (v := ⟨s, hs.le⟩)
+  have hvar : Var[fun x ↦ x; gaussianReal 0 v] = (v : ℝ) :=
+    variance_fun_id_gaussianReal (μ := 0) (v := v)
   rw [variance_eq_integral measurable_id'.aemeasurable, integral_id_gaussianReal] at hvar
   -- chain: `∫ u² g_s u du = ∫ u² ∂𝒩 = ∫ (u-0)² ∂𝒩 = s`.
-  calc ∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ∂volume
-      = ∫ u, gaussianPDFReal 0 ⟨s, hs.le⟩ u • u ^ 2 ∂volume := by
+  calc ∫ u, u ^ 2 * gaussianPDFReal 0 v u ∂volume
+      = ∫ u, gaussianPDFReal 0 v u • u ^ 2 ∂volume := by
         refine integral_congr_ae (Filter.Eventually.of_forall fun u ↦ ?_)
         simp [smul_eq_mul, mul_comm]
-    _ = ∫ u, u ^ 2 ∂(gaussianReal 0 ⟨s, hs.le⟩) :=
+    _ = ∫ u, u ^ 2 ∂(gaussianReal 0 v) :=
         (integral_gaussianReal_eq_integral_smul (μ := 0) (f := fun u ↦ u ^ 2) hv_ne).symm
-    _ = ∫ u, (u - 0) ^ 2 ∂(gaussianReal 0 ⟨s, hs.le⟩) := by simp
-    _ = s := by rw [hvar]
+    _ = ∫ u, (u - 0) ^ 2 ∂(gaussianReal 0 v) := by simp
+    _ = s := by rw [hvar, hv_def]; rfl
 
 /-- `u ↦ u ^ 2 * gaussianPDFReal 0 ⟨s, _⟩ u` is integrable over `volume`.
 @audit:ok -/
 theorem integrable_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
     Integrable (fun u ↦ u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u) volume := by
-  have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
+  set v : ℝ≥0 := ⟨s, hs.le⟩ with hv_def
+  have hv_ne : v ≠ 0 := by
     intro h; exact hs.ne' (congrArg NNReal.toReal h)
   -- `u² = id² ∈ L²(gaussianReal)`, hence integrable under `gaussianReal`.
-  have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 ⟨s, hs.le⟩) := memLp_id_gaussianReal 2
-  have hsq_int : Integrable (fun u ↦ u ^ 2) (gaussianReal 0 ⟨s, hs.le⟩) := by
-    have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 ⟨s, hs.le⟩)
+  have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 v) := memLp_id_gaussianReal 2
+  have hsq_int : Integrable (fun u ↦ u ^ 2) (gaussianReal 0 v) := by
+    have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 v)
       (f := (id : ℝ → ℝ)) measurable_id.aestronglyMeasurable).mp hmem
     simpa using this
   -- transport to `volume` via `gaussianReal = volume.withDensity gaussianPDF`.
@@ -152,12 +154,13 @@ theorem convScore_sq_le_pointwise
     · exact ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable
     · refine Filter.Eventually.of_forall (fun y ↦ ?_)
-      rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
+      rw [Real.norm_eq_abs]
+      refine (abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))).trans_le ?_
       -- `g_s(u) = (√(2πs))⁻¹·exp(...) ≤ (√(2πs))⁻¹` since `exp(neg) ≤ 1`.
-      rw [gaussianPDFReal]
+      simp only [gaussianPDFReal]
       refine mul_le_of_le_one_right (by positivity) (Real.exp_le_one_iff.mpr ?_)
       rw [neg_div]
-      exact neg_nonpos.mpr (by positivity)
+      exact neg_nonpos.mpr (div_nonneg (sq_nonneg _) (mul_nonneg zero_le_two (NNReal.coe_nonneg _)))
   -- `a·b = |x-y|·w`, `a² = (x-y)²·w`, `b² = w`.
   have hab : ∀ y, a y * b y = |x - y| * (pX y * g (x - y)) := by
     intro y
@@ -178,7 +181,7 @@ theorem convScore_sq_le_pointwise
   have ha_memLp : MemLp a (ENNReal.ofReal 2) volume := by
     rw [show (ENNReal.ofReal 2) = (2 : ℝ≥0∞) from by norm_num]
     refine (memLp_two_iff_integrable_sq ?_).mpr ?_
-    · exact ((measurable_const.sub measurable_id).abs.mul
+    · exact ((by fun_prop : Measurable fun y : ℝ ↦ |x - y|).mul
         (hw_meas.sqrt)).aestronglyMeasurable
     · exact ha_int
   have hb_memLp : MemLp b (ENNReal.ofReal 2) volume := by
@@ -270,7 +273,7 @@ theorem convDensityAdd_deriv_eq
     rw [heatFlow_density_heat_equation_kernel_eq hs u]
     have hpref_nn : (0 : ℝ) ≤ (Real.sqrt (2 * Real.pi * s))⁻¹ := by positivity
     have hcoe : ((⟨s, hs.le⟩ : ℝ≥0) : ℝ) = s := rfl
-    rw [gaussianPDFReal, sub_zero, hM1]
+    simp only [gaussianPDFReal, sub_zero, hM1]
     show |(Real.sqrt (2 * Real.pi * s))⁻¹ * Real.exp (-u ^ 2 / (2 * s)) * (-(u / s))|
       ≤ (Real.sqrt (2 * Real.pi * s))⁻¹ * (Real.sqrt (s * Real.exp (-1)) / s)
     -- factor the absolute value: `|(√2πs)⁻¹·exp·(-(u/s))| = (√2πs)⁻¹·exp·(|u|/s)`.
@@ -292,8 +295,8 @@ theorem convDensityAdd_deriv_eq
   have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel s v|
       ≤ (Real.sqrt (2 * Real.pi * s))⁻¹ := by
     intro v
-    rw [heatFlow_density_heat_equation_kernel_eq hs v, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v),
-      gaussianPDFReal, sub_zero]
+    unfold heatFlow_density_heat_equation_kernel
+    rw [abs_of_nonneg (by positivity)]
     refine mul_le_of_le_one_right (by positivity) (Real.exp_le_one_iff.mpr ?_)
     rw [neg_div]; exact neg_nonpos.mpr (by positivity)
   have hF1_int : ∀ ξ : ℝ,

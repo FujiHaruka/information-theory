@@ -42,15 +42,15 @@ theorem rnDeriv_map_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
   have hpY_nn : ∀ x, 0 ≤ pY x := fun x ↦ ENNReal.toReal_nonneg
   have hpXY_nn : ∀ x, 0 ≤ pXY x := fun x ↦ ENNReal.toReal_nonneg
   -- withDensity laws (a.c. probability ⇒ recovered by `withDensity_rnDeriv_eq`).
-  haveI : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
-  haveI : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
+  haveI : IsProbabilityMeasure (P.map X) := inferInstance
+  haveI : IsProbabilityMeasure (P.map Y) := inferInstance
   haveI : IsProbabilityMeasure (P.map (fun ω ↦ X ω + Y ω)) :=
-    Measure.isProbabilityMeasure_map (hX.add hY).aemeasurable
+    inferInstance
   have mk_law : ∀ (W : Ω → ℝ) (pW : ℝ → ℝ), Measurable W → (P.map W) ≪ volume
       → pW = (fun y ↦ (P.map W).rnDeriv volume y |>.toReal)
       → P.map W = volume.withDensity (fun x ↦ ENNReal.ofReal (pW x)) := by
     intro W pW hWmeas hWac hpW_eq
-    haveI : IsProbabilityMeasure (P.map W) := Measure.isProbabilityMeasure_map hWmeas.aemeasurable
+    haveI : IsProbabilityMeasure (P.map W) := inferInstance
     have hcongr : (fun x ↦ ENNReal.ofReal (pW x))
         =ᵐ[volume] (P.map W).rnDeriv volume := by
       filter_upwards [(P.map W).rnDeriv_lt_top volume] with x hx
@@ -130,7 +130,7 @@ theorem condTrunc_marginal_density_le (P : Measure Ω) [IsProbabilityMeasure P]
   have hSn_meas : MeasurableSet Sn := measurableSet_le measurable_norm measurable_const
   have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
   haveI : IsProbabilityMeasure (P.map Z) :=
-    Measure.isProbabilityMeasure_map hZmeas.aemeasurable
+    inferInstance
   -- positive mass at level `n₀` and `n` (the latter by monotone `Sn₀ ⊆ Sn`).
   have hpos_n : P (truncSet X Y n) ≠ 0 := by
     intro h0; exact hpos₀ (measure_mono_null (truncSet_mono hn) h0)
@@ -183,8 +183,8 @@ theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasur
             (fun y ↦ (P.map Y).rnDeriv volume y |>.toReal) z := by
   classical
   -- marginal densities of `P` (probability measures, a.c. ⇒ integrable toReal rnDeriv).
-  haveI : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
-  haveI : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
+  haveI : IsProbabilityMeasure (P.map X) := inferInstance
+  haveI : IsProbabilityMeasure (P.map Y) := inferInstance
   set pX : ℝ → ℝ := fun y ↦ ((P.map X).rnDeriv volume y).toReal with hpX_def
   set pY : ℝ → ℝ := fun y ↦ ((P.map Y).rnDeriv volume y).toReal with hpY_def
   have hpX_meas : Measurable pX := (Measure.measurable_rnDeriv _ _).ennreal_toReal
@@ -292,8 +292,8 @@ theorem convDensityAdd_condTrunc_le_const_mul_at (P : Measure Ω) [IsProbability
         ≤ C * convDensityAdd (fun y ↦ (P.map X).rnDeriv volume y |>.toReal)
             (fun y ↦ (P.map Y).rnDeriv volume y |>.toReal) z := by
   classical
-  haveI : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
-  haveI : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
+  haveI : IsProbabilityMeasure (P.map X) := inferInstance
+  haveI : IsProbabilityMeasure (P.map Y) := inferInstance
   set pX : ℝ → ℝ := fun y ↦ ((P.map X).rnDeriv volume y).toReal with hpX_def
   set pY : ℝ → ℝ := fun y ↦ ((P.map Y).rnDeriv volume y).toReal with hpY_def
   have hpX_meas : Measurable pX := (Measure.measurable_rnDeriv _ _).ennreal_toReal
@@ -376,7 +376,7 @@ private theorem condTrunc_marginal_density_tendsto (P : Measure Ω) [IsProbabili
   have hSn_meas : ∀ n, MeasurableSet (Sn n) := fun n ↦
     measurableSet_le measurable_norm measurable_const
   have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
-  haveI : IsProbabilityMeasure (P.map Z) := Measure.isProbabilityMeasure_map hZmeas.aemeasurable
+  haveI : IsProbabilityMeasure (P.map Z) := inferInstance
   set pZ : ℝ → ℝ := fun y ↦ ((P.map Z).rnDeriv volume y).toReal with hpZ_def
   -- a fixed positive-mass index (internal to this helper).
   obtain ⟨n₀, hpos₀⟩ := (eventually_measure_truncSet_pos P hX hY).exists
@@ -459,8 +459,8 @@ theorem convDensity_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
           (fun y ↦ (P.map Y).rnDeriv volume y |>.toReal) z)) := by
   classical
   -- marginal densities of `P`.
-  haveI : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
-  haveI : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
+  haveI : IsProbabilityMeasure (P.map X) := inferInstance
+  haveI : IsProbabilityMeasure (P.map Y) := inferInstance
   set pX : ℝ → ℝ := fun y ↦ ((P.map X).rnDeriv volume y).toReal with hpX_def
   set pY : ℝ → ℝ := fun y ↦ ((P.map Y).rnDeriv volume y).toReal with hpY_def
   have hpX_meas : Measurable pX := (Measure.measurable_rnDeriv _ _).ennreal_toReal
@@ -591,8 +591,8 @@ theorem crossEntropy_integrable_condTrunc_sum (P : Measure Ω) [IsProbabilityMea
   have hsum_meas : Measurable (fun ω ↦ X ω + Y ω) := hX.add hY
   set ν := P.map (fun ω ↦ X ω + Y ω) with hν_def
   set μn := (condTrunc P X Y n).map (fun ω ↦ X ω + Y ω) with hμn_def
-  haveI : IsProbabilityMeasure ν := Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
-  haveI : IsProbabilityMeasure μn := Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+  haveI : IsProbabilityMeasure ν := inferInstance
+  haveI : IsProbabilityMeasure μn := inferInstance
   -- a.c. of the conditioned sum law (used for the pull-back).
   have hν_ac : ν ≪ volume := by
     have hconv : P.map (fun ω ↦ X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
@@ -685,9 +685,9 @@ theorem differentialEntropy_condTrunc_sum_le_crossEntropy (P : Measure Ω) [IsPr
   haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
     isProbabilityMeasure_condTrunc P hX hY hpos
   haveI : IsProbabilityMeasure ((condTrunc P X Y n).map (fun ω ↦ X ω + Y ω)) :=
-    Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (P.map (fun ω ↦ X ω + Y ω)) :=
-    Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+    inferInstance
   -- regularity facts for the Gibbs lemma.
   have hμ_ac : ((condTrunc P X Y n).map (fun ω ↦ X ω + Y ω)) ≪ volume :=
     map_condTrunc_absolutelyContinuous P hX hsum_meas hν_ac
@@ -721,7 +721,7 @@ theorem crossEntropySeq_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
   classical
   have hsum_meas : Measurable (fun ω ↦ X ω + Y ω) := hX.add hY
   set ν := P.map (fun ω ↦ X ω + Y ω) with hν_def
-  haveI : IsProbabilityMeasure ν := Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+  haveI : IsProbabilityMeasure ν := inferInstance
   have hν_ac : ν ≪ volume := by
     have hconv : P.map (fun ω ↦ X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
       rw [show (fun ω ↦ X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
@@ -806,7 +806,7 @@ theorem crossEntropySeq_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
     haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
       isProbabilityMeasure_condTrunc P hX hY hpos
     set μn := (condTrunc P X Y n).map (fun ω ↦ X ω + Y ω) with hμn_def
-    haveI : IsProbabilityMeasure μn := Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+    haveI : IsProbabilityMeasure μn := inferInstance
     have hμn_ac : μn ≪ volume := map_condTrunc_absolutelyContinuous P hX hsum_meas hν_ac
     -- `crossEntropySeq n = -∫ g ∂μn = -∫ (μn.rnDeriv vol).toReal • g ∂vol`.
     have h1 : crossEntropySeq P X Y n = -∫ x, g x ∂μn := rfl

@@ -44,7 +44,7 @@ omit [DecidableEq X] [Nonempty X] [MeasurableSingletonClass X] in
 lemma entropy_nonneg (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (hXs : Measurable Xs) : 0 ≤ entropy μ Xs := by
   have _ : IsProbabilityMeasure (μ.map Xs) :=
-    Measure.isProbabilityMeasure_map hXs.aemeasurable
+    inferInstance
   unfold entropy
   exact Finset.sum_nonneg fun x _ ↦
     Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
@@ -65,9 +65,9 @@ private theorem absolutelyContinuous_joint_prod_marginals
     (μ.map (fun ω ↦ (Xs ω, Yo ω))) ≪ (μ.map Xs).prod (μ.map Yo) := by
   have hpair : Measurable (fun ω ↦ (Xs ω, Yo ω)) := hXs.prodMk hYo
   have _ : IsProbabilityMeasure (μ.map Yo) :=
-    Measure.isProbabilityMeasure_map hYo.aemeasurable
+    inferInstance
   have _ : IsProbabilityMeasure (μ.map Xs) :=
-    Measure.isProbabilityMeasure_map hXs.aemeasurable
+    inferInstance
   refine Measure.AbsolutelyContinuous.mk fun A hA hA0 ↦ ?_
   -- 1. Expand the product-measure 0 via Tonelli + Fintype sum
   rw [Measure.prod_apply hA, lintegral_fintype] at hA0
@@ -266,7 +266,7 @@ private lemma lintegral_condDistrib_singleton_eq
     ∫⁻ y, (condDistrib Xs Yo μ y) {x} ∂(μ.map Yo)
       = (μ.map Xs) {x} := by
   have h_compProd : (μ.map Yo) ⊗ₘ (condDistrib Xs Yo μ)
-      = μ.map (fun ω ↦ (Yo ω, Xs ω)) := compProd_map_condDistrib hXs.aemeasurable
+      = μ.map (fun ω ↦ (Yo ω, Xs ω)) := compProd_map_condDistrib (by fun_prop) hXs.aemeasurable
   have hpair : Measurable (fun ω ↦ (Yo ω, Xs ω)) := hYo.prodMk hXs
   have hxs : MeasurableSet ({x} : Set X) := measurableSet_singleton x
   have h₁ : ((μ.map Yo) ⊗ₘ (condDistrib Xs Yo μ)) ((Set.univ : Set Y) ×ˢ ({x} : Set X))
@@ -287,7 +287,7 @@ private lemma integral_condDistrib_real_singleton_eq
     ∫ y, (condDistrib Xs Yo μ y).real {x} ∂(μ.map Yo)
       = (μ.map Xs).real {x} := by
   have _ : IsProbabilityMeasure (μ.map Yo) :=
-    Measure.isProbabilityMeasure_map hYo.aemeasurable
+    inferInstance
   -- Convert the ∫ (Bochner) into toReal of ∫⁻ via integral_toReal
   have h_ae_lt_top : ∀ᵐ y ∂(μ.map Yo), (condDistrib Xs Yo μ y) {x} < ∞ := by
     refine ae_of_all _ fun y ↦ ?_
@@ -307,11 +307,11 @@ private lemma condDistrib_ae_absolutelyContinuous_map
     (hXs : Measurable Xs) (hYo : Measurable Yo) :
     ∀ᵐ y ∂(μ.map Yo), condDistrib Xs Yo μ y ≪ μ.map Xs := by
   have _ : IsProbabilityMeasure (μ.map Yo) :=
-    Measure.isProbabilityMeasure_map hYo.aemeasurable
+    inferInstance
   have _ : IsProbabilityMeasure (μ.map Xs) :=
-    Measure.isProbabilityMeasure_map hXs.aemeasurable
+    inferInstance
   have h_compProd : (μ.map Yo) ⊗ₘ (condDistrib Xs Yo μ)
-      = μ.map (fun ω ↦ (Yo ω, Xs ω)) := compProd_map_condDistrib hXs.aemeasurable
+      = μ.map (fun ω ↦ (Yo ω, Xs ω)) := compProd_map_condDistrib (by fun_prop) hXs.aemeasurable
   -- Step 1: per-`x` ae vanishing of `condDistrib y {x}` when `(μ.map Xs) {x} = 0`.
   have h_each_x : ∀ x : X, (μ.map Xs) {x} = 0 →
       ∀ᵐ y ∂(μ.map Yo), condDistrib Xs Yo μ y {x} = 0 := by
@@ -410,9 +410,9 @@ private theorem klDiv_joint_prod_marginals_toReal
       = entropy μ Xs - InformationTheory.MeasureFano.condEntropy μ Xs Yo := by
   classical
   have hMYo : IsProbabilityMeasure (μ.map Yo) :=
-    Measure.isProbabilityMeasure_map hYo.aemeasurable
+    inferInstance
   have hMXs : IsProbabilityMeasure (μ.map Xs) :=
-    Measure.isProbabilityMeasure_map hXs.aemeasurable
+    inferInstance
   -- Step 1: swap to (Yo, Xs) form via `mutualInfo_comm`.
   have h_swap_kl : klDiv (μ.map (fun ω ↦ (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))
       = klDiv (μ.map (fun ω ↦ (Yo ω, Xs ω))) ((μ.map Yo).prod (μ.map Xs)) := by
@@ -422,7 +422,7 @@ private theorem klDiv_joint_prod_marginals_toReal
   -- Step 2: rewrite both sides as compProd.
   have h_eq_joint : μ.map (fun ω ↦ (Yo ω, Xs ω))
       = (μ.map Yo) ⊗ₘ (condDistrib Xs Yo μ) :=
-    (compProd_map_condDistrib hXs.aemeasurable).symm
+    (compProd_map_condDistrib (by fun_prop) hXs.aemeasurable).symm
   have h_eq_prod : (μ.map Yo).prod (μ.map Xs)
       = (μ.map Yo) ⊗ₘ Kernel.const Y (μ.map Xs) := Measure.compProd_const.symm
   rw [h_eq_joint, h_eq_prod]

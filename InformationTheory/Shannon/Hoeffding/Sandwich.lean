@@ -103,7 +103,7 @@ lemma steinTypeII_at_level_pmf_ge_pow_pmin
     have h_p1_le_one : ∀ x : Fin n → α, ∏ i, P₁ (x i) ≤ 1 := by
       intro x
       -- Each P₁(x_i) ≤ 1 (since ∑ a, P₁ a = 1 and entries ≥ 0).
-      refine Finset.prod_le_one ?_ ?_
+      refine Finset.prod_le_one₀ ?_ ?_
       · intro i _
         exact (hP₁_pos (x i)).le
       · intro i _
@@ -125,7 +125,7 @@ lemma steinTypeII_at_level_pmf_ge_pow_pmin
           = ∏ _i : Fin n, P₂ a₀ := by
             rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
         _ ≤ ∏ i : Fin n, P₂ (x i) := by
-            refine Finset.prod_le_prod (fun i _ ↦ (hP₂_pos a₀).le) (fun i _ ↦ ?_)
+            refine Finset.prod_le_prod₀ (fun i _ ↦ (hP₂_pos a₀).le) (fun i _ ↦ ?_)
             exact ha₀ (x i)
     have h_sum_p2_ge : ∑ x ∈ s, (P₂ a₀) ^ n ≤ ∑ x ∈ s, ∏ i, P₂ (x i) :=
       Finset.sum_le_sum (fun x _ ↦ h_p2_pow_le x)

@@ -83,7 +83,8 @@ private lemma lintegral_pi_prod_eq_prod {n : ℕ} {E : Fin n → Type*}
           refine lintegral_congr fun x ↦ ?_
           simp_rw [MeasurableEquiv.piFinSuccAbove_symm_apply, Fin.insertNthEquiv,
             Fin.prod_univ_succ, Fin.insertNth_zero, Equiv.coe_fn_mk, Fin.cons_succ,
-            Fin.zero_succAbove, cast_eq, Fin.cons_zero]
+            Fin.zero_succAbove, Fin.cons_zero]
+          rfl
         _ = (∫⁻ x, f 0 x ∂μ 0)
             * ∏ i : Fin n, ∫⁻ x, f (Fin.succ i) x ∂(μ i.succ) := by
           rw [← n_ih (fun i ↦ μ i.succ) (fun i ↦ f i.succ) (fun i ↦ hf i.succ),
@@ -286,8 +287,7 @@ lemma awgn_perLetter_changeOfMeasure_facts
   have hQJ_ac : Q₁ ≪ J₁ := hQ_ac_vol.trans hvol_ac_J
   haveI : IsProbabilityMeasure J₁ := by
     rw [hJ₁]
-    exact Measure.isProbabilityMeasure_map
-      (measurable_fst.prodMk (measurable_fst.add measurable_snd)).aemeasurable
+    exact inferInstance
   haveI : IsProbabilityMeasure Q₁ := by rw [hQ₁]; infer_instance
   -- `rnDeriv` ratios w.r.t. `vol×vol`
   have hqden_ne_zero : ∀ᵐ p ∂(volume.prod volume : Measure (ℝ × ℝ)), qden p ≠ 0 :=
@@ -371,7 +371,7 @@ lemma awgn_perLetter_klDiv_degenerate
     have hN : N = 0 := hdeg.resolve_left hP'
     subst hN
     set μX : Measure ℝ := gaussianReal 0 P' with hμX_def
-    haveI : NoAtoms μX := by rw [hμX_def]; exact noAtoms_gaussianReal hP'
+    haveI : NullSingletonClass μX := by rw [hμX_def]; exact nullSingletonClass_gaussianReal hP'
     haveI : IsProbabilityMeasure μX := by rw [hμX_def]; infer_instance
     have hD_meas : MeasurableSet {p : ℝ × ℝ | p.1 = p.2} :=
       measurableSet_eq_fun measurable_fst measurable_snd
@@ -662,7 +662,7 @@ theorem klDiv_nFold_eq_nsmul (P : ℝ) (N : ℝ≥0) {n : ℕ} :
   have hh₁_meas : Measurable (fun p : ℝ × ℝ ↦ (p.1, p.1 + p.2)) :=
     measurable_fst.prodMk (measurable_fst.add measurable_snd)
   haveI : IsProbabilityMeasure J₁ := by
-    rw [hJ₁_def]; exact Measure.isProbabilityMeasure_map hh₁_meas.aemeasurable
+    rw [hJ₁_def]; exact inferInstance
   haveI : IsProbabilityMeasure Q₁ := by rw [hQ₁_def]; infer_instance
   -- the n-fold maps
   set g : (Fin n → ℝ) × (Fin n → ℝ) → (Fin n → ℝ) × (Fin n → ℝ) :=
@@ -670,11 +670,11 @@ theorem klDiv_nFold_eq_nsmul (P : ℝ) (N : ℝ≥0) {n : ℕ} :
   set H : (Fin n → ℝ × ℝ) → (Fin n → ℝ × ℝ) := fun w i ↦ (fun p : ℝ × ℝ ↦ (p.1, p.1 + p.2)) (w i)
     with hH_def
   have hg_meas : Measurable g := by
-    rw [hg_def]; exact measurable_fst.prodMk (measurable_pi_lambda _
+    rw [hg_def]; exact measurable_fst.prodMk (Measurable.of_eval
       (fun i ↦ (measurable_pi_apply i).comp measurable_fst |>.add
         ((measurable_pi_apply i).comp measurable_snd)))
   have hH_meas : Measurable H :=
-    measurable_pi_lambda _ (fun i ↦ hh₁_meas.comp (measurable_pi_apply i))
+    Measurable.of_eval (fun i ↦ hh₁_meas.comp (measurable_pi_apply i))
   -- `J_n = (pi J₁).map e` (same reshape as the engine's `hJ_eq`)
   have hJ_eq :
       ((Measure.pi (fun _ : Fin n ↦ μX)).prod (Measure.pi (fun _ : Fin n ↦ μZ))).map g
@@ -788,8 +788,7 @@ lemma gaussian_shear_logRnDeriv_memLp_two (P' N : ℝ≥0) (hP_ne : P' ≠ 0) (h
   set φ : ℝ × ℝ → ℝ := fun p ↦ Real.log ((J₁.rnDeriv Q₁ p).toReal) with hφ_def
   haveI : IsProbabilityMeasure J₁ := by
     rw [hJ₁_def]
-    exact Measure.isProbabilityMeasure_map
-      (measurable_fst.prodMk (measurable_fst.add measurable_snd)).aemeasurable
+    exact inferInstance
   haveI : IsProbabilityMeasure Q₁ := by rw [hQ₁_def]; infer_instance
   show MemLp φ 2 J₁
   have hPN_ne : P' + N ≠ 0 := by
@@ -920,14 +919,14 @@ theorem continuousAepGaussian_degenerate_witness
     · -- mass of `univ` under a probability measure is `1`
       have hg_meas : Measurable
           (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ (p.1, fun i ↦ p.1 i + p.2 i)) :=
-        measurable_fst.prodMk (measurable_pi_lambda _ (fun i ↦
+        measurable_fst.prodMk (Measurable.of_eval (fun i ↦
           ((measurable_pi_apply i).comp measurable_fst).add
             ((measurable_pi_apply i).comp measurable_snd)))
       haveI : IsProbabilityMeasure
           (((Measure.pi (fun _ : Fin n ↦ gaussianReal 0 P.toNNReal)).prod
             (Measure.pi (fun _ : Fin n ↦ gaussianReal 0 N))).map
             (fun p : (Fin n → ℝ) × (Fin n → ℝ) ↦ (p.1, fun i ↦ p.1 i + p.2 i))) :=
-        Measure.isProbabilityMeasure_map hg_meas.aemeasurable
+        inferInstance
       exact measure_univ
   · -- (iii) `Qₙ univ ≤ ofReal (exp (−(klDiv_n.toReal − n·3δ)))`, via `klDiv_n.toReal = 0`.
     set Jn : Measure ((Fin n → ℝ) × (Fin n → ℝ)) :=
@@ -969,13 +968,13 @@ theorem awgn_joint_law_reshape_eq (n : ℕ) (μX μZ : Measure ℝ)
   set h₁ : ℝ × ℝ → ℝ × ℝ := fun p ↦ (p.1, p.1 + p.2) with hh₁_def
   set H : (Fin n → ℝ × ℝ) → (Fin n → ℝ × ℝ) := fun w i ↦ h₁ (w i) with hH_def
   have hg_meas : Measurable g := by
-    rw [hg_def]; exact measurable_fst.prodMk (measurable_pi_lambda _
+    rw [hg_def]; exact measurable_fst.prodMk (Measurable.of_eval
       (fun i ↦ (measurable_pi_apply i).comp measurable_fst |>.add
         ((measurable_pi_apply i).comp measurable_snd)))
   have hh₁_meas : Measurable h₁ := by
     rw [hh₁_def]; exact measurable_fst.prodMk (measurable_fst.add measurable_snd)
   have hH_meas : Measurable H :=
-    measurable_pi_lambda _ (fun i ↦ hh₁_meas.comp (measurable_pi_apply i))
+    Measurable.of_eval (fun i ↦ hh₁_meas.comp (measurable_pi_apply i))
   -- reshape `(pi μX).prod (pi μZ) = (pi (μX × μZ)).map e`
   have hmp := measurePreserving_arrowProdEquivProdArrow ℝ ℝ (Fin n)
     (fun _ : Fin n ↦ μX) (fun _ : Fin n ↦ μZ)
@@ -1241,8 +1240,7 @@ theorem continuousAepGaussian_holds (P : ℝ) (N : ℝ≥0) :
   set φ : ℝ × ℝ → ℝ := fun p ↦ Real.log ((J₁.rnDeriv Q₁ p).toReal) with hφ_def
   haveI : IsProbabilityMeasure J₁ := by
     rw [hJ₁_def]
-    exact Measure.isProbabilityMeasure_map
-      (measurable_fst.prodMk (measurable_fst.add measurable_snd)).aemeasurable
+    exact inferInstance
   haveI : IsProbabilityMeasure Q₁ := by rw [hQ₁_def]; infer_instance
   -- `MemLp φ 2 J₁` (GENUINE, nondegenerate `P', N > 0`): the info density `φ = log dJ₁/dQ₁`
   -- is a.e. equal to a quadratic polynomial in `(x, y)` — the difference of two Gaussian

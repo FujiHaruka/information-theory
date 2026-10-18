@@ -110,9 +110,9 @@ theorem convDensityAdd_hasDerivAt_self
   have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel t v|
       ≤ (Real.sqrt (2 * Real.pi * (⟨t, ht.le⟩ : ℝ≥0)))⁻¹ := by
     intro v
-    rw [heatFlow_density_heat_equation_kernel_eq ht v,
-      abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)]
-    exact gaussianPDFReal_le_prefactor' ⟨t, ht.le⟩ v
+    rw [heatFlow_density_heat_equation_kernel_eq ht v]
+    exact (abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)).trans_le
+      (gaussianPDFReal_le_prefactor' ⟨t, ht.le⟩ v)
   have hF1_int : ∀ ξ : ℝ,
       Integrable (fun y ↦ pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume := by
     intro ξ
@@ -197,9 +197,9 @@ theorem convDensityAdd_deriv_hasDerivAt_self
   have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel t v|
       ≤ (Real.sqrt (2 * Real.pi * (⟨t, ht.le⟩ : ℝ≥0)))⁻¹ := by
     intro v
-    rw [heatFlow_density_heat_equation_kernel_eq ht v,
-      abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)]
-    exact gaussianPDFReal_le_prefactor' ⟨t, ht.le⟩ v
+    rw [heatFlow_density_heat_equation_kernel_eq ht v]
+    exact (abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)).trans_le
+      (gaussianPDFReal_le_prefactor' ⟨t, ht.le⟩ v)
   have hF1_int : ∀ ξ : ℝ,
       Integrable (fun y ↦ pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume := by
     intro ξ
@@ -568,8 +568,7 @@ private theorem gaussianGrad_le_gaussGradMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
   have hspos : (0:ℝ) < s := by have := hs.1; linarith
   have ht2s : t < 2 * s := by have := hs.1; linarith
   have hs2t : s ≤ 2 * t := hs.2.le
-  rw [gaussianPDFReal]
-  simp only [sub_zero]
+  simp only [gaussianPDFReal, sub_zero]
   have hpref : (Real.sqrt (2 * Real.pi * s))⁻¹ ≤ (Real.sqrt (Real.pi * t))⁻¹ := by
     apply inv_anti₀ (by positivity)
     apply Real.sqrt_le_sqrt
@@ -611,9 +610,9 @@ private theorem convDensityAdd_deriv1_le_gaussGradMaj_conv
   have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel s v|
       ≤ (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹ := by
     intro v
-    rw [heatFlow_density_heat_equation_kernel_eq hspos v,
-      abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)]
-    exact gaussianPDFReal_le_prefactor' ⟨s, hspos.le⟩ v
+    rw [heatFlow_density_heat_equation_kernel_eq hspos v]
+    exact (abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)).trans_le
+      (gaussianPDFReal_le_prefactor' ⟨s, hspos.le⟩ v)
   -- the `bound1` group of `convDensityAdd_deriv1_gaussian_eq` (= the deriv2 lemma's bound1 group).
   have hF1_meas : ∀ ξ : ℝ,
       AEStronglyMeasurable

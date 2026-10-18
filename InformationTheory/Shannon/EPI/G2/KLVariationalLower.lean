@@ -74,6 +74,7 @@ theorem integral_exp_sub_llr_le [IsProbabilityMeasure μ] [IsProbabilityMeasure 
       filter_upwards with x
       have hfactor : (μ.rnDeriv ν x).toReal * (Real.exp (g x) * (μ.rnDeriv ν x).toReal⁻¹)
           = Real.exp (g x) * ((μ.rnDeriv ν x).toReal * (μ.rnDeriv ν x).toReal⁻¹) := by ring
+      simp only [Pi.mul_apply, Pi.inv_apply]
       rw [hfactor]
       rcases eq_or_ne (μ.rnDeriv ν x).toReal 0 with hr0 | hr0
       · rw [hr0, zero_mul, mul_zero, norm_zero]; positivity
@@ -117,6 +118,7 @@ theorem klDiv_variational_lower_bound [IsProbabilityMeasure μ] [IsProbabilityMe
     filter_upwards with x
     have hfactor : (μ.rnDeriv ν x).toReal * (Real.exp (g x) * (μ.rnDeriv ν x).toReal⁻¹)
         = Real.exp (g x) * ((μ.rnDeriv ν x).toReal * (μ.rnDeriv ν x).toReal⁻¹) := by ring
+    simp only [Pi.mul_apply, Pi.inv_apply]
     rw [hfactor]
     rcases eq_or_ne (μ.rnDeriv ν x).toReal 0 with hr0 | hr0
     · rw [hr0, zero_mul, mul_zero, norm_zero]; positivity

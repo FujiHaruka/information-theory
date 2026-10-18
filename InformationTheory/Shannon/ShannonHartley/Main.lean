@@ -153,7 +153,9 @@ private theorem norm_sq_smul_sum_eq_timeLimitProj (T W : ℝ) {c : ℝ}
     rw [Lp.norm_def, Lp.norm_def]
     congr 1
     rw [show eLpNorm (⇑p) 2 volume = eLpNorm (fun t ↦ ((⇑p t : ℝ) : ℂ)) 2 volume from
-      eLpNorm_congr_norm_ae (by filter_upwards with t; rw [Complex.norm_real])]
+      eLpNorm_congr_norm_ae (Lp.aestronglyMeasurable p)
+        (Complex.continuous_ofReal.comp_aestronglyMeasurable (Lp.aestronglyMeasurable p))
+        (by filter_upwards with t; rw [Complex.norm_real])]
     exact eLpNorm_congr_ae hpc
   rw [hnorm]
 

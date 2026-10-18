@@ -33,7 +33,7 @@ instance parallelOutput_marginal_isProbabilityMeasure (i : Fin n) :
   have : IsProbabilityMeasure
       (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)) :=
     inferInstance
-  exact Measure.isProbabilityMeasure_map (measurable_pi_apply i).aemeasurable
+  exact inferInstance
 
 /-- Parallel-output marginal as 1-D AWGN convolution. The `i`-th coordinate marginal of
 the correlated output law is the input marginal smoothed by the noise:
@@ -135,7 +135,7 @@ theorem parallelMarginal_mem_awgnPowerConstraintSet (P : ℝ)
     p.map (fun z ↦ z i) ∈ AWGN.awgnPowerConstraintSet P := by
   obtain ⟨hp_prob, hp_lint⟩ := hp
   have hmeas_i : Measurable (fun z : Fin n → ℝ ↦ z i) := measurable_pi_apply i
-  refine ⟨Measure.isProbabilityMeasure_map hmeas_i.aemeasurable, ?_⟩
+  refine ⟨inferInstance, ?_⟩
   -- `∫⁻ y² ∂(p.map (· i)) = ∫⁻ (x i)² ∂p`
   rw [lintegral_map (by fun_prop : Measurable (fun y : ℝ ↦ ENNReal.ofReal (y ^ 2))) hmeas_i]
   -- single coordinate ≤ total ≤ ofReal P
@@ -336,7 +336,7 @@ theorem parallelOutput_marginal_logDensity_integrable (P : ℝ) (hP : 0 ≤ P) (
   set μY := outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas) with hμY
   haveI : IsProbabilityMeasure μY := by rw [hμY]; infer_instance
   haveI : IsProbabilityMeasure (μY.map (fun z ↦ z i)) :=
-    Measure.isProbabilityMeasure_map hmeas_i.aemeasurable
+    inferInstance
   set g : ℝ → ℝ := fun y ↦ Real.log (((μY.map (fun z ↦ z i)).rnDeriv volume y).toReal) with hg
   -- integrand = g ∘ (·i); push to marginal
   have hg_aesm : AEStronglyMeasurable g (μY.map (fun z ↦ z i)) :=
@@ -350,7 +350,7 @@ theorem parallelOutput_marginal_logDensity_integrable (P : ℝ) (hP : 0 ≤ P) (
   rw [hμY, parallelOutput_marginal_eq_awgn_output N h_meas h_parallel_meas p i] at hg ⊢
   rw [hg]
   haveI : IsProbabilityMeasure (p.map (fun z ↦ z i)) :=
-    Measure.isProbabilityMeasure_map hmeas_i.aemeasurable
+    inferInstance
   exact awgnOutput_logDensity_integrable_self P hP (N i) hN (p.map (fun z ↦ z i)) h_mem
 
 end Phase1Regularity

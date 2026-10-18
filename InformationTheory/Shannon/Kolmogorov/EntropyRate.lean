@@ -241,8 +241,6 @@ theorem typeCount_filter_ofFn {n : ℕ} (x : Fin n → α) (a : α) :
     ← List.toFinset_card_of_nodup ((List.nodup_finRange n).filter _),
     List.toFinset_filter, List.toFinset_finRange]
   congr 1
-  ext i
-  simp [Function.comp, decide_eq_true_eq]
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 theorem typeSig_ofFn {n : ℕ} (x : Fin n → α) :
@@ -404,7 +402,7 @@ theorem entropyByCount_le_of_strongTypical
   have hn_pos : (0 : ℝ) < n := by exact_mod_cast hn
   have hn_ne : (n : ℝ) ≠ 0 := hn_pos.ne'
   haveI : IsProbabilityMeasure (μ.map (Xs 0)) :=
-    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+    inferInstance
   have hqX_sum_one : (∑ a : α, (μ.map (Xs 0)).real {a}) = 1 :=
     sum_measureReal_singleton_univ_eq_one (μ.map (Xs 0))
   have hT_sum : (∑ a : α, typeCount x a) = n := sum_typeCount x
@@ -689,7 +687,7 @@ theorem blockProb_eq_prod (hXs : ∀ i, Measurable (Xs i))
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) (n : ℕ) (b : Fin n → α) :
     (μ.map (jointRV Xs n)).real {b} = ∏ i : Fin n, (μ.map (Xs 0)).real {b i} := by
   haveI : IsProbabilityMeasure (μ.map (Xs 0)) :=
-    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+    inferInstance
   rw [blockLaw_eq_pi μ Xs hXs hindep_full hident n]
   change ((Measure.pi (fun _ : Fin n ↦ μ.map (Xs 0))) {b}).toReal
     = ∏ i : Fin n, (μ.map (Xs 0)).real {b i}

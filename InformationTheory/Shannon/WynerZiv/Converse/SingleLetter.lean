@@ -60,13 +60,13 @@ private lemma wz_isMarkovChain_of_indepFun_side
   classical
   have hU : Measurable (fun ω ↦ g (As ω) (Ws ω)) := hg.comp (hAs.prodMk hWs)
   set Q : Kernel A B := condDistrib Cs As μ with hQ_def
-  haveI : IsProbabilityMeasure (μ.map As) := Measure.isProbabilityMeasure_map hAs.aemeasurable
-  haveI : IsProbabilityMeasure (μ.map Ws) := Measure.isProbabilityMeasure_map hWs.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map As) := inferInstance
+  haveI : IsProbabilityMeasure (μ.map Ws) := inferInstance
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (As ω, Cs ω))) :=
-    Measure.isProbabilityMeasure_map (hAs.prodMk hCs).aemeasurable
+    inferInstance
   -- `ρ = (μ.map As) ⊗ₘ Q` (disintegration of the `(As, Cs)` law).
   have hρ_split : μ.map (fun ω ↦ (As ω, Cs ω)) = (μ.map As) ⊗ₘ Q :=
-    (compProd_map_condDistrib hCs.aemeasurable).symm
+    (compProd_map_condDistrib (by fun_prop) hCs.aemeasurable).symm
   -- `μ.map ((As, Cs), Ws) = ρ.prod π` (independence).
   have hjoint : μ.map (fun ω ↦ ((As ω, Cs ω), Ws ω))
       = (μ.map (fun ω ↦ (As ω, Cs ω))).prod (μ.map Ws) :=
@@ -161,9 +161,9 @@ private theorem wz_perletter_markov
       (Fin M × ({j : Fin n // j ≠ i} → β)) :=
     fun a p ↦ (c.encoder (fun j ↦ if h : j = i then a else p.1 ⟨j, h⟩), p.2) with hg_def
   have hWs_meas : Measurable Ws :=
-    (measurable_pi_lambda (fun ω (j : {j : Fin n // j ≠ i}) ↦ Xs (↑j) ω)
+    (Measurable.of_eval (f := fun ω (j : {j : Fin n // j ≠ i}) ↦ Xs (↑j) ω)
         (fun j ↦ hXs ↑j)).prodMk
-      (measurable_pi_lambda (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (fun j ↦ hYs ↑j))
+      (Measurable.of_eval (f := fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) (fun j ↦ hYs ↑j))
   have hg_meas : Measurable
       (fun p : α × (({j : Fin n // j ≠ i} → α) × ({j : Fin n // j ≠ i} → β)) ↦ g p.1 p.2) :=
     Measurable.of_discrete
@@ -252,10 +252,10 @@ private theorem wz_perletter_empirical_factorizable
     fun ω ↦ (c.encoder (fun j ↦ Xs j ω), fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)
     with hUᵢ_def
   have hUᵢ_meas : Measurable Uᵢ :=
-    (hencoder.comp (measurable_pi_lambda _ (fun j ↦ hXs j))).prodMk
-      (measurable_pi_lambda _ (fun j ↦ hYs ↑j))
+    (hencoder.comp (Measurable.of_eval (fun j ↦ hXs j))).prodMk
+      (Measurable.of_eval (fun j ↦ hYs ↑j))
   haveI : IsProbabilityMeasure (μ.map (Xs i)) :=
-    Measure.isProbabilityMeasure_map (hXs i).aemeasurable
+    inferInstance
   -- The per-letter Markov chain `Uᵢ − Xᵢ − Yᵢ`, as a measure equation.
   have hmarkov_eq : μ.map (fun ω ↦ (Xs i ω, Uᵢ ω, Ys i ω))
       = (μ.map (Xs i)) ⊗ₘ ((condDistrib Uᵢ (Xs i) μ) ×ₖ (condDistrib (Ys i) (Xs i) μ)) :=
@@ -297,7 +297,7 @@ private theorem wz_perletter_empirical_factorizable
         rw [hset, Kernel.prod_apply_prod]
       have hXY : (μ.map (fun ω ↦ (Xs i ω, Ys i ω))) {(x, y)}
           = ((condDistrib (Ys i) (Xs i) μ) x) {y} * (μ.map (Xs i)) {x} := by
-        rw [← compProd_map_condDistrib (hYs i).aemeasurable,
+        rw [← compProd_map_condDistrib (X := Xs i) (by fun_prop) (hYs i).aemeasurable,
             wz_compProd_markov_singleton (μ.map (Xs i)) (condDistrib (Ys i) (Xs i) μ) x y]
       rw [hprod, hXY]; ring
     show (μ.map (fun ω ↦ (Xs i ω, Ys i ω, Uᵢ ω))).real {(x, y, u)}
@@ -366,8 +366,8 @@ private theorem wz_perletter_factorizable
     fun ω ↦ (c.encoder (fun j ↦ Xs j ω), fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)
     with hUᵢ_def
   have hUᵢ_meas : Measurable Uᵢ :=
-    (hencoder.comp (measurable_pi_lambda _ (fun j ↦ hXs j))).prodMk
-      (measurable_pi_lambda _ (fun j ↦ hYs ↑j))
+    (hencoder.comp (Measurable.of_eval (fun j ↦ hXs j))).prodMk
+      (Measurable.of_eval (fun j ↦ hYs ↑j))
   -- The distortion budget of the per-letter reconstruction.
   set D : ℝ := ∫ ω, (d (Xs i ω)
       ((c.decoder (c.encoder (fun j ↦ Xs j ω), fun j ↦ Ys j ω)) i) : ℝ) ∂μ with hD_def
@@ -384,7 +384,7 @@ private theorem wz_perletter_factorizable
   have hJoint_meas : Measurable (fun ω ↦ (Xs i ω, Ys i ω, Uᵢ ω)) :=
     (hXs i).prodMk ((hYs i).prodMk hUᵢ_meas)
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (Xs i ω, Ys i ω, Uᵢ ω))) :=
-    Measure.isProbabilityMeasure_map hJoint_meas.aemeasurable
+    inferInstance
   have hdist : wzExpectedDistortion (Fin M × ({j : Fin n // j ≠ i} → β))
       (fun a b ↦ (d a b : ℝ)) q f ≤ D := by
     refine le_of_eq ?_
@@ -544,9 +544,9 @@ private theorem wz_inputs_cond_indep
   set Xpre : Ω → (Fin i.val → α) := fun ω j ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hXpre_def
   set Yoth : Ω → ({j : Fin n // j ≠ i} → β) := fun ω j ↦ Ys (↑j) ω with hYoth_def
   set Yn : Ω → (Fin n → β) := fun ω j ↦ Ys j ω with hYn_def
-  have hXpre_meas : Measurable Xpre := measurable_pi_lambda _ fun j ↦ hXs _
-  have hYoth_meas : Measurable Yoth := measurable_pi_lambda _ fun j ↦ hYs ↑j
-  have hYn_meas : Measurable Yn := measurable_pi_lambda _ fun j ↦ hYs j
+  have hXpre_meas : Measurable Xpre := Measurable.of_eval fun j ↦ hXs _
+  have hYoth_meas : Measurable Yoth := Measurable.of_eval fun j ↦ hYs ↑j
+  have hYn_meas : Measurable Yn := Measurable.of_eval fun j ↦ hYs j
   -- Conditioner reshape `Yⁿ ≅ (Yᵢ, Y_{\i})`.
   have hcond : condMutualInfo μ (Xs i) Xpre Yn
       = condMutualInfo μ (Xs i) Xpre (fun ω ↦ (Ys i ω, Yoth ω)) := by
@@ -623,8 +623,8 @@ private lemma wz_perletter_mutualInfo_sub_eq_condMutualInfo
   have hU_meas : ∀ i : Fin n, Measurable
       (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
         fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := fun i ↦
-    (hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)).prodMk
-      (measurable_pi_lambda _ fun j ↦ hYs ↑j)
+    (hencoder.comp (Measurable.of_eval fun j ↦ hXs j)).prodMk
+      (Measurable.of_eval fun j ↦ hYs ↑j)
   have hfin_YU : ∀ i : Fin n,
       mutualInfo μ (Ys i)
         (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
@@ -685,12 +685,12 @@ private lemma wz_perletter_condMutualInfo_eq_block
               (fun ω j ↦ Ys j ω) := by
   set Jn : Ω → Fin M := fun ω ↦ c.encoder (fun j ↦ Xs j ω) with hJn_def
   set Yn : Ω → (Fin n → β) := fun ω j ↦ Ys j ω with hYn_def
-  have hYn_meas : Measurable Yn := by rw [hYn_def]; exact measurable_pi_lambda _ fun j ↦ hYs j
+  have hYn_meas : Measurable Yn := by rw [hYn_def]; exact Measurable.of_eval fun j ↦ hYs j
   intro i
   have hJ_meas : Measurable (fun ω ↦ c.encoder (fun j ↦ Xs j ω)) :=
-    hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)
+    hencoder.comp (Measurable.of_eval fun j ↦ hXs j)
   have hYoth_meas : Measurable (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) :=
-    measurable_pi_lambda _ fun j ↦ hYs ↑j
+    Measurable.of_eval fun j ↦ hYs ↑j
   -- Independence `(Yᵢ, Xᵢ) ⊥ Y_{\i}` (memorylessness).
   have hindep_pair : IndepFun (fun ω ↦ (Ys i ω, Xs i ω))
       (fun ω (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω) μ := by
@@ -775,10 +775,10 @@ private lemma wz_sum_condMutualInfo_le_mutualInfo_sub
   set Jn : Ω → Fin M := fun ω ↦ c.encoder (fun j ↦ Xs j ω) with hJn_def
   set Xn : Ω → (Fin n → α) := fun ω j ↦ Xs j ω with hXn_def
   set Yn : Ω → (Fin n → β) := fun ω j ↦ Ys j ω with hYn_def
-  have hXn_meas : Measurable Xn := by rw [hXn_def]; exact measurable_pi_lambda _ fun j ↦ hXs j
-  have hYn_meas : Measurable Yn := by rw [hYn_def]; exact measurable_pi_lambda _ fun j ↦ hYs j
+  have hXn_meas : Measurable Xn := by rw [hXn_def]; exact Measurable.of_eval fun j ↦ hXs j
+  have hYn_meas : Measurable Yn := by rw [hYn_def]; exact Measurable.of_eval fun j ↦ hYs j
   have hJn_meas : Measurable Jn := by
-    rw [hJn_def]; exact hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)
+    rw [hJn_def]; exact hencoder.comp (Measurable.of_eval fun j ↦ hXs j)
   -- Deterministic-encoder identity `I(Xⁿ; J | Yⁿ) = I(J; Xⁿ) − I(J; Yⁿ)`.
   have h_enc : condMutualInfo μ Xn Jn Yn = mutualInfo μ Jn Xn - mutualInfo μ Jn Yn := by
     have hmarkov : IsMarkovChain μ Yn Xn Jn :=
@@ -808,7 +808,7 @@ private lemma wz_sum_condMutualInfo_le_mutualInfo_sub
           (fun ω ↦ (Yn ω, fun (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := by
     intro i
     have hXpre_meas : Measurable (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
-      measurable_pi_lambda _ fun j ↦ hXs _
+      Measurable.of_eval fun j ↦ hXs _
     have hside : mutualInfo μ Yn (Xs i) ≠ ∞ := mutualInfo_ne_top μ Yn (Xs i) hYn_meas (hXs i)
     have hg1 := ChannelCodingConverseGeneral.condMutualInfo_chain_rule_Y_2var μ (Xs i) Jn
       (fun ω (j : Fin i.val) ↦ Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) Yn (hXs i) hJn_meas hXpre_meas
@@ -901,15 +901,15 @@ private theorem wz_singleletter_rate_le
   set Jn : Ω → Fin M := fun ω ↦ c.encoder (fun j ↦ Xs j ω) with hJn_def
   set Xn : Ω → (Fin n → α) := fun ω j ↦ Xs j ω with hXn_def
   set Yn : Ω → (Fin n → β) := fun ω j ↦ Ys j ω with hYn_def
-  have hXn_meas : Measurable Xn := by rw [hXn_def]; exact measurable_pi_lambda _ fun j ↦ hXs j
+  have hXn_meas : Measurable Xn := by rw [hXn_def]; exact Measurable.of_eval fun j ↦ hXs j
   have hJn_meas : Measurable Jn := by
-    rw [hJn_def]; exact hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)
+    rw [hJn_def]; exact hencoder.comp (Measurable.of_eval fun j ↦ hXs j)
   -- Per-letter auxiliary `Uᵢ = (J, Y_{\i})` and its measurability.
   have hU_meas : ∀ i : Fin n, Measurable
       (fun ω ↦ (c.encoder (fun j ↦ Xs j ω),
         fun (j : {j : Fin n // j ≠ i}) ↦ Ys (↑j) ω)) := fun i ↦
-    (hencoder.comp (measurable_pi_lambda _ fun j ↦ hXs j)).prodMk
-      (measurable_pi_lambda _ fun j ↦ hYs ↑j)
+    (hencoder.comp (Measurable.of_eval fun j ↦ hXs j)).prodMk
+      (Measurable.of_eval fun j ↦ hYs ↑j)
   -- Finiteness of the per-letter mutual informations (finite alphabets).
   have hfin_XU : ∀ i : Fin n,
       mutualInfo μ (Xs i)

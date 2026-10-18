@@ -162,8 +162,7 @@ noncomputable def uvQuantizeSlack (ν : Measure (ℕ × ℕ × α × β₁ × β
 
 instance uvQuantizeLaw_isProbabilityMeasure (ν : Measure (ℕ × ℕ × α × β₁ × β₂))
     [IsProbabilityMeasure ν] (m : ℕ) : IsProbabilityMeasure (uvQuantizeLaw.{u} ν m) :=
-  Measure.isProbabilityMeasure_map
-    (measurable_uvRelabel (measurable_uvQuantize.{u} m) measurable_id).aemeasurable
+  by unfold uvQuantizeLaw; infer_instance
 
 omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β₁] [Nonempty β₁]
   [MeasurableSingletonClass β₁] [Fintype β₂] [Nonempty β₂] [MeasurableSingletonClass β₂] in
@@ -221,12 +220,13 @@ theorem ae_ae_uvQuantize_eq_fst :
     ∀ᵐ t ∂(ν.map fun q ↦ uvQuantize.{u} m q.1),
       ∀ᵐ q ∂(condDistrib id (fun q ↦ uvQuantize.{u} m q.1) ν t), uvQuantize.{u} m q.1 = t := by
   haveI : IsProbabilityMeasure (ν.map fun q ↦ uvQuantize.{u} m q.1) :=
-    Measure.isProbabilityMeasure_map
-      ((measurable_uvQuantize.{u} m).comp measurable_fst).aemeasurable
+    inferInstance
   refine Measure.ae_ae_of_ae_compProd
     (p := fun p : ULift.{u} (Fin (m + 1)) × (ℕ × ℕ × α × β₁ × β₂) ↦
       uvQuantize.{u} m p.2.1 = p.1) ?_
-  rw [compProd_map_condDistrib (Y := id) aemeasurable_id]
+  rw [compProd_map_condDistrib (X := fun q : ℕ × ℕ × α × β₁ × β₂ ↦ uvQuantize.{u} m q.1) (Y := id)
+      (by fun_prop)
+    aemeasurable_id]
   refine (ae_map_iff ?_ ?_).2 (Filter.Eventually.of_forall fun q ↦ rfl)
   · exact (((measurable_uvQuantize.{u} m).comp measurable_fst).prodMk
       measurable_id).aemeasurable
@@ -239,7 +239,7 @@ theorem lintegral_mutualInfo_condDistrib_le_uvQuantizeSlack :
   have hqm : Measurable (fun q : ℕ × ℕ × α × β₁ × β₂ ↦ uvQuantize.{u} m q.1) :=
     (measurable_uvQuantize.{u} m).comp measurable_fst
   haveI : IsProbabilityMeasure (ν.map fun q ↦ uvQuantize.{u} m q.1) :=
-    Measure.isProbabilityMeasure_map hqm.aemeasurable
+    inferInstance
   set S : Set (ULift.{u} (Fin (m + 1))) := {t | (t.down : ℕ) = m} with hSdef
   set c : ℝ≥0∞ := ENNReal.ofReal (Real.log (Fintype.card β₂)) with hcdef
   have hbound : ∀ᵐ t ∂(ν.map fun q ↦ uvQuantize.{u} m q.1),
@@ -278,10 +278,11 @@ theorem mutualInfo_le_mutualInfo_uvQuantize_add_slack :
   have hT : Measurable (fun q : ℕ × ℕ × α × β₁ × β₂ ↦ (uvQuantize.{u} m q.1, q)) :=
     hqm.prodMk measurable_id
   haveI : IsProbabilityMeasure (ν.map fun q ↦ uvQuantize.{u} m q.1) :=
-    Measure.isProbabilityMeasure_map hqm.aemeasurable
+    inferInstance
   have hcp : (ν.map fun q ↦ uvQuantize.{u} m q.1) ⊗ₘ
       condDistrib id (fun q ↦ uvQuantize.{u} m q.1) ν
-      = ν.map (fun q ↦ (uvQuantize.{u} m q.1, q)) := compProd_map_condDistrib aemeasurable_id
+      = ν.map (fun q ↦ (uvQuantize.{u} m q.1, q)) := compProd_map_condDistrib
+          (by fun_prop) aemeasurable_id
   have hrec : ∀ᵐ p ∂((ν.map fun q ↦ uvQuantize.{u} m q.1) ⊗ₘ
         condDistrib id (fun q ↦ uvQuantize.{u} m q.1) ν), uvQuantize.{u} m p.2.1 = p.1 := by
     rw [hcp]

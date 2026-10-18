@@ -69,10 +69,10 @@ lemma errorProbAt_restrict₁ (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W 
     (c.restrict₁ m₂).errorProbAt (Kernel.fst W) m₁ = c.errorProbAt₁ W (m₁, m₂) := by
   classical
   have hproj : Measurable fun (y : Fin n → β₁ × β₂) (i : Fin n) ↦ (y i).1 :=
-    measurable_pi_lambda _ fun i ↦ measurable_fst.comp (measurable_pi_apply i)
+    Measurable.of_eval fun i ↦ measurable_fst.comp (measurable_pi_apply i)
   have hE : MeasurableSet ((c.restrict₁ m₂).errorEvent m₁) := (Set.toFinite _).measurableSet
   haveI : ∀ i : Fin n, IsProbabilityMeasure ((W (c.encoder (m₁, m₂) i)).map Prod.fst) :=
-    fun _ ↦ Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+    fun _ ↦ inferInstance
   have hpi : (Measure.pi fun i : Fin n ↦ W (c.encoder (m₁, m₂) i)).map
       (fun (y : Fin n → β₁ × β₂) (i : Fin n) ↦ (y i).1)
       = Measure.pi fun i : Fin n ↦ (W (c.encoder (m₁, m₂) i)).map Prod.fst :=
@@ -91,10 +91,10 @@ lemma errorProbAt_restrict₂ (c : BroadcastCode M₁ M₂ n α β₁ β₂) (W 
     (c.restrict₂ m₁).errorProbAt (Kernel.snd W) m₂ = c.errorProbAt₂ W (m₁, m₂) := by
   classical
   have hproj : Measurable fun (y : Fin n → β₁ × β₂) (i : Fin n) ↦ (y i).2 :=
-    measurable_pi_lambda _ fun i ↦ measurable_snd.comp (measurable_pi_apply i)
+    Measurable.of_eval fun i ↦ measurable_snd.comp (measurable_pi_apply i)
   have hE : MeasurableSet ((c.restrict₂ m₁).errorEvent m₂) := (Set.toFinite _).measurableSet
   haveI : ∀ i : Fin n, IsProbabilityMeasure ((W (c.encoder (m₁, m₂) i)).map Prod.snd) :=
-    fun _ ↦ Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+    fun _ ↦ inferInstance
   have hpi : (Measure.pi fun i : Fin n ↦ W (c.encoder (m₁, m₂) i)).map
       (fun (y : Fin n → β₁ × β₂) (i : Fin n) ↦ (y i).2)
       = Measure.pi fun i : Fin n ↦ (W (c.encoder (m₁, m₂) i)).map Prod.snd :=

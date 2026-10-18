@@ -99,7 +99,7 @@ theorem map_truncW_add_le_smul_map_add
   have hcond : (truncW P W n).map g = (P E)⁻¹ • (P.restrict E).map g := by
     rw [truncW]
     show ((P E)⁻¹ • P.restrict E).map g = (P E)⁻¹ • (P.restrict E).map g
-    exact Measure.map_smul (P E)⁻¹ (P.restrict E) g
+    exact Measure.map_smul (P E)⁻¹ (μ := P.restrict E) (f := g) (by fun_prop)
   rw [hcond]
   -- `(P.restrict E).map g ≤ P.map g` (restrict_le_self + map_mono), then scale by `(P E)⁻¹`.
   have hle : (P.restrict E).map g ≤ P.map g :=

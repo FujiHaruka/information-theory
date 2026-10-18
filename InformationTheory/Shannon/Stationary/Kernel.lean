@@ -53,7 +53,7 @@ theorem prefixBlockProb_zero
     prefixBlockProb μ p ω 0 = 1 := by
   unfold prefixBlockProb
   have _ : IsProbabilityMeasure (μ.map (p.blockRV 0)) :=
-    Measure.isProbabilityMeasure_map (p.measurable_blockRV 0).aemeasurable
+    inferInstance
   have h_default : ∀ x : (Fin 0 → α), x = default := fun x ↦ by
     funext i; exact i.elim0
   have h_singleton_eq_univ :

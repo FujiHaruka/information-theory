@@ -69,8 +69,8 @@ instance martonJointDistribution.instIsProbabilityMeasure
   haveI : IsProbabilityMeasure
       (((pV ⊗ₘ K) ⊗ₘ (W.comap Prod.snd measurable_snd)).map
         MeasurableEquiv.prodAssoc) :=
-    Measure.isProbabilityMeasure_map MeasurableEquiv.prodAssoc.measurable.aemeasurable
-  exact Measure.isProbabilityMeasure_map MeasurableEquiv.prodAssoc.measurable.aemeasurable
+    inferInstance
+  exact inferInstance
 
 lemma martonJointDistribution_map_V
     (pV : Measure (V₁ × V₂)) [IsProbabilityMeasure pV]

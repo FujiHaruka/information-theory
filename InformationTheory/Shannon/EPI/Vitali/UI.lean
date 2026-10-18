@@ -132,9 +132,10 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
     · exact ((measurable_gaussianPDFReal 0 ⟨t, ht.le⟩).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable
     · refine Filter.Eventually.of_forall (fun y ↦ ?_)
-      rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
-      show gaussianPDFReal 0 ⟨t, ht.le⟩ (x - y) ≤ _
-      rw [gaussianPDFReal]
+      rw [Real.norm_eq_abs]
+      refine (abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))).trans_le ?_
+      change (Real.sqrt (2 * Real.pi * t))⁻¹ * Real.exp (-(x - y - 0) ^ 2 / (2 * t))
+        ≤ (Real.sqrt (2 * Real.pi * t))⁻¹
       refine mul_le_of_le_one_right (by positivity) (Real.exp_le_one_iff.mpr ?_)
       rw [neg_div]; exact neg_nonpos.mpr (by positivity)
   have hsq_mom_int : Integrable (fun u ↦ u ^ 2 * g u) volume := by
@@ -167,10 +168,11 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
         (f := (id : ℝ → ℝ))).mp hmem
       exact this
     rw [gaussianReal_of_var_ne_zero _ hv_ne] at hid_g
-    rw [integrable_withDensity_iff (measurable_gaussianPDF _ _)
-      (ae_of_all _ fun _ ↦ gaussianPDF_lt_top)] at hid_g
-    refine hid_g.congr (Filter.Eventually.of_forall fun u ↦ ?_)
-    simp only [hg_def, gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg _ _ _)]
+    refine ((integrable_withDensity_iff (measurable_gaussianPDF _ _)
+      (ae_of_all _ fun _ ↦ gaussianPDF_lt_top)).mp hid_g).congr
+          (Filter.Eventually.of_forall fun u ↦ ?_)
+    simp only [gaussianPDF]
+    exact congrArg (u * ·) (ENNReal.toReal_ofReal (gaussianPDFReal_nonneg _ _ _))
   have hsq_shift_int : ∀ y, Integrable (fun x ↦ x ^ 2 * g (x - y)) volume := by
     intro y
     have hexp : Integrable (fun u ↦ (u + y) ^ 2 * g u) volume := by

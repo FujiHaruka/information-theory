@@ -256,7 +256,7 @@ lemma measurePreserving_codebookEmbed (μX : Measure A) (μY : Measure B)
   have hsum := measurePreserving_sumPiEquivProdPi_symm (ambientFactor μX μY M₁ M₂)
   have hcomp := hsum.comp (hfst.prod hsnd)
   have hmeas : Measurable (codebookEmbed (A := A) (B := B) M₁ M₂) := by
-    refine measurable_pi_lambda _ fun k ↦ ?_
+    refine Measurable.of_eval fun k ↦ ?_
     cases k with
     | inl i => exact ((measurable_pi_apply i).comp measurable_fst).prodMk measurable_const
     | inr j => exact measurable_const.prodMk ((measurable_pi_apply j).comp measurable_snd)
@@ -545,9 +545,9 @@ theorem meas_codebook_no_jointlyTypicalPair_lt
   have hn₀ : N₀ ≤ n := le_trans (le_max_left _ _) hn
   have hn₁ : N₁ ≤ n := le_trans (le_max_right _ _) hn
   haveI : IsProbabilityMeasure (μ.map (jointRV Xs n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV Xs hXs n).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μ.map (jointRV Ys n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV Ys hYs n).aemeasurable
+    inferInstance
   have hpge : (1 - 1 / 2) * Real.exp ((n : ℝ) * (HZ - HX - HY - 3 * ε))
       ≤ pairProb (μ.map (jointRV Xs n)) (μ.map (jointRV Ys n))
           (jointlyTypicalSet μ Xs Ys n ε) :=
@@ -645,9 +645,9 @@ theorem meas_codebook_no_jointStronglyTypicalPair_lt
   have hn₁ : N₁ ≤ n := le_trans (le_trans (le_max_right _ _) (le_max_left _ 1)) hn
   have hnpos : 0 < n := lt_of_lt_of_le Nat.one_pos (le_trans (le_max_right _ 1) hn)
   haveI : IsProbabilityMeasure (μ.map (jointRV Xs n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV Xs hXs n).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μ.map (jointRV Ys n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV Ys hYs n).aemeasurable
+    inferInstance
   have hsub : jointStronglyTypicalSet μ Xs Ys n ε
       ⊆ jointlyTypicalSet μ Xs Ys n (ε * (1 + coveringBandConst μ Xs Ys)) :=
     jointStronglyTypicalSet_subset_jointlyTypicalSet_bandConst μ Xs Ys hXs hYs hmarg_X hmarg_Y

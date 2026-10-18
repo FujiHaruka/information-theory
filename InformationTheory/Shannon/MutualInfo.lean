@@ -119,9 +119,9 @@ theorem mutualInfo_eq_zero_iff_indep
     mutualInfo μ Xs Yo = 0 ↔ IndepFun Xs Yo μ := by
   have hpair : Measurable (fun ω ↦ (Xs ω, Yo ω)) := hXs.prodMk hYo
   have : IsProbabilityMeasure (μ.map (fun ω ↦ (Xs ω, Yo ω))) :=
-    Measure.isProbabilityMeasure_map hpair.aemeasurable
-  have : IsProbabilityMeasure (μ.map Xs) := Measure.isProbabilityMeasure_map hXs.aemeasurable
-  have : IsProbabilityMeasure (μ.map Yo) := Measure.isProbabilityMeasure_map hYo.aemeasurable
+    inferInstance
+  have : IsProbabilityMeasure (μ.map Xs) := inferInstance
+  have : IsProbabilityMeasure (μ.map Yo) := inferInstance
   rw [mutualInfo, klDiv_eq_zero_iff,
       ← indepFun_iff_map_prod_eq_prod_map_map hXs.aemeasurable hYo.aemeasurable]
 
@@ -181,7 +181,7 @@ private lemma integrable_llr_map_pair_prod_marginals
       (llr (μ.map (fun ω ↦ (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo)))
       (μ.map (fun ω ↦ (Xs ω, Yo ω))) := by
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (Xs ω, Yo ω))) :=
-    Measure.isProbabilityMeasure_map (_hXs.prodMk _hYo).aemeasurable
+    inferInstance
   refine ⟨(measurable_llr _ _).aestronglyMeasurable, ?_⟩
   rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
   exact ENNReal.sum_lt_top.mpr fun _ _ ↦

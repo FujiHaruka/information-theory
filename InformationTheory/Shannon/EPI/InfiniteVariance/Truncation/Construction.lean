@@ -291,7 +291,7 @@ theorem integrable_negMulLog_map_condTrunc (P : Measure Ω) [IsProbabilityMeasur
     measurableSet_le measurable_norm measurable_const
   have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
   haveI : IsProbabilityMeasure (P.map Z) :=
-    MeasureTheory.Measure.isProbabilityMeasure_map hZmeas.aemeasurable
+    inferInstance
   -- positive mass of `Sn` under `P.map Z` (so that `cond` is the genuine conditioning).
   have hSn_pos : (P.map Z) Sn ≠ 0 := by
     rw [Measure.map_apply hZmeas hSn_meas]
@@ -358,7 +358,7 @@ theorem map_condTrunc_withDensity_toReal_rnDeriv (P : Measure Ω) [IsProbability
   haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
     isProbabilityMeasure_condTrunc P hX hY hpos
   haveI : IsProbabilityMeasure ((condTrunc P X Y n).map Z) :=
-    Measure.isProbabilityMeasure_map _hZ.aemeasurable
+    inferInstance
   have hcongr : (fun x ↦ ENNReal.ofReal (((condTrunc P X Y n).map Z).rnDeriv volume x).toReal)
       =ᵐ[volume] ((condTrunc P X Y n).map Z).rnDeriv volume := by
     filter_upwards [((condTrunc P X Y n).map Z).rnDeriv_lt_top volume] with x hx
@@ -430,12 +430,12 @@ theorem rnDeriv_map_condTrunc_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
   have hpX_lmass : (∫⁻ x, ENNReal.ofReal (pX x) ∂volume) = 1 := by
     rw [hlmass X pX hpX_law]
     haveI : IsProbabilityMeasure ((condTrunc P X Y n).map X) :=
-      Measure.isProbabilityMeasure_map hX.aemeasurable
+      inferInstance
     exact measure_univ
   have hpY_lmass : (∫⁻ x, ENNReal.ofReal (pY x) ∂volume) = 1 := by
     rw [hlmass Y pY hpY_law]
     haveI : IsProbabilityMeasure ((condTrunc P X Y n).map Y) :=
-      Measure.isProbabilityMeasure_map hY.aemeasurable
+      inferInstance
     exact measure_univ
   have hpXY_lmass : (∫⁻ x, ENNReal.ofReal (pXY x) ∂volume) ≠ ⊤ := by
     rw [hlmass (fun ω ↦ X ω + Y ω) pXY hpXY_law]
@@ -466,7 +466,7 @@ theorem map_condTrunc_sum_concentrated (P : Measure Ω) [IsProbabilityMeasure P]
       (Set.Icc (-(2 * (n : ℝ))) (2 * (n : ℝ)))ᶜ = 0 := by
   haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
     isProbabilityMeasure_condTrunc P hX hY _hpos
-  rw [Measure.map_apply (hX.add hY) (measurableSet_Icc.compl)]
+  rw [Measure.map_apply (hX.fun_add hY) (measurableSet_Icc.compl)]
   -- `condTrunc (truncSetᶜ) = 0` (concentrated on `truncSet`).
   have h_trunc_compl : (condTrunc P X Y n) (truncSet X Y n)ᶜ = 0 := by
     have h_mem : ∀ᵐ ω ∂(condTrunc P X Y n), ω ∈ truncSet X Y n := by
@@ -689,7 +689,7 @@ theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProba
     map_condTrunc_withDensity_toReal_rnDeriv P hX hY hX hpos
       (map_condTrunc_absolutelyContinuous P hX hX hX_ac)
   haveI hpnP : IsProbabilityMeasure ((condTrunc P X Y n).map X) :=
-    Measure.isProbabilityMeasure_map hX.aemeasurable
+    inferInstance
   set μX : Measure ℝ := volume.withDensity (fun x ↦ ENNReal.ofReal (pn x)) with hμX_def
   haveI hμXP : IsProbabilityMeasure μX := hpn_law ▸ hpnP
   -- `pn`'s lintegral is `1`.
@@ -733,7 +733,7 @@ theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProba
       map_condTrunc_withDensity_toReal_rnDeriv P hX hY hY hpos
         (map_condTrunc_absolutelyContinuous P hX hY hY_ac)
     haveI : IsProbabilityMeasure ((condTrunc P X Y n).map Y) :=
-      Measure.isProbabilityMeasure_map hY.aemeasurable
+      inferInstance
     have h1 : ((condTrunc P X Y n).map Y) Set.univ = 1 := measure_univ
     rwa [hlaw, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at h1
   have hCm_fin : (∫⁻ w, ENNReal.ofReal (Cm w) ∂volume) ≠ ∞ := by
@@ -800,7 +800,7 @@ theorem integrable_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMe
   set ν := (condTrunc P X Y n).map (fun ω ↦ X ω + Y ω) with hν_def
   have hsum_meas : Measurable (fun ω ↦ X ω + Y ω) := hX.add hY
   haveI : IsProbabilityMeasure ν :=
-    Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+    inferInstance
   set r : ℝ → ℝ := fun x ↦ (ν.rnDeriv volume x).toReal with hr_def
   have hr_meas : Measurable r := (Measure.measurable_rnDeriv _ _).ennreal_toReal
   have hr_nn : ∀ x, 0 ≤ r x := fun x ↦ ENNReal.toReal_nonneg

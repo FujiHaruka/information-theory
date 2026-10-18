@@ -617,7 +617,7 @@ lemma initMultiset_mergedMeasure_snd_map_eq
   have hemb : Finset.map (Function.Embedding.subtype (· ≠ b))
       (Finset.univ : Finset {y : α // y ≠ b})
       = (Finset.univ : Finset α).erase b := by
-    ext x; simp [Function.Embedding.subtype, Finset.mem_erase]
+    ext x; simp [Finset.mem_erase]
   have hRHS' : (initMultiset (mergedMeasure P a b hab)).map Prod.snd
       = ((Finset.univ : Finset α).erase b).val.map
           (fun c ↦ if c = a then P.real {a} + P.real {b} else P.real {c}) := by

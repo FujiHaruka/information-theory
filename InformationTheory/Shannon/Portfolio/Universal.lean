@@ -385,7 +385,7 @@ theorem bestConstantWealth_le_mul_universalWealth
           rw [Finset.prod_mul_distrib, Finset.prod_const, Finset.card_range]
       _ ≤ ∏ i ∈ Finset.range n,
             (∑ j, ((1 - lam) • simplexLift ystar + lam • simplexLift y) j * xs i j) := by
-          refine Finset.prod_le_prod (fun i _ ↦ ?_) (fun i _ ↦ hfactor i)
+          refine Finset.prod_le_prod₀ (fun i _ ↦ ?_) (fun i _ ↦ hfactor i)
           exact mul_nonneg (by linarith) (wealthFactor_pos hpos hbstar_mem i).le
       _ = constWealth xs ((1 - lam) • simplexLift ystar + lam • simplexLift y) n := rfl
   -- Integrating the pointwise bound over the image, then enlarging to the corner simplex.

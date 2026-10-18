@@ -54,7 +54,7 @@ lemma mutualInfo_toReal_eq_entropy_form
   classical
   have hh : Measurable (fun ω ↦ (f ω, g ω)) := hf.prodMk hg
   haveI : IsProbabilityMeasure (μ.map (fun ω ↦ (f ω, g ω))) :=
-    Measure.isProbabilityMeasure_map hh.aemeasurable
+    inferInstance
   have hfst : (μ.map (fun ω ↦ (f ω, g ω))).map Prod.fst = μ.map f := by
     rw [Measure.map_map measurable_fst hh]; rfl
   have hsnd : (μ.map (fun ω ↦ (f ω, g ω))).map Prod.snd = μ.map g := by

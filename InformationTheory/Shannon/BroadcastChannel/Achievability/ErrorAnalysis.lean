@@ -299,7 +299,7 @@ lemma bc_block_law_UXY_singleton
     (measurable_jointRV bcUs hbcUs n).prodMk
       ((measurable_jointRV bcXs hbcXs n).prodMk (measurable_jointRV bcYPs hbcYPs n))
   have hê_meas : Measurable ê :=
-    measurable_pi_lambda _ fun i ↦
+    Measurable.of_eval fun i ↦
       ((measurable_pi_apply i).comp measurable_fst).prodMk
         (((measurable_pi_apply i).comp (measurable_fst.comp measurable_snd)).prodMk
           ((measurable_pi_apply i).comp (measurable_snd.comp measurable_snd)))
@@ -307,7 +307,7 @@ lemma bc_block_law_UXY_singleton
     (bcAmbientMeasure pU K W).map (jointRV (macJointSequence bcUs bcXs bcYPs) n) with hρ_def
   haveI : IsProbabilityMeasure
       ((bcJointDistribution pU K W).map (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2))) :=
-    Measure.isProbabilityMeasure_map hg_meas.aemeasurable
+    inferInstance
   have hρ_eq : ρ = Measure.pi (fun _ : Fin n ↦
       (bcJointDistribution pU K W).map (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1, q.2.2))) := by
     refine block_law_X_eq_pi_p (bcAmbientMeasure pU K W) (macJointSequence bcUs bcXs bcYPs)
@@ -365,10 +365,7 @@ lemma bc_chan_fold_master
       (fun ω ↦ (jointRV bcUs n ω, jointRV bcXs n ω, jointRV bcYPs n ω)) with hνt_def
   haveI : IsProbabilityMeasure νt := by
     rw [hνt_def]
-    exact Measure.isProbabilityMeasure_map
-      ((measurable_jointRV bcUs (fun i ↦ (measurable_pi_apply i).fst) n).prodMk
-        ((measurable_jointRV bcXs (fun i ↦ (measurable_pi_apply i).snd.fst) n).prodMk
-          (measurable_jointRV bcYPs (fun i ↦ (measurable_pi_apply i).snd.snd) n))).aemeasurable
+    exact inferInstance
   have h_single : ∀ (u : Fin n → U) (x : Fin n → α) (yp : Fin n → β₁ × β₂),
       νt.real {(u, x, yp)}
         = (Measure.pi (fun _ : Fin n ↦ pU)).real {u}
@@ -416,7 +413,7 @@ lemma bc_chan_fold_Y₂_set
         (measurable_jointRV bcYPs (fun i ↦ (measurable_pi_apply i).snd.snd) n))
   have hproj_meas : Measurable
       (fun t : (Fin n → U) × (Fin n → α) × (Fin n → β₁ × β₂) ↦ (fun i ↦ (t.2.2 i).2 : Fin n → β₂)) :=
-    measurable_pi_lambda _ fun i ↦
+    Measurable.of_eval fun i ↦
       ((measurable_pi_apply i).comp (measurable_snd.comp measurable_snd)).snd
   have hmap : (bcAmbientMeasure pU K W).map (jointRV bcY₂s n)
       = ((bcAmbientMeasure pU K W).map
@@ -454,11 +451,9 @@ theorem bc_random_codebook_wrongcloud_swap
   set μ := bcAmbientMeasure pU K W with hμ_def
   set JTS := jointlyTypicalSet μ bcUs bcY₂s n ε with hJTS_def
   haveI : IsProbabilityMeasure (μ.map (jointRV bcUs n)) :=
-    Measure.isProbabilityMeasure_map
-      (measurable_jointRV bcUs (fun i ↦ (measurable_pi_apply i).fst) n).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μ.map (jointRV bcY₂s n)) :=
-    Measure.isProbabilityMeasure_map
-      (measurable_jointRV bcY₂s (fun i ↦ (measurable_pi_apply i).snd.snd.snd) n).aemeasurable
+    inferInstance
   -- Step 1: satellite single-row marginalization (per cloud codebook).
   have hsat : ∀ cU : BCCloudCodebook M₂ n U,
       (∑ cX : BCSatelliteCodebook M₁ M₂ n α, (bcSatelliteCodebookMeasure K M₁ M₂ n cU).real {cX}
@@ -555,7 +550,7 @@ lemma bc_chan_fold_UY₂_set
       (fun t : (Fin n → U) × (Fin n → α) × (Fin n → β₁ × β₂) ↦
         ((t.1, fun i ↦ (t.2.2 i).2) : (Fin n → U) × (Fin n → β₂))) :=
     measurable_fst.prodMk
-      (measurable_pi_lambda _ fun i ↦
+      (Measurable.of_eval fun i ↦
         ((measurable_pi_apply i).comp (measurable_snd.comp measurable_snd)).snd)
   have hmap : (bcAmbientMeasure pU K W).map
         (fun ω ↦ (jointRV bcUs n ω, jointRV bcY₂s n ω))
@@ -909,7 +904,7 @@ lemma bc_chan_fold_Y₁_set
         (measurable_jointRV bcYPs (fun i ↦ (measurable_pi_apply i).snd.snd) n))
   have hproj_meas : Measurable
       (fun t : (Fin n → U) × (Fin n → α) × (Fin n → β₁ × β₂) ↦ (fun i ↦ (t.2.2 i).1 : Fin n → β₁)) :=
-    measurable_pi_lambda _ fun i ↦
+    Measurable.of_eval fun i ↦
       ((measurable_pi_apply i).comp (measurable_snd.comp measurable_snd)).fst
   have hmap : (bcAmbientMeasure pU K W).map (jointRV bcY₁s n)
       = ((bcAmbientMeasure pU K W).map
@@ -949,7 +944,7 @@ lemma bc_block_law_UX_paired_singleton
     measurable_fst.prodMk (measurable_fst.comp measurable_snd)
   haveI : IsProbabilityMeasure
       ((bcJointDistribution pU K W).map (fun q : U × α × β₁ × β₂ ↦ (q.1, q.2.1))) :=
-    Measure.isProbabilityMeasure_map hsel_meas.aemeasurable
+    inferInstance
   have hρ_eq : (bcAmbientMeasure pU K W).map (jointRV (jointSequence bcUs bcXs) n)
       = Measure.pi (fun _ : Fin n ↦
           (bcJointDistribution pU K W).map (fun q ↦ (q.1, q.2.1))) := by
@@ -1003,11 +998,9 @@ theorem bc_joint_indep_prob_le
     (measurable_fst.prodMk (measurable_fst.comp measurable_snd)).prodMk
       (measurable_fst.comp (measurable_snd.comp measurable_snd))
   haveI : IsProbabilityMeasure (μ.map (jointRV (jointSequence bcUs bcXs) n)) :=
-    Measure.isProbabilityMeasure_map
-      (measurable_jointRV (jointSequence bcUs bcXs)
-        (fun i ↦ measurable_jointSequence bcUs bcXs hbcUs hbcXs i) n).aemeasurable
+    inferInstance
   haveI : IsProbabilityMeasure (μ.map (jointRV bcY₁s n)) :=
-    Measure.isProbabilityMeasure_map (measurable_jointRV bcY₁s hbcY₁s n).aemeasurable
+    inferInstance
   set Puxblk := μ.map (jointRV (jointSequence bcUs bcXs) n) with hPuxblk_def
   set Py₁blk := μ.map (jointRV bcY₁s n) with hPy₁blk_def
   -- The independent-pair bound (reshaped macJTS).

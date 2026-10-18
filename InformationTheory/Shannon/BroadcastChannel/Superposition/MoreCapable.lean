@@ -251,7 +251,7 @@ theorem condMutualInfo_out₂_le_out₁_of_moreCapable (W : BCChannel α β₁ �
   set σ := ν.map (fun q : U × V × α × β₁ × β₂ ↦ (q.2.1, q.1, q.2.2))
   have hs : IsUVChannelLaw W σ := h.swap_auxiliaries
   haveI : IsProbabilityMeasure σ :=
-    Measure.isProbabilityMeasure_map (by fun_prop : Measurable _).aemeasurable
+    inferInstance
   have hkey := hmc.condMutualInfo_le (uvCloudLaw σ) (uvSatelliteKernel σ)
   have hjd : bcJointDistribution (uvCloudLaw σ) (uvSatelliteKernel σ) W
       = σ.map (fun q ↦ (q.1, q.2.2.1, q.2.2.2.1, q.2.2.2.2)) :=
@@ -307,7 +307,7 @@ lemma mutualInfo_out₂_le_out₁_of_moreCapable (W : BCChannel α β₁ β₂) 
     mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.2)
       ≤ mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1) := by
   haveI : IsProbabilityMeasure (ν.map fun q : U × V × α × β₁ × β₂ ↦ q.2.2.1) :=
-    Measure.isProbabilityMeasure_map (by fun_prop : Measurable _).aemeasurable
+    inferInstance
   have hmap : ν.map (fun q ↦ (q.2.2.1, q.2.2.2))
       = (ν.map fun q ↦ q.2.2.1) ⊗ₘ W := h.map_input_output
   have e₁ : mutualInfo ν (fun q ↦ q.2.2.1) (fun q ↦ q.2.2.2.1)
@@ -487,7 +487,7 @@ theorem exists_fullSupport_bcInfo_ge_sumRate (W : BCChannel α β₁ β₂) [IsM
         ∧ max (R₁ - δ) 0 + (R₂ - δ) ≤ bcInfoJoint pU' K' W := by
   classical
   haveI : IsProbabilityMeasure ((pU ⊗ₘ K).map (fun p : U × α ↦ (p.1, p.1, p.2))) :=
-    Measure.isProbabilityMeasure_map (by fun_prop : Measurable _).aemeasurable
+    inferInstance
   have hlaw : IsUVChannelLaw W (uvLawOfPair W pU K) := uvLawOfInput_isUVChannelLaw W _
   have hmarg : (uvLawOfPair W pU K).map (fun q ↦ (q.1, q.2.2.1)) = pU ⊗ₘ K := by
     rw [uvLawOfPair, uvLawOfInput_map_aux_input W _,

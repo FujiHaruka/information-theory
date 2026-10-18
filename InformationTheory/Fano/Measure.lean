@@ -269,7 +269,7 @@ theorem fano_inequality_measure_theoretic
         + errorProb μ Xs Yo decoder * Real.log ((Fintype.card X : ℝ) - 1) := by
   -- ## Shared infrastructure (used in Steps 1 / 2 / 3)
   haveI : IsProbabilityMeasure (μ.map Yo) :=
-    Measure.isProbabilityMeasure_map hYo.aemeasurable
+    inferInstance
   -- Lift the `y`-dependent error event `{x | x ≠ decoder y}` to a fixed measurable set on
   -- `Y × X`, so that `Kernel.measurable_kernel_prodMk_left` applies.
   have hMS : MeasurableSet {p : Y × X | p.2 ≠ decoder p.1} := by
@@ -385,7 +385,7 @@ theorem fano_inequality_measure_theoretic
     congr 1
     simp_rw [hPreimage]
     rw [← Measure.compProd_apply hMS,
-        compProd_map_condDistrib hXs.aemeasurable,
+        compProd_map_condDistrib hYo.aemeasurable hXs.aemeasurable,
         Measure.map_apply (hYo.prodMk hXs) hMS]
     rfl
   -- Step 4: `qaryEntropy = binEntropy + Pe * log(|X|-1)` (a known rewrite).

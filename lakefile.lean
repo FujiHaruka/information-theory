@@ -19,7 +19,7 @@ package InformationTheory where
 meta if (get_config? dev).isSome then
 require loogle from git "https://github.com/nomeata/loogle"@"3a988dbfa601ddbbfd9330d90c45e7a68263b9c7"
 
-require "leanprover-community" / mathlib @ git "v4.31.0"
+require "leanprover-community" / mathlib @ git "v4.35.0"
 
 @[default_target] lean_lib InformationTheory where leanOptions :=
   #[⟨`weak.linter.mathlibStandardSet, true⟩, ⟨`weak.linter.unusedFintypeInType, false⟩]

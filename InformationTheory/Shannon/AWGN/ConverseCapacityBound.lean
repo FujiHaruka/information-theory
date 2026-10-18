@@ -130,7 +130,7 @@ private lemma perLetterYLaw_eq_mixture
   have h_meas_eval :
       Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ ω.2 i) :=
     (measurable_pi_apply i).comp measurable_snd
-  rw [Measure.map_smul]
+  rw [Measure.map_smul _ (by fun_prop)]
   rw [Measure.map_finset_sum (s := Finset.univ)
       (m := fun m ↦ (Measure.dirac m).prod
         (Measure.pi (fun j : Fin n ↦ awgnChannel N h_meas (c.encoder m j))))
@@ -175,7 +175,7 @@ private lemma perLetterYLaw_isProbabilityMeasure
   have h_meas_eval :
       Measurable (fun ω : Fin M × (Fin n → ℝ) ↦ ω.2 i) :=
     (measurable_pi_apply i).comp measurable_snd
-  exact Measure.isProbabilityMeasure_map h_meas_eval.aemeasurable
+  exact inferInstance
 
 /-- Absolute continuity of `perLetterYLaw` w.r.t. Lebesgue volume,
 needed for `differentialEntropy_le_gaussian_of_variance_le`. -/

@@ -73,7 +73,7 @@ theorem blockLogAvg_bddBelow_ae
   refine Filter.isBoundedUnder_of_eventually_ge (a := 0)
     (Filter.Eventually.of_forall (fun n ↦ ?_))
   have hPn : IsProbabilityMeasure (μ.map (p.blockRV n)) :=
-    Measure.isProbabilityMeasure_map (p.measurable_blockRV n).aemeasurable
+    inferInstance
   have h_le_one : (μ.map (p.blockRV n)).real {p.blockRV n ω} ≤ 1 :=
     measureReal_le_one
   have h_nn : 0 ≤ (μ.map (p.blockRV n)).real {p.blockRV n ω} := measureReal_nonneg
