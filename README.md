@@ -201,14 +201,14 @@ The library root [`InformationTheory.lean`](InformationTheory.lean) imports ever
 
 ## Use it as a dependency
 
-Requires the Lean toolchain pinned in [`lean-toolchain`](lean-toolchain) — `leanprover/lean4:v4.31.0`,
-matching Mathlib `v4.31.0`. Add to your `lakefile.toml`:
+Requires the Lean toolchain pinned in [`lean-toolchain`](lean-toolchain) — `leanprover/lean4:v4.35.0`,
+matching Mathlib `v4.35.0`. Add to your `lakefile.toml`:
 
 ```toml
 [[require]]
 name = "InformationTheory"
 git = "https://github.com/FujiHaruka/information-theory"
-rev = "v1.0.1"
+rev = "v1.1.0"
 ```
 
 Each release carries a prebuilt archive of the library's oleans, and Lake downloads it instead
